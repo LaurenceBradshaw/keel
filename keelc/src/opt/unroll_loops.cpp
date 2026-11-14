@@ -13,35 +13,6 @@ namespace keel
 namespace
 {
 
-// A copy of `loop`'s blocks, its edges inside the loop kept inside the copy; `map` takes each block to its copy.
-void clone_blocks( Function& func, const Loop& loop, std::vector<Block_id>& map )
-{
-    map.assign( func.blocks.size(), Block_id {} );
-    for( const Block_id b : loop.blocks )
-    {
-        const u32 first = narrow_cast<u32>( func.statements.size() );
-        const u32 count = func.blocks[b].statement_count;
-        for( u32 s = 0; s < count; ++s )
-        {
-            Statement copy = func.clone( func.statements[func.blocks[b].first_statement + s] );
-            func.statements.push_back( std::move( copy ) );
-        }
-        const Terminator terminator = func.blocks[b].terminator;
-        map[b.v] =
-            func.blocks.push_back( Block { .first_statement = first, .statement_count = count, .terminator = terminator } );
-    }
-    for( const Block_id b : loop.blocks )
-    {
-        for( Block_id& target : func.blocks[map[b.v]].terminator.targets )
-        {
-            if( target.is_valid() && loop.contains( target ) )
-            {
-                target = map[target.v];
-            }
-        }
-    }
-}
-
 bool unroll( Function& func, const Type_table& types, const Literal_pool& literals, const Loop& loop, u32 budget, bool growing )
 {
     if( !loop.preheader.is_valid() || !loop.latch.is_valid() )

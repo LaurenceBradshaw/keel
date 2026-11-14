@@ -394,6 +394,7 @@ function's `-O1` code depends on nothing outside it.
 | `loop_self_calls` | `-O2` | A call of the function itself whose result it returns jumps back to the entry. Without it a deep tail-recursive call overflows the stack, so the default level must have it. Frames go. |
 | `rotate_loops`, `forward_reads` | `-O1` | Block shape, and a temporary's read; the test's copy keeps its line, so stepping is still the test, the body, the test. |
 | `hoist_invariants` | `-O1` | Pinned: a named local's statement stays in the loop, and what moves takes the loop test's line, or stepping would go back to a body line before the loop starts. |
+| `version_loops` | `-O3` | Landing. A second copy of a loop, under a budget of 200 statements, and a check before it (below). |
 | `reduce_inductions` | `-O2` | Its gain is removing the index, which `-O1` pins; it would only add a second live variable. |
 | `unroll_loops` | `-O2`, `-O3` | `-O2` only where the copies, less each one's step and test, are no bigger than the loop; `-O3` trades size for speed within 200 statements. |
 | `eliminate_common` | `-O3` | Landing, per the rule above. In each round, before `propagate_values`: a pure computation every path to it already made, into a local still holding it, copies that local. Exact repeats only, so no float is reassociated; a read through a pointer, of a global or of an addressed local is forgotten at a call, a drop or a store through a pointer, as Keel has no TBAA. A call of a pure function (below) is such a computation, keyed by its callee and its arguments, each a copy or a constant. `i = i + 1` is left as the loop passes' step. `thread_jumps` then decides a branch on a local written once below an edge that branched on it, so a repeated division's zero and `-1` tests and their join go. |
@@ -411,7 +412,7 @@ removing an unread call of anything else could end a program that would have run
 panicked.
 
 **Loop passes** run once per function after the rounds, from `-O1`, each at its level in the
-table: rotation, read forwarding, a round, then LICM, induction variables, full unrolling and another
+table: rotation, read forwarding, a round, then LICM, versioning, induction variables, full unrolling and another
 round, as LICM needs the checks the first round folds gone, and unrolling last lets that round fold
 each copy's index. The first round runs only when rotation or forwarding changed something, and at
 `-O3` always, as a repeat `eliminate_common` finds is threaded only by a third round. The last runs
@@ -427,6 +428,16 @@ between pointers would break. A read through a pointer, or
 an operation that can panic, is hoisted only from a block that dominates every exit, so it runs on
 the first turn, with nothing observable before it in the loop: a panic's message comes after the
 output that precedes it. In practice that means a rotated loop.
+Where neither proof holds, `-O3` checks at run time instead. The loop has to be rotated and innermost, with at
+most 200 statements, and its index has to step by 1 to the latch's `i < n`. It may store only into
+`*( b + i )`, with one base `b` for every store, and must have no call, drop or `release`. If a store
+may reach a read through a pointer, the preheader makes each read the loop could make there. That is
+a read the loop makes on its first turn before anything observable, or a field of a parameter passed
+by address, which is a live object for the whole call. The preheader then tests that `[ b + i, b + n )`
+holds none of the reads a store may reach. If it holds none, the loop runs on the preheader's values.
+Otherwise a copy of the loop as it was runs. Neither copy is versioned again, so a loop inlined into
+another function is not copied a third time. The test costs two compares per read and a second copy
+of the loop, and it is sound for any program, `unsafe` or not.
 Induction variables are integers and pointers; no closed forms. Only what is cheaper on every target
 is reduced: a multiply of the index by an invariant that is not a power of two becomes an add stepped
 beside the index, and the index itself goes when its only other reads are `i + c`, `i - c`, `p + i`

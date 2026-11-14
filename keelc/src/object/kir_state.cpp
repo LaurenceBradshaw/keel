@@ -15,10 +15,10 @@ static_assert( sizeof( Rvalue ) == 160, "Rvalue changed: update kir_state.cpp's 
 #endif
 static_assert( sizeof( Statement ) == 44, "Statement changed: update kir_state.cpp's walk" );
 static_assert( sizeof( Terminator ) == 156, "Terminator changed: update kir_state.cpp's walk" );
-static_assert( sizeof( Block ) == 164, "Block changed: update kir_state.cpp's walk" );
+static_assert( sizeof( Block ) == 168, "Block changed: update kir_state.cpp's walk" );
 static_assert( sizeof( Field_slot ) == 20, "Field_slot changed: update kir_state.cpp's walk" );
 #ifdef __GLIBCXX__ // holds std containers, whose sizes are libstdc++'s
-static_assert( sizeof( Function ) == 336, "Function changed: update kir_state.cpp's walk" );
+static_assert( sizeof( Function ) == 360, "Function changed: update kir_state.cpp's walk" );
 #endif
 
 namespace
@@ -188,6 +188,7 @@ void write_function( Byte_writer& out, Ref_writer& refs, const Function& functio
     put_types( out, refs, function.type_arguments );
     out.put_u32( function.parameter_count );
     put_locals( out, function.out_parameters );
+    put_locals( out, function.references );
     put_locals( out, function.one_path_temporaries );
     put_locals( out, function.walked );
     put_locals( out, function.chosen );
@@ -230,6 +231,7 @@ void write_function( Byte_writer& out, Ref_writer& refs, const Function& functio
         out.put_u32( block.first_statement );
         out.put_u32( block.statement_count );
         put_terminator( out, refs, block.terminator );
+        out.put_u8( u8( block.versioned ) );
     }
 
     out.put_u32( narrow_cast<u32>( function.statements.size() ) );
@@ -269,6 +271,7 @@ Function read_function( Byte_reader& in, Ref_reader& refs )
     function.type_arguments       = get_types( in, refs );
     function.parameter_count      = in.get_u32();
     function.out_parameters       = get_locals( in, refs );
+    function.references           = get_locals( in, refs );
     function.one_path_temporaries = get_locals( in, refs );
     function.walked               = get_locals( in, refs );
     function.chosen               = get_locals( in, refs );
@@ -320,6 +323,7 @@ Function read_function( Byte_reader& in, Ref_reader& refs )
             block.first_statement = in.get_u32();
             block.statement_count = in.get_u32();
             block.terminator      = get_terminator( in, refs );
+            block.versioned       = in.get_u8() != 0;
             return block;
         }
     ) );

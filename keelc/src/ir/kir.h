@@ -362,6 +362,7 @@ struct Block
     u32        first_statement = 0; // into Function::statements
     u32        statement_count = 0;
     Terminator terminator {};
+    bool       versioned = false; // the header of the loop version_loops kept as it was, never versioned again
 };
 
 constexpr u32 k_no_field = ~u32 { 0 };
@@ -395,6 +396,7 @@ struct Function
     // local holds a valid address, and it is the referent that is empty - so the analysis that
     // needs it cannot work it out from the graph.
     std::vector<Local_id> out_parameters;
+    std::vector<Local_id> references;                     // parameters passed by address: each a live object for the whole call
     std::vector<Local_id> one_path_temporaries;           // built on one path, so dropped under a flag
     std::vector<Local_id> walked;                         // D74: a walk's receiver, freezing what it walks
     std::vector<Local_id> chosen;                         // D75: assigned the address of whichever arm ran

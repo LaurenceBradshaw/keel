@@ -19,15 +19,6 @@ namespace
 {
 __extension__ typedef __int128 Wide;
 
-// A local whose one write in the loop is `local = local + step`, at `index` in `block`.
-struct Basic
-{
-    Local_id local;
-    Operand  step;
-    Block_id block;
-    u32      index;
-};
-
 // `local` is `from op other`, `other` invariant.
 struct Derived
 {
@@ -40,11 +31,11 @@ struct Derived
 // One loop, as the function now stands.
 struct Scope
 {
-    const Function&    func;
-    const Loop&        loop;
-    const Local_set&   addressed;
-    std::vector<u32>   writes; // by local: statements in the loop that write it or take its address
-    std::vector<Basic> basics;
+    const Function&        func;
+    const Loop&            loop;
+    const Local_set&       addressed;
+    std::vector<u32>       writes; // by local: statements in the loop that write it or take its address
+    std::vector<Induction> basics;
 
     Scope( const Function& f, const Loop& l, const Local_set& a )
         : func( f ),
@@ -87,11 +78,11 @@ struct Scope
                 }
                 if( is_local( value.a, local ) && invariant( value.b ) )
                 {
-                    basics.push_back( Basic { local, value.b, b, s } );
+                    basics.push_back( Induction { local, value.b, b, s } );
                 }
                 else if( is_local( value.b, local ) && invariant( value.a ) )
                 {
-                    basics.push_back( Basic { local, value.a, b, s } );
+                    basics.push_back( Induction { local, value.a, b, s } );
                 }
             }
         }
@@ -109,9 +100,9 @@ struct Scope
                  !is_addressed( addressed, operand.place.local ) );
     }
 
-    const Basic* basic( const Operand& operand ) const
+    const Induction* basic( const Operand& operand ) const
     {
-        for( const Basic& b : basics )
+        for( const Induction& b : basics )
         {
             if( is_local( operand, b.local ) )
             {
@@ -123,7 +114,7 @@ struct Scope
 
     bool is_basic( Local_id local ) const
     {
-        return std::ranges::any_of( basics, [&]( const Basic& b ) { return b.local == local; } );
+        return std::ranges::any_of( basics, [&]( const Induction& b ) { return b.local == local; } );
     }
 };
 
@@ -237,9 +228,9 @@ bool reduce_one(
                 continue;
             }
 
-            const Type_kind kind  = types.get( value.type ).kind;
-            const Basic*    basic = scope.basic( value.a );
-            Operand         other = value.b;
+            const Type_kind  kind  = types.get( value.type ).kind;
+            const Induction* basic = scope.basic( value.a );
+            Operand          other = value.b;
             if( !basic && value.op != Token_kind::Minus )
             {
                 basic = scope.basic( value.b );
@@ -290,7 +281,7 @@ bool reduce_one(
             const Token_kind op      = value.op;
             const Type_id    type    = value.type;
             const Span       span    = statement.span;
-            const Basic      i       = *basic;
+            const Induction  i       = *basic;
             Rvalue           initial = value;
             if( const std::optional<Operand> entry = entry_constant( func, scope.loop, i.local ) )
             {
@@ -403,7 +394,12 @@ struct Counted
 };
 
 std::optional<Counted> counted(
-    const Function& func, const Type_table& types, const Literal_pool& literals, const Scope& scope, const Basic& i, Block_id at
+    const Function&     func,
+    const Type_table&   types,
+    const Literal_pool& literals,
+    const Scope&        scope,
+    const Induction&    i,
+    Block_id            at
 )
 {
     if( !at.is_valid() || i.block != at || func.blocks[at].terminator.kind != Terminator_kind::Branch )
@@ -469,7 +465,7 @@ bool retire_one(
 )
 {
     const Block_id latch = scope.loop.latch;
-    for( const Basic& i : scope.basics )
+    for( const Induction& i : scope.basics )
     {
         const std::optional<Counted> count = i.local == only ? counted( func, types, literals, scope, i, latch ) : std::nullopt;
         if( !count )
@@ -544,6 +540,11 @@ bool retire_one(
 }
 } // namespace
 
+std::vector<Induction> inductions_of( const Function& func, const Loop& loop, const Local_set& addressed )
+{
+    return Scope( func, loop, addressed ).basics;
+}
+
 std::optional<Trip> trip_count(
     const Function& func, const Type_table& types, const Literal_pool& literals, const Loop& loop, const Local_set& addressed
 )
@@ -556,7 +557,7 @@ std::optional<Trip> trip_count(
         {
             continue;
         }
-        for( const Basic& i : scope.basics )
+        for( const Induction& i : scope.basics )
         {
             if( const std::optional<Counted> c = counted( func, types, literals, scope, i, at ) )
             {
@@ -587,7 +588,7 @@ bool reduce_inductions( Function& func, const Type_table& types, Literal_pool& l
 
         // A stepped `i + c` or `i << k` saves nothing unless `i` then goes, so it is undone when `i` stays.
         std::vector<Local_id> basics;
-        for( const Basic& i : Scope( func, loop, addressed ).basics )
+        for( const Induction& i : Scope( func, loop, addressed ).basics )
         {
             basics.push_back( i.local );
         }

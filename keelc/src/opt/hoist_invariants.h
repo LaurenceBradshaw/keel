@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #pragma once
+#include <optional>
+#include <vector>
 #include "ir/kir.h"
+#include "ir/loops.h"
 
 namespace keel
 {
@@ -12,4 +15,16 @@ namespace keel
 // statement stays, and what moves takes the loop test's span. Whether it changed the function,
 // normalising the loops included.
 bool hoist_invariants( Function& func, bool pin_named );
+
+// A read through a pointer whose place names no local the loop writes.
+struct Blocked_read
+{
+    Place   place;
+    Type_id type;
+    bool    early;   // somewhere it runs on the first turn with nothing a program sees before it
+    bool    reached; // a store in the loop may change it
+};
+// For an innermost loop that stores, and only through pointers, with no call, drop or release: each
+// read that stores alone may keep in it.
+std::optional<std::vector<Blocked_read>> blocked_reads( const Function& func, const Loops& found, u32 index );
 } // namespace keel

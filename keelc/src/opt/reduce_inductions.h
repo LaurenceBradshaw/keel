@@ -3,6 +3,7 @@
 
 #pragma once
 #include <optional>
+#include <vector>
 #include "common/literal_pool.h"
 #include "ir/initialised.h"
 #include "ir/kir.h"
@@ -19,6 +20,17 @@ namespace keel
 bool reduce_inductions( Function& func, const Type_table& types, Literal_pool& literals );
 
 struct Loop;
+
+// A local whose one write in the loop is `local = local + step`, `step` invariant, at `index` in `block`.
+struct Induction
+{
+    Local_id local;
+    Operand  step;
+    Block_id block;
+    u32      index;
+};
+std::vector<Induction> inductions_of( const Function& func, const Loop& loop, const Local_set& addressed );
+
 struct Trip
 {
     u64      turns;

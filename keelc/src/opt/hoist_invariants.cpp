@@ -258,7 +258,8 @@ struct Scope
         return writes[local.v] == 0 && !( is_addressed( addressed, local ) && ( everything || anywhere ) );
     }
 
-    bool invariant( const Place& place ) const
+    // Whether the loop writes no local `place` names, and, for a global, nothing a store may reach.
+    bool fixed( const Place& place ) const
     {
         if( place.is_global() ? everything || anywhere : !invariant( place.local ) )
         {
@@ -271,7 +272,12 @@ struct Scope
                 return false;
             }
         }
-        return !has_deref_projection( func, place ) || !reached( place );
+        return true;
+    }
+
+    bool invariant( const Place& place ) const
+    {
+        return fixed( place ) && ( !has_deref_projection( func, place ) || !reached( place ) );
     }
 
     bool invariant( const Operand& operand ) const
@@ -520,15 +526,9 @@ bool hoist_one( Function& func, const Scope& scope, bool pin_named )
     }
     return false;
 }
-} // namespace
 
-bool hoist_invariants( Function& func, bool pin_named )
+std::vector<u32> innermost_of( const Function& func, const Loops& found )
 {
-    // The round before merged the preheaders away.
-    bool            changed   = normalise_loops( func );
-    const Loops     found     = find_loops( func );
-    const Local_set addressed = addressed_locals_of( func );
-
     std::vector<u32> innermost( func.blocks.size(), k_no_loop );
     for( u32 l = 0; l < found.loops.size(); ++l )
     {
@@ -540,6 +540,67 @@ bool hoist_invariants( Function& func, bool pin_named )
             }
         }
     }
+    return innermost;
+}
+} // namespace
+
+std::optional<std::vector<Blocked_read>> blocked_reads( const Function& func, const Loops& found, u32 index )
+{
+    const Local_set addressed = addressed_locals_of( func );
+    const Scope     scope( func, found, index, innermost_of( func, found ), addressed );
+    if( scope.everything || scope.stores.empty() ||
+        std::ranges::any_of( scope.loop.blocks, [&]( Block_id b ) { return !scope.own[b.v]; } ) )
+    {
+        return std::nullopt;
+    }
+
+    std::vector<Blocked_read> reads;
+    const auto                add = [&]( const Operand& operand, Block_id b, u32 s )
+    {
+        if( operand.kind != Operand_kind::Copy || !has_deref_projection( func, operand.place ) ||
+            !scope.fixed( operand.place ) )
+        {
+            return;
+        }
+        const bool early = scope.runs_unobserved( b, s );
+        for( Blocked_read& read : reads )
+        {
+            if( same_place( func, read.place, operand.place ) )
+            {
+                read.early |= early;
+                return;
+            }
+        }
+        reads.push_back( Blocked_read {
+            .place = operand.place, .type = operand.type, .early = early, .reached = scope.reached( operand.place )
+        } );
+    };
+    for( const Block_id b : scope.loop.blocks )
+    {
+        const Run<const Statement> statements = func.statements_of( b );
+        for( u32 s = 0; s < statements.size(); ++s )
+        {
+            if( statements[s].kind == Statement_kind::Assign && func.rvalue( statements[s] ).kind != Rvalue_kind::Address_of )
+            {
+                for_each_operand( func.rvalue( statements[s] ), [&]( const Operand& operand ) { add( operand, b, s ); } );
+            }
+        }
+        const Terminator& terminator = func.blocks[b].terminator;
+        for( const Operand* operand : { &terminator.condition, &terminator.message, &terminator.at } )
+        {
+            add( *operand, b, statements.size() );
+        }
+    }
+    return reads;
+}
+
+bool hoist_invariants( Function& func, bool pin_named )
+{
+    // The round before merged the preheaders away.
+    bool                   changed   = normalise_loops( func );
+    const Loops            found     = find_loops( func );
+    const Local_set        addressed = addressed_locals_of( func );
+    const std::vector<u32> innermost = innermost_of( func, found );
 
     for( u32 l = 0; l < found.loops.size(); ++l )
     {
@@ -577,7 +638,10 @@ constexpr std::string_view k_types = "struct Pair { i32 a; i32 b; };\n"
 // Optimised and elaborated, as a release build emits it. The function under test is always the first.
 struct Hoisted : Compiled
 {
-    explicit Hoisted( std::string_view source, u32 level = 3, std::optional<Loop_weights> loops = Loop_weights {} )
+    // Without versioning, which copies a loop LICM leaves.
+    explicit Hoisted(
+        std::string_view source, u32 level = 3, std::optional<Loop_weights> loops = Loop_weights { .versioning = 0 }
+    )
         : Compiled(
               std::string( source ) + std::string( k_types ), Stage::Elaborated, Build { .level = level, .loops = loops }
           )

@@ -20,6 +20,7 @@ _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 int64_t kl__6fields__R3Buf_3i64( struct kl__Buf*, int64_t );
 int64_t kl__6copied__3Buf( struct kl__Buf* );
+void kl__5moved__R3Buf_3Buf( struct kl__Buf*, struct kl__Buf* );
 int32_t kl__4main__( void );
 
 #line 13 "opt/hoisted_past_stores/main.kl"
@@ -121,6 +122,155 @@ int64_t kl__6copied__3Buf( struct kl__Buf* kl_b_1 )
 #line 47 "opt/hoisted_past_stores/main.kl"
 }
 
+#line 50 "opt/hoisted_past_stores/main.kl"
+void kl__5moved__R3Buf_3Buf( struct kl__Buf* kl_ys_1, struct kl__Buf* kl_xs_2 )
+{
+    uint64_t kl_i_3;
+    bool kl_t4;
+    int64_t* kl_t5;
+    int64_t* kl_t6;
+    int64_t kl_t7;
+    int64_t* kl_t8;
+    int64_t* kl_t9;
+    uint64_t kl_t10;
+    int64_t* kl_t11;
+    uint64_t kl_t12;
+    int64_t* kl_t13;
+    uint64_t kl_t14;
+    bool kl_t15;
+    int64_t** kl_t16;
+    uint64_t kl_t17;
+    int64_t** kl_t18;
+    uint64_t kl_t19;
+    bool kl_t20;
+    bool kl_t21;
+    bool kl_t22;
+    bool kl_t23;
+    int64_t** kl_t24;
+    uint64_t kl_t25;
+    int64_t** kl_t26;
+    uint64_t kl_t27;
+    bool kl_t28;
+    bool kl_t29;
+    bool kl_t30;
+    bool kl_t31;
+    uint64_t* kl_t32;
+    uint64_t kl_t33;
+    uint64_t* kl_t34;
+    uint64_t kl_t35;
+    bool kl_t36;
+    bool kl_t37;
+    bool kl_t38;
+    bool kl_t39;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_i_3 = 0;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t4 = 0 < ( *kl_xs_2 ).kl_count;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    if ( kl_t4 ) goto bb3; else goto bb2;
+    bb1:
+#line 56 "opt/hoisted_past_stores/main.kl"
+    kl_t5 = kl_t8 + kl_i_3;
+#line 56 "opt/hoisted_past_stores/main.kl"
+    kl_t6 = kl_t9 + kl_i_3;
+#line 56 "opt/hoisted_past_stores/main.kl"
+    kl_t7 = ( *kl_t6 ) + 1;
+#line 56 "opt/hoisted_past_stores/main.kl"
+    ( *kl_t5 ) = kl_t7;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_i_3 = kl_i_3 + 1;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t4 = kl_i_3 < kl_t10;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb2:
+#line 59 "opt/hoisted_past_stores/main.kl"
+    return;
+    bb3:
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t8 = ( *kl_ys_1 ).kl_data;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t9 = ( *kl_xs_2 ).kl_data;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t10 = ( *kl_xs_2 ).kl_count;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t11 = kl_t8 + 0;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t12 = ( uint64_t ) kl_t11;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t13 = kl_t8 + kl_t10;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t14 = ( uint64_t ) kl_t13;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t15 = 0 < kl_t10;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t16 = &( *kl_ys_1 ).kl_data;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t17 = ( uint64_t ) kl_t16;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t18 = kl_t16 + 1;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t19 = ( uint64_t ) kl_t18;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t20 = kl_t19 <= kl_t12;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t21 = kl_t17 >= kl_t14;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t22 = kl_t20 | kl_t21;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t23 = kl_t15 & kl_t22;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t24 = &( *kl_xs_2 ).kl_data;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t25 = ( uint64_t ) kl_t24;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t26 = kl_t24 + 1;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t27 = ( uint64_t ) kl_t26;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t28 = kl_t27 <= kl_t12;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t29 = kl_t25 >= kl_t14;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t30 = kl_t28 | kl_t29;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t31 = kl_t23 & kl_t30;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t32 = &( *kl_xs_2 ).kl_count;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t33 = ( uint64_t ) kl_t32;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t34 = kl_t32 + 1;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t35 = ( uint64_t ) kl_t34;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t36 = kl_t35 <= kl_t12;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t37 = kl_t33 >= kl_t14;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t38 = kl_t36 | kl_t37;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t39 = kl_t31 & kl_t38;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    if ( kl_t39 ) goto bb1; else goto bb4;
+    bb4:
+#line 56 "opt/hoisted_past_stores/main.kl"
+    kl_t5 = ( *kl_ys_1 ).kl_data + kl_i_3;
+#line 56 "opt/hoisted_past_stores/main.kl"
+    kl_t6 = ( *kl_xs_2 ).kl_data + kl_i_3;
+#line 56 "opt/hoisted_past_stores/main.kl"
+    kl_t7 = ( *kl_t6 ) + 1;
+#line 56 "opt/hoisted_past_stores/main.kl"
+    ( *kl_t5 ) = kl_t7;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_i_3 = kl_i_3 + 1;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    kl_t4 = kl_i_3 < ( *kl_xs_2 ).kl_count;
+#line 52 "opt/hoisted_past_stores/main.kl"
+    if ( kl_t4 ) goto bb4; else goto bb2;
+#line 59 "opt/hoisted_past_stores/main.kl"
+}
+
 #line 61 "opt/hoisted_past_stores/main.kl"
 int32_t kl__4main__( void )
 {
@@ -135,14 +285,11 @@ int32_t kl__4main__( void )
     struct kl__Buf* kl_t8;
     int64_t kl_t9;
     bool kl_t10;
-    int64_t kl_last_11;
-    int64_t* kl_t12;
-    bool kl_t14;
-    uint64_t kl_i_15;
-    bool kl_t16;
-    int64_t* kl_t17;
-    int64_t* kl_t18;
-    int64_t kl_t19;
+    struct kl__Buf* kl_t11;
+    struct kl__Buf* kl_t12;
+    int64_t kl_last_14;
+    int64_t* kl_t15;
+    bool kl_t17;
 #line 63 "opt/hoisted_past_stores/main.kl"
     kl_b_1.kl_data = NULL;
 #line 63 "opt/hoisted_past_stores/main.kl"
@@ -185,54 +332,36 @@ int32_t kl__4main__( void )
 #line 77 "opt/hoisted_past_stores/main.kl"
     kl_t10 = kl_t9 != 24;
 #line 77 "opt/hoisted_past_stores/main.kl"
-    if ( kl_t10 ) goto bb4; else goto bb7;
+    if ( kl_t10 ) goto bb4; else goto bb5;
     bb4:
     kl_t0 = 2;
 #line 79 "opt/hoisted_past_stores/main.kl"
     return kl_t0;
     bb5:
-#line 91 "opt/hoisted_past_stores/main.kl"
+#line 82 "opt/hoisted_past_stores/main.kl"
+    kl_t11 = &kl_b_1;
+#line 82 "opt/hoisted_past_stores/main.kl"
+    kl_t12 = &kl_b_1;
+#line 82 "opt/hoisted_past_stores/main.kl"
+    kl__5moved__R3Buf_3Buf( kl_t11, kl_t12 );
+#line 86 "opt/hoisted_past_stores/main.kl"
+    kl_t15 = kl_b_1.kl_data + 2;
+#line 86 "opt/hoisted_past_stores/main.kl"
+    kl_last_14 = ( *kl_t15 );
+    kl_rt_free( kl_b_1.kl_data );
+#line 89 "opt/hoisted_past_stores/main.kl"
+    kl_t17 = kl_last_14 != 8;
+#line 89 "opt/hoisted_past_stores/main.kl"
+    if ( kl_t17 ) goto bb6; else goto bb7;
+    bb6:
     kl_t0 = 3;
 #line 91 "opt/hoisted_past_stores/main.kl"
     return kl_t0;
-    bb6:
+    bb7:
 #line 94 "opt/hoisted_past_stores/main.kl"
     kl_t0 = 0;
 #line 94 "opt/hoisted_past_stores/main.kl"
     return kl_t0;
-    bb7:
-#line 52 "opt/hoisted_past_stores/main.kl"
-    kl_i_15 = 0;
-#line 52 "opt/hoisted_past_stores/main.kl"
-    kl_t16 = 0 < kl_b_1.kl_count;
-#line 52 "opt/hoisted_past_stores/main.kl"
-    if ( kl_t16 ) goto bb8; else goto bb9;
-    bb8:
-#line 56 "opt/hoisted_past_stores/main.kl"
-    kl_t17 = kl_b_1.kl_data + kl_i_15;
-#line 56 "opt/hoisted_past_stores/main.kl"
-    kl_t18 = kl_b_1.kl_data + kl_i_15;
-#line 56 "opt/hoisted_past_stores/main.kl"
-    kl_t19 = ( *kl_t18 ) + 1;
-#line 56 "opt/hoisted_past_stores/main.kl"
-    ( *kl_t17 ) = kl_t19;
-#line 52 "opt/hoisted_past_stores/main.kl"
-    kl_i_15 = kl_i_15 + 1;
-#line 52 "opt/hoisted_past_stores/main.kl"
-    kl_t16 = kl_i_15 < kl_b_1.kl_count;
-#line 52 "opt/hoisted_past_stores/main.kl"
-    if ( kl_t16 ) goto bb8; else goto bb9;
-    bb9:
-#line 86 "opt/hoisted_past_stores/main.kl"
-    kl_t12 = kl_b_1.kl_data + 2;
-#line 86 "opt/hoisted_past_stores/main.kl"
-    kl_last_11 = ( *kl_t12 );
-    kl_rt_free( kl_b_1.kl_data );
-#line 89 "opt/hoisted_past_stores/main.kl"
-    kl_t14 = kl_last_11 != 8;
-#line 89 "opt/hoisted_past_stores/main.kl"
-    if ( kl_t14 ) goto bb5; else goto bb6;
-#line 95 "opt/hoisted_past_stores/main.kl"
 }
 
 int main( void )

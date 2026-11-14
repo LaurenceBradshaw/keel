@@ -1,0 +1,76 @@
+// M16's -O3: a loop that stores through one pointer stepped by its index, and reads headers no proof
+// keeps apart from those stores, is copied. The preheader reads each header once and checks that the
+// stored range holds none of them: if so the copy reading those values runs, otherwise the loop as
+// written. Each check returns its own code.
+
+struct Buf
+{
+    i64[*] data;
+    u64    count;
+    i64    last;
+};
+
+void moved( ref Buf ys, const ref Buf xs )
+{
+    for( u64 i = 0; i < xs.count; i += 1 )
+    {
+        unsafe
+        {
+            ys.data[ i ] = xs.data[ i ] + 1;
+        }
+    }
+}
+
+i32 main()
+{
+    // Apart: the check passes, and three turns run.
+    Buf xs = Buf { nullptr, 3, 0 };
+    Buf ys = Buf { nullptr, 3, 0 };
+    unsafe
+    {
+        xs.data = alloc<i64>( 3 );
+        ys.data = alloc<i64>( 3 );
+        xs.data[ 0 ] = 5;
+        xs.data[ 1 ] = 6;
+        xs.data[ 2 ] = 7;
+    }
+    moved( ref ys, xs );
+    i64 apart = 0;
+    unsafe
+    {
+        apart = ys.data[ 0 ] + ys.data[ 1 ] + ys.data[ 2 ];
+        free( xs.data );
+        free( ys.data );
+    }
+    if( apart != 21 )
+    {
+        return 1;
+    }
+
+    // Aliased: the header lies in the buffer it describes, at `m`, and `data` is `m + 1`, so the first
+    // store raises `count` from 3 to 4 and the second `last`; four turns run, not three.
+    i64[*] m;
+    unsafe
+    {
+        m = alloc<i64>( 6 );
+        Buf* h = cast<Buf*>( m );
+        m[ 3 ] = 30;
+        m[ 4 ] = 40;
+        h.data  = m + 1;
+        h.count = 3;
+        h.last  = 5;
+        moved( ref *h, *h );
+    }
+    i64 aliased = 0;
+    unsafe
+    {
+        aliased = m[ 1 ] * 1000 + m[ 2 ] * 100 + m[ 3 ] + m[ 4 ];
+        free( m );
+    }
+    if( aliased != 4672 )
+    {
+        return 2;
+    }
+
+    return 0;
+}

@@ -1,0 +1,233 @@
+// opt/versioned_loops.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Buf;
+
+struct kl__Buf
+{
+    int64_t* kl_data;
+    uint64_t kl_count;
+    int64_t kl_last;
+};
+_Static_assert( sizeof( struct kl__Buf ) == 24 && _Alignof( struct kl__Buf ) == 8 && offsetof( struct kl__Buf, kl_data ) == 0 && offsetof( struct kl__Buf, kl_count ) == 8 && offsetof( struct kl__Buf, kl_last ) == 16, "layout" );
+
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
+void  kl_rt_free( void* );
+void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+
+void kl__5moved__R3Buf_3Buf( struct kl__Buf*, struct kl__Buf* );
+int32_t kl__4main__( void );
+
+#line 13 "opt/versioned_loops.kl"
+void kl__5moved__R3Buf_3Buf( struct kl__Buf* kl_ys_1, struct kl__Buf* kl_xs_2 )
+{
+    uint64_t kl_i_3;
+    bool kl_t4;
+    int64_t* kl_t5;
+    int64_t* kl_t6;
+    int64_t kl_t7;
+#line 15 "opt/versioned_loops.kl"
+    kl_i_3 = 0;
+#line 15 "opt/versioned_loops.kl"
+    kl_t4 = 0 < ( *kl_xs_2 ).kl_count;
+#line 15 "opt/versioned_loops.kl"
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+#line 19 "opt/versioned_loops.kl"
+    kl_t5 = ( *kl_ys_1 ).kl_data + kl_i_3;
+#line 19 "opt/versioned_loops.kl"
+    kl_t6 = ( *kl_xs_2 ).kl_data + kl_i_3;
+#line 19 "opt/versioned_loops.kl"
+    kl_t7 = ( *kl_t6 ) + 1;
+#line 19 "opt/versioned_loops.kl"
+    ( *kl_t5 ) = kl_t7;
+#line 15 "opt/versioned_loops.kl"
+    kl_i_3 = kl_i_3 + 1;
+#line 15 "opt/versioned_loops.kl"
+    kl_t4 = kl_i_3 < ( *kl_xs_2 ).kl_count;
+#line 15 "opt/versioned_loops.kl"
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb2:
+#line 22 "opt/versioned_loops.kl"
+    return;
+#line 22 "opt/versioned_loops.kl"
+}
+
+#line 24 "opt/versioned_loops.kl"
+int32_t kl__4main__( void )
+{
+    int32_t kl_t0;
+    int64_t* kl_t1;
+    int64_t* kl_t2;
+    int64_t* kl_t3;
+    int64_t kl_apart_4;
+    int64_t* kl_t5;
+    int64_t* kl_t6;
+    int64_t kl_t7;
+    int64_t* kl_t8;
+    bool kl_t11;
+    int64_t* kl_m_12;
+    int64_t* kl_t13;
+    int64_t* kl_t14;
+    int64_t* kl_t15;
+    struct kl__Buf* kl_xs_16;
+    int64_t kl_aliased_17;
+    int64_t* kl_t18;
+    int64_t kl_t19;
+    int64_t* kl_t20;
+    int64_t kl_t21;
+    int64_t kl_t22;
+    int64_t* kl_t23;
+    int64_t kl_t24;
+    int64_t* kl_t25;
+    bool kl_t27;
+    uint64_t kl_i_28;
+    bool kl_t29;
+    int64_t* kl_t30;
+    int64_t* kl_t31;
+    int64_t kl_t32;
+    uint64_t kl_i_33;
+    bool kl_t34;
+    int64_t* kl_t35;
+    int64_t* kl_t36;
+    int64_t kl_t37;
+    int64_t* kl_xs_38;
+    int64_t* kl_ys_39;
+#line 31 "opt/versioned_loops.kl"
+    kl_xs_38 = ( int64_t* ) kl_rt_alloc_many( ( size_t ) 3, 8, "opt/versioned_loops.kl", 31, "out of memory: alloc<i64>( 3 )" );
+    kl_ys_39 = ( int64_t* ) kl_rt_alloc_many( ( size_t ) 3, 8, "opt/versioned_loops.kl", 32, "out of memory: alloc<i64>( 3 )" );
+    kl_t1 = kl_xs_38 + 0;
+#line 33 "opt/versioned_loops.kl"
+    ( *kl_t1 ) = 5;
+    kl_t2 = kl_xs_38 + 1;
+#line 34 "opt/versioned_loops.kl"
+    ( *kl_t2 ) = 6;
+    kl_t3 = kl_xs_38 + 2;
+#line 35 "opt/versioned_loops.kl"
+    ( *kl_t3 ) = 7;
+#line 15 "opt/versioned_loops.kl"
+    kl_i_33 = 0;
+#line 15 "opt/versioned_loops.kl"
+    goto bb7;
+    bb1:
+#line 47 "opt/versioned_loops.kl"
+    kl_t0 = 1;
+#line 47 "opt/versioned_loops.kl"
+    return kl_t0;
+    bb2:
+#line 55 "opt/versioned_loops.kl"
+    kl_m_12 = ( int64_t* ) kl_rt_alloc_many( ( size_t ) 6, 8, "opt/versioned_loops.kl", 55, "out of memory: alloc<i64>( 6 )" );
+    kl_xs_16 = ( struct kl__Buf* ) kl_m_12;
+    kl_t13 = kl_m_12 + 3;
+#line 57 "opt/versioned_loops.kl"
+    ( *kl_t13 ) = 30;
+    kl_t14 = kl_m_12 + 4;
+#line 58 "opt/versioned_loops.kl"
+    ( *kl_t14 ) = 40;
+    kl_t15 = kl_m_12 + 1;
+#line 59 "opt/versioned_loops.kl"
+    ( *kl_xs_16 ).kl_data = kl_t15;
+    ( *kl_xs_16 ).kl_count = 3;
+    ( *kl_xs_16 ).kl_last = 5;
+#line 15 "opt/versioned_loops.kl"
+    kl_i_28 = 0;
+#line 15 "opt/versioned_loops.kl"
+    kl_t29 = 0 < ( *kl_xs_16 ).kl_count;
+#line 15 "opt/versioned_loops.kl"
+    if ( kl_t29 ) goto bb5; else goto bb6;
+    bb3:
+#line 72 "opt/versioned_loops.kl"
+    kl_t0 = 2;
+#line 72 "opt/versioned_loops.kl"
+    return kl_t0;
+    bb4:
+#line 75 "opt/versioned_loops.kl"
+    kl_t0 = 0;
+#line 75 "opt/versioned_loops.kl"
+    return kl_t0;
+    bb5:
+#line 19 "opt/versioned_loops.kl"
+    kl_t30 = ( *kl_xs_16 ).kl_data + kl_i_28;
+#line 19 "opt/versioned_loops.kl"
+    kl_t31 = ( *kl_xs_16 ).kl_data + kl_i_28;
+#line 19 "opt/versioned_loops.kl"
+    kl_t32 = ( *kl_t31 ) + 1;
+#line 19 "opt/versioned_loops.kl"
+    ( *kl_t30 ) = kl_t32;
+#line 15 "opt/versioned_loops.kl"
+    kl_i_28 = kl_i_28 + 1;
+#line 15 "opt/versioned_loops.kl"
+    kl_t29 = kl_i_28 < ( *kl_xs_16 ).kl_count;
+#line 15 "opt/versioned_loops.kl"
+    if ( kl_t29 ) goto bb5; else goto bb6;
+    bb6:
+#line 67 "opt/versioned_loops.kl"
+    kl_t18 = kl_m_12 + 1;
+#line 67 "opt/versioned_loops.kl"
+    kl_t19 = ( *kl_t18 ) * 1000;
+#line 67 "opt/versioned_loops.kl"
+    kl_t20 = kl_m_12 + 2;
+#line 67 "opt/versioned_loops.kl"
+    kl_t21 = ( *kl_t20 ) * 100;
+#line 67 "opt/versioned_loops.kl"
+    kl_t22 = kl_t19 + kl_t21;
+#line 67 "opt/versioned_loops.kl"
+    kl_t23 = kl_m_12 + 3;
+#line 67 "opt/versioned_loops.kl"
+    kl_t24 = kl_t22 + ( *kl_t23 );
+#line 67 "opt/versioned_loops.kl"
+    kl_t25 = kl_m_12 + 4;
+#line 67 "opt/versioned_loops.kl"
+    kl_aliased_17 = kl_t24 + ( *kl_t25 );
+    kl_rt_free( kl_m_12 );
+#line 70 "opt/versioned_loops.kl"
+    kl_t27 = kl_aliased_17 != 4672;
+#line 70 "opt/versioned_loops.kl"
+    if ( kl_t27 ) goto bb3; else goto bb4;
+    bb7:
+#line 19 "opt/versioned_loops.kl"
+    kl_t35 = kl_ys_39 + kl_i_33;
+#line 19 "opt/versioned_loops.kl"
+    kl_t36 = kl_xs_38 + kl_i_33;
+#line 19 "opt/versioned_loops.kl"
+    kl_t37 = ( *kl_t36 ) + 1;
+#line 19 "opt/versioned_loops.kl"
+    ( *kl_t35 ) = kl_t37;
+#line 15 "opt/versioned_loops.kl"
+    kl_i_33 = kl_i_33 + 1;
+#line 15 "opt/versioned_loops.kl"
+    kl_t34 = kl_i_33 < 3;
+#line 15 "opt/versioned_loops.kl"
+    if ( kl_t34 ) goto bb7; else goto bb8;
+    bb8:
+#line 41 "opt/versioned_loops.kl"
+    kl_t5 = kl_ys_39 + 0;
+#line 41 "opt/versioned_loops.kl"
+    kl_t6 = kl_ys_39 + 1;
+#line 41 "opt/versioned_loops.kl"
+    kl_t7 = ( *kl_t5 ) + ( *kl_t6 );
+#line 41 "opt/versioned_loops.kl"
+    kl_t8 = kl_ys_39 + 2;
+#line 41 "opt/versioned_loops.kl"
+    kl_apart_4 = kl_t7 + ( *kl_t8 );
+    kl_rt_free( kl_xs_38 );
+    kl_rt_free( kl_ys_39 );
+#line 45 "opt/versioned_loops.kl"
+    kl_t11 = kl_apart_4 != 21;
+#line 45 "opt/versioned_loops.kl"
+    if ( kl_t11 ) goto bb1; else goto bb2;
+#line 76 "opt/versioned_loops.kl"
+}
+
+int main( void )
+{
+    int32_t kl_t0;
+#line 24 "opt/versioned_loops.kl"
+    kl_t0 = kl__4main__(  );
+#line 24 "opt/versioned_loops.kl"
+    return kl_t0;
+#line 24 "opt/versioned_loops.kl"
+}
+

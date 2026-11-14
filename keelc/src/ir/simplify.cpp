@@ -435,6 +435,7 @@ void remove_unused_locals( Function& func, bool pin_named )
         }
     };
     renumber_all( func.out_parameters );
+    renumber_all( func.references );
     renumber_all( func.one_path_temporaries );
     renumber_all( func.walked );
     renumber_all( func.chosen );

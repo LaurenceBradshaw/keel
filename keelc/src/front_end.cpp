@@ -36,6 +36,7 @@
 #include "opt/split_aggregates.h"
 #include "opt/thread_jumps.h"
 #include "opt/unroll_loops.h"
+#include "opt/version_loops.h"
 
 namespace keel
 {
@@ -449,11 +450,17 @@ Front_end run_front_end(
                     {
                         verified( function, "hoist_invariants" );
                     }
-                    // After hoisting, so `i * n` has an invariant `n`.
-                    bool moved = build.level >= 2 && reduce_inductions( function, front.types.table(), literals );
+                    // After hoisting, so only what no proof could take is checked at run time.
+                    bool moved = build.level >= 3 && version_loops( function, front.types.table(), literals, *build.loops );
                     if( moved )
                     {
+                        verified( function, "version_loops" );
+                    }
+                    // After hoisting, so `i * n` has an invariant `n`.
+                    if( build.level >= 2 && reduce_inductions( function, front.types.table(), literals ) )
+                    {
                         verified( function, "reduce_inductions" );
+                        moved = true;
                     }
                     // Last, so the round after folds each copy's index.
                     if( build.level >= 2 &&

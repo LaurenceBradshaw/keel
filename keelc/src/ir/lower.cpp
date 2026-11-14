@@ -487,6 +487,7 @@ Lowering::Lowering(
             if( is_borrowed_binding( ast_, types_, param ) )
             {
                 borrowed_bindings_.insert( param.v );
+                builder_.mark_reference( local );
             }
 
             if( ast_.parameter_mode( param ) == Keyword::Out )
@@ -3418,6 +3419,7 @@ void Lowering::lambda_parameters()
         if( address )
         {
             borrowed_bindings_.insert( params[i].v );
+            builder_.mark_reference( local );
         }
         if( mode == Param_mode::Out )
         {

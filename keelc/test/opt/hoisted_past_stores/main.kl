@@ -46,7 +46,7 @@ i64 copied( const ref Buf b )
     return total;
 }
 
-// `ys.data` may point anywhere, `xs` and `ys` included, so both headers are read each turn.
+// `ys.data` may point anywhere, `xs` and `ys` included: no proof holds, so a run-time check decides.
 void moved( ref Buf ys, const ref Buf xs )
 {
     for( u64 i = 0; i < xs.count; i += 1 )
