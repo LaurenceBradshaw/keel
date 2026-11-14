@@ -1,0 +1,11 @@
+warning: `*` is not needed: `.` reaches through `p` [-Wneedless-deref]
+  --> sema/needless_deref.kl:17:5
+   |
+17 |     ( *p ).x = 4;     // warning
+   |     ^^^^^^^^ write `p.x`
+
+warning: `*` is not needed: `.` reaches through `p` [-Wneedless-deref]
+  --> sema/needless_deref.kl:18:9
+   |
+18 |     _ = ( *p ).get(); // warning
+   |         ^^^^^^^^^^ write `p.get`

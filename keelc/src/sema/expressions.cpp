@@ -1051,7 +1051,8 @@ Type_id Expressions::infer_method_call( Node_id id )
     const Node_id object      = ast_.object( callee );
     const Type_id expectation = take_call_expectation();
 
-    const Type_id result      = infer( object );
+    const Type_id result = infer( object );
+    warn_needless_deref( callee );
     const Type_id object_type = table_.is_pointer( result )             ? table_.get( result ).element
                                 : refuses_many_member( callee, result ) ? table_.builtin( Type_kind::Error )
                                                                         : result;
@@ -3495,6 +3496,7 @@ Type_id Expressions::infer_field( Node_id id )
 {
     const Node_id base      = ast_.object( id );
     const Type_id base_type = infer( base );
+    warn_needless_deref( id );
 
     if( table_.is_error( base_type ) )
     {
@@ -5259,6 +5261,26 @@ void Expressions::warn_read_move( Node_id value, std::string_view where )
             ast_.span( value ),
             fmt::format( "`move` is not needed {}", where ),
             "it only reads the value; drop `move`"
+        );
+    }
+}
+
+// Parentheses leave no node, so a Field_expr over a `*` was written `( *p ).x`.
+void Expressions::warn_needless_deref( Node_id member )
+{
+    const Node_id object = ast_.object( member );
+
+    if( ast_.kind( object ) == Node_kind::Unary_expr && ast_.op( object ) == Token_kind::Star &&
+        table_.is_pointer( types_.type_of( ast_.operand( object ) ) ) )
+    {
+        const std::string pointer = std::string( reporter_.text( ast_.span( ast_.operand( object ) ) ) );
+        const std::string name    = std::string( interner_.text( ast_.name( member ) ) );
+
+        reporter_.warn_at(
+            Warning::Needless_deref,
+            ast_.span( member ),
+            fmt::format( "`*` is not needed: `.` reaches through `{}`", pointer ),
+            fmt::format( "write `{}.{}`", pointer, name )
         );
     }
 }

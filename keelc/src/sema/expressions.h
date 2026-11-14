@@ -90,6 +90,8 @@ public:
     void check_condition( Node_id id );
     // `move` on a value that is only read, as `where` reads it.
     void warn_read_move( Node_id value, std::string_view where );
+    // `( *p ).x` where `.` already reaches through `p`.
+    void warn_needless_deref( Node_id member );
 
     // D74: `yield( ... )`, checked as a call whose parameters are the enclosing walk's.
     void check_yield( Node_id id );

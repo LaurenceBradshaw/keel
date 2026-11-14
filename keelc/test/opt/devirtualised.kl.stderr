@@ -1,0 +1,5 @@
+warning: `*` is not needed: `.` reaches through `p` [-Wneedless-deref]
+  --> opt/devirtualised.kl:42:12
+   |
+42 |     return ( *p ).area();
+   |            ^^^^^^^^^^^ write `p.area`

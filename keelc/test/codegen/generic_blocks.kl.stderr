@@ -1,0 +1,5 @@
+warning: `*` is not needed: `.` reaches through `this` [-Wneedless-deref]
+  --> codegen/generic_blocks.kl:31:31
+   |
+31 |     i32 code() const { return ( *this ).code() + 1000; }
+   |                               ^^^^^^^^^^^^^^ write `this.code`

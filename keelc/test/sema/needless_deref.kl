@@ -1,0 +1,22 @@
+// `( *p ).x` where `.` already reaches through `p`. A line ending `// warning` warns exactly once,
+// and every other line warns not at all.
+struct Point
+{
+    i64 x;
+
+    i64 get() const
+    {
+        return x;
+    }
+};
+
+i32 main()
+{
+    Point  q = Point { 3 };
+    Point* p = &q;
+    ( *p ).x = 4;     // warning
+    _ = ( *p ).get(); // warning
+    p.x = 5;
+    _ = p.get();
+    return 0;
+}

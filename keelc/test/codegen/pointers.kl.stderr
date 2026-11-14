@@ -1,0 +1,29 @@
+warning: `*` is not needed: `.` reaches through `p` [-Wneedless-deref]
+  --> codegen/pointers.kl:38:5
+   |
+38 |     (*p).x = 3.0;
+   |     ^^^^^^ write `p.x`
+
+warning: `*` is not needed: `.` reaches through `p` [-Wneedless-deref]
+  --> codegen/pointers.kl:42:5
+   |
+42 |     (*p).x = (*p).x + 1.0;
+   |     ^^^^^^ write `p.x`
+
+warning: `*` is not needed: `.` reaches through `p` [-Wneedless-deref]
+  --> codegen/pointers.kl:42:14
+   |
+42 |     (*p).x = (*p).x + 1.0;
+   |              ^^^^^^ write `p.x`
+
+warning: `*` is not needed: `.` reaches through `d` [-Wneedless-deref]
+  --> codegen/pointers.kl:48:5
+   |
+48 |     (*d).n += 5;
+   |     ^^^^^^ write `d.n`
+
+warning: `*` is not needed: `.` reaches through `d` [-Wneedless-deref]
+  --> codegen/pointers.kl:51:5
+   |
+51 |     (*d).n++;
+   |     ^^^^^^ write `d.n`

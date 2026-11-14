@@ -1,0 +1,17 @@
+warning: `*` is not needed: `.` reaches through `p` [-Wneedless-deref]
+  --> kir/places.kl:40:12
+   |
+40 |     return (*p).value;
+   |            ^^^^^^^^^^ write `p.value`
+
+warning: `*` is not needed: `.` reaches through `p` [-Wneedless-deref]
+  --> kir/places.kl:47:5
+   |
+47 |     (*p).value = 2;
+   |     ^^^^^^^^^^ write `p.value`
+
+warning: `*` is not needed: `.` reaches through `p` [-Wneedless-deref]
+  --> kir/places.kl:48:5
+   |
+48 |     (*p).next = p;
+   |     ^^^^^^^^^ write `p.next`

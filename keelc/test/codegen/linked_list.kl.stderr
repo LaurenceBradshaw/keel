@@ -1,0 +1,95 @@
+warning: `*` is not needed: `.` reaches through `step` [-Wneedless-deref]
+  --> codegen/linked_list.kl:23:16
+   |
+23 |         step = (*step).next;
+   |                ^^^^^^^^^^^^ write `step.next`
+
+warning: `*` is not needed: `.` reaches through `step` [-Wneedless-deref]
+  --> codegen/linked_list.kl:36:18
+   |
+36 |         total += (*step).value;
+   |                  ^^^^^^^^^^^^^ write `step.value`
+
+warning: `*` is not needed: `.` reaches through `step` [-Wneedless-deref]
+  --> codegen/linked_list.kl:37:16
+   |
+37 |         step = (*step).next;
+   |                ^^^^^^^^^^^^ write `step.next`
+
+warning: `*` is not needed: `.` reaches through `head` [-Wneedless-deref]
+  --> codegen/linked_list.kl:47:18
+   |
+47 |     i32   best = (*head).value;
+   |                  ^^^^^^^^^^^^^ write `head.value`
+
+warning: `*` is not needed: `.` reaches through `head` [-Wneedless-deref]
+  --> codegen/linked_list.kl:48:18
+   |
+48 |     Node* step = (*head).next;
+   |                  ^^^^^^^^^^^^ write `head.next`
+
+warning: `*` is not needed: `.` reaches through `step` [-Wneedless-deref]
+  --> codegen/linked_list.kl:52:14
+   |
+52 |         if ( (*step).value > best )
+   |              ^^^^^^^^^^^^^ write `step.value`
+
+warning: `*` is not needed: `.` reaches through `step` [-Wneedless-deref]
+  --> codegen/linked_list.kl:54:20
+   |
+54 |             best = (*step).value;
+   |                    ^^^^^^^^^^^^^ write `step.value`
+
+warning: `*` is not needed: `.` reaches through `step` [-Wneedless-deref]
+  --> codegen/linked_list.kl:57:16
+   |
+57 |         step = (*step).next;
+   |                ^^^^^^^^^^^^ write `step.next`
+
+warning: `*` is not needed: `.` reaches through `step` [-Wneedless-deref]
+  --> codegen/linked_list.kl:73:20
+   |
+73 |             return (*step).value;
+   |                    ^^^^^^^^^^^^^ write `step.value`
+
+warning: `*` is not needed: `.` reaches through `step` [-Wneedless-deref]
+  --> codegen/linked_list.kl:77:16
+   |
+77 |         step = (*step).next;
+   |                ^^^^^^^^^^^^ write `step.next`
+
+warning: `*` is not needed: `.` reaches through `step` [-Wneedless-deref]
+  --> codegen/linked_list.kl:94:13
+   |
+94 |     while ( (*step).next != nullptr )
+   |             ^^^^^^^^^^^^ write `step.next`
+
+warning: `*` is not needed: `.` reaches through `step` [-Wneedless-deref]
+  --> codegen/linked_list.kl:96:16
+   |
+96 |         step = (*step).next;
+   |                ^^^^^^^^^^^^ write `step.next`
+
+warning: `*` is not needed: `.` reaches through `current` [-Wneedless-deref]
+   --> codegen/linked_list.kl:111:27
+    |
+111 |         Node* following = (*current).next;
+    |                           ^^^^^^^^^^^^^^^ write `current.next`
+
+warning: `*` is not needed: `.` reaches through `current` [-Wneedless-deref]
+   --> codegen/linked_list.kl:113:9
+    |
+113 |         (*current).next = earlier;
+    |         ^^^^^^^^^^^^^^^ write `current.next`
+
+warning: `*` is not needed: `.` reaches through `tail( head )` [-Wneedless-deref]
+   --> codegen/linked_list.kl:158:10
+    |
+158 |     if ( (*tail( head )).value != 5 ) { return 16; }
+    |          ^^^^^^^^^^^^^^^^^^^^^ write `tail( head ).value`
+
+warning: `*` is not needed: `.` reaches through `tail( head )` [-Wneedless-deref]
+   --> codegen/linked_list.kl:159:10
+    |
+159 |     if ( (*tail( head )).next != nullptr ) { return 17; }
+    |          ^^^^^^^^^^^^^^^^^^^^ write `tail( head ).next`

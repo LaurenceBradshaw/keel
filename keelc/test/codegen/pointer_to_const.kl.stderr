@@ -1,0 +1,5 @@
+warning: `*` is not needed: `.` reaches through `p` [-Wneedless-deref]
+  --> codegen/pointer_to_const.kl:48:18
+   |
+48 |     return p.x + ( *p ).y;
+   |                  ^^^^^^^^ write `p.y`
