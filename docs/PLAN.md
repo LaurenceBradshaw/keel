@@ -1235,6 +1235,8 @@ same one, so a program's output does not depend on which backend built it.
 - **No float contraction.** Every operation is its own statement (rule 1), and `-std=c11` keeps
   GCC from fusing across them, so `a * b + c` rounds twice. Another backend emits no `fma` that
   was not written, except inside an `@real_arithmetic` function, whose operations may fuse (D86).
+  LLVM marks them `contract` and, beside it, `reassoc`, so a float sum there may change its order;
+  nowhere else does a float operation carry either.
 - **`never` and panics.** A function that never returns is `_Noreturn`. After a call to one
   through a pointer comes `kl_rt_unreachable`, since C cannot see that the call never returns. In LLVM these
   are `noreturn` and `unreachable`.

@@ -638,9 +638,11 @@ void Llvm_emitter::define( const Function& function, llvm::Function* defined )
     }
 
     builder_.SetInsertPoint( entry_ );
-    // Contraction is D86's permission alone: elsewhere a * b + c rounds twice (§7.1).
+    // Contraction and reassociation are D86's permission alone: elsewhere a * b + c rounds twice and
+    // a sum keeps its order (§7.1).
     llvm::FastMathFlags flags;
     flags.setAllowContract( function.real_arithmetic );
+    flags.setAllowReassoc( function.real_arithmetic );
     builder_.setFastMathFlags( flags );
     describe( function, defined );
     locals_.assign( function.locals.size(), nullptr );
@@ -2591,9 +2593,10 @@ TEST_CASE( "emit_llvm_contracts_only_in_a_real_arithmetic_function", "[codegen][
     const u64 fused = out.ir.find( "@kl__5fused" );
     const u64 exact = out.ir.find( "@kl__5exact" );
     REQUIRE( fused < exact );
-    REQUIRE( out.ir.find( "fmul contract double" ) < exact );
-    REQUIRE( out.ir.find( "fadd contract double" ) < exact );
+    REQUIRE( out.ir.find( "fmul reassoc contract double" ) < exact );
+    REQUIRE( out.ir.find( "fadd reassoc contract double" ) < exact );
     REQUIRE( out.ir.find( "contract", exact ) == std::string::npos );
+    REQUIRE( out.ir.find( "reassoc", exact ) == std::string::npos );
 }
 
 TEST_CASE( "emit_llvm_promotes_a_scalar_local_unless_debug_at_O1_names_it", "[codegen][llvm]" )
