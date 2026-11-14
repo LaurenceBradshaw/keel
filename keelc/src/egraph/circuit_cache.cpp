@@ -20,7 +20,7 @@ std::string key( const Field& field, const std::vector<Row>& rows, const Solve_o
     std::string out = "keelc " + std::string( build_id() ) + '\n';
     out += "options " + std::to_string( options.fuel ) + ' ' + std::to_string( options.graph_fuel ) + ' ' +
            std::to_string( options.restart_fuel ) + ' ' + std::to_string( options.restarts ) + ' ' +
-           std::to_string( options.direct_max ) + '\n';
+           std::to_string( options.direct_max ) + ' ' + std::to_string( options.fma ) + '\n';
     out += "ring " + std::to_string( static_cast<u32>( field.kind() ) ) + ' ' + std::to_string( field.n() ) + ' ' +
            std::to_string( field.width() ) + '\n';
     for( const Row& row : rows )

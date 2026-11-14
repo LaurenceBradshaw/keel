@@ -59,7 +59,8 @@ public:
     // The live nodes, with a(bx) folded to (ab)x where bx has no other user.
     Circuit pruned() const;
 
-    Cost cost() const;
+    // With `fma`, a float multiply fused into the add after it is free, as LLVM fuses at -march with FMA.
+    Cost cost( bool fma = false ) const;
 
     // Every node's value for the given inputs.
     std::vector<std::complex<f64>> evaluate( const std::vector<std::complex<f64>>& inputs ) const;

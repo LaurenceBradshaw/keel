@@ -278,10 +278,48 @@ Circuit Circuit::pruned() const
     return folded ? c.pruned() : c;
 }
 
-Cost Circuit::cost() const
+Cost Circuit::cost( bool fma ) const
 {
     const std::vector<bool> lv = live();
-    Cost                    total;
+    fma                        = fma && integers_ == nullptr;
+    std::vector<u32> users( fma ? ops_.size() : 0 );
+    if( fma )
+    {
+        for( const auto& [row, o] : outputs )
+        {
+            ++users[o];
+        }
+        for( u32 o = 0; o < ops_.size(); ++o )
+        {
+            if( lv[o] && ops_[o].kind != Op_kind::Input )
+            {
+                ++users[ops_[o].a];
+                users[ops_[o].b] += ops_[o].kind == Op_kind::Add;
+            }
+        }
+    }
+
+    // A constant's lowering ends in its multiplies when a part is 0 or |Re| = |Im| (k(+-1 +-i)), and
+    // otherwise ends in adds that each take one of them.
+    const auto ends_in_muls = [&]( const Constant& c )
+    {
+        const f64 x = std::abs( c.value.real() );
+        const f64 y = std::abs( c.value.imag() );
+        return real_ || x < 1e-9 || y < 1e-9 || ( std::abs( x - y ) < 1e-9 && std::abs( x - 1 ) >= 1e-9 );
+    };
+    // The add after a multiply takes it when that is its only user, through a unit (a sign or swap).
+    const auto feeds = [&]( u32 n )
+    {
+        if( ops_[n].kind == Op_kind::Scale && users[n] == 1 && is_unit( constants_[ops_[n].b] ) )
+        {
+            n = ops_[n].a;
+        }
+        return ops_[n].kind == Op_kind::Scale && users[n] == 1 && !is_unit( constants_[ops_[n].b] ) &&
+               ends_in_muls( constants_[ops_[n].b] );
+    };
+
+    Cost total;
+    u32  fused = 0;
     for( u32 o = 0; o < ops_.size(); ++o )
     {
         if( !lv[o] || ops_[o].kind == Op_kind::Input )
@@ -291,6 +329,10 @@ Cost Circuit::cost() const
         if( ops_[o].kind == Op_kind::Add )
         {
             total.adds += real_ ? 1 : 2;
+            if( fma && ( feeds( ops_[o].a ) || feeds( ops_[o].b ) ) )
+            {
+                fused += real_ ? 1 : 2;
+            }
             continue;
         }
 
@@ -320,7 +362,12 @@ Cost Circuit::cost() const
             total.adds += 2;
             total.muls += 4;
         }
+        if( fma && !ends_in_muls( c ) )
+        {
+            fused += 2;
+        }
     }
+    total.muls -= fused;
     return total;
 }
 
@@ -613,6 +660,31 @@ TEST_CASE( "circuit_costs_by_the_constant", "[egraph][circuit]" )
     Circuit real( true );
     real.outputs.emplace( k_row0, real.scale( real.input( 0 ), 3.0 ) );
     CHECK( real.cost() == Cost { 0, 1 } );
+}
+
+TEST_CASE( "circuit_costs_a_fused_multiply_as_free", "[egraph][circuit]" )
+{
+    // 3x + 5y + x: the add takes one of its two products; z = 3x feeding two adds keeps its own.
+    Circuit   c( true );
+    const u32 x = c.input( 0 );
+    const u32 s = c.add( c.scale( x, 3.0 ), c.scale( c.input( 1 ), 5.0 ) );
+    c.outputs.emplace( k_row0, c.add( s, x ) );
+    CHECK( c.cost() == Cost { 2, 2 } );
+    CHECK( c.cost( true ) == Cost { 2, 1 } );
+
+    Circuit   d( true );
+    const u32 z = d.scale( d.input( 0 ), 3.0 );
+    d.outputs.emplace( k_row0, d.add( z, d.input( 1 ) ) );
+    d.outputs.emplace( k_row1, d.add( z, d.input( 2 ) ) );
+    CHECK( d.cost( true ) == Cost { 2, 1 } );
+
+    // Complex: a general constant's adds take two of its four; 2i's two are taken by the add after.
+    Circuit   e( false );
+    const u32 g = e.scale( e.input( 0 ), std::complex<f64> { 2, 3 } );
+    e.outputs.emplace( k_row0, g );
+    e.outputs.emplace( k_row1, e.add( e.scale( e.input( 1 ), std::complex<f64> { 0, 2 } ), e.input( 2 ) ) );
+    CHECK( e.cost() == Cost { 4, 6 } );
+    CHECK( e.cost( true ) == Cost { 4, 2 } );
 }
 
 TEST_CASE( "circuit_prunes_dead_nodes_and_folds_products", "[egraph][circuit]" )

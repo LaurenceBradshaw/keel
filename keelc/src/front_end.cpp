@@ -395,8 +395,15 @@ Front_end run_front_end(
                 {
                     if( build.level >= 3 && function.real_arithmetic )
                     {
-                        const Map_outcome outcome =
-                            solve_linear_maps( function, front.functions, purity, front.types.table(), literals, build.cache );
+                        const Map_outcome outcome = solve_linear_maps(
+                            function,
+                            front.functions,
+                            purity,
+                            front.types.table(),
+                            literals,
+                            build.cache,
+                            { .fma = target_has_fma() }
+                        );
                         if( clock != nullptr && !outcome.ending )
                         {
                             clock->note( fmt::format(

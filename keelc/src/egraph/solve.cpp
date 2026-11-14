@@ -299,7 +299,7 @@ Element Solver::rational( Fraction q ) const
 Result Solver::finish( const Circuit& c ) const
 {
     Circuit p    = c.pruned();
-    Cost    cost = p.cost();
+    Cost    cost = p.cost( options_.fma );
     return { cost, std::make_shared<const Circuit>( std::move( p ) ) };
 }
 
@@ -1889,7 +1889,7 @@ Solution Solver::run( const std::vector<Row>& given )
             out.circuit.outputs[given[i]] = times( out.circuit, node, of[i]->second );
         }
     }
-    out.cost   = out.circuit.cost();
+    out.cost   = out.circuit.cost( options_.fma );
     out.spent  = spent();
     out.memo   = static_cast<u32>( memo_.size() );
     out.reused = reused_;
@@ -2089,6 +2089,18 @@ TEST_CASE( "solve_gives_every_recorded_cost", "[.][specs]" )
         names.push_back( name );
     }
     check_specs( names );
+}
+
+TEST_CASE( "solve_with_fma_finds_fewer_fused_ops", "[egraph][solve]" )
+{
+    // circ3 is 13 ops once LLVM fuses the plain solve's circuit; counting fusion finds one of 9.
+    Spec           a     = read_spec( "circ3" );
+    Spec           b     = read_spec( "circ3" );
+    const Solution plain = solve( *a.field, a.rows );
+    const Solution fused = solve( *b.field, b.rows, { .fma = true } );
+    CHECK( plain.circuit.cost( true ) == Cost { 10, 3 } );
+    CHECK( fused.cost == Cost { 6, 3 } );
+    CHECK( computes( fused.circuit, *b.field, b.rows ) );
 }
 
 TEST_CASE( "solve_gives_one_circuit", "[egraph][solve]" )

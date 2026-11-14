@@ -2485,6 +2485,19 @@ std::string target_cpu()
     return g_features.empty() ? g_cpu : g_cpu + " " + g_features;
 }
 
+bool target_has_fma()
+{
+    LLVMInitializeX86TargetInfo();
+    LLVMInitializeX86Target();
+    LLVMInitializeX86TargetMC();
+    std::string         error;
+    const llvm::Target* target = llvm::TargetRegistry::lookupTarget( "x86_64-unknown-linux-gnu", error );
+    const std::unique_ptr<llvm::MCSubtargetInfo> info(
+        target == nullptr ? nullptr : target->createMCSubtargetInfo( "x86_64-unknown-linux-gnu", g_cpu, g_features )
+    );
+    return info != nullptr && info->checkFeatures( "+fma" );
+}
+
 std::string set_target_cpu( const std::string& cpu )
 {
     if( cpu != "native" )
@@ -2666,6 +2679,14 @@ std::string vectorised( std::string_view source )
     llvm::raw_string_ostream printed( text );
     module->print( printed, nullptr );
     return text;
+}
+
+TEST_CASE( "target_has_fma_from_x86_64_v3", "[codegen][llvm]" )
+{
+    REQUIRE( set_target_cpu( "x86-64-v3" ).empty() );
+    CHECK( target_has_fma() );
+    REQUIRE( set_target_cpu( "x86-64-v2" ).empty() );
+    CHECK( !target_has_fma() );
 }
 
 TEST_CASE( "vectorise_widens_a_loop_over_elements", "[codegen][llvm]" )
