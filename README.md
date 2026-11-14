@@ -6,6 +6,10 @@ Keel compiles through LLVM to native code and links it in-process with lld, so b
 needs no C compiler. A C11 backend stays beside it. The source extension is `.kl`, the compiler is
 `keelc`, and the build tool is `keelb`. It runs on x86-64 Linux and x86-64 Windows.
 
+At `-O3`, a function marked `@real_arithmetic` that computes a linear map with constant
+coefficients, such as a DFT, DCT or Walsh–Hadamard transform written as its definition, is solved
+with an e-graph for the cheapest circuit it can find, and the circuit is cached for later builds.
+
 ```cpp
 // A class owns what it allocates, and its destructor is the one place it is freed.
 class Buffer
@@ -176,7 +180,12 @@ processes, time, command-line parsing, and a unit test runner. `keelb` is writte
 - **Programs:** modules, packages and module-private declarations, string literals that become any
   type implementing `from<str>`, counting `for` loops and `for` over a container, named warnings,
   `extern` functions checked against what C can read, and linking the program's own C.
-- **Tools:** native executables through LLVM and lld, optimised in KIR in a release build; `keelb`,
+- **Optimiser:** levels `-O0` to `-O3` in KIR, `-O2` by default and `-O1` under `--debug`, which
+  keeps every named local for the debugger. At `-O3`, the linear-map solve and its circuit cache
+  (`--cache`): a solved 64-point DFT runs 18x faster than the same loop reading a twiddle table, and
+  an 8-point DCT 56x faster than the loop as written. On ordinary numerical code (n-body, RK4,
+  Kepler's equation, Mandelbrot, a 4x4 transform), Keel's `-O3` runs level with gcc's or ahead.
+- **Tools:** native executables through LLVM and lld; `keelb`,
   which builds a project and its packages from cached objects and runs its tests; doc comments with
   generated pages; a VS Code extension; and debug information in Keel's names, for gdb on Linux and
   the Visual Studio debugger on Windows.
@@ -217,9 +226,36 @@ i32 main()
 }
 ```
 
-**Not yet built:** optimisation levels, `-O0` to `-O3`, which are next; a printing interface, so a
-generic body can print a `T`; and targets other than x86-64. `docs/PLAN.md` §12 has the open
-questions and §15 the open work.
+```cpp
+import kl::math;
+
+// A DFT written as its definition. At -O3 each N's body becomes a straight-line circuit of adds and
+// multiplies by constants, the cheapest an e-graph finds for that map: no sin or cos is left.
+@real_arithmetic
+void dft<u64 N>( const ref f64[N] re, const ref f64[N] im, ref f64[N] yr, ref f64[N] yi )
+{
+    for( u64 k : 0..N )
+    {
+        f64 sr = 0.0;
+        f64 si = 0.0;
+        for( u64 j : 0..N )
+        {
+            const f64 t = -2.0 * kl::pi * cast<f64>( j * k % N ) / cast<f64>( N );
+            sr += re[j] * kl::cos( t ) - im[j] * kl::sin( t );
+            si += re[j] * kl::sin( t ) + im[j] * kl::cos( t );
+        }
+        yr[k] = sr;
+        yi[k] = si;
+    }
+}
+```
+
+`@real_arithmetic` lets keelc treat the function's floats as real numbers, so results differ from
+the loop's by rounding. The solve reads only linear maps, and it does not yet bound rounding error;
+`docs/PLAN.md` D86 has the rules and §15 the limits.
+
+**Not yet built:** a printing interface, so a generic body can print a `T`; and targets other than
+x86-64. `docs/PLAN.md` §12 has the open questions and §15 the open work.
 
 ---
 
@@ -408,7 +444,8 @@ links to `keel_stl/src`; `--package kl=<dir>` names another.
 | `--dump-tokens` / `--dump-ast` / `--dump-kir` | Print that stage and stop |
 | `--backend c` | Generate C and build it with `$CC`, in place of LLVM (the default) |
 | `--emit-c` / `--emit-llvm` | Print the generated C or LLVM IR and stop |
-| `--debug` | Run each `assert`, check overflow as `--overflow-checks` does, and skip Keel's optimisations, so a debugger steps through the program as written; without it an assert's condition is checked but never run |
+| `-O0` … `-O3` | Optimisation level: `-O0` is the program as lowered, `-O2` the default, `-O3` adds loop work and the linear-map solve |
+| `--debug` | Run each `assert`, check overflow as `--overflow-checks` does, and optimise at `-O1`, which keeps every named local, so a debugger steps through the program as written; without it an assert's condition is checked but never run |
 | `--overflow-checks` | Panic when an integer `+`, `-`, `*` or unary `-` overflows; `wrap<T>( … )` around arithmetic wraps it on purpose |
 | `-q` / `--quiet` | Print only diagnostics. Without it, a check or build ends with one line on stderr: errors, warnings, files and seconds |
 | `--verbose` | Also print each phase as it ends, with its time |
@@ -480,7 +517,8 @@ keelc/src/parse      recursive descent, Pratt for expressions, the module loader
 keelc/src/ast        flat vectors, u32 handles, a span on every node
 keelc/src/sema       name resolution, bidirectional type checking, overloads, generics
 keelc/src/ir         lowering to KIR and simplification
-keelc/src/opt        KIR optimisation passes, release builds only
+keelc/src/opt        KIR optimisation passes, by level
+keelc/src/egraph     the linear-map solve: recognition, the e-graph, extraction, the circuit cache
 keelc/src/check      move checking and definite assignment over the KIR CFG
 keelc/src/codegen    what both backends share: layout, mangling, descriptions
 keelc/src/codegen_llvm  KIR to LLVM IR, and linking with lld
