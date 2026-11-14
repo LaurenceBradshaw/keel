@@ -411,7 +411,9 @@ Front_end run_front_end(
                             // Callers inline the circuit; it has no owning locals, so no drops to elaborate.
                             saved[f] = function;
                         }
-                        else if( outcome.ending && std::ranges::find( warned_maps, function.declaration ) == warned_maps.end() )
+                        // Without parameters there are no inputs, so no map to miss: a mark for the folds alone.
+                        else if( outcome.ending && function.parameter_count > 0 &&
+                                 std::ranges::find( warned_maps, function.declaration ) == warned_maps.end() )
                         {
                             warned_maps.push_back( function.declaration );
                             const Span at =

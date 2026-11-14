@@ -48,8 +48,10 @@ kl::path find_keelc()
 }
 
 // Builds the program, or under `testing` builds and runs the tests, and answers the exit code.
-// `level` is empty, or the `-O<n>` the link is given.
-result<i32, kl::string> run( bool testing, const ref kl::path cache_dir, bool debug, const ref kl::string level, bool verbose )
+// `link_flags` are the `-O<n>` and `-march=` the link is given.
+result<i32, kl::string> run(
+    bool testing, const ref kl::path cache_dir, bool debug, const ref kl::list<kl::string> link_flags, bool verbose
+)
 {
     kl::path current_dir;
     switch( move kl::current_directory() )
@@ -90,7 +92,7 @@ result<i32, kl::string> run( bool testing, const ref kl::path cache_dir, bool de
     }
 
     Builder builder = Builder( move keelc, move project, move kl_folder, move cache, debug, testing, verbose );
-    switch( builder.link( main_file, output, level ) )
+    switch( builder.link( main_file, output, link_flags ) )
     {
         case result::ok():
             break;
@@ -120,12 +122,13 @@ i32 main( const ref str[] args )
     kl::flag verbose_flag = cl.add_flag( "verbose", "print the commands that are run" );
     kl::option cache_option = cl.add_option( "cache", "dir", "where to store the build cache" );
     kl::option level_option = cl.add_option( 'O', "", "n", "optimisation level, 0 to 3: 2, or 1 under --debug" );
+    kl::option machine_option = cl.add_option( 'm', "", "arch=cpu", "the CPU to build for: x86-64 by default, or native" );
 
     Command mode = Command::Error( "no command given" );
     kl::path cache_dir = kl::path::from( "build" );
     bool debug = false;
     bool verbose = false;
-    kl::string level = kl::string();
+    kl::list<kl::string> link_flags = kl::list<kl::string>();
 
     switch( cl.parse( args ) )
     {
@@ -169,11 +172,16 @@ i32 main( const ref str[] args )
                 {
                     mode = Command::Error( "there is no -O" + n + "; the levels are -O0 to -O3" );
                 }
-                else if( debug && ( n == "2" || n == "3" ) )
+                link_flags.push( "-O" + n );
+            }
+            if( parsed.has( machine_option ) )
+            {
+                const ref kl::string m = parsed.value( machine_option );
+                if( !m.starts_with( "arch=" ) )
                 {
-                    mode = Command::Error( "--debug takes -O0 or -O1, not -O" + n );
+                    mode = Command::Error( "there is no -m" + m + "; the CPU is given as -march=<cpu>" );
                 }
-                level = "-O" + n;
+                link_flags.push( "-m" + m );
             }
             break;
         case result::err( error ):
@@ -196,7 +204,7 @@ i32 main( const ref str[] args )
             return 2;
     }
 
-    switch( run( testing, cache_dir, debug, level, verbose ) )
+    switch( run( testing, cache_dir, debug, link_flags, verbose ) )
     {
         case result::ok( code ):
             return code;

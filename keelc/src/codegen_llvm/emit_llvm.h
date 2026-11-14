@@ -50,6 +50,9 @@ Llvm_output emit_llvm(
     const Llvm_options&          options
 );
 
+// The CPU every later object is built for, as -march names it (`x86-64-v3`, `native`); the error, or empty.
+std::string set_target_cpu( const std::string& cpu );
+
 // Options for LLVM's code generator, as llc takes them (`-disable-lsr`); the error, or empty.
 std::string set_llvm_options( const std::vector<std::string>& options );
 

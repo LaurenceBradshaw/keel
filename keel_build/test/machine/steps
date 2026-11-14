@@ -1,0 +1,5 @@
+# `-march=<cpu>` reaches only the link, as `-O<n>` does; any other `-m` is refused.
+keelb build -mtune=native; echo "exit $?"
+keelb build --verbose -march=x86-64-v3 > log 2>&1; echo "exit $?"
+grep -c -- ' -march=x86-64-v3' log
+grep -- ' -march=x86-64-v3' log | grep -c -- ' -c '

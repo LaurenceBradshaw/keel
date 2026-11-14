@@ -92,6 +92,7 @@ int main( int argc, char** argv )
         ( "W",               "Warnings: -W<name>, -Wno-<name>, -Werror, -Werror=<name>", cxxopts::value<std::vector<std::string>>() )
         ( "debug",           "Keep assert and overflow checks; without it an assert's condition is checked but never run" )
         ( "O",               "Optimisation level, -O0 to -O3: -O0 is the program as lowered; -O2 by default, -O1 under --debug", cxxopts::value<keel::u32>() )
+        ( "m",               "-march=<cpu>: the CPU the LLVM backend builds for, x86-64 by default; native is this machine's", cxxopts::value<std::string>() )
         ( "overflow-checks", "Panic when +, -, * or unary - overflows; on under --debug" )
         ( "cache",           "Keep -O3's solved circuits here (default: the user's cache folder, keel/)", cxxopts::value<std::string>() )
         ( "keep-unreached",  "Without --debug, keep the functions main never reaches" )
@@ -501,10 +502,19 @@ int main( int argc, char** argv )
         fmt::print( stderr, "keelc: there is no -O{}; the levels are -O0 to -O3\n", level );
         return 2;
     }
-    if( debug && level > 1 )
+    if( args.count( "m" ) )
     {
-        fmt::print( stderr, "keelc: --debug takes -O0 or -O1, not -O{}\n", level );
-        return 2;
+        const std::string machine = args["m"].as<std::string>();
+        if( !machine.starts_with( "arch=" ) )
+        {
+            fmt::print( stderr, "keelc: there is no -m{}; the CPU is given as -march=<cpu>\n", machine );
+            return 2;
+        }
+        if( const std::string error = keel::set_target_cpu( machine.substr( 5 ) ); !error.empty() )
+        {
+            fmt::print( stderr, "keelc: {}\n", error );
+            return 2;
+        }
     }
 
     // Read and judged before anything is parsed, so a refused object costs nothing.

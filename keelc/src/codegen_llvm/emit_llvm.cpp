@@ -12,6 +12,7 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/ValueHandle.h>
 #include <llvm/IR/Verifier.h>
+#include <llvm/MC/MCSubtargetInfo.h>
 #include <llvm/MC/TargetRegistry.h>
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/FileSystem.h>
@@ -19,6 +20,7 @@
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Target/TargetMachine.h>
 #include <llvm/Target/TargetOptions.h>
+#include <llvm/TargetParser/Host.h>
 #include <algorithm>
 #include <array>
 #include <memory>
@@ -636,6 +638,10 @@ void Llvm_emitter::define( const Function& function, llvm::Function* defined )
     }
 
     builder_.SetInsertPoint( entry_ );
+    // Contraction is D86's permission alone: elsewhere a * b + c rounds twice (§7.1).
+    llvm::FastMathFlags flags;
+    flags.setAllowContract( function.real_arithmetic );
+    builder_.setFastMathFlags( flags );
     describe( function, defined );
     locals_.assign( function.locals.size(), nullptr );
 
@@ -2374,6 +2380,10 @@ llvm::Constant* Llvm_emitter::vtable( Type_id implementer, Type_id interface )
     return table_global;
 }
 
+// Set by -march; baseline x86-64 unless asked, so a binary runs on any x86-64.
+std::string g_cpu      = "x86-64";
+std::string g_features = "";
+
 // x86-64, COFF or ELF by the module's triple, at the machine passes of its level, and none of LLVM's IR passes (§2.2):
 // Keel optimises its own IR. None at -O0 and at a debug -O1, so each line keeps its code and every store.
 std::string write_object( llvm::Module& module, const std::filesystem::path& object, bool debug, u32 level )
@@ -2393,8 +2403,8 @@ std::string write_object( llvm::Module& module, const std::filesystem::path& obj
 
     const std::unique_ptr<llvm::TargetMachine> machine( target->createTargetMachine(
         triple,
-        "x86-64",
-        "",
+        g_cpu,
+        g_features,
         llvm::TargetOptions {},
         llvm::Reloc::PIC_,
         std::nullopt,
@@ -2426,6 +2436,39 @@ std::string write_object( llvm::Module& module, const std::filesystem::path& obj
 }
 
 } // namespace
+
+std::string set_target_cpu( const std::string& cpu )
+{
+    if( cpu != "native" )
+    {
+        LLVMInitializeX86TargetInfo();
+        LLVMInitializeX86Target();
+        LLVMInitializeX86TargetMC();
+        std::string         error;
+        const llvm::Target* target = llvm::TargetRegistry::lookupTarget( "x86_64-unknown-linux-gnu", error );
+        const std::unique_ptr<llvm::MCSubtargetInfo> info(
+            target == nullptr ? nullptr : target->createMCSubtargetInfo( "x86_64-unknown-linux-gnu", "", "" )
+        );
+        if( info == nullptr || !info->isCPUStringValid( cpu ) )
+        {
+            return fmt::format( "there is no -march={}; try x86-64, x86-64-v2, x86-64-v3, x86-64-v4 or native", cpu );
+        }
+        g_cpu = cpu;
+        return {};
+    }
+    // The host's name and the features it has, as clang's -march=native: a CPU's name alone may promise
+    // features a virtual machine has turned off.
+    g_cpu = llvm::sys::getHostCPUName().str();
+    llvm::StringMap<bool> features;
+    llvm::sys::getHostCPUFeatures( features );
+    g_features.clear();
+    for( const auto& feature : features )
+    {
+        g_features +=
+            fmt::format( "{}{}{}", g_features.empty() ? "" : ",", feature.getValue() ? '+' : '-', feature.getKey().str() );
+    }
+    return {};
+}
 
 std::string set_llvm_options( const std::vector<std::string>& options )
 {
@@ -2521,6 +2564,30 @@ TEST_CASE( "emit_llvm_writes_a_function_the_verifier_accepts", "[codegen][llvm]"
     REQUIRE( out.ir.find( "define i32 @kl__5twice__3i32(i32 %0)" ) != std::string::npos );
     REQUIRE( out.ir.find( "mul i32" ) != std::string::npos );
     REQUIRE( out.ir.find( " nsw " ) == std::string::npos );
+}
+
+TEST_CASE( "emit_llvm_contracts_only_in_a_real_arithmetic_function", "[codegen][llvm]" )
+{
+    Compiled p(
+        "@real_arithmetic\nf64 fused( f64 a, f64 b, f64 c ) { return a * b + c; }\n"
+        "f64 exact( f64 a, f64 b, f64 c ) { return a * b + c; }\n"
+        "i32 main() { return fused( 1.0, 2.0, 3.0 ) == exact( 1.0, 2.0, 3.0 ) ? 0 : 1; }\n",
+        Stage::Elaborated
+    );
+    REQUIRE( p.clean() );
+
+    const Description program = describe( p.ast, p.types, p.interner );
+    const Llvm_output out =
+        emit_llvm( p.functions, program, p.types, p.literals, p.sm, p.interner, p.modules, { .print = true } );
+
+    INFO( out.ir );
+    REQUIRE( out.error.empty() );
+    const u64 fused = out.ir.find( "@kl__5fused" );
+    const u64 exact = out.ir.find( "@kl__5exact" );
+    REQUIRE( fused < exact );
+    REQUIRE( out.ir.find( "fmul contract double" ) < exact );
+    REQUIRE( out.ir.find( "fadd contract double" ) < exact );
+    REQUIRE( out.ir.find( "contract", exact ) == std::string::npos );
 }
 
 TEST_CASE( "emit_llvm_promotes_a_scalar_local_unless_debug_at_O1_names_it", "[codegen][llvm]" )

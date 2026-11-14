@@ -1,0 +1,13 @@
+// A `@real_arithmetic` function without parameters has no inputs, so it offers no linear map and
+// does not warn: marked only for its folds.
+
+@real_arithmetic
+i32 main()
+{
+    f64 sum = 0.0;
+    for( u64 i = 0; i < 4; i += 1 )
+    {
+        sum = sum + cast<f64>( i ) * 0.0 + 1.0;
+    }
+    return sum == 4.0 ? 0 : 1;
+}

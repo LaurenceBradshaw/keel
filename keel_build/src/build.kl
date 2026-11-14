@@ -35,9 +35,8 @@ class Builder
         build_order_ = kl::list<kl::string>();
     }
 
-    // Builds `main`'s imports, then links `main` with every object into `output`, at `level` unless
-    // it is empty.
-    public result<void, i32> link( const ref kl::path main, const ref kl::path output, const ref kl::string level )
+    // Builds `main`'s imports, then links `main` with every object into `output`, passing `flags` to the link.
+    public result<void, i32> link( const ref kl::path main, const ref kl::path output, const ref kl::list<kl::string> flags )
     {
         kl::list<kl::string> imports = try imports_of( main, kl::string() );
         for( u64 i : 0..imports.size() )
@@ -57,9 +56,9 @@ class Builder
         }
         args.push( "-o" );
         args.push( kl::string( output ) );
-        if( level.size() > 0 )
+        for( u64 i : 0..flags.size() )
         {
-            args.push( kl::string( level ) );
+            args.push( kl::string( flags.as_run()[i] ) );
         }
 
         return call_keelc( move args );

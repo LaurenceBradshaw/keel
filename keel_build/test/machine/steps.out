@@ -1,0 +1,13 @@
+keelb: there is no -mtune=native; the CPU is given as -march=<cpu>
+usage: keelb <build|test> [options]
+
+options:
+      --debug        build with debug information
+      --verbose      print the commands that are run
+      --cache <dir>  where to store the build cache
+  -O<n>              optimisation level, 0 to 3: 2, or 1 under --debug
+  -m<arch=cpu>       the CPU to build for: x86-64 by default, or native
+exit 2
+exit 0
+1
+0
