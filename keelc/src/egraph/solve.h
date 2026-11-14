@@ -12,7 +12,7 @@ namespace keel
 // Work is counted in steps, not seconds, so every machine builds the same circuit.
 struct Solve_options
 {
-    u64  fuel         = 1'000'000'000; // the whole run, 0 unlimited
+    u64  fuel         = 1'000'000'000; // each of the two passes, 0 unlimited
     u64  graph_fuel   = 10'000'000;    // per direct search's graph
     u64  restart_fuel = 3'000'000;     // per direct search's extraction restart
     u32  restarts     = 16;

@@ -181,8 +181,8 @@ private:
     Maybe direct( const std::vector<Row>& rows );
 
     std::vector<std::vector<u32>> components( const std::vector<Row>& rows ) const;
-    std::vector<Blocks>           partitions( const std::vector<Row>& rows ) const;
-    Factored                      factor( const std::vector<Row>& rows, const Blocks& part ) const;
+    std::vector<Blocks>           partitions( const std::vector<Row>& rows );
+    Factored                      factor( const std::vector<Row>& rows, const Blocks& part );
     Maybe                         via_components( const std::vector<Row>& rows, const std::vector<std::vector<u32>>& groups );
     Maybe                         via_blocks( const std::vector<Row>& rows, const Blocks& part, const Factored& f );
     Maybe                         via_diagonal( const std::vector<Row>& rows, const Row& d );
@@ -403,15 +403,56 @@ std::vector<std::vector<u32>> Solver::components( const std::vector<Row>& rows )
     return groups;
 }
 
-// The inputs grouped by the ratio of two full rows, each grouping once.
-std::vector<Solver::Blocks> Solver::partitions( const std::vector<Row>& rows ) const
+// The inputs grouped by the ratio of two full rows, each grouping once. Ratios apart numerically
+// differ exactly, so only a new numeric grouping is confirmed, by cross-multiplying: inverses are dear.
+std::vector<Solver::Blocks> Solver::partitions( const std::vector<Row>& rows )
 {
     const size_t        n = rows[0].size();
     std::vector<Blocks> found;
-    std::set<Blocks>    seen;
+    std::set<Blocks>    seen, tried;
     const auto          full = [&]( const Row& r )
     { return std::ranges::all_of( r, [&]( Element e ) { return F_->invertible( e ); } ); };
-    for( size_t a = 0; a < rows.size(); ++a )
+    std::vector<std::vector<std::complex<f64>>> v( rows.size() );
+    for( size_t i = 0; i < rows.size(); ++i )
+    {
+        for( const Element e : rows[i] )
+        {
+            v[i].push_back( F_->value( e ) );
+        }
+    }
+    own_ += rows.size() * n;
+    std::vector<std::complex<f64>> q( n );
+    std::vector<u32>               by( n );
+    const auto                     group = [&]( const std::function<bool( u32, u32 )>& same )
+    {
+        Blocks           part;
+        std::vector<u32> rep; // each block's first input, in sorted order
+        for( const u32 j : by )
+        {
+            size_t in = part.size();
+            for( size_t k = rep.size(); k-- > 0 && q[j].real() - q[rep[k]].real() <= 1e-9 * ( 1 + std::abs( q[j] ) ); )
+            {
+                if( std::abs( q[rep[k]] - q[j] ) <= 1e-9 * ( 1 + std::abs( q[j] ) ) && same( rep[k], j ) )
+                {
+                    in = k;
+                    break;
+                }
+            }
+            if( in == part.size() )
+            {
+                part.emplace_back();
+                rep.push_back( j );
+            }
+            part[in].push_back( j );
+        }
+        for( std::vector<u32>& blk : part )
+        {
+            std::ranges::sort( blk );
+        }
+        std::ranges::sort( part );
+        return part;
+    };
+    for( size_t a = 0; a < rows.size() && left() > 0; ++a )
     {
         if( !full( rows[a] ) )
         {
@@ -423,18 +464,20 @@ std::vector<Solver::Blocks> Solver::partitions( const std::vector<Row>& rows ) c
             {
                 continue;
             }
-            Blocks                    part;
-            std::map<Element, size_t> at;
             for( u32 j = 0; j < n; ++j )
             {
-                const auto [it, added] = at.try_emplace( F_->div( rows[b][j], rows[a][j] ), part.size() );
-                if( added )
-                {
-                    part.emplace_back();
-                }
-                part[it->second].push_back( j );
+                q[j]  = v[b][j] / v[a][j];
+                by[j] = j;
             }
-            std::ranges::sort( part );
+            std::ranges::sort( by, [&]( u32 x, u32 y ) { return q[x].real() < q[y].real(); } );
+            own_ += n * 8;
+            Blocks rough = group( []( u32, u32 ) { return true; } );
+            if( rough.size() == n || !tried.insert( std::move( rough ) ).second )
+            {
+                continue;
+            }
+            Blocks part =
+                group( [&]( u32 r, u32 j ) { return F_->mul( rows[b][j], rows[a][r] ) == F_->mul( rows[b][r], rows[a][j] ); } );
             if( part.size() > 1 && part.size() < n && seen.insert( part ).second )
             {
                 found.push_back( std::move( part ) );
@@ -446,66 +489,101 @@ std::vector<Solver::Blocks> Solver::partitions( const std::vector<Row>& rows ) c
 
 // Per block, the distinct restricted rows up to a scalar, normalised at the reference input that
 // leaves the second stage the fewest distinct constants.
-Solver::Factored Solver::factor( const std::vector<Row>& rows, const Blocks& part ) const
+Solver::Factored Solver::factor( const std::vector<Row>& rows, const Blocks& part )
 {
     Factored out;
     out.s.resize( rows.size() );
     for( const std::vector<u32>& blk : part )
     {
-        struct Choice
+        if( left() <= 0 )
         {
-            size_t                               consts;
-            std::vector<Row>                     shapes;
-            std::vector<std::pair<u32, Element>> col; // shape and scalar, k_none for a zero row
+            throw Cannot {};
+        }
+        const auto at = [&]( const Row& r, u32 ref ) // the row's scalar's input, k_none for a zero row
+        {
+            for( size_t i = 0; r[ref] == F_->zero() && i < blk.size(); ++i )
+            {
+                if( r[blk[i]] != F_->zero() )
+                {
+                    return blk[i];
+                }
+            }
+            return r[ref] != F_->zero() ? ref : k_none;
         };
-        std::optional<Choice> best;
-        for( const u32 ref : blk )
+        u32    ref   = blk[0];
+        size_t least = SIZE_MAX;
+        for( const u32 c : blk ) // the shapes are the same up to scale whatever the reference
         {
-            Choice               c { 0, {}, {} };
-            std::map<Row, u32>   index;
             std::vector<Element> scalars;
             for( const Row& r : rows )
             {
-                u32 at = r[ref] != F_->zero() ? ref : k_none;
-                for( size_t i = 0; at == k_none && i < blk.size(); ++i )
+                if( const u32 a = at( r, c ); a != k_none )
                 {
-                    at = r[blk[i]] != F_->zero() ? blk[i] : k_none;
+                    scalars.push_back( F_->orbit( r[a] ).first );
                 }
-                if( at == k_none )
+            }
+            if( const size_t k = distinct_count( scalars ); k < least )
+            {
+                least = k;
+                ref   = c;
+            }
+        }
+        // A row matches a shape seen numerically, confirmed by multiplying: inverses are dear.
+        std::vector<Row>                            shapes;
+        std::vector<std::vector<std::complex<f64>>> near;
+        std::vector<std::pair<u32, Element>>        col; // shape and scalar, k_none for a zero row
+        for( const Row& r : rows )
+        {
+            const u32 a = at( r, ref );
+            if( a == k_none )
+            {
+                col.emplace_back( k_none, F_->zero() );
+                continue;
+            }
+            std::vector<std::complex<f64>> v;
+            const std::complex<f64>        va = F_->value( r[a] );
+            for( const u32 j : blk )
+            {
+                v.push_back( F_->value( r[j] ) / va );
+            }
+            u32 found = k_none;
+            for( u32 s = 0; s < shapes.size() && found == k_none; ++s )
+            {
+                bool same = true;
+                for( size_t i = 0; i < blk.size() && same; ++i )
                 {
-                    c.col.emplace_back( k_none, F_->zero() );
-                    continue;
+                    same = std::abs( near[s][i] - v[i] ) <= 1e-9 * ( 1 + std::abs( v[i] ) );
                 }
+                for( size_t i = 0; i < blk.size() && same; ++i )
+                {
+                    same = F_->mul( r[a], shapes[s][i] ) == r[blk[i]];
+                }
+                found = same ? s : k_none;
+            }
+            if( found == k_none )
+            {
                 Row shape;
                 for( const u32 j : blk )
                 {
-                    shape.push_back( divide( r[j], r[at] ) );
+                    shape.push_back( divide( r[j], r[a] ) );
                 }
-                const auto [it, added] = index.try_emplace( shape, static_cast<u32>( c.shapes.size() ) );
-                if( added )
-                {
-                    c.shapes.push_back( std::move( shape ) );
-                }
-                c.col.emplace_back( it->second, r[at] );
-                scalars.push_back( F_->orbit( r[at] ).first );
+                found = static_cast<u32>( shapes.size() );
+                shapes.push_back( std::move( shape ) );
+                near.push_back( std::move( v ) );
             }
-            c.consts = distinct_count( scalars );
-            if( !best || c.consts < best->consts )
-            {
-                best = std::move( c );
-            }
+            col.emplace_back( found, r[a] );
         }
-        out.pieces += best->shapes.size();
+        out.pieces += shapes.size();
         for( size_t i = 0; i < rows.size(); ++i )
         {
-            Row row( best->shapes.size(), F_->zero() );
-            if( best->col[i].first != k_none )
+            Row row( shapes.size(), F_->zero() );
+            if( col[i].first != k_none )
             {
-                row[best->col[i].first] = best->col[i].second;
+                row[col[i].first] = col[i].second;
             }
             out.s[i].insert( out.s[i].end(), row.begin(), row.end() );
         }
-        out.firsts.push_back( std::move( best->shapes ) );
+        out.firsts.push_back( std::move( shapes ) );
     }
     return out;
 }
