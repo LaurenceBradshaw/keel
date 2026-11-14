@@ -65,6 +65,15 @@ double kl__length__as_kl__scaled__kl__12operator_mul__3f64( void*, double );
 
 static const struct kl__scaled__vtable kl__length__as_kl__scaled = { kl__length__drop, kl__length__as_kl__scaled__kl__12operator_mul__3f64 };
 
+double kl__length__as_kl__scaled__kl__12operator_mul__3f64( void* kl_t1, double kl_t2 )
+{
+    double kl_t0;
+    struct kl__length* kl_t3;
+    kl_t3 = ( struct kl__length* ) kl_t1;
+    kl_t0 = kl__12operator_mul__S6length_3f64( kl_t3, kl_t2 );
+    return kl_t0;
+}
+
 #line 31 "codegen/operator_bounds.kl"
 struct kl__vec kl__12operator_add__S3vec_3vec( struct kl__vec* kl_this_1, struct kl__vec* kl_other_2 )
 {
@@ -600,20 +609,6 @@ void kl__length__drop( void* kl_t1 )
 #line 55 "codegen/operator_bounds.kl"
     return;
 #line 55 "codegen/operator_bounds.kl"
-}
-
-#line 23 "codegen/operator_bounds.kl"
-double kl__length__as_kl__scaled__kl__12operator_mul__3f64( void* kl_t1, double kl_t2 )
-{
-    double kl_t0;
-    struct kl__length* kl_t3;
-#line 59 "codegen/operator_bounds.kl"
-    kl_t3 = ( struct kl__length* ) kl_t1;
-#line 59 "codegen/operator_bounds.kl"
-    kl_t0 = kl__12operator_mul__S6length_3f64( kl_t3, kl_t2 );
-#line 59 "codegen/operator_bounds.kl"
-    return kl_t0;
-#line 23 "codegen/operator_bounds.kl"
 }
 
 int main( void )

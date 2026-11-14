@@ -104,6 +104,40 @@ static const struct kl__Shape__vtable kl__Framed__as_kl__Shape = { kl__Framed__d
 
 static const struct kl__Shape__vtable kl__Square__as_kl__Shape = { kl__Square__drop, kl__Square__as_kl__Shape__kl__4area__, kl__Square__as_kl__Shape__kl__4grow__3f64 };
 
+double kl__Framed__as_kl__Shape__kl__4area__( void* kl_t1 )
+{
+    double kl_t0;
+    struct kl__Framed* kl_t2;
+    kl_t2 = ( struct kl__Framed* ) kl_t1;
+    kl_t0 = kl__4area__S6Framed( kl_t2 );
+    return kl_t0;
+}
+
+void kl__Framed__as_kl__Shape__kl__4grow__3f64( void* kl_t1, double kl_t2 )
+{
+    struct kl__Framed* kl_t3;
+    kl_t3 = ( struct kl__Framed* ) kl_t1;
+    kl__4grow__S6Framed_3f64( kl_t3, kl_t2 );
+    return;
+}
+
+double kl__Square__as_kl__Shape__kl__4area__( void* kl_t1 )
+{
+    double kl_t0;
+    struct kl__Square* kl_t2;
+    kl_t2 = ( struct kl__Square* ) kl_t1;
+    kl_t0 = kl__4area__S6Square( kl_t2 );
+    return kl_t0;
+}
+
+void kl__Square__as_kl__Shape__kl__4grow__3f64( void* kl_t1, double kl_t2 )
+{
+    struct kl__Square* kl_t3;
+    kl_t3 = ( struct kl__Square* ) kl_t1;
+    kl__4grow__S6Square_3f64( kl_t3, kl_t2 );
+    return;
+}
+
 #line 16 "codegen/box.kl"
 double kl__4area__S6Square( struct kl__Square* kl_this_1 )
 {
@@ -1173,33 +1207,6 @@ void kl__Framed__drop( void* kl_t1 )
 #line 45 "codegen/box.kl"
 }
 
-#line 8 "codegen/box.kl"
-double kl__Framed__as_kl__Shape__kl__4area__( void* kl_t1 )
-{
-    double kl_t0;
-    struct kl__Framed* kl_t2;
-#line 56 "codegen/box.kl"
-    kl_t2 = ( struct kl__Framed* ) kl_t1;
-#line 56 "codegen/box.kl"
-    kl_t0 = kl__4area__S6Framed( kl_t2 );
-#line 56 "codegen/box.kl"
-    return kl_t0;
-#line 8 "codegen/box.kl"
-}
-
-#line 9 "codegen/box.kl"
-void kl__Framed__as_kl__Shape__kl__4grow__3f64( void* kl_t1, double kl_t2 )
-{
-    struct kl__Framed* kl_t3;
-#line 57 "codegen/box.kl"
-    kl_t3 = ( struct kl__Framed* ) kl_t1;
-#line 57 "codegen/box.kl"
-    kl__4grow__S6Framed_3f64( kl_t3, kl_t2 );
-#line 57 "codegen/box.kl"
-    return;
-#line 9 "codegen/box.kl"
-}
-
 void kl__Square__drop( void* kl_t1 )
 {
     struct kl__Square* kl_t2;
@@ -1209,33 +1216,6 @@ void kl__Square__drop( void* kl_t1 )
 #line 12 "codegen/box.kl"
     return;
 #line 12 "codegen/box.kl"
-}
-
-#line 8 "codegen/box.kl"
-double kl__Square__as_kl__Shape__kl__4area__( void* kl_t1 )
-{
-    double kl_t0;
-    struct kl__Square* kl_t2;
-#line 16 "codegen/box.kl"
-    kl_t2 = ( struct kl__Square* ) kl_t1;
-#line 16 "codegen/box.kl"
-    kl_t0 = kl__4area__S6Square( kl_t2 );
-#line 16 "codegen/box.kl"
-    return kl_t0;
-#line 8 "codegen/box.kl"
-}
-
-#line 9 "codegen/box.kl"
-void kl__Square__as_kl__Shape__kl__4grow__3f64( void* kl_t1, double kl_t2 )
-{
-    struct kl__Square* kl_t3;
-#line 17 "codegen/box.kl"
-    kl_t3 = ( struct kl__Square* ) kl_t1;
-#line 17 "codegen/box.kl"
-    kl__4grow__S6Square_3f64( kl_t3, kl_t2 );
-#line 17 "codegen/box.kl"
-    return;
-#line 9 "codegen/box.kl"
 }
 
 int main( void )

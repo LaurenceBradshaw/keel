@@ -42,6 +42,40 @@ static const struct kl__sink__I4boolE__vtable kl__light__as_kl__sink__I4boolE = 
 
 static const struct kl__sink__I3i64E__vtable kl__light__as_kl__sink__I3i64E = { kl__light__drop, kl__light__as_kl__sink__I3i64E__kl__3put__1T, kl__light__as_kl__sink__I3i64E__kl__5count__ };
 
+void kl__light__as_kl__sink__I4boolE__kl__3put__1T( void* kl_t1, bool* kl_t2 )
+{
+    int32_t* kl_t3;
+    kl_t3 = ( int32_t* ) kl_t1;
+    kl__3put__S5lightC4sinkI4boolE_4bool( kl_t3, ( *kl_t2 ) );
+    return;
+}
+
+uint64_t kl__light__as_kl__sink__I4boolE__kl__5count__( void* kl_t1 )
+{
+    uint64_t kl_t0;
+    int32_t* kl_t2;
+    kl_t2 = ( int32_t* ) kl_t1;
+    kl_t0 = kl__5count__S5lightC4sinkI4boolE( kl_t2 );
+    return kl_t0;
+}
+
+void kl__light__as_kl__sink__I3i64E__kl__3put__1T( void* kl_t1, int64_t* kl_t2 )
+{
+    int32_t* kl_t3;
+    kl_t3 = ( int32_t* ) kl_t1;
+    kl__3put__S5lightC4sinkI3i64E_3i64( kl_t3, ( *kl_t2 ) );
+    return;
+}
+
+uint64_t kl__light__as_kl__sink__I3i64E__kl__5count__( void* kl_t1 )
+{
+    uint64_t kl_t0;
+    int32_t* kl_t2;
+    kl_t2 = ( int32_t* ) kl_t1;
+    kl_t0 = kl__5count__S5lightC4sinkI3i64E( kl_t2 );
+    return kl_t0;
+}
+
 #line 18 "codegen/generic_interface_blocks.kl"
 void kl__3put__S5lightC4sinkI3i64E_3i64( int32_t* kl_this_1, int64_t kl_t2 )
 {
@@ -223,60 +257,6 @@ void kl__light__drop( void* kl_t1 )
 #line 10 "codegen/generic_interface_blocks.kl"
     return;
 #line 10 "codegen/generic_interface_blocks.kl"
-}
-
-#line 6 "codegen/generic_interface_blocks.kl"
-void kl__light__as_kl__sink__I4boolE__kl__3put__1T( void* kl_t1, bool* kl_t2 )
-{
-    int32_t* kl_t3;
-#line 24 "codegen/generic_interface_blocks.kl"
-    kl_t3 = ( int32_t* ) kl_t1;
-#line 24 "codegen/generic_interface_blocks.kl"
-    kl__3put__S5lightC4sinkI4boolE_4bool( kl_t3, ( *kl_t2 ) );
-#line 24 "codegen/generic_interface_blocks.kl"
-    return;
-#line 6 "codegen/generic_interface_blocks.kl"
-}
-
-#line 7 "codegen/generic_interface_blocks.kl"
-uint64_t kl__light__as_kl__sink__I4boolE__kl__5count__( void* kl_t1 )
-{
-    uint64_t kl_t0;
-    int32_t* kl_t2;
-#line 25 "codegen/generic_interface_blocks.kl"
-    kl_t2 = ( int32_t* ) kl_t1;
-#line 25 "codegen/generic_interface_blocks.kl"
-    kl_t0 = kl__5count__S5lightC4sinkI4boolE( kl_t2 );
-#line 25 "codegen/generic_interface_blocks.kl"
-    return kl_t0;
-#line 7 "codegen/generic_interface_blocks.kl"
-}
-
-#line 6 "codegen/generic_interface_blocks.kl"
-void kl__light__as_kl__sink__I3i64E__kl__3put__1T( void* kl_t1, int64_t* kl_t2 )
-{
-    int32_t* kl_t3;
-#line 18 "codegen/generic_interface_blocks.kl"
-    kl_t3 = ( int32_t* ) kl_t1;
-#line 18 "codegen/generic_interface_blocks.kl"
-    kl__3put__S5lightC4sinkI3i64E_3i64( kl_t3, ( *kl_t2 ) );
-#line 18 "codegen/generic_interface_blocks.kl"
-    return;
-#line 6 "codegen/generic_interface_blocks.kl"
-}
-
-#line 7 "codegen/generic_interface_blocks.kl"
-uint64_t kl__light__as_kl__sink__I3i64E__kl__5count__( void* kl_t1 )
-{
-    uint64_t kl_t0;
-    int32_t* kl_t2;
-#line 19 "codegen/generic_interface_blocks.kl"
-    kl_t2 = ( int32_t* ) kl_t1;
-#line 19 "codegen/generic_interface_blocks.kl"
-    kl_t0 = kl__5count__S5lightC4sinkI3i64E( kl_t2 );
-#line 19 "codegen/generic_interface_blocks.kl"
-    return kl_t0;
-#line 7 "codegen/generic_interface_blocks.kl"
 }
 
 int main( void )

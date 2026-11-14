@@ -233,9 +233,13 @@ void Kir_emitter::write_line( std::string_view text )
     }
 }
 
-// A statement's or terminator's span becomes the current Keel line.
+// A statement's or terminator's span becomes the current Keel line; a thunk has none.
 void Kir_emitter::line_directive( Span span )
 {
+    if( current_->thunk_of.is_valid() )
+    {
+        return;
+    }
     keel_span_ = span;
     sync_line();
 }
@@ -773,12 +777,19 @@ void Kir_emitter::emit_externs()
     }
 }
 
+// Thunks first, before any `#line`: they keep the C file's lines, which a debugger steps over.
 void Kir_emitter::emit_functions()
 {
-    for( const Function& function : functions_ )
+    for( const bool thunks : { true, false } )
     {
-        emit_function( function );
-        write_line( "" );
+        for( const Function& function : functions_ )
+        {
+            if( function.thunk_of.is_valid() == thunks )
+            {
+                emit_function( function );
+                write_line( "" );
+            }
+        }
     }
 }
 

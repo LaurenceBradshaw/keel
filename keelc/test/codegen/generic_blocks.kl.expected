@@ -46,6 +46,15 @@ int32_t kl__Wrap__I3i32E__as_kl__Named__kl__4code__( void* );
 
 static const struct kl__Named__vtable kl__Wrap__I3i32E__as_kl__Named = { kl__Wrap__I3i32E__drop, kl__Wrap__I3i32E__as_kl__Named__kl__4code__ };
 
+int32_t kl__Wrap__I3i32E__as_kl__Named__kl__4code__( void* kl_t1 )
+{
+    int32_t kl_t0;
+    struct kl__Wrap__I3i32E* kl_t2;
+    kl_t2 = ( struct kl__Wrap__I3i32E* ) kl_t1;
+    kl_t0 = kl__4code__I3i32E__S4WrapI3i32EC5Named( kl_t2 );
+    return kl_t0;
+}
+
 #line 11 "codegen/generic_blocks.kl"
 int32_t kl__4code__S3i32C5Named( int32_t* kl_this_1 )
 {
@@ -382,20 +391,6 @@ void kl__Wrap__I3i32E__drop( void* kl_t1 )
 #line 14 "codegen/generic_blocks.kl"
     return;
 #line 14 "codegen/generic_blocks.kl"
-}
-
-#line 6 "codegen/generic_blocks.kl"
-int32_t kl__Wrap__I3i32E__as_kl__Named__kl__4code__( void* kl_t1 )
-{
-    int32_t kl_t0;
-    struct kl__Wrap__I3i32E* kl_t2;
-#line 21 "codegen/generic_blocks.kl"
-    kl_t2 = ( struct kl__Wrap__I3i32E* ) kl_t1;
-#line 21 "codegen/generic_blocks.kl"
-    kl_t0 = kl__4code__I3i32E__S4WrapI3i32EC5Named( kl_t2 );
-#line 21 "codegen/generic_blocks.kl"
-    return kl_t0;
-#line 6 "codegen/generic_blocks.kl"
 }
 
 int main( void )

@@ -204,6 +204,15 @@ static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_
 
 static const struct kl_7prelude_textual__vtable kl_2kl6string_string__as_kl_7prelude_textual = { kl_2kl6string_string__drop, kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__ };
 
+struct kl__run__L2u8__ref kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__( void* kl_t1 )
+{
+    struct kl__run__L2u8__ref kl_t0;
+    struct kl_2kl6string_string* kl_t2;
+    kl_t2 = ( struct kl_2kl6string_string* ) kl_t1;
+    kl_t0 = kl_2kl6string_7as_text__SQ2kl6string( kl_t2 );
+    return kl_t0;
+}
+
 #line 27 "../../src/string.kl"
 void kl_2kl6string_6string__RQ2kl6string__ctor( struct kl_2kl6string_string* kl_this_1 )
 {
@@ -4020,20 +4029,6 @@ void kl_2kl6string_string__drop( void* kl_t1 )
 #line 21 "../../src/string.kl"
 }
 
-#line 11 "<prelude>"
-struct kl__run__L2u8__ref kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__( void* kl_t1 )
-{
-    struct kl__run__L2u8__ref kl_t0;
-    struct kl_2kl6string_string* kl_t2;
-#line 154 "../../src/string.kl"
-    kl_t2 = ( struct kl_2kl6string_string* ) kl_t1;
-#line 154 "../../src/string.kl"
-    kl_t0 = kl_2kl6string_7as_text__SQ2kl6string( kl_t2 );
-#line 154 "../../src/string.kl"
-    return kl_t0;
-#line 11 "<prelude>"
-}
-
 // ../../src/os.kl
 #include <stdint.h>
 #include <stdbool.h>
@@ -4442,6 +4437,15 @@ static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_
 static const struct kl_7prelude_textual__vtable kl_2kl6string_string__as_kl_7prelude_textual = { kl_2kl6string_string__drop, kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__ };
 
 static const struct kl_7prelude_textual__vtable kl_2kl2os_path__as_kl_7prelude_textual = { kl_2kl2os_path__drop, kl_2kl2os_path__as_kl_7prelude_textual__kl__7as_text__ };
+
+struct kl__run__L2u8__ref kl_2kl2os_path__as_kl_7prelude_textual__kl__7as_text__( void* kl_t1 )
+{
+    struct kl__run__L2u8__ref kl_t0;
+    struct kl_2kl2os_path* kl_t2;
+    kl_t2 = ( struct kl_2kl2os_path* ) kl_t1;
+    kl_t0 = kl_2kl2os_7as_text__SQ2kl4path( kl_t2 );
+    return kl_t0;
+}
 
 #line 66 "../../src/os.kl"
 struct kl_2kl2os_os_error kl_2kl2os_11os_error_of__3i32( int32_t kl_code_1 )
@@ -8837,20 +8841,6 @@ void kl_2kl2os_path__drop( void* kl_t1 )
 #line 135 "../../src/os.kl"
     return;
 #line 135 "../../src/os.kl"
-}
-
-#line 11 "<prelude>"
-struct kl__run__L2u8__ref kl_2kl2os_path__as_kl_7prelude_textual__kl__7as_text__( void* kl_t1 )
-{
-    struct kl__run__L2u8__ref kl_t0;
-    struct kl_2kl2os_path* kl_t2;
-#line 155 "../../src/os.kl"
-    kl_t2 = ( struct kl_2kl2os_path* ) kl_t1;
-#line 155 "../../src/os.kl"
-    kl_t0 = kl_2kl2os_7as_text__SQ2kl4path( kl_t2 );
-#line 155 "../../src/os.kl"
-    return kl_t0;
-#line 11 "<prelude>"
 }
 
 // os_errors/main.kl

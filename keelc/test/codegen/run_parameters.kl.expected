@@ -360,6 +360,16 @@ static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_
 
 static const struct kl__Measure__vtable kl__Scaled__as_kl__Measure = { kl__Scaled__drop, kl__Scaled__as_kl__Measure__kl__5total__L3i32 };
 
+int32_t kl__Scaled__as_kl__Measure__kl__5total__L3i32( void* kl_t1, int32_t* kl_t2_data, uint64_t kl_t2_size )
+{
+    int32_t kl_t0;
+    struct kl__run__L3i32__ref kl_t2 = { kl_t2_data, kl_t2_size };
+    struct kl__Scaled* kl_t3;
+    kl_t3 = ( struct kl__Scaled* ) kl_t1;
+    kl_t0 = kl__5total__S6Scaled_L3i32( kl_t3, ( kl_t2 ).data, ( kl_t2 ).size );
+    return kl_t0;
+}
+
 #line 12 "codegen/run_parameters.kl"
 void kl__6Scaled__R6Scaled_3i32__ctor( struct kl__Scaled* kl_this_1, int32_t kl_by_2 )
 {
@@ -882,22 +892,6 @@ void kl__Scaled__drop( void* kl_t1 )
 #line 10 "codegen/run_parameters.kl"
     return;
 #line 10 "codegen/run_parameters.kl"
-}
-
-#line 7 "codegen/run_parameters.kl"
-int32_t kl__Scaled__as_kl__Measure__kl__5total__L3i32( void* kl_t1, int32_t* kl_t2_data, uint64_t kl_t2_size )
-{
-    int32_t kl_t0;
-#line 7 "codegen/run_parameters.kl"
-    struct kl__run__L3i32__ref kl_t2 = { kl_t2_data, kl_t2_size };
-    struct kl__Scaled* kl_t3;
-#line 17 "codegen/run_parameters.kl"
-    kl_t3 = ( struct kl__Scaled* ) kl_t1;
-#line 17 "codegen/run_parameters.kl"
-    kl_t0 = kl__5total__S6Scaled_L3i32( kl_t3, ( kl_t2 ).data, ( kl_t2 ).size );
-#line 17 "codegen/run_parameters.kl"
-    return kl_t0;
-#line 7 "codegen/run_parameters.kl"
 }
 
 int main( void )

@@ -34,6 +34,17 @@ int32_t kl__Circle__as_kl__Shape__kl__4area__( void* );
 
 static const struct kl__Shape__vtable kl__Circle__as_kl__Shape = { kl__Circle__drop, kl__Circle__as_kl__Shape__kl__4area__ };
 
+int32_t kl__Circle__as_kl__Shape__kl__4area__( void* kl_t1 )
+{
+    int32_t kl_t0;
+    struct kl__Circle* kl_this_2;
+    int32_t kl_t3;
+    kl_this_2 = ( struct kl__Circle* ) kl_t1;
+    kl_t3 = 3 * ( *kl_this_2 ).kl_r;
+    kl_t0 = kl_t3 * ( *kl_this_2 ).kl_r;
+    return kl_t0;
+}
+
 #line 30 "opt/unreached/main.kl"
 int32_t kl__5seven__( void )
 {
@@ -130,23 +141,6 @@ void kl__Circle__drop( void* kl_t1 )
 #line 20 "opt/unreached/main.kl"
     return;
 #line 20 "opt/unreached/main.kl"
-}
-
-#line 7 "opt/unreached/main.kl"
-int32_t kl__Circle__as_kl__Shape__kl__4area__( void* kl_t1 )
-{
-    int32_t kl_t0;
-    struct kl__Circle* kl_this_2;
-    int32_t kl_t3;
-#line 24 "opt/unreached/main.kl"
-    kl_this_2 = ( struct kl__Circle* ) kl_t1;
-#line 26 "opt/unreached/main.kl"
-    kl_t3 = 3 * ( *kl_this_2 ).kl_r;
-#line 26 "opt/unreached/main.kl"
-    kl_t0 = kl_t3 * ( *kl_this_2 ).kl_r;
-#line 24 "opt/unreached/main.kl"
-    return kl_t0;
-#line 7 "opt/unreached/main.kl"
 }
 
 int main( void )

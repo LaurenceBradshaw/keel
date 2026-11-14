@@ -55,9 +55,9 @@ done
 # in the generated C behind `text.as_text()`, and the loop ends on the constructor's `}` before
 # returning to line 26.
 steps="$( gdb -batch -nx -ex "source editors/gdb/keel_c.py" -ex "break debugging.kl:25" -ex run \
-    -ex step -ex step -ex step -ex step -ex step -ex step $( for _ in $( seq 11 ); do echo -ex next; done ) \
+    -ex step -ex step -ex step -ex step -ex step -ex step $( for _ in $( seq 13 ); do echo -ex next; done ) \
     build/examples/debugging_c 2>&1 | grep -oE '^[0-9]+'$'\t' | tr -d '\t' | tr '\n' ' ' )"
-expected_steps="25 32 33 34 25 32 34 35 37 35 37 35 37 35 37 35 39 26 "
+expected_steps="25 27 28 29 25 37 41 44 45 46 50 46 50 46 50 46 50 46 53 26 "
 if [ "$steps" != "$expected_steps" ]; then
     echo "stepped: $steps"
     echo "wanted:  $expected_steps"

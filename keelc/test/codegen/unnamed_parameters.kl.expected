@@ -34,6 +34,15 @@ int32_t kl__square__as_kl__shape__kl__4area__3i32( void*, int32_t );
 
 static const struct kl__shape__vtable kl__square__as_kl__shape = { kl__square__drop, kl__square__as_kl__shape__kl__4area__3i32 };
 
+int32_t kl__square__as_kl__shape__kl__4area__3i32( void* kl_t1, int32_t kl_t2 )
+{
+    int32_t kl_t0;
+    struct kl__square* kl_t3;
+    kl_t3 = ( struct kl__square* ) kl_t1;
+    kl_t0 = kl__4area__S6square_3i32( kl_t3, kl_t2 );
+    return kl_t0;
+}
+
 #line 12 "codegen/unnamed_parameters.kl"
 void kl__6square__R6square_3i32__ctor( struct kl__square* kl_this_1, int32_t kl_side_2 )
 {
@@ -174,20 +183,6 @@ void kl__square__drop( void* kl_t1 )
 #line 8 "codegen/unnamed_parameters.kl"
     return;
 #line 8 "codegen/unnamed_parameters.kl"
-}
-
-#line 5 "codegen/unnamed_parameters.kl"
-int32_t kl__square__as_kl__shape__kl__4area__3i32( void* kl_t1, int32_t kl_t2 )
-{
-    int32_t kl_t0;
-    struct kl__square* kl_t3;
-#line 17 "codegen/unnamed_parameters.kl"
-    kl_t3 = ( struct kl__square* ) kl_t1;
-#line 17 "codegen/unnamed_parameters.kl"
-    kl_t0 = kl__4area__S6square_3i32( kl_t3, kl_t2 );
-#line 17 "codegen/unnamed_parameters.kl"
-    return kl_t0;
-#line 5 "codegen/unnamed_parameters.kl"
 }
 
 int main( void )

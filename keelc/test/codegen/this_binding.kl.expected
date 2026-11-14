@@ -372,6 +372,33 @@ static const struct kl__adder__vtable kl__i32__as_kl__adder = { kl__i32__drop, k
 
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
+int32_t kl__C__as_kl__A__kl__3foo__( void* kl_t1 )
+{
+    int32_t kl_t0;
+    struct kl__C* kl_t2;
+    kl_t2 = ( struct kl__C* ) kl_t1;
+    kl_t0 = kl__3foo__S1C( kl_t2 );
+    return kl_t0;
+}
+
+int32_t kl__i32__as_kl__adder__kl__6to_int__( void* kl_t1 )
+{
+    int32_t kl_t0;
+    int32_t* kl_t2;
+    kl_t2 = ( int32_t* ) kl_t1;
+    kl_t0 = kl__6to_int__S3i32C5adder( kl_t2 );
+    return kl_t0;
+}
+
+int32_t kl__i32__as_kl__adder__kl__4plus__3i32( void* kl_t1, int32_t kl_t2 )
+{
+    int32_t kl_t0;
+    int32_t* kl_t3;
+    kl_t3 = ( int32_t* ) kl_t1;
+    kl_t0 = kl__4plus__S3i32C5adder_3i32( kl_t3, kl_t2 );
+    return kl_t0;
+}
+
 #line 10 "codegen/this_binding.kl"
 void kl__1C__R1C__ctor( struct kl__C* kl_this_1 )
 {
@@ -680,20 +707,6 @@ void kl__C__drop( void* kl_t1 )
 #line 7 "codegen/this_binding.kl"
 }
 
-#line 5 "codegen/this_binding.kl"
-int32_t kl__C__as_kl__A__kl__3foo__( void* kl_t1 )
-{
-    int32_t kl_t0;
-    struct kl__C* kl_t2;
-#line 11 "codegen/this_binding.kl"
-    kl_t2 = ( struct kl__C* ) kl_t1;
-#line 11 "codegen/this_binding.kl"
-    kl_t0 = kl__3foo__S1C( kl_t2 );
-#line 11 "codegen/this_binding.kl"
-    return kl_t0;
-#line 5 "codegen/this_binding.kl"
-}
-
 void kl__i32__drop( void* kl_t1 )
 {
     int32_t* kl_t2;
@@ -702,33 +715,6 @@ void kl__i32__drop( void* kl_t1 )
     kl_t2 = ( int32_t* ) kl_t1;
 #line 17 "codegen/this_binding.kl"
     return;
-#line 17 "codegen/this_binding.kl"
-}
-
-#line 17 "codegen/this_binding.kl"
-int32_t kl__i32__as_kl__adder__kl__6to_int__( void* kl_t1 )
-{
-    int32_t kl_t0;
-    int32_t* kl_t2;
-    kl_t2 = ( int32_t* ) kl_t1;
-#line 21 "codegen/this_binding.kl"
-    kl_t0 = kl__6to_int__S3i32C5adder( kl_t2 );
-#line 21 "codegen/this_binding.kl"
-    return kl_t0;
-#line 17 "codegen/this_binding.kl"
-}
-
-#line 17 "codegen/this_binding.kl"
-int32_t kl__i32__as_kl__adder__kl__4plus__3i32( void* kl_t1, int32_t kl_t2 )
-{
-    int32_t kl_t0;
-    int32_t* kl_t3;
-#line 22 "codegen/this_binding.kl"
-    kl_t3 = ( int32_t* ) kl_t1;
-#line 22 "codegen/this_binding.kl"
-    kl_t0 = kl__4plus__S3i32C5adder_3i32( kl_t3, kl_t2 );
-#line 22 "codegen/this_binding.kl"
-    return kl_t0;
 #line 17 "codegen/this_binding.kl"
 }
 

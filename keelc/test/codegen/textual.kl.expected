@@ -348,6 +348,15 @@ static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_
 
 static const struct kl_7prelude_textual__vtable kl__Name__as_kl_7prelude_textual = { kl__Name__drop, kl__Name__as_kl_7prelude_textual__kl__7as_text__ };
 
+struct kl__run__L2u8__ref kl__Name__as_kl_7prelude_textual__kl__7as_text__( void* kl_t1 )
+{
+    struct kl__run__L2u8__ref kl_t0;
+    struct kl__Name* kl_t2;
+    kl_t2 = ( struct kl__Name* ) kl_t1;
+    kl_t0 = kl__7as_text__S4Name( kl_t2 );
+    return kl_t0;
+}
+
 #line 10 "codegen/textual.kl"
 struct kl__run__L2u8__ref kl__7as_text__S4Name( struct kl__Name* kl_this_1 )
 {
@@ -768,19 +777,6 @@ void kl__Name__drop( void* kl_t1 )
 #line 5 "codegen/textual.kl"
     return;
 #line 5 "codegen/textual.kl"
-}
-
-#line 11 "<prelude>"
-struct kl__run__L2u8__ref kl__Name__as_kl_7prelude_textual__kl__7as_text__( void* kl_t1 )
-{
-    struct kl__run__L2u8__ref kl_t0;
-    struct kl__Name* kl_t2;
-#line 10 "codegen/textual.kl"
-    kl_t2 = ( struct kl__Name* ) kl_t1;
-#line 10 "codegen/textual.kl"
-    kl_t0 = kl__7as_text__S4Name( kl_t2 );
-#line 10 "codegen/textual.kl"
-    return kl_t0;
 }
 
 int main( void )

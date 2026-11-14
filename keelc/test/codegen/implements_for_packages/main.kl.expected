@@ -130,6 +130,40 @@ static const struct kl__Measured__vtable kl_6shapes5kinds_Rod__as_kl__Measured =
 
 static const struct kl__Measured__vtable kl_6shapes5kinds_Tracked__as_kl__Measured = { kl_6shapes5kinds_Tracked__drop, kl_6shapes5kinds_Tracked__as_kl__Measured__kl__7measure__, kl_6shapes5kinds_Tracked__as_kl__Measured__kl__4grow__3i64 };
 
+int64_t kl_6shapes5kinds_Rod__as_kl__Measured__kl__7measure__( void* kl_t1 )
+{
+    int64_t kl_t0;
+    struct kl_6shapes5kinds_Rod* kl_t2;
+    kl_t2 = ( struct kl_6shapes5kinds_Rod* ) kl_t1;
+    kl_t0 = kl__7measure__SQ6shapes3RodC8Measured( kl_t2 );
+    return kl_t0;
+}
+
+void kl_6shapes5kinds_Rod__as_kl__Measured__kl__4grow__3i64( void* kl_t1, int64_t kl_t2 )
+{
+    struct kl_6shapes5kinds_Rod* kl_t3;
+    kl_t3 = ( struct kl_6shapes5kinds_Rod* ) kl_t1;
+    kl__4grow__SQ6shapes3RodC8Measured_3i64( kl_t3, kl_t2 );
+    return;
+}
+
+int64_t kl_6shapes5kinds_Tracked__as_kl__Measured__kl__7measure__( void* kl_t1 )
+{
+    int64_t kl_t0;
+    struct kl_6shapes5kinds_Tracked* kl_t2;
+    kl_t2 = ( struct kl_6shapes5kinds_Tracked* ) kl_t1;
+    kl_t0 = kl__7measure__SQ6shapes7TrackedC8Measured( kl_t2 );
+    return kl_t0;
+}
+
+void kl_6shapes5kinds_Tracked__as_kl__Measured__kl__4grow__3i64( void* kl_t1, int64_t kl_t2 )
+{
+    struct kl_6shapes5kinds_Tracked* kl_t3;
+    kl_t3 = ( struct kl_6shapes5kinds_Tracked* ) kl_t1;
+    kl__4grow__SQ6shapes7TrackedC8Measured_3i64( kl_t3, kl_t2 );
+    return;
+}
+
 #line 14 "codegen/implements_for_packages/main.kl"
 int64_t kl__7measure__SQ6shapes3RodC8Measured( struct kl_6shapes5kinds_Rod* kl_this_1 )
 {
@@ -613,60 +647,6 @@ void kl_6shapes5kinds_Rod__drop( void* kl_t1 )
 #line 3 "codegen/implements_for_packages/shapes/kinds.kl"
     return;
 #line 3 "codegen/implements_for_packages/shapes/kinds.kl"
-}
-
-#line 8 "codegen/implements_for_packages/main.kl"
-int64_t kl_6shapes5kinds_Rod__as_kl__Measured__kl__7measure__( void* kl_t1 )
-{
-    int64_t kl_t0;
-    struct kl_6shapes5kinds_Rod* kl_t2;
-#line 14 "codegen/implements_for_packages/main.kl"
-    kl_t2 = ( struct kl_6shapes5kinds_Rod* ) kl_t1;
-#line 14 "codegen/implements_for_packages/main.kl"
-    kl_t0 = kl__7measure__SQ6shapes3RodC8Measured( kl_t2 );
-#line 14 "codegen/implements_for_packages/main.kl"
-    return kl_t0;
-#line 8 "codegen/implements_for_packages/main.kl"
-}
-
-#line 9 "codegen/implements_for_packages/main.kl"
-void kl_6shapes5kinds_Rod__as_kl__Measured__kl__4grow__3i64( void* kl_t1, int64_t kl_t2 )
-{
-    struct kl_6shapes5kinds_Rod* kl_t3;
-#line 15 "codegen/implements_for_packages/main.kl"
-    kl_t3 = ( struct kl_6shapes5kinds_Rod* ) kl_t1;
-#line 15 "codegen/implements_for_packages/main.kl"
-    kl__4grow__SQ6shapes3RodC8Measured_3i64( kl_t3, kl_t2 );
-#line 15 "codegen/implements_for_packages/main.kl"
-    return;
-#line 9 "codegen/implements_for_packages/main.kl"
-}
-
-#line 8 "codegen/implements_for_packages/main.kl"
-int64_t kl_6shapes5kinds_Tracked__as_kl__Measured__kl__7measure__( void* kl_t1 )
-{
-    int64_t kl_t0;
-    struct kl_6shapes5kinds_Tracked* kl_t2;
-#line 20 "codegen/implements_for_packages/main.kl"
-    kl_t2 = ( struct kl_6shapes5kinds_Tracked* ) kl_t1;
-#line 20 "codegen/implements_for_packages/main.kl"
-    kl_t0 = kl__7measure__SQ6shapes7TrackedC8Measured( kl_t2 );
-#line 20 "codegen/implements_for_packages/main.kl"
-    return kl_t0;
-#line 8 "codegen/implements_for_packages/main.kl"
-}
-
-#line 9 "codegen/implements_for_packages/main.kl"
-void kl_6shapes5kinds_Tracked__as_kl__Measured__kl__4grow__3i64( void* kl_t1, int64_t kl_t2 )
-{
-    struct kl_6shapes5kinds_Tracked* kl_t3;
-#line 21 "codegen/implements_for_packages/main.kl"
-    kl_t3 = ( struct kl_6shapes5kinds_Tracked* ) kl_t1;
-#line 21 "codegen/implements_for_packages/main.kl"
-    kl__4grow__SQ6shapes7TrackedC8Measured_3i64( kl_t3, kl_t2 );
-#line 21 "codegen/implements_for_packages/main.kl"
-    return;
-#line 9 "codegen/implements_for_packages/main.kl"
 }
 
 int main( void )

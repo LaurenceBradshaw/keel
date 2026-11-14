@@ -204,6 +204,15 @@ static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_
 
 static const struct kl_7prelude_textual__vtable kl_2kl6string_string__as_kl_7prelude_textual = { kl_2kl6string_string__drop, kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__ };
 
+struct kl__run__L2u8__ref kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__( void* kl_t1 )
+{
+    struct kl__run__L2u8__ref kl_t0;
+    struct kl_2kl6string_string* kl_t2;
+    kl_t2 = ( struct kl_2kl6string_string* ) kl_t1;
+    kl_t0 = kl_2kl6string_7as_text__SQ2kl6string( kl_t2 );
+    return kl_t0;
+}
+
 #line 27 "<kl>/string.kl"
 void kl_2kl6string_6string__RQ2kl6string__ctor( struct kl_2kl6string_string* kl_this_1 )
 {
@@ -4020,20 +4029,6 @@ void kl_2kl6string_string__drop( void* kl_t1 )
 #line 21 "<kl>/string.kl"
 }
 
-#line 11 "<prelude>"
-struct kl__run__L2u8__ref kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__( void* kl_t1 )
-{
-    struct kl__run__L2u8__ref kl_t0;
-    struct kl_2kl6string_string* kl_t2;
-#line 154 "<kl>/string.kl"
-    kl_t2 = ( struct kl_2kl6string_string* ) kl_t1;
-#line 154 "<kl>/string.kl"
-    kl_t0 = kl_2kl6string_7as_text__SQ2kl6string( kl_t2 );
-#line 154 "<kl>/string.kl"
-    return kl_t0;
-#line 11 "<prelude>"
-}
-
 // codegen/box_borrowed_conversion.kl
 #include <stdint.h>
 #include <stdbool.h>
@@ -4171,6 +4166,24 @@ static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_
 static const struct kl__shape__vtable kl__Square__as_kl__shape = { kl__Square__drop, kl__Square__as_kl__shape__kl__4area__ };
 
 static const struct kl__shape__vtable kl__Framed__as_kl__shape = { kl__Framed__drop, kl__Framed__as_kl__shape__kl__4area__ };
+
+double kl__Square__as_kl__shape__kl__4area__( void* kl_t1 )
+{
+    double kl_t0;
+    struct kl__Square* kl_t2;
+    kl_t2 = ( struct kl__Square* ) kl_t1;
+    kl_t0 = kl__4area__S6Square( kl_t2 );
+    return kl_t0;
+}
+
+double kl__Framed__as_kl__shape__kl__4area__( void* kl_t1 )
+{
+    double kl_t0;
+    struct kl__Framed* kl_t2;
+    kl_t2 = ( struct kl__Framed* ) kl_t1;
+    kl_t0 = kl__4area__S6Framed( kl_t2 );
+    return kl_t0;
+}
 
 #line 14 "codegen/box_borrowed_conversion.kl"
 double kl__4area__S6Square( struct kl__Square* kl_this_1 )
@@ -5035,34 +5048,6 @@ void kl__Square__drop( void* kl_t1 )
 #line 11 "codegen/box_borrowed_conversion.kl"
     return;
 #line 11 "codegen/box_borrowed_conversion.kl"
-}
-
-#line 8 "codegen/box_borrowed_conversion.kl"
-double kl__Square__as_kl__shape__kl__4area__( void* kl_t1 )
-{
-    double kl_t0;
-    struct kl__Square* kl_t2;
-#line 14 "codegen/box_borrowed_conversion.kl"
-    kl_t2 = ( struct kl__Square* ) kl_t1;
-#line 14 "codegen/box_borrowed_conversion.kl"
-    kl_t0 = kl__4area__S6Square( kl_t2 );
-#line 14 "codegen/box_borrowed_conversion.kl"
-    return kl_t0;
-#line 8 "codegen/box_borrowed_conversion.kl"
-}
-
-#line 8 "codegen/box_borrowed_conversion.kl"
-double kl__Framed__as_kl__shape__kl__4area__( void* kl_t1 )
-{
-    double kl_t0;
-    struct kl__Framed* kl_t2;
-#line 21 "codegen/box_borrowed_conversion.kl"
-    kl_t2 = ( struct kl__Framed* ) kl_t1;
-#line 21 "codegen/box_borrowed_conversion.kl"
-    kl_t0 = kl__4area__S6Framed( kl_t2 );
-#line 21 "codegen/box_borrowed_conversion.kl"
-    return kl_t0;
-#line 8 "codegen/box_borrowed_conversion.kl"
 }
 
 int main( void )

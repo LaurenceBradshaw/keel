@@ -49,6 +49,24 @@ static const struct kl__Named__vtable kl__Wrap__I3i32E__as_kl__Named = { kl__Wra
 
 static const struct kl__Named__vtable kl__Pair__I2u8_2u8E__as_kl__Named = { kl__Pair__I2u8_2u8E__drop, kl__Pair__I2u8_2u8E__as_kl__Named__kl__4code__ };
 
+int32_t kl__Wrap__I3i32E__as_kl__Named__kl__4code__( void* kl_t1 )
+{
+    int32_t kl_t0;
+    struct kl__Wrap__I3i32E* kl_t2;
+    kl_t2 = ( struct kl__Wrap__I3i32E* ) kl_t1;
+    kl_t0 = kl__4code__S4WrapI3i32EC5Named( kl_t2 );
+    return kl_t0;
+}
+
+int32_t kl__Pair__I2u8_2u8E__as_kl__Named__kl__4code__( void* kl_t1 )
+{
+    int32_t kl_t0;
+    struct kl__Pair__I2u8_2u8E* kl_t2;
+    kl_t2 = ( struct kl__Pair__I2u8_2u8E* ) kl_t1;
+    kl_t0 = kl__4code__I2u8E__S4PairI2u8_2u8EC5Named( kl_t2 );
+    return kl_t0;
+}
+
 #line 21 "codegen/concrete_blocks.kl"
 int32_t kl__4code__S4WrapI3i32EC5Named( struct kl__Wrap__I3i32E* kl_this_1 )
 {
@@ -332,20 +350,6 @@ void kl__Wrap__I3i32E__drop( void* kl_t1 )
 #line 8 "codegen/concrete_blocks.kl"
 }
 
-#line 5 "codegen/concrete_blocks.kl"
-int32_t kl__Wrap__I3i32E__as_kl__Named__kl__4code__( void* kl_t1 )
-{
-    int32_t kl_t0;
-    struct kl__Wrap__I3i32E* kl_t2;
-#line 21 "codegen/concrete_blocks.kl"
-    kl_t2 = ( struct kl__Wrap__I3i32E* ) kl_t1;
-#line 21 "codegen/concrete_blocks.kl"
-    kl_t0 = kl__4code__S4WrapI3i32EC5Named( kl_t2 );
-#line 21 "codegen/concrete_blocks.kl"
-    return kl_t0;
-#line 5 "codegen/concrete_blocks.kl"
-}
-
 void kl__Pair__I2u8_2u8E__drop( void* kl_t1 )
 {
     struct kl__Pair__I2u8_2u8E* kl_t2;
@@ -355,20 +359,6 @@ void kl__Pair__I2u8_2u8E__drop( void* kl_t1 )
 #line 13 "codegen/concrete_blocks.kl"
     return;
 #line 13 "codegen/concrete_blocks.kl"
-}
-
-#line 5 "codegen/concrete_blocks.kl"
-int32_t kl__Pair__I2u8_2u8E__as_kl__Named__kl__4code__( void* kl_t1 )
-{
-    int32_t kl_t0;
-    struct kl__Pair__I2u8_2u8E* kl_t2;
-#line 35 "codegen/concrete_blocks.kl"
-    kl_t2 = ( struct kl__Pair__I2u8_2u8E* ) kl_t1;
-#line 35 "codegen/concrete_blocks.kl"
-    kl_t0 = kl__4code__I2u8E__S4PairI2u8_2u8EC5Named( kl_t2 );
-#line 35 "codegen/concrete_blocks.kl"
-    return kl_t0;
-#line 5 "codegen/concrete_blocks.kl"
 }
 
 int main( void )

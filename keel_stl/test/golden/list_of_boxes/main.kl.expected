@@ -204,6 +204,15 @@ static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_
 
 static const struct kl_7prelude_textual__vtable kl_2kl6string_string__as_kl_7prelude_textual = { kl_2kl6string_string__drop, kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__ };
 
+struct kl__run__L2u8__ref kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__( void* kl_t1 )
+{
+    struct kl__run__L2u8__ref kl_t0;
+    struct kl_2kl6string_string* kl_t2;
+    kl_t2 = ( struct kl_2kl6string_string* ) kl_t1;
+    kl_t0 = kl_2kl6string_7as_text__SQ2kl6string( kl_t2 );
+    return kl_t0;
+}
+
 #line 27 "../../src/string.kl"
 void kl_2kl6string_6string__RQ2kl6string__ctor( struct kl_2kl6string_string* kl_this_1 )
 {
@@ -4020,20 +4029,6 @@ void kl_2kl6string_string__drop( void* kl_t1 )
 #line 21 "../../src/string.kl"
 }
 
-#line 11 "<prelude>"
-struct kl__run__L2u8__ref kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__( void* kl_t1 )
-{
-    struct kl__run__L2u8__ref kl_t0;
-    struct kl_2kl6string_string* kl_t2;
-#line 154 "../../src/string.kl"
-    kl_t2 = ( struct kl_2kl6string_string* ) kl_t1;
-#line 154 "../../src/string.kl"
-    kl_t0 = kl_2kl6string_7as_text__SQ2kl6string( kl_t2 );
-#line 154 "../../src/string.kl"
-    return kl_t0;
-#line 11 "<prelude>"
-}
-
 // list_of_boxes/main.kl
 #include <stdint.h>
 #include <stdbool.h>
@@ -4174,6 +4169,40 @@ void kl_2kl4list_4list__IQ2kl6stringE__dtor( struct kl_2kl4list_list__IQ2kl6stri
 static const struct kl__Shape__vtable kl__Square__as_kl__Shape = { kl__Square__drop, kl__Square__as_kl__Shape__kl__4area__, kl__Square__as_kl__Shape__kl__4grow__3f64 };
 
 static const struct kl__Shape__vtable kl__Labelled__as_kl__Shape = { kl__Labelled__drop, kl__Labelled__as_kl__Shape__kl__4area__, kl__Labelled__as_kl__Shape__kl__4grow__3f64 };
+
+double kl__Square__as_kl__Shape__kl__4area__( void* kl_t1 )
+{
+    double kl_t0;
+    struct kl__Square* kl_t2;
+    kl_t2 = ( struct kl__Square* ) kl_t1;
+    kl_t0 = kl__4area__S6Square( kl_t2 );
+    return kl_t0;
+}
+
+void kl__Square__as_kl__Shape__kl__4grow__3f64( void* kl_t1, double kl_t2 )
+{
+    struct kl__Square* kl_t3;
+    kl_t3 = ( struct kl__Square* ) kl_t1;
+    kl__4grow__S6Square_3f64( kl_t3, kl_t2 );
+    return;
+}
+
+double kl__Labelled__as_kl__Shape__kl__4area__( void* kl_t1 )
+{
+    double kl_t0;
+    struct kl__Labelled* kl_t2;
+    kl_t2 = ( struct kl__Labelled* ) kl_t1;
+    kl_t0 = kl__4area__S8Labelled( kl_t2 );
+    return kl_t0;
+}
+
+void kl__Labelled__as_kl__Shape__kl__4grow__3f64( void* kl_t1, double kl_t2 )
+{
+    struct kl__Labelled* kl_t3;
+    kl_t3 = ( struct kl__Labelled* ) kl_t1;
+    kl__4grow__S8Labelled_3f64( kl_t3, kl_t2 );
+    return;
+}
 
 #line 17 "list_of_boxes/main.kl"
 double kl__4area__S6Square( struct kl__Square* kl_this_1 )
@@ -5425,60 +5454,6 @@ void kl__Square__drop( void* kl_t1 )
 #line 13 "list_of_boxes/main.kl"
     return;
 #line 13 "list_of_boxes/main.kl"
-}
-
-#line 9 "list_of_boxes/main.kl"
-double kl__Square__as_kl__Shape__kl__4area__( void* kl_t1 )
-{
-    double kl_t0;
-    struct kl__Square* kl_t2;
-#line 17 "list_of_boxes/main.kl"
-    kl_t2 = ( struct kl__Square* ) kl_t1;
-#line 17 "list_of_boxes/main.kl"
-    kl_t0 = kl__4area__S6Square( kl_t2 );
-#line 17 "list_of_boxes/main.kl"
-    return kl_t0;
-#line 9 "list_of_boxes/main.kl"
-}
-
-#line 10 "list_of_boxes/main.kl"
-void kl__Square__as_kl__Shape__kl__4grow__3f64( void* kl_t1, double kl_t2 )
-{
-    struct kl__Square* kl_t3;
-#line 18 "list_of_boxes/main.kl"
-    kl_t3 = ( struct kl__Square* ) kl_t1;
-#line 18 "list_of_boxes/main.kl"
-    kl__4grow__S6Square_3f64( kl_t3, kl_t2 );
-#line 18 "list_of_boxes/main.kl"
-    return;
-#line 10 "list_of_boxes/main.kl"
-}
-
-#line 9 "list_of_boxes/main.kl"
-double kl__Labelled__as_kl__Shape__kl__4area__( void* kl_t1 )
-{
-    double kl_t0;
-    struct kl__Labelled* kl_t2;
-#line 34 "list_of_boxes/main.kl"
-    kl_t2 = ( struct kl__Labelled* ) kl_t1;
-#line 34 "list_of_boxes/main.kl"
-    kl_t0 = kl__4area__S8Labelled( kl_t2 );
-#line 34 "list_of_boxes/main.kl"
-    return kl_t0;
-#line 9 "list_of_boxes/main.kl"
-}
-
-#line 10 "list_of_boxes/main.kl"
-void kl__Labelled__as_kl__Shape__kl__4grow__3f64( void* kl_t1, double kl_t2 )
-{
-    struct kl__Labelled* kl_t3;
-#line 35 "list_of_boxes/main.kl"
-    kl_t3 = ( struct kl__Labelled* ) kl_t1;
-#line 35 "list_of_boxes/main.kl"
-    kl__4grow__S8Labelled_3f64( kl_t3, kl_t2 );
-#line 35 "list_of_boxes/main.kl"
-    return;
-#line 10 "list_of_boxes/main.kl"
 }
 
 int main( void )
