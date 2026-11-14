@@ -581,7 +581,8 @@ std::optional<Circuit> Circuit::load( std::string_view text, Field& field, const
             return word().empty() ? std::optional<Circuit>( std::move( c ) ) : std::nullopt;
         }
         const std::optional<u32> i = whole( rows.size() ), node = whole( *ops );
-        if( w != "y" || !i || !node || !c.outputs.try_emplace( rows[*i], *node ).second )
+        if( w != "y" || !i || !node ||
+            c.outputs.try_emplace( rows[*i], *node ).first->second != *node ) // equal rows share a node
         {
             return std::nullopt;
         }

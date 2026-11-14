@@ -179,6 +179,16 @@ TEST_CASE( "a_cached_circuit_is_read_back_as_itself_and_a_damaged_one_is_a_miss"
     REQUIRE( !damaged( whole ) );
 }
 
+TEST_CASE( "a_map_with_equal_rows_is_read_back", "[egraph][circuit_cache]" )
+{
+    const Temp_dir         dir;
+    Field                  field( Ring_kind::Real, 4 );
+    const Element          one = field.one();
+    const std::vector<Row> rows { { one, one }, { one, field.minus_one() }, { one, one } };
+    cache_circuit( dir.path, field, rows, {}, solve( field, rows ).circuit );
+    REQUIRE( cached_circuit( dir.path, field, rows, {} ) );
+}
+
 constexpr std::string_view k_two_dfts = R"(
 @trig_cos
 f64 cosine( f64 x ) { return x; }

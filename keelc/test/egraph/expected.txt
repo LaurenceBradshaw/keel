@@ -25,8 +25,8 @@ dft61 1848/684 input 14520/14400 spent 200934293 memo 1356 reused 319
 wht32 320/0 input 1364/0 spent 5523651 memo 9 reused 116
 fir7 54/18 input 98/14 spent 121472113 memo 541 reused 950
 fir8 72/28 input 160/80 spent 181552667 memo 566 reused 591
-fir12 214/78 input 360/168 spent 1878340617 memo 1570 reused 6777
-fir16 320/112 input 672/384 spent 1971869959 memo 3075 reused 15769
+fir12 214/78 input 360/168 spent 1751697961 memo 2011 reused 10615
+fir16 320/112 input 672/384 spent 1891325090 memo 3563 reused 9056
 rdft3 4/2 input 6/4 spent 42891 memo 40 reused 3
 rdft4 6/0 input 9/0 spent 4205 memo 4 reused 1
 rdft5 13/5 input 24/16 spent 2491025 memo 71 reused 10

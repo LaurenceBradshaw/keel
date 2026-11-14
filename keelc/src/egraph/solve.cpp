@@ -1927,7 +1927,7 @@ Solution Solver::run( const std::vector<Row>& given )
     if( ran_out_ && options_.fuel != 0 ) // pass 1 spent depth-first and ran out: shares now
     {
         const Maybe first = got;
-        memo_.clear();
+        std::erase_if( memo_, []( const auto& m ) { return !m.second || m.second->had; } ); // keep what had enough
         shares_     = true;
         ceiling_[0] = static_cast<i64>( spent() + options_.fuel );
         got         = solve( rows );
