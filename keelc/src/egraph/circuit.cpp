@@ -278,6 +278,31 @@ Circuit Circuit::pruned() const
     return folded ? c.pruned() : c;
 }
 
+// Complex: real or imaginary 0+2, |Re| = |Im| or a part +-1 2+2, else 2+4. Real: 0+1. A unit is free.
+Cost scale_cost( std::complex<f64> c, bool real )
+{
+    c = snap( c );
+    if( std::ranges::any_of( float_units( real ), [&]( std::complex<f64> u ) { return std::abs( c - u ) < 1e-12; } ) )
+    {
+        return {};
+    }
+    const f64 x = std::abs( c.real() );
+    const f64 y = std::abs( c.imag() );
+    if( real )
+    {
+        return { 0, 1 };
+    }
+    if( x < 1e-9 || y < 1e-9 )
+    {
+        return { 0, 2 };
+    }
+    if( std::abs( x - y ) < 1e-9 || std::abs( x - 1 ) < 1e-9 || std::abs( y - 1 ) < 1e-9 )
+    {
+        return { 2, 2 };
+    }
+    return { 2, 4 };
+}
+
 Cost Circuit::cost( bool fma ) const
 {
     const std::vector<bool> lv = live();
@@ -336,32 +361,14 @@ Cost Circuit::cost( bool fma ) const
             continue;
         }
 
-        // Complex: real or imaginary 0+2, |Re| = |Im| or a part +-1 2+2, else 2+4. Real: 0+1.
         const Constant& c = constants_[ops_[o].b];
-        const f64       x = std::abs( c.value.real() );
-        const f64       y = std::abs( c.value.imag() );
         if( is_unit( c ) )
         {
             continue;
         }
-        if( real_ )
-        {
-            total.muls += 1;
-        }
-        else if( x < 1e-9 || y < 1e-9 )
-        {
-            total.muls += 2;
-        }
-        else if( std::abs( x - y ) < 1e-9 || std::abs( x - 1 ) < 1e-9 || std::abs( y - 1 ) < 1e-9 )
-        {
-            total.adds += 2;
-            total.muls += 2;
-        }
-        else
-        {
-            total.adds += 2;
-            total.muls += 4;
-        }
+        const Cost s = scale_cost( c.value, real_ );
+        total.adds += s.adds;
+        total.muls += s.muls;
         if( fma && !ends_in_muls( c ) )
         {
             fused += 2;

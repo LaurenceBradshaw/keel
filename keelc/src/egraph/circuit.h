@@ -40,6 +40,9 @@ struct Cost
 // A row of a linear map, the key of the output that computes it.
 using Row = std::vector<Element>;
 
+// What scaling by `c` costs, as Circuit::cost counts it.
+Cost scale_cost( std::complex<f64> c, bool real );
+
 // A hash-consed straight-line circuit over inputs, adds and scalings. Constants are snapped complex
 // floats, since sub-circuits from other fields are pasted in; an integer ring's stay exact.
 class Circuit
