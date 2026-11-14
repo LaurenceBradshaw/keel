@@ -36,6 +36,7 @@ struct Loaded_state
     File_id              file;
     std::string          object;       // the .klo it was read from
     std::optional<u32>   level;        // -O<n> its native part was built at; a release object has none
+    std::string          cpu;          // and the target_cpu() it was built for
     std::vector<Node_id> declarations; // top-level, for the root
 
     // The resolver's: each use's declaration, and the overload chains of member scopes. Top-level

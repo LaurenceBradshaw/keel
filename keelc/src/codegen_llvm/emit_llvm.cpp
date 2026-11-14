@@ -2380,8 +2380,8 @@ llvm::Constant* Llvm_emitter::vtable( Type_id implementer, Type_id interface )
     return table_global;
 }
 
-// Set by -march; baseline x86-64 unless asked, so a binary runs on any x86-64.
-std::string g_cpu      = "x86-64";
+// Set by -march; x86-64-v2 (SSE4.2) unless asked, which every x86-64 since about 2010 has.
+std::string g_cpu      = "x86-64-v2";
 std::string g_features = "";
 
 // x86-64, COFF or ELF by the module's triple, at the machine passes of its level, and none of LLVM's IR passes (§2.2):
@@ -2437,6 +2437,11 @@ std::string write_object( llvm::Module& module, const std::filesystem::path& obj
 
 } // namespace
 
+std::string target_cpu()
+{
+    return g_features.empty() ? g_cpu : g_cpu + " " + g_features;
+}
+
 std::string set_target_cpu( const std::string& cpu )
 {
     if( cpu != "native" )
@@ -2454,6 +2459,7 @@ std::string set_target_cpu( const std::string& cpu )
             return fmt::format( "there is no -march={}; try x86-64, x86-64-v2, x86-64-v3, x86-64-v4 or native", cpu );
         }
         g_cpu = cpu;
+        g_features.clear();
         return {};
     }
     // The host's name and the features it has, as clang's -march=native: a CPU's name alone may promise

@@ -353,10 +353,13 @@ Built in M16: keelc and keelb take `-O0` to `-O3`, keelb passing it to the link 
 defaults to `-O1` and a plain build to `-O2`; `-O<n>` overrides either. `--debug` means `assert` and
 overflow checks and nothing else. `-O0` is never a default: it is the KIR as lowered, which the goldens ask for.
 `--debug` takes any level; above `-O1` nothing promises that a debugger finds every local or steps every statement in order.
-`-march=<cpu>`, gcc's spelling, names the CPU the LLVM backend builds for: `x86-64` by default, so a
-binary runs on any x86-64, or any CPU LLVM knows (`x86-64-v3`), or `native`, the host's name and
-features as clang reads them. keelb passes it to the link alone, as it does `-O<n>`. The circuit
-cache needs no key for it, since circuits are KIR.
+`-march=<cpu>`, gcc's spelling, names the CPU the LLVM backend builds for: `x86-64-v2` (SSE4.2) by
+default, which every x86-64 sold since about 2010 has, `x86-64` for any x86-64 at all, any other CPU
+LLVM knows (`x86-64-v3`), or `native`, the host's name and features as clang reads them. A default
+above gcc's and clang's is a floor a modern language can take, and `-march` lowers it. keelb passes it
+to the link alone, as it does `-O<n>`; a debug object's manifest records its CPU beside its level, and
+a link for another CPU redoes it as it would for another level. The circuit cache needs no key for
+it, since circuits are KIR.
 
 **Each level is defined by what it promises.**
 - **`-O1`: debuggable.** Within one function; every named local keeps its stores and every statement
@@ -440,8 +443,8 @@ a later one overwrites and moves an instruction across a line, so the debugger w
 local and step back to a line it left.
 
 **Objects.** A release object holds checked KIR and no level; the program that links it chooses
-the level, so a change of level only relinks. A debug object is compiled at its level and its
-manifest records that level; a link at the same level reuses the code, and one at another redoes
+the level, so a change of level only relinks. A debug object is compiled at its level and CPU and
+its manifest records both; a link at the same level and CPU reuses the code, and any other redoes
 the object from its kept KIR. keelb's caches stay `build/release` and `build/debug`.
 
 **Floats fold as exact IEEE** in the operand's own type, rounding to nearest: `f32` in `float`,

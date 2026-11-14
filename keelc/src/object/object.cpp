@@ -96,6 +96,7 @@ int write_object(
         .build       = std::string( build_id() ),
         .debug       = options.debug,
         .level       = options.level,
+        .cpu         = target_cpu(),
         .overflow    = options.overflow,
         .llvm        = options.llvm,
         .module      = module_name( program.modules, sm, interner, input ),
@@ -492,8 +493,10 @@ TEST_CASE( "a_debug_object_links_its_code_only_at_its_own_level", "[object]" )
     const std::optional<Object> clock = read_object( dir.path / "clock.klo", error );
     REQUIRE( clock );
 
-    for( const u32 level : { 0u, 1u } )
+    // At its level for another CPU, as -march=x86-64-v3 asks, it is redone too.
+    for( const auto& [level, cpu] : { std::pair { 0u, "x86-64-v2" }, { 1u, "x86-64-v2" }, { 1u, "x86-64-v3" } } )
     {
+        REQUIRE( set_target_cpu( cpu ).empty() );
         Source_manager  sm;
         Interner        interner;
         Literal_pool    literals;
@@ -511,11 +514,12 @@ TEST_CASE( "a_debug_object_links_its_code_only_at_its_own_level", "[object]" )
             false,
             std::span( &*clock, 1 )
         );
-        INFO( level );
+        INFO( level << " " << cpu );
         REQUIRE( !diags.has_errors() );
         REQUIRE( !front.provided.empty() );
-        REQUIRE( front.reuses( front.provided[0] ) == ( level == 1 ) );
+        REQUIRE( front.reuses( front.provided[0] ) == ( level == 1 && cpu == std::string_view( "x86-64-v2" ) ) );
     }
+    REQUIRE( set_target_cpu( "x86-64-v2" ).empty() );
 }
 
 namespace

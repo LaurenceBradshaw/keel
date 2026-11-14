@@ -104,7 +104,8 @@ class command_line
     }
 
     /// Declares `-s <placeholder>` and, unless `name` is empty, `--name <placeholder>`, which `help`
-    /// describes.
+    /// describes. With no `name`, a placeholder that ends in `>` is shown as written, as `-march=<cpu>`
+    /// from `arch=<cpu>`.
     ///
     /// Panics when `short_name` is not a letter or digit, `name` starts with `-`, or either is
     /// already declared.
@@ -329,7 +330,7 @@ class command_line
     }
 
     // `-s, --name <placeholder>`, with `    ` for a missing `-s, ` when `shorts`, and `-s<placeholder>`
-    // when there is only a short name.
+    // when there is only a short name, or `-splaceholder` when it ends in `>`.
     private static string left_side( const ref entry e, bool shorts )
     {
         string s = "";
@@ -339,9 +340,15 @@ class command_line
             s.push( e.short_name );
             if( e.name.size == 0 )
             {
-                if( e.placeholder.size > 0 )
+                string placeholder = "";
+                placeholder += e.placeholder;
+                if( placeholder.ends_with( ">" ) )
                 {
-                    s += "<" + e.placeholder + ">";
+                    s += placeholder;
+                }
+                else if( placeholder.size() > 0 )
+                {
+                    s += "<" + placeholder + ">";
                 }
                 return s;
             }

@@ -6,6 +6,7 @@
 #include <algorithm>
 #include "check/drop_flags.h"
 #include "check/report.h"
+#include "codegen_llvm/emit_llvm.h"
 #include "ir/call_graph.h"
 #include "ir/lower.h"
 #include "ir/lower_dispatch.h"
@@ -122,7 +123,7 @@ Front_end run_front_end(
 
     for( const Loaded_state& state : states )
     {
-        if( state.level == build.level )
+        if( state.level == build.level && state.cpu == target_cpu() )
         {
             front.reused.push_back( state.file );
         }

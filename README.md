@@ -445,7 +445,7 @@ links to `keel_stl/src`; `--package kl=<dir>` names another.
 | `--backend c` | Generate C and build it with `$CC`, in place of LLVM (the default) |
 | `--emit-c` / `--emit-llvm` | Print the generated C or LLVM IR and stop |
 | `-O0` … `-O3` | Optimisation level: `-O0` is the program as lowered, `-O2` the default, `-O3` adds loop work and the linear-map solve |
-| `-march=<cpu>` | The CPU to build for: `x86-64` by default, so the program runs on any x86-64; `x86-64-v3` or `native` lets an `@real_arithmetic` function fuse multiplies and adds |
+| `-march=<cpu>` | The CPU to build for: `x86-64-v2` (SSE4.2) by default, which any x86-64 since about 2010 has; `x86-64` for any x86-64 at all; `x86-64-v3` or `native` lets an `@real_arithmetic` function fuse multiplies and adds |
 | `--debug` | Run each `assert`, check overflow as `--overflow-checks` does, and optimise at `-O1`, which keeps every named local, so a debugger steps through the program as written (any `-O<n>` may replace it, with no such promise above `-O1`); without it an assert's condition is checked but never run |
 | `--overflow-checks` | Panic when an integer `+`, `-`, `*` or unary `-` overflows; `wrap<T>( … )` around arithmetic wraps it on purpose |
 | `-q` / `--quiet` | Print only diagnostics. Without it, a check or build ends with one line on stderr: errors, warnings, files and seconds |

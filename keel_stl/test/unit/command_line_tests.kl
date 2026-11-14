@@ -222,5 +222,9 @@ private void usage_with_short_names( ref kl::test::context c )
     _ = cl.add_flag( 'd', "debug", "checks" );
     _ = cl.add_option( "cache", "dir", "where" );
     _ = cl.add_option( 'O', "", "n", "how hard" );
-    c.check_eq( cl.usage(), "usage: t\n\noptions:\n  -d, --debug        checks\n      --cache <dir>  where\n  -O<n>              how hard\n" );
+    _ = cl.add_option( 'm', "", "arch=<cpu>", "for what" );
+    c.check_eq(
+        cl.usage(),
+        "usage: t\n\noptions:\n  -d, --debug        checks\n      --cache <dir>  where\n  -O<n>              how hard\n  -march=<cpu>       for what\n"
+    );
 }

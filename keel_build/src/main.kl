@@ -122,7 +122,7 @@ i32 main( const ref str[] args )
     kl::flag verbose_flag = cl.add_flag( "verbose", "print the commands that are run" );
     kl::option cache_option = cl.add_option( "cache", "dir", "where to store the build cache" );
     kl::option level_option = cl.add_option( 'O', "", "n", "optimisation level, 0 to 3: 2, or 1 under --debug" );
-    kl::option machine_option = cl.add_option( 'm', "", "arch=cpu", "the CPU to build for: x86-64 by default, or native" );
+    kl::option machine_option = cl.add_option( 'm', "", "arch=<cpu>", "the CPU to build for: x86-64-v2 by default, or native" );
 
     Command mode = Command::Error( "no command given" );
     kl::path cache_dir = kl::path::from( "build" );
