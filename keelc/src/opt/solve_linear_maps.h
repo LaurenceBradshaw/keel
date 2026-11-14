@@ -31,6 +31,7 @@ Map_outcome solve_linear_maps(
     const Type_table&            types,
     Literal_pool&                literals,
     const std::filesystem::path& cache   = {},
-    const Solve_options&         options = {}
+    const Solve_options&         options = {},
+    const Global_constants&      globals = {}
 );
 } // namespace keel

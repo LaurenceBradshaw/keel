@@ -220,6 +220,17 @@ Front_end run_front_end(
     // Decided a group at a time as the loop below finishes it, so a caller sees its callees'.
     Purity purity( front.functions, ast );
 
+    // A linear map may read a `const` global's folded value as its constants.
+    const Global_constants constants = [&]( Node_id decl ) -> std::optional<Global_constant>
+    {
+        const std::optional<Constant_value> value = front.types.constant_of( decl );
+        if( !value || !ast.is_const_binding( decl ) )
+        {
+            return std::nullopt;
+        }
+        return Global_constant { *value, front.types.type_of( decl ) };
+    };
+
     // At -O1 a named local keeps its stores, so a debugger finds its current value.
     const bool pin_named = build.level == 1;
 
@@ -402,7 +413,8 @@ Front_end run_front_end(
                             front.types.table(),
                             literals,
                             build.cache,
-                            { .fma = target_has_fma() }
+                            { .fma = target_has_fma() },
+                            constants
                         );
                         if( clock != nullptr && !outcome.ending )
                         {

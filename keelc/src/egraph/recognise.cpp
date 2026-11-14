@@ -90,13 +90,15 @@ public:
         const Purity&                purity,
         const Type_table&            types,
         const Literal_pool&          literals,
-        u64                          budget
+        u64                          budget,
+        const Global_constants&      globals
     )
         : functions_( functions ),
           purity_( purity ),
           types_( types ),
           literals_( literals ),
-          budget_( budget )
+          budget_( budget ),
+          globals_( globals )
     {
     }
 
@@ -621,14 +623,62 @@ private:
         }
     }
 
-    Location locate( Frame& fr, const Place& place )
+    // A `const` global's root, its value written there on first use.
+    std::pair<u32, Type_id> global( Node_id decl )
     {
-        if( place.is_global() )
+        if( const auto found = global_roots_.find( decl.v ); found != global_roots_.end() )
+        {
+            return found->second;
+        }
+        const std::optional<Global_constant> c = globals_ ? globals_( decl ) : std::nullopt;
+        if( !c )
         {
             end( Ending::Global );
         }
-        Location at { root( fr, place.local ), {} };
-        Type_id  type = fr.func->locals[place.local].type;
+        const u32 r = static_cast<u32>( roots_.size() );
+        roots_.emplace_back();
+        store( { r, {} }, c->value, c->type );
+        return global_roots_.emplace( decl.v, std::pair { r, c->type } ).first->second;
+    }
+
+    // Numbers as a literal of their type would read; anything else stays unknown.
+    void store( const Location& at, const Constant_value& v, Type_id type )
+    {
+        const Type& t = types_.get( type );
+        if( v.kind == Constant_value::Kind::Array || v.kind == Constant_value::Kind::Fill )
+        {
+            for( u64 i = 0; i < t.count; ++i )
+            {
+                Location e = at;
+                e.steps.push_back( i << 1 );
+                store( e, v.elements[v.kind == Constant_value::Kind::Fill ? 0 : i], t.element );
+            }
+        }
+        else if( is_f64( type ) && ( v.kind == Constant_value::Kind::Float || v.kind == Constant_value::Kind::Integer ) )
+        {
+            const f64 x = v.kind == Constant_value::Kind::Float ? v.floating
+                                                                : ( v.negative ? -1.0 : 1.0 ) * static_cast<f64>( v.magnitude );
+            write( at, real( x, exact_literal( x ) ) );
+        }
+        else if( t.kind == Type_kind::Int && v.kind == Constant_value::Kind::Integer )
+        {
+            write( at, number( v.negative ? 0 - v.magnitude : v.magnitude ) );
+        }
+    }
+
+    Location locate( Frame& fr, const Place& place )
+    {
+        Location at;
+        Type_id  type;
+        if( place.is_global() )
+        {
+            std::tie( at.root, type ) = global( place.global );
+        }
+        else
+        {
+            at   = { root( fr, place.local ), {} };
+            type = fr.func->locals[place.local].type;
+        }
         for( const Projection& p : fr.func->projections_of( place ) )
         {
             switch( p.kind )
@@ -1336,24 +1386,26 @@ private:
     const Type_table&            types_;
     const Literal_pool&          literals_;
     u64                          budget_;
+    const Global_constants&      globals_;
     u64                          steps_ = 0;
     u32                          depth_ = 0;
     Span                         span_ {};
 
-    std::map<u32, Field>                          fields_;
-    std::unordered_map<u64, Element>              lifts_;
-    std::unordered_map<u64, std::optional<Exact>> literal_exacts_;
-    std::vector<Root>                             roots_;
-    std::vector<Location>                         locations_;
-    std::map<Location, Cell>                      memory_; // what the run wrote
-    std::map<Location, Value>                     read_;   // inputs not yet overwritten
-    std::vector<Form>                             forms_;
-    std::vector<Location>                         inputs_; // in the order first read
-    bool                                          ring_    = false;
-    bool                                          integer_ = false;
-    u8                                            width_   = 64;
-    Type_id                                       type_ {};
-    Cost                                          cost_ {};
+    std::map<u32, Field>                             fields_;
+    std::unordered_map<u64, Element>                 lifts_;
+    std::unordered_map<u64, std::optional<Exact>>    literal_exacts_;
+    std::vector<Root>                                roots_;
+    std::unordered_map<u32, std::pair<u32, Type_id>> global_roots_; // by declaration
+    std::vector<Location>                            locations_;
+    std::map<Location, Cell>                         memory_; // what the run wrote
+    std::map<Location, Value>                        read_;   // inputs not yet overwritten
+    std::vector<Form>                                forms_;
+    std::vector<Location>                            inputs_; // in the order first read
+    bool                                             ring_    = false;
+    bool                                             integer_ = false;
+    u8                                               width_   = 64;
+    Type_id                                          type_ {};
+    Cost                                             cost_ {};
 };
 } // namespace
 
@@ -1409,10 +1461,11 @@ std::variant<Recognised, Unrecognised> recognise(
     const Purity&                purity,
     const Type_table&            types,
     const Literal_pool&          literals,
+    const Global_constants&      globals,
     u64                          budget
 )
 {
-    return Recogniser( functions, purity, types, literals, budget ).run( func );
+    return Recogniser( functions, purity, types, literals, budget, globals ).run( func );
 }
 } // namespace keel
 
@@ -1449,7 +1502,16 @@ struct Attempt : Compiled
         {
             purity.decide( group );
         }
-        result = recognise( functions.front(), all, purity, types.table(), literals, budget );
+        const Global_constants globals = [&]( Node_id decl ) -> std::optional<Global_constant>
+        {
+            const std::optional<Constant_value> value = types.constant_of( decl );
+            if( !value || !ast.is_const_binding( decl ) )
+            {
+                return std::nullopt;
+            }
+            return Global_constant { *value, types.type_of( decl ) };
+        };
+        result = recognise( functions.front(), all, purity, types.table(), literals, globals, budget );
     }
 
     std::string kir() const
@@ -1589,6 +1651,20 @@ TEST_CASE( "recognise_reads_cos_constants_and_roots_exactly", "[egraph][recognis
     CHECK( std::abs( r.field.value( r.rows[2][2] ) - std::sqrt( 3.0 ) ) < 1e-15 );
 }
 
+TEST_CASE( "recognise_reads_a_const_global_table", "[egraph][recognise]" )
+{
+    const Attempt     a( "@real_arithmetic\n"
+                         "void f( const ref f64[3] x, ref f64[3] y )\n"
+                         "{\n"
+                         "    for( u64 i = 0; i < 3; i += 1 ) { y[i] = x[i] * q[i]; }\n"
+                         "}\n"
+                         "const f64[3] q = [ 0.5, 3.0, 0.75 ];\n" );
+    const Recognised& r = a.map();
+    CHECK( r.field.value( r.rows[0][0] ) == 0.5 );
+    CHECK( r.field.value( r.rows[1][1] ) == 3.0 );
+    CHECK( r.field.value( r.rows[2][2] ) == 0.75 );
+}
+
 TEST_CASE( "recognise_ends_with_the_operation_that_stops_it", "[egraph][recognise]" )
 {
     const auto ending = []( std::string_view body, u64 budget = 4'000'000 )
@@ -1604,6 +1680,7 @@ TEST_CASE( "recognise_ends_with_the_operation_that_stops_it", "[egraph][recognis
     CHECK( ending( "i64 f( i32 x ) { return cast<i64>( x ); }\n" ) == Ending::Cast );
     CHECK( ending( "f64 f( f64 x ) { return x * 0.1; }\n" ) == Ending::Coefficient );
     CHECK( ending( "f64 f( f64 x ) { return x + 1.0; }\n" ) == Ending::Constant );
+    CHECK( ending( "f64 f( f64 x ) { return x * g; }\nf64 g = 0.5;\n" ) == Ending::Global );
     CHECK(
         ending( "f64 f( f64 x ) { f64 s = 0.0; for( u64 i = 0; i < 1000; i += 1 ) { s += x; } return s; }\n", 100 ) ==
         Ending::Budget

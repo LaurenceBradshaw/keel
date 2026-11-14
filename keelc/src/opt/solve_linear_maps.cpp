@@ -103,10 +103,11 @@ Map_outcome solve_linear_maps(
     const Type_table&            types,
     Literal_pool&                literals,
     const std::filesystem::path& cache,
-    const Solve_options&         options
+    const Solve_options&         options,
+    const Global_constants&      globals
 )
 {
-    std::variant<Recognised, Unrecognised> attempt = recognise( func, functions, purity, types, literals );
+    std::variant<Recognised, Unrecognised> attempt = recognise( func, functions, purity, types, literals, globals );
     if( Unrecognised* u = std::get_if<Unrecognised>( &attempt ) )
     {
         return { .ending = *u };

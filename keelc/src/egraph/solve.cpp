@@ -186,6 +186,7 @@ private:
     Maybe                         via_components( const std::vector<Row>& rows, const std::vector<std::vector<u32>>& groups );
     Maybe                         via_blocks( const std::vector<Row>& rows, const Blocks& part, const Factored& f );
     Maybe                         via_diagonal( const std::vector<Row>& rows, const Row& d );
+    Maybe                         via_row_scales( const std::vector<Row>& rows, const Row& d );
     size_t                        consts( const std::vector<Row>& rows ) const;
     std::optional<std::vector<Rotation>> rotations( const std::vector<Row>& rows, u32 r1, u32 r2 ) const;
     std::pair<u32, u32>                  rotate( Circuit& c, u32 x, u32 y, Rotation b ) const;
@@ -631,6 +632,42 @@ Maybe Solver::via_diagonal( const std::vector<Row>& rows, const Row& d )
     for( size_t i = 0; i < rows.size(); ++i )
     {
         c.outputs[rows[i]] = m[sc->circuit->outputs.at( m2[i] )];
+    }
+    return finish( c );
+}
+
+// M = diag(d) M', row i of M' being row i of M over d[i]; rows equal in M' are solved once.
+Maybe Solver::via_row_scales( const std::vector<Row>& rows, const Row& d )
+{
+    std::vector<Row> m2, of;
+    for( size_t i = 0; i < rows.size(); ++i )
+    {
+        Row x;
+        for( const Element e : rows[i] )
+        {
+            x.push_back( divide( e, d[i] ) );
+        }
+        if( std::ranges::find( m2, x ) == m2.end() )
+        {
+            m2.push_back( x );
+        }
+        of.push_back( std::move( x ) );
+    }
+    const Maybe sc = solve( m2 );
+    if( !sc )
+    {
+        return std::nullopt;
+    }
+    Circuit          c = circuit();
+    std::vector<u32> ins;
+    for( u32 j = 0; j < rows[0].size(); ++j )
+    {
+        ins.push_back( c.input( j ) );
+    }
+    const std::vector<u32> m = c.paste( *sc->circuit, ins );
+    for( size_t i = 0; i < rows.size(); ++i )
+    {
+        c.outputs[rows[i]] = times( c, m[sc->circuit->outputs.at( of[i] )], d[i] );
     }
     return finish( c );
 }
@@ -1708,6 +1745,27 @@ Maybe Solver::solve_map( const std::vector<Row>& rows )
                 cands.emplace_back( [&, r] { return via_diagonal( rows, r ); } );
             }
         }
+        guarded(
+            [&]
+            {
+                Row  d; // each row's first nonzero entry
+                bool scaled = false;
+                for( const Row& r : rows )
+                {
+                    const auto first = std::ranges::find_if( r, [&]( Element e ) { return e != F_->zero(); } );
+                    if( first == r.end() )
+                    {
+                        return;
+                    }
+                    d.push_back( *first );
+                    scaled = scaled || !F_->is_unit( d.back() );
+                }
+                if( scaled && std::ranges::all_of( d, [&]( Element e ) { return F_->invertible( e ); } ) )
+                {
+                    cands.emplace_back( [&, d] { return via_row_scales( rows, d ); } );
+                }
+            }
+        );
         if( real ) // complex: a rotation is a constant
         {
             std::set<std::vector<std::tuple<u32, u32, Element, Element, Element>>> seen;

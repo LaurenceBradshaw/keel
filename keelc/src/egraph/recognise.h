@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #pragma once
+#include <functional>
+#include <optional>
 #include <string_view>
 #include <variant>
 #include <vector>
@@ -12,6 +14,7 @@
 #include "ir/kir.h"
 #include "ir/purity.h"
 #include "sema/type.h"
+#include "sema/type_checker.h"
 
 namespace keel
 {
@@ -77,20 +80,29 @@ struct Unrecognised
     Span   span;
 };
 
+// A file-scope `const` whose initialiser folds, by its declaration: its value and type.
+struct Global_constant
+{
+    Constant_value value;
+    Type_id        type;
+};
+using Global_constants = std::function<std::optional<Global_constant>( Node_id )>;
+
 // What ended an attempt, as "multiplies two inputs".
 std::string_view describe( Ending why );
 
 // Runs `func` with its inputs as symbols: by-value number parameters, and what pointer parameters
-// reach. Integers, addresses and branches are concrete; numbers are linear forms over the inputs
-// with exact coefficients in Q(W_M), or Z/2^w for an integer ring. Outputs are what the run writes
-// through pointer parameters, and the return. Pure callees run too; a `@trig_*` call at a rational
-// multiple of pi is exact. A real 2N map of rotation blocks is paired into N complex rows.
+// reach, and `const` globals `globals` knows. Integers, addresses and branches are concrete; numbers are linear forms over the
+// inputs with exact coefficients in Q(W_M), or Z/2^w for an integer ring. Outputs are what the run writes through pointer
+// parameters, and the return. Pure callees run too; a `@trig_*` call at a rational multiple of pi is exact. A real 2N map of
+// rotation blocks is paired into N complex rows.
 std::variant<Recognised, Unrecognised> recognise(
     const Function&              func,
     const std::vector<Function>& functions,
     const Purity&                purity,
     const Type_table&            types,
     const Literal_pool&          literals,
-    u64                          budget = 4'000'000
+    const Global_constants&      globals = {},
+    u64                          budget  = 4'000'000
 );
 } // namespace keel
