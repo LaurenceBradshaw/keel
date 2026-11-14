@@ -106,8 +106,9 @@ hides which of our own transformations are worth writing.
 **The `-O` level is two knobs rather than one.** LLVM's command-line `-O` conflates the mid-level IR
 pipeline with the codegen optimisation level; the API keeps them apart, and so should we.
 
-- **Mid-level pipeline: empty.** `PassBuilder` with no passes added, plus the handful that are about
-  legality rather than speed: `AlwaysInliner` if `alwaysinline` is ever emitted, `AtomicExpand`,
+- **Mid-level pipeline: the two vectorisers at `-O3`, else empty.** At `-O3`, LLVM's loop vectoriser
+  then its SLP vectoriser, and no other IR pass; at every level, the handful that are about legality
+  rather than speed: `AlwaysInliner` if `alwaysinline` is ever emitted, `AtomicExpand`,
   `PreISelIntrinsicLowering`.
 - **Codegen: `CodeGenOptLevel::Aggressive`.** Through `llc` that is `llc -O3` applied to
   unoptimised IR, which is the combination this rule describes and the one to test against.
@@ -123,15 +124,17 @@ Keel's own LICM and strength reduction do the part that does not depend on the t
 benchmark also runs with `-disable-lsr` to show it.
 
 **Three boundary cases.** **Auto-vectorisation is LLVM's**, because the transformation depends on
-the target's vector width, which KIR cannot know. Nothing runs it yet: keelc's codegen pipeline has
-no vectoriser, so no Keel code is vectorised. **What general vectorisation needs outside the
-e-graph is open to look at even where it breaks this rule**, because vectorised loops are among
-the largest speed-ups left: LLVM's loop and SLP vectorisers, the IR passes they assume have run,
-and the `noalias` that Keel's borrow rules can prove. **Tail-call elimination is Keel's**, because
-turning self-recursion into a loop has nothing target-specific in it; the backend's sibling-call
-optimisation stays the backend's. **Anything gated on undefined behaviour is nobody's**: no `nsw`,
-`nuw`, `noalias`, `dereferenceable` or `!tbaa` is emitted unless Keel can prove the claim, because
-those are permissions handed to an optimiser we have declined to run.
+the target's vector width, which KIR cannot know. At `-O3` the object writer runs the loop vectoriser
+then the SLP vectoriser before codegen, costed by the target machine, with none of the clean-up
+passes LLVM's own pipeline runs beside them; below `-O3` nothing is vectorised. **What general
+vectorisation needs outside the e-graph is open to look at even where it breaks this rule**,
+because vectorised loops are among the largest speed-ups left: LLVM's loop and SLP vectorisers, the
+IR passes they assume have run, and the `noalias` that Keel's borrow rules can prove. **Tail-call
+elimination is Keel's**, because turning self-recursion into a loop has nothing target-specific in
+it; the backend's sibling-call optimisation stays the backend's. **Anything gated on undefined
+behaviour is nobody's**: no `nsw`, `nuw`, `noalias`, `dereferenceable` or `!tbaa` is emitted unless
+Keel can prove the claim, because those are permissions handed to an optimiser we have declined to
+run.
 
 **What the rule obliges Keel to write**: promotion of non-address-taken locals to SSA values (the
 big one - LLVM assumes SROA/mem2reg has run); inlining with a cost model; CSE and GVN; constant and

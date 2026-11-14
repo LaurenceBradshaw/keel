@@ -14,6 +14,7 @@
 #include <llvm/IR/Verifier.h>
 #include <llvm/MC/MCSubtargetInfo.h>
 #include <llvm/MC/TargetRegistry.h>
+#include <llvm/Passes/PassBuilder.h>
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/TargetSelect.h>
@@ -21,6 +22,8 @@
 #include <llvm/Target/TargetMachine.h>
 #include <llvm/Target/TargetOptions.h>
 #include <llvm/TargetParser/Host.h>
+#include <llvm/Transforms/Vectorize/LoopVectorize.h>
+#include <llvm/Transforms/Vectorize/SLPVectorizer.h>
 #include <algorithm>
 #include <array>
 #include <memory>
@@ -2386,9 +2389,9 @@ llvm::Constant* Llvm_emitter::vtable( Type_id implementer, Type_id interface )
 std::string g_cpu      = "x86-64-v2";
 std::string g_features = "";
 
-// x86-64, COFF or ELF by the module's triple, at the machine passes of its level, and none of LLVM's IR passes (§2.2):
-// Keel optimises its own IR. None at -O0 and at a debug -O1, so each line keeps its code and every store.
-std::string write_object( llvm::Module& module, const std::filesystem::path& object, bool debug, u32 level )
+// The target machine for the module's triple at its level's codegen, with its data layout set; null if this
+// keelc has no x86-64 target.
+std::unique_ptr<llvm::TargetMachine> machine_for( llvm::Module& module, bool debug, u32 level, std::string& error )
 {
     LLVMInitializeX86TargetInfo();
     LLVMInitializeX86Target();
@@ -2396,14 +2399,13 @@ std::string write_object( llvm::Module& module, const std::filesystem::path& obj
     LLVMInitializeX86AsmPrinter();
 
     const std::string   triple = module.getTargetTriple();
-    std::string         error;
     const llvm::Target* target = llvm::TargetRegistry::lookupTarget( triple, error );
     if( target == nullptr )
     {
-        return "internal error: no x86-64 target in this keelc: " + error;
+        return nullptr;
     }
 
-    const std::unique_ptr<llvm::TargetMachine> machine( target->createTargetMachine(
+    std::unique_ptr<llvm::TargetMachine> machine( target->createTargetMachine(
         triple,
         g_cpu,
         g_features,
@@ -2419,6 +2421,45 @@ std::string write_object( llvm::Module& module, const std::filesystem::path& obj
     if( machine->getTargetTriple().isOSLinux() )
     {
         module.setPIELevel( llvm::PIELevel::Large );
+    }
+    return machine;
+}
+
+// LLVM's loop vectoriser, then its SLP vectoriser, costed for `machine`'s vector width (§2.2).
+void vectorise( llvm::Module& module, llvm::TargetMachine& machine )
+{
+    llvm::LoopAnalysisManager     loops;
+    llvm::FunctionAnalysisManager functions;
+    llvm::CGSCCAnalysisManager    sccs;
+    llvm::ModuleAnalysisManager   modules;
+    llvm::PassBuilder             builder( &machine );
+    builder.registerModuleAnalyses( modules );
+    builder.registerCGSCCAnalyses( sccs );
+    builder.registerFunctionAnalyses( functions );
+    builder.registerLoopAnalyses( loops );
+    builder.crossRegisterProxies( loops, functions, sccs, modules );
+
+    llvm::FunctionPassManager passes;
+    passes.addPass( llvm::LoopVectorizePass() );
+    passes.addPass( llvm::SLPVectorizerPass() );
+    llvm::ModulePassManager module_passes;
+    module_passes.addPass( llvm::createModuleToFunctionPassAdaptor( std::move( passes ) ) );
+    module_passes.run( module, modules );
+}
+
+// x86-64, COFF or ELF by the module's triple, at the machine passes of its level; of LLVM's IR passes only the
+// vectorisers, at -O3 (§2.2). None at -O0 and at a debug -O1, so each line keeps its code and every store.
+std::string write_object( llvm::Module& module, const std::filesystem::path& object, bool debug, u32 level )
+{
+    std::string                                error;
+    const std::unique_ptr<llvm::TargetMachine> machine = machine_for( module, debug, level, error );
+    if( machine == nullptr )
+    {
+        return "internal error: no x86-64 target in this keelc: " + error;
+    }
+    if( level >= 3 )
+    {
+        vectorise( module, *machine );
     }
 
     std::error_code      failed;
@@ -2549,6 +2590,8 @@ Llvm_output emit_llvm(
 } // namespace keel
 
 #ifdef ENABLE_UNIT_TESTS
+#include <llvm/AsmParser/Parser.h>
+#include <llvm/Support/SourceMgr.h>
 #include <catch2/catch_test_macros.hpp>
 #include <fstream>
 #include "check/pipeline_test_support.h"
@@ -2597,6 +2640,57 @@ TEST_CASE( "emit_llvm_contracts_only_in_a_real_arithmetic_function", "[codegen][
     REQUIRE( out.ir.find( "fadd reassoc contract double" ) < exact );
     REQUIRE( out.ir.find( "contract", exact ) == std::string::npos );
     REQUIRE( out.ir.find( "reassoc", exact ) == std::string::npos );
+}
+
+// The module `source` emits at -O3, through the vectorisers, as text.
+std::string vectorised( std::string_view source )
+{
+    Compiled p( source, Stage::Elaborated, { .level = 3 } );
+    REQUIRE( p.clean() );
+    const Description program = describe( p.ast, p.types, p.interner );
+    const Llvm_output out =
+        emit_llvm( p.functions, program, p.types, p.literals, p.sm, p.interner, p.modules, { .print = true, .level = 3 } );
+    REQUIRE( out.error.empty() );
+
+    llvm::LLVMContext                   context;
+    llvm::SMDiagnostic                  problem;
+    const std::unique_ptr<llvm::Module> module = llvm::parseAssemblyString( out.ir, problem, context );
+    REQUIRE( module != nullptr );
+    std::string                                error;
+    const std::unique_ptr<llvm::TargetMachine> machine = machine_for( *module, false, 3, error );
+    REQUIRE( machine != nullptr );
+    vectorise( *module, *machine );
+
+    std::string              text;
+    llvm::raw_string_ostream printed( text );
+    module->print( printed, nullptr );
+    return text;
+}
+
+TEST_CASE( "vectorise_widens_a_loop_over_elements", "[codegen][llvm]" )
+{
+    const std::string ir = vectorised( "void scale( f64[*] ys, f64[*] xs, f64 k, u64 n ) { for( u64 i = 0; i < n; i += 1 ) "
+                                       "{ unsafe { ys[ i ] = xs[ i ] * k; } } }\n"
+                                       "i64 isum( i64[*] xs, u64 n ) { i64 s = 0; for( u64 i = 0; i < n; i += 1 ) "
+                                       "{ unsafe { s = s + xs[ i ]; } } return s; }\n" );
+    INFO( ir );
+    REQUIRE( ir.find( "fmul <" ) != std::string::npos );
+    REQUIRE( ir.find( "x double>" ) != std::string::npos );
+    REQUIRE( ir.find( "add <" ) != std::string::npos );
+    REQUIRE( ir.find( "x i64>" ) != std::string::npos );
+}
+
+// A float sum changes its order when vectorised, which only `reassoc` allows.
+TEST_CASE( "vectorise_widens_a_float_sum_only_under_real_arithmetic", "[codegen][llvm]" )
+{
+    constexpr std::string_view sum     = "f64 fsum( f64[*] xs, u64 n ) { f64 s = 0.0; for( u64 i = 0; i < n; i += 1 ) "
+                                         "{ unsafe { s = s + xs[ i ]; } } return s; }\n";
+    const std::string          kept    = vectorised( sum );
+    const std::string          widened = vectorised( "@real_arithmetic\n" + std::string( sum ) );
+    INFO( kept );
+    INFO( widened );
+    REQUIRE( kept.find( "fadd <" ) == std::string::npos );
+    REQUIRE( widened.find( "fadd reassoc contract <" ) != std::string::npos );
 }
 
 TEST_CASE( "emit_llvm_promotes_a_scalar_local_unless_debug_at_O1_names_it", "[codegen][llvm]" )
