@@ -287,8 +287,9 @@ std::vector<u32> Sum_graph::references( u32 p, u32 q, u64 both )
     return refs;
 }
 
-// p|I = A + B with A = (p + lq)/2, B = (p - lq)/2 on I; then lq|I = A - B.
-void Sum_graph::butterfly( u32 p, u32 q, u64 both, Element l, const std::vector<u32>& refs )
+// p|I = A + B with A = (p + lq)/2, B = (p - lq)/2 on I; then lq|I = A - B. `least` holds, per
+// reference (inputs first), min( groups( P ), groups( Q ) ), ~0 until known.
+void Sum_graph::butterfly( u32 p, u32 q, u64 both, Element l, const std::vector<u32>& refs, std::vector<u32>& least )
 {
     const Form P = restricted( forms_[p], both );
     const Form Q = restricted( forms_[q], both );
@@ -309,13 +310,21 @@ void Sum_graph::butterfly( u32 p, u32 q, u64 both, Element l, const std::vector<
 
     // Kept only if the halves together need no more distinct constants than p or q, counted over the
     // inputs or over the pieces of a reference output.
-    bool keep = groups( A ) + groups( B ) <= std::min( groups( P ), groups( Q ) );
+    const auto pq = [&]( size_t i, const Form* R )
+    {
+        if( least[i] == ~u32 { 0 } )
+        {
+            least[i] = std::min( groups( P, R ), groups( Q, R ) );
+        }
+        return least[i];
+    };
+    bool keep = groups( A ) + groups( B ) <= pq( 0, nullptr );
     if( field_->is_unit( l ) )
     {
         for( size_t i = 0; i < refs.size() && !keep; ++i )
         {
             const Form* R = &forms_[refs[i]];
-            keep          = groups( A, R ) + groups( B, R ) <= std::min( groups( P, R ), groups( Q, R ) );
+            keep          = groups( A, R ) + groups( B, R ) <= pq( i + 1, R );
         }
     }
     if( !keep )
@@ -610,11 +619,17 @@ Sum_graph::Sum_graph( Field& field, const std::vector<Row>& rows, u64 fuel )
                 refs[b.refs] = references( b.p, b.q, supp_[b.p] & supp_[b.q] );
             }
         }
-        for( const Pair& b : pairs )
+        std::vector<u32> least;
+        for( size_t i = 0; i < pairs.size(); ++i )
         {
+            const Pair& b = pairs[i];
+            if( i == 0 || b.refs != pairs[i - 1].refs )
+            {
+                least.assign( refs[b.refs].size() + 1, ~u32 { 0 } );
+            }
             if( !burnt() )
             {
-                butterfly( b.p, b.q, supp_[b.p] & supp_[b.q], b.l, refs[b.refs] );
+                butterfly( b.p, b.q, supp_[b.p] & supp_[b.q], b.l, refs[b.refs], least );
             }
         }
 

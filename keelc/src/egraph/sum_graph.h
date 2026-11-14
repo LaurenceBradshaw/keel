@@ -102,7 +102,7 @@ private:
     void             add_node( u32 c, Graph_node n );
     void             split( u32 c, u64 mask, Why why );
     void             activate( u32 c );
-    void             butterfly( u32 p, u32 q, u64 both, Element l, const std::vector<u32>& refs );
+    void             butterfly( u32 p, u32 q, u64 both, Element l, const std::vector<u32>& refs, std::vector<u32>& least );
     std::vector<u32> references( u32 p, u32 q, u64 both );
     u32              groups( const Form& f, const Form* r = nullptr );
     void             contain();
