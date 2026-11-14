@@ -1873,6 +1873,16 @@ major), no longer blocked now that D81 has settled lambdas.
   and multiplies whatever its rounding (D86); a prime-length convolution's error can reach 10x the
   written loop's. A bound per output, from the coefficients along the circuit's paths, would let the
   solve refuse a candidate past it; how tight a bound to ask for is a language question.
+- **The linear-map pass counts operations, not latency.** Its cost is adds plus multiplies, right
+  for a large map, whose independent operations keep the CPU busy, but not for a small one bound by
+  its longest chain of dependent operations: there, fewer operations can run slower. Hand rewrites
+  of everyday loops showed it (2026-11-13): sharing `m[j] * mag` in an n-body step cut 12 multiplies
+  to 8 and ran 5% slower, since `dx * m[j]` no longer starts while the sqrt and divide run, and
+  carrying a Mandelbrot step's squares into its escape test ran 8% slower on the loop-carried path.
+  The fix is a critical-path term in `Cost` from a per-operation latency table, the extractor
+  comparing an estimate like max(operations / throughput, critical path), and splits that offer
+  balanced sums; a loop body would also need its loop-carried cycle. Wait for a small map measured
+  choosing badly.
 - **No FMA, by rule and by target.** §7.1 forbids contraction, and the LLVM backend emits plain
   `fmul`/`fadd`. Two things would allow it (noted 2026-11-12):
   1. Permission per operation: the `contract` flag on an `fmul` and the `fadd` it feeds (or
