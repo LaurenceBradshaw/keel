@@ -14,6 +14,7 @@ namespace keel
 namespace
 {
 constexpr u32 k_cyclic = 1u << 28; // the cost of a choice that reaches itself
+constexpr u32 k_rounds = 5;        // of successive halving: 16 restarts down to 1
 
 u32 total( Cost c )
 {
@@ -75,7 +76,8 @@ private:
     std::vector<f64>                              amortised_;
     std::vector<f64>                              flat_;
     std::mt19937                                  rng_;
-    u64                                           work_ = 0; // edges relaxed this restart
+    u64                                           work_  = 0; // edges relaxed this turn
+    u64                                           limit_ = 0; // this turn's fuel, 0 unlimited
 
     // best_trees' results, and its scratch: per node, flat by first_[orbit] + index.
     std::vector<f64>  best_;
@@ -206,7 +208,7 @@ void Extractor::shuffle( std::vector<u32>& v )
 
 bool Extractor::broke() const
 {
-    return options_.fuel != 0 && work_ >= options_.fuel;
+    return limit_ != 0 && work_ >= limit_;
 }
 
 // Optimal tree costs where orbits in `free` cost nothing, node costs scaled by `w`. Knuth's
@@ -778,45 +780,96 @@ std::optional<Extraction> Extractor::run( const std::vector<Row>& rows )
         input_cost = dag_cost( input_choice );
     }
 
+    // Successive halving: every restart starts on an equal share of the pool; each later round the
+    // better half of those still descending go on, the rest stop. Unused fuel passes on.
+    struct Run
+    {
+        Choice choice;
+        Cost   cost;
+        f64    noise;
+        bool   done = false;
+    };
+    const u64        pool  = options_.fuel * options_.restarts;
+    u64              carry = 0;
+    u64              spent = 0;
+    std::vector<Run> runs;
+    for( u32 round = 0; round < k_rounds; ++round )
+    {
+        std::vector<u32> live;
+        for( u32 i = 0; i < ( round == 0 ? options_.restarts : static_cast<u32>( runs.size() ) ); ++i )
+        {
+            if( round == 0 || !runs[i].done )
+            {
+                live.push_back( i );
+            }
+        }
+        if( round > 0 )
+        {
+            std::ranges::sort( live, {}, [&]( u32 i ) { return std::pair { total( runs[i].cost ), i }; } );
+            for( size_t j = ( live.size() + 1 ) / 2; j < live.size(); ++j )
+            {
+                runs[live[j]].done = true;
+            }
+            live.resize( ( live.size() + 1 ) / 2 );
+        }
+        if( live.empty() )
+        {
+            break;
+        }
+        const u64 budget = pool / k_rounds + carry;
+        u64       used   = 0;
+        for( size_t j = 0; j < live.size(); ++j )
+        {
+            const u32 rs = live[j];
+            rng_.seed( options_.seed * 1000003u + rs + 7919u * round );
+            work_  = 0;
+            limit_ = options_.fuel == 0 ? 0 : std::max<u64>( 1, ( budget - std::min( used, budget ) ) / ( live.size() - j ) );
+            if( round == 0 )
+            {
+                const f64 noise = rs <= 1 ? 0 : 0.3;
+                Choice    choice;
+                if( rs == 0 && have_input )
+                {
+                    choice = input_choice;
+                }
+                else
+                {
+                    best_trees( std::vector<bool>( O, false ), amortised_, noise );
+                    choice = pick_;
+                    if( rs % 2 )
+                    {
+                        if( Choice g = forward_greedy( rs <= 2 ? 0 : 0.2 ); !g.empty() )
+                        {
+                            choice = std::move( g );
+                        }
+                    }
+                }
+                const Cost cost = dag_cost( choice );
+                runs.push_back( { std::move( choice ), cost, noise } );
+            }
+            Run& r = runs[rs];
+            do
+            {
+                do
+                {
+                    descent( r.choice, r.cost, r.noise );
+                } while( node_descent( r.choice, r.cost ) );
+            } while( piece_descent( r.choice, r.cost ) );
+            r.done = !broke();
+            used += work_;
+        }
+        spent += used;
+        carry = budget - std::min( used, budget );
+    }
     // Lowest total, ties to the lowest restart.
     Choice best_choice;
     Cost   best_cost { k_cyclic, k_cyclic };
-    u64    spent = 0;
-    for( u32 rs = 0; rs < options_.restarts; ++rs )
+    for( const Run& r : runs )
     {
-        rng_.seed( options_.seed * 1000003u + rs );
-        work_           = 0;
-        const f64 noise = rs <= 1 ? 0 : 0.3;
-        Choice    choice;
-        if( rs == 0 && have_input )
+        if( total( r.cost ) < total( best_cost ) )
         {
-            choice = input_choice;
-        }
-        else
-        {
-            best_trees( std::vector<bool>( O, false ), amortised_, noise );
-            choice = pick_;
-            if( rs % 2 )
-            {
-                if( Choice g = forward_greedy( rs <= 2 ? 0 : 0.2 ); !g.empty() )
-                {
-                    choice = std::move( g );
-                }
-            }
-        }
-        Cost cost = dag_cost( choice );
-        do
-        {
-            do
-            {
-                descent( choice, cost, noise );
-            } while( node_descent( choice, cost ) );
-        } while( piece_descent( choice, cost ) );
-        spent += work_;
-        if( total( cost ) < total( best_cost ) )
-        {
-            best_cost   = cost;
-            best_choice = choice;
+            best_cost   = r.cost;
+            best_choice = r.choice;
         }
     }
     if( total( best_cost ) >= k_cyclic )
