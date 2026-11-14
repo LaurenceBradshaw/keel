@@ -96,9 +96,9 @@ bool clobbers( const Function& func, const Local_set& addressed, const Statement
         return false;
     }
 
+    // An Allocate writes only the memory it returns.
     const Rvalue_kind kind = func.rvalue( statement ).kind;
-    if( kind == Rvalue_kind::Call || kind == Rvalue_kind::Indirect_call || kind == Rvalue_kind::Allocate ||
-        kind == Rvalue_kind::Release )
+    if( kind == Rvalue_kind::Call || kind == Rvalue_kind::Indirect_call || kind == Rvalue_kind::Release )
     {
         return true;
     }

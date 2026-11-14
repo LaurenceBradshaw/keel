@@ -417,8 +417,13 @@ each copy's index. The first round runs only when rotation or forwarding changed
 `-O3` always, as a repeat `eliminate_common` finds is threaded only by a third round. The last runs
 only when induction variables or unrolling changed something; otherwise only the empty blocks
 normalising added and a hoist went through are merged, as the round found nothing more. A loop has one preheader, one latch and exits only it enters. LICM
-hoists a read through a reference only when the loop has no store to that place, a call or a store
-through a `T*` counting as a store to every place that is not a local. A read through a pointer, or
+hoists a read through a reference only when no store in the loop can reach it, a call, a drop or a
+`release` counting as a store to every place that is not a local. A store through a pointer reaches
+every such place too, unless it is to another field behind the same unchanged pointer, or to memory
+an `alloc` in the function returned, followed through the locals it is copied and offset into, while
+the read goes through a parameter, a local's address or another `alloc`'s pointer. An `alloc` itself
+writes only the memory it returns. Neither proof needs a rule about types, which `unsafe` casts
+between pointers would break. A read through a pointer, or
 an operation that can panic, is hoisted only from a block that dominates every exit, so it runs on
 the first turn, with nothing observable before it in the loop: a panic's message comes after the
 output that precedes it. In practice that means a rotated loop.

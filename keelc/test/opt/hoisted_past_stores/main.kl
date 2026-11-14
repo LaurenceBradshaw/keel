@@ -1,0 +1,95 @@
+// M16's -O3: a read through a pointer moves out of a loop that stores through one only when the
+// store cannot reach it: another field behind the same pointer, or memory an Allocate in the
+// function returned. Each check returns its own code.
+
+struct Buf
+{
+    i64[*] data;
+    u64    count;
+    i64    last;
+};
+
+// `b.count` read once: the store is to `b.last`, beside it.
+i64 fields( ref Buf b, i64 n )
+{
+    i64 total = 0;
+    for( i64 i = 0; i < n; i += 1 )
+    {
+        total += cast<i64>( b.count ) + b.last;
+        b.last = total;
+    }
+    return total;
+}
+
+// `b.data` read once: `copy` is new memory, which nothing before it points into.
+i64 copied( const ref Buf b )
+{
+    i64[*] copy;
+    unsafe
+    {
+        copy = alloc<i64>( b.count );
+    }
+    for( u64 i = 0; i < b.count; i += 1 )
+    {
+        unsafe
+        {
+            copy[ i ] = b.data[ i ] * 2;
+        }
+    }
+
+    i64 total = 0;
+    unsafe
+    {
+        total = copy[ 0 ] + copy[ 2 ];
+        free( copy );
+    }
+    return total;
+}
+
+// `ys.data` may point anywhere, `xs` and `ys` included, so both headers are read each turn.
+void moved( ref Buf ys, const ref Buf xs )
+{
+    for( u64 i = 0; i < xs.count; i += 1 )
+    {
+        unsafe
+        {
+            ys.data[ i ] = xs.data[ i ] + 1;
+        }
+    }
+}
+
+i32 main()
+{
+    Buf b = Buf { nullptr, 3, 1 };
+    unsafe
+    {
+        b.data = alloc<i64>( 3 );
+        b.data[ 0 ] = 5;
+        b.data[ 1 ] = 6;
+        b.data[ 2 ] = 7;
+    }
+
+    if( fields( ref b, 3 ) != 25 || b.last != 25 )
+    {
+        return 1;
+    }
+
+    if( copied( b ) != 24 )
+    {
+        return 2;
+    }
+
+    moved( ref b, b );
+    i64 last = 0;
+    unsafe
+    {
+        last = b.data[ 2 ];
+        free( b.data );
+    }
+    if( last != 8 )
+    {
+        return 3;
+    }
+
+    return 0;
+}

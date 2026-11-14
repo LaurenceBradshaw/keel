@@ -3,6 +3,7 @@
 
 #include "opt/hoist_invariants.h"
 #include <algorithm>
+#include <optional>
 #include <utility>
 #include <vector>
 #include "ir/loops.h"
@@ -14,17 +15,52 @@ namespace keel
 
 namespace
 {
+// `(*p)` then only fields and elements: a place in the one object `p` points at.
+bool through_one( const Function& func, const Place& place )
+{
+    const Run<const Projection> projections = func.projections_of( place );
+    if( place.is_global() || projections.size() == 0 || projections[0].kind != Projection_kind::Deref )
+    {
+        return false;
+    }
+    for( u32 i = 1; i < projections.size(); ++i )
+    {
+        if( projections[i].kind == Projection_kind::Deref )
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Where a pointer local's values all came from.
+struct Origin
+{
+    enum Kind : u8
+    {
+        Unknown,
+        Fresh, // an Allocate in this function, assigned to `fresh`
+        Before // a parameter, or a local's address: memory no Allocate here returns
+    };
+    Kind     kind = Unknown;
+    Local_id fresh {};
+};
+
 // One loop, as the function now stands.
 struct Scope
 {
-    const Function&       func;
-    const Loops&          found;
-    const Loop&           loop;
-    const Local_set&      addressed;
-    std::vector<bool>     own;     // by block: in the loop and in none inside it
-    std::vector<u32>      writes;  // by local: statements in the loop that write it or take its address
-    std::vector<Block_id> exiting; // blocks in the loop with an edge out
-    bool                  clobbered = false;
+    const Function&                         func;
+    const Loops&                            found;
+    const Loop&                             loop;
+    const Local_set&                        addressed;
+    std::vector<bool>                       own;     // by block: in the loop and in none inside it
+    std::vector<u32>                        writes;  // by local: statements in the loop that write it or take its address
+    std::vector<Block_id>                   exiting; // blocks in the loop with an edge out
+    std::vector<u32>                        sets;    // by local: the same over the whole function
+    std::vector<std::vector<const Rvalue*>> sources; // by local: the rvalues assigned to all of it
+    std::vector<Place>                      stores;  // stores in the loop through a pointer
+    bool everything = false;                         // a call, drop, release, or store to a global or an addressed local
+    bool anywhere   = false;                         // a store through a pointer that may reach memory from before it
 
     Scope( const Function& f, const Loops& l, u32 index, const std::vector<u32>& innermost, const Local_set& a )
         : func( f ),
@@ -32,27 +68,49 @@ struct Scope
           loop( l.loops[index] ),
           addressed( a ),
           own( f.blocks.size(), false ),
-          writes( f.locals.size(), 0 )
+          writes( f.locals.size(), 0 ),
+          sets( f.locals.size(), 0 ),
+          sources( f.locals.size() )
     {
+        for( const Block_id b : func.blocks.ids() )
+        {
+            for( const Statement& statement : func.statements_of( b ) )
+            {
+                // A storage marker changes no value a later read may see.
+                if( statement.kind == Statement_kind::Storage_live || statement.kind == Statement_kind::Storage_dead )
+                {
+                    continue;
+                }
+                count( statement, sets );
+                if( statement.kind == Statement_kind::Assign && statement.place.is_whole_local() )
+                {
+                    sources[statement.place.local.v].push_back( &func.rvalue( statement ) );
+                }
+            }
+        }
+
         std::vector<Block_id> targets;
         for( const Block_id b : loop.blocks )
         {
             own[b.v] = innermost[b.v] == index;
             for( const Statement& statement : func.statements_of( b ) )
             {
-                clobbered |= clobbers( func, addressed, statement );
-                if( !statement.place.is_global() && statement.place.local.is_valid() )
+                count( statement, writes );
+                if( !clobbers( func, addressed, statement ) )
                 {
-                    ++writes[statement.place.local.v];
+                    continue;
                 }
-                if( statement.kind == Statement_kind::Assign )
+                const Rvalue_kind kind =
+                    statement.kind == Statement_kind::Assign ? func.rvalue( statement ).kind : Rvalue_kind::Call;
+                if( kind == Rvalue_kind::Call || kind == Rvalue_kind::Indirect_call || kind == Rvalue_kind::Release ||
+                    !has_deref_projection( func, statement.place ) )
                 {
-                    const Rvalue& value = func.rvalue( statement );
-                    if( value.kind == Rvalue_kind::Address_of && !value.a.place.is_global() &&
-                        !has_deref_projection( func, value.a.place ) )
-                    {
-                        writes[value.a.place.local.v] += 2;
-                    }
+                    everything = true;
+                }
+                else
+                {
+                    stores.push_back( statement.place );
+                    anywhere |= !through_one( func, statement.place ) || origin( statement.place.local ).kind != Origin::Fresh;
                 }
             }
 
@@ -69,14 +127,140 @@ struct Scope
         }
     }
 
+    // A write of `statement`'s local, or of a local whose address it takes, into `counts`. A store
+    // through `*p` writes no part of `p`.
+    void count( const Statement& statement, std::vector<u32>& counts ) const
+    {
+        if( !statement.place.is_global() && statement.place.local.is_valid() && !has_deref_projection( func, statement.place ) )
+        {
+            ++counts[statement.place.local.v];
+        }
+        if( statement.kind == Statement_kind::Assign )
+        {
+            const Rvalue& value = func.rvalue( statement );
+            if( value.kind == Rvalue_kind::Address_of && !value.a.place.is_global() &&
+                !has_deref_projection( func, value.a.place ) )
+            {
+                counts[value.a.place.local.v] += 2;
+            }
+        }
+    }
+
+    Origin origin( Local_id local ) const
+    {
+        std::vector<bool> visiting( func.locals.size(), false );
+        return origin( local, visiting ).value_or( Origin {} );
+    }
+
+    // Every value `local` is assigned, through copies, offsets and addresses within one object; none
+    // when `local` is in a cycle of these already being followed, which adds no value of its own.
+    std::optional<Origin> origin( Local_id local, std::vector<bool>& visiting ) const
+    {
+        if( local.v >= sets.size() || is_addressed( addressed, local ) )
+        {
+            return Origin {};
+        }
+        if( visiting[local.v] )
+        {
+            return std::nullopt;
+        }
+        if( sets[local.v] == 0 )
+        {
+            return Origin { .kind = local.v >= 1 && local.v <= func.parameter_count ? Origin::Before : Origin::Unknown };
+        }
+        // Written some other way too: in part, by a drop, or through its address.
+        if( sets[local.v] != sources[local.v].size() )
+        {
+            return Origin {};
+        }
+
+        visiting[local.v] = true;
+        std::optional<Origin> all;
+        for( const Rvalue* value : sources[local.v] )
+        {
+            std::optional<Origin> one = Origin {};
+            if( value->kind == Rvalue_kind::Allocate )
+            {
+                one = Origin { .kind = Origin::Fresh, .fresh = local };
+            }
+            else if( value->kind == Rvalue_kind::Address_of )
+            {
+                if( value->a.place.is_global() || !has_deref_projection( func, value->a.place ) )
+                {
+                    one = Origin { .kind = Origin::Before };
+                }
+                else if( through_one( func, value->a.place ) )
+                {
+                    one = origin( value->a.place.local, visiting );
+                }
+            }
+            // The checker puts a pointer on the left of `+` and `-`, so `a` stays a pointer.
+            else if( ( value->kind == Rvalue_kind::Use ||
+                       ( value->kind == Rvalue_kind::Binary &&
+                         ( value->op == Token_kind::Plus || value->op == Token_kind::Minus ) ) ) &&
+                     value->a.kind == Operand_kind::Copy && value->a.place.is_whole_local() )
+            {
+                one = origin( value->a.place.local, visiting );
+            }
+
+            if( !one )
+            {
+                continue;
+            }
+            if( one->kind == Origin::Unknown || ( all && ( all->kind != one->kind || all->fresh != one->fresh ) ) )
+            {
+                all = Origin {};
+                break;
+            }
+            all = one;
+        }
+        visiting[local.v] = false;
+        return all;
+    }
+
+    // Whether a store to `store`, through a pointer, may change `read`, read through one.
+    bool reaches( const Place& store, const Place& read ) const
+    {
+        if( !through_one( func, store ) || !through_one( func, read ) )
+        {
+            return true;
+        }
+
+        // The same pointer, then different fields of one struct.
+        if( store.local == read.local )
+        {
+            const Run<const Projection> a = func.projections_of( store );
+            const Run<const Projection> b = func.projections_of( read );
+            for( u32 i = 1; i < std::min( a.size(), b.size() ); ++i )
+            {
+                if( !same_projection( a[i], b[i] ) )
+                {
+                    return a[i].kind != Projection_kind::Field || b[i].kind != Projection_kind::Field;
+                }
+            }
+            return true;
+        }
+
+        // New memory, and a read of memory that was there before it or came from another Allocate.
+        const Origin to   = origin( store.local );
+        const Origin from = origin( read.local );
+        return to.kind != Origin::Fresh || from.kind == Origin::Unknown ||
+               ( from.kind == Origin::Fresh && from.fresh == to.fresh );
+    }
+
+    bool reached( const Place& read ) const
+    {
+        return everything || std::ranges::any_of( stores, [&]( const Place& store ) { return reaches( store, read ); } );
+    }
+
     bool invariant( Local_id local ) const
     {
-        return writes[local.v] == 0 && !( is_addressed( addressed, local ) && clobbered );
+        return writes[local.v] == 0 && !( is_addressed( addressed, local ) && ( everything || anywhere ) );
     }
 
     bool invariant( const Place& place ) const
     {
-        if( place.is_global() ? clobbered : !invariant( place.local ) )
+        if( place.is_global() ? everything || anywhere : !invariant( place.local ) )
         {
             return false;
         }
@@ -87,7 +271,7 @@ struct Scope
                 return false;
             }
         }
-        return !clobbered || !has_deref_projection( func, place );
+        return !has_deref_projection( func, place ) || !reached( place );
     }
 
     bool invariant( const Operand& operand ) const
@@ -376,6 +560,7 @@ bool hoist_invariants( Function& func, bool pin_named )
 #include <catch2/catch_test_macros.hpp>
 
 #include "check/pipeline_test_support.h"
+#include "ir/print.h"
 #include "ir/verify.h"
 
 namespace keel
@@ -384,6 +569,7 @@ namespace
 {
 
 constexpr std::string_view k_types = "struct Pair { i32 a; i32 b; };\n"
+                                     "struct Buf { i64[*] data; u64 count; i64 last; };\n"
                                      "i32 g = 0;\n"
                                      "void touch() { g += 1; }\n"
                                      "i32 main() { return 0; }\n";
@@ -401,7 +587,12 @@ struct Hoisted : Compiled
         REQUIRE( verify( functions.front() ).empty() );
     }
 
-    // Statements in a loop that `fn` picks.
+    std::string kir() const
+    {
+        return print( functions.front(), ast, types.table(), literals, interner );
+    }
+
+    // What `fn` counts in each statement in a loop.
     template <typename Fn>
     std::size_t in_loops( Fn fn ) const
     {
@@ -420,22 +611,26 @@ struct Hoisted : Compiled
         {
             for( const Statement& statement : func.statements_of( b ) )
             {
-                count += inside[b.v] && statement.kind == Statement_kind::Assign && fn( func, func.rvalue( statement ) );
+                if( inside[b.v] && statement.kind == Statement_kind::Assign )
+                {
+                    count += fn( func, func.rvalue( statement ) );
+                }
             }
         }
         return count;
     }
 
+    // Operands in a loop read through a pointer.
     std::size_t reads_through() const
     {
         return in_loops(
             []( const Function& func, const Rvalue& value )
             {
-                bool through = false;
+                std::size_t through = 0;
                 for_each_operand(
                     value,
                     [&]( const Operand& operand )
-                    { through |= operand.kind == Operand_kind::Copy && has_deref_projection( func, operand.place ); }
+                    { through += operand.kind == Operand_kind::Copy && has_deref_projection( func, operand.place ); }
                 );
                 return through;
             }
@@ -499,6 +694,40 @@ TEST_CASE( "hoist_invariants_keeps_a_write_a_read_comes_before", "[opt][hoist_in
     const Hoisted f( "i64 f( i64 n, i64 k ) { i64 t = 0; i64 x = 0; for( i64 i = 0; i < n; i += 1 ) { t += x; x = k * 4; } "
                      "return t; }\n" );
     REQUIRE( f.by( Token_kind::Star ) == 1 );
+}
+
+// A store to `p.b` cannot reach `p.a`, a field beside it through the same pointer, so `p.a` is read
+// once; `p.b` is read each turn.
+TEST_CASE( "hoist_invariants_hoists_a_field_a_store_to_another_field_cannot_reach", "[opt][hoist_invariants]" )
+{
+    constexpr std::string_view source = "i32 f( ref Pair p, i32 n ) { i32 t = 0; for( i32 i = 0; i < n; i += 1 ) "
+                                        "{ t += p.a + p.b; p.b = t; } return t; }\n";
+    const Hoisted              f( source );
+    INFO( f.kir() );
+    REQUIRE( f.reads_through() == 1 );
+    REQUIRE( Hoisted( source, 3, std::nullopt ).reads_through() == 2 );
+}
+
+// `d` is new memory, so no store through it reaches `b`: `b.data` is read once. `b.count`, read by
+// the test after the store, waits for the store to stop counting as something a program sees.
+TEST_CASE( "hoist_invariants_hoists_a_header_past_a_store_to_fresh_memory", "[opt][hoist_invariants]" )
+{
+    constexpr std::string_view source =
+        "void f( const ref Buf b ) { i64[*] d; unsafe { d = alloc<i64>( b.count ); } "
+        "for( u64 i = 0; i < b.count; i += 1 ) { unsafe { d[ i ] = b.data[ i ]; } } unsafe { free( d ); } }\n";
+    const Hoisted f( source );
+    INFO( f.kir() );
+    REQUIRE( f.reads_through() == 2 );
+    REQUIRE( Hoisted( source, 3, std::nullopt ).reads_through() == 3 );
+}
+
+// `ys.data` may point at `xs` or at `ys` itself, so both headers are read each turn.
+TEST_CASE( "hoist_invariants_keeps_a_header_a_store_through_a_reference_may_reach", "[opt][hoist_invariants]" )
+{
+    const Hoisted f( "void f( ref Buf ys, const ref Buf xs ) { for( u64 i = 0; i < xs.count; i += 1 ) "
+                     "{ unsafe { ys.data[ i ] = xs.data[ i ]; } } }\n" );
+    INFO( f.kir() );
+    REQUIRE( f.reads_through() == 4 );
 }
 
 } // namespace keel
