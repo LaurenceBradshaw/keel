@@ -34,6 +34,13 @@ debug_bin="./build/${prefix}debug/bin"
 release_bin="./build/${prefix}release/bin"
 export KEEL_FORMAT="$format"
 
+# Only Markdown changed (staged, unstaged or untracked): nothing a check reads, so none run.
+changed="$( { git diff --name-only --no-renames HEAD; git ls-files --others --exclude-standard; } )"
+if [ -n "$changed" ] && ! grep -qv '\.md$' <<< "$changed"; then
+    echo "  ${green}only Markdown changed; checks skipped${reset}"
+    exit 0
+fi
+
 log="$( mktemp )"
 trap 'rm -f "$log"' EXIT
 
