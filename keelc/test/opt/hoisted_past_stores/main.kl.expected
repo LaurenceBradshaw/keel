@@ -81,6 +81,7 @@ int64_t kl__6copied__3Buf( struct kl__Buf* kl_b_1 )
     int64_t* kl_t8;
     int64_t* kl_t9;
     int64_t* kl_t11;
+    uint64_t kl_t12;
 #line 30 "opt/hoisted_past_stores/main.kl"
     kl_copy_2 = ( int64_t* ) kl_rt_alloc_many( ( size_t ) ( *kl_b_1 ).kl_count, 8, "opt/hoisted_past_stores/main.kl", 30, "out of memory: alloc<i64>( b.count )" );
 #line 32 "opt/hoisted_past_stores/main.kl"
@@ -101,7 +102,7 @@ int64_t kl__6copied__3Buf( struct kl__Buf* kl_b_1 )
 #line 32 "opt/hoisted_past_stores/main.kl"
     kl_i_3 = kl_i_3 + 1;
 #line 32 "opt/hoisted_past_stores/main.kl"
-    kl_t4 = kl_i_3 < ( *kl_b_1 ).kl_count;
+    kl_t4 = kl_i_3 < kl_t12;
 #line 32 "opt/hoisted_past_stores/main.kl"
     if ( kl_t4 ) goto bb1; else goto bb2;
     bb2:
@@ -117,6 +118,8 @@ int64_t kl__6copied__3Buf( struct kl__Buf* kl_b_1 )
     bb3:
 #line 36 "opt/hoisted_past_stores/main.kl"
     kl_t11 = ( *kl_b_1 ).kl_data;
+#line 32 "opt/hoisted_past_stores/main.kl"
+    kl_t12 = ( *kl_b_1 ).kl_count;
 #line 32 "opt/hoisted_past_stores/main.kl"
     goto bb1;
 #line 47 "opt/hoisted_past_stores/main.kl"

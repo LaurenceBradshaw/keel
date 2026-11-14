@@ -1,0 +1,33 @@
+// M16's -O3: `ys[ i ]`'s bounds check is not covered by the loop's test, `i < xs.size()`, and the body
+// only stores, so the check leaves the loop as one test before it, `ys.size() < xs.size()`, panicking
+// with the check's own message. With `ys` as long as `xs` the loop runs; with it shorter the program
+// panics before the first turn, where the loop as written stored `ys[ 0 ]` first.
+
+import kl::list;
+
+void scale( ref kl::list<f64> ys, const ref kl::list<f64> xs, f64 k )
+{
+    for( u64 i = 0; i < xs.size(); i += 1 )
+    {
+        ys[ i ] = xs[ i ] * k;
+    }
+}
+
+i32 main()
+{
+    kl::list<f64> xs = kl::list<f64>();
+    kl::list<f64> ys = kl::list<f64>();
+    xs.push( 1.0 );
+    xs.push( 2.0 );
+    ys.push( 0.0 );
+    ys.push( 0.0 );
+    scale( ref ys, xs, 3.0 );
+    if( ys[ 0 ] != 3.0 || ys[ 1 ] != 6.0 )
+    {
+        return 1;
+    }
+
+    ys.pop();
+    scale( ref ys, xs, 3.0 );
+    return 2;
+}

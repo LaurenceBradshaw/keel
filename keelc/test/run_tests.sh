@@ -339,6 +339,8 @@ check_run()
     fi
 
     local ran=$?
+    # A panic in kl names its file as keelc's diagnostics do.
+    sed -i "s|${kl_root}/|<kl>/|g" "$run_log"
 
     if [ -n "$valgrind_run" ] && [ -s "$vg_log" ]; then
         echo "    valgrind reported an error:"

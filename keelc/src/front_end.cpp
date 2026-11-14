@@ -446,7 +446,7 @@ Front_end run_front_end(
                         optimise_round( function );
                     }
                     // After the round folds the checks that would exit before an invariant.
-                    if( hoist_invariants( function, pin_named ) )
+                    if( hoist_invariants( function, literals, pin_named ) )
                     {
                         verified( function, "hoist_invariants" );
                     }
@@ -455,6 +455,9 @@ Front_end run_front_end(
                     if( moved )
                     {
                         verified( function, "version_loops" );
+                        // The copy reads its bounds once, so its checks can leave it.
+                        hoist_invariants( function, literals, pin_named );
+                        verified( function, "hoist_invariants" );
                     }
                     // After hoisting, so `i * n` has an invariant `n`.
                     if( build.level >= 2 && reduce_inductions( function, front.types.table(), literals ) )

@@ -230,6 +230,7 @@ void kl_2kl4list_10reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list
     int32_t* kl_t7;
     int32_t* kl_t8;
     int32_t* kl_t10;
+    uint64_t kl_t11;
 #line 449 "../../src/list.kl"
     kl_new_data_3 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 4, "../../src/list.kl", 449, "out of memory: alloc<T>( n )" );
 #line 452 "../../src/list.kl"
@@ -252,7 +253,7 @@ void kl_2kl4list_10reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list
 #line 454 "../../src/list.kl"
     kl_i_5 = kl_i_5 + 1;
 #line 454 "../../src/list.kl"
-    kl_t6 = kl_i_5 < ( *kl_this_1 ).kl_count_;
+    kl_t6 = kl_i_5 < kl_t11;
 #line 454 "../../src/list.kl"
     if ( kl_t6 ) goto bb2; else goto bb3;
     bb3:
@@ -268,6 +269,8 @@ void kl_2kl4list_10reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list
     bb5:
 #line 458 "../../src/list.kl"
     kl_t10 = ( *kl_this_1 ).kl_data_;
+#line 454 "../../src/list.kl"
+    kl_t11 = ( *kl_this_1 ).kl_count_;
 #line 454 "../../src/list.kl"
     goto bb2;
 #line 471 "../../src/list.kl"

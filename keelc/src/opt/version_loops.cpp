@@ -132,7 +132,7 @@ bool version(
     const std::vector<u32> all       = writes_in( func, nullptr );
     const std::vector<u32> inside    = writes_in( func, &loop );
 
-    // A read the preheader may make: one the loop makes on its first turn before anything is seen,
+    // A read the preheader may make: one the loop makes on its first turn with only stores before it,
     // or a part of a parameter passed by address, which holds a live object for the whole call.
     std::vector<bool> usable( blocked->size(), false );
     bool              any = false;

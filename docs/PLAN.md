@@ -426,13 +426,21 @@ the read goes through a parameter, a local's address or another `alloc`'s pointe
 writes only the memory it returns. Neither proof needs a rule about types, which `unsafe` casts
 between pointers would break. A read through a pointer, or
 an operation that can panic, is hoisted only from a block that dominates every exit, so it runs on
-the first turn, with nothing observable before it in the loop: a panic's message comes after the
-output that precedes it. In practice that means a rotated loop.
+the first turn, with nothing but stores to memory before it in the loop: a panic's message comes
+after the output that precedes it, and after a panic nothing reads memory. In practice that means a
+rotated loop.
+A bounds check the loop's test does not cover becomes one range check before the loop. The index has
+to step by 1 to the latch's `i < n`, and the loop's only other exit has to be a panic on `i >= len`,
+`len` invariant, from a block that dominates the latch. The loop must be innermost, with no call,
+drop or `release`. The preheader then panics, with the check's own message, when `a >= len` or
+`n > len`, `a` the index on entry. The turns this skips only store to memory. A loop with a second
+check keeps both, as which one fails first can depend on the turn. LICM runs again after versioning,
+so the copy that reads the preheader's values loses its checks too.
 Where neither proof holds, `-O3` checks at run time instead. The loop has to be rotated and innermost, with at
 most 200 statements, and its index has to step by 1 to the latch's `i < n`. It may store only into
 `*( b + i )`, with one base `b` for every store, and must have no call, drop or `release`. If a store
 may reach a read through a pointer, the preheader makes each read the loop could make there. That is
-a read the loop makes on its first turn before anything observable, or a field of a parameter passed
+a read the loop makes on its first turn with only stores before it, or a field of a parameter passed
 by address, which is a live object for the whole call. The preheader then tests that `[ b + i, b + n )`
 holds none of the reads a store may reach. If it holds none, the loop runs on the preheader's values.
 Otherwise a copy of the loop as it was runs. Neither copy is versioned again, so a loop inlined into
