@@ -7,6 +7,7 @@
 #include <bit>
 #include <cmath>
 #include <complex>
+#include <cstring>
 #include <limits>
 #include <map>
 #include <numbers>
@@ -1078,6 +1079,33 @@ private:
         }
     }
 
+    // A constant array's root, its elements written there on first use.
+    u32 table( const Rvalue& r )
+    {
+        const auto [found, added] = table_roots_.try_emplace( r.a.constant.v, static_cast<u32>( roots_.size() ) );
+        if( added )
+        {
+            roots_.emplace_back();
+            const Type_id          element = types_.get( types_.get( r.type ).element ).element;
+            const u64              size    = types_.get( element ).width / 8;
+            const std::string_view bytes   = literals_.string( r.a.constant );
+            for( u64 at = 0; at < bytes.size(); at += size )
+            {
+                u64 bits = 0;
+                std::memcpy( &bits, bytes.data() + at, size );
+                f64 d = 0;
+                std::memcpy( &d, &bits, sizeof d );
+                write(
+                    { found->second, { at / size << 2 } },
+                    is_f64( element )     ? real( d, exact_literal( d ) )
+                    : is_float( element ) ? Value {}
+                                          : number( bits )
+                );
+            }
+        }
+        return found->second;
+    }
+
     // A `const` global's root, its value written there on first use.
     std::pair<u32, Type_id> global( Node_id decl )
     {
@@ -1580,6 +1608,8 @@ private:
         }
         case Rvalue_kind::Address_of:
             return { .kind = Kind::Address, .index = address_of( locate( fr, r.a.place ) ) };
+        case Rvalue_kind::Constant_array:
+            return { .kind = Kind::Address, .index = address_of( { table( r ), {} } ) };
         default:
             end( Ending::Unsupported );
         }
@@ -2877,6 +2907,7 @@ private:
     std::unordered_map<u64, std::optional<Exact>>    literal_exacts_;
     std::vector<Root>                                roots_;
     std::unordered_map<u32, std::pair<u32, Type_id>> global_roots_; // by declaration
+    std::unordered_map<u32, u32>                     table_roots_;  // a constant array's, by its literal
     std::vector<Location>                            locations_;
     std::map<Location, Cell>                         memory_; // what the run wrote
     std::map<Location, Value>                        read_;   // inputs not yet overwritten

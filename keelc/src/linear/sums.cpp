@@ -864,16 +864,17 @@ u64 primitive_root( u64 p )
 }
 
 // DFT_p for prime p, inputs at j = g^a and outputs at k = g^-b, is x[0] plus a cyclic convolution of length p - 1.
-std::vector<Use> rader_match( const Sum& s, const Plan_options& )
+std::vector<Use> rader_match( const Sum& s, const Plan_options& options )
 {
     const std::optional<Kernel> k = kernel_of( s );
     if( !k || k->c == 0 || k->n != k->M || k->m != k->M || k->M < 3 || k->M > 1 << 20 || primitive_root( k->M ) == 0 )
     {
         return {};
     }
-    const u32  L = static_cast<u32>( k->M - 1 );
-    const Cost own =
-        Cost { s.real ? 2u : 4u, 0 } + scale_cost( -1.0 / L, true ) + ( L - 1 ) * scale_cost( { 0.3, 0.7 }, false );
+    const u32  L   = static_cast<u32>( k->M - 1 );
+    const Cost own = Cost { s.real ? 2u : 4u, 0 } +
+                     ( looped( s, options ) ? L * Cost { 2, 4 }
+                                            : scale_cost( -1.0 / L, true ) + ( L - 1 ) * scale_cost( { 0.3, 0.7 }, false ) );
     return {
         { { { 1, kernel_sum( { L, L, L, 1 }, s.real ) }, { 1, kernel_sum( { L, L, L, L - 1 }, false ) } },
           own,
@@ -1709,6 +1710,17 @@ private:
         return static_cast<u32>( p.tables.size() - 1 );
     }
 
+    // Equal index tables are one.
+    u32 indices( Loop_program& p, std::vector<u64> t )
+    {
+        if( const auto at = std::ranges::find( p.indices, t ); at != p.indices.end() )
+        {
+            return static_cast<u32>( at - p.indices.begin() );
+        }
+        p.indices.push_back( std::move( t ) );
+        return static_cast<u32>( p.indices.size() - 1 );
+    }
+
     // W_M^e for e < M, made once per M.
     u32 roots( Loop_program& p, u64 M )
     {
@@ -1776,6 +1788,14 @@ private:
             if( choice.rule->build == convolution_build )
             {
                 return emit_convolution( p, into, s, choice.use, in, out, conj );
+            }
+            if( choice.rule->build == pfa_build )
+            {
+                return emit_pfa( p, into, s, choice.use, in, out, conj );
+            }
+            if( choice.rule->build == rader_build )
+            {
+                return emit_rader( p, into, s, choice.use, in, out, conj );
             }
         }
         into.push_back( Loop_step { .kind = Loop_kind::Leaf, .count = s.n, .leaf = leaf( p, s, conj ), .in = in, .out = out } );
@@ -1898,6 +1918,92 @@ private:
         emit( p, into, use.parts[1].second, { X }, out, conj );
     }
 
+    // x gathered to j2 N1 + j1, the N1-point sums, the N2-point sums across them, gathered to y.
+    void emit_pfa(
+        Loop_program&           p,
+        std::vector<Loop_step>& into,
+        const Sum&              s,
+        const Use&              use,
+        const Stride&           in,
+        const Stride&           out,
+        bool                    conj
+    )
+    {
+        const auto [N1, N2] = use.chosen;
+        const u64        N  = s.M;
+        const u64        e1 = N2 * inverse_mod( N2 % N1, N1 ), e2 = N1 * inverse_mod( N1 % N2, N2 );
+        std::vector<u64> from( N ), to( N );
+        for( u64 a = 0; a < N1; ++a )
+        {
+            for( u64 b = 0; b < N2; ++b )
+            {
+                from[b * N1 + a]            = ( N2 * a + N1 * b ) % N;
+                to[( e1 * a + e2 * b ) % N] = a * N2 + b;
+            }
+        }
+        const u32 t = buffer( p, N ), z = buffer( p, N ), w = buffer( p, N );
+        const u32 n = static_cast<u32>( N );
+        into.push_back( Loop_step { .kind = Loop_kind::Gather, .count = n, .table = indices( p, from ), .in = in, .out = { t } }
+        );
+        emit( p, into, use.parts[0].second, { t, 0, 1, N1 }, { z, 0, 1, N1 }, conj );
+        emit( p, into, use.parts[1].second, { z, 0, N1, 1 }, { w, 0, 1, N2 }, conj );
+        into.push_back( Loop_step { .kind = Loop_kind::Gather, .count = n, .table = indices( p, to ), .in = { w }, .out = out }
+        );
+    }
+
+    // x at g^a, its DFT_L U, U times the kernel's transform plus x[0] at 0, DFT_L back, y at g^-b; y[0] = x[0] + U[0].
+    void emit_rader(
+        Loop_program&           p,
+        std::vector<Loop_step>& into,
+        const Sum&              s,
+        const Use&              use,
+        const Stride&           in,
+        const Stride&           out,
+        bool                    conj
+    )
+    {
+        const Kernel     k = *kernel_of( s );
+        const u64        P = k.M, L = P - 1, g = primitive_root( P );
+        std::vector<u64> at( L ), back( L );
+        at[0] = 1;
+        for( u64 a = 1; a < L; ++a )
+        {
+            at[a] = at[a - 1] * g % P;
+        }
+        for( u64 b = 0; b < L; ++b )
+        {
+            back[at[( L - b ) % L] - 1] = b;
+        }
+        std::vector<std::complex<f64>> w( L ), H( L );
+        for( u64 t = 0; t < L; ++t )
+        {
+            w[t] = root( k.c * at[( L - t ) % L] % P, P );
+        }
+        for( u64 f = 0; f < L; ++f )
+        {
+            for( u64 t = 0; t < L; ++t )
+            {
+                H[f] += w[t] * root( f * t % L, L );
+            }
+            H[f] /= static_cast<f64>( L );
+            H[f] = conj ? std::conj( H[f] ) : H[f];
+        }
+        const u32 n = static_cast<u32>( L );
+        const u32 u = buffer( p, L ), U = buffer( p, L ), V = buffer( p, L ), v = buffer( p, L );
+        into.push_back( Loop_step { .kind = Loop_kind::Gather, .count = n, .table = indices( p, at ), .in = in, .out = { u } }
+        );
+        emit( p, into, use.parts[0].second, { u }, { U }, conj );
+        into.push_back( Loop_step { .kind = Loop_kind::Scale, .count = n, .table = table( p, H ), .in = { U }, .out = { V } } );
+        into.push_back( Loop_step { .kind = Loop_kind::Add, .count = 1, .in = in, .out = { V }, .also = { V } } );
+        emit( p, into, use.parts[1].second, { V }, { v }, conj );
+        into.push_back( Loop_step { .kind = Loop_kind::Add, .count = 1, .in = in, .out = out, .also = { U } } );
+        Stride rest = out;
+        rest.offset += out.step;
+        into.push_back(
+            Loop_step { .kind = Loop_kind::Gather, .count = n, .table = indices( p, back ), .in = { v }, .out = rest }
+        );
+    }
+
     Cost cost( const Loop_program& p, const std::vector<Loop_step>& steps ) const
     {
         Cost total {};
@@ -1916,6 +2022,11 @@ private:
                 break;
             case Loop_kind::Scale:
                 total = total + s.count * Cost { 2, 4 };
+                break;
+            case Loop_kind::Gather:
+                break;
+            case Loop_kind::Add:
+                total = total + s.count * Cost { 2, 0 };
                 break;
             }
         }
@@ -2325,6 +2436,20 @@ void run(
                     b[s.in.buffer].at( element( s.in, index, i ) ) * p.tables[s.table].at( i );
             }
             break;
+        case Loop_kind::Gather:
+            for( u32 i = 0; i < s.count; ++i )
+            {
+                b[s.out.buffer].at( element( s.out, index, i ) ) =
+                    b[s.in.buffer].at( element( s.in, index, p.indices[s.table].at( i ) ) );
+            }
+            break;
+        case Loop_kind::Add:
+            for( u32 i = 0; i < s.count; ++i )
+            {
+                b[s.out.buffer].at( element( s.out, index, i ) ) =
+                    b[s.in.buffer].at( element( s.in, index, i ) ) + b[s.also.buffer].at( element( s.also, index, i ) );
+            }
+            break;
         }
     }
 }
@@ -2373,6 +2498,31 @@ TEST_CASE( "a_planned_dft_runs_as_loops_over_its_leaves", "[linear][sums]" )
         CHECK( p->loops > 0 );
         CHECK( p->leaves.size() < 12 );
         CHECK( error( *p, s ) < 1e-12 );
+    }
+}
+
+bool gathers( const std::vector<Loop_step>& steps )
+{
+    return std::ranges::any_of( steps, []( const Loop_step& s ) { return s.kind == Loop_kind::Gather || gathers( s.body ); } );
+}
+
+TEST_CASE( "a_pfa_or_rader_plan_runs_as_loops_through_index_tables", "[linear][sums]" )
+{
+    // Forward and inverse at 8-point leaves: 97 is prime, 96 = 32 3; 240 = 16 15.
+    Plan_options small;
+    small.leaf_max = 8;
+    for( const u32 n : { 97u, 240u } )
+    {
+        for( const u32 c : { 1u, n - 1 } )
+        {
+            const Sum                         s = exponent_kernel( n, n, n, c );
+            const std::optional<Loop_program> p = plan_loops( s, small );
+            REQUIRE( p );
+            INFO( n << " " << c );
+            CHECK( plan_sum( s, small )->how.find( n == 97 ? "rader " : "pfa " ) < 16 );
+            CHECK( gathers( p->steps ) );
+            CHECK( error( *p, s ) < 1e-12 );
+        }
     }
 }
 

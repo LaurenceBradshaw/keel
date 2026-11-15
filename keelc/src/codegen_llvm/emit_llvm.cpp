@@ -156,6 +156,7 @@ private:
     void         assign_memory( const Rvalue& value, const Place& place );
 
     llvm::Constant*       c_string( const std::string& text );
+    llvm::Constant*       constant_array( const Rvalue& value );
     llvm::GlobalVariable* global( Node_id declaration, Type_id owner );
     llvm::Constant*       initial( const Constant_value& value, Type_id type );
     llvm::Function*       defined( const std::string& name );
@@ -183,6 +184,7 @@ private:
     mutable llvm::IRBuilder<>          builder_; // mutable for its type getters
 
     std::unordered_map<std::string, llvm::Constant*> strings_;
+    std::unordered_map<u32, llvm::Constant*>         tables_;
 
     std::unique_ptr<llvm::DIBuilder>                   di_; // null without --debug
     llvm::DICompileUnit*                               unit_ = nullptr;
@@ -1874,6 +1876,8 @@ llvm::Value* Llvm_emitter::rvalue( const Rvalue& value )
         return load( value.type, builder_.CreateGEP( builder_.getInt8Ty(), operand( value.a ), operand( value.b ) ) );
     case Rvalue_kind::Literal_bytes:
         return c_string( std::string( literals_.string( value.a.constant ) ) );
+    case Rvalue_kind::Constant_array:
+        return constant_array( value );
     case Rvalue_kind::Make_interface:
     {
         llvm::Value* reference = llvm::PoisonValue::get( value_type( value.type ) );
@@ -2230,6 +2234,28 @@ llvm::Constant* Llvm_emitter::c_string( const std::string& text )
     if( added )
     {
         found->second = builder_.CreateGlobalStringPtr( text, "", 0, module_.get() );
+    }
+    return found->second;
+}
+
+// A read-only array of the literal's bytes, each once.
+llvm::Constant* Llvm_emitter::constant_array( const Rvalue& value )
+{
+    const auto [found, added] = tables_.try_emplace( value.a.constant.v, nullptr );
+    if( added )
+    {
+        const Type_id          array = table().get( value.type ).element;
+        const std::string_view bytes = literals_.string( value.a.constant );
+        llvm::Constant*        data  = llvm::ConstantDataArray::getRaw(
+            llvm::StringRef( bytes.data(), bytes.size() ),
+            table().get( array ).count,
+            memory_type( table().get( array ).element )
+        );
+        auto* global =
+            new llvm::GlobalVariable( *module_, data->getType(), true, llvm::GlobalValue::PrivateLinkage, data, "keel.table" );
+        global->setUnnamedAddr( llvm::GlobalValue::UnnamedAddr::Global );
+        global->setAlignment( align( array ) );
+        found->second = global;
     }
     return found->second;
 }

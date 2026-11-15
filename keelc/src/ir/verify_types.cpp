@@ -105,6 +105,7 @@ public:
         case Rvalue_kind::Run_size:
         case Rvalue_kind::Release:
         case Rvalue_kind::Literal_bytes:
+        case Rvalue_kind::Constant_array:
             operand( value.a, at );
             return;
 

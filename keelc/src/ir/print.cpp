@@ -237,6 +237,8 @@ struct Printer
             return fmt::format( "read {} at {}", operand( value.a ), operand( value.b ) );
         case Rvalue_kind::Literal_bytes:
             return fmt::format( "bytes \"{}\"", escape_bytes( literals.string( value.a.constant ) ) );
+        case Rvalue_kind::Constant_array:
+            return fmt::format( "constant {}", type_name( value.type ) );
         }
 
         return "<bad rvalue>";

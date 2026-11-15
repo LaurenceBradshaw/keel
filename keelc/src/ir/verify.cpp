@@ -155,6 +155,7 @@ void check_rvalue( const Function& func, const Rvalue& value, const At& where, s
         return;
 
     case Rvalue_kind::Literal_bytes:
+    case Rvalue_kind::Constant_array:
         operand_at( value.a, "literal" );
         return;
     }

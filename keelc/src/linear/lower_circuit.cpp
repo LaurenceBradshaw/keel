@@ -573,14 +573,17 @@ public:
         }
         for( const std::vector<std::complex<f64>>& t : program_.tables )
         {
-            const Value_place at = array( t.size() );
-            for( u64 i = 0; i < t.size(); ++i )
+            std::vector<f64> re, im;
+            for( const std::complex<f64>& w : t )
             {
-                const Local_id k = number( i );
-                assign( element( at.real, k ), use( literal( t[i].real() ) ) );
-                assign( element( at.imaginary, k ), use( literal( t[i].imag() ) ) );
+                re.push_back( w.real() );
+                im.push_back( w.imag() );
             }
-            tables_.push_back( at );
+            tables_.push_back( { constant_table( re, real_ ), constant_table( im, real_ ) } );
+        }
+        for( const std::vector<u64>& t : program_.indices )
+        {
+            indices_.push_back( constant_table( t, index_ ) );
         }
         run( program_.steps );
         blocks_.back().terminator = { .kind = Terminator_kind::Return, .span = span_ };
@@ -654,6 +657,44 @@ private:
                                 product( buffers_[s.out.buffer], at, tables_[s.table], e, buffers_[s.out.buffer], at );
                             }
                         );
+                    }
+                );
+                break;
+            case Loop_kind::Gather:
+                loop(
+                    0,
+                    s.count,
+                    [&]( Local_id i )
+                    {
+                        const Local_id from = emit( use( copy( element( indices_[s.table], i ), index_ ) ) );
+                        const Local_id to   = offset( s.out, i );
+                        const Local_id at   = offset( s.in, from );
+                        const Local_id re   = load( element( buffers_[s.in.buffer].real, at ) );
+                        const Local_id im   = load( element( buffers_[s.in.buffer].imaginary, at ) );
+                        assign( element( buffers_[s.out.buffer].real, to ), use( read( re ) ) );
+                        assign( element( buffers_[s.out.buffer].imaginary, to ), use( read( im ) ) );
+                    }
+                );
+                break;
+            case Loop_kind::Add:
+                loop(
+                    0,
+                    s.count,
+                    [&]( Local_id i )
+                    {
+                        const Local_id a = offset( s.in, i ), b = offset( s.also, i ), o = offset( s.out, i );
+                        const auto     sum = [&]( Place Value_place::*part )
+                        {
+                            return emit( binary(
+                                Token_kind::Plus,
+                                read( load( element( buffers_[s.in.buffer].*part, a ) ) ),
+                                read( load( element( buffers_[s.also.buffer].*part, b ) ) ),
+                                real_
+                            ) );
+                        };
+                        const Local_id re = sum( &Value_place::real ), im = sum( &Value_place::imaginary );
+                        assign( element( buffers_[s.out.buffer].real, o ), use( read( re ) ) );
+                        assign( element( buffers_[s.out.buffer].imaginary, o ), use( read( im ) ) );
                     }
                 );
                 break;
@@ -777,6 +818,18 @@ private:
         };
     }
 
+    // The array behind a pointer to read-only `values`, each of `type`.
+    template <class T>
+    Place constant_table( const std::vector<T>& values, Type_id type )
+    {
+        const Type_id  t = types_.pointer_to( types_.array_of( type, values.size() ), true );
+        const Local_id p = emit( constant_array(
+            literals_.add_string( std::string( reinterpret_cast<const char*>( values.data() ), values.size() * sizeof( T ) ) ),
+            t
+        ) );
+        return projected( func_, Place { .local = p }, Projection { .kind = Projection_kind::Deref } );
+    }
+
     Value_place at( Value_place buffer, Local_id i )
     {
         return { element( buffer.real, i ), element( buffer.imaginary, i ) };
@@ -800,11 +853,6 @@ private:
     Operand number_operand( u64 k ) const
     {
         return constant( literals_.add_integer( k ), index_ );
-    }
-
-    Operand literal( f64 v ) const
-    {
-        return constant( literals_.add_float( v, static_cast<f32>( v ) ), real_ );
     }
 
     Operand read( Local_id l ) const
@@ -839,6 +887,7 @@ private:
     std::vector<Pending>     blocks_;
     std::vector<Value_place> buffers_;
     std::vector<Value_place> tables_;
+    std::vector<Place>       indices_;
 };
 } // namespace
 

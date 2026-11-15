@@ -169,6 +169,7 @@ enum class Rvalue_kind : u8
     Field_offset,   // callee is the Field_decl; the aggregate is argument 0 of the field type
     Field_read,     // a is the object's address, b the offset
     Literal_bytes,  // the address of a string literal's bytes; a is the literal
+    Constant_array, // the address of a read-only T[N], the type's pointee, its bytes the literal a
     Make_interface, // §6.7: `a` is an implementer's address, and the type the interface pointer of it and its vtable
     Vtable_slot,    // §6.7: `a` is an interface pointer, callee the requirement, and the type the slot's function
     Interface_self, // §6.7: `a` is an interface pointer, and the type the `void*` of its object
@@ -844,6 +845,11 @@ inline Rvalue interface_self( Operand reference, Type_id type )
 inline Rvalue literal_bytes( Literal_id literal, Type_id type )
 {
     return Rvalue { .kind = Rvalue_kind::Literal_bytes, .type = type, .a = constant( literal, type ) };
+}
+
+inline Rvalue constant_array( Literal_id bytes, Type_id type )
+{
+    return Rvalue { .kind = Rvalue_kind::Constant_array, .type = type, .a = constant( bytes, type ) };
 }
 
 inline Rvalue field_offset( Node_id field, Type_id type )

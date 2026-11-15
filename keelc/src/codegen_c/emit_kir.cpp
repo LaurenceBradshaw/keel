@@ -4,6 +4,7 @@
 #include "codegen_c/emit_kir.h"
 #include <fmt/format.h>
 #include <algorithm>
+#include <cstring>
 #include <optional>
 #include <span>
 #include <unordered_set>
@@ -117,6 +118,7 @@ private:
     std::string place( const Place& place ) const;
     std::string constant( Literal_id literal, Type_id type ) const;
     std::string operand( const Operand& operand ) const;
+    std::string constant_array( const Rvalue& value ) const;
     std::string rvalue( const Rvalue& rvalue, Span span ) const;
 
     // A `Shape*` made from the address of an implementer: the address beside its vtable's.
@@ -1185,6 +1187,16 @@ void Kir_emitter::emit_function( const Function& function )
         ) );
     }
 
+    std::unordered_set<u32> tables;
+    for( const Statement& statement : function.statements )
+    {
+        const Rvalue& value = function.rvalue( statement );
+        if( value.kind == Rvalue_kind::Constant_array && tables.insert( value.a.constant.v ).second )
+        {
+            write_line( constant_array( value ) );
+        }
+    }
+
     // gcc warns on a name nothing reads: an unread parameter, or a call's unread result.
     const std::vector<bool> read = read_locals( function );
 
@@ -1660,6 +1672,29 @@ std::string Kir_emitter::constant( Literal_id literal, Type_id type ) const
     }
 }
 
+// A function-local static of the array, each element read from the literal's bytes.
+std::string Kir_emitter::constant_array( const Rvalue& value ) const
+{
+    const Type_id          array   = types_.table().get( value.type ).element;
+    const Type&            element = types_.table().get( types_.table().get( array ).element );
+    const std::string_view bytes   = literal_pool_.string( value.a.constant );
+    const u64              size    = element.width / 8;
+    std::string            items;
+    for( u64 at = 0; at < bytes.size(); at += size )
+    {
+        u64 bits = 0;
+        std::memcpy( &bits, bytes.data() + at, size );
+        f64 d = 0;
+        f32 f = 0;
+        std::memcpy( &d, &bits, sizeof d );
+        std::memcpy( &f, &bits, sizeof f );
+        items += fmt::format(
+            "{}{}", at == 0 ? "" : ", ", element.kind != Type_kind::Float ? c_integer( bits ) : c_float( size == 8 ? d : f )
+        );
+    }
+    return fmt::format( "static const {} keel_table{} = {{ {{ {} }} }};", spelling_.type( array ), value.a.constant.v, items );
+}
+
 std::string Kir_emitter::operand( const Operand& operand ) const
 {
     switch( operand.kind )
@@ -1808,6 +1843,9 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
 
     case Rvalue_kind::Literal_bytes:
         return fmt::format( "( {} ) {}", spelling_.type( rvalue.type ), c_string( literal_pool_.string( rvalue.a.constant ) ) );
+
+    case Rvalue_kind::Constant_array:
+        return fmt::format( "( {} ) &keel_table{}", spelling_.type( rvalue.type ), rvalue.a.constant.v );
 
     case Rvalue_kind::Call:
         assert(
