@@ -503,7 +503,7 @@ Front_end run_front_end(
                                     interner.text( ast.name( current().declaration ) ),
                                     describe( outcome.ending->why )
                                 ),
-                                "each output must be a sum of inputs scaled by constants"
+                                "each output must be a sum of inputs scaled by constants, plus a constant"
                             );
                         }
                     }

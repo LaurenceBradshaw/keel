@@ -1,0 +1,560 @@
+// opt3/dft8_plus_constant.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__A8_3f64;
+
+struct kl__A8_3f64
+{
+    double e[8];
+};
+_Static_assert( sizeof( struct kl__A8_3f64 ) == 64 && _Alignof( struct kl__A8_3f64 ) == 8, "layout" );
+
+double kl__6cosine__3f64( double );
+double kl__4sine__3f64( double );
+void kl__3dft__A8_3f64_A8_3f64_RA8_3f64_RA8_3f64( struct kl__A8_3f64*, struct kl__A8_3f64*, struct kl__A8_3f64*, struct kl__A8_3f64* );
+int32_t kl__4main__( void );
+
+#line 6 "opt3/dft8_plus_constant.kl"
+double kl__6cosine__3f64( double kl_x_1 )
+{
+    double kl_t0;
+#line 8 "opt3/dft8_plus_constant.kl"
+    kl_t0 = kl_x_1;
+#line 8 "opt3/dft8_plus_constant.kl"
+    return kl_t0;
+}
+
+#line 12 "opt3/dft8_plus_constant.kl"
+double kl__4sine__3f64( double kl_x_1 )
+{
+    double kl_t0;
+#line 14 "opt3/dft8_plus_constant.kl"
+    kl_t0 = kl_x_1;
+#line 14 "opt3/dft8_plus_constant.kl"
+    return kl_t0;
+}
+
+#line 18 "opt3/dft8_plus_constant.kl"
+void kl__3dft__A8_3f64_A8_3f64_RA8_3f64_RA8_3f64( struct kl__A8_3f64* kl_re_1, struct kl__A8_3f64* kl_im_2, struct kl__A8_3f64* kl_yr_3, struct kl__A8_3f64* kl_yi_4 )
+{
+    uint64_t kl_t5;
+    uint64_t kl_t6;
+    uint64_t kl_t7;
+    uint64_t kl_t8;
+    uint64_t kl_t9;
+    uint64_t kl_t10;
+    uint64_t kl_t11;
+    uint64_t kl_t12;
+    double kl_t13;
+    double kl_t14;
+    double kl_t15;
+    double kl_t16;
+    double kl_t17;
+    double kl_t18;
+    double kl_t19;
+    double kl_t20;
+    double kl_t21;
+    double kl_t22;
+    double kl_t23;
+    double kl_t24;
+    double kl_t25;
+    double kl_t26;
+    double kl_t27;
+    double kl_t28;
+    double kl_t29;
+    double kl_t30;
+    double kl_t31;
+    double kl_t32;
+    double kl_t33;
+    double kl_t34;
+    double kl_t35;
+    double kl_t36;
+    double kl_t37;
+    double kl_t38;
+    double kl_t39;
+    double kl_t40;
+    double kl_t41;
+    double kl_t42;
+    double kl_t43;
+    double kl_t44;
+    double kl_t45;
+    double kl_t46;
+    double kl_t47;
+    double kl_t48;
+    double kl_t49;
+    double kl_t50;
+    double kl_t51;
+    double kl_t52;
+    double kl_t53;
+    double kl_t54;
+    double kl_t55;
+    double kl_t56;
+    double kl_t57;
+    double kl_t58;
+    double kl_t59;
+    double kl_t60;
+    double kl_t61;
+    double kl_t62;
+    double kl_t63;
+    double kl_t64;
+    double kl_t65;
+    double kl_t66;
+    double kl_t67;
+    double kl_t68;
+    double kl_t69;
+    double kl_t70;
+    double kl_t71;
+    double kl_t72;
+    double kl_t73;
+    double kl_t74;
+    double kl_t75;
+    double kl_t76;
+    double kl_t77;
+    double kl_t78;
+    double kl_t79;
+    double kl_t80;
+    double kl_t81;
+    double kl_t82;
+    double kl_t83;
+    double kl_t84;
+    double kl_t85;
+    double kl_t86;
+    ( void ) kl_t5;
+    ( void ) kl_t6;
+    ( void ) kl_t7;
+    ( void ) kl_t8;
+    ( void ) kl_t9;
+    ( void ) kl_t10;
+    ( void ) kl_t11;
+    ( void ) kl_t12;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t5 = 0;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t6 = 1;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t7 = 2;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t8 = 3;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t9 = 4;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t10 = 5;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t11 = 6;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t12 = 7;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t13 = ( *kl_re_1 ).e[kl_t5];
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t14 = ( *kl_im_2 ).e[kl_t5];
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t15 = ( *kl_re_1 ).e[kl_t6];
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t16 = ( *kl_im_2 ).e[kl_t6];
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t17 = ( *kl_re_1 ).e[kl_t7];
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t18 = ( *kl_im_2 ).e[kl_t7];
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t19 = ( *kl_re_1 ).e[kl_t8];
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t20 = ( *kl_im_2 ).e[kl_t8];
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t21 = ( *kl_re_1 ).e[kl_t9];
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t22 = ( *kl_im_2 ).e[kl_t9];
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t23 = ( *kl_re_1 ).e[kl_t10];
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t24 = ( *kl_im_2 ).e[kl_t10];
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t25 = ( *kl_re_1 ).e[kl_t11];
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t26 = ( *kl_im_2 ).e[kl_t11];
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t27 = ( *kl_re_1 ).e[kl_t12];
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t28 = ( *kl_im_2 ).e[kl_t12];
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t29 = kl_t13 + 1.0;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t30 = kl_t14 + 0.5;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t31 = kl_t21 + kl_t29;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t32 = kl_t22 + kl_t30;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t33 = kl_t29 - kl_t21;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t34 = kl_t30 - kl_t22;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t35 = kl_t15 + kl_t23;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t36 = kl_t16 + kl_t24;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t37 = kl_t15 - kl_t23;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t38 = kl_t16 - kl_t24;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t39 = kl_t17 + kl_t25;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t40 = kl_t18 + kl_t26;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t41 = kl_t17 - kl_t25;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t42 = kl_t18 - kl_t26;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t43 = kl_t19 + kl_t27;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t44 = kl_t20 + kl_t28;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t45 = kl_t19 - kl_t27;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t46 = kl_t20 - kl_t28;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t47 = kl_t31 + kl_t39;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t48 = kl_t32 + kl_t40;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t49 = kl_t31 - kl_t39;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t50 = kl_t32 - kl_t40;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t51 = kl_t35 + kl_t43;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t52 = kl_t36 + kl_t44;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t53 = kl_t35 - kl_t43;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t54 = kl_t36 - kl_t44;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t55 = kl_t47 + kl_t51;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t56 = kl_t48 + kl_t52;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t57 = kl_t49 + kl_t54;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t58 = kl_t50 - kl_t53;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t59 = kl_t47 - kl_t51;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t60 = kl_t48 - kl_t52;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t61 = kl_t49 - kl_t54;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t62 = kl_t50 + kl_t53;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t63 = kl_t33 + kl_t42;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t64 = kl_t34 - kl_t41;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t65 = kl_t33 - kl_t42;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t66 = kl_t34 + kl_t41;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t67 = kl_t37 + kl_t46;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t68 = kl_t38 - kl_t45;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t69 = kl_t37 - kl_t46;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t70 = kl_t38 + kl_t45;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t71 = kl_t68 - kl_t67;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t72 = kl_t71 * 0.7071067811865475;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t73 = kl_t68 + kl_t67;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t74 = kl_t73 * 0.7071067811865475;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t75 = kl_t63 + kl_t74;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t76 = kl_t64 + kl_t72;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t77 = kl_t70 - kl_t69;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t78 = kl_t77 * 0.7071067811865475;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t79 = kl_t70 + kl_t69;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t80 = kl_t79 * 0.7071067811865475;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t81 = kl_t65 + kl_t78;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t82 = kl_t66 - kl_t80;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t83 = kl_t63 - kl_t74;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t84 = kl_t64 - kl_t72;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t85 = kl_t65 - kl_t78;
+#line 20 "opt3/dft8_plus_constant.kl"
+    kl_t86 = kl_t66 + kl_t80;
+#line 20 "opt3/dft8_plus_constant.kl"
+    ( *kl_yr_3 ).e[kl_t5] = kl_t55;
+#line 20 "opt3/dft8_plus_constant.kl"
+    ( *kl_yi_4 ).e[kl_t5] = kl_t56;
+#line 20 "opt3/dft8_plus_constant.kl"
+    ( *kl_yr_3 ).e[kl_t6] = kl_t75;
+#line 20 "opt3/dft8_plus_constant.kl"
+    ( *kl_yi_4 ).e[kl_t6] = kl_t76;
+#line 20 "opt3/dft8_plus_constant.kl"
+    ( *kl_yr_3 ).e[kl_t7] = kl_t57;
+#line 20 "opt3/dft8_plus_constant.kl"
+    ( *kl_yi_4 ).e[kl_t7] = kl_t58;
+#line 20 "opt3/dft8_plus_constant.kl"
+    ( *kl_yr_3 ).e[kl_t8] = kl_t81;
+#line 20 "opt3/dft8_plus_constant.kl"
+    ( *kl_yi_4 ).e[kl_t8] = kl_t82;
+#line 20 "opt3/dft8_plus_constant.kl"
+    ( *kl_yr_3 ).e[kl_t9] = kl_t59;
+#line 20 "opt3/dft8_plus_constant.kl"
+    ( *kl_yi_4 ).e[kl_t9] = kl_t60;
+#line 20 "opt3/dft8_plus_constant.kl"
+    ( *kl_yr_3 ).e[kl_t10] = kl_t83;
+#line 20 "opt3/dft8_plus_constant.kl"
+    ( *kl_yi_4 ).e[kl_t10] = kl_t84;
+#line 20 "opt3/dft8_plus_constant.kl"
+    ( *kl_yr_3 ).e[kl_t11] = kl_t61;
+#line 20 "opt3/dft8_plus_constant.kl"
+    ( *kl_yi_4 ).e[kl_t11] = kl_t62;
+#line 20 "opt3/dft8_plus_constant.kl"
+    ( *kl_yr_3 ).e[kl_t12] = kl_t85;
+#line 20 "opt3/dft8_plus_constant.kl"
+    ( *kl_yi_4 ).e[kl_t12] = kl_t86;
+#line 20 "opt3/dft8_plus_constant.kl"
+    return;
+#line 35 "opt3/dft8_plus_constant.kl"
+}
+
+#line 37 "opt3/dft8_plus_constant.kl"
+int32_t kl__4main__( void )
+{
+    int32_t kl_t0;
+    struct kl__A8_3f64 kl_re_1;
+    uint64_t kl_t2;
+    uint64_t kl_t3;
+    uint64_t kl_t4;
+    uint64_t kl_t5;
+    uint64_t kl_t6;
+    uint64_t kl_t7;
+    uint64_t kl_t8;
+    uint64_t kl_t9;
+    struct kl__A8_3f64 kl_im_10;
+    uint64_t kl_t11;
+    struct kl__A8_3f64 kl_yr_12;
+    uint64_t kl_t13;
+    struct kl__A8_3f64 kl_yi_14;
+    uint64_t kl_t15;
+    struct kl__A8_3f64* kl_t16;
+    struct kl__A8_3f64* kl_t17;
+    struct kl__A8_3f64* kl_t18;
+    struct kl__A8_3f64* kl_t19;
+    bool kl_t21;
+    uint64_t kl_t22;
+    uint64_t kl_t23;
+    uint64_t kl_t24;
+    uint64_t kl_t25;
+    ( void ) kl_t2;
+    ( void ) kl_t3;
+    ( void ) kl_t4;
+    ( void ) kl_t5;
+    ( void ) kl_t6;
+    ( void ) kl_t7;
+    ( void ) kl_t8;
+    ( void ) kl_t9;
+    ( void ) kl_t11;
+    ( void ) kl_t13;
+    ( void ) kl_t15;
+    ( void ) kl_t22;
+    ( void ) kl_t23;
+    ( void ) kl_t24;
+    ( void ) kl_t25;
+#line 39 "opt3/dft8_plus_constant.kl"
+    kl_t2 = 0;
+#line 39 "opt3/dft8_plus_constant.kl"
+    kl_re_1.e[kl_t2] = 1.0;
+#line 39 "opt3/dft8_plus_constant.kl"
+    kl_t3 = 1;
+#line 39 "opt3/dft8_plus_constant.kl"
+    kl_re_1.e[kl_t3] = 2.0;
+#line 39 "opt3/dft8_plus_constant.kl"
+    kl_t4 = 2;
+#line 39 "opt3/dft8_plus_constant.kl"
+    kl_re_1.e[kl_t4] = 3.0;
+#line 39 "opt3/dft8_plus_constant.kl"
+    kl_t5 = 3;
+#line 39 "opt3/dft8_plus_constant.kl"
+    kl_re_1.e[kl_t5] = 4.0;
+#line 39 "opt3/dft8_plus_constant.kl"
+    kl_t6 = 4;
+#line 39 "opt3/dft8_plus_constant.kl"
+    kl_re_1.e[kl_t6] = 5.0;
+#line 39 "opt3/dft8_plus_constant.kl"
+    kl_t7 = 5;
+#line 39 "opt3/dft8_plus_constant.kl"
+    kl_re_1.e[kl_t7] = 6.0;
+#line 39 "opt3/dft8_plus_constant.kl"
+    kl_t8 = 6;
+#line 39 "opt3/dft8_plus_constant.kl"
+    kl_re_1.e[kl_t8] = 7.0;
+#line 39 "opt3/dft8_plus_constant.kl"
+    kl_t9 = 7;
+#line 39 "opt3/dft8_plus_constant.kl"
+    kl_re_1.e[kl_t9] = 8.0;
+    kl_t11 = 0;
+#line 40 "opt3/dft8_plus_constant.kl"
+    kl_im_10.e[kl_t11] = 0.0;
+#line 40 "opt3/dft8_plus_constant.kl"
+    kl_t11 = 1;
+#line 40 "opt3/dft8_plus_constant.kl"
+    kl_im_10.e[kl_t11] = 0.0;
+#line 40 "opt3/dft8_plus_constant.kl"
+    kl_t11 = 2;
+#line 40 "opt3/dft8_plus_constant.kl"
+    kl_im_10.e[kl_t11] = 0.0;
+#line 40 "opt3/dft8_plus_constant.kl"
+    kl_t11 = 3;
+#line 40 "opt3/dft8_plus_constant.kl"
+    kl_im_10.e[kl_t11] = 0.0;
+#line 40 "opt3/dft8_plus_constant.kl"
+    kl_t11 = 4;
+#line 40 "opt3/dft8_plus_constant.kl"
+    kl_im_10.e[kl_t11] = 0.0;
+#line 40 "opt3/dft8_plus_constant.kl"
+    kl_t11 = 5;
+#line 40 "opt3/dft8_plus_constant.kl"
+    kl_im_10.e[kl_t11] = 0.0;
+#line 40 "opt3/dft8_plus_constant.kl"
+    kl_t11 = 6;
+#line 40 "opt3/dft8_plus_constant.kl"
+    kl_im_10.e[kl_t11] = 0.0;
+#line 40 "opt3/dft8_plus_constant.kl"
+    kl_t11 = 7;
+#line 40 "opt3/dft8_plus_constant.kl"
+    kl_im_10.e[kl_t11] = 0.0;
+    kl_t13 = 0;
+#line 41 "opt3/dft8_plus_constant.kl"
+    kl_yr_12.e[kl_t13] = 0.0;
+#line 41 "opt3/dft8_plus_constant.kl"
+    kl_t13 = 1;
+#line 41 "opt3/dft8_plus_constant.kl"
+    kl_yr_12.e[kl_t13] = 0.0;
+#line 41 "opt3/dft8_plus_constant.kl"
+    kl_t13 = 2;
+#line 41 "opt3/dft8_plus_constant.kl"
+    kl_yr_12.e[kl_t13] = 0.0;
+#line 41 "opt3/dft8_plus_constant.kl"
+    kl_t13 = 3;
+#line 41 "opt3/dft8_plus_constant.kl"
+    kl_yr_12.e[kl_t13] = 0.0;
+#line 41 "opt3/dft8_plus_constant.kl"
+    kl_t13 = 4;
+#line 41 "opt3/dft8_plus_constant.kl"
+    kl_yr_12.e[kl_t13] = 0.0;
+#line 41 "opt3/dft8_plus_constant.kl"
+    kl_t13 = 5;
+#line 41 "opt3/dft8_plus_constant.kl"
+    kl_yr_12.e[kl_t13] = 0.0;
+#line 41 "opt3/dft8_plus_constant.kl"
+    kl_t13 = 6;
+#line 41 "opt3/dft8_plus_constant.kl"
+    kl_yr_12.e[kl_t13] = 0.0;
+#line 41 "opt3/dft8_plus_constant.kl"
+    kl_t13 = 7;
+#line 41 "opt3/dft8_plus_constant.kl"
+    kl_yr_12.e[kl_t13] = 0.0;
+    kl_t15 = 0;
+#line 42 "opt3/dft8_plus_constant.kl"
+    kl_yi_14.e[kl_t15] = 0.0;
+#line 42 "opt3/dft8_plus_constant.kl"
+    kl_t15 = 1;
+#line 42 "opt3/dft8_plus_constant.kl"
+    kl_yi_14.e[kl_t15] = 0.0;
+#line 42 "opt3/dft8_plus_constant.kl"
+    kl_t15 = 2;
+#line 42 "opt3/dft8_plus_constant.kl"
+    kl_yi_14.e[kl_t15] = 0.0;
+#line 42 "opt3/dft8_plus_constant.kl"
+    kl_t15 = 3;
+#line 42 "opt3/dft8_plus_constant.kl"
+    kl_yi_14.e[kl_t15] = 0.0;
+#line 42 "opt3/dft8_plus_constant.kl"
+    kl_t15 = 4;
+#line 42 "opt3/dft8_plus_constant.kl"
+    kl_yi_14.e[kl_t15] = 0.0;
+#line 42 "opt3/dft8_plus_constant.kl"
+    kl_t15 = 5;
+#line 42 "opt3/dft8_plus_constant.kl"
+    kl_yi_14.e[kl_t15] = 0.0;
+#line 42 "opt3/dft8_plus_constant.kl"
+    kl_t15 = 6;
+#line 42 "opt3/dft8_plus_constant.kl"
+    kl_yi_14.e[kl_t15] = 0.0;
+#line 42 "opt3/dft8_plus_constant.kl"
+    kl_t15 = 7;
+#line 42 "opt3/dft8_plus_constant.kl"
+    kl_yi_14.e[kl_t15] = 0.0;
+    kl_t16 = &kl_re_1;
+#line 43 "opt3/dft8_plus_constant.kl"
+    kl_t17 = &kl_im_10;
+#line 43 "opt3/dft8_plus_constant.kl"
+    kl_t18 = &kl_yr_12;
+#line 43 "opt3/dft8_plus_constant.kl"
+    kl_t19 = &kl_yi_14;
+#line 43 "opt3/dft8_plus_constant.kl"
+    kl__3dft__A8_3f64_A8_3f64_RA8_3f64_RA8_3f64( kl_t16, kl_t17, kl_t18, kl_t19 );
+    kl_t22 = 0;
+#line 44 "opt3/dft8_plus_constant.kl"
+    kl_t21 = kl_yr_12.e[kl_t22] == 37.0;
+#line 44 "opt3/dft8_plus_constant.kl"
+    if ( kl_t21 ) goto bb4; else goto bb2;
+    bb1:
+#line 44 "opt3/dft8_plus_constant.kl"
+    kl_t0 = 0;
+#line 44 "opt3/dft8_plus_constant.kl"
+    goto bb3;
+    bb2:
+#line 44 "opt3/dft8_plus_constant.kl"
+    kl_t0 = 1;
+#line 44 "opt3/dft8_plus_constant.kl"
+    goto bb3;
+    bb3:
+#line 44 "opt3/dft8_plus_constant.kl"
+    return kl_t0;
+    bb4:
+#line 44 "opt3/dft8_plus_constant.kl"
+    kl_t23 = 0;
+#line 44 "opt3/dft8_plus_constant.kl"
+    kl_t21 = kl_yi_14.e[kl_t23] == 0.5;
+#line 44 "opt3/dft8_plus_constant.kl"
+    if ( kl_t21 ) goto bb5; else goto bb2;
+    bb5:
+#line 44 "opt3/dft8_plus_constant.kl"
+    kl_t24 = 4;
+#line 44 "opt3/dft8_plus_constant.kl"
+    kl_t21 = kl_yr_12.e[kl_t24] == -3.0;
+#line 44 "opt3/dft8_plus_constant.kl"
+    if ( kl_t21 ) goto bb6; else goto bb2;
+    bb6:
+#line 44 "opt3/dft8_plus_constant.kl"
+    kl_t25 = 4;
+#line 44 "opt3/dft8_plus_constant.kl"
+    kl_t21 = kl_yi_14.e[kl_t25] == 0.5;
+#line 44 "opt3/dft8_plus_constant.kl"
+    if ( kl_t21 ) goto bb1; else goto bb2;
+}
+
+int main( void )
+{
+    int32_t kl_t0;
+#line 37 "opt3/dft8_plus_constant.kl"
+    kl_t0 = kl__4main__(  );
+#line 37 "opt3/dft8_plus_constant.kl"
+    return kl_t0;
+#line 37 "opt3/dft8_plus_constant.kl"
+}
+

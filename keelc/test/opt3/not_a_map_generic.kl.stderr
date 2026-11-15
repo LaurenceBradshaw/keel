@@ -1,0 +1,5 @@
+warning: `squared` is `@real_arithmetic` but computes no linear map: it multiplies two inputs [-Wlinear-map]
+ --> opt3/not_a_map_generic.kl:7:12
+  |
+7 |     return x * x * cast<f64>( N );
+  |            ^^^^^ each output must be a sum of inputs scaled by constants, plus a constant

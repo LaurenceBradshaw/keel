@@ -1,0 +1,45 @@
+// A complex map plus a constant pairs as the map alone does, the constant one complex coefficient on
+// the input fixed at 1: the DFT8's 56 adds and multiplies and 2 more, for 1 + 0.5i added to x0, which
+// every output reads.
+
+@trig_cos
+f64 cosine( f64 x )
+{
+    return x;
+}
+
+@trig_sin
+f64 sine( f64 x )
+{
+    return x;
+}
+
+@real_arithmetic
+void dft( const ref f64[8] re, const ref f64[8] im, ref f64[8] yr, ref f64[8] yi )
+{
+    for( u64 k = 0; k < 8; k += 1 )
+    {
+        f64 sr = 1.0;
+        f64 si = 0.5;
+        for( u64 j = 0; j < 8; j += 1 )
+        {
+            const f64 t = -2.0 * 3.141592653589793 * cast<f64>( j * k ) / 8.0;
+            const f64 c = cosine( t );
+            const f64 s = sine( t );
+            sr += re[j] * c - im[j] * s;
+            si += re[j] * s + im[j] * c;
+        }
+        yr[k] = sr;
+        yi[k] = si;
+    }
+}
+
+i32 main()
+{
+    const f64[8] re = [ 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0 ];
+    const f64[8] im = [ 0.0, .. ];
+    f64[8]       yr = [ 0.0, .. ];
+    f64[8]       yi = [ 0.0, .. ];
+    dft( re, im, ref yr, ref yi );
+    return yr[0] == 37.0 && yi[0] == 0.5 && yr[4] == -3.0 && yi[4] == 0.5 ? 0 : 1;
+}

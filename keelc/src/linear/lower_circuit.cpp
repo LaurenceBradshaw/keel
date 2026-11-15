@@ -173,13 +173,20 @@ public:
                 v[o] = { a.re, negated( a.im ) };
                 continue;
             }
+            if( ops[o].kind == Op_kind::One )
+            {
+                v[o] = { constant_part( one() ), {} };
+                continue;
+            }
 
             const auto [cr, ci] = z_.integer
                                       ? parts( field_, circuit.exact( ops[o].b ) )
                                       : std::pair<Number, Number> {
                                             { circuit.constant( ops[o].b ).real() }, { circuit.constant( ops[o].b ).imag() }
                                         };
-            v[o]                = scale( a, cr, ci, live[o] );
+            v[o]                = ops[ops[o].a].kind == Op_kind::One
+                                      ? Value { live[o][0] ? constant_part( cr ) : Part {}, live[o][1] ? constant_part( ci ) : Part {} }
+                                      : scale( a, cr, ci, live[o] );
         }
         for( size_t i = 0; i < nodes.size(); ++i )
         {
@@ -229,6 +236,12 @@ private:
         const Local_id t = func_.locals.push_back( Local { .type = type_, .span = span_ } );
         assign( Place { .local = t }, std::move( value ) );
         return { t };
+    }
+
+    // A literal's part; no local is zero.
+    Part constant_part( Number k )
+    {
+        return z_.zero( k ) ? Part {} : emit( use( literal( k ) ) );
     }
 
     Part load( const Place& place )
@@ -486,6 +499,12 @@ private:
     std::vector<std::pair<Number, Number>> x;
     for( const Value_place& in : inputs )
     {
+        // No place is the constant 1.
+        if( !in.real.local.is_valid() )
+        {
+            x.emplace_back( z.integer ? Number { 0, 1 } : Number { 1.0 }, Number {} );
+            continue;
+        }
         x.emplace_back( draw(), two ? draw() : Number {} );
         machine.set( in.real, x.back().first );
         if( two )

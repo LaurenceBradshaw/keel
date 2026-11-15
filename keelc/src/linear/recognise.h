@@ -35,7 +35,7 @@ struct Param_path
     std::vector<Step> steps;
 };
 
-// `imaginary` only when the map was paired into complex rows.
+// `imaginary` only when the map was paired into complex rows; no `real` local is the input fixed at 1.
 struct Value_path
 {
     Param_path real;
@@ -65,7 +65,6 @@ enum class Ending : u8
     Bits,        // an input's bits
     Cast,        // an input cast to another type
     Coefficient, // an input scaled by a value with no exact value
-    Constant,    // a constant added to an input, or written to an output
     Unknown,     // a value known only at run time written to an output
     Global,      // a global read
     Panic,       // a path that panics or is unreachable

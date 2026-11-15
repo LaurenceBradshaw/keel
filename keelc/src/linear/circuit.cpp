@@ -91,6 +91,8 @@ std::string op_line( const Op& op )
         return "r " + std::to_string( op.a ) + '\n';
     case Op_kind::Conj:
         return "c " + std::to_string( op.a ) + '\n';
+    case Op_kind::One:
+        return "1\n";
     case Op_kind::Result:
         break;
     }
@@ -122,7 +124,7 @@ u32 Circuit::put( Op op )
                           : op.kind == Op_kind::Add   ? real_ops_[op.a] && real_ops_[op.b]
                           : op.kind == Op_kind::Scale ? real_ops_[op.a] && std::abs( constants_[op.b].value.imag() ) < 1e-12
                           : op.kind == Op_kind::Conj  ? real_ops_[op.a]
-                                                      : op.kind == Op_kind::Real;
+                                                      : op.kind == Op_kind::Real || op.kind == Op_kind::One;
         real_ops_.push_back( real );
     }
     return found->second;
@@ -135,6 +137,10 @@ u32 Circuit::input( u32 j )
 
 u32 Circuit::add( u32 a, u32 b )
 {
+    if( is_constant( a ) && is_constant( b ) )
+    {
+        return scale_by( one(), plus( value_of( a ), value_of( b ) ) );
+    }
     return put( { Op_kind::Add, std::min( a, b ), std::max( a, b ) } );
 }
 
@@ -150,12 +156,39 @@ u32 Circuit::scale( u32 a, Element c )
 
 u32 Circuit::real_part( u32 a )
 {
+    if( !real_ops_[a] && !integers_ && is_constant( a ) )
+    {
+        return scale( one(), value_of( a ).value.real() );
+    }
     return real_ops_[a] ? a : put( { Op_kind::Real, a, 0 } );
 }
 
 u32 Circuit::conj( u32 a )
 {
+    if( !real_ops_[a] && !integers_ && is_constant( a ) )
+    {
+        return scale( one(), std::conj( value_of( a ).value ) );
+    }
     return real_ops_[a] ? a : ops_[a].kind == Op_kind::Conj ? ops_[a].a : put( { Op_kind::Conj, a, 0 } );
+}
+
+u32 Circuit::one()
+{
+    return put( { Op_kind::One, 0, 0 } );
+}
+
+bool Circuit::is_constant( u32 a ) const
+{
+    return ops_[a].kind == Op_kind::One || ( ops_[a].kind == Op_kind::Scale && ops_[ops_[a].a].kind == Op_kind::One );
+}
+
+Circuit::Constant Circuit::value_of( u32 a ) const
+{
+    if( ops_[a].kind == Op_kind::Scale )
+    {
+        return constants_[ops_[a].b];
+    }
+    return integers_ ? make( integers_->one() ) : make( 1.0 );
 }
 
 u32 Circuit::call( Call call )
@@ -203,6 +236,11 @@ Circuit::Constant Circuit::times( Constant x, Constant y ) const
     return integers_ ? make( integers_->mul( x.exact, y.exact ) ) : make( x.value * y.value );
 }
 
+Circuit::Constant Circuit::plus( Constant x, Constant y ) const
+{
+    return integers_ ? make( integers_->add( x.exact, y.exact ) ) : make( x.value + y.value );
+}
+
 bool Circuit::is_unit( Constant c ) const
 {
     if( integers_ )
@@ -225,6 +263,12 @@ u32 Circuit::scale_node( u32 a, Constant c )
 
 u32 Circuit::scale_by( u32 a, Constant c )
 {
+    // A constant times c is one constant, unit or not.
+    if( is_constant( a ) )
+    {
+        c = times( c, value_of( a ) );
+        return ( integers_ ? c.exact == integers_->one() : c.value == 1.0 ) ? one() : scale_node( one(), c );
+    }
     // Units fold into the constant, which is kept as unit times the least of its orbit, so -cx reuses cx.
     if( ops_[a].kind == Op_kind::Scale && is_unit( constants_[ops_[a].b] ) )
     {
@@ -277,6 +321,9 @@ std::vector<u32> Circuit::paste( const Circuit& sub, const std::vector<u32>& inp
         case Op_kind::Input:
             m.push_back( inputs[op.a] );
             break;
+        case Op_kind::One:
+            m.push_back( one() );
+            break;
         case Op_kind::Add:
             m.push_back( add( m[op.a], m[op.b] ) );
             break;
@@ -327,7 +374,7 @@ std::vector<bool> Circuit::live() const
                 }
             }
         }
-        else if( ops_[o].kind != Op_kind::Input )
+        else if( ops_[o].kind != Op_kind::Input && ops_[o].kind != Op_kind::One )
         {
             stack.push_back( ops_[o].a );
         }
@@ -391,7 +438,7 @@ std::vector<u32> Circuit::uses( const std::vector<bool>& lv ) const
     std::vector<bool> counted( calls_.size(), false );
     for( u32 o = 0; o < ops_.size(); ++o )
     {
-        if( !lv[o] || ops_[o].kind == Op_kind::Input )
+        if( !lv[o] || ops_[o].kind == Op_kind::Input || ops_[o].kind == Op_kind::One )
         {
             continue;
         }
@@ -438,6 +485,10 @@ Circuit Circuit::pruned() const
         {
             m[o] = c.input( op.a );
         }
+        else if( op.kind == Op_kind::One )
+        {
+            m[o] = c.one();
+        }
         else if( op.kind == Op_kind::Add )
         {
             m[o] = c.add( m[op.a], m[op.b] );
@@ -474,6 +525,26 @@ Circuit Circuit::pruned() const
         c.outputs.emplace( row, m[o] );
     }
     return folded ? c.pruned() : c;
+}
+
+Circuit Circuit::bound( u32 j ) const
+{
+    Circuit          c = integers_ ? Circuit( *integers_ ) : Circuit( real_ );
+    std::vector<u32> inputs;
+    for( const Op& op : ops_ )
+    {
+        if( op.kind == Op_kind::Input )
+        {
+            inputs.resize( std::max<size_t>( inputs.size(), op.a + 1 ) );
+            inputs[op.a] = op.a == j ? c.one() : c.input( op.a );
+        }
+    }
+    const std::vector<u32> m = c.paste( *this, inputs );
+    for( const auto& [row, o] : outputs )
+    {
+        c.outputs.emplace( row, m[o] );
+    }
+    return c;
 }
 
 // Complex: real or imaginary 0+2, |Re| = |Im| or a part +-1 2+2, else 2+4. Real: a multiply a part. A unit is free.
@@ -523,7 +594,7 @@ Cost Circuit::cost( bool fma ) const
         {
             n = ops_[n].a;
         }
-        return ops_[n].kind == Op_kind::Scale && users[n] == 1 && !is_unit( constants_[ops_[n].b] ) &&
+        return ops_[n].kind == Op_kind::Scale && !is_constant( n ) && users[n] == 1 && !is_unit( constants_[ops_[n].b] ) &&
                ends_in_muls( n, constants_[ops_[n].b] );
     };
 
@@ -539,7 +610,7 @@ Cost Circuit::cost( bool fma ) const
             total        = total + calls_[op.a].cost;
         }
         if( !lv[o] || op.kind == Op_kind::Input || op.kind == Op_kind::Real || op.kind == Op_kind::Conj ||
-            op.kind == Op_kind::Result )
+            op.kind == Op_kind::Result || is_constant( o ) )
         {
             continue;
         }
@@ -627,6 +698,9 @@ std::vector<std::complex<f64>> Circuit::evaluate( const std::vector<std::complex
         case Op_kind::Conj:
             v.push_back( std::conj( v[op.a] ) );
             break;
+        case Op_kind::One:
+            v.push_back( 1 );
+            break;
         }
     }
     return v;
@@ -655,6 +729,9 @@ std::string Circuit::text() const
             break;
         case Op_kind::Conj:
             out << o << " conj " << op.a << '\n';
+            break;
+        case Op_kind::One:
+            out << o << " one\n";
             break;
         case Op_kind::Result:
             out << o << " result " << op.a << ' ' << op.b << '\n';
@@ -835,6 +912,11 @@ std::optional<Circuit> Circuit::load( std::string_view text, Field& field, const
         {
             k = Op_kind::Conj;
             a = whole( o );
+        }
+        else if( kind == "1" )
+        {
+            k = Op_kind::One;
+            a = 0;
         }
         if( !a || !b || c.put( { k, *a, *b } ) != o )
         {
@@ -1075,6 +1157,20 @@ TEST_CASE( "circuit_keeps_integer_constants_exact", "[linear][circuit]" )
     const Circuit p = c.pruned();
     CHECK( p.ops()[p.outputs.at( k_row0 )].kind == Op_kind::Input );
     CHECK( p.cost() == Cost { 0, 0 } );
+}
+
+TEST_CASE( "a_bound_input_folds_into_free_constants", "[linear][circuit]" )
+{
+    // 3 x0 + 5 x1 + x0 with x1 = 1: one multiply and two adds, 5 a literal.
+    Circuit   c( true );
+    const u32 x = c.input( 0 );
+    c.outputs.emplace( k_row0, c.add( c.add( c.scale( x, 3.0 ), c.scale( c.input( 1 ), 5.0 ) ), x ) );
+    c.outputs.emplace( k_row1, c.add( c.scale( c.input( 1 ), 2.0 ), c.scale( c.input( 1 ), -2.0 ) ) );
+    const Circuit b = c.bound( 1 );
+    CHECK( b.cost() == Cost { .adds = 2, .muls = 1 } );
+    const std::vector<std::complex<f64>> v = b.evaluate( { 2.0 } );
+    CHECK( v[b.outputs.at( k_row0 )] == 13.0 );
+    CHECK( v[b.outputs.at( k_row1 )] == 0.0 );
 }
 } // namespace keel
 #endif // ENABLE_UNIT_TESTS

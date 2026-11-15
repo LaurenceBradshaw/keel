@@ -1,5 +1,5 @@
-// A `@real_arithmetic` function whose body is no linear map warns at what stops it, once however
-// many instances it has, and is optimised as usual.
+// A `@real_arithmetic` function whose body is no linear map warns at what stops it, and is optimised
+// as usual; one adding a constant computes a map, so is quiet.
 
 @real_arithmetic
 f64 energy( const ref f64[2] x )

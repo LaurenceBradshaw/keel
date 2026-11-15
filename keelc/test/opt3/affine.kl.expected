@@ -1,0 +1,74 @@
+// opt3/affine.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__A2_3f64;
+
+struct kl__A2_3f64
+{
+    double e[2];
+};
+_Static_assert( sizeof( struct kl__A2_3f64 ) == 16 && _Alignof( struct kl__A2_3f64 ) == 8, "layout" );
+
+void kl__6affine__A2_3f64_RA2_3f64( struct kl__A2_3f64*, struct kl__A2_3f64* );
+int32_t kl__4main__( void );
+
+#line 5 "opt3/affine.kl"
+void kl__6affine__A2_3f64_RA2_3f64( struct kl__A2_3f64* kl_x_1, struct kl__A2_3f64* kl_y_2 )
+{
+    uint64_t kl_t3;
+    uint64_t kl_t4;
+    double kl_t5;
+    double kl_t6;
+    double kl_t7;
+    double kl_t8;
+    double kl_t9;
+    double kl_t10;
+    ( void ) kl_t3;
+    ( void ) kl_t4;
+#line 7 "opt3/affine.kl"
+    kl_t3 = 0;
+#line 7 "opt3/affine.kl"
+    kl_t4 = 1;
+#line 7 "opt3/affine.kl"
+    kl_t5 = ( *kl_x_1 ).e[kl_t3];
+#line 7 "opt3/affine.kl"
+    kl_t6 = ( *kl_x_1 ).e[kl_t4];
+#line 7 "opt3/affine.kl"
+    kl_t7 = kl_t5 + kl_t6;
+#line 7 "opt3/affine.kl"
+    kl_t8 = kl_t7 + 0.25;
+#line 7 "opt3/affine.kl"
+    kl_t9 = kl_t7 * 3.0;
+#line 7 "opt3/affine.kl"
+    kl_t10 = kl_t8 * 2.0;
+#line 7 "opt3/affine.kl"
+    ( *kl_y_2 ).e[kl_t3] = kl_t9;
+#line 7 "opt3/affine.kl"
+    ( *kl_y_2 ).e[kl_t4] = kl_t10;
+#line 7 "opt3/affine.kl"
+    return;
+#line 9 "opt3/affine.kl"
+}
+
+#line 11 "opt3/affine.kl"
+int32_t kl__4main__( void )
+{
+    int32_t kl_t0;
+#line 16 "opt3/affine.kl"
+    kl_t0 = 0;
+#line 16 "opt3/affine.kl"
+    return kl_t0;
+}
+
+int main( void )
+{
+    int32_t kl_t0;
+#line 11 "opt3/affine.kl"
+    kl_t0 = kl__4main__(  );
+#line 11 "opt3/affine.kl"
+    return kl_t0;
+#line 11 "opt3/affine.kl"
+}
+

@@ -1,0 +1,13 @@
+// A generic `@real_arithmetic` function whose body is no linear map warns once, however many
+// instances it has.
+
+@real_arithmetic
+f64 squared<u64 N>( f64 x )
+{
+    return x * x * cast<f64>( N );
+}
+
+i32 main()
+{
+    return squared<2>( 1.0 ) + squared<3>( 1.0 ) == 5.0 ? 0 : 1;
+}

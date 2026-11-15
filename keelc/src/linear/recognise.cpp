@@ -436,6 +436,9 @@ struct Location
 
 constexpr u64 k_symbolic_step = 2;
 
+// The root of the input fixed at 1, past every other.
+constexpr u32 k_one_root = ~0u;
+
 // What a parameter's elements are read or written through: a root, an element, then the fields in `rest`.
 struct Stream
 {
@@ -935,6 +938,22 @@ private:
         return { .exact = *e };
     }
 
+    // A number as a form, its coefficient on the input fixed at 1.
+    Value constant_form( Value n )
+    {
+        if( is_zero( n ) )
+        {
+            return form( {} );
+        }
+        const Term c = coefficient( n, false );
+        if( one_ == ~0u )
+        {
+            one_ = static_cast<u32>( inputs_.size() );
+            inputs_.push_back( { .root = k_one_root, .steps = {} } );
+        }
+        return form( { { .input = one_, .bits = c.bits, .exact = c.exact } } );
+    }
+
     bool is_zero( Value n ) const
     {
         return n.kind == Kind::Number && ( integer_ ? wrap( n.bits ) == 0 : as_real( n ) == 0.0 );
@@ -1224,16 +1243,9 @@ private:
             {
                 end( Ending::Unknown );
             }
-            if( !is_zero( n ) )
-            {
-                end( Ending::Constant );
-            }
             count( false );
-            if( left || op == Token_kind::Plus )
-            {
-                return left ? a : b;
-            }
-            return form( scaled( forms_[b.index], negative_one() ) );
+            const Value k = constant_form( n );
+            return left ? combined( a, k, op == Token_kind::Minus ) : combined( k, b, op == Token_kind::Minus );
         }
         case Token_kind::Star:
         {
@@ -2670,13 +2682,19 @@ private:
             {
                 rows_of.emplace_back();
             }
+            else if( cell.value.kind == Kind::Number )
+            {
+                span_ = cell.span;
+                rows_of.push_back( forms_[constant_form( cell.value ).index] );
+            }
             else
             {
-                end( cell.value.kind == Kind::Number ? Ending::Constant : Ending::Unknown, cell.span );
+                end( Ending::Unknown, cell.span );
             }
             outs.push_back( at );
         }
-        if( outs.empty() || inputs_.empty() )
+        span_ = {};
+        if( outs.empty() || inputs_.size() == ( one_ == ~0u ? 0u : 1u ) )
         {
             end( Ending::Empty );
         }
@@ -2713,9 +2731,11 @@ private:
         { return integer_ ? wrap( 0 - id ) : field( m ).neg( Element { static_cast<u32>( id ) } ).v; };
 
         std::optional<std::pair<Pairs, Pairs>> paired;
+        // The input fixed at 1 sorts last and pairs with none: its coefficients make one complex constant.
+        const bool affine = one_ != ~0u;
         for( const Pairs& rp : pairings( static_cast<u32>( outs.size() ) ) )
         {
-            for( const Pairs& cp : pairings( cols ) )
+            for( const Pairs& cp : pairings( cols - affine ) )
             {
                 bool rotation = true;
                 for( const auto& [p, q] : rp )
@@ -2767,7 +2787,7 @@ private:
             }
             for( const Location& at : ins )
             {
-                out.inputs.push_back( { path( at ), {} } );
+                out.inputs.push_back( at.root == k_one_root ? Value_path {} : Value_path { path( at ), {} } );
             }
             return out;
         }
@@ -2781,12 +2801,20 @@ private:
             {
                 row.push_back( f.add( element( ids[p][u] ), f.mul( element( ids[q][u] ), i ) ) );
             }
+            if( affine )
+            {
+                row.push_back( f.add( element( ids[p][cols - 1] ), f.mul( element( ids[q][cols - 1] ), i ) ) );
+            }
             out.rows.push_back( std::move( row ) );
             out.outputs.push_back( { path( outs[p] ), path( outs[q] ) } );
         }
         for( const auto& [u, v] : paired->second )
         {
             out.inputs.push_back( { path( ins[u] ), path( ins[v] ) } );
+        }
+        if( affine )
+        {
+            out.inputs.emplace_back();
         }
         return out;
     }
@@ -2810,7 +2838,8 @@ private:
     std::map<Location, Cell>                         memory_; // what the run wrote
     std::map<Location, Value>                        read_;   // inputs not yet overwritten
     std::vector<Form>                                forms_;
-    std::vector<Location>                            inputs_; // in the order first read
+    std::vector<Location>                            inputs_;        // in the order first read
+    u32                                              one_     = ~0u; // the input fixed at 1, once a constant is added
     bool                                             ring_    = false;
     bool                                             integer_ = false;
     u8                                               width_   = 64;
@@ -2859,8 +2888,6 @@ std::string_view describe( Ending why )
         return "casts an input to another type";
     case Ending::Coefficient:
         return "scales an input by a value with no exact form";
-    case Ending::Constant:
-        return "adds a constant to an input, or writes one to an output";
     case Ending::Unknown:
         return "computes an output from a value known only at run time";
     case Ending::Global:
@@ -3127,6 +3154,27 @@ TEST_CASE( "recognise_reads_a_const_global_table", "[linear][recognise]" )
     CHECK( r.field.value( r.rows[2][2] ) == 0.75 );
 }
 
+TEST_CASE( "recognise_reads_a_constant_as_the_input_fixed_at_1", "[linear][recognise]" )
+{
+    const Attempt     a( "@real_arithmetic\n"
+                         "void f( const ref f64[2] x, ref f64[3] y )\n"
+                         "{\n"
+                         "    y[0] = 2.0 * ( x[0] + 1.5 );\n"
+                         "    y[1] = 0.5 - x[1];\n"
+                         "    y[2] = 4.0;\n"
+                         "}\n" );
+    const Recognised& r = a.map();
+    REQUIRE( r.inputs.size() == 3 );
+    CHECK( r.inputs[0].real.local.is_valid() );
+    CHECK( !r.inputs[2].real.local.is_valid() );
+    const auto at = [&]( u32 k, u32 j ) { return r.field.value( r.rows[k][j] ).real(); };
+    CHECK( at( 0, 0 ) == 2.0 );
+    CHECK( at( 0, 2 ) == 3.0 );
+    CHECK( at( 1, 1 ) == -1.0 );
+    CHECK( at( 1, 2 ) == 0.5 );
+    CHECK( at( 2, 2 ) == 4.0 );
+}
+
 TEST_CASE( "recognise_ends_with_the_operation_that_stops_it", "[linear][recognise]" )
 {
     const auto ending = []( std::string_view body, u64 budget = 4'000'000 )
@@ -3141,7 +3189,6 @@ TEST_CASE( "recognise_ends_with_the_operation_that_stops_it", "[linear][recognis
     CHECK( ending( "i64 f( i64 x ) { return x % 3; }\n" ) == Ending::Remainder );
     CHECK( ending( "i64 f( i32 x ) { return cast<i64>( x ); }\n" ) == Ending::Cast );
     CHECK( ending( "f64 f( f64 x ) { return x * 0.1; }\n" ) == Ending::Coefficient );
-    CHECK( ending( "f64 f( f64 x ) { return x + 1.0; }\n" ) == Ending::Constant );
     CHECK( ending( "f64 f( f64 x ) { return x * g; }\nf64 g = 0.5;\n" ) == Ending::Global );
     CHECK(
         ending( "f64 f( f64 x ) { f64 s = 0.0; for( u64 i = 0; i < 1000; i += 1 ) { s += x; } return s; }\n", 100 ) ==

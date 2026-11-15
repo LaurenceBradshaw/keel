@@ -24,11 +24,12 @@ enum class Op_kind : u8
     Scale,
     Real,
     Conj,
+    One,
     Result,
 };
 
 // Input: `a` is the input. Add: `a <= b` are nodes. Scale: node `a` times constant `b`. Real: node `a`'s real part.
-// Conj: node `a`'s conjugate, free as a sign is. Result: output `b` of call `a`.
+// Conj: node `a`'s conjugate, free as a sign is. One: the constant 1. Result: output `b` of call `a`.
 struct Op
 {
     Op_kind kind;
@@ -77,8 +78,9 @@ struct Call
     std::vector<u32> arguments;
 };
 
-// A hash-consed straight-line circuit over inputs, adds, scalings, real parts and conjugates. Constants are snapped
-// complex floats, since sub-circuits from other fields are pasted in; an integer ring's stay exact.
+// A hash-consed straight-line circuit over inputs, adds, scalings, real parts and conjugates. A constant node is 1
+// or 1 scaled, folded and free as a literal is. Constants are snapped complex floats, since sub-circuits from other
+// fields are pasted in; an integer ring's stay exact.
 // A node is real when its inputs are and its constants keep it so; only live parts are counted.
 class Circuit
 {
@@ -93,6 +95,7 @@ public:
     u32 scale( u32 a, Element c );
     u32 real_part( u32 a );
     u32 conj( u32 a );
+    u32 one();
     // `call`, made once however often it is asked for; result( id, k ) is its output k.
     u32 call( Call call );
     u32 result( u32 call, u32 k );
@@ -110,6 +113,9 @@ public:
     // Builds `sub` here with its inputs bound to `inputs`, its float constants conjugated when
     // `conjugate`, so computing the conjugate map; maps each of sub's nodes to one here.
     std::vector<u32> paste( const Circuit& sub, const std::vector<u32>& inputs, bool conjugate = false );
+
+    // This circuit with input `j` the constant 1.
+    Circuit bound( u32 j ) const;
 
     // The live nodes, with a(bx) folded to (ab)x where bx has no other user.
     Circuit pruned() const;
@@ -169,9 +175,12 @@ private:
     std::vector<u32> uses( const std::vector<bool>& lv ) const;
     u32              scale_by( u32 a, Constant c );
     u32              scale_node( u32 a, Constant c );
+    bool             is_constant( u32 a ) const;
+    Constant         value_of( u32 a ) const; // a constant node's
     Constant         make( std::complex<f64> c ) const;
     Constant         make( Element c ) const;
     Constant         times( Constant x, Constant y ) const;
+    Constant         plus( Constant x, Constant y ) const;
     bool             is_unit( Constant c ) const;
 
     bool   real_;

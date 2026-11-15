@@ -903,6 +903,7 @@ std::optional<Extraction> Extractor::run( const std::vector<Row>& rows )
                 break;
             case Op_kind::Real: // the graph has neither
             case Op_kind::Conj:
+            case Op_kind::One:
             case Op_kind::Result:
                 break;
             }

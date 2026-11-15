@@ -24,8 +24,13 @@ public:
     {
     }
 
+    // No place for the input fixed at 1.
     Value_place place( const Value_path& v )
     {
+        if( !v.real.local.is_valid() )
+        {
+            return {};
+        }
         return { place( v.real ), v.imaginary.local.is_valid() ? place( v.imaginary ) : Place {} };
     }
 
@@ -219,6 +224,13 @@ Map_outcome solve_linear_maps(
         if( !cache.empty() )
         {
             cache_circuit( cache, map.field, map.rows, options, *found );
+        }
+    }
+    for( u32 j = 0; j < map.inputs.size(); ++j )
+    {
+        if( !map.inputs[j].real.local.is_valid() )
+        {
+            found = found->bound( j );
         }
     }
     const bool solved = replace_with(

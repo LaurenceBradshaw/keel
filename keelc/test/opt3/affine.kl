@@ -1,0 +1,17 @@
+// A map plus constants is solved as a linear map with one more input fixed at 1, the constants becoming
+// literals; both outputs share s = x0 + x1, and the 1 and -1 cancel.
+
+@real_arithmetic
+void affine( const ref f64[2] x, ref f64[2] y )
+{
+    y[0] = 3.0 * ( x[0] + 1.0 ) + 3.0 * ( x[1] - 1.0 );
+    y[1] = 2.0 * x[0] + 2.0 * x[1] + 0.5;
+}
+
+i32 main()
+{
+    const f64[2] x = [ 1.0, 2.0 ];
+    f64[2]       y = [ 0.0, 0.0 ];
+    affine( x, ref y );
+    return y[0] == 9.0 && y[1] == 6.5 ? 0 : 1;
+}
