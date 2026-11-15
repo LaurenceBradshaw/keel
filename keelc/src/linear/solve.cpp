@@ -2133,8 +2133,11 @@ Solution solve( Field& field, const std::vector<Row>& rows, const Solve_options&
 #ifdef ENABLE_UNIT_TESTS
 #include <bit>
 #include <catch2/catch_test_macros.hpp>
+#include <chrono>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <random>
 #include <sstream>
 #include <string>
@@ -2444,6 +2447,22 @@ TEST_CASE( "solve_gives_every_recorded_cost", "[.][specs]" )
         names.push_back( name );
     }
     check_specs( names );
+}
+
+// KEEL_SPECS="a b" solves those specs and prints each cost against the naive one: keel_tests "[solve_measure]".
+TEST_CASE( "solve_measures_named_specs", "[.][solve_measure]" )
+{
+    std::istringstream names( std::getenv( "KEEL_SPECS" ) ? std::getenv( "KEEL_SPECS" ) : "" );
+    for( std::string name; names >> name; )
+    {
+        Spec           spec  = read_spec( name );
+        const auto     start = std::chrono::steady_clock::now();
+        const Solution got   = solve( *spec.field, spec.rows );
+        const f64      secs  = std::chrono::duration<f64>( std::chrono::steady_clock::now() - start ).count();
+        std::cout << name << " " << got.cost.adds << "/" << got.cost.muls << " input " << got.input.adds << "/"
+                  << got.input.muls << " " << secs << "s\n";
+        CHECK( computes( got.circuit, *spec.field, spec.rows ) );
+    }
 }
 
 TEST_CASE( "every_solve_route_computes_its_map", "[linear][solve]" )

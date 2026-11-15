@@ -1664,6 +1664,122 @@ TEST_CASE( "an_odd_length_dct_ii_reflects", "[linear][sums]" )
     CHECK( error( c, out, s ) < 1e-12 );
 }
 
+// W_M^(a jk + b j + c k + d + e j^2 + f k^2), its zero powers left out.
+Exponent ex( i64 a, i64 b, i64 c, i64 d, i64 e = 0, i64 f = 0 )
+{
+    Exponent out;
+    for( const auto& [powers, v] : std::initializer_list<std::pair<std::array<u8, 2>, i64>> {
+             { { 1, 1 }, a }, { { 1, 0 }, b }, { { 0, 1 }, c }, { { 0, 0 }, d }, { { 2, 0 }, e }, { { 0, 2 }, f }
+         } )
+    {
+        if( v != 0 )
+        {
+            out[powers] = v;
+        }
+    }
+    return out;
+}
+
+// Kernels outside the ones the rules were built for, known and meaningless, each planned and printed
+// against its direct sum and, where there is one, the best known count: keel_tests "[sums_measure]".
+// KEEL_SUM_CASES="a b" plans only those.
+TEST_CASE( "the_planner_measures_unfamiliar_kernels", "[.][sums_measure]" )
+{
+    struct Case
+    {
+        std::string name;
+        Sum         s;
+        u32         best; // 0 when none is known
+    };
+    const Rational h( 1, 2 ), mh( -1, 2 );
+    // cos(2pi e / M) and sin(2pi e / M) as sums of W_M^(-+e); sin's 1/(2i) is W^(M/4) / 2.
+    const auto cos_of = [&]( Exponent e )
+    {
+        Exponent neg;
+        for( const auto& [p, v] : e )
+        {
+            neg[p] = -v;
+        }
+        return std::map<Exponent, Rational> { { e, h }, { neg, h } };
+    };
+    const auto sin_of = [&]( u64 M, Exponent e )
+    {
+        Exponent neg;
+        for( const auto& [p, v] : e )
+        {
+            neg[p] = -v;
+        }
+        neg[{ 0, 0 }] += static_cast<i64>( M / 4 );
+        e[{ 0, 0 }] += static_cast<i64>( M / 4 );
+        return std::map<Exponent, Rational> { { neg, h }, { e, mh } };
+    };
+    const auto sum = [&]( u32 n, u32 m, u64 M, std::map<Exponent, Rational> c, bool real = false )
+    { return normalised( Sum { n, m, M, std::move( c ), real } ); };
+    std::map<Exponent, Rational> cas = cos_of( ex( 1, 0, 0, 0 ) );
+    for( const auto& [e, c] : sin_of( 64, ex( 1, 0, 0, 0 ) ) )
+    {
+        cas[e] = cas[e] + c;
+    }
+    Sum dft_offset    = exponent_kernel( 64, 64, 64, 1 );
+    dft_offset.offset = { { ex( 0, 0, 5, 1 ), Rational( 3, 2 ) }, { ex( 0, 0, 0, 0 ), h } };
+    Sum mixed_batch   = sum( 48, 48, 48, { { ex( 1, 0, 3, 0 ), 1 }, { ex( -1, 0, -3, 0 ), 1 } }, true );
+    mixed_batch.batch = 3;
+    // 2N lg N - N + 1 for DCT-II/III and DST-II, 2N lg N + N for DCT-IV, 4N lg N - 6N + 8 for a complex
+    // DFT, 2N lg N - 4N + 6 for a real one; others add what they add to one of those.
+    const std::vector<Case> cases {
+        { "dct3-64", sum( 64, 64, 256, cos_of( ex( 2, 1, 0, 0 ) ), true ), 705 },
+        { "dct4-64", sum( 64, 64, 512, cos_of( ex( 4, 2, 2, 1 ) ), true ), 832 },
+        { "dst2-64", sum( 64, 64, 256, sin_of( 256, ex( 2, 2, 1, 1 ) ), true ), 705 },
+        { "mdct-64to32", sum( 64, 32, 256, cos_of( ex( 4, 2, 66, 33 ) ), true ), 384 },
+        { "dht-64", sum( 64, 64, 64, cas, true ), 518 },
+        { "odd-freq-dft-64", sum( 64, 64, 128, { { ex( 2, 1, 0, 0 ), 1 } } ), 1160 + 6 * 64 },
+        { "fresnel-64", sum( 64, 64, 128, { { ex( -2, 0, 0, 0, 1, 1 ), 1 } } ), 1160 + 12 * 64 },
+        { "zoom-dft-64-of-192", exponent_kernel( 64, 64, 192, 1 ), 0 },
+        { "chirp-z-100-to-37", exponent_kernel( 100, 37, 100, 1 ), 0 },
+        { "dft-243", exponent_kernel( 243, 243, 243, 1 ), 0 },
+        { "dft-105", exponent_kernel( 105, 105, 105, 1 ), 0 },
+        { "dft-194", exponent_kernel( 194, 194, 194, 1 ), 0 },
+        { "real-dft-243", sum( 243, 243, 243, { { ex( 1, 0, 0, 0 ), 1 } }, true ), 0 },
+        { "real-dct2-100", dct_ii( 100 ), 0 },
+        { "dft-256-10-bins", exponent_kernel( 256, 10, 256, 1 ), 6664 },
+        { "dft-10-padded-to-256", exponent_kernel( 10, 256, 256, 1 ), 0 },
+        { "dft-64-stride-3", exponent_kernel( 64, 64, 64, 3 ), 1160 },
+        { "two-dfts-64", sum( 64, 64, 64, { { ex( 1, 0, 0, 0 ), 1 }, { ex( 3, 0, 0, 0 ), 1 } } ), 2 * 1160 + 128 },
+        { "dft-64-plus-offset", dft_offset, 1160 + 2 },
+        { "real-batch-3-48", mixed_batch, 0 },
+        { "nonsense-quadratic", sum( 100, 60, 210, { { ex( 7, 0, 5, 0, 3 ), Rational( 2, 3 ) } } ), 0 },
+        { "nonsense-three-terms",
+          sum( 96, 96, 96, { { ex( 1, 0, 0, 0 ), 1 }, { ex( 5, 1, 0, 0 ), h }, { ex( 0, 0, 2, 0, 3 ), 3 } } ),
+          0 },
+        { "nonsense-square-of-sum", sum( 128, 128, 256, { { ex( 2, 0, 0, 0, 1, 1 ), Rational( 5, 7 ) } } ), 0 },
+        { "nonsense-real-hermitian",
+          sum( 80, 80, 120, { { ex( 3, 7, 11, 2 ), Rational( 4, 3 ) }, { ex( -3, -7, -11, -2 ), Rational( 4, 3 ) } }, true ),
+          0 },
+        { "nonsense-j2k", sum( 60, 60, 120, { { Exponent { { { 2, 1 }, 1 } }, 1 } } ), 0 },
+    };
+    const char*       only = std::getenv( "KEEL_SUM_CASES" );
+    const std::string pick = only ? std::string( " " ) + only + " " : "";
+    for( const Case& c : cases )
+    {
+        if( !pick.empty() && pick.find( " " + c.name + " " ) == std::string::npos )
+        {
+            continue;
+        }
+        INFO( c.name );
+        const Cost                   naive = direct_match( c.s, {} )[0].own;
+        const auto                   start = std::chrono::steady_clock::now();
+        const std::optional<Planned> p     = plan_sum( c.s );
+        const f64                    secs  = std::chrono::duration<f64>( std::chrono::steady_clock::now() - start ).count();
+        REQUIRE( p );
+        const f64 err = error( *p, c.s );
+        std::cout << c.name << " | " << c.s.n << "x" << c.s.m << " W" << c.s.M << ( c.s.real ? " real" : "" ) << " | naive "
+                  << naive.adds + naive.muls << " | best " << c.best << " | got " << p->cost.adds + p->cost.muls << " ("
+                  << p->cost.adds << "/" << p->cost.muls << ") | " << secs << "s | err " << err << " | "
+                  << p->how.substr( 0, 90 ) << "\n";
+        CHECK( err < 1e-11 );
+    }
+}
+
 // KEEL_SUM="n M c" plans a large kernel and prints it, "real n M c" one on real x, a fourth number m outputs, and "dct n" a
 // DCT-II: keel_tests
 // "[sums_large]".
