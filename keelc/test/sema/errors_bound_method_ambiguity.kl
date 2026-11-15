@@ -1,0 +1,38 @@
+// Two bounds that each declare a method of one name do not say which a call through them means,
+// whichever is written first; one interface at two instances is a single overload set.
+
+interface A
+{
+    i32 foo() const;
+    static i32 make();
+};
+
+interface B
+{
+    i32 foo() const;
+    static i32 make();
+};
+
+i32 a_then_b<T>( const ref T t ) where T : A & B { return t.foo(); }
+i32 b_then_a<T>( const ref T t ) where T : B & A { return t.foo(); }
+i32 shared_static<T>() where T : A & B { return T::make(); }
+
+// The arity differs, which must not decide it either.
+interface An { i32 name() const; };
+interface Bn { i32 name( bool v ) const; };
+i32 by_arity<T>( const ref T t ) where T : An & Bn { return t.name( true ); }
+
+interface Ap { self operator+( const ref self other ) const; };
+interface Bp { self operator+( const ref self other ) const; };
+T plus<T>( const ref T a, const ref T b ) where T : Ap & Bp { return a + b; }
+
+// Still accepted: one `-` takes one operand and the other two.
+interface Negates { self operator-() const; };
+interface Subtracts { self operator-( const ref self other ) const; };
+T minus<T>( const ref T a, const ref T b ) where T : Negates & Subtracts { return a - -b; }
+
+// Still accepted: one interface, two instances.
+interface sink<U> { void put( U value ); };
+void two_instances<T>( ref T t ) where T : sink<i64> & sink<bool> { t.put( true ); t.put( cast<i64>( 1 ) ); }
+
+i32 main() { return 0; }

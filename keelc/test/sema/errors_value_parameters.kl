@@ -1,0 +1,28 @@
+// A type before a type parameter's name makes a value parameter, which Keel does not have yet.
+// Each is one error; the parameter's uses in the body stay quiet.
+class Value<i32 N> // error
+{
+    i32 v;
+    public Value() { v = N; }
+};
+
+struct Point { i32 x; };
+void at<Point p>() { } // error
+
+u64 width<u64 W>() { return W; } // error
+
+// A builtin's name as a type parameter is refused once, though each method declares it again.
+class Holder<i32> // error
+{
+    i32 v;
+    public Holder() { v = 0; }
+    public i32 get() const { return v; }
+};
+
+// A type parameter has no default.
+class Default<T = i32> { T v; public Default( T x ) { v = x; } }; // error
+
+i32 main()
+{
+    return 0;
+}

@@ -1,0 +1,9 @@
+// An expression built on a parenthesised operand is underlined from its `(`.
+i32 main()
+{
+    i8  z = ( 100 ) * 2; // error
+    i8  w = 2 * ( 100 ); // error
+    i32 q = ( -2147483647 - 1 ) / -1; // error
+
+    return 0;
+}

@@ -1,0 +1,24 @@
+// A method's clause cannot bound the aggregate's parameter: no conditional methods.
+struct Cell<T> where T : copyable
+{
+    T v;
+
+    bool same( const ref Cell<T> o ) const where T : equatable { return v == o.v; }
+
+    bool with<U>( U u ) const where U : copyable, where T : comparable { return v < v; }
+};
+
+interface sink<T>
+{
+    void put( T x ) where T : copyable;
+};
+
+// The operator's help names the aggregate whose parameter it is.
+struct Plain<T> where T : copyable
+{
+    T v;
+
+    bool same( const ref Plain<T> o ) const { return v == o.v; }
+};
+
+i32 main() { return 0; }

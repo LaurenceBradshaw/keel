@@ -1,0 +1,13 @@
+error: `Z` is `const`, so it needs its value here
+ --> sema/errors_const_global.kl:3:1
+  |
+3 | const i32 Z; // error
+  | ^^^^^^^^^^^^ write `const i32 Z = 0;` if zero is meant
+
+error: `limit` is `const`, so it needs its value here
+  --> sema/errors_const_global.kl:10:12
+   |
+10 |     static const u8 limit; // error
+   |            ^^^^^^^^^^^^^^^ write `static const u8 limit = 0;` if zero is meant
+
+2 errors generated

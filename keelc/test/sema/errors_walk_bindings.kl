@@ -1,0 +1,87 @@
+// D74: bindings by name over a walk that yields two values. One error per marked line.
+class Pairs
+{
+    i32[*] keys_;
+    i32[*] values_;
+    u64    count_;
+
+    public Pairs()
+    {
+        keys_   = nullptr;
+        values_ = nullptr;
+        count_  = 0;
+    }
+
+    void operator:( const ref i32 key, const ref i32 value ) const
+    {
+        for( u64 i : 0..count_ )
+        {
+            unsafe
+            {
+                yield( keys_[i], values_[i] );
+            }
+        }
+    }
+
+    void operator:( const ref i32 key, ref i32 value )
+    {
+        for( u64 i : 0..count_ )
+        {
+            unsafe
+            {
+                yield( keys_[i], ref values_[i] );
+            }
+        }
+    }
+};
+
+i32 main()
+{
+    Pairs p = Pairs();
+    i32   sum = 0;
+
+    for( [ const ref key, const ref size ] : p ) // error: no `size`
+    {
+        sum += key;
+    }
+
+    for( [ key, key ] : p ) // error: bound twice
+    {
+        sum += key;
+    }
+
+    for( [ ref key, ref value ] : p ) // error: `key` is read-only
+    {
+        value = key;
+    }
+
+    for( const ref i32 key : p ) // error: two values
+    {
+        sum += key;
+    }
+
+    for( [ const ref key ] : p )
+    {
+        for( [ key, value ] : p ) // error: `key` shadows
+        {
+            sum += value;
+        }
+    }
+
+    for( [ value, const ref key ] : p )
+    {
+        sum += key + value;
+    }
+
+    for( [ ref value ] : p )
+    {
+        value += 1;
+    }
+
+    for( [ value ] : p )
+    {
+        value = 0; // error: bare is read-only
+    }
+
+    return sum;
+}

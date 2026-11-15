@@ -1,0 +1,19 @@
+error: a call of `f` with 1 argument could mean either declaration
+ --> sema/errors_param_default_overloads.kl:3:5
+  |
+3 | i32 f( i32 a, i32 b = 0 ) { return a + b; }
+  |     ^ remove a default, or change a parameter's type
+
+error: a call of `g` with 1 argument could mean either declaration
+ --> sema/errors_param_default_overloads.kl:6:5
+  |
+6 | i32 g( i32 a, i64 b = 0 ) { return a; }
+  |     ^ remove a default, or change a parameter's type
+
+error: a call of `m` with 0 arguments could mean either declaration
+  --> sema/errors_param_default_overloads.kl:17:9
+   |
+17 |     i32 m() const { return 1; }
+   |         ^ remove a default, or change a parameter's type
+
+3 errors generated

@@ -1,0 +1,30 @@
+// D42 through a payload: `Bad` reaches `Bad` at a bigger argument each time round. Through a
+// pointer, so it has a size and the growth is the only fault. The edge is recorded from the *enum*,
+// so the cycle closes on the declaration.
+struct Box<T> where T : copyable
+{
+    T v;
+};
+
+enum Opt<T> where T : copyable
+{
+    None,
+    Some( T v )
+};
+
+enum Bad<T> where T : copyable
+{
+    V( Bad<Box<T>>* b )
+};
+
+// The growing argument built out of a generic `enum`, which counts as a construction over the
+// parameter the way a struct does.
+enum Worse<T> where T : copyable
+{
+    V( Worse<Opt<T>>* w )
+};
+
+i32 main()
+{
+    return 0;
+}

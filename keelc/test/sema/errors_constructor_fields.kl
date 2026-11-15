@@ -1,0 +1,121 @@
+// D9 for a constructor's fields: each holds a value before it is read, before `this` is used whole,
+// and at every way out. An owning field is written once per path.
+class Buf
+{
+    u8[*] p;
+
+    Buf()
+    {
+        unsafe
+        {
+            p = alloc<u8>( 4 );
+        }
+    }
+
+    ~Buf()
+    {
+        unsafe
+        {
+            free( p );
+        }
+    }
+};
+
+class Never
+{
+    i32 a;
+    i32 b;
+
+    Never()
+    {
+        a = 1;
+    }
+};
+
+class Sometimes
+{
+    i32 a;
+
+    Sometimes( bool c )
+    {
+        if( c )
+        {
+            a = 1;
+        }
+    }
+};
+
+class Early
+{
+    i32 a;
+
+    Early( bool c )
+    {
+        if( c )
+        {
+            return;
+        }
+
+        a = 1;
+    }
+};
+
+class Read_first
+{
+    i32 a;
+    i32 b;
+
+    Read_first()
+    {
+        a = b;
+        b = 1;
+    }
+};
+
+class Whole
+{
+    i32 a;
+    i32 b;
+
+    Whole()
+    {
+        touch();
+        a = 1;
+        b = 2;
+    }
+
+    void touch()
+    {
+    }
+};
+
+class Twice
+{
+    Buf b;
+
+    Twice()
+    {
+        b = Buf();
+        b = Buf();
+    }
+};
+
+class Maybe_twice
+{
+    Buf b;
+
+    Maybe_twice( bool c )
+    {
+        if( c )
+        {
+            b = Buf();
+        }
+
+        b = Buf();
+    }
+};
+
+i32 main()
+{
+    return 0;
+}

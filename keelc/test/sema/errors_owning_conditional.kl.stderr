@@ -1,0 +1,73 @@
+error: an owning value is transferred, not copied
+  --> sema/errors_owning_conditional.kl:32:17
+   |
+32 |     Buf x = c ? a : b;
+   |                 ^ write `move a`
+
+error: an owning value is transferred, not copied
+  --> sema/errors_owning_conditional.kl:32:21
+   |
+32 |     Buf x = c ? a : b;
+   |                     ^ write `move b`
+
+error: an owning value is transferred, not copied
+  --> sema/errors_owning_conditional.kl:39:17
+   |
+39 |     x     = c ? a : Buf( 3 );
+   |                 ^ write `move a`
+
+error: an owning value is transferred, not copied
+  --> sema/errors_owning_conditional.kl:46:29
+   |
+46 |     auto x = c ? Buf( 2 ) : a;
+   |                             ^ write `move a`
+
+error: an owning value is transferred, not copied
+  --> sema/errors_owning_conditional.kl:51:16
+   |
+51 |     return c ? a : b;
+   |                ^ write `move a`
+
+error: an owning value is transferred, not copied
+  --> sema/errors_owning_conditional.kl:51:20
+   |
+51 |     return c ? a : b;
+   |                    ^ write `move b`
+
+error: an owning value is transferred, not copied
+  --> sema/errors_owning_conditional.kl:60:22
+   |
+60 |     return peek( c ? a : b );
+   |                      ^ write `move a`
+
+error: an owning value is transferred, not copied
+  --> sema/errors_owning_conditional.kl:60:26
+   |
+60 |     return peek( c ? a : b );
+   |                          ^ write `move b`
+
+error: an owning value is transferred, not copied
+  --> sema/errors_owning_conditional.kl:67:30
+   |
+67 |     return Holder::Full( c ? a : Buf( 2 ) );
+   |                              ^ write `move a`
+
+error: an owning value is transferred, not copied
+  --> sema/errors_owning_conditional.kl:74:20
+   |
+74 |     Holder x = c ? a : b;
+   |                    ^ write `move a`
+
+error: an owning value is transferred, not copied
+  --> sema/errors_owning_conditional.kl:74:24
+   |
+74 |     Holder x = c ? a : b;
+   |                        ^ write `move b`
+
+error: an owning value is transferred, not copied
+  --> sema/errors_owning_conditional.kl:83:24
+   |
+83 |             return c ? b : Buf( 0 );
+   |                        ^ `b` still belongs to what holds it
+
+12 errors generated

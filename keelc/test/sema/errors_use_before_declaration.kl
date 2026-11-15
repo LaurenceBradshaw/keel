@@ -1,0 +1,6 @@
+i32 main()
+{
+    i32 later = used_first;
+    i32 used_first = 1;
+    return later;
+}

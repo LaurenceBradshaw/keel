@@ -1,0 +1,85 @@
+error: `x` is a field, and there is no object here to read it from
+  --> sema/errors_static_methods.kl:24:16
+   |
+24 |         return x;
+   |                ^ take one as a parameter, or make this a method
+
+error: `this` is not declared
+  --> sema/errors_static_methods.kl:30:16
+   |
+30 |         return this.x;
+   |                ^^^^
+
+error: `get` is a method, and there is no object here to call it on
+  --> sema/errors_static_methods.kl:37:16
+   |
+37 |         return get();
+   |                ^^^ a method can only be called by bare name from inside another method of the same type
+
+error: a `static` method has no object, so it cannot be `const`
+  --> sema/errors_static_methods.kl:47:22
+   |
+47 |     static i32 one() const
+   |                      ^^^^^
+
+error: a constructor cannot be `static`
+  --> sema/errors_static_methods.kl:60:5
+   |
+60 |     static Ctor( i32 v )
+   |     ^^^^^^
+
+error: a destructor cannot be `static`
+  --> sema/errors_static_methods.kl:65:5
+   |
+65 |     static ~Ctor()
+   |     ^^^^^^
+
+error: `f` is already declared with these parameters
+  --> sema/errors_static_methods.kl:93:9
+   |
+93 |     i32 f( i32 a ) const
+   |         ^ a `static` method and a method of one name must differ in their parameters
+
+error: `make` is a `static` method of `P`, so it takes no object
+   --> sema/errors_static_methods.kl:104:11
+    |
+104 |     P q = p.make( 2 );
+    |           ^^^^^^ call it as `P::make(...)`
+
+error: `get` needs an object
+   --> sema/errors_static_methods.kl:111:12
+    |
+111 |     return P::get();
+    |            ^^^^^^ call it as `value.get(...)`
+
+error: `P` has no static field `x`
+   --> sema/errors_static_methods.kl:116:12
+    |
+116 |     return P::x;
+    |            ^^^^ take its offset as `&P::x`, or read it as `value.x`
+
+error: `P` has no static method `nope`
+   --> sema/errors_static_methods.kl:121:11
+    |
+121 |     P p = P::nope();
+    |           ^^^^^^^
+
+error: `i32` has no member `make`
+   --> sema/errors_static_methods.kl:130:12
+    |
+130 |     return i32::make( 1 );
+    |            ^^^^^^^^^ a number type has only `i32::max` and `i32::min`
+
+error: `::` needs the name of a type on its left
+   --> sema/errors_static_methods.kl:140:12
+    |
+140 |     return free_function()::x;
+    |            ^^^^^^^^^^^^^^^
+
+error: `Colour` has no variant `make`
+   --> sema/errors_static_methods.kl:153:12
+    |
+153 |     return Colour::make( 1 );
+    |            ^^^^^^^^^^^^
+
+14 errors generated

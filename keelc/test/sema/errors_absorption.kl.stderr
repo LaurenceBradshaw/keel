@@ -1,0 +1,37 @@
+error: a `void` function cannot return a value
+  --> sema/errors_absorption.kl:13:12
+   |
+13 |     return nullptr;
+   |            ^^^^^^^
+
+error: `missing` is not declared
+  --> sema/errors_absorption.kl:20:10
+   |
+20 |     if ( missing() != nullptr ) { return 1; }
+   |          ^^^^^^^
+
+error: `missing` is not declared
+  --> sema/errors_absorption.kl:21:21
+   |
+21 |     if ( nullptr != missing() ) { return 2; }
+   |                     ^^^^^^^
+
+error: cannot assign to this expression
+  --> sema/errors_absorption.kl:23:5
+   |
+23 |     identity( &value ) = nullptr;
+   |     ^^^^^^^^^^^^^^^^^^ `identity( &value )` is a value, not a place
+
+error: `undeclared` is not declared
+  --> sema/errors_absorption.kl:24:5
+   |
+24 |     undeclared = nullptr;
+   |     ^^^^^^^^^^
+
+error: `Point` has no field `wrong`
+  --> sema/errors_absorption.kl:27:22
+   |
+27 |     auto p = Point { .wrong = nullptr };
+   |                      ^^^^^^^^^^^^^^^^ `address` is not given
+
+6 errors generated

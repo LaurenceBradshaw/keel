@@ -1,0 +1,13 @@
+error: octal literals are not supported
+ --> parse/errors_octal_prefix.kl:4:13
+  |
+4 |     i32 a = 0o755; // error
+  |             ^^^^^ Keel has no octal literals; write the value in hex or decimal
+
+error: octal literals are not supported
+ --> parse/errors_octal_prefix.kl:5:13
+  |
+5 |     i32 b = 0O17; // error
+  |             ^^^^ Keel has no octal literals; write the value in hex or decimal
+
+2 errors generated

@@ -1,0 +1,19 @@
+error: `index` needs a `K` that implements `hashable`, but `Colour` does not
+  --> sema/errors_hash.kl:33:21
+   |
+33 | void refused( index<Colour> i )
+   |                     ^^^^^^ `Colour`'s own `equatable` at sema/errors_hash.kl:16:12 drops the compiler's `equatable` and `hashable`; write `implements hashable for Colour` too
+
+error: `i32` has no methods
+  --> sema/errors_hash.kl:42:5
+   |
+42 |     x.hash();
+   |     ^ `hash` is reached only as a `hashable`: through a `where T : hashable` parameter
+
+error: `Suit` has no methods
+  --> sema/errors_hash.kl:43:5
+   |
+43 |     s.hash();
+   |     ^ `hash` is reached only as a `hashable`: through a `where T : hashable` parameter
+
+3 errors generated

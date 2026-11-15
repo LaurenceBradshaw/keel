@@ -1,0 +1,31 @@
+error: `D` already has a variant `x`
+ --> sema/errors_resolve_hints.kl:4:16
+  |
+4 | enum D { x, y, x };
+  |                ^ previous declaration is at: sema/errors_resolve_hints.kl:4:10
+
+error: `b` is not declared
+ --> sema/errors_resolve_hints.kl:9:11
+  |
+9 |     E e = b;
+  |           ^ write `E::b`
+
+error: `a` is not declared
+  --> sema/errors_resolve_hints.kl:10:11
+   |
+10 |     E f = a;
+   |           ^ write `E::a` or `F::a`
+
+error: `one` is not callable
+  --> sema/errors_resolve_hints.kl:12:13
+   |
+12 |     i32 n = one();
+   |             ^^^ this `one` is the local, which hides the function of that name
+
+error: `v` is a variable, not a type
+  --> sema/errors_resolve_hints.kl:14:11
+   |
+14 |     E w = v::a;
+   |           ^ `::` reaches a variant of an `enum` or a static method of a `struct` or `class`
+
+5 errors generated

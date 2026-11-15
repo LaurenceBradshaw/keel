@@ -1,0 +1,127 @@
+error: unknown type `T`
+ --> sema/errors_generics.kl:9:1
+  |
+9 | T stray( T a )
+  | ^
+
+error: unknown type `T`
+ --> sema/errors_generics.kl:9:10
+  |
+9 | T stray( T a )
+  |          ^
+
+error: `T` is already declared in this scope
+  --> sema/errors_generics.kl:14:20
+   |
+14 | void duplicated<T, T>( T a )
+   |                    ^ previous declaration is at: sema/errors_generics.kl:14:17
+
+error: unknown type `T`
+  --> sema/errors_generics.kl:18:1
+   |
+18 | T empty<>( i32 a )
+   | ^
+
+error: a generic needs at least one type parameter
+  --> sema/errors_generics.kl:18:9
+   |
+18 | T empty<>( i32 a )
+   |         ^
+
+error: a type parameter is a name on its own here
+  --> sema/errors_generics.kl:23:16
+   |
+23 | T inline_bound<comparable T>( T a )
+   |                ^^^^^^^^^^ write the bound in a `where` clause after the parameter list
+
+error: cannot return a borrowed value
+  --> sema/errors_generics.kl:25:12
+   |
+25 |     return a;
+   |            ^ the caller still owns it
+
+error: `not_a_generic` is not a generic
+  --> sema/errors_generics.kl:45:12
+   |
+45 |     return not_a_generic<i32>( 1 );
+   |            ^^^^^^^^^^^^^
+
+error: expected `i32`, but got `bool`
+  --> sema/errors_generics.kl:52:12
+   |
+52 |     return id<bool>( 1 );
+   |            ^^^^^^^^^^^^^
+
+error: expected `bool`, but got an integer literal
+  --> sema/errors_generics.kl:52:22
+   |
+52 |     return id<bool>( 1 );
+   |                      ^
+
+error: `id` takes 1 type argument, but 2 were given
+  --> sema/errors_generics.kl:57:14
+   |
+57 |     return id<i32, f64>( 1 );
+   |              ^^^^^^^^^^ `id` declares `T`
+
+error: unknown bound `Sortable`
+  --> sema/errors_generics.kl:62:40
+   |
+62 | void unknown_bound<T>( T a ) where T : Sortable
+   |                                        ^^^^^^^^ a bound is an interface, or one of copyable, numeric, integral, floating and defaultable
+
+error: `U` is not a type parameter of `wrong_subject`
+  --> sema/errors_generics.kl:66:30
+   |
+66 | void wrong_subject<T>( T a ) where U : copyable
+   |                              ^^^^^^^^^^^^^^^^^^
+
+error: a `where` clause needs type parameters
+  --> sema/errors_generics.kl:70:33
+   |
+70 | i32 no_type_parameters( i32 a ) where T : copyable
+   |                                 ^^^^^^^^^^^^^^^^^^ write them on the name, as in `T f<T>(T a) where T : copyable`
+
+error: duplicate where clause for type parameter `T`
+  --> sema/errors_generics.kl:75:47
+   |
+75 | void twice_over<T>( T a ) where T : copyable, where T : comparable
+   |                                               ^^^^^^^^^^^^^^^^^^^^
+
+error: bounds are joined with `&`
+  --> sema/errors_generics.kl:80:51
+   |
+80 | void wrong_separator<T>( T a ) where T : copyable | comparable
+   |                                                   ^ every one of them has to hold, and `&` says so
+
+error: no operator `<` for `T` and `T`
+  --> sema/errors_generics.kl:99:12
+   |
+99 |     return a < a;
+   |            ^^^^^ `<` needs `comparable`; write `where T : comparable` on `unpromised_operator`
+
+error: no operator `<` for `T` and `bool`
+   --> sema/errors_generics.kl:106:12
+    |
+106 |     return a < b;
+    |            ^^^^^ `<` needs both operands to be the same type
+
+error: `Owner` is not `copyable`, and `id` requires it of `T`
+   --> sema/errors_generics.kl:113:8
+    |
+113 |     id<Owner>( o );
+    |        ^^^^^ it owns something, itself or through a field, so copying it would own that twice
+
+error: `Suit` is not `integral`, and `needs_integral` requires it of `T`
+   --> sema/errors_generics.kl:124:20
+    |
+124 |     needs_integral<Suit>( Suit::Clubs );
+    |                    ^^^^ it has to be an integer
+
+error: `T` does not promise `comparable`, and `needs_comparable` requires it of `T`
+   --> sema/errors_generics.kl:134:22
+    |
+134 |     needs_comparable<T>( a );
+    |                      ^ add `comparable` to the `where` clause for `T` on `forwards`
+
+21 errors generated

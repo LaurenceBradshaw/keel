@@ -1,0 +1,34 @@
+// A pattern does not nest. Each nested field is refused once, its names are declared so their uses
+// stay quiet, and the outer variant is still covered once, so nothing after it is reported.
+enum Inner
+{
+    Both( i32 a, i32 b ),
+    Empty,
+};
+
+enum Outer
+{
+    Wrap( Inner inner ),
+    Pair( Inner first, i32 count ),
+    Nothing,
+};
+
+i32 sum( Outer o )
+{
+    switch( o )
+    {
+        case Outer::Wrap( Inner::Both( a, b ) ):
+            return a + b;
+        case Outer::Wrap( Inner::Empty ):
+            return 1;
+        case Outer::Pair( Inner::Both( x, _ ), n ):
+            return x + n;
+        case Outer::Nothing:
+            return 0;
+    }
+}
+
+i32 main()
+{
+    return 0;
+}

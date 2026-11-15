@@ -1,0 +1,22 @@
+// A destructor cannot be named after `::`, whether for its address or to call it.
+class C
+{
+    i32 n;
+
+    C( i32 v )
+    {
+        n = v;
+    }
+
+    ~C()
+    {
+    }
+};
+
+i32 main()
+{
+    C c = C( 1 );
+    auto p = &C::~C;
+    C::~C();
+    return 0;
+}

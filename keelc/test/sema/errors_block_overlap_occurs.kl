@@ -1,0 +1,61 @@
+// Blocks overlap only where a finite type matches both: `T` cannot also be `Wrap<T>`.
+interface Named
+{
+    i32 code() const;
+};
+
+interface Sized
+{
+    i32 size() const;
+};
+
+interface Tagged
+{
+    i32 tag() const;
+};
+
+struct Pair<A, B> where A : copyable, where B : copyable
+{
+    A a;
+    B b;
+};
+
+struct Wrap<T> where T : copyable
+{
+    T v;
+};
+
+implements<T> Named for Pair<T, Wrap<T>> where T : copyable
+{
+    i32 code() const { return 1; }
+};
+
+implements<U> Named for Pair<Wrap<U>, U> where U : copyable
+{
+    i32 code() const { return 2; }
+};
+
+implements<T> Sized for Pair<T, Wrap<T>> where T : copyable
+{
+    i32 size() const { return 1; }
+};
+
+implements<U> Sized for Pair<U, U> where U : copyable
+{
+    i32 size() const { return 2; }
+};
+
+implements<T, U> Tagged for Pair<T, Wrap<U>> where T : copyable, where U : copyable
+{
+    i32 tag() const { return 1; }
+};
+
+implements<V> Tagged for Pair<Wrap<V>, V> where V : copyable // error: both at `Pair<Wrap<Wrap<U>>, Wrap<U>>`
+{
+    i32 tag() const { return 2; }
+};
+
+i32 main()
+{
+    return 0;
+}

@@ -1,0 +1,46 @@
+Source_file                             1:1-9:1
+  Function_decl                         2:1-8:2     name=f
+    Named_type                          2:1-2:5     "void"
+    Param_list                          2:7-2:9     "()"
+    Block                               3:1-8:2
+      Var_decl                          4:5-4:15    name=a
+        Named_type                      4:5-4:8     "i32"
+        Int_literal                     4:13-4:14   "1"
+      Expr_stmt                         5:5-5:31
+        Call_expr                       5:5-5:30
+          Name_expr                     5:5-5:8     "run"
+          Arg_list                      5:8-5:30
+            Lambda_expr                 5:10-5:28
+              <none>                    -
+              Param_list                5:22-5:24   "()"
+              Block                     5:25-5:28   "{ }"
+              Capture_list              5:12-5:22
+                Capture_decl            5:14-5:20
+                  Name_expr             5:19-5:20   "a"
+          <none>                        -
+      Expr_stmt                         6:5-6:30
+        Call_expr                       6:5-6:29
+          Name_expr                     6:5-6:8     "run"
+          Arg_list                      6:8-6:29
+            Lambda_expr                 6:10-6:27
+              <none>                    -
+              Param_list                6:21-6:23   "()"
+              Block                     6:24-6:27   "{ }"
+              Capture_list              6:12-6:21
+                Capture_decl            6:14-6:19
+                  Name_expr             6:18-6:19   "a"
+          <none>                        -
+      Expr_stmt                         7:5-7:34
+        Call_expr                       7:5-7:33
+          Name_expr                     7:5-7:8     "run"
+          Arg_list                      7:8-7:33
+            Lambda_expr                 7:10-7:31
+              <none>                    -
+              Param_list                7:14-7:27
+                Param_decl              7:16-7:25   name=x
+                  Named_type            7:16-7:19   "i32"
+                  Int_literal           7:24-7:25   "1"
+              Block                     7:28-7:31   "{ }"
+              Capture_list              7:12-7:14   "[]"
+          <none>                        -
+    <none>                              -

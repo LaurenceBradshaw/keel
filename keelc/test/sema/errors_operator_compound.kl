@@ -1,0 +1,56 @@
+// M9.6: what `a op= b` needs on a user type: an `operator op=`, or an `operator op` returning `a`'s
+// own type for the fallback `a = a op b`, and a target that may be written. Shifts, `++` and `--`
+// stay with the numbers.
+struct plain
+{
+    i32 x;
+};
+
+struct meters
+{
+    f64 m;
+
+    speed operator/( f64 s ) const { return speed { m / s }; }
+};
+
+struct speed
+{
+    f64 per_second;
+};
+
+struct counter
+{
+    i32 n;
+
+    void operator+=( i32 by ) { n += by; }
+    counter operator-( i32 by ) const { return counter { n - by }; }
+};
+
+void add_through( const ref counter c )
+{
+    c += 1;
+}
+
+i32 main()
+{
+    plain p = plain { 1 };
+    p += plain { 2 };
+
+    meters m = meters { 10.0 };
+    m /= 2.0;
+
+    const counter fixed = counter { 0 };
+    fixed += 1;
+    fixed -= 1;
+
+    counter c = counter { 0 };
+    c += counter { 1 };
+    c <<= 1;
+    c++;
+    c--;
+
+    i32 n = 0;
+    n += c;
+
+    return 0;
+}

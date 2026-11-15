@@ -1,0 +1,13 @@
+error: `v` is `const`, so it needs its value here
+  --> sema/errors_const_local.kl:20:5
+   |
+20 |     const i32 v; // error
+   |     ^^^^^^^^^^^^ write `const i32 v = value;`, or remove `const` to set it later
+
+error: `p` is `const`, so it needs its value here
+  --> sema/errors_const_local.kl:21:5
+   |
+21 |     const P p; // error
+   |     ^^^^^^^^^^ write `const P p = value;`, or remove `const` to set it later
+
+2 errors generated

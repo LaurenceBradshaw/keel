@@ -1,0 +1,85 @@
+error: a parameter after a default needs one too
+ --> sema/errors_param_defaults.kl:2:23
+  |
+2 | i32 later( i32 a = 1, i32 b ) { return a + b; }
+  |                       ^^^^^ give `b` a default, or move it before `a`
+
+error: a `ref` parameter cannot have a default
+ --> sema/errors_param_defaults.kl:4:26
+  |
+4 | void writes( ref i32 n = 0 ) { }
+  |                          ^ it needs a place the caller names
+
+error: an `out` parameter cannot have a default
+ --> sema/errors_param_defaults.kl:5:25
+  |
+5 | void fills( out i32 n = 0 ) { n = 1; }
+  |                         ^ it needs a place the caller names
+
+error: `a` is not declared
+ --> sema/errors_param_defaults.kl:7:35
+  |
+7 | i32 reads_another( i32 a, i32 b = a ) { return b; }
+  |                                   ^ a default cannot read another parameter
+
+error: an `extern` cannot have a default parameter
+ --> sema/errors_param_defaults.kl:9:25
+  |
+9 | extern i32 abs( i32 v = 0 );
+  |                         ^ pass the value at each call instead
+
+error: an interface's method cannot have a default parameter
+  --> sema/errors_param_defaults.kl:13:27
+   |
+13 |     u64 size( u64 extra = 0 ) const;
+   |                           ^ pass the value at each call instead
+
+error: `Square`'s `area` cannot have a default, since it answers `shape`
+  --> sema/errors_param_defaults.kl:21:26
+   |
+21 | struct Square implements shape
+   |                          ^^^^^ a call through `shape` would not see it; pass the value at each call instead
+
+error: a default cannot read the object it is called on
+  --> sema/errors_param_defaults.kl:27:26
+   |
+27 |     f64 scaled( f64 by = side ) const { return by; }
+   |                          ^^^^ it runs at the caller, before the call
+
+error: a default cannot read the object it is called on
+  --> sema/errors_param_defaults.kl:28:25
+   |
+28 |     f64 again( f64 by = this.side ) const { return by; }
+   |                         ^^^^ it runs at the caller, before the call
+
+error: a default cannot read the object it is called on
+  --> sema/errors_param_defaults.kl:29:26
+   |
+29 |     f64 called( f64 by = area() ) const { return by; }
+   |                          ^^^^ it runs at the caller, before the call
+
+error: an operator cannot have a default parameter
+  --> sema/errors_param_defaults.kl:31:47
+   |
+31 |     bool operator==( const ref Square other = Square { 1.0 } ) const { return side == other.side; }
+   |                                               ^^^^^^^^^^^^^^ pass the value at each call instead
+
+error: `main` cannot have a default parameter
+  --> sema/errors_param_defaults.kl:36:34
+   |
+36 | i32 main( const ref str[] args = [ "keel" ] )
+   |                                  ^^^^^^^^^^ pass the value at each call instead
+
+error: `two` takes 1 to 2 arguments, but 0 were given
+  --> sema/errors_param_defaults.kl:38:8
+   |
+38 |     two();
+   |        ^^
+
+error: `two` takes 1 to 2 arguments, but 3 were given
+  --> sema/errors_param_defaults.kl:39:8
+   |
+39 |     two( 1, 2, 3 );
+   |        ^^^^^^^^^^^
+
+14 errors generated

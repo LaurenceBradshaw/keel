@@ -1,0 +1,20 @@
+// Two written sizes with one value: the report points at the one the suffix reads, written here or
+// carried through another generic. Each marked line is one error.
+u64 second<u64 A, u64 B>() { u8[B - 2] a = [ 0, .. ]; return A; }
+u64 split<u64 W, u64 H>() { u8[W / ( H - 2 )] a = [ 0, .. ]; return W; }
+u64 third<u64 A, u64 B>() { u8[B - 4] a = [ 0, .. ]; return A; }
+u64 carry<u64 X, u64 Y>() { return third<X, Y>(); }
+u64 swapped<u64 X, u64 Y>() { return second<Y, X>(); }
+
+struct Two<u64 A, u64 B> { u8[A] x; u8[B - 2] y; };
+
+u64 both( const ref Two<2, 2> t ) { return 0; }    // error: at the second `2`
+
+i32 main()
+{
+    second<2, 2>();                                 // error: at the second `2`
+    split<2, 2>();                                  // error: at the divisor's `2`
+    carry<4, 4>();                                  // error: at the second `4`
+    swapped<2, 3>();                                // error: at the `2`, which becomes `B`
+    return 0;
+}

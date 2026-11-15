@@ -1,0 +1,56 @@
+// D9: reading a variable before anything put a value in it. The analysis is the one D31's `out`
+// parameters already needed - a *must* analysis over the CFG - asked at every read rather than only
+// at the ways out.
+struct Point { i32 x; i32 y; };
+
+i32 never_written()
+{
+    i32 x;
+
+    return x;
+}
+
+i32 written_on_one_branch( bool b )
+{
+    i32 x;
+
+    if( b )
+    {
+        x = 1;
+    }
+
+    return x;
+}
+
+i32 read_in_a_condition()
+{
+    i32 x;
+
+    if( x > 0 )
+    {
+        return 1;
+    }
+
+    return 0;
+}
+
+i32 a_whole_struct()
+{
+    Point p;
+
+    return p.x;
+}
+
+// An `out` parameter holds storage, not a value: the caller supplies somewhere to write, and until
+// the body writes it there is nothing to read.
+void reads_its_own_out( out i32 a )
+{
+    i32 copied = a;
+
+    a = copied;
+}
+
+i32 main()
+{
+    return 0;
+}

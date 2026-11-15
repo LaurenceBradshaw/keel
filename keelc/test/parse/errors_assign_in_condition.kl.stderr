@@ -1,0 +1,7 @@
+error: expected `)`, found `=`
+ --> parse/errors_assign_in_condition.kl:6:10
+  |
+6 |     if( x = 1 ) { } // error
+  |          ^ `=` assigns, and an assignment is not a value: compare with `==`
+
+1 error generated

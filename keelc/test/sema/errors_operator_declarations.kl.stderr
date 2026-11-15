@@ -1,0 +1,121 @@
+error: `operator+` must be `const`
+ --> sema/errors_operator_declarations.kl:9:22
+  |
+9 |     binary_not_const operator+( const ref binary_not_const other ) { return other; }
+  |                      ^^^^^^^^^ write `const` after its parameter list; `a + b` reads both operands
+
+error: `operator*` takes one parameter, the right-hand operand
+  --> sema/errors_operator_declarations.kl:16:34
+   |
+16 |     binary_two_operands operator*( i32 a, i32 b ) const { return binary_two_operands { a * b }; }
+   |                                  ^^^^^^^^^^^^^^^^
+
+error: `operator/` takes one parameter, the right-hand operand
+  --> sema/errors_operator_declarations.kl:23:32
+   |
+23 |     binary_no_operand operator/() const { return binary_no_operand { x }; }
+   |                                ^^
+
+error: `operator&` takes its right operand by value or `const ref`
+  --> sema/errors_operator_declarations.kl:30:30
+   |
+30 |     binary_by_ref operator&( ref binary_by_ref other ) const { return binary_by_ref { x }; }
+   |                              ^^^^^^^^^^^^^^^^^^^^^^^ `a & b` has nowhere to write a `ref`, `out` or `move`
+
+error: `operator|` takes its right operand by value or `const ref`
+  --> sema/errors_operator_declarations.kl:37:31
+   |
+37 |     binary_by_move operator|( move binary_by_move other ) const { return binary_by_move { x }; }
+   |                               ^^^^^^^^^^^^^^^^^^^^^^^^^ `a | b` has nowhere to write a `ref`, `out` or `move`
+
+error: `operator^` must return a value
+  --> sema/errors_operator_declarations.kl:44:5
+   |
+44 |     void operator^( i32 other ) const { }
+   |     ^^^^ `a ^ b` is an expression; to change `a` in place, declare `operator^=`
+
+error: `operator+=` cannot be `const`
+  --> sema/errors_operator_declarations.kl:51:10
+   |
+51 |     void operator+=( i32 by ) const { }
+   |          ^^^^^^^^^^ it changes its left operand
+
+error: `operator*=` must return `void`
+  --> sema/errors_operator_declarations.kl:58:5
+   |
+58 |     compound_returns operator*=( i32 by ) { return compound_returns { x * by }; }
+   |     ^^^^^^^^^^^^^^^^ `a *= b` is a statement and changes `a` in place
+
+error: `operator%=` takes one parameter, the right-hand operand
+  --> sema/errors_operator_declarations.kl:65:20
+   |
+65 |     void operator%=() { }
+   |                    ^^
+
+error: `operator-=` takes its right operand by value or `const ref`
+  --> sema/errors_operator_declarations.kl:72:22
+   |
+72 |     void operator-=( out i32 by ) { by = 0; }
+   |                      ^^^^^^^^^^ `a -= b` has nowhere to write a `ref`, `out` or `move`
+
+error: `operator~` takes no parameter
+  --> sema/errors_operator_declarations.kl:79:33
+   |
+79 |     unary_with_operand operator~( i32 bits ) const { return unary_with_operand { x }; }
+   |                                 ^^^^^^^^^^^^ `~a` has one operand, the object
+
+error: `operator-` takes no parameter, for `-a`, or one, for `a - b`
+  --> sema/errors_operator_declarations.kl:86:33
+   |
+86 |     minus_two_operands operator-( i32 a, i32 b ) const { return minus_two_operands { a }; }
+   |                                 ^^^^^^^^^^^^^^^^
+
+error: `operator-` must be `const`
+  --> sema/errors_operator_declarations.kl:93:21
+   |
+93 |     unary_not_const operator-() { return unary_not_const { 0 - x }; }
+   |                     ^^^^^^^^^ write `const` after its parameter list; `-a` reads its operand
+
+error: `operator~` must return a value
+   --> sema/errors_operator_declarations.kl:100:5
+    |
+100 |     void operator~() const { }
+    |     ^^^^
+
+error: `twice` already has an `operator+`
+   --> sema/errors_operator_declarations.kl:108:11
+    |
+108 |     twice operator+( const ref twice other ) const { return twice { x + other.x }; }
+    |           ^^^^^^^^^ previous declaration is at: sema/errors_operator_declarations.kl:107:5
+
+error: `twice` already has an `operator-`
+   --> sema/errors_operator_declarations.kl:110:11
+    |
+110 |     twice operator-() const { return twice { x }; }
+    |           ^^^^^^^^^ previous declaration is at: sema/errors_operator_declarations.kl:109:5
+
+error: an operator cannot be `static`
+   --> sema/errors_operator_declarations.kl:125:28
+    |
+125 |     static static_operator operator*( i32 by ) { return static_operator { by }; }
+    |                            ^^^^^^^^^ it is called on its left operand
+
+error: an operator cannot have type parameters of its own
+   --> sema/errors_operator_declarations.kl:132:31
+    |
+132 |     generic_operator operator+<U>( U by ) const { return generic_operator { x }; }
+    |                               ^^^ it is called without any, so nothing could say what they are
+
+error: `operator+` must return a value
+   --> sema/errors_operator_declarations.kl:137:5
+    |
+137 |     void operator+( const ref self other ) const;
+    |     ^^^^ `a + b` is an expression; to change `a` in place, declare `operator+=`
+
+error: `operator-=` must return `void`
+   --> sema/errors_operator_declarations.kl:138:5
+    |
+138 |     self operator-=( i32 by );
+    |     ^^^^ `a -= b` is a statement and changes `a` in place
+
+20 errors generated

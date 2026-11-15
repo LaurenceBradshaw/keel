@@ -1,0 +1,132 @@
+// What `operator==` must be - a `const` method returning `bool`, taking one more of its own type,
+// declared once - and what using `==` on an aggregate needs.
+struct returns_i32
+{
+    i32 x;
+
+    i32 operator==( const ref returns_i32 other ) const
+    {
+        return 0;
+    }
+};
+
+struct not_const
+{
+    i32 x;
+
+    bool operator==( const ref not_const other )
+    {
+        return true;
+    }
+};
+
+struct other_type
+{
+    i32 x;
+
+    bool operator==( i32 other ) const
+    {
+        return true;
+    }
+};
+
+struct declared_twice
+{
+    i32 x;
+
+    bool operator==( const ref declared_twice other ) const
+    {
+        return true;
+    }
+
+    bool operator==( declared_twice other ) const
+    {
+        return true;
+    }
+};
+
+struct is_static
+{
+    i32 x;
+
+    static bool operator==( const ref is_static other )
+    {
+        return true;
+    }
+};
+
+struct two_parameters
+{
+    i32 x;
+
+    bool operator==( const ref two_parameters p, const ref two_parameters q ) const
+    {
+        return true;
+    }
+};
+
+class hidden
+{
+    hidden()
+    {
+        x = 0;
+    }
+
+    private bool operator==( const ref hidden other ) const
+    {
+        return true;
+    }
+
+    private i32 x;
+};
+
+struct plain
+{
+    i32 x;
+};
+
+struct point
+{
+    i32 x;
+
+    bool operator==( const ref point other ) const
+    {
+        return x == other.x;
+    }
+};
+
+i32 main()
+{
+    plain  one   = plain { 1 };
+    plain  two   = plain { 2 };
+    hidden h     = hidden();
+    hidden k     = hidden();
+    point  p     = point { 1 };
+
+    if( one == two )
+    {
+        return 1;
+    }
+
+    if( h == k )
+    {
+        return 2;
+    }
+
+    if( one == 5 )
+    {
+        return 3;
+    }
+
+    if( p == 5 )
+    {
+        return 4;
+    }
+
+    if( p != one )
+    {
+        return 5;
+    }
+
+    return 0;
+}

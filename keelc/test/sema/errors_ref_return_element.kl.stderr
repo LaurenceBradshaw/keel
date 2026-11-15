@@ -1,0 +1,7 @@
+error: a returned reference must borrow from a parameter
+  --> sema/errors_ref_return_element.kl:16:12
+   |
+16 |     return c[0];
+   |            ^^^^ anything else here dies when this function returns
+
+1 error generated

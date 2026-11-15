@@ -1,0 +1,93 @@
+// A pointer to const, refused one way to a function: writing through it, dropping its `const`,
+// releasing it, and the two spellings of `const` that mean something else. The address of a
+// read-only place is one, which is what the last two catch.
+struct Point
+{
+    i32 x;
+};
+
+class Counter
+{
+    Counter()
+    {
+        n = 0;
+    }
+
+    public void bump()
+    {
+        n += 1;
+    }
+
+    public i32 peek() const
+    {
+        i32* p = &n;
+
+        return *p;
+    }
+
+    private i32 n;
+};
+
+void writes_through_it( const i32* q )
+{
+    *q = 1;
+}
+
+void writes_a_field_through_it( const Point* q )
+{
+    q.x = 1;
+}
+
+void writes_an_element_through_it( const i32[*] q )
+{
+    unsafe
+    {
+        q[ 0 ] = 1;
+    }
+}
+
+void calls_a_method_that_writes( const Counter* q )
+{
+    q.bump();
+}
+
+void drops_its_const( const i32* q )
+{
+    i32* w = q;
+}
+
+void adds_const_two_levels_down( i32** raw )
+{
+    const i32** q = raw;
+}
+
+void frees_it( const u8[*] q )
+{
+    unsafe
+    {
+        free( q );
+    }
+}
+
+void writes_after_the_const()
+{
+    i32 const* q = nullptr;
+}
+
+void writes_const_twice()
+{
+    const i32 const* q = nullptr;
+}
+
+i32 takes_the_address_of_a_const()
+{
+    const i32 k = 1;
+    i32*      p = &k;
+
+    return *p;
+}
+
+i32 main()
+{
+    return 0;
+}

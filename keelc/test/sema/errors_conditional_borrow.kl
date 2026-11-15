@@ -1,0 +1,17 @@
+// D75: each arm of a borrowed conditional is checked as the whole would be. One error per marked
+// line, at the arm.
+void bump( ref i32 n ) { n = n + 10; }
+u64 peek( const ref i32 _ ) { return 0; }
+
+void spelled( bool c )
+{
+    i32 a = 1;
+    u8 n = 2;
+    bump( c ? ref a : a );       // error: the second arm takes `ref`
+    bump( c ? ref a : ref 1 );   // error: no variable
+    bump( c ? ref a : ref n );   // error: `u8` as `ref i32`
+    _ = peek( c ? ref a : ref a ); // error: twice, `peek` does not modify
+    ref i32 r = c ? a : 1;       // error: no variable
+}
+
+i32 main() { return 0; }

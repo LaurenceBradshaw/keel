@@ -1,0 +1,25 @@
+error: calling `abs` needs an `unsafe` block
+ --> sema/errors_extern.kl:7:12
+  |
+7 |     return abs( v );
+  |            ^^^ it is defined in C, so the compiler cannot check what it does with its arguments
+
+error: `abs` takes 1 argument, but 2 were given
+  --> sema/errors_extern.kl:16:16
+   |
+16 |         n = abs( 1, 2 );
+   |                ^^^^^^^^
+
+error: expected `i32`, but got `f64`
+  --> sema/errors_extern.kl:29:18
+   |
+29 |         n = abs( d );
+   |                  ^
+
+error: an `extern` function cannot have a body
+  --> sema/errors_extern.kl:38:1
+   |
+38 | {
+   | ^ `extern` says the definition is in C: remove the body, or remove `extern` to define it here
+
+4 errors generated

@@ -92,9 +92,6 @@ public:
     // each. Lines and columns are 1-based bytes; end is exclusive.
     void render_json( const Source_manager& sm, std::ostream& out ) const;
 
-    // What render() shows, in its order.
-    std::vector<Diagnostic> shown() const;
-
 private:
     size_t            count( Severity severity ) const;
     std::vector<u32>  in_source_order() const;

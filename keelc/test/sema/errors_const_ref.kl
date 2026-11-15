@@ -1,0 +1,115 @@
+// PLAN D31/D32. `const ref T` is the read-only borrow. Every rule the mutable binding has still
+// applies - initialised at its declaration, never bound to a temporary - and the const half adds
+// that it may not be written through.
+struct Point
+{
+    i32 x;
+};
+
+i32 make()
+{
+    return 1;
+}
+
+i32 writes_through_a_parameter( const ref Point p )
+{
+    p.x = 5;
+
+    return p.x;
+}
+
+i32 writes_through_a_binding()
+{
+    i32 x = 1;
+
+    const ref i32 r = x;
+
+    r = 5;
+
+    return x;
+}
+
+i32 uninitialised_binding()
+{
+    const ref i32 r;
+
+    return 0;
+}
+
+i32 binds_a_temporary()
+{
+    const ref i32 r = make();
+
+    return r;
+}
+
+i32 reads( const ref Point p )
+{
+    return p.x;
+}
+
+// The marker at a call site announces that something happens to the caller's variable. With
+// `const ref` nothing does, so there is no marker to write - and writing one is refused.
+i32 marks_the_call()
+{
+    Point v = Point { 1 };
+
+    return reads( ref v );
+}
+
+void grow( ref Point p )
+{
+    p.x = 1;
+}
+
+// The contrast: a mutable borrow of a const variable is laundering, and is refused.
+i32 lends_a_const_mutably()
+{
+    const Point v = Point { 1 };
+
+    grow( ref v );
+
+    return 0;
+}
+
+// Everything below is accepted, and the fixture would be worth much less without it.
+
+i32 reads_through_a_binding()
+{
+    i32 x = 1;
+
+    const ref i32 r = x;
+
+    // The referent stays writable in its own right: `const` is a property of *this* name.
+    x = 5;
+
+    return r;
+}
+
+i32 passes_bare()
+{
+    Point v = Point { 1 };
+
+    return reads( v );
+}
+
+i32 passes_a_const()
+{
+    const Point v = Point { 1 };
+
+    return reads( v );
+}
+
+i32 binds_a_const()
+{
+    const i32 k = 1;
+
+    const ref i32 r = k;
+
+    return r;
+}
+
+i32 main()
+{
+    return 0;
+}

@@ -1,0 +1,7 @@
+error: this function returns `never`, but can reach its end
+ --> sema/errors_never_ends.kl:3:1
+  |
+3 | never ends( bool c )
+  | ^^^^^^^^^^^^^^^^^^^^ end every path in `panic`, a call of another `never` function, or a loop that never exits
+
+1 error generated

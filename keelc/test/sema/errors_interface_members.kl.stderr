@@ -1,0 +1,31 @@
+error: an `interface` holds only method signatures
+ --> sema/errors_interface_members.kl:2:23
+  |
+2 | interface With_ctor { With_ctor(); };
+  |                       ^^^^^^^^^^^^
+
+error: an `interface` holds only method signatures
+ --> sema/errors_interface_members.kl:3:23
+  |
+3 | interface With_dtor { ~With_dtor(); };
+  |                       ^^^^^^^^^^^^^
+
+error: an `interface` holds only method signatures
+ --> sema/errors_interface_members.kl:4:28
+  |
+4 | interface With_body_ctor { With_body_ctor() { } i32 f() const; };
+  |                            ^^^^^^^^^^^^^^^^^^^^
+
+error: an interface's methods are public
+ --> sema/errors_interface_members.kl:5:25
+  |
+5 | interface With_public { public i32 f() const; };
+  |                         ^^^^^^ remove it
+
+error: an interface's methods are public
+ --> sema/errors_interface_members.kl:6:26
+  |
+6 | interface With_private { private i32 f() const; };
+  |                          ^^^^^^^ remove it
+
+5 errors generated

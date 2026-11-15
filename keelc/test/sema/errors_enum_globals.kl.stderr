@@ -1,0 +1,7 @@
+error: `colour` has no variant `purple`
+ --> sema/errors_enum_globals.kl:6:16
+  |
+6 | colour wrong = colour::purple;
+  |                ^^^^^^^^^^^^^^
+
+1 error generated

@@ -1,0 +1,39 @@
+// M9.6: a `T` has an operator only through a bound that requires it, and an implementer must match
+// the requirement or declare it.
+interface addable
+{
+    self operator+( const ref self other ) const;
+};
+
+interface negatable
+{
+    self operator-() const;
+};
+
+struct wrong implements addable
+{
+    i32 x;
+
+    wrong operator+( i32 other ) const { return wrong { x + other }; }
+};
+
+struct missing implements negatable
+{
+    i32 x;
+};
+
+T unbounded<T>( T a, T b ) where T : copyable
+{
+    return a + b;
+}
+
+T other_bound<T>( T a, T b ) where T : copyable & negatable
+{
+    a += b;
+    return a * b;
+}
+
+i32 main()
+{
+    return 0;
+}

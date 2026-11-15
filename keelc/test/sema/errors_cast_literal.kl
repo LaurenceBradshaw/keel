@@ -1,0 +1,21 @@
+// A literal takes the target of a `cast` only when the target is a number, so a refused pair is
+// the conversion's own error with its help.
+enum E { a, b };
+
+void give( i32 x )
+{
+    return cast<void>( x ); // error: the conversion only
+}
+
+i32 main()
+{
+    bool t = cast<bool>( 5 ); // error
+    f32  f = cast<f32>( false ); // error
+    u8*  p = cast<u8*>( 42 ); // error
+    E    e = cast<E>( 1 ); // error
+    u8   m = cast<u8>( 200 ); // fine
+    f32  h = cast<f32>( 1 ); // fine
+    u8*  n = cast<u8*>( nullptr ); // fine
+
+    return 0;
+}

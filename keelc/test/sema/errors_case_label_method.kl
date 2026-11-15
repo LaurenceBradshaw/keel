@@ -1,0 +1,17 @@
+// A method named in a `case` label is one error, not a second "known at compile time".
+class K
+{
+    public i32 k;
+    public K() { k = 1; }
+    public i32 boom() const { return k; }
+};
+
+i32 main()
+{
+    i32 n = 1;
+    switch( n )
+    {
+        case K::boom: return 1;
+        default: return 0;
+    }
+}

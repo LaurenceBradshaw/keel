@@ -1,0 +1,21 @@
+// A method named without a call is not a field: read, assigned or compounded, the error says what
+// it is, and a static one is called through its type.
+
+class Cat
+{
+    i32 lives;
+    public Cat() { lives = 9; }
+    public i32 count() const { return lives; }
+    public void speak() {}
+    public static i32 boom() { return 1; }
+};
+
+i32 main()
+{
+    Cat c = Cat();
+    c.speak = 1;
+    c.speak += 1;
+    i32 n = c.count;
+    i32 m = c.boom;
+    return n + m;
+}

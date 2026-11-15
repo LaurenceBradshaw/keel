@@ -1,0 +1,31 @@
+error: `T` is already declared in this scope
+  --> sema/errors_block_cascades.kl:24:15
+   |
+24 | implements<T, T> Named for Wrap<T*> where T : Named
+   |               ^ previous declaration is at: sema/errors_block_cascades.kl:24:12
+
+error: `U` is not a type parameter of the block
+  --> sema/errors_block_cascades.kl:31:34
+   |
+31 | implements<T> Named for Wrap<T*> where U : copyable
+   |                                  ^^^^^^^^^^^^^^^^^^
+
+error: `A` does not promise `copyable`, and `Pair` requires it of `A`
+  --> sema/errors_block_cascades.kl:37:30
+   |
+37 | implements<A> Named for Pair<A, A> where A : Named
+   |                              ^ add `copyable` to the block's `where` clause for `A`
+
+error: a block cannot make `Opaque*` `equatable`
+  --> sema/errors_block_cascades.kl:43:26
+   |
+43 | implements equatable for Opaque*
+   |                          ^^^^^^^ the compiler compares and hashes a pointer by its address
+
+error: `self` is written only inside an `interface`
+  --> sema/errors_block_cascades.kl:45:32
+   |
+45 |     bool operator==( const ref self other ) const { return true; }
+   |                                ^^^^ write `Opaque*`, the type's own name
+
+5 errors generated

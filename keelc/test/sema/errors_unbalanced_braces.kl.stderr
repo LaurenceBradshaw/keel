@@ -1,0 +1,13 @@
+error: expected `}`, found `i32`
+ --> sema/errors_unbalanced_braces.kl:9:14
+  |
+9 |     return 0;
+  |              ^
+
+error: expected `}`, found end of file
+  --> sema/errors_unbalanced_braces.kl:19:2
+   |
+19 | }
+   |  ^ a `{` above was never closed
+
+2 errors generated

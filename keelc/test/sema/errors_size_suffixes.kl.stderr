@@ -1,0 +1,37 @@
+error: `Ring<1>` makes an array of 0 elements
+  --> sema/errors_size_suffixes.kl:17:10
+   |
+17 |     Ring<One> ring;
+   |          ^^^ `N - 1` at sema/errors_size_suffixes.kl:7:9 is 0 when `N` is 1
+
+error: `Slab<1>` makes an array of 0 elements
+  --> sema/errors_size_suffixes.kl:30:11
+   |
+30 |     outer<1>();
+   |           ^ `N - 1` at sema/errors_size_suffixes.kl:12:8 is 0 when `N` is 1
+
+error: `huge<100000000>` makes an array whose size overflows a `u64`
+  --> sema/errors_size_suffixes.kl:31:10
+   |
+31 |     huge<100000000>();
+   |          ^^^^^^^^^ `N * 1000000000000` at sema/errors_size_suffixes.kl:23:24 overflows a `u64` when `N` is 100000000
+
+error: `below<2>` makes an array whose size is below 0
+  --> sema/errors_size_suffixes.kl:32:11
+   |
+32 |     below<2>();
+   |           ^ `N - 3` at sema/errors_size_suffixes.kl:24:25 is below 0 when `N` is 2
+
+error: `split<4, 2>` makes an array whose size divides by 0
+  --> sema/errors_size_suffixes.kl:33:14
+   |
+33 |     split<4, 2>();
+   |              ^ `W / (H - 2)` at sema/errors_size_suffixes.kl:25:32 divides by 0 when `W` is 4 and `H` is 2
+
+error: `shorter<1>` makes an array of 0 elements
+  --> sema/errors_size_suffixes.kl:35:5
+   |
+35 |     shorter( one );
+   |     ^^^^^^^^^^^^^^ `N - 1` at sema/errors_size_suffixes.kl:26:47 is 0 when `N` is 1
+
+6 errors generated

@@ -1,0 +1,27 @@
+// Each `@trig_` function below is not `f64( f64 )`, one error apiece at its directive.
+
+@trig_sin
+f32 narrow( f32 x ) { return x; }
+
+@trig_cos
+f64 two( f64 x, f64 y ) { return x + y; }
+
+@trig_tan
+f64 by_reference( const ref f64 x ) { return x; }
+
+@trig_sin
+f64 none() { return 0.0; }
+
+struct Angle
+{
+    f64 radians;
+
+    @trig_cos
+    f64 cosine() const { return radians; }
+};
+
+@real_arithmetic
+@trig_sin
+f64 accepted( f64 x ) { return x; }
+
+i32 main() { return 0; }

@@ -1,0 +1,25 @@
+error: a field cannot be moved on its own
+  --> sema/errors_field_moves.kl:59:20
+   |
+59 |         sink( move a ); // error
+   |                    ^ it belongs to `this`, which a method only borrows
+
+error: a field cannot be moved out of `D`
+  --> sema/errors_field_moves.kl:69:16
+   |
+69 |     sink( move d.v ); // error
+   |                ^^^ its destructor needs every field; move the whole object instead
+
+error: cannot move out of a borrow
+  --> sema/errors_field_moves.kl:74:16
+   |
+74 |     sink( move q.a ); // error
+   |                ^^^ take it as `move P q` to own it
+
+error: a pointee cannot be moved
+  --> sema/errors_field_moves.kl:79:16
+   |
+79 |     sink( move q.a ); // error
+   |                ^^^ move the variable it points into instead
+
+4 errors generated

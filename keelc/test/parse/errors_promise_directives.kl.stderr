@@ -1,0 +1,31 @@
+error: `@dft` marks a function
+ --> parse/errors_promise_directives.kl:2:1
+  |
+2 | @dft
+  | ^^^^
+
+error: `@dft` is written twice
+ --> parse/errors_promise_directives.kl:5:6
+  |
+5 | @dft @dft
+  |      ^^^^
+
+error: `@dft` after `@trig_sin`
+ --> parse/errors_promise_directives.kl:8:11
+  |
+8 | @trig_sin @dft
+  |           ^^^^ a function makes one promise
+
+error: `@trig_cos` after `@dft`
+  --> parse/errors_promise_directives.kl:11:6
+   |
+11 | @dft @trig_cos
+   |      ^^^^^^^^^ a function makes one promise
+
+error: `@dft` marks a function
+  --> parse/errors_promise_directives.kl:18:5
+   |
+18 |     @dft
+   |     ^^^^
+
+5 errors generated

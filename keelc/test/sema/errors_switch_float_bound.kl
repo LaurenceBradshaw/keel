@@ -1,0 +1,27 @@
+// A fractional `case` bound over a float is refused once per label, as a bound that is not an
+// integer - a literal, a mix with an integer, and a float `const`. A bound that is not a constant
+// is still "not known at compile time".
+
+const f64 K = 0.5;
+
+i32 f( f64 x, f64 y )
+{
+    switch( x )
+    {
+        case 0.5..1.5:
+            return 1;
+        case 2..2.5:
+            return 2;
+        case K..9:
+            return 3;
+        case 10..y:
+            return 4;
+        default:
+            return 0;
+    }
+}
+
+i32 main()
+{
+    return 0;
+}

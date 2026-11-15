@@ -1,0 +1,21 @@
+// D82: through a bound, `c[i]` under `const ref C` is not written, is never a slice, and needs a bound
+// that declares `operator[]`.
+void write<C, T>( const ref C c ) where C : fixed_memory<T>, where T : copyable
+{
+    c[0] = c[1];
+}
+
+void slice<C, T>( const ref C c ) where C : fixed_memory<T>
+{
+    const ref T[] s = c[0..1];
+}
+
+void plain<C>( const ref C c ) where C : hashable
+{
+    const ref i32 x = c[0];
+}
+
+i32 main()
+{
+    return 0;
+}

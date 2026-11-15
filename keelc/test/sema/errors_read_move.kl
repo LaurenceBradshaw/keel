@@ -1,0 +1,61 @@
+// `move` where the value is only read: a condition, an operator's operand, a compound assignment's
+// value. A line ending `// warning` warns exactly once, a line ending `// error` reports exactly one
+// error, and every other line reports neither.
+class Buf
+{
+    u64 n;
+
+    Buf( u64 v )
+    {
+        n = v;
+    }
+
+    ~Buf()
+    {
+    }
+
+    bool operator==( const ref Buf other ) const
+    {
+        return n == other.n;
+    }
+};
+
+void conditions( bool b, bool c, bool d )
+{
+    if( move b ) // warning
+    {
+    }
+    while( move c ) // warning
+    {
+    }
+    i32 e = ( move d ) ? 1 : 2; // warning
+    _ = e;
+}
+
+void operands( i32 a, i32 b, i32 c, Buf x, move Buf y )
+{
+    i32 d = ( move a ) + 1; // warning
+    i32 e = -move b; // warning
+    bool f = x == ( move y ); // warning
+    d += move c; // warning
+    _ = e;
+    _ = f;
+    _ = d;
+}
+
+// `move` takes all of `a > 0`, which is not a variable.
+void whole( i32 a )
+{
+    if( move a > 0 ) // error
+    {
+    }
+}
+
+// A move that hands the value on is still accepted.
+Buf kept( move Buf x, bool b )
+{
+    Buf y = move x;
+    bool c = b ? true : false;
+    _ = c;
+    return move y;
+}

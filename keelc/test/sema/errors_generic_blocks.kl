@@ -1,0 +1,73 @@
+// M12: what a block with parameters of its own may not be. One error per marked line.
+interface Named
+{
+    i32 code() const;
+};
+
+struct Pair<A, B> where A : copyable, where B : copyable
+{
+    A a;
+    B b;
+};
+
+implements Named for i32
+{
+    i32 code() const { return this; }
+};
+
+// A conditional block for this package's own type is allowed; an unconditional one is not.
+implements<A, B> Named for Pair<A, B> where A : copyable & Named, where B : copyable
+{
+    i32 code() const { return 1; }
+};
+
+implements<A> Named for Pair<A, A> where A : copyable // error: could meet the block above
+{
+    i32 code() const { return 2; }
+};
+
+implements<T> Named for T // error: a bare parameter is every type
+{
+    i32 code() const { return 3; }
+};
+
+implements<A, B> equatable for Pair<A, i32> where A : copyable // error: `B` is not in the type
+{
+    bool operator==( const ref Pair<A, i32> other ) const { return true; }
+};
+
+implements<T> hashable for T* // error: every pointer is hashed by the compiler
+{
+    void hash( ref hasher h ) const { }
+};
+
+implements<A> equatable for Pair<A, u8> where A : copyable & numeric // error: not an interface
+{
+    bool operator==( const ref Pair<A, u8> other ) const { return true; }
+};
+
+i32 read<T>( const ref T x ) where T : Named
+{
+    return x.code();
+}
+
+struct Opaque
+{
+    i32 x;
+};
+
+implements<T> equatable for Pair<T, u8> where T : copyable & equatable
+{
+    bool operator==( const ref Pair<T, u8> other ) const { return this.a == other.a; }
+};
+
+i32 main()
+{
+    Pair<bool, i32> p = Pair<bool, i32> { true, 1 };
+    Pair<Opaque, u8> q = Pair<Opaque, u8> { Opaque { 1 }, 2 };
+    if( q == q ) // error: `Opaque` is not `equatable`, which the block asks of `T`
+    {
+        return 1;
+    }
+    return read( p ); // error: `bool` is not `Named`, which the block asks of `A`
+}

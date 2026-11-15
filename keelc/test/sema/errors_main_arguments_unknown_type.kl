@@ -1,0 +1,5 @@
+// An unknown element type is reported once, as unknown, not again as the wrong `main`.
+i32 main( const ref strr[] args )
+{
+    return 0;
+}

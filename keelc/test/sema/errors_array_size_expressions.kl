@@ -1,0 +1,13 @@
+// Array sizes written as expressions that are not a valid size. A line ending `// error` reports
+// exactly one error; every other line reports none.
+const u64 N = 3;
+
+void f()
+{
+    i32[-1] negative;      // error
+    i32[1 << 70] shifted;  // error
+    i32[N - 3] empty;      // error
+    i32[N * 2] fine = [ 0, .. ];
+}
+
+i32 main() { return 0; }

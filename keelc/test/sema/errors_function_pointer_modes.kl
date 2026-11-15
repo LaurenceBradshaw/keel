@@ -1,0 +1,11 @@
+// The parameter spellings that stay errors once modes are part of a function type. A mode on the
+// *return* has its own fixture, and the refusal this file used to record for `&peek` is gone: a
+// function returning a `const ref` has a type now.
+
+i32 main()
+{
+    fn( const i32 ) -> i32     a;
+    fn( ref const i32 ) -> i32 b;
+
+    return 0;
+}

@@ -1,0 +1,5 @@
+warning: this statement is never reached [-Wunreachable-code]
+ --> sema/unreachable_after_endless_loop.kl:8:5
+  |
+8 |     return 0; // warning
+  |     ^^^^^^^^^ the one before it always leaves the block

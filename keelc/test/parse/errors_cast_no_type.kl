@@ -1,0 +1,8 @@
+// A `cast` or `wrap` with no target type is one error, and the operand after it is read.
+i32 main()
+{
+    i32 a = cast( 1 ); // error
+    i32 b = wrap( 2 ); // error
+
+    return a + b;
+}

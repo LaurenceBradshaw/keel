@@ -1,0 +1,21 @@
+// Declaring any constructor removes the implicit `C()`.
+class Made
+{
+    i32 n = 1;
+
+    Made( i32 v )
+    {
+        n = v;
+    }
+
+    public i32 get() const
+    {
+        return n;
+    }
+};
+
+i32 main()
+{
+    Made m = Made();
+    return m.get();
+}

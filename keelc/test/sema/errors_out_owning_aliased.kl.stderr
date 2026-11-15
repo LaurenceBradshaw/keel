@@ -1,0 +1,19 @@
+error: one object is passed twice to this call, which could change it
+  --> sema/errors_out_owning_aliased.kl:36:21
+   |
+36 |     changes( out v, ref v );
+   |                     ^^^^^ `out v` at 36:14 is the same object; the callee would see it under two names
+
+error: one object is passed twice to this call, which could change it
+  --> sema/errors_out_owning_aliased.kl:37:19
+   |
+37 |     reads( out v, v );
+   |                   ^ `out v` at 37:12 is the same object; the callee would see it under two names
+
+error: one object is passed twice to this call, which could change it
+  --> sema/errors_out_owning_aliased.kl:41:21
+   |
+41 |     changes( out v, ref r );
+   |                     ^^^^^ `out v` at 41:14 is the same object; the callee would see it under two names
+
+3 errors generated

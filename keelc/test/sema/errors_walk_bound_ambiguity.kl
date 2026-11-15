@@ -1,0 +1,19 @@
+// Two bounds that each require a walk do not say which a loop through them means, whichever is
+// written first, even when both yield the same type; nor does one interface at two instances.
+
+interface ints { void operator:( const ref i32 item ) const; };
+interface more_ints { void operator:( const ref i32 item ) const; };
+interface bools { void operator:( const ref bool item ) const; };
+interface each<T> { void operator:( const ref T item ) const; };
+interface sized { u64 size() const; };
+
+i32 ints_then_bools<C>( const ref C c ) where C : ints & bools { i32 s = 0; for( const ref i32 x : c ) { s += x; } return s; }
+i32 bools_then_ints<C>( const ref C c ) where C : bools & ints { i32 s = 0; for( const ref i32 x : c ) { s += x; } return s; }
+i32 same_yield<C>( const ref C c ) where C : ints & more_ints { i32 s = 0; for( i32 x : c ) { s += x; } return s; }
+i32 two_instances<C>( const ref C c ) where C : each<i32> & each<bool> { i32 s = 0; for( i32 x : c ) { s += x; } return s; }
+i32 two_instances_swapped<C>( const ref C c ) where C : each<bool> & each<i32> { i32 s = 0; for( i32 x : c ) { s += x; } return s; }
+
+// Still accepted: only one bound walks.
+i32 one_walks<C>( const ref C c ) where C : sized & ints { i32 s = 0; for( i32 x : c ) { s += x; } return s; }
+
+i32 main() { return 0; }

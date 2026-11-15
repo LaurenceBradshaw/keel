@@ -1,0 +1,25 @@
+error: `speak` is a method of `Cat`, not a field
+  --> sema/errors_method_as_field.kl:16:5
+   |
+16 |     c.speak = 1;
+   |     ^^^^^^^ a method is only called: `c.speak()`
+
+error: `speak` is a method of `Cat`, not a field
+  --> sema/errors_method_as_field.kl:17:5
+   |
+17 |     c.speak += 1;
+   |     ^^^^^^^ a method is only called: `c.speak()`
+
+error: `count` is a method of `Cat`, not a field
+  --> sema/errors_method_as_field.kl:18:13
+   |
+18 |     i32 n = c.count;
+   |             ^^^^^^^ a method is only called: `c.count()`
+
+error: `boom` is a method of `Cat`, not a field
+  --> sema/errors_method_as_field.kl:19:13
+   |
+19 |     i32 m = c.boom;
+   |             ^^^^^^ a method is only called: `Cat::boom()`
+
+4 errors generated

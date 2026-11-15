@@ -1,0 +1,51 @@
+// Block errors that are reported once, without the errors that follow from them.
+interface Named
+{
+    i32 code() const;
+};
+
+struct Opaque
+{
+    i32 x;
+};
+
+struct Wrap<T> where T : copyable
+{
+    T v;
+};
+
+struct Pair<A, B> where A : copyable, where B : copyable
+{
+    A a;
+    B b;
+};
+
+// error: once, not once more per method
+implements<T, T> Named for Wrap<T*> where T : Named
+{
+    i32 code() const { return 1; }
+    i32 two() const { return 2; }
+};
+
+// error: `U` is unknown, and nothing more is said of its bound
+implements<T> Named for Wrap<T*> where U : copyable
+{
+    i32 code() const { return 1; }
+};
+
+// error: once for `A`, though it fills both parameters
+implements<A> Named for Pair<A, A> where A : Named
+{
+    i32 code() const { return 1; }
+};
+
+// error: the refused block's type is still named in the `self` help
+implements equatable for Opaque*
+{
+    bool operator==( const ref self other ) const { return true; }
+};
+
+i32 main()
+{
+    return 0;
+}

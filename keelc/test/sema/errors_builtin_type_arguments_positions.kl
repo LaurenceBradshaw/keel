@@ -1,0 +1,15 @@
+// Type arguments on a builtin, outside a local's declaration.
+void parameter( i32<i64> x ) { } // error
+void pointer( i32<u8>* p ) { } // error
+i32<i64> result() { return 1; } // error
+class Holder
+{
+    bool<i32> f; // error
+    public Holder() { f = true; }
+};
+
+i32 main()
+{
+    i32<u8>[2] a = [ 1, 2 ]; // error
+    return 0;
+}

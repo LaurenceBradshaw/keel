@@ -1,0 +1,14 @@
+// A const that leads back to itself, and an overflow through a const's name. A line ending
+// `// error` reports exactly one error; every other line reports none.
+const i32 R = R + 1; // error
+const i32 A = B * 2; // error
+const i32 B = A + 1; // error
+
+i32 big()
+{
+    return N * 1000000000; // error
+}
+
+const i32 N = 4;
+
+i32 main() { return big(); }

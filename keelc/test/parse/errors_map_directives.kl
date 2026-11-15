@@ -1,0 +1,17 @@
+// Each `@real_arithmetic` and `@trig_` directive below is misplaced or repeated, one error apiece.
+@real_arithmetic
+struct Pair { f64 a; f64 b; };
+
+@real_arithmetic @real_arithmetic
+void twice( out f64 y, f64 x ) { y = x; }
+
+@trig_sin
+f64 angle = 0.5;
+
+@trig_cos @trig_cos
+f64 cosine_twice( f64 x ) { return x; }
+
+@trig_sin @trig_tan
+f64 sine_or_tangent( f64 x ) { return x; }
+
+i32 main() { return 0; }

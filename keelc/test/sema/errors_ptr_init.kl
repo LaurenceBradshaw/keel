@@ -1,0 +1,59 @@
+// `ptr_init( p, v )` needs `unsafe`, a `T*` that does not point to `const`, and a `T`; an owning
+// value is moved in, as at any other write.
+class Owner
+{
+    u8 held;
+
+    public Owner() { held = 0; }
+    ~Owner() { }
+};
+
+void outside( i32* p )
+{
+    ptr_init( p, 1 );
+}
+
+void many( i32[*] slots )
+{
+    unsafe
+    {
+        ptr_init( slots, 1 );
+    }
+}
+
+void not_a_pointer( i32 n )
+{
+    unsafe
+    {
+        ptr_init( n, 1 );
+    }
+}
+
+void read_only( const i32* p )
+{
+    unsafe
+    {
+        ptr_init( p, 1 );
+    }
+}
+
+void wrong_type( i32* p )
+{
+    unsafe
+    {
+        ptr_init( p, true );
+    }
+}
+
+void copied( Owner* p, Owner o )
+{
+    unsafe
+    {
+        ptr_init( p, o );
+    }
+}
+
+i32 main()
+{
+    return 0;
+}

@@ -1,0 +1,18 @@
+// A `where` clause with nothing to constrain, on an enum rather than a function.
+enum Unconstrained where T : copyable
+{
+    Red,
+};
+
+// Recovery: a variant with no name is left out, but the enum is not then empty - it was written with
+// variants, so only the variants are reported.
+enum Nameless
+{
+    3,
+    3,
+};
+
+i32 main()
+{
+    return 0;
+}

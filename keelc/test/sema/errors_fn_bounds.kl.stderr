@@ -1,0 +1,79 @@
+error: nothing here says what `T` is in `first`
+ --> sema/errors_fn_bounds.kl:7:19
+  |
+7 | i32 undeduced() { first( 1, fn[]( x ) { } ); return 0; }
+  |                   ^^^^^ write the type arguments, as in `first<i32, i32>(...)`
+
+error: expected `fn(i32) -> i32`, but got `fn(i32) -> bool`
+ --> sema/errors_fn_bounds.kl:8:31
+  |
+8 | i32 returns() { return apply( fn[]( a ) -> bool { return true; }, 1 ); }
+  |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: this lambda takes 2 parameters, but `fn(i32) -> i32` takes 1
+ --> sema/errors_fn_bounds.kl:9:33
+  |
+9 | i32 arity() { return apply( fn[]( a, b ) -> i32 { return a; }, 1 ); }
+  |                                 ^^^^^^^^
+
+error: expected `fn(i32) -> i32`, but got `fn(i32) -> bool`
+  --> sema/errors_fn_bounds.kl:10:31
+   |
+10 | i32 address() { return apply( &odd, 1 ); }
+   |                               ^^^^ one signature is never widened into another, so the two have to match exactly
+
+error: expected `fn(i32) -> i32`, but got an integer literal
+  --> sema/errors_fn_bounds.kl:11:31
+   |
+11 | i32 literal() { return apply( 5, 1 ); }
+   |                               ^
+
+error: each lambda has a type of its own, so this one cannot be `fn[…] at 12:20`
+  --> sema/errors_fn_bounds.kl:12:32
+   |
+12 | void each() { two( fn[]() { }, fn[]() { } ); }
+   |                                ^^^^^^^^^^ give it a type parameter of its own
+
+error: `F` is a function passed to the call, so it can only be a parameter's type
+  --> sema/errors_fn_bounds.kl:14:1
+   |
+14 | F keep<F>( F f ) where F : fn() -> void { return f; }
+   | ^ call it, or pass it on to a parameter whose type has an `fn` bound
+
+error: `f` is a function passed to this call, so it can only be called or passed on
+  --> sema/errors_fn_bounds.kl:14:50
+   |
+14 | F keep<F>( F f ) where F : fn() -> void { return f; }
+   |                                                  ^
+
+error: `F` is a function passed to the call, so it can only be a parameter's type
+  --> sema/errors_fn_bounds.kl:15:46
+   |
+15 | void hold<F>( F f ) where F : fn() -> void { F* p = nullptr; }
+   |                                              ^ call it, or pass it on to a parameter whose type has an `fn` bound
+
+error: `f` is a function passed to this call, so it can only be called or passed on
+  --> sema/errors_fn_bounds.kl:16:50
+   |
+16 | i32 add<F>( F f ) where F : fn() -> i32 { return f + 1; }
+   |                                                  ^
+
+error: `f` is a function passed to this call, so it can only be called or passed on
+  --> sema/errors_fn_bounds.kl:17:53
+   |
+17 | i32 member<F>( F f ) where F : fn() -> i32 { return f.x; }
+   |                                                     ^
+
+error: `f` is a function passed to this call, so it can only be called or passed on
+  --> sema/errors_fn_bounds.kl:18:61
+   |
+18 | i32 store<F>( F f ) where F : fn() -> i32 { fn() -> i32 g = f; return g(); }
+   |                                                             ^
+
+error: an `fn` bound is written on a function's type parameter
+  --> sema/errors_fn_bounds.kl:19:23
+   |
+19 | struct S<F> where F : fn() -> void { i32 x; };
+   |                       ^^^^^^^^^^^^ a type stores an `fn` value as a field of `fn` type
+
+13 errors generated

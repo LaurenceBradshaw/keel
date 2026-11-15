@@ -1,0 +1,183 @@
+// PLAN D9, D31 and §8 per field. A line ending `// error` reports exactly one error; every other
+// line reports none.
+class Buf
+{
+    u64* data;
+
+    Buf( u64 n )
+    {
+        unsafe
+        {
+            data = alloc<u64>();
+        }
+
+        *data = n;
+    }
+
+    ~Buf()
+    {
+        unsafe
+        {
+            free( data );
+        }
+    }
+
+    u64 get() const
+    {
+        return *data;
+    }
+};
+
+struct S
+{
+    i32 x;
+    i32 y;
+};
+
+class P
+{
+    public Buf a;
+    public Buf b;
+};
+
+// A constructor, so it is assigned whole while it holds nothing.
+class C
+{
+    public Buf b;
+    public u64 n;
+
+    C( u64 v )
+    {
+        b = Buf( v );
+        n = v;
+    }
+};
+
+// Only a destructor, which built whole covers too.
+class E
+{
+    public Buf b;
+    public u64 n;
+
+    ~E()
+    {
+    }
+};
+
+// A constructor's field of a class built whole.
+class Dd
+{
+    public C c;
+
+    Dd()
+    {
+        c.n = 1; // error
+    }
+};
+
+void sink( move Buf b )
+{
+}
+
+void keep( move P p )
+{
+}
+
+void both( move Buf b, ref P p )
+{
+}
+
+void beside( move Buf b, ref Buf other )
+{
+}
+
+i32 half_read()
+{
+    S s;
+    s.x = 1;
+    return s.y; // error
+}
+
+void half_written( out S s ) // error
+{
+    s.x = 1;
+}
+
+void whole_after_a_field( move P p )
+{
+    sink( move p.a );
+    keep( move p ); // error
+}
+
+void maybe_moved( move P p, bool c )
+{
+    if( c )
+    {
+        sink( move p.a );
+    }
+
+    sink( move p.a ); // error
+}
+
+void aliased( move P p )
+{
+    both( move p.a, ref p ); // error
+}
+
+void disjoint( move P p )
+{
+    beside( move p.a, ref p.b );
+}
+
+void borrowed_then_moved( move P p )
+{
+    ref Buf r = p.a;
+    sink( move p.a ); // error
+    r.get();
+}
+
+void piecewise_with_a_constructor()
+{
+    C c;
+    c.n = 1; // error
+}
+
+void piecewise_with_a_destructor()
+{
+    E e;
+    e.n = 1; // error
+}
+
+void piecewise_out( out C c )
+{
+    c.n = 1; // error
+}
+
+void piecewise_maybe( bool k )
+{
+    C c;
+
+    if( k )
+    {
+        c = C( 1 );
+    }
+
+    c.n = 1; // error
+}
+
+void whole_then_field()
+{
+    C c = C( 3 );
+    c.n = 1;
+}
+
+void whole_out_then_field( out C c )
+{
+    c = C( 1 );
+    c.n = 2;
+}
+
+i32 main()
+{
+    return 0;
+}

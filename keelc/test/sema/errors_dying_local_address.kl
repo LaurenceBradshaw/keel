@@ -1,0 +1,41 @@
+// D54: a read through a pointer after the local it was given the address of has ended, on some
+// path. One error per marked line.
+i32 block_scope()
+{
+    i32* p = nullptr;
+    {
+        i32 inner = 1;
+        p         = &inner;
+    }
+    return *p; // error: has ended
+}
+
+// The path that skips the loop leaves `p` null; the one through it leaves `p` dangling.
+i32 loop_scope()
+{
+    i32* p = nullptr;
+    i32  n = 0;
+    while( n < 2 )
+    {
+        i32 inner = n;
+        p         = &inner;
+        n++;
+    }
+    return *p; // error: has ended
+}
+
+i32 copied()
+{
+    i32* p = nullptr;
+    {
+        i32  inner = 1;
+        i32* q     = &inner;
+        p          = q;
+    }
+    return *p; // error: has ended
+}
+
+i32 main()
+{
+    return 0;
+}

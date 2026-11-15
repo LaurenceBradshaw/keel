@@ -1,0 +1,19 @@
+// An `fn` bound takes a lambda or `&f` of its signature, each its own type; `f` is only called or passed on.
+i32 apply<F>( F f, i32 x ) where F : fn( i32 ) -> i32 { return f( x ); }
+void two<F>( F a, F b ) where F : fn() -> void { a(); b(); }
+void first<T, F>( T a, F f ) where F : fn( T ) -> void { }
+bool odd( i32 x ) { return x % 2 != 0; }
+
+i32 undeduced() { first( 1, fn[]( x ) { } ); return 0; }
+i32 returns() { return apply( fn[]( a ) -> bool { return true; }, 1 ); }
+i32 arity() { return apply( fn[]( a, b ) -> i32 { return a; }, 1 ); }
+i32 address() { return apply( &odd, 1 ); }
+i32 literal() { return apply( 5, 1 ); }
+void each() { two( fn[]() { }, fn[]() { } ); }
+
+F keep<F>( F f ) where F : fn() -> void { return f; }
+void hold<F>( F f ) where F : fn() -> void { F* p = nullptr; }
+i32 add<F>( F f ) where F : fn() -> i32 { return f + 1; }
+i32 member<F>( F f ) where F : fn() -> i32 { return f.x; }
+i32 store<F>( F f ) where F : fn() -> i32 { fn() -> i32 g = f; return g(); }
+struct S<F> where F : fn() -> void { i32 x; };

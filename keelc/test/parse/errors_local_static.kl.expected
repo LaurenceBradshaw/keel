@@ -1,0 +1,40 @@
+Source_file                             1:1-22:1
+  Enum_decl                             2:1-6:3     name=level
+    <none>                              -
+    <none>                              -
+    Variant_decl                        4:5-4:8     "low"  name=low
+    Variant_decl                        5:5-5:9     "high"  name=high
+  Function_decl                         8:1-13:2    name=bump
+    Named_type                          8:1-8:4     "i32"
+    Param_list                          8:9-8:11    "()"
+    Block                               9:1-13:2
+      Var_decl                          10:12-10:26 name=count
+        Named_type                      10:12-10:15 "i32"
+        Int_literal                     10:24-10:25 "0"
+      Assign_stmt                       11:5-11:23  op==
+        Name_expr                       11:5-11:10  "count"
+        Binary_expr                     11:13-11:22 op=+
+          Name_expr                     11:13-11:18 "count"
+          Int_literal                   11:21-11:22 "1"
+      Return_stmt                       12:5-12:18
+        Name_expr                       12:12-12:17 "count"
+    <none>                              -
+  Function_decl                         15:1-21:2   name=main
+    Named_type                          15:1-15:4   "i32"
+    Param_list                          15:9-15:11  "()"
+    Block                               16:1-21:2
+      Var_decl                          17:5-17:22  name=accent
+        Named_type                      17:5-17:7   "u8"
+        Error                           17:17-17:21 "'é'"
+      Var_decl                          18:5-18:21  name=euro
+        Named_type                      18:5-18:7   "u8"
+        Error                           18:15-18:20 "'€'"
+      Var_decl                          19:5-19:19  name=two
+        Named_type                      19:5-19:7   "u8"
+        Error                           19:14-19:18 "'ab'"
+      Return_stmt                       20:5-20:19
+        Call_expr                       20:12-20:18
+          Name_expr                     20:12-20:16 "bump"
+          Arg_list                      20:16-20:18 "()"
+          <none>                        -
+    <none>                              -

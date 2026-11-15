@@ -1,0 +1,43 @@
+// The addresses a global's initialiser may not take, one error each.
+struct P
+{
+    i32 x;
+    i32 y;
+};
+
+struct Box<T> where T : copyable
+{
+    T v;
+
+    static i32 made = 0;
+
+    static Box<T> of( T x )
+    {
+        return Box { x };
+    }
+};
+
+T id<T>( T a ) where T : copyable
+{
+    return a;
+}
+
+extern i32 puts( u8* s );
+
+const i32 N = 3;
+i32[2]    pair = [ 1, 2 ];
+
+i32*                  to_const       = &N;
+fn( i32 ) -> i32      generic        = &id<i32>;
+i32*                  generic_static = &Box<i32>::made;
+fn( i32 ) -> Box<i32> generic_method = &Box<i32>::of;
+fn( u8* ) -> i32      c_function     = &puts;
+i32*                  element        = &pair[0];
+field( P ) -> i32     offset         = &P::x;
+i32*                  undeclared     = &nope;
+i32                   also           = nope;
+
+i32 main()
+{
+    return 0;
+}

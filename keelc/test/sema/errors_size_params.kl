@@ -1,0 +1,17 @@
+// A size parameter is a `u64` written before its name. Each declaration below is one error.
+struct Point { i32 x; };
+
+struct Signed<i32 N> { i32 x; };
+
+struct Pointed<Point N> { i32 x; };
+
+struct Bounded<T, u64 N> where T : copyable, where N : copyable { T x; };
+
+struct Typed<u64 N> { N x; };
+
+struct Fine<T, u64 N> where T : copyable { T x; };
+
+i32 main()
+{
+    return 0;
+}

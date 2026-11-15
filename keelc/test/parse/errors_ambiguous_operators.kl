@@ -1,0 +1,3 @@
+i32 bitwise_vs_comparison()  { return a & b == c; }
+i32 shift_vs_additive()      { return a << b + c; }
+i32 logical()                { return a && b || c; }

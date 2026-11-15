@@ -1,0 +1,9 @@
+// A lambda that captures is passed straight to a call; an `fn` value holds no captures.
+i32 apply( fn() -> i32 f ) { return f(); }
+
+struct Holder { fn() -> i32 f; };
+
+void held() { i32 k = 1; auto a = fn[ k ]() -> i32 { return k; }; }
+void typed() { i32 k = 1; fn() -> i32 e = fn[ k ]() -> i32 { return k; }; }
+i32 passed() { i32 k = 1; return apply( fn[ k ]() -> i32 { return k; } ); }
+void in_field() { i32 k = 1; Holder h = Holder { fn[ k ]() -> i32 { return k; } }; }

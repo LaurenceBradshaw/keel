@@ -1,0 +1,19 @@
+error: a pattern does not nest
+  --> sema/errors_switch_nested_pattern.kl:20:27
+   |
+20 |         case Outer::Wrap( Inner::Both( a, b ) ):
+   |                           ^^^^^^^^^^^^^^^^^^^ bind it, and `switch` on the binding inside this arm
+
+error: a pattern does not nest
+  --> sema/errors_switch_nested_pattern.kl:22:27
+   |
+22 |         case Outer::Wrap( Inner::Empty ):
+   |                           ^^^^^^^^^^^^ bind it, and `switch` on the binding inside this arm
+
+error: a pattern does not nest
+  --> sema/errors_switch_nested_pattern.kl:24:27
+   |
+24 |         case Outer::Pair( Inner::Both( x, _ ), n ):
+   |                           ^^^^^^^^^^^^^^^^^^^ bind it, and `switch` on the binding inside this arm
+
+3 errors generated

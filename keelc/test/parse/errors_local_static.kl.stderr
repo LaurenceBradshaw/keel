@@ -1,0 +1,31 @@
+error: a variant cannot be given a value
+ --> parse/errors_local_static.kl:4:9
+  |
+4 |     low = 1,
+  |         ^ a variant's value is its position; Keel has no explicit discriminants
+
+error: a function cannot have a `static`
+  --> parse/errors_local_static.kl:10:5
+   |
+10 |     static i32 count = 0;
+   |     ^^^^^^ declare it at file scope (a `private` one keeps it to this module)
+
+error: a character literal is one byte; `é` is 2 bytes in UTF-8
+  --> parse/errors_local_static.kl:17:17
+   |
+17 |     u8 accent = 'é';
+   |                 ^^^^ write it in a string literal
+
+error: a character literal is one byte; `€` is 3 bytes in UTF-8
+  --> parse/errors_local_static.kl:18:15
+   |
+18 |     u8 euro = '€';
+   |               ^^^^^ write it in a string literal
+
+error: character literal must contain exactly one character
+  --> parse/errors_local_static.kl:19:14
+   |
+19 |     u8 two = 'ab';
+   |              ^^^^ use a string literal for more than one
+
+5 errors generated

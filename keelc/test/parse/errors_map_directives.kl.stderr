@@ -1,0 +1,31 @@
+error: `@real_arithmetic` marks a function or a method
+ --> parse/errors_map_directives.kl:2:1
+  |
+2 | @real_arithmetic
+  | ^^^^^^^^^^^^^^^^
+
+error: `@real_arithmetic` is written twice
+ --> parse/errors_map_directives.kl:5:18
+  |
+5 | @real_arithmetic @real_arithmetic
+  |                  ^^^^^^^^^^^^^^^^
+
+error: a `@trig_` directive marks a function or a method
+ --> parse/errors_map_directives.kl:8:1
+  |
+8 | @trig_sin
+  | ^^^^^^^^^
+
+error: `@trig_cos` is written twice
+  --> parse/errors_map_directives.kl:11:11
+   |
+11 | @trig_cos @trig_cos
+   |           ^^^^^^^^^
+
+error: `@trig_tan` after another `@trig_` directive
+  --> parse/errors_map_directives.kl:14:11
+   |
+14 | @trig_sin @trig_tan
+   |           ^^^^^^^^^ a function is one of sin, cos and tan
+
+5 errors generated

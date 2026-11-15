@@ -1,0 +1,85 @@
+error: `v` is a member, and this lambda does not capture `this`
+  --> sema/errors_lambda_captures.kl:12:35
+   |
+12 |     void member() { run( fn[]() { v = 1; } ); }
+   |                                   ^ capture it: `fn[this]` reads through it, `fn[ref this]` writes through it
+
+error: `this` is not captured by this lambda
+  --> sema/errors_lambda_captures.kl:13:41
+   |
+13 |     void through_this() { run( fn[]() { this.v = 1; } ); }
+   |                                         ^^^^ capture it: `fn[this]` reads through it, `fn[ref this]` writes through it
+
+error: `v` is a member, so a lambda reaches it through `this`
+  --> sema/errors_lambda_captures.kl:14:37
+   |
+14 |     void field_capture() { run( fn[ v ]() { } ); }
+   |                                     ^ capture `this`: `fn[this]` reads it, `fn[ref this]` writes it
+
+error: `this` is captured read-only, so its object cannot be modified
+  --> sema/errors_lambda_captures.kl:15:49
+   |
+15 |     void read_only_this() { run( fn[ this ]() { v = 1; } ); }
+   |                                                 ^ capture it as `ref this`
+
+error: `this` is captured read-only, so `bump`, which may modify the object, cannot be called
+  --> sema/errors_lambda_captures.kl:16:49
+   |
+16 |     void read_only_call() { run( fn[ this ]() { bump(); } ); }
+   |                                                 ^^^^ capture it as `ref this`
+
+error: a `const` method cannot modify its object
+  --> sema/errors_lambda_captures.kl:17:37
+   |
+17 |     i32 peek() const { run( fn[ ref this ]() { } ); return v; }
+   |                                     ^^^^ remove `const` from `peek` so it can modify its object
+
+error: `x` is not captured by this lambda
+  --> sema/errors_lambda_captures.kl:20:46
+   |
+20 | void uncaptured() { i32 x = 0; run( fn[]() { x += 1; } ); }
+   |                                              ^ capture it: `fn[x]` reads it, `fn[ref x]` writes it
+
+error: `x` is not captured by this lambda
+  --> sema/errors_lambda_captures.kl:21:48
+   |
+21 | void uncaptured_param( i32 x ) { run( fn[]() { x += 1; } ); }
+   |                                                ^ capture it: `fn[x]` reads it, `fn[ref x]` writes it
+
+error: `x` is not captured by this lambda
+  --> sema/errors_lambda_captures.kl:22:67
+   |
+22 | void nested() { i32 x = 0; run( fn[ x ]() { run( fn[]() { i32 y = x; } ); } ); }
+   |                                                                   ^ capture it: `fn[x]` reads it, `fn[ref x]` writes it
+
+error: `g` is not a local, so it cannot be captured
+  --> sema/errors_lambda_captures.kl:23:26
+   |
+23 | void global() { run( fn[ g ]() { } ); }
+   |                          ^ a lambda names globals, functions and types without capturing them
+
+error: `x` is already declared in this scope
+  --> sema/errors_lambda_captures.kl:24:43
+   |
+24 | void twice() { i32 x = 0; run( fn[ x, ref x ]() { } ); }
+   |                                           ^ previous declaration is at: sema/errors_lambda_captures.kl:24:36
+
+error: `x` shadows an outer declaration
+  --> sema/errors_lambda_captures.kl:25:51
+   |
+25 | void shadowed() { i32 x = 0; run( fn[ x ]() { i32 x = 1; } ); }
+   |                                                   ^ previous declaration is at: sema/errors_lambda_captures.kl:25:39
+
+error: `x` is captured read-only, so it cannot be modified
+  --> sema/errors_lambda_captures.kl:26:48
+   |
+26 | void read_only() { i32 x = 0; run( fn[ x ]() { x = 2; } ); }
+   |                                                ^ capture it as `ref x`
+
+error: a capture cannot be moved
+  --> sema/errors_lambda_captures.kl:27:57
+   |
+27 | void moved() { i32 x = 0; run( fn[ x ]() { i32 z = move x; } ); }
+   |                                                         ^ `x` belongs to where the lambda is written; a lambda only copies or borrows it
+
+14 errors generated

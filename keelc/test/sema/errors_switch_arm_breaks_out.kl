@@ -1,0 +1,60 @@
+// An arm still runs on when its last `switch` or `while( true )` can be left by a `break`.
+enum Shape
+{
+    Circle,
+    Square,
+};
+
+i32 nested( Shape a, Shape b )
+{
+    switch( a )
+    {
+        case Shape::Circle:
+            switch( b )
+            {
+                case Shape::Circle: return 1;
+                case Shape::Square:
+                    if( a == Shape::Circle )
+                    {
+                        break;
+                    }
+                    return 2;
+            }
+        case Shape::Square: return 3;
+    }
+    return 0;
+}
+
+i32 spins( i32 n )
+{
+    switch( n )
+    {
+        case 0:
+            while( true )
+            {
+                if( n == 5 )
+                {
+                    break;
+                }
+                n = n + 1;
+            }
+        default: return -1;
+    }
+}
+
+i32 inner_loop( i32 n )
+{
+    // Accepted: the `break` leaves only the inner loop, so the outer one never ends.
+    switch( n )
+    {
+        case 0:
+            while( true )
+            {
+                while( true )
+                {
+                    break;
+                }
+            }
+        default: return -1;
+    }
+}

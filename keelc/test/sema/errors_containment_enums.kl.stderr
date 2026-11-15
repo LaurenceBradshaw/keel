@@ -1,0 +1,25 @@
+error: `MList` contains itself, so it has no size
+ --> sema/errors_containment_enums.kl:2:1
+  |
+2 | enum MList
+  | ^^^^^^^^^^ MList -> MList; hold one through `box`
+
+error: `P` contains itself, so it has no size
+ --> sema/errors_containment_enums.kl:9:1
+  |
+9 | struct P
+  | ^^^^^^^^ P -> Q -> P; hold one through `box`
+
+error: `Object_type` contains itself, so it has no size
+  --> sema/errors_containment_enums.kl:22:1
+   |
+22 | enum Object_type
+   | ^^^^^^^^^^^^^^^^ Object_type -> Type_sig -> Object_type; hold one through `box`
+
+error: `Loop` contains itself, so it has no size
+  --> sema/errors_containment_enums.kl:41:1
+   |
+41 | struct Loop
+   | ^^^^^^^^^^^ Loop -> Holder -> Loop; hold one through `box`
+
+4 errors generated

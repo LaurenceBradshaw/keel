@@ -1,0 +1,25 @@
+error: `by_ref` returns a const ref, so it cannot be modified
+  --> sema/errors_reference_return_writes.kl:41:5
+   |
+41 |     by_ref( a ).t = 2;
+   |     ^^^^^^^^^^^^^ a `const ref` result is read-only
+
+error: `by_ref` returns a const ref, so it cannot be modified
+  --> sema/errors_reference_return_writes.kl:42:5
+   |
+42 |     by_ref( a ).t++;
+   |     ^^^^^^^^^^^^^ a `const ref` result is read-only
+
+error: `get` returns a const ref, so it cannot be modified
+  --> sema/errors_reference_return_writes.kl:46:5
+   |
+46 |     h.get().t = 5;
+   |     ^^^^^^^^^ a `const ref` result is read-only
+
+error: `by_ref` returns a const ref, so it cannot be modified
+  --> sema/errors_reference_return_writes.kl:49:17
+   |
+49 |     ref i32 r = by_ref( a ).t;
+   |                 ^^^^^^^^^^^^^ a `const ref` result is read-only
+
+4 errors generated

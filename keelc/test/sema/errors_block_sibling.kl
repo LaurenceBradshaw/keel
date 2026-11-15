@@ -1,0 +1,18 @@
+// A block's method answers its interface: inside the block, `this` reaches it once bound as that
+// interface; elsewhere every interface declaring the name is named.
+interface to_primitive { i32 to_int() const; };
+interface adder { i32 to_int() const; i32 plus( i32 n ) const; };
+
+implements to_primitive for i32 { i32 to_int() const { return this; } };
+
+implements adder for i32
+{
+    i32 to_int() const { return this; }
+    i32 plus( i32 n ) const { return this.to_int() + n.to_int(); }
+};
+
+i32 main()
+{
+    i32 x = 3;
+    return x.to_int();
+}

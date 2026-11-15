@@ -1,0 +1,7 @@
+// A lambda's types come from what it says or the `fn` type expected of it.
+void untyped() { auto b = fn[]( x ) -> i32 { return x; }; }
+void count() { fn( i32 ) -> i32 d = fn[]( i32 p, i32 q ) -> i32 { return p; }; }
+void parameter() { fn( i32 ) -> i32 f = fn[]( i64 p ) -> i32 { return 0; }; }
+void unsaid() { auto c = fn[]() { return 3; }; }
+void nothing() { fn() -> void v = fn[]() { return 3; }; }
+void result() { fn() -> i32 r = fn[]() -> bool { return true; }; }

@@ -1,0 +1,49 @@
+error: `n` is not callable
+  --> sema/errors_function_pointer_field.kl:22:16
+   |
+22 |         return n();
+   |                ^
+
+error: `cb` is a field, and there is no object here to read it from
+  --> sema/errors_function_pointer_field.kl:28:16
+   |
+28 |         return cb( 1 );
+   |                ^^ take one as a parameter, or make this a method
+
+error: `cb` takes 1 argument, but 0 were given
+  --> sema/errors_function_pointer_field.kl:56:17
+   |
+56 |     i32 a = h.cb();
+   |                 ^^
+
+error: expected `i32`, but got `bool`
+  --> sema/errors_function_pointer_field.kl:57:19
+   |
+57 |     i32 b = h.cb( true );
+   |                   ^^^^
+
+error: `cb` is not a generic
+  --> sema/errors_function_pointer_field.kl:58:17
+   |
+58 |     i32 c = h.cb<i32>( 1 );
+   |                 ^^^^^
+
+error: `n` is a field of `Holder`, not a method; it cannot be called
+  --> sema/errors_function_pointer_field.kl:59:13
+   |
+59 |     i32 d = h.n();
+   |             ^^^
+
+error: `hidden` is private to `Guard`
+  --> sema/errors_function_pointer_field.kl:62:15
+   |
+62 |     i32   e = g.hidden();
+   |               ^^^^^^^^ only that type's own members may name it
+
+error: `step` may modify this argument
+  --> sema/errors_function_pointer_field.kl:66:13
+   |
+66 |     k.step( v );
+   |             ^ write `ref`
+
+8 errors generated

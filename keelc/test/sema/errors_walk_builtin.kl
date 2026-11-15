@@ -1,0 +1,38 @@
+// D74: the compiler's walk of a run or an array yields each element, unnamed, and writes only what
+// may be written. One error per marked line.
+void zero( const ref i32[] values )
+{
+    for( ref i32 v : values ) // error: `values` is read-only
+    {
+        v = 0;
+    }
+}
+
+i32 main()
+{
+    i32[2] a = [ 1, 2 ];
+    i32    sum = 0;
+
+    for( [ value ] : a ) // error: no names
+    {
+        sum += value;
+    }
+
+    for( const ref i64 v : a ) // error: yields `i32`
+    {
+        sum += 1;
+    }
+
+    const i32[2] b = [ 3, 4 ];
+    for( ref i32 v : b ) // error: `b` is const
+    {
+        v = 0;
+    }
+
+    for( i32 v : a )
+    {
+        v = 0; // error: bare is read-only
+    }
+
+    return sum;
+}

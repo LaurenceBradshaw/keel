@@ -1,0 +1,10 @@
+// Only the prelude's `str` qualifies: a program's own, of the same name, does not.
+class str
+{
+    public u64 size;
+};
+
+i32 main( const ref str[] args )
+{
+    return 0;
+}

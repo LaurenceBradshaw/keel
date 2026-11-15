@@ -1,0 +1,7 @@
+error: expected `mine`, but got `str`
+  --> sema/errors_string_literal_own_from.kl:18:14
+   |
+18 |     mine m = "abc";
+   |              ^^^^^ a string literal becomes a `mine` only if `mine` implements the prelude's `from<str>`
+
+1 error generated

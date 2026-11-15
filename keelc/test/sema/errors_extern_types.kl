@@ -1,0 +1,27 @@
+// What C cannot read by value: one error per annotation, with what to pass instead.
+class handle { i32 fd; ~handle() {} };
+enum shape { circle( f64 r ), dot };
+struct pair<T> where T : copyable { T a; T b; };
+struct label { str text; };
+interface measured { f64 size() const; };
+
+extern void close( move handle h );
+extern handle open();
+extern void name( str s );
+extern void draw( shape s );
+extern void both( pair<i32> p );
+extern void tag( label l );
+extern void weigh( measured* m );
+extern void count( ref measured m );
+extern void fill( i32[4] a );
+extern const ref u8[] read_all();
+extern void call( fn( str ) -> i32 cb );
+
+// Behind a pointer, and a struct of what C can read, all cross.
+struct point { i32 x; i32 y; i32[2] spare; };
+extern point move_to( ref handle h, const ref label l, point to, handle* raw );
+
+i32 main()
+{
+    return 0;
+}

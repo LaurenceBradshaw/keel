@@ -1,0 +1,68 @@
+// D7's three rules about an arm's shape. Each of these compiled before, and two of them meant
+// something other than they appear to.
+enum Shape { Circle( i32 r ), Rect( i32 w, i32 h ), Dot };
+
+enum E { A, B, C };
+
+i32 runs_on( E e )
+{
+    i32 t = 0;
+
+    switch( e )
+    {
+        case E::A:
+            t = 1;
+        case E::B:
+        case E::C:
+            t = 2;
+    }
+
+    return t;
+}
+
+i32 stacks_a_binding( Shape s )
+{
+    switch( s )
+    {
+        case Shape::Circle( r ):
+        case Shape::Rect( w, h ):
+            return 1;
+        case Shape::Dot:
+            return 0;
+    }
+}
+
+i32 falls_into_a_binding( Shape s )
+{
+    switch( s )
+    {
+        case Shape::Circle:
+            fallthrough;
+        case Shape::Rect( w, h ):
+            return w;
+        case Shape::Dot:
+            return 0;
+    }
+}
+
+void falls_from_the_last( E e )
+{
+    switch( e )
+    {
+        case E::A:
+            break;
+        case E::B:
+        case E::C:
+            fallthrough;
+    }
+}
+
+void falls_from_nowhere()
+{
+    fallthrough;
+}
+
+i32 main()
+{
+    return 0;
+}

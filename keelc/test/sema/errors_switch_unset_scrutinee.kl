@@ -1,0 +1,31 @@
+// An unset scrutinee is reported under the scrutinee, not under the first label that tests it.
+enum Colour : u8
+{
+    Red,
+    Green,
+};
+
+i32 of_enum()
+{
+    Colour c;
+    switch( c )
+    {
+        case Colour::Red: return 1;
+        default: return 0;
+    }
+}
+
+i32 of_number()
+{
+    i32 n;
+    switch( n )
+    {
+        case 1: return 1;
+        default: return 0;
+    }
+}
+
+i32 main()
+{
+    return of_enum() + of_number();
+}

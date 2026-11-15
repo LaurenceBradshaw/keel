@@ -1,0 +1,40 @@
+// M9.5: what `box` refuses. Only the prelude's `box` takes an interface as its type argument, and
+// only by converting a box of an implementer: it is never built from a `Shape`, never converted
+// from a non-implementer or back to an implementer, copied, or borrowed as another box's type.
+// Each mistake is reported once, where it was made.
+interface Shape
+{
+    f64 area() const;
+};
+
+struct Square implements Shape
+{
+    f64 side;
+
+    f64 area() const { return side * side; }
+};
+
+struct Point
+{
+    f64 x;
+};
+
+class Holder<T>
+{
+    T* p;
+};
+
+void hold( Holder<Shape>* h ) { }
+
+i32 main()
+{
+    box<Shape>  built = box<Shape>( Square { 1.0 } );
+    box<Point>  point = box<Point>( Point { 1.0 } );
+    box<Shape>  wrong = move point;
+    box<Square> plain = box<Square>( Square { 1.0 } );
+    box<Shape>  copy  = plain;
+    ref box<Shape> borrowed = plain;
+    box<Shape>  shape = move plain;
+    box<Square> back  = move shape;
+    return 0;
+}

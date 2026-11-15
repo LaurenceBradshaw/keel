@@ -1,0 +1,21 @@
+// One error each, and no cascade.
+enum level
+{
+    low = 1,
+    high
+};
+
+i32 bump()
+{
+    static i32 count = 0;
+    count = count + 1;
+    return count;
+}
+
+i32 main()
+{
+    u8 accent = 'é';
+    u8 euro = '€';
+    u8 two = 'ab';
+    return bump();
+}

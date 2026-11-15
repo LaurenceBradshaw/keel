@@ -1,0 +1,55 @@
+error: an interface's method cannot be `@located`
+ --> sema/errors_located.kl:6:5
+  |
+6 |     f64 area() const;
+  |     ^^^^^^^^^^^^^^^^^ a call through the interface has no caller to pass on
+
+error: `Square`'s `id` cannot be `@located`, since it answers `Named`
+  --> sema/errors_located.kl:14:25
+   |
+14 | class Square implements Named
+   |                         ^^^^^ a call through `Named` passes no location; move the `@located` work into a method `Named` does not declare
+
+error: `i64`'s `id` cannot be `@located`, since it answers `Named`
+  --> sema/errors_located.kl:24:12
+   |
+24 | implements Named for i64
+   |            ^^^^^ a call through `Named` passes no location; move the `@located` work into a method `Named` does not declare
+
+error: `@caller()` is only meaningful inside an `@located` function
+  --> sema/errors_located.kl:39:19
+   |
+39 |     location at = @caller();
+   |                   ^^^^^^^^^ write `@located` on the line above `plain`
+
+error: expected `location`, but got an integer literal
+  --> sema/errors_located.kl:45:18
+   |
+45 |     panic( "no", 3 );
+   |                  ^
+
+error: `main` cannot be `@located`
+  --> sema/errors_located.kl:49:1
+   |
+49 | i32 main()
+   | ^^^^^^^^^^ nothing in the program calls it, so it has no caller
+
+error: `traced` is `@located`, so it has no address
+  --> sema/errors_located.kl:51:22
+   |
+51 |     fn() -> void p = &traced;
+   |                      ^^^^^^^ a call through a pointer has no caller to pass on; call it directly, or wrap it in a function that is not `@located`
+
+error: `make` is `@located`, so it has no address
+  --> sema/errors_located.kl:52:21
+   |
+52 |     fn() -> i32 q = &Square::make;
+   |                     ^^^^^^^^^^^^^ a call through a pointer has no caller to pass on; call it directly, or wrap it in a function that is not `@located`
+
+error: `picked` is `@located`, so it has no address
+  --> sema/errors_located.kl:53:27
+   |
+53 |     fn( i32 ) -> void r = &picked;
+   |                           ^^^^^^^ a call through a pointer has no caller to pass on; call it directly, or wrap it in a function that is not `@located`
+
+9 errors generated

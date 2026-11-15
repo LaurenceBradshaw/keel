@@ -1,0 +1,43 @@
+error: a default cannot read the object it builds
+  --> sema/errors_field_defaults.kl:10:14
+   |
+10 |     i32  y = x;
+   |              ^ it runs before `Point` holds a value
+
+error: expected `bool`, but got an integer literal
+  --> sema/errors_field_defaults.kl:11:14
+   |
+11 |     bool b = 3;
+   |              ^
+
+error: a default cannot read the object it builds
+  --> sema/errors_field_defaults.kl:12:14
+   |
+12 |     i32  z = this.x;
+   |              ^^^^ it runs before `Point` holds a value
+
+error: a default cannot read the object it builds
+  --> sema/errors_field_defaults.kl:13:14
+   |
+13 |     i32  w = area();
+   |              ^^^^ it runs before `Point` holds a value
+
+error: a default cannot `try`
+  --> sema/errors_field_defaults.kl:26:20
+   |
+26 |     public i32 n = try parse();
+   |                    ^^^^^^^^^^^ it runs where the object is built, and has no caller to pass the error to
+
+error: `Pair` has 2 fields, but 1 was given
+  --> sema/errors_field_defaults.kl:38:15
+   |
+38 |     Pair  q = Pair { 2 };      // positional lists every field
+   |               ^^^^
+
+error: field `b` is not initialised
+  --> sema/errors_field_defaults.kl:39:15
+   |
+39 |     Pair  r = Pair {};         // `b` has no default
+   |               ^^^^
+
+7 errors generated

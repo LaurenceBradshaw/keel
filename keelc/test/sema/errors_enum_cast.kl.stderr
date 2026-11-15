@@ -1,0 +1,31 @@
+error: `wrap` cannot convert `Suit` to `u8`
+  --> sema/errors_enum_cast.kl:37:14
+   |
+37 |     u8   a = wrap<u8>( s );
+   |              ^^^^^^^^^^^^^ an `enum`'s tag converts with `cast`
+
+error: `cast` cannot convert `i32` to `Suit`
+  --> sema/errors_enum_cast.kl:38:14
+   |
+38 |     Suit b = cast<Suit>( one );
+   |              ^^^^^^^^^^^^^^^^^
+
+error: `cast` cannot convert `Suit` to `f64`
+  --> sema/errors_enum_cast.kl:39:14
+   |
+39 |     f64  c = cast<f64>( s );
+   |              ^^^^^^^^^^^^^^ an `enum`'s tag converts only to an integer
+
+error: `cast` cannot convert `Shape` to `u8`
+  --> sema/errors_enum_cast.kl:40:14
+   |
+40 |     u8   e = cast<u8>( d );
+   |              ^^^^^^^^^^^^^ only an `enum` without payloads converts to its tag
+
+error: `cast` cannot convert `Many` to `i8`
+  --> sema/errors_enum_cast.kl:41:14
+   |
+41 |     i8   f = cast<i8>( m );
+   |              ^^^^^^^^^^^^^ its last tag is 128, which `i8` cannot hold
+
+5 errors generated

@@ -1,0 +1,7 @@
+error: `limit` already holds a value here
+  --> sema/errors_constructor_defaults.kl:11:13
+   |
+11 |             limit = 1;
+   |             ^^^^^^^^^^ `limit` has a default, so assign it on every path or on none
+
+1 error generated

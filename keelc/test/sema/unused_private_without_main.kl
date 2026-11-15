@@ -1,0 +1,4 @@
+// A file with no `main` is a module of a program it cannot see, whose `@functions_of` may list its
+// private functions, so a test-shaped one stays quiet; a generic one no list can hold still warns.
+private void listed( i32 _ ) {}
+private T kept<T>( move T t ) { return t; }

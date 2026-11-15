@@ -1,0 +1,19 @@
+error: `200` does not fit in `i8`
+ --> sema/errors_parenthesised_span.kl:4:13
+  |
+4 |     i8  z = ( 100 ) * 2; // error
+  |             ^^^^^^^^^^^
+
+error: `200` does not fit in `i8`
+ --> sema/errors_parenthesised_span.kl:5:13
+  |
+5 |     i8  w = 2 * ( 100 ); // error
+  |             ^^^^^^^^^^^
+
+error: `2147483648` does not fit in `i32`
+ --> sema/errors_parenthesised_span.kl:6:13
+  |
+6 |     i32 q = ( -2147483647 - 1 ) / -1; // error
+  |             ^^^^^^^^^^^^^^^^^^^^^^^^
+
+3 errors generated

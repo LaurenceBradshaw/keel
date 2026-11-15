@@ -1,0 +1,7 @@
+error: `str[]` is a run, so it is reached only through `ref`
+ --> sema/errors_main_arguments_value.kl:2:11
+  |
+2 | i32 main( str[] args )
+  |           ^^^^^ borrow it as `const ref str[]`, or point at its elements with `str[*]`
+
+1 error generated

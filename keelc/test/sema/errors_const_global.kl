@@ -1,0 +1,14 @@
+// A global or static `const` can never change, so it takes its value where it is declared. A line
+// ending `// error` reports exactly one error; every other line reports none.
+const i32 Z; // error
+const i32 ONE = 1;
+i32 blank;
+
+struct S
+{
+    i32 x;
+    static const u8 limit; // error
+    static u8 count;
+};
+
+i32 main() { return Z + ONE + blank; }

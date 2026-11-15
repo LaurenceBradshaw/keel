@@ -1,0 +1,8 @@
+// A `~` over a literal adopts only an integer context, and its operand is range-checked there.
+i32 main()
+{
+    f32 f = ~0;
+    u8  b = ~256;
+    f64 g = ~1.5;
+    return 0;
+}

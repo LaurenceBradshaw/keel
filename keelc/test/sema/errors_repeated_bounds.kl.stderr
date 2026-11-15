@@ -1,0 +1,37 @@
+error: `copyable` is named twice for `T`
+  --> sema/errors_repeated_bounds.kl:11:43
+   |
+11 | void twice<T>( T _ ) where T : copyable & copyable { }
+   |                                           ^^^^^^^^ remove one
+
+error: `Shape` is named twice for `T`
+  --> sema/errors_repeated_bounds.kl:12:60
+   |
+12 | void twice_interface<T>( const ref T _ ) where T : Shape & Shape { }
+   |                                                            ^^^^^ remove one
+
+error: `Sorted` needs a `T` that implements `comparable`, but `Plain` does not
+  --> sema/errors_repeated_bounds.kl:17:12
+   |
+17 |     Sorted<Plain> s = Sorted( x );
+   |            ^^^^^ declare `Plain` with `implements equatable, comparable`
+
+error: `copyable` already names a bound
+  --> sema/errors_repeated_bounds.kl:20:18
+   |
+20 | void hides_bound<copyable>( copyable _ ) { }
+   |                  ^^^^^^^^ a type parameter would hide it; give it a name of its own, such as `T`
+
+error: `Shape` already names an interface
+  --> sema/errors_repeated_bounds.kl:21:22
+   |
+21 | void hides_interface<Shape>( Shape _ ) { }
+   |                      ^^^^^ a type parameter would hide it; give it a name of its own, such as `T`
+
+error: `Plain` already names a type
+  --> sema/errors_repeated_bounds.kl:22:19
+   |
+22 | void hides_struct<Plain>( Plain _ ) { }
+   |                   ^^^^^ a type parameter would hide it; give it a name of its own, such as `T`
+
+6 errors generated

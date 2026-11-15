@@ -1,0 +1,19 @@
+// A module finds one `@dft` for each N: two generics, or two fixed at one N, are one error a pair;
+// a fixed one beside a generic, and two fixed at different N, are fine.
+
+@dft
+void first<u64 N>( const ref f64[N] re, const ref f64[N] im, ref f64[N] yr, ref f64[N] yi ) {}
+
+@dft
+void second<u64 N>( const ref f64[N] re, const ref f64[N] im, ref f64[N] yr, ref f64[N] yi ) {}
+
+@dft
+void eight( const ref f64[8] re, const ref f64[8] im, ref f64[8] yr, ref f64[8] yi ) {}
+
+@dft
+void also_eight( const ref f64[8] re, const ref f64[8] im, ref f64[8] yr, ref f64[8] yi ) {}
+
+@dft
+void four( const ref f64[4] re, const ref f64[4] im, ref f64[4] yr, ref f64[4] yi ) {}
+
+i32 main() { return 0; }

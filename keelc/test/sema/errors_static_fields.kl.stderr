@@ -1,0 +1,61 @@
+error: a static field of `Point` needs an initialiser
+  --> sema/errors_static_fields.kl:26:12
+   |
+26 |     static Point origin;
+   |            ^^^^^^^^^^^^^ its field `x` has no default
+
+error: a `str` static field needs a value
+  --> sema/errors_static_fields.kl:29:12
+   |
+29 |     static str label;
+   |            ^^^^^^^^^^ write `= ""` for an empty one
+
+error: field `id` is already declared
+  --> sema/errors_static_fields.kl:34:9
+   |
+34 |     i32 id;
+   |         ^^ previous declaration is at: sema/errors_static_fields.kl:32:12
+
+error: a static field's type cannot name a type parameter yet
+  --> sema/errors_static_fields.kl:44:12
+   |
+44 |     static T last;
+   |            ^^^^^^^
+
+error: `limit` is static, so it belongs to `Counter` rather than to one object
+  --> sema/errors_static_fields.kl:49:12
+   |
+49 |     return c.limit;
+   |            ^^^^^^^ write `Counter::limit`
+
+error: `made` is private to `Counter`
+  --> sema/errors_static_fields.kl:54:13
+   |
+54 |     i32 b = Counter::made;       // private
+   |             ^^^^^^^^^^^^^ only that type's own members may name it
+
+error: `Counter` has no static field `nope`
+  --> sema/errors_static_fields.kl:55:13
+   |
+55 |     i32 d = Counter::nope;       // nothing of that name
+   |             ^^^^^^^^^^^^^
+
+error: `cap` is `const`
+  --> sema/errors_static_fields.kl:56:5
+   |
+56 |     Counter::cap = 4;            // const
+   |     ^^^^^^^^^^^^ remove `const` to modify it
+
+error: `Box` needs its type arguments here
+  --> sema/errors_static_fields.kl:57:13
+   |
+57 |     i32 e = Box::made;           // which instantiation
+   |             ^^^ write `Box< ... >::made`
+
+error: `Counter` is not a generic
+  --> sema/errors_static_fields.kl:58:13
+   |
+58 |     i32 f = Counter<i32>::limit; // not generic
+   |             ^^^^^^^^^^^^^^^^^^^
+
+10 errors generated

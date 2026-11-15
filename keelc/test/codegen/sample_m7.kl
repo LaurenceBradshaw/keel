@@ -1,7 +1,7 @@
 // M7's acceptance program: every feature of the milestone in one program that checks its own answer.
 // A class hides its representation behind a named constructor, and positions are filtered through
 // function pointers, method pointers and field types. The refusals the acceptance also names are
-// diagnostics, so they live in the errors_sample_m7 test of sema/diagnostics_tests.cpp.
+// diagnostics, so they live in sema/errors_sample_m7.kl.
 
 struct Fix
 {

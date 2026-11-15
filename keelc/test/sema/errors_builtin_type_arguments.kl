@@ -1,0 +1,8 @@
+// A builtin type is a known name that takes no type arguments.
+i32 main()
+{
+    i32<u8> x = 1; // error
+    bool<i32> y = true; // error
+
+    return 0;
+}

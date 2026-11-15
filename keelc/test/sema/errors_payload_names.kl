@@ -1,0 +1,21 @@
+// A payload field is named; the switch that reads one stays quiet.
+enum List
+{
+    empty,
+    link( i32, box<List> ),
+};
+
+enum Shape
+{
+    circle( f64 ),
+    square( f64 side, f64 ),
+};
+
+i32 head( const ref List l )
+{
+    switch( l )
+    {
+        case List::empty: return 0;
+        case List::link( v, rest ): return v;
+    }
+}

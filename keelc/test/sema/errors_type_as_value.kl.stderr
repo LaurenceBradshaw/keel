@@ -1,0 +1,37 @@
+error: `T` is a type, not a value
+  --> sema/errors_type_as_value.kl:15:14
+   |
+15 |     T copy = T;
+   |              ^
+
+error: `Point` is a type, not a value
+  --> sema/errors_type_as_value.kl:21:16
+   |
+21 |     Point  p = Point;
+   |                ^^^^^
+
+error: `Point` is a type, not a value
+  --> sema/errors_type_as_value.kl:22:17
+   |
+22 |     Point* q = &Point;
+   |                 ^^^^^
+
+error: `Colour` is a type, not a value
+  --> sema/errors_type_as_value.kl:23:5
+   |
+23 |     Colour = Colour::Red;
+   |     ^^^^^^
+
+error: `Point` is a type, not a value
+  --> sema/errors_type_as_value.kl:24:16
+   |
+24 |     i32    n = Point + 1;
+   |                ^^^^^
+
+error: `Colour` is a type, not a value
+  --> sema/errors_type_as_value.kl:26:12
+   |
+26 |     return Colour;
+   |            ^^^^^^
+
+6 errors generated

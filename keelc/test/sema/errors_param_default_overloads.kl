@@ -1,0 +1,24 @@
+// D79: an overload with defaults that some call could not tell apart from another is refused.
+i32 f( i32 a ) { return a; }
+i32 f( i32 a, i32 b = 0 ) { return a + b; }
+
+i32 g( i32 a, f64 b = 0.0 ) { return a; }
+i32 g( i32 a, i64 b = 0 ) { return a; }
+
+// Accepted: the first parameter tells every call apart.
+i32 h( i64 a, i32 b = 0 ) { return b; }
+i32 h( f64 a, i32 b = 0 ) { return b; }
+
+struct S
+{
+    i32 n;
+
+    i32 m( i32 a = 0 ) const { return a; }
+    i32 m() const { return 1; }
+};
+
+i32 main()
+{
+    const i64 wide = 1;
+    return h( wide ) + h( 1.5, 2 );
+}

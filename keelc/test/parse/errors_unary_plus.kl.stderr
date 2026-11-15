@@ -1,0 +1,7 @@
+error: expected an expression, found `+`
+ --> parse/errors_unary_plus.kl:5:13
+  |
+5 |     i32 y = +x; // error
+  |             ^ there is no unary `+`: write the operand on its own
+
+1 error generated

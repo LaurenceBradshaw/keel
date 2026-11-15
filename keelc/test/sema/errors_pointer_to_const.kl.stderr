@@ -1,0 +1,67 @@
+error: expected `i32*`, but got `const i32*`
+  --> sema/errors_pointer_to_const.kl:23:18
+   |
+23 |         i32* p = &n;
+   |                  ^^ a pointer to `const` never converts back to one that writes
+
+error: this is reached through a `const i32*`, so it cannot be modified
+  --> sema/errors_pointer_to_const.kl:33:5
+   |
+33 |     *q = 1;
+   |     ^^ a pointer to `const` only reads what it points at
+
+error: this is reached through a `const Point*`, so it cannot be modified
+  --> sema/errors_pointer_to_const.kl:38:5
+   |
+38 |     q.x = 1;
+   |     ^^^ a pointer to `const` only reads what it points at
+
+error: this is reached through a `const i32[*]`, so it cannot be modified
+  --> sema/errors_pointer_to_const.kl:45:9
+   |
+45 |         q[ 0 ] = 1;
+   |         ^^^^^^ a pointer to `const` only reads what it points at
+
+error: `bump` may modify its object, which is reached through a `const Counter*`
+  --> sema/errors_pointer_to_const.kl:51:5
+   |
+51 |     q.bump();
+   |     ^ a pointer to `const` can call only `const` methods
+
+error: expected `i32*`, but got `const i32*`
+  --> sema/errors_pointer_to_const.kl:56:14
+   |
+56 |     i32* w = q;
+   |              ^ a pointer to `const` never converts back to one that writes
+
+error: expected `const i32**`, but got `i32**`
+  --> sema/errors_pointer_to_const.kl:61:21
+   |
+61 |     const i32** q = raw;
+   |                     ^^^
+
+error: `free` cannot release a `const u8[*]`, which points to `const`
+  --> sema/errors_pointer_to_const.kl:68:9
+   |
+68 |         free( q );
+   |         ^^^^^^^^^ if it came from `alloc`, `cast<u8[*]>` it back first
+
+error: `const` goes before the type
+  --> sema/errors_pointer_to_const.kl:74:9
+   |
+74 |     i32 const* q = nullptr;
+   |         ^^^^^ write `const i32*`
+
+error: `const` is written twice
+  --> sema/errors_pointer_to_const.kl:79:15
+   |
+79 |     const i32 const* q = nullptr;
+   |               ^^^^^ both apply to `i32`; a `const` after the `*` makes the pointer `const`
+
+error: expected `i32*`, but got `const i32*`
+  --> sema/errors_pointer_to_const.kl:85:19
+   |
+85 |     i32*      p = &k;
+   |                   ^^ a pointer to `const` never converts back to one that writes
+
+11 errors generated

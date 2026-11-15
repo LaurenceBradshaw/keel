@@ -1,0 +1,97 @@
+// Every refusal a many-item pointer brings, one to a function so each is reported on its own. What
+// is accepted is in codegen/many_pointers.kl.
+struct Point
+{
+    i32 x;
+};
+
+i32 ungated_index( i32[*] p )
+{
+    return p[ 0 ];
+}
+
+i32[*] ungated_offset( i32[*] p )
+{
+    return p + 1;
+}
+
+void ungated_step( i32[*] p )
+{
+    p++;
+}
+
+i32 single_indexed( i32* p )
+{
+    return p[ 0 ];
+}
+
+i32* single_offset( i32* p )
+{
+    return p + 1;
+}
+
+i32 not_a_pointer( i32 v )
+{
+    return v[ 0 ];
+}
+
+i32 no_star( i32[*] p )
+{
+    return *p;
+}
+
+i32 no_dot( Point[*] p )
+{
+    return p.x;
+}
+
+i32[*] pointer_first( i32[*] p )
+{
+    return 1 + p;
+}
+
+i32 bad_index( i32[*] p )
+{
+    i32 r = 0;
+
+    unsafe
+    {
+        r = p[ true ];
+    }
+
+    return r;
+}
+
+i32[*] bad_count()
+{
+    i32[*] p = nullptr;
+
+    unsafe
+    {
+        p = alloc<i32>( 1.5 );
+    }
+
+    return p;
+}
+
+i32* no_implicit( i32[*] p )
+{
+    i32* q = p;
+
+    return q;
+}
+
+bool no_ordering( i32[*] p, i32[*] q )
+{
+    return p < q;
+}
+
+void no_backwards( i32[*] p )
+{
+    p -= 1;
+}
+
+i32 main()
+{
+    return 0;
+}

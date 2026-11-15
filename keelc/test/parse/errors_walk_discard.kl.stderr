@@ -1,0 +1,7 @@
+error: expected an identifier, found `_`
+  --> parse/errors_walk_discard.kl:22:24
+   |
+22 |     for( const ref i32 _ : b ) // error: `_` is not a name
+   |                        ^ `_` is a keyword, so it cannot be used as a name
+
+1 error generated

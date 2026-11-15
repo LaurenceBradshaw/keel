@@ -1,0 +1,19 @@
+error: no operator `~` for `f32`
+ --> sema/errors_tilde_literal.kl:4:13
+  |
+4 |     f32 f = ~0;
+  |             ^^ the operand must be an integer
+
+error: `256` does not fit in `u8`
+ --> sema/errors_tilde_literal.kl:5:14
+  |
+5 |     u8  b = ~256;
+  |              ^^^
+
+error: no operator `~` for `f64`
+ --> sema/errors_tilde_literal.kl:6:13
+  |
+6 |     f64 g = ~1.5;
+  |             ^^^^ the operand must be an integer
+
+3 errors generated

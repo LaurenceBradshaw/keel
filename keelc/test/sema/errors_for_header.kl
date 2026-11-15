@@ -1,0 +1,36 @@
+// One mistake in a `for` header is one error: the header recovers at its own `)`, so the body, the
+// rest of the class and its fields all still parse. Prefix `++` is refused with its postfix spelling.
+class Counter
+{
+    Counter()
+    {
+        total = 0;
+        count = 4;
+    }
+
+    void run()
+    {
+        for( u64 i = 0; i < count; ++i )
+        {
+            total = total + i;
+        }
+    }
+
+    void stray()
+    {
+        for( u64 i = 0; i < count; i++ i )
+        {
+            total = total + i;
+        }
+    }
+
+    u64 total;
+    u64 count;
+};
+
+i32 main()
+{
+    i32 n = 1;
+    --n;
+    return n;
+}

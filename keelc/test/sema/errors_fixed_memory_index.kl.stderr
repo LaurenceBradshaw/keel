@@ -1,0 +1,19 @@
+error: `c` is `const`
+ --> sema/errors_fixed_memory_index.kl:5:5
+  |
+5 |     c[0] = c[1];
+  |     ^^^^ remove `const` to modify it
+
+error: `C` cannot be sliced
+  --> sema/errors_fixed_memory_index.kl:10:23
+   |
+10 |     const ref T[] s = c[0..1];
+   |                       ^^^^^^^
+
+error: `C` has no `operator[]`
+  --> sema/errors_fixed_memory_index.kl:15:23
+   |
+15 |     const ref i32 x = c[0];
+   |                       ^^^^
+
+3 errors generated

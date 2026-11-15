@@ -1,0 +1,144 @@
+// M9.6: what each new operator must be. A binary one is `const`, takes one operand by value or
+// `const ref`, and returns a value; a compound assignment is not `const`, takes one operand, and
+// returns `void`; unary `-` and `~` are `const` and take none, and `-` with one is subtraction.
+// Each is declared once, though `operator-()` and `operator-( x )` are two.
+struct binary_not_const
+{
+    i32 x;
+
+    binary_not_const operator+( const ref binary_not_const other ) { return other; }
+};
+
+struct binary_two_operands
+{
+    i32 x;
+
+    binary_two_operands operator*( i32 a, i32 b ) const { return binary_two_operands { a * b }; }
+};
+
+struct binary_no_operand
+{
+    i32 x;
+
+    binary_no_operand operator/() const { return binary_no_operand { x }; }
+};
+
+struct binary_by_ref
+{
+    i32 x;
+
+    binary_by_ref operator&( ref binary_by_ref other ) const { return binary_by_ref { x }; }
+};
+
+struct binary_by_move
+{
+    i32 x;
+
+    binary_by_move operator|( move binary_by_move other ) const { return binary_by_move { x }; }
+};
+
+struct binary_void
+{
+    i32 x;
+
+    void operator^( i32 other ) const { }
+};
+
+struct compound_const
+{
+    i32 x;
+
+    void operator+=( i32 by ) const { }
+};
+
+struct compound_returns
+{
+    i32 x;
+
+    compound_returns operator*=( i32 by ) { return compound_returns { x * by }; }
+};
+
+struct compound_no_operand
+{
+    i32 x;
+
+    void operator%=() { }
+};
+
+struct compound_by_out
+{
+    i32 x;
+
+    void operator-=( out i32 by ) { by = 0; }
+};
+
+struct unary_with_operand
+{
+    i32 x;
+
+    unary_with_operand operator~( i32 bits ) const { return unary_with_operand { x }; }
+};
+
+struct minus_two_operands
+{
+    i32 x;
+
+    minus_two_operands operator-( i32 a, i32 b ) const { return minus_two_operands { a }; }
+};
+
+struct unary_not_const
+{
+    i32 x;
+
+    unary_not_const operator-() { return unary_not_const { 0 - x }; }
+};
+
+struct unary_void
+{
+    i32 x;
+
+    void operator~() const { }
+};
+
+struct twice
+{
+    i32 x;
+
+    twice operator+( i32 by ) const { return twice { x + by }; }
+    twice operator+( const ref twice other ) const { return twice { x + other.x }; }
+    twice operator-() const { return twice { 0 - x }; }
+    twice operator-() const { return twice { x }; }
+};
+
+struct both_minuses
+{
+    i32 x;
+
+    both_minuses operator-() const { return both_minuses { 0 - x }; }
+    both_minuses operator-( const ref both_minuses other ) const { return both_minuses { x - other.x }; }
+};
+
+struct static_operator
+{
+    i32 x;
+
+    static static_operator operator*( i32 by ) { return static_operator { by }; }
+};
+
+struct generic_operator
+{
+    i32 x;
+
+    generic_operator operator+<U>( U by ) const { return generic_operator { x }; }
+};
+
+interface badly_required
+{
+    void operator+( const ref self other ) const;
+    self operator-=( i32 by );
+};
+
+i32 main()
+{
+    return 0;
+}

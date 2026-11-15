@@ -1,0 +1,5 @@
+warning: unused private function `kept` [-Wunused-private]
+ --> sema/unused_private_without_main.kl:4:11
+  |
+4 | private T kept<T>( move T t ) { return t; }
+  |           ^^^^ nothing public in this module reaches it; remove it

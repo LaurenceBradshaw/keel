@@ -1,0 +1,66 @@
+// A function every path of which calls itself warns, once however many instances it has. A line
+// ending `// warning` warns exactly once; every other line warns not at all.
+i32 forever( i32 n ) // warning
+{
+    return forever( n + 1 );
+}
+
+i32 either( i32 n ) // warning
+{
+    if( n > 0 )
+    {
+        return either( n - 1 );
+    }
+    return either( n + 1 );
+}
+
+T forwards<T>( T x ) // warning
+{
+    return forwards( x );
+}
+
+class Counter
+{
+    i32 k;
+    public Counter() { k = 0; }
+    public i32 up( i32 n ) // warning
+    {
+        return this.up( n + k );
+    }
+};
+
+// A base case, a `panic` the author wrote, or a loop that never calls it.
+i32 down( i32 n )
+{
+    if( n == 0 )
+    {
+        return 0;
+    }
+    return down( n - 1 );
+}
+
+i32 dies( i32 n )
+{
+    if( n == 0 )
+    {
+        panic( "reached zero" );
+    }
+    return dies( n - 1 );
+}
+
+void spin()
+{
+    while( true )
+    {
+    }
+}
+
+i32 main()
+{
+    Counter c = Counter();
+    if( c.up( 0 ) == 0 )
+    {
+        spin();
+    }
+    return forever( 1 ) + either( 2 ) + forwards<i32>( 3 ) + cast<i32>( forwards<i64>( 4 ) ) + down( 5 ) + dies( 6 );
+}

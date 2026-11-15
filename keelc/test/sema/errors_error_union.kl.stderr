@@ -1,0 +1,79 @@
+error: `i32` cannot be a member of an error union
+  --> sema/errors_error_union.kl:35:17
+   |
+35 | result<u64, A | i32> not_enum()
+   |                 ^^^ each member is an `enum`, matched by its variants
+
+error: `P` cannot be a member of an error union
+  --> sema/errors_error_union.kl:40:17
+   |
+40 | result<u64, A | P> struct_member()
+   |                 ^ each member is an `enum`, matched by its variants
+
+error: `A` is written twice
+  --> sema/errors_error_union.kl:45:17
+   |
+45 | result<u64, A | A> twice()
+   |                 ^
+
+error: `T` cannot be a member of an error union
+  --> sema/errors_error_union.kl:50:15
+   |
+50 | result<T, A | T> generic<T>( T v )
+   |               ^ a union's members are known where it is written, so none is a type parameter
+
+error: `try` passes on a `C` error, but `lacks_c` returns `result<u64, A | B>`
+  --> sema/errors_error_union.kl:57:13
+   |
+57 |     u64 n = try make_c();
+   |             ^^^^^^^^^^^^ add `C` to `A | B`
+
+error: `try` passes on a `A | B` error, but `lacks_b` returns `result<u64, A | C>`
+  --> sema/errors_error_union.kl:63:13
+   |
+63 |     u64 n = try make_ab();
+   |             ^^^^^^^^^^^^^ add `B` to `A | C`
+
+error: expected `A | B | C`, but got `A | B`
+  --> sema/errors_error_union.kl:69:21
+   |
+69 |     A | B | C abc = ab;
+   |                     ^^ one union widens into another only through `try`
+
+error: expected `A | B`, but got `C`
+  --> sema/errors_error_union.kl:74:15
+   |
+74 |     A | B e = C::c1;
+   |               ^^^^^
+
+error: `switch` does not cover every variant of `A | B`
+  --> sema/errors_error_union.kl:79:5
+   |
+79 |     switch( e )
+   |     ^^^^^^^^^^^ missing `A::a2`
+
+error: a `case` label must be a variant of `A | B`
+  --> sema/errors_error_union.kl:92:10
+   |
+92 |     case C::c1:
+   |          ^^^^^
+
+error: every variant of `A | B` is covered, so `default` can never run
+   --> sema/errors_error_union.kl:101:5
+    |
+101 |     switch( e )
+    |     ^^^^^^^^^^^ remove it, so that adding a variant later is a compile error here
+
+error: `a1` is already covered
+   --> sema/errors_error_union.kl:119:10
+    |
+119 |     case A::a1:
+    |          ^^^^^ previous declaration is at: sema/errors_error_union.kl:117:10
+
+error: `same` is already declared with these parameters
+   --> sema/errors_error_union.kl:131:6
+    |
+131 | void same( B | A e )
+    |      ^^^^ previous declaration is at: sema/errors_error_union.kl:127:1
+
+13 errors generated

@@ -1,0 +1,26 @@
+// A const local never changes once it holds a value, so it takes one where it is declared. A
+// line ending `// error` reports exactly one error; every other line reports none.
+struct P
+{
+    i32 x;
+};
+
+class Holder
+{
+    const i32 n;
+
+    Holder( i32 v )
+    {
+        n = v;
+    }
+};
+
+i32 main()
+{
+    const i32 v; // error
+    const P p; // error
+    const i32 w = 1;
+    const Holder h = Holder( w );
+    _ = h;
+    return w;
+}

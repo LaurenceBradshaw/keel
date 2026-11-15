@@ -1,0 +1,23 @@
+// A fixed array deduces a run's `T` from its element, but a `T` an earlier argument bound stays
+// bound, so the array is refused naming both.
+bool has<T>( T wanted, const ref T[] values ) where T : equatable
+{
+    for( u64 i : 0..values.size )
+    {
+        if( values[i] == wanted )
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+i32 main()
+{
+    i32[2] numbers = [ 1, 2 ];
+    if( has( true, numbers ) )
+    {
+        return 1;
+    }
+    return 0;
+}

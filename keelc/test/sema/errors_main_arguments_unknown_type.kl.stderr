@@ -1,0 +1,7 @@
+error: unknown type `strr`
+ --> sema/errors_main_arguments_unknown_type.kl:2:21
+  |
+2 | i32 main( const ref strr[] args )
+  |                     ^^^^
+
+1 error generated

@@ -1,0 +1,118 @@
+// A `const` field is assigned by its own constructor, with `=`, and by nothing else. Assigning one
+// twice is errors_const_field_once, since this file's errors stop the checks that would report it.
+struct Point
+{
+    const i32 x;
+    i32       y;
+};
+
+class Inner
+{
+    i32 v;
+
+    Inner()
+    {
+        v = 0;
+    }
+
+    void poke()
+    {
+        v = 1;
+    }
+};
+
+void set( ref i32 a )
+{
+    a = 1;
+}
+
+void init( out i32 a )
+{
+    a = 1;
+}
+
+class Counter
+{
+    public const i32 n;
+
+    Counter()
+    {
+        n = 1;
+    }
+
+    // Another object of its own class is not the one being built.
+    Counter( ref Counter other )
+    {
+        n       = other.n;
+        other.n = 2;
+    }
+
+    void bump()
+    {
+        n += 1;
+    }
+
+    void bump_this()
+    {
+        this.n++;
+    }
+
+    ~Counter()
+    {
+        n = 0;
+    }
+};
+
+// Each of these writes the field after its one assignment, or through something other than `=`.
+class Once
+{
+    const i32   a;
+    const i32   b;
+    const i32   c;
+    const Point p;
+    const Inner i;
+
+    Once( bool flag )
+    {
+        a = 1;
+        b = 1;
+        c = 1;
+        c += 1;
+
+        p   = Point { 1, 2 };
+        p.y = 3;
+
+        i = Inner();
+        i.poke();
+    }
+
+    Once()
+    {
+        set( ref a );
+        init( out b );
+        c = 1;
+        p = Point { 1, 2 };
+        i = Inner();
+    }
+};
+
+void through_a_reference( ref Point p )
+{
+    p.x = 2;
+}
+
+void through_a_pointer( Counter* c )
+{
+    c.n = 2;
+}
+
+i32 main()
+{
+    Point p = Point { 1, 2 };
+    p.x     = 3;
+
+    Counter c = Counter();
+    i32*    q = &c.n;
+
+    return 0;
+}

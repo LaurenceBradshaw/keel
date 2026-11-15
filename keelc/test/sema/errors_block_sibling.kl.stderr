@@ -1,0 +1,19 @@
+error: `i32` has no methods
+  --> sema/errors_block_sibling.kl:11:38
+   |
+11 |     i32 plus( i32 n ) const { return this.to_int() + n.to_int(); }
+   |                                      ^^^^ `to_int` is reached only as a `adder`; bind `this` first: `const ref adder me = this;`
+
+error: `i32` has no methods
+  --> sema/errors_block_sibling.kl:11:54
+   |
+11 |     i32 plus( i32 n ) const { return this.to_int() + n.to_int(); }
+   |                                                      ^ `to_int` is reached only as a `to_primitive` or a `adder`: through a `where T :` parameter bounded by one, or a pointer to one
+
+error: `i32` has no methods
+  --> sema/errors_block_sibling.kl:17:12
+   |
+17 |     return x.to_int();
+   |            ^ `to_int` is reached only as a `to_primitive` or a `adder`: through a `where T :` parameter bounded by one, or a pointer to one
+
+3 errors generated

@@ -1,0 +1,37 @@
+error: `ptr_init` needs an `unsafe` block
+  --> sema/errors_ptr_init.kl:13:5
+   |
+13 |     ptr_init( p, 1 );
+   |     ^^^^^^^^^^^^^^^^ the compiler cannot tell that no value is there yet
+
+error: `ptr_init` needs a `T*`, but got `i32[*]`
+  --> sema/errors_ptr_init.kl:20:19
+   |
+20 |         ptr_init( slots, 1 );
+   |                   ^^^^^ a `T[*]` slot is raw storage, so `p[i] = v` already drops nothing
+
+error: `ptr_init` needs a `T*`, but got `i32`
+  --> sema/errors_ptr_init.kl:28:19
+   |
+28 |         ptr_init( n, 1 );
+   |                   ^ it writes the first value a `T*` points at
+
+error: `ptr_init` cannot write through a `const i32*`, which points to `const`
+  --> sema/errors_ptr_init.kl:36:19
+   |
+36 |         ptr_init( p, 1 );
+   |                   ^
+
+error: expected `i32`, but got `bool`
+  --> sema/errors_ptr_init.kl:44:22
+   |
+44 |         ptr_init( p, true );
+   |                      ^^^^
+
+error: an owning value is transferred, not copied
+  --> sema/errors_ptr_init.kl:52:22
+   |
+52 |         ptr_init( p, o );
+   |                      ^ take it as `move Owner o` to own it
+
+6 errors generated

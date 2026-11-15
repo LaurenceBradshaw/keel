@@ -1,0 +1,31 @@
+// A pointer compares, orders and hashes by its address, whatever it points at.
+
+struct Opaque
+{
+    i32 v;
+};
+
+struct Wrap<T> where T : copyable
+{
+    T v;
+};
+
+implements equatable for Opaque* // error: not even for one pointer type
+{
+    bool operator==( const ref Opaque* other ) const { return true; }
+};
+
+implements<T> comparable for Wrap<T>* where T : copyable & comparable // error: nor for an instance's
+{
+    ordering operator<=>( const ref Wrap<T>* other ) const { return ordering::equal; }
+};
+
+implements hashable for const Opaque* // error: nor through `const`
+{
+    void hash( ref hasher h ) const { }
+};
+
+i32 main()
+{
+    return 0;
+}

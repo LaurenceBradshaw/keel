@@ -1,0 +1,7 @@
+error: expected `str`, but got `str`
+ --> sema/errors_str_shadowed.kl:9:16
+  |
+9 |     str mine = "abc";
+  |                ^^^^^ two different types are both named `str`
+
+1 error generated

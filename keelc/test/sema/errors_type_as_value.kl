@@ -1,0 +1,27 @@
+// A type's name is not a value: each use is one error, and nothing after it cascades.
+struct Point
+{
+    i32 x;
+};
+
+enum Colour
+{
+    Red,
+    Green,
+};
+
+i32 measure<T>( T value )
+{
+    T copy = T;
+    return 0;
+}
+
+i32 main()
+{
+    Point  p = Point;
+    Point* q = &Point;
+    Colour = Colour::Red;
+    i32    n = Point + 1;
+    i32    m = measure( n );
+    return Colour;
+}

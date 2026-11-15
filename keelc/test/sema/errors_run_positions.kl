@@ -1,0 +1,115 @@
+// Every place a run may not be written, one to a function so each is reported on its own. A run is
+// written only straight after `ref` or `const ref`; the positions that accept one come first.
+interface Shape
+{
+    f64 area() const;
+};
+
+struct Box<T> where T : copyable
+{
+    T value;
+};
+
+struct Holder
+{
+    u8[] bytes;
+};
+
+u64 accepted( const ref u8[] text, ref i32[] out_run, fn( const ref u8[] ) -> u64 measure )
+{
+    const ref u8[] again = text;
+
+    return measure( again );
+}
+
+const ref u8[] returned( const ref u8[] text )
+{
+    return text;
+}
+
+void by_value( u8[] text )
+{
+}
+
+u8[] returned_by_value( const ref u8[] text )
+{
+    return text;
+}
+
+void local()
+{
+    u8[] text;
+}
+
+void through_a_pointer( u8[]* text )
+{
+}
+
+void through_a_many_pointer( u8[][*] texts )
+{
+}
+
+void out_parameter( out u8[] text )
+{
+}
+
+void move_parameter( move u8[] text )
+{
+}
+
+void a_run_of_runs( const ref u8[][] texts )
+{
+}
+
+void a_run_of_void( const ref void[] nothing )
+{
+}
+
+void a_run_of_never( const ref never[] nothing )
+{
+}
+
+void a_run_of_shapes( const ref Shape[] shapes )
+{
+}
+
+void a_by_value_function_parameter( fn( u8[] ) -> u64 measure )
+{
+}
+
+void a_generic_argument( const ref Box<u8[]> box )
+{
+}
+
+void take<T>( const ref T value )
+{
+}
+
+void an_explicit_type_argument( const ref u8[] text )
+{
+    take<u8[]>( text );
+}
+
+void a_deduced_type_argument( const ref u8[] text )
+{
+    take( text );
+}
+
+struct Reader
+{
+    i32 count;
+
+    void read<T>( const ref T value ) const
+    {
+    }
+};
+
+void a_deduced_method_type_argument( const ref Reader reader, const ref u8[] text )
+{
+    reader.read( text );
+}
+
+i32 main()
+{
+    return 0;
+}

@@ -1,0 +1,31 @@
+error: `foo` is declared by both `A` and `B`, so the call does not say which
+  --> sema/errors_bound_method_ambiguity.kl:16:59
+   |
+16 | i32 a_then_b<T>( const ref T t ) where T : A & B { return t.foo(); }
+   |                                                           ^^^^^ call it from a function bound by only one of them
+
+error: `foo` is declared by both `B` and `A`, so the call does not say which
+  --> sema/errors_bound_method_ambiguity.kl:17:59
+   |
+17 | i32 b_then_a<T>( const ref T t ) where T : B & A { return t.foo(); }
+   |                                                           ^^^^^ call it from a function bound by only one of them
+
+error: `make` is declared by both `A` and `B`, so the call does not say which
+  --> sema/errors_bound_method_ambiguity.kl:18:49
+   |
+18 | i32 shared_static<T>() where T : A & B { return T::make(); }
+   |                                                 ^^^^^^^ call it from a function bound by only one of them
+
+error: `name` is declared by both `An` and `Bn`, so the call does not say which
+  --> sema/errors_bound_method_ambiguity.kl:23:61
+   |
+23 | i32 by_arity<T>( const ref T t ) where T : An & Bn { return t.name( true ); }
+   |                                                             ^^^^^^ call it from a function bound by only one of them
+
+error: `operator+` is declared by both `Ap` and `Bp`, so the call does not say which
+  --> sema/errors_bound_method_ambiguity.kl:27:70
+   |
+27 | T plus<T>( const ref T a, const ref T b ) where T : Ap & Bp { return a + b; }
+   |                                                                      ^^^^^ call it from a function bound by only one of them
+
+5 errors generated

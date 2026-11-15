@@ -1,0 +1,24 @@
+// Each `@dft` function below does not read two arrays and write two, one error apiece at its directive.
+
+@dft
+void narrow<u64 N>( const ref f32[N] re, const ref f32[N] im, ref f32[N] yr, ref f32[N] yi ) {}
+
+@dft
+void three<u64 N>( const ref f64[N] re, const ref f64[N] im, ref f64[N] yr ) {}
+
+@dft
+void writes_input<u64 N>( ref f64[N] re, const ref f64[N] im, ref f64[N] yr, ref f64[N] yi ) {}
+
+@dft
+void ragged<u64 N, u64 M>( const ref f64[N] re, const ref f64[N] im, ref f64[M] yr, ref f64[M] yi ) {}
+
+@dft
+f64 returns( const ref f64[4] re, const ref f64[4] im, ref f64[4] yr, ref f64[4] yi ) { return 0.0; }
+
+@dft
+void accepted<u64 N>( const ref f64[N] re, const ref f64[N] im, ref f64[N] yr, ref f64[N] yi ) {}
+
+@dft
+void fixed( const ref f64[8] re, const ref f64[8] im, ref f64[8] yr, ref f64[8] yi ) {}
+
+i32 main() { return 0; }

@@ -1,0 +1,19 @@
+error: `++` is written after the variable
+  --> sema/errors_for_header.kl:13:36
+   |
+13 |         for( u64 i = 0; i < count; ++i )
+   |                                    ^^^ write `i++`
+
+error: expected `)`, found `i`
+  --> sema/errors_for_header.kl:21:39
+   |
+21 |         for( u64 i = 0; i < count; i++ i )
+   |                                       ^
+
+error: `--` is written after the variable
+  --> sema/errors_for_header.kl:34:5
+   |
+34 |     --n;
+   |     ^^^ write `n--`
+
+3 errors generated

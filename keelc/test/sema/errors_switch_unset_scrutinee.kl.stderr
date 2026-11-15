@@ -1,0 +1,13 @@
+error: `c` is used before it is initialised
+  --> sema/errors_switch_unset_scrutinee.kl:11:13
+   |
+11 |     switch( c )
+   |             ^ give it a value at its declaration
+
+error: `n` is used before it is initialised
+  --> sema/errors_switch_unset_scrutinee.kl:21:13
+   |
+21 |     switch( n )
+   |             ^ give it a value at its declaration
+
+2 errors generated

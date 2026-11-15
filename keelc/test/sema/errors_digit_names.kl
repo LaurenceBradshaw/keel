@@ -1,0 +1,39 @@
+// A name that starts with a digit, or a bare number where a name belongs. Each is reported once, on
+// the token itself, and the declaration carries on as one with no name - so nothing after it is a
+// follow-on error.
+struct Point
+{
+    i32 3x;
+    i32 y;
+};
+
+// Its only field was left out, but it was written with one, so it is not also reported as empty.
+struct Numbered
+{
+    i32 3;
+};
+
+struct Reserved
+{
+    i32 if;
+};
+
+i32 first( i32 2nd )
+{
+    return 0;
+}
+
+i32 main()
+{
+    i32 v = first( 1 );
+    i32 1st = v;
+    i32 2 = v;
+
+    // Used rather than declared, so there is no "not declared" after it.
+    1st = v;
+
+    // A literal is a value: this is the assignment's error, not the name's.
+    3 = v;
+
+    return 3rd;
+}

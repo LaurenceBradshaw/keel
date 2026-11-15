@@ -1,0 +1,55 @@
+// A refused requirement cycle loses its edge, so a method reached only through it is not reported
+// again: not on the interface, not on a bound reaching it, and not on a static call. A struct
+// missing the kept edge's interface still is.
+interface Loop implements Again
+{
+    i32 spin() const;
+};
+
+interface Again implements Loop
+{
+    i32 turn() const;
+};
+
+interface A implements C
+{
+    i32 a() const;
+    static self make();
+};
+
+interface B implements A
+{
+    i32 b() const;
+};
+
+interface C implements B
+{
+    i32 c() const;
+    static self build();
+};
+
+struct Only implements Loop
+{
+    i32 w;
+    i32 spin() const { return 0; }
+};
+
+i32 via( const ref Again a )
+{
+    return a.spin() + a.turn();
+}
+
+i32 bound<T>( const ref T t ) where T : A
+{
+    return t.a() + t.b() + t.c();
+}
+
+void made<T>() where T : C
+{
+    T::make();
+}
+
+i32 main()
+{
+    return 0;
+}

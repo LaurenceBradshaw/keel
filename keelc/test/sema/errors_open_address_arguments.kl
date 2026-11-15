@@ -1,0 +1,61 @@
+// `&f` of an overloaded or generic `f` passed to a call that is refused: the refusal is the one error.
+
+U apply<T, U>( fn( T ) -> U f, T x ) where T : copyable, where U : copyable
+{
+    return f( x );
+}
+
+i64 widen( i32 x )
+{
+    return cast<i64>( x );
+}
+
+i64 widen( i64 x )
+{
+    return x;
+}
+
+T id<T>( T x ) where T : copyable
+{
+    return x;
+}
+
+i64 take( fn( i32 ) -> i64 f )
+{
+    return f( 1 );
+}
+
+i64 take( fn( i64 ) -> i64 f )
+{
+    return f( 2 );
+}
+
+// A literal deduces nothing, so `T` is open.
+void undeducible()
+{
+    i64 r = apply( &widen, 3 );
+    i64 s = apply( &id, 3 );
+}
+
+void miscounted()
+{
+    i64 r = apply<i32>( &widen, 3 );
+    i64 s = apply<i32>( &id, 3 );
+}
+
+// Both take `&widen`, so the call is what is ambiguous.
+void both_take_it()
+{
+    i64 r = take( &widen );
+}
+
+// Outside a call, nothing chooses.
+void alone()
+{
+    auto f = &widen;
+}
+
+i32 main()
+{
+    return 0;
+}

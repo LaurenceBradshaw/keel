@@ -1,0 +1,25 @@
+error: `Red` is not declared
+  --> sema/errors_switch_bare_variant.kl:20:14
+   |
+20 |         case Red:
+   |              ^^^ write `Colour::Red`
+
+error: `Circle` is not declared
+  --> sema/errors_switch_bare_variant.kl:31:14
+   |
+31 |         case Circle( r ):
+   |              ^^^^^^ write `Shape::Circle`
+
+error: `Dot` is not declared
+  --> sema/errors_switch_bare_variant.kl:33:14
+   |
+33 |         case Dot:
+   |              ^^^ write `Shape::Dot`
+
+error: `Purple` is not declared
+  --> sema/errors_switch_bare_variant.kl:42:14
+   |
+42 |         case Purple:
+   |              ^^^^^^
+
+4 errors generated

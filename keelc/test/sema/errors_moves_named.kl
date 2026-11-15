@@ -1,0 +1,68 @@
+// An uninitialised local reported once, and a moved part named. A line ending `// error` reports
+// exactly one error; every other line reports none.
+class Buf
+{
+    u64* data;
+
+    Buf( u64 n )
+    {
+        unsafe
+        {
+            data = alloc<u64>();
+        }
+
+        *data = n;
+    }
+
+    ~Buf()
+    {
+        unsafe
+        {
+            free( data );
+        }
+    }
+
+    u64 get() const
+    {
+        return *data;
+    }
+};
+
+class Inner
+{
+    public Buf n;
+};
+
+class Outer
+{
+    public Inner a;
+    public Buf b;
+};
+
+void sink( move Buf _ ) { }
+void consume( move Outer _ ) { }
+u64 look( const ref Outer o ) { return o.b.get(); }
+
+void read_three_times()
+{
+    i32 x;
+    i32 y = x + 1; // error
+    i32 z = x + 2;
+    _ = y + z + x;
+}
+
+void whole_after_its_fields( move Outer o )
+{
+    sink( move o.a.n );
+    sink( move o.b );
+    consume( move o ); // error
+}
+
+void field_under_a_loan( move Outer o )
+{
+    const ref Outer r = o;
+    sink( move o.a.n ); // error
+    _ = look( r );
+}
+
+i32 main() { return 0; }

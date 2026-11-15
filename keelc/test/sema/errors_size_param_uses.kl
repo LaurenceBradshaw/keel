@@ -1,0 +1,37 @@
+// What a size argument, a suffix over `N`, and `N` in a body refuse. Each marked line is one error.
+struct Box<T> where T : copyable { T x; };
+
+u64 first<u64 N>( const ref i32[N] a )
+{
+    return cast<u64>( a[0] );
+}
+
+struct Shifted<u64 N> { i32[N << 1] x; };           // error: only + - * / %
+
+void body<u64 N>()
+{
+    const u64 w = N * 2;                            // a read-only local, not a constant
+    i32[N] filled = [ w > 0 ? 1 : 2, .. ];
+    i32[N] listed = [ 1, 2 ];                       // error: listed against T[N]
+    N = 3;                                          // error: not assignable
+
+    switch( cast<u64>( 1 ) )
+    {
+        case N:                                     // error: known only per instance
+            return;
+        default:
+            return;
+    }
+}
+
+i32 main()
+{
+    i32[2] a = [ 1, 2 ];
+    u64    n = 2;
+
+    first<0>( a );                                  // error: at least 1
+    first<i32>( a );                                // error: a type
+    first<n>( a );                                  // error: a run-time value
+    Box<4>* b = nullptr;                            // error: `T` takes a type
+    return 0;
+}

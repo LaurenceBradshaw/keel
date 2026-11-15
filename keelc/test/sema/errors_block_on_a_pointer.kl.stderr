@@ -1,0 +1,19 @@
+error: a block cannot make `Opaque*` `equatable`
+  --> sema/errors_block_on_a_pointer.kl:13:26
+   |
+13 | implements equatable for Opaque* // error: not even for one pointer type
+   |                          ^^^^^^^ the compiler compares and hashes a pointer by its address
+
+error: a block cannot make `Wrap<T>*` `comparable`
+  --> sema/errors_block_on_a_pointer.kl:18:30
+   |
+18 | implements<T> comparable for Wrap<T>* where T : copyable & comparable // error: nor for an instance's
+   |                              ^^^^^^^^ the compiler compares and hashes a pointer by its address
+
+error: a block cannot make `const Opaque*` `hashable`
+  --> sema/errors_block_on_a_pointer.kl:23:25
+   |
+23 | implements hashable for const Opaque* // error: nor through `const`
+   |                         ^^^^^^^^^^^^^ the compiler compares and hashes a pointer by its address
+
+3 errors generated

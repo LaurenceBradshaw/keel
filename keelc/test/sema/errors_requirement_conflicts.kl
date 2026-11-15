@@ -1,0 +1,108 @@
+// Two requirements of one name and parameters are one method to an implementer, so a set of them
+// that disagrees on the return, a `ref` return or `static` can never be met: refused once, at the
+// interface or the `where` clause that first brings them together. One interface naming a
+// requirement twice is refused too. `const` may differ, since a `const` method answers both.
+interface Base
+{
+    i32 f() const;
+};
+
+interface Clash implements Base
+{
+    i64 f() const;
+};
+
+// Inherits the conflict without adding one.
+interface Inherits implements Clash
+{
+    void k();
+};
+
+interface Dup
+{
+    i32 f() const;
+    i32 f() const;
+};
+
+interface Shape
+{
+    f64 area() const;
+};
+
+interface Other
+{
+    i32 area() const;
+};
+
+interface Both implements Shape, Other
+{
+    void h();
+};
+
+interface Stat
+{
+    static i32 make();
+};
+
+interface Inst
+{
+    i32 make();
+};
+
+interface Held
+{
+    ref i32 at( u64 i );
+};
+
+interface Copied
+{
+    i32 at( u64 i );
+};
+
+// Accepted: overloads by parameter, and `const` beside not.
+interface Over
+{
+    i32 g( i32 x ) const;
+    i32 g( i64 x ) const;
+};
+
+interface Lean
+{
+    i32 c() const;
+};
+
+interface Loose
+{
+    i32 c();
+};
+
+i32 one<T>( const ref T t ) where T : Shape & Other
+{
+    return 0;
+}
+
+i32 two<T>( const ref T t ) where T : Stat & Inst
+{
+    return 0;
+}
+
+i32 three<T>( ref T t ) where T : Held & Copied
+{
+    return 0;
+}
+
+i32 lean<T>( const ref T t ) where T : Lean & Loose
+{
+    return 0;
+}
+
+// The conflict is `Clash`'s, so its calls add nothing.
+i64 via_clash<T>( const ref T t ) where T : Clash
+{
+    return t.f();
+}
+
+i32 main()
+{
+    return 0;
+}

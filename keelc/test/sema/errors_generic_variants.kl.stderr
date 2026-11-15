@@ -1,0 +1,43 @@
+error: expected `Red`, but got `Blue`
+  --> sema/errors_generic_variants.kl:76:41
+   |
+76 |     Opt<Red> wrong_payload = Opt::Some( b );
+   |                                         ^
+
+error: expected `Red`, but got `Blue`
+  --> sema/errors_generic_variants.kl:79:43
+   |
+79 |     Pair<Red, Blue> swapped = Pair::Both( b, r );
+   |                                           ^
+
+error: expected `Blue`, but got `Red`
+  --> sema/errors_generic_variants.kl:79:46
+   |
+79 |     Pair<Red, Blue> swapped = Pair::Both( b, r );
+   |                                              ^
+
+error: expected `Opt<Red>`, but got `Opt<Blue>`
+  --> sema/errors_generic_variants.kl:86:38
+   |
+86 |     Nest<Red> mixed   = Nest::Inner( blue );
+   |                                      ^^^^
+
+error: expected `Opt<Green>`, but got `Red`
+  --> sema/errors_generic_variants.kl:89:42
+   |
+89 |     Nest<Green> unspelled = Nest::Inner( r );
+   |                                          ^
+
+error: expected `Opt<Red>`, but got `Plain`
+  --> sema/errors_generic_variants.kl:92:24
+   |
+92 |     Opt<Red> foreign = Plain::One;
+   |                        ^^^^^^^^^^
+
+error: nothing here says which `Opt` this is
+  --> sema/errors_generic_variants.kl:95:18
+   |
+95 |     auto loose = Opt::Some( r );
+   |                  ^^^^^^^^^ write the type where the value lands, as in `Opt<i32> x = ...`
+
+7 errors generated

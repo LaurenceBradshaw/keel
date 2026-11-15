@@ -1,0 +1,6 @@
+// An interface holds method signatures only, and every one is public.
+interface With_ctor { With_ctor(); };
+interface With_dtor { ~With_dtor(); };
+interface With_body_ctor { With_body_ctor() { } i32 f() const; };
+interface With_public { public i32 f() const; };
+interface With_private { private i32 f() const; };

@@ -1,0 +1,19 @@
+error: no operator `==` for `Plain[2]` and `Plain[2]`
+  --> sema/errors_array_operators.kl:10:12
+   |
+10 |     return a == b;
+   |            ^^^^^^ the block at <prelude>:164:36 makes `T[N]` implement `equatable` only where `T : equatable`, which `Plain` is not
+
+error: no operator `<=>` for `i32[2]` and `i32[2]`
+  --> sema/errors_array_operators.kl:15:12
+   |
+15 |     return a <=> b;
+   |            ^^^^^^^
+
+error: a block for `i32[3]` must be in the package that declares `i32[3]` or `equatable`
+  --> sema/errors_array_operators.kl:18:26
+   |
+18 | implements equatable for i32[3]
+   |                          ^^^^^^ two packages could otherwise each make `i32[3]` a `equatable`
+
+3 errors generated

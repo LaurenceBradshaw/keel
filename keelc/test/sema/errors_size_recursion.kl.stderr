@@ -1,0 +1,13 @@
+error: `grow` is instantiated with a different size each time round
+ --> sema/errors_size_recursion.kl:3:58
+  |
+3 | void grow<u64 N>( i32[N] a ) { i32[N + 1] b = [ 0, .. ]; grow( b ); }
+  |                                                          ^^^^^^^^^ `grow` to `grow`, and each round computes a size from the last - so no set of instances ever finishes; forward the size parameter itself
+
+error: `shrink` is instantiated with a different size each time round
+ --> sema/errors_size_recursion.kl:4:60
+  |
+4 | void shrink<u64 N>( i32[N] a ) { i32[N - 1] b = [ 0, .. ]; shrink( b ); }
+  |                                                            ^^^^^^^^^^^ `shrink` to `shrink`, and each round computes a size from the last - so no set of instances ever finishes; forward the size parameter itself
+
+2 errors generated

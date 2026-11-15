@@ -1,0 +1,58 @@
+// D74: what a walk may hand its loop. One error per marked line.
+class Wrong
+{
+    i32 x_;
+
+    i32 operator:( const ref i32 item ) const // error: a walk returns nothing
+    {
+        return 0;
+    }
+};
+
+class Empty
+{
+    i32 x_;
+
+    void operator:() const {} // error: a walk hands the loop at least one value
+};
+
+class Taken
+{
+    i32 x_;
+
+    void operator:( move i32 item ) const {} // error: a walk lends what it yields
+};
+
+class Writes
+{
+    i32 x_;
+
+    void operator:( ref i32 item ) const {} // error: a `const` walk cannot hand out `ref`
+};
+
+class Reads
+{
+    i32 x_;
+
+    void operator:( const ref i32 item ) {} // error: a walk that writes nothing is `const`
+};
+
+class Unnamed
+{
+    i32 x_;
+
+    void operator:( const ref i32, const ref i32 b ) const {} // error: name each value a walk yields
+};
+
+class Twice
+{
+    i32 x_;
+
+    void operator:( const ref i32 a ) const {}
+    void operator:( const ref i32 b ) const {} // error: already has a reading walk
+};
+
+i32 main()
+{
+    return 0;
+}

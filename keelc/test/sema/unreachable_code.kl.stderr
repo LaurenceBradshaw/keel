@@ -1,0 +1,41 @@
+warning: this statement is never reached [-Wunreachable-code]
+  --> sema/unreachable_code.kl:11:5
+   |
+11 |     i32 x = 2; // warning
+   |     ^^^^^^^^^^ the one before it always leaves the block
+
+warning: this statement is never reached [-Wunreachable-code]
+  --> sema/unreachable_code.kl:21:9
+   |
+21 |         x = 1; // warning
+   |         ^^^^^^ the one before it always leaves the block
+
+warning: this statement is never reached [-Wunreachable-code]
+  --> sema/unreachable_code.kl:26:9
+   |
+26 |         x = 2; // warning
+   |         ^^^^^^ the one before it always leaves the block
+
+warning: this statement is never reached [-Wunreachable-code]
+  --> sema/unreachable_code.kl:41:5
+   |
+41 |     return 3; // warning
+   |     ^^^^^^^^^ the one before it always leaves the block
+
+warning: this statement is never reached [-Wunreachable-code]
+  --> sema/unreachable_code.kl:47:5
+   |
+47 |     return 1; // warning
+   |     ^^^^^^^^^ the one before it always leaves the block
+
+warning: this statement is never reached [-Wunreachable-code]
+  --> sema/unreachable_code.kl:53:5
+   |
+53 |     return 1; // warning
+   |     ^^^^^^^^^ the one before it always leaves the block
+
+warning: this statement is never reached [-Wunreachable-code]
+  --> sema/unreachable_code.kl:70:5
+   |
+70 |     return 4; // warning
+   |     ^^^^^^^^^ the one before it always leaves the block

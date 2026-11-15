@@ -1,0 +1,40 @@
+// Both operations are gated (D35), both are typed, and neither is excused from any other rule.
+struct Node { i32 value; };
+
+i32 ungated()
+{
+    Node* n = alloc<Node>();
+
+    free( n );
+
+    return 0;
+}
+
+i32 wrong_type()
+{
+    i32 v = 0;
+
+    unsafe
+    {
+        i32* n = alloc<Node>();
+
+        free( v );
+    }
+
+    return v;
+}
+
+i32 nothing_to_allocate()
+{
+    unsafe
+    {
+        i32* n = alloc<void>();
+    }
+
+    return 0;
+}
+
+i32 main()
+{
+    return 0;
+}

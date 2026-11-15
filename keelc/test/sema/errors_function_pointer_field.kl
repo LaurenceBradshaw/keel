@@ -1,0 +1,69 @@
+// A field holding a function is called by its name, and the call answers to the field's rules and to
+// its signature's: a private field is refused outside its type, and the arguments are checked as a
+// call through a variable checks them.
+i32 twice( i32 a )
+{
+    return a * 2;
+}
+
+void bump( ref i32 v )
+{
+    v = v + 1;
+}
+
+struct Holder
+{
+    fn( i32 ) -> i32 cb;
+    i32              n;
+
+    // Not a function, so not callable by its bare name either.
+    i32 bare() const
+    {
+        return n();
+    }
+
+    // No object, so no field to read.
+    static i32 none()
+    {
+        return cb( 1 );
+    }
+};
+
+class Guard
+{
+    fn() -> i32 hidden;
+
+    Guard()
+    {
+        hidden = &one;
+    }
+};
+
+i32 one()
+{
+    return 1;
+}
+
+struct Counter
+{
+    fn( ref i32 ) -> void step;
+};
+
+i32 main()
+{
+    Holder h = Holder { &twice, 0 };
+
+    i32 a = h.cb();
+    i32 b = h.cb( true );
+    i32 c = h.cb<i32>( 1 );
+    i32 d = h.n();
+
+    Guard g = Guard();
+    i32   e = g.hidden();
+
+    Counter k = Counter { &bump };
+    i32     v = 1;
+    k.step( v );
+
+    return 0;
+}

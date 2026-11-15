@@ -1,0 +1,11 @@
+// A program's own `str` is a different type from a literal's, though both read `str`.
+struct str
+{
+    i32 n;
+};
+
+i32 main()
+{
+    str mine = "abc";
+    return mine.n;
+}

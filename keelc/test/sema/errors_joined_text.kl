@@ -1,0 +1,44 @@
+// What `str + textual` gives, and where its `joined_text` is refused. A line ending `// error`
+// reports exactly one error; every other line reports none.
+class Name implements textual
+{
+    str text;
+
+    public Name() { text = "nm"; }
+
+    public const ref u8[] as_text() const { return text.as_text(); }
+};
+
+class Label implements from<str>
+{
+    u64 n;
+
+    public Label( u64 n ) { this.n = n; }
+    public static Label from( move str text ) { return Label( text.size ); }
+};
+
+class Owned implements from<joined_text>
+{
+    u64 n;
+
+    public Owned( u64 n ) { this.n = n; }
+    public static Owned from( move joined_text text ) { return Owned( text.size() ); }
+};
+
+i32 main()
+{
+    Name name = Name();
+    u64  count = 3;
+
+    auto joined = "a " + name;
+    auto more = joined + "b";
+    auto none = "a " + count; // error
+    i32 wrong = "a " + name; // error
+    Label label = "a " + name; // error
+    joined.push( 1 ); // error
+    Owned bare = joined; // error
+    Owned moved = move more;
+    Owned built = "c " + name;
+
+    return 0;
+}

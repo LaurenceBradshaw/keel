@@ -1,0 +1,25 @@
+error: a function type returns only `const ref`
+ --> sema/errors_function_pointer_returns.kl:3:35
+  |
+3 | void mutable_borrow( fn( i32 ) -> ref i32 p )
+  |                                   ^^^ write `const ref i32`
+
+error: `out` is not a return mode
+ --> sema/errors_function_pointer_returns.kl:7:28
+  |
+7 | void assigns( fn( i32 ) -> out i32 p )
+  |                            ^^^ `out` says how an argument travels, and a return is not an argument
+
+error: `move` is not a return mode
+  --> sema/errors_function_pointer_returns.kl:11:30
+   |
+11 | void transfers( fn( i32 ) -> move i32 p )
+   |                              ^^^^ `move` says how an argument travels, and a return is not an argument
+
+error: a `const` here binds nothing, because a function type has no callee
+  --> sema/errors_function_pointer_returns.kl:15:29
+   |
+15 | void promises( fn( i32 ) -> const i32 p )
+   |                             ^^^^^ remove it - whether the callee copies is its own business
+
+4 errors generated

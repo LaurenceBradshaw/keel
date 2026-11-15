@@ -1,0 +1,23 @@
+warning: `forever` calls itself on every path, so it never returns [-Wunconditional-recursion]
+ --> sema/unconditional_recursion.kl:3:5
+  |
+3 | i32 forever( i32 n ) // warning
+  |     ^^^^^^^ every path reaches the call at 5:12; return without it on some path
+
+warning: `either` calls itself on every path, so it never returns [-Wunconditional-recursion]
+ --> sema/unconditional_recursion.kl:8:5
+  |
+8 | i32 either( i32 n ) // warning
+  |     ^^^^^^ every path reaches the call at 12:16; return without it on some path
+
+warning: `forwards` calls itself on every path, so it never returns [-Wunconditional-recursion]
+  --> sema/unconditional_recursion.kl:17:3
+   |
+17 | T forwards<T>( T x ) // warning
+   |   ^^^^^^^^ every path reaches the call at 19:12; return without it on some path
+
+warning: `up` calls itself on every path, so it never returns [-Wunconditional-recursion]
+  --> sema/unconditional_recursion.kl:26:16
+   |
+26 |     public i32 up( i32 n ) // warning
+   |                ^^ every path reaches the call at 28:16; return without it on some path

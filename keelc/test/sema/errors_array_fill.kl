@@ -1,0 +1,51 @@
+// PLAN D60's fill `[ x, .. ]`, and an array local with no initialiser. A line ending `// error`
+// reports exactly one error; every other line reports none.
+class Buf
+{
+    u64* data;
+
+    Buf()
+    {
+        unsafe
+        {
+            data = alloc<u64>();
+        }
+
+        *data = 0;
+    }
+
+    ~Buf()
+    {
+        unsafe
+        {
+            free( data );
+        }
+    }
+};
+
+void declared()
+{
+    i32[4] a; // error
+    Buf[2] b; // error
+}
+
+u64 filled()
+{
+    u64[4] a = [ 0, .. ];
+    auto   f = [ 0, .. ]; // error
+    return a[0];
+}
+
+void owning()
+{
+    Buf[2] g = [ Buf(), .. ];
+    Buf    x = Buf();
+    Buf[2] h = [ move x, .. ]; // error
+    Buf    y = Buf();
+    Buf[2] k = [ y, .. ]; // error
+}
+
+i32 main()
+{
+    return 0;
+}

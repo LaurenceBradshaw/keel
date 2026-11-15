@@ -1,0 +1,13 @@
+error: this could change `this` while `x` still borrows from it
+  --> sema/errors_this_loans.kl:45:9
+   |
+45 |         reset();
+   |         ^^^^^^^ `x` is used after this; it was bound at 44:9
+
+error: this could change `this` while `x` still borrows from it
+  --> sema/errors_this_loans.kl:52:9
+   |
+52 |         this.reset();
+   |         ^^^^ `x` is used after this; it was bound at 51:9
+
+2 errors generated

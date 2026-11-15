@@ -1,0 +1,17 @@
+// D78: a size parameter is deduced only from an array or an array literal. A run's length and a
+// fill's count are known only at run time or from the type, so both leave `N` open.
+u64 sum<u64 N>( const ref i32[N] a )
+{
+    return N + cast<u64>( a[0] );
+}
+
+u64 from_run( const ref i32[] r )
+{
+    return sum( r ); // error
+}
+
+i32 main()
+{
+    u64 a = sum( [ 7, .. ] ); // error
+    return cast<i32>( a );
+}

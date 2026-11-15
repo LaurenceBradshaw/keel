@@ -1,0 +1,13 @@
+error: `Y` is declared in this package, so a block cannot be written for it
+  --> sema/errors_refused_block_body.kl:18:22
+   |
+18 | implements Named for Y
+   |                      ^ write `implements Named` where `Y` is declared
+
+error: `Z` is declared in this package, so a block cannot be written for it
+  --> sema/errors_refused_block_body.kl:23:22
+   |
+23 | implements Named for Z
+   |                      ^ write `implements Named` where `Z` is declared
+
+2 errors generated

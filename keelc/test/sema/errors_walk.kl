@@ -1,0 +1,103 @@
+// D74: a loop over a walk, and `yield`. One error per marked line.
+class Bag
+{
+    i32[*] data_;
+    u64    count_;
+
+    public Bag()
+    {
+        data_  = nullptr;
+        count_ = 0;
+    }
+
+    void operator:( const ref i32 item ) const
+    {
+        for( u64 i : 0..count_ )
+        {
+            unsafe
+            {
+                yield( data_[i], 1 ); // error: `yield` takes 1 argument
+            }
+        }
+    }
+
+    void operator:( ref i32 item )
+    {
+        for( u64 i : 0..count_ )
+        {
+            unsafe
+            {
+                yield( data_[i] ); // error: needs `ref`
+            }
+        }
+    }
+};
+
+class Reading
+{
+    i32 x_;
+
+    public Reading()
+    {
+        x_ = 0;
+    }
+
+    void operator:( const ref i32 item ) const
+    {
+        yield( x_ );
+        i32 y = item; // error: `item` is not declared
+    }
+};
+
+class Loops
+{
+    i32 x_;
+
+    public Loops()
+    {
+        x_ = 0;
+    }
+
+    void operator:( const ref i32 item ) const
+    {
+        for( const ref i32 x : this ) // error: a walk cannot loop over itself
+        {
+            yield( x );
+        }
+    }
+};
+
+void outside()
+{
+    yield( 1 ); // error: only allowed in a walk
+}
+
+i32 main()
+{
+    i32[*] raw = nullptr;
+    for( const ref i32 x : raw ) // error: has no walk
+    {
+    }
+
+    const Reading r = Reading();
+    for( ref i32 x : r ) // error: has no writing walk
+    {
+    }
+
+    Bag b = Bag();
+    for( const ref u8 x : b ) // error: the walk yields `i32`
+    {
+    }
+
+    for( const ref i32 x : b )
+    {
+        x = 1; // error: `x` is `const`
+    }
+
+    for( i32 x : b )
+    {
+        x = 1; // error: lent by the walk
+    }
+
+    return 0;
+}

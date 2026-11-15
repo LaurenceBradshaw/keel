@@ -1,0 +1,5 @@
+// `main` reads its arguments; it cannot be given a `ref` to change them.
+i32 main( ref str[] args )
+{
+    return 0;
+}

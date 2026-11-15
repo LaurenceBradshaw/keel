@@ -1,0 +1,55 @@
+// Each refusal of `@located` and `@caller()` the checker makes, one error apiece.
+
+interface Shape
+{
+    @located
+    f64 area() const;
+};
+
+interface Named
+{
+    i32 id() const;
+};
+
+class Square implements Named
+{
+    i32 n;
+    public Square() { n = 1; }
+    @located
+    public i32 id() const { return n; }
+    @located
+    public static i32 make() { return 2; }
+};
+
+implements Named for i64
+{
+    @located
+    i32 id() const { return 3; }
+};
+
+@located
+void traced() { }
+
+@located
+void picked( i32 a ) { }
+void picked( f64 a ) { }
+
+void plain()
+{
+    location at = @caller();
+}
+
+@located
+void wrong_location()
+{
+    panic( "no", 3 );
+}
+
+@located
+i32 main()
+{
+    fn() -> void p = &traced;
+    fn() -> i32 q = &Square::make;
+    fn( i32 ) -> void r = &picked;
+    return 0;
+}
