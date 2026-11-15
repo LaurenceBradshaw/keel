@@ -7,6 +7,7 @@
 #include <numeric>
 #include <optional>
 #include <utility>
+#include "egraph/circuit_cache.h"
 #include "egraph/field.h"
 
 namespace keel
@@ -249,13 +250,26 @@ private:
                 rows[o].push_back( field.root( static_cast<u32>( k.c * j % k.M * o % k.M ) ) );
             }
         }
-        Solution s = solve( field, rows, options_.solve );
-        Choice   c { .kind = Kind::Solved, .cost = s.cost, .how = "solved " + sides( k ) + " W" + std::to_string( k.M ) };
+        std::optional<Circuit> found =
+            options_.cache.empty() ? std::nullopt : cached_circuit( options_.cache, field, rows, options_.solve );
+        if( !found )
+        {
+            found = solve( field, rows, options_.solve ).circuit;
+            if( !options_.cache.empty() )
+            {
+                cache_circuit( options_.cache, field, rows, options_.solve, *found );
+            }
+        }
+        Choice c {
+            .kind = Kind::Solved,
+            .cost = found->cost( options_.solve.fma ),
+            .how  = "solved " + sides( k ) + " W" + std::to_string( k.M )
+        };
         for( const Row& r : rows )
         {
-            c.solved_outputs.push_back( s.circuit.outputs.at( r ) );
+            c.solved_outputs.push_back( found->outputs.at( r ) );
         }
-        c.solved = std::move( s.circuit );
+        c.solved = std::move( *found );
         return c;
     }
 

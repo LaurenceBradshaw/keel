@@ -3,9 +3,11 @@
 
 #include "opt/propagate_values.h"
 #include <optional>
+#include <unordered_map>
 #include "ir/live.h"
 #include "opt/fold_constants.h"
 #include "opt/forward_reads.h"
+#include "opt/held_table.h"
 
 namespace keel
 {
@@ -14,7 +16,28 @@ namespace
 {
 // What each local is known to hold, by Local_id::v: a constant, a copy of a whole local, or nothing known.
 // propagate_constants has already read every integer one; a float or an `enum` is left to this.
-using Values = std::vector<std::optional<Operand>>;
+struct Values
+{
+    std::vector<std::optional<Operand>>       facts;
+    std::unordered_map<u32, std::vector<u32>> naming; // a local, and the locals whose copy fact may name it
+
+    Values() = default;
+
+    Values( std::size_t size, std::nullopt_t )
+        : facts( size, std::nullopt )
+    {
+    }
+
+    std::optional<Operand>& operator[]( std::size_t i )
+    {
+        return facts[i];
+    }
+
+    const std::optional<Operand>& operator[]( std::size_t i ) const
+    {
+        return facts[i];
+    }
+};
 
 // A place a fact may name: a whole local or a field of one, never through a pointer.
 bool copyable( const Function& func, const Place& place )
@@ -42,14 +65,20 @@ bool same( const Operand& a, const Operand& b )
 // `local` changed: its own fact goes, and so does every fact naming it, a field of it or an index by it included.
 void kill( const Function& func, Values& values, Local_id local )
 {
-    values[local.v] = std::nullopt;
-    for( u32 i = 0; i < values.size(); ++i )
+    values[local.v]  = std::nullopt;
+    const auto found = values.naming.find( local.v );
+    if( found == values.naming.end() )
+    {
+        return;
+    }
+    for( const u32 i : found->second )
     {
         if( values[i].has_value() && values[i]->kind == Operand_kind::Copy && mentions( func, values[i]->place, local ) )
         {
             values[i] = std::nullopt;
         }
     }
+    values.naming.erase( found );
 }
 
 void step(
@@ -110,6 +139,12 @@ void step(
              !addressed[from.place.local.v] )
     {
         values[into.v] = from;
+        std::vector<Local_id> named;
+        mentioned_by( func, from.place, named );
+        for( const Local_id l : named )
+        {
+            values.naming[l.v].push_back( into.v );
+        }
     }
 }
 

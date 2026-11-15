@@ -3,6 +3,7 @@
 
 #pragma once
 #include <compare>
+#include <filesystem>
 #include <string>
 #include <vector>
 #include "egraph/circuit.h"
@@ -31,8 +32,9 @@ struct Planned
 
 struct Plan_options
 {
-    u32           leaf_max = 64; // largest side handed to solve
-    Solve_options solve;
+    u32                   leaf_max = 64; // largest side handed to solve
+    Solve_options         solve;
+    std::filesystem::path cache {}; // where solved leaves are kept, as solve_linear_maps keeps whole maps
 };
 
 // The cheapest circuit found from the exponent's laws alone: W^(a+b) = W^a W^b and W^M = 1 make

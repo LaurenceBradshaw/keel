@@ -100,6 +100,8 @@ std::pair<Number, Number> parts( const Field& field, Element e )
     return { a, z.negated( b ) };
 }
 
+constexpr u32 k_none = ~u32 { 0 };
+
 class Lowerer
 {
 public:
@@ -114,14 +116,15 @@ public:
     {
     }
 
+    // `nodes` holds each output's node, or k_none for zero.
     std::vector<Statement> lower(
         const Circuit&                  circuit,
-        const std::vector<Row>&         rows,
+        const std::vector<u32>&         nodes,
         const std::vector<Value_place>& inputs,
         const std::vector<Value_place>& outputs
     )
     {
-        assert( rows.size() == outputs.size() );
+        assert( nodes.size() == outputs.size() );
         const std::vector<Op>&  ops  = circuit.ops();
         const std::vector<bool> live = circuit.live();
         std::vector<Value>      v( ops.size() );
@@ -153,10 +156,9 @@ public:
                                         };
             v[o]                = scale( a, cr, ci );
         }
-        for( size_t i = 0; i < rows.size(); ++i )
+        for( size_t i = 0; i < nodes.size(); ++i )
         {
-            const auto  found = circuit.outputs.find( rows[i] );
-            const Value y     = found == circuit.outputs.end() ? Value {} : v[found->second];
+            const Value y = nodes[i] == k_none ? Value {} : v[nodes[i]];
             store( outputs[i].real, y.re );
             if( paired_ )
             {
@@ -449,9 +451,30 @@ std::vector<Statement> lower_circuit(
     Span                            span
 )
 {
-    std::vector<Statement> body = Lowerer( func, field, type, literals, span ).lower( circuit, rows, inputs, outputs );
+    std::vector<u32> nodes;
+    for( const Row& row : rows )
+    {
+        const auto found = circuit.outputs.find( row );
+        nodes.push_back( found == circuit.outputs.end() ? k_none : found->second );
+    }
+    std::vector<Statement> body = Lowerer( func, field, type, literals, span ).lower( circuit, nodes, inputs, outputs );
     assert( computes( func, body, field, rows, inputs, outputs, literals ) && "a lowered circuit disagrees with its map" );
     return body;
+}
+
+std::vector<Statement> lower_nodes(
+    Function&                       func,
+    const Circuit&                  circuit,
+    const std::vector<u32>&         nodes,
+    const std::vector<Value_place>& inputs,
+    const std::vector<Value_place>& outputs,
+    Type_id                         type,
+    Literal_pool&                   literals,
+    Span                            span
+)
+{
+    const Field complex( Ring_kind::Complex, 4 );
+    return Lowerer( func, complex, type, literals, span ).lower( circuit, nodes, inputs, outputs );
 }
 } // namespace keel
 

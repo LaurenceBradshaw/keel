@@ -32,4 +32,16 @@ std::vector<Statement> lower_circuit(
     Literal_pool&                   literals,
     Span                            span
 );
+
+// The same for a complex f64 circuit whose outputs are `nodes`, one per entry of `outputs`.
+std::vector<Statement> lower_nodes(
+    Function&                       func,
+    const Circuit&                  circuit,
+    const std::vector<u32>&         nodes,
+    const std::vector<Value_place>& inputs,
+    const std::vector<Value_place>& outputs,
+    Type_id                         type,
+    Literal_pool&                   literals,
+    Span                            span
+);
 } // namespace keel

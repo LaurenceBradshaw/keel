@@ -8,6 +8,7 @@
 #include <vector>
 #include "ir/initialised.h"
 #include "ir/simplify.h"
+#include "opt/held_table.h"
 
 namespace keel
 {
@@ -109,29 +110,39 @@ bool clobbers( const Function& func, const Local_set& addressed, const Statement
 
 namespace
 {
-// A place read through a pointer, and the local holding what it read. A place without a deref is
-// propagate_values's, which forwards the other way.
-using Reads = std::vector<std::pair<Place, Local_id>>;
-
-void forget( const Function& func, Reads& reads, Local_id local )
+struct Place_traits
 {
-    std::erase_if(
-        reads,
-        [&]( const std::pair<Place, Local_id>& read ) { return read.second == local || mentions( func, read.first, local ); }
-    );
-}
+    const Function& func;
 
-const Local_id* held( const Function& func, const Reads& reads, const Place& place )
-{
-    for( const std::pair<Place, Local_id>& read : reads )
+    u64 hash( const Place& p ) const
     {
-        if( same_place( func, read.first, place ) )
-        {
-            return &read.second;
-        }
+        return place_hash( func, p );
     }
 
-    return nullptr;
+    bool same( const Place& a, const Place& b ) const
+    {
+        return same_place( func, a, b );
+    }
+
+    void mentioned( const Place& p, std::vector<Local_id>& out ) const
+    {
+        mentioned_by( func, p, out );
+    }
+
+    static bool in_memory( const Place& )
+    {
+        return true;
+    }
+};
+
+// A place read through a pointer, and the local holding what it read. A place without a deref is
+// propagate_values's, which forwards the other way.
+using Reads = Held_table<Place, Place_traits>;
+
+const Local_id* held( const Reads& reads, const Place& place )
+{
+    const Reads::Entry* e = reads.find( place );
+    return e ? &e->local : nullptr;
 }
 
 void step( const Function& func, const Local_set& addressed, const Statement& statement, Reads& reads )
@@ -142,7 +153,7 @@ void step( const Function& func, const Local_set& addressed, const Statement& st
     }
     else if( !statement.place.is_global() && statement.place.local.is_valid() )
     {
-        forget( func, reads, statement.place.local );
+        reads.forget( statement.place.local );
     }
 
     if( statement.kind != Statement_kind::Assign || !statement.place.is_whole_local() )
@@ -155,22 +166,22 @@ void step( const Function& func, const Local_set& addressed, const Statement& st
     const Local_id into  = statement.place.local;
 
     if( value.kind == Rvalue_kind::Use && from.kind == Operand_kind::Copy && has_deref_projection( func, from.place ) &&
-        from.type == func.locals[into].type && !mentions( func, from.place, into ) && !held( func, reads, from.place ) )
+        from.type == func.locals[into].type && !mentions( func, from.place, into ) && !held( reads, from.place ) )
     {
-        reads.emplace_back( from.place, into );
+        reads.add( from.place, into );
     }
 }
 
-std::vector<std::optional<Reads>> reads_on_entry( const Function& func, const Local_set& addressed )
+std::vector<std::optional<Reads>> reads_on_entry( const Function& func, const Local_set& addressed, const Place_traits& traits )
 {
     std::vector<std::optional<Reads>> entry( func.blocks.size(), std::nullopt );
-    entry[0].emplace();
+    entry[0].emplace( traits );
 
     // Reads only go away, and a block is reached once, so this ends.
     bool                  changed = true;
     std::vector<Block_id> targets;
     std::vector<bool>     dirty( func.blocks.size(), true );
-    Reads                 reads;
+    Reads                 reads( traits );
     while( changed )
     {
         changed = false;
@@ -205,12 +216,11 @@ std::vector<std::optional<Reads>> reads_on_entry( const Function& func, const Lo
 
                 // A read survives a join only if this path holds it in the same local.
                 const std::size_t before = into->size();
-                std::erase_if(
-                    *into,
-                    [&]( const std::pair<Place, Local_id>& read )
+                into->erase_if(
+                    [&]( const Reads::Entry& read )
                     {
-                        const Local_id* local = held( func, reads, read.first );
-                        return !local || *local != read.second;
+                        const Local_id* local = held( reads, read.key );
+                        return !local || *local != read.local;
                     }
                 );
                 if( into->size() != before )
@@ -232,7 +242,7 @@ bool rewrite( const Function& func, const Reads& reads, Operand& operand )
         return false;
     }
 
-    const Local_id* local = held( func, reads, operand.place );
+    const Local_id* local = held( reads, operand.place );
     if( !local || func.locals[*local].type != operand.type )
     {
         return false;
@@ -246,8 +256,9 @@ bool rewrite( const Function& func, const Reads& reads, Operand& operand )
 bool forward_reads( Function& func )
 {
     const Local_set                         addressed = addressed_locals_of( func );
-    const std::vector<std::optional<Reads>> entry     = reads_on_entry( func, addressed );
-    bool                                    changed   = false;
+    const Place_traits                      traits { func };
+    const std::vector<std::optional<Reads>> entry   = reads_on_entry( func, addressed, traits );
+    bool                                    changed = false;
     std::vector<bool>                       deleted( func.statements.size(), false );
 
     for( const Block_id b : func.blocks.ids() )

@@ -7,18 +7,12 @@
 #include <vector>
 #include "ir/simplify.h"
 #include "opt/forward_reads.h"
+#include "opt/held_table.h"
 
 namespace keel
 {
 namespace
 {
-// A computation, and the local holding it.
-struct Made
-{
-    Rvalue   value;
-    Local_id local;
-};
-using Table = std::vector<Made>;
 
 bool pure( Rvalue_kind kind )
 {
@@ -103,16 +97,73 @@ bool in_memory( const Function& func, const Local_set& addressed, const Operand&
                                     is_addressed( addressed, operand.place.local ) );
 }
 
-const Made* held( const Function& func, const Literal_pool& literals, const Table& table, const Rvalue& value )
+struct Value_traits
 {
-    for( const Made& made : table )
+    const Function&     func;
+    const Literal_pool& literals;
+    const Local_set&    addressed;
+
+    u64 hash( const Rvalue& v ) const
     {
-        if( same_value( func, literals, made.value, value ) )
+        u64 h = mixed(
+            mixed( mixed( mixed( 0xcbf29ce484222325ull, static_cast<u64>( v.kind ) ), v.type.v ), static_cast<u64>( v.op ) ),
+            v.callee.v
+        );
+        const auto operand = [&]( const Operand& o )
         {
-            return &made;
+            h = mixed( mixed( h, static_cast<u64>( o.kind ) ), o.type.v );
+            if( o.has_place() )
+            {
+                h = mixed( h, place_hash( func, o.place ) );
+            }
+        };
+        if( v.kind != Rvalue_kind::Call )
+        {
+            operand( v.a );
         }
+        if( uses_b( v.kind ) )
+        {
+            operand( v.b );
+        }
+        for( const Operand& o : v.arguments )
+        {
+            operand( o );
+        }
+        return h;
     }
-    return nullptr;
+
+    bool same( const Rvalue& a, const Rvalue& b ) const
+    {
+        return same_value( func, literals, a, b );
+    }
+
+    void mentioned( const Rvalue& v, std::vector<Local_id>& out ) const
+    {
+        for_each_operand(
+            v,
+            [&]( const Operand& o )
+            {
+                if( o.has_place() )
+                {
+                    mentioned_by( func, o.place, out );
+                }
+            }
+        );
+    }
+
+    bool in_memory( const Rvalue& v ) const
+    {
+        return any_operand( v, [&]( const Operand& o ) { return keel::in_memory( func, addressed, o ); } );
+    }
+};
+
+// A computation, and the local holding it.
+using Table = Held_table<Rvalue, Value_traits>;
+using Made  = Table::Entry;
+
+const Made* held( const Table& table, const Rvalue& value )
+{
+    return table.find( value );
 }
 
 struct Walk
@@ -121,26 +172,17 @@ struct Walk
     const Literal_pool& literals;
     const Purity&       purity;
     const Local_set     addressed;
+    const Value_traits  traits { func, literals, addressed };
 
     void step( const Statement& statement, Table& table ) const
     {
         if( clobbers( func, addressed, statement ) )
         {
-            std::erase_if(
-                table,
-                [&]( const Made& made ) {
-                    return any_operand(
-                        made.value, [&]( const Operand& operand ) { return in_memory( func, addressed, operand ); }
-                    );
-                }
-            );
+            table.forget_memory();
         }
         if( !statement.place.is_global() && statement.place.local.is_valid() )
         {
-            const Local_id local = statement.place.local;
-            std::erase_if(
-                table, [&]( const Made& made ) { return made.local == local || reads_local( func, made.value, local ); }
-            );
+            table.forget( statement.place.local );
         }
 
         if( statement.kind != Statement_kind::Assign || !statement.place.is_whole_local() )
@@ -151,9 +193,9 @@ struct Walk
         const Rvalue&  value = func.rvalue( statement );
         const Local_id into  = statement.place.local;
         if( sharable( value, purity ) && value.type == func.locals[into].type && !is_addressed( addressed, into ) &&
-            !reads_local( func, value, into ) && !held( func, literals, table, value ) )
+            !reads_local( func, value, into ) && !held( table, value ) )
         {
-            table.push_back( Made { .value = value, .local = into } );
+            table.add( value, into );
         }
     }
 
@@ -161,13 +203,13 @@ struct Walk
     std::vector<std::optional<Table>> on_entry() const
     {
         std::vector<std::optional<Table>> entry( func.blocks.size(), std::nullopt );
-        entry[0].emplace();
+        entry[0].emplace( traits );
 
         // Entries only go away, and a block is reached once, so this ends.
         bool                  changed = true;
         std::vector<Block_id> targets;
         std::vector<bool>     dirty( func.blocks.size(), true );
-        Table                 table;
+        Table                 table( traits );
         while( changed )
         {
             changed = false;
@@ -201,11 +243,10 @@ struct Walk
 
                     // An entry survives a join only if this path holds it in the same local.
                     const std::size_t before = into->size();
-                    std::erase_if(
-                        *into,
+                    into->erase_if(
                         [&]( const Made& made )
                         {
-                            const Made* other = held( func, literals, table, made.value );
+                            const Made* other = held( table, made.key );
                             return !other || other->local != made.local;
                         }
                     );
@@ -247,7 +288,7 @@ bool eliminate_common( Function& func, const Literal_pool& literals, const Purit
                 !reads_local( func, func.rvalue( statement ), statement.place.local ) )
             {
                 Rvalue& value = func.rvalue( statement );
-                if( const Made* made = sharable( value, purity ) ? held( func, literals, table, value ) : nullptr;
+                if( const Made* made = sharable( value, purity ) ? held( table, value ) : nullptr;
                     made && func.locals[made->local].type == func.locals[statement.place.local].type )
                 {
                     changed = true;

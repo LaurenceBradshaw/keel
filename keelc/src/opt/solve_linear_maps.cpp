@@ -6,6 +6,7 @@
 #include <utility>
 #include "egraph/circuit_cache.h"
 #include "egraph/lower_circuit.h"
+#include "egraph/read_kernel.h"
 
 namespace keel
 {
@@ -94,6 +95,54 @@ Span body_span( const Function& func )
     }
     return func.blocks[k_entry_block].terminator.span;
 }
+
+// `body` in place of every block.
+void replace_body( Function& func, std::vector<Statement> body, Span span )
+{
+    const u32 count = static_cast<u32>( body.size() );
+    func.statements = Statements( std::move( body ) );
+    func.blocks     = {};
+    func.blocks.push_back( Block {
+        .first_statement = 0, .statement_count = count, .terminator = { .kind = Terminator_kind::Return, .span = span }
+    } );
+    func.compact_rvalues();
+}
+
+// A kernel too large to solve whole, planned from its exponent's laws; whether it replaced the body.
+bool plan_kernel(
+    Function&                    func,
+    const Read_kernel&           read,
+    const Type_table&            types,
+    Literal_pool&                literals,
+    const Solve_options&         options,
+    const std::filesystem::path& cache
+)
+{
+    const Planned planned = plan_sum( read.kernel, { .solve = options, .cache = cache } );
+    if( !cheaper( planned.cost, read.input ) )
+    {
+        return false;
+    }
+    const Span               span = body_span( func );
+    Places                   places( func, types, literals, span );
+    std::vector<Value_place> inputs, outputs;
+    for( const Value_path& v : read.inputs )
+    {
+        inputs.push_back( places.place( v ) );
+    }
+    for( const Value_path& v : read.outputs )
+    {
+        outputs.push_back( places.place( v ) );
+    }
+    std::vector<Statement> body = places.take_prologue();
+    for( Statement& s :
+         lower_nodes( func, planned.circuit, planned.outputs, inputs, outputs, types.floating( 64 ), literals, span ) )
+    {
+        body.push_back( std::move( s ) );
+    }
+    replace_body( func, std::move( body ), span );
+    return true;
+}
 } // namespace
 
 Map_outcome solve_linear_maps(
@@ -107,6 +156,13 @@ Map_outcome solve_linear_maps(
     const Global_constants&      globals
 )
 {
+    // Past what solve takes whole, the loops are read as a kernel rather than run.
+    if( const std::optional<Read_kernel> read = read_kernel( func, functions, purity, types, literals );
+        read && read->kernel.n > Plan_options {}.leaf_max )
+    {
+        return { .solved = plan_kernel( func, *read, types, literals, options, cache ) };
+    }
+
     std::variant<Recognised, Unrecognised> attempt = recognise( func, functions, purity, types, literals, globals );
     if( Unrecognised* u = std::get_if<Unrecognised>( &attempt ) )
     {
@@ -148,13 +204,7 @@ Map_outcome solve_linear_maps(
     }
 
     // A recognised body's only effects are its outputs, so the circuit replaces all of it.
-    const u32 count = static_cast<u32>( body.size() );
-    func.statements = Statements( std::move( body ) );
-    func.blocks     = {};
-    func.blocks.push_back( Block {
-        .first_statement = 0, .statement_count = count, .terminator = { .kind = Terminator_kind::Return, .span = span }
-    } );
-    func.compact_rvalues();
+    replace_body( func, std::move( body ), span );
     return { .solved = true, .cached = cached, .ending = std::nullopt };
 }
 } // namespace keel
