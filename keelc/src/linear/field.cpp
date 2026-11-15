@@ -1,7 +1,7 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "egraph/field.h"
+#include "linear/field.h"
 #include <algorithm>
 #include <cassert>
 #include <numbers>
@@ -591,7 +591,7 @@ Element sample( Field& field )
 }
 } // namespace
 
-TEST_CASE( "field_has_the_degree_of_the_totient", "[egraph][field]" )
+TEST_CASE( "field_has_the_degree_of_the_totient", "[linear][field]" )
 {
     for( const auto [n, phi] :
          { std::pair { 1u, 1u }, { 2u, 1u }, { 4u, 2u }, { 12u, 4u }, { 13u, 12u }, { 61u, 60u }, { 64u, 32u } } )
@@ -600,7 +600,7 @@ TEST_CASE( "field_has_the_degree_of_the_totient", "[egraph][field]" )
     }
 }
 
-TEST_CASE( "field_roots_multiply_by_adding_powers", "[egraph][field]" )
+TEST_CASE( "field_roots_multiply_by_adding_powers", "[linear][field]" )
 {
     for( const u32 n : { 3u, 8u, 12u, 15u } )
     {
@@ -616,7 +616,7 @@ TEST_CASE( "field_roots_multiply_by_adding_powers", "[egraph][field]" )
     CHECK( even.root( 4 ) == even.minus_one() );
 }
 
-TEST_CASE( "field_interns_one_id_per_value", "[egraph][field]" )
+TEST_CASE( "field_interns_one_id_per_value", "[linear][field]" )
 {
     Field         field( Ring_kind::Complex, 8 );
     const Element half = field.rational( 1, 2 );
@@ -628,7 +628,7 @@ TEST_CASE( "field_interns_one_id_per_value", "[egraph][field]" )
     CHECK( field.rational( 2, 4 ) == field.rational( -3, -6 ) );
 }
 
-TEST_CASE( "field_inverts_any_nonzero", "[egraph][field]" )
+TEST_CASE( "field_inverts_any_nonzero", "[linear][field]" )
 {
     for( const u32 n : { 5u, 8u, 12u, 13u, 17u } )
     {
@@ -643,14 +643,14 @@ TEST_CASE( "field_inverts_any_nonzero", "[egraph][field]" )
     }
 }
 
-TEST_CASE( "field_conjugates", "[egraph][field]" )
+TEST_CASE( "field_conjugates", "[linear][field]" )
 {
     Field         field( Ring_kind::Complex, 12 );
     const Element a = sample( field );
     CHECK( near( field.value( field.conjugate( a ) ), std::conj( field.value( a ) ) ) );
 }
 
-TEST_CASE( "field_units_are_real_only_for_a_real_map", "[egraph][field]" )
+TEST_CASE( "field_units_are_real_only_for_a_real_map", "[linear][field]" )
 {
     Field complex( Ring_kind::Complex, 8 );
     CHECK( complex.units().size() == 4 );
@@ -661,7 +661,7 @@ TEST_CASE( "field_units_are_real_only_for_a_real_map", "[egraph][field]" )
     CHECK( Field( Ring_kind::Complex, 6 ).units().size() == 2 );
 }
 
-TEST_CASE( "field_orbit_is_the_least_unit_multiple", "[egraph][field]" )
+TEST_CASE( "field_orbit_is_the_least_unit_multiple", "[linear][field]" )
 {
     Field         field( Ring_kind::Complex, 8 );
     const Element a        = sample( field );
@@ -674,7 +674,7 @@ TEST_CASE( "field_orbit_is_the_least_unit_multiple", "[egraph][field]" )
     }
 }
 
-TEST_CASE( "field_integers_wrap_and_invert_only_odd", "[egraph][field]" )
+TEST_CASE( "field_integers_wrap_and_invert_only_odd", "[linear][field]" )
 {
     Field bytes( Ring_kind::Integer, 2, 8 );
     CHECK( bytes.add( bytes.rational( 128 ), bytes.rational( 128 ) ) == bytes.zero() );
@@ -697,7 +697,7 @@ TEST_CASE( "field_integers_wrap_and_invert_only_odd", "[egraph][field]" )
     CHECK( gaussian.units().size() == 4 );
 }
 
-TEST_CASE( "field_overflow_throws", "[egraph][field]" )
+TEST_CASE( "field_overflow_throws", "[linear][field]" )
 {
     Field         field( Ring_kind::Complex, 4 );
     const Element big = field.rational( INT64_MAX / 2 + 1 );

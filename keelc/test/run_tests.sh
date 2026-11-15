@@ -571,9 +571,9 @@ fi
 
 # A suite whose FLAGS stop before emission must leave nothing behind. Nothing above would notice
 # otherwise: a driver that wrongly compiles a --check fixture writes a .c file and an executable,
-# and every stream comparison still passes because neither appears on stdout or stderr. egraph/
+# and every stream comparison still passes because neither appears on stdout or stderr. linear/
 # holds the linear-map solver's specs, read by its unit tests.
-stray="$( find . -path ./egraph -prune -o -type f \
+stray="$( find . -path ./linear -prune -o -type f \
     ! -name '*.kl' ! -name '*.kl.expected' ! -name '*.kl.stderr' ! -name '*.kl.exit' \
     ! -name '*.kl.run' ! -name '*.kl.out' ! -name '*.kl.args' ! -name '*.kl.stdin' ! -name '*.kl.link' \
     ! -name '*.kl.objects' ! -name '*.kl.debug_only' \

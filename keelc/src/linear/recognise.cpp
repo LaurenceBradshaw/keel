@@ -1,7 +1,7 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "egraph/recognise.h"
+#include "linear/recognise.h"
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -1557,7 +1557,7 @@ bool is_dft4( const Recognised& r )
 }
 } // namespace
 
-TEST_CASE( "recognise_pairs_a_dft4_loop", "[egraph][recognise]" )
+TEST_CASE( "recognise_pairs_a_dft4_loop", "[linear][recognise]" )
 {
     const Attempt     a( "@real_arithmetic\n"
                          "void dft( const ref f64[4] re, const ref f64[4] im, ref f64[4] yr, ref f64[4] yi )\n"
@@ -1591,7 +1591,7 @@ TEST_CASE( "recognise_pairs_a_dft4_loop", "[egraph][recognise]" )
     CHECK( r.outputs[3].imaginary.local == Local_id { 4 } );
 }
 
-TEST_CASE( "recognise_pairs_a_dft4_by_hand", "[egraph][recognise]" )
+TEST_CASE( "recognise_pairs_a_dft4_by_hand", "[linear][recognise]" )
 {
     const Attempt a( "@real_arithmetic\n"
                      "void dft( const ref f64[4] r, const ref f64[4] i, ref f64[4] yr, ref f64[4] yi )\n"
@@ -1609,7 +1609,7 @@ TEST_CASE( "recognise_pairs_a_dft4_by_hand", "[egraph][recognise]" )
     CHECK( a.map().input == Cost { .adds = 24, .muls = 0 } );
 }
 
-TEST_CASE( "recognise_reads_an_integer_wht4_in_place", "[egraph][recognise]" )
+TEST_CASE( "recognise_reads_an_integer_wht4_in_place", "[linear][recognise]" )
 {
     const Attempt     a( "@real_arithmetic\n"
                          "void wht( ref i32[4] x )\n"
@@ -1634,7 +1634,7 @@ TEST_CASE( "recognise_reads_an_integer_wht4_in_place", "[egraph][recognise]" )
     CHECK( r.input == Cost { .adds = 8, .muls = 0 } );
 }
 
-TEST_CASE( "recognise_reads_cos_constants_and_roots_exactly", "[egraph][recognise]" )
+TEST_CASE( "recognise_reads_cos_constants_and_roots_exactly", "[linear][recognise]" )
 {
     // cos(pi/4) as a literal and as a root, and sqrt 3 = 2 cos(pi/6).
     const Attempt     a( "@real_arithmetic\n"
@@ -1651,7 +1651,7 @@ TEST_CASE( "recognise_reads_cos_constants_and_roots_exactly", "[egraph][recognis
     CHECK( std::abs( r.field.value( r.rows[2][2] ) - std::sqrt( 3.0 ) ) < 1e-15 );
 }
 
-TEST_CASE( "recognise_reads_a_const_global_table", "[egraph][recognise]" )
+TEST_CASE( "recognise_reads_a_const_global_table", "[linear][recognise]" )
 {
     const Attempt     a( "@real_arithmetic\n"
                          "void f( const ref f64[3] x, ref f64[3] y )\n"
@@ -1665,7 +1665,7 @@ TEST_CASE( "recognise_reads_a_const_global_table", "[egraph][recognise]" )
     CHECK( r.field.value( r.rows[2][2] ) == 0.75 );
 }
 
-TEST_CASE( "recognise_ends_with_the_operation_that_stops_it", "[egraph][recognise]" )
+TEST_CASE( "recognise_ends_with_the_operation_that_stops_it", "[linear][recognise]" )
 {
     const auto ending = []( std::string_view body, u64 budget = 4'000'000 )
     { return Attempt( "@real_arithmetic\n" + std::string( body ), budget ).ending(); };

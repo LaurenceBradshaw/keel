@@ -1,7 +1,7 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "egraph/circuit_cache.h"
+#include "linear/circuit_cache.h"
 #include <atomic>
 #include <fstream>
 #include <iterator>
@@ -149,7 +149,7 @@ std::string read( const std::filesystem::path& file )
     return { std::istreambuf_iterator<char>( in ), std::istreambuf_iterator<char>() };
 }
 
-TEST_CASE( "a_cached_circuit_is_read_back_as_itself_and_a_damaged_one_is_a_miss", "[egraph][circuit_cache]" )
+TEST_CASE( "a_cached_circuit_is_read_back_as_itself_and_a_damaged_one_is_a_miss", "[linear][circuit_cache]" )
 {
     const Temp_dir         dir;
     Field                  field( Ring_kind::Complex, 8 );
@@ -179,7 +179,7 @@ TEST_CASE( "a_cached_circuit_is_read_back_as_itself_and_a_damaged_one_is_a_miss"
     REQUIRE( !damaged( whole ) );
 }
 
-TEST_CASE( "a_map_with_equal_rows_is_read_back", "[egraph][circuit_cache]" )
+TEST_CASE( "a_map_with_equal_rows_is_read_back", "[linear][circuit_cache]" )
 {
     const Temp_dir         dir;
     Field                  field( Ring_kind::Real, 4 );
@@ -256,7 +256,7 @@ std::vector<std::string> compiled_kir( const std::filesystem::path& cache )
     return kir;
 }
 
-TEST_CASE( "a_written_dft8_and_dft_at_8_share_an_entry_that_a_second_compile_reads", "[egraph][circuit_cache]" )
+TEST_CASE( "a_written_dft8_and_dft_at_8_share_an_entry_that_a_second_compile_reads", "[linear][circuit_cache]" )
 {
     const Temp_dir                 dir;
     const std::vector<std::string> first = compiled_kir( dir.path );

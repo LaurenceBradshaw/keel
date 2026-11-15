@@ -10,7 +10,7 @@
 #include <unordered_map>
 #include <vector>
 #include "common/types.h"
-#include "egraph/field.h"
+#include "linear/field.h"
 
 namespace keel
 {

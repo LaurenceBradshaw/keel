@@ -5,8 +5,8 @@
 #include <optional>
 #include <vector>
 #include "common/types.h"
-#include "egraph/circuit.h"
-#include "egraph/sum_graph.h"
+#include "linear/circuit.h"
+#include "linear/sum_graph.h"
 
 namespace keel
 {

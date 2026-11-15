@@ -1,7 +1,7 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "egraph/extract.h"
+#include "linear/extract.h"
 #include <algorithm>
 #include <bit>
 #include <cassert>
@@ -1020,7 +1020,7 @@ Extraction solve( Field& field, const std::vector<Row>& rows, u64 fuel = 0, u32 
 
 // Recorded by the experiment's qgraph and descend at 16 restarts, found here in 2; dft7 (60/36)
 // takes seconds.
-TEST_CASE( "extract_finds_the_recorded_dfts", "[egraph][extract]" )
+TEST_CASE( "extract_finds_the_recorded_dfts", "[linear][extract]" )
 {
     for( const auto [n, cost] : { std::pair { 3u, Cost { 12, 4 } }, { 5u, { 32, 12 } }, { 6u, { 36, 8 } }, { 8u, { 52, 4 } } } )
     {
@@ -1030,7 +1030,7 @@ TEST_CASE( "extract_finds_the_recorded_dfts", "[egraph][extract]" )
     }
 }
 
-TEST_CASE( "extract_finds_the_recorded_real_maps", "[egraph][extract]" )
+TEST_CASE( "extract_finds_the_recorded_real_maps", "[linear][extract]" )
 {
     Field      dct( Ring_kind::Real, 16 );
     const auto dct4 = parse(
@@ -1064,7 +1064,7 @@ TEST_CASE( "extract_finds_the_recorded_real_maps", "[egraph][extract]" )
 }
 
 // No 1/2 in Z/2^w, so no butterflies: the shared parts find n log n.
-TEST_CASE( "extract_finds_an_integer_wht", "[egraph][extract]" )
+TEST_CASE( "extract_finds_an_integer_wht", "[linear][extract]" )
 {
     Field            ring( Ring_kind::Integer, 1, 32 );
     std::vector<Row> rows( 8 );
@@ -1080,14 +1080,14 @@ TEST_CASE( "extract_finds_an_integer_wht", "[egraph][extract]" )
     CHECK( e.best == Cost { 24, 0 } );
 }
 
-TEST_CASE( "extract_gives_one_circuit_per_map", "[egraph][extract]" )
+TEST_CASE( "extract_gives_one_circuit_per_map", "[linear][extract]" )
 {
     Field a( Ring_kind::Complex, 8 );
     Field b( Ring_kind::Complex, 8 );
     CHECK( solve( a, dft( a ) ).circuit.text() == solve( b, dft( b ) ).circuit.text() );
 }
 
-TEST_CASE( "extract_out_of_fuel_keeps_the_input", "[egraph][extract]" )
+TEST_CASE( "extract_out_of_fuel_keeps_the_input", "[linear][extract]" )
 {
     Field            field( Ring_kind::Complex, 8 );
     const Extraction e = solve( field, dft( field ), 1 );

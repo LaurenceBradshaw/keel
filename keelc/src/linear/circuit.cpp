@@ -1,7 +1,7 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "egraph/circuit.h"
+#include "linear/circuit.h"
 #include <algorithm>
 #include <cassert>
 #include <charconv>
@@ -626,7 +626,7 @@ Cost scaled_cost( std::complex<f64> k )
 }
 } // namespace
 
-TEST_CASE( "circuit_hash_conses_nodes", "[egraph][circuit]" )
+TEST_CASE( "circuit_hash_conses_nodes", "[linear][circuit]" )
 {
     Circuit   c( false );
     const u32 x0 = c.input( 0 );
@@ -637,7 +637,7 @@ TEST_CASE( "circuit_hash_conses_nodes", "[egraph][circuit]" )
     CHECK( c.ops().size() == 5 ); // 0.5 is -1 times -0.5
 }
 
-TEST_CASE( "circuit_folds_units_and_shares_negations", "[egraph][circuit]" )
+TEST_CASE( "circuit_folds_units_and_shares_negations", "[linear][circuit]" )
 {
     Circuit   c( false );
     const u32 x = c.input( 0 );
@@ -653,7 +653,7 @@ TEST_CASE( "circuit_folds_units_and_shares_negations", "[egraph][circuit]" )
     CHECK( c.cost() == Cost { 0, 2 } );
 }
 
-TEST_CASE( "circuit_costs_by_the_constant", "[egraph][circuit]" )
+TEST_CASE( "circuit_costs_by_the_constant", "[linear][circuit]" )
 {
     CHECK( dft2( false ).cost() == Cost { 4, 0 } );
     CHECK( dft2( true ).cost() == Cost { 2, 0 } );
@@ -670,7 +670,7 @@ TEST_CASE( "circuit_costs_by_the_constant", "[egraph][circuit]" )
     CHECK( real.cost() == Cost { 0, 1 } );
 }
 
-TEST_CASE( "circuit_costs_a_fused_multiply_as_free", "[egraph][circuit]" )
+TEST_CASE( "circuit_costs_a_fused_multiply_as_free", "[linear][circuit]" )
 {
     // 3x + 5y + x: the add takes one of its two products; z = 3x feeding two adds keeps its own.
     Circuit   c( true );
@@ -695,7 +695,7 @@ TEST_CASE( "circuit_costs_a_fused_multiply_as_free", "[egraph][circuit]" )
     CHECK( e.cost( true ) == Cost { 4, 2 } );
 }
 
-TEST_CASE( "circuit_prunes_dead_nodes_and_folds_products", "[egraph][circuit]" )
+TEST_CASE( "circuit_prunes_dead_nodes_and_folds_products", "[linear][circuit]" )
 {
     Circuit   c( false );
     const u32 x = c.input( 0 );
@@ -712,7 +712,7 @@ TEST_CASE( "circuit_prunes_dead_nodes_and_folds_products", "[egraph][circuit]" )
     CHECK( p.evaluate( { { 1, 1 } } )[p.outputs.at( k_row0 )] == std::complex<f64> { 6, 6 } );
 }
 
-TEST_CASE( "circuit_pastes_one_into_another", "[egraph][circuit]" )
+TEST_CASE( "circuit_pastes_one_into_another", "[linear][circuit]" )
 {
     const Circuit          sub = dft2( false );
     Circuit                c( false );
@@ -729,7 +729,7 @@ TEST_CASE( "circuit_pastes_one_into_another", "[egraph][circuit]" )
     CHECK( c.cost() == Cost { 8, 0 } );
 }
 
-TEST_CASE( "circuit_keeps_integer_constants_exact", "[egraph][circuit]" )
+TEST_CASE( "circuit_keeps_integer_constants_exact", "[linear][circuit]" )
 {
     Field     z( Ring_kind::Integer, 1, 8 );
     Circuit   c( z );

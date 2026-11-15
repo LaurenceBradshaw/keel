@@ -7,8 +7,8 @@
 #include <unordered_set>
 #include <vector>
 #include "common/types.h"
-#include "egraph/circuit.h"
-#include "egraph/field.h"
+#include "linear/circuit.h"
+#include "linear/field.h"
 
 namespace keel
 {

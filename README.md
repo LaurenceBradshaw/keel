@@ -519,7 +519,7 @@ keelc/src/ast        flat vectors, u32 handles, a span on every node
 keelc/src/sema       name resolution, bidirectional type checking, overloads, generics
 keelc/src/ir         lowering to KIR and simplification
 keelc/src/opt        KIR optimisation passes, by level
-keelc/src/egraph     the linear-map solve: recognition, the e-graph, extraction, the circuit cache
+keelc/src/linear     the linear-map pass: reading, planning, the solve, the e-graph, extraction, the circuit cache
 keelc/src/check      move checking and definite assignment over the KIR CFG
 keelc/src/codegen    what both backends share: layout, mangling, descriptions
 keelc/src/codegen_llvm  KIR to LLVM IR, and linking with lld

@@ -1,7 +1,7 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "egraph/solve.h"
+#include "linear/solve.h"
 #include <algorithm>
 #include <cassert>
 #include <functional>
@@ -13,8 +13,8 @@
 #include <set>
 #include <span>
 #include <tuple>
-#include "egraph/extract.h"
-#include "egraph/sum_graph.h"
+#include "linear/extract.h"
+#include "linear/sum_graph.h"
 
 namespace keel
 {
@@ -2046,13 +2046,13 @@ Solution solve( Field& field, const std::vector<Row>& rows, const Solve_options&
 #include <random>
 #include <sstream>
 #include <string>
-#include "egraph/lower_circuit.h"
+#include "linear/lower_circuit.h"
 
 namespace keel
 {
 namespace
 {
-const std::filesystem::path k_specs = std::filesystem::path( __FILE__ ).parent_path() / "../../test/egraph";
+const std::filesystem::path k_specs = std::filesystem::path( __FILE__ ).parent_path() / "../../test/linear";
 
 // A spec entry: k is W^k, -1 is zero, else a sum of terms q@k, q W^k, with q a rational.
 Element entry( Field& field, const std::string& t )
@@ -2211,7 +2211,7 @@ void check_specs( const std::vector<std::string>& names )
 }
 } // namespace
 
-TEST_CASE( "solve_gives_the_recorded_costs", "[egraph][solve]" )
+TEST_CASE( "solve_gives_the_recorded_costs", "[linear][solve]" )
 {
     check_specs( { "dft3", "dft8", "rdft4", "rdft5", "rdft8", "rhaar16", "dct4", "circ4", "lin4" } );
 }
@@ -2227,7 +2227,7 @@ TEST_CASE( "solve_gives_every_recorded_cost", "[.][specs]" )
     check_specs( names );
 }
 
-TEST_CASE( "solve_with_fma_finds_fewer_fused_ops", "[egraph][solve]" )
+TEST_CASE( "solve_with_fma_finds_fewer_fused_ops", "[linear][solve]" )
 {
     // circ3 is 13 ops once LLVM fuses the plain solve's circuit; counting fusion finds one of 9.
     Spec           a     = read_spec( "circ3" );
@@ -2239,14 +2239,14 @@ TEST_CASE( "solve_with_fma_finds_fewer_fused_ops", "[egraph][solve]" )
     CHECK( computes( fused.circuit, *b.field, b.rows ) );
 }
 
-TEST_CASE( "solve_gives_one_circuit", "[egraph][solve]" )
+TEST_CASE( "solve_gives_one_circuit", "[linear][solve]" )
 {
     Spec a = read_spec( "dft8" );
     Spec b = read_spec( "dft8" );
     CHECK( solve( *a.field, a.rows ).circuit.text() == solve( *b.field, b.rows ).circuit.text() );
 }
 
-TEST_CASE( "solve_keeps_zero_and_unit_multiple_rows", "[egraph][solve]" )
+TEST_CASE( "solve_keeps_zero_and_unit_multiple_rows", "[linear][solve]" )
 {
     Field            field( Ring_kind::Complex, 4 );
     const Element    z = field.zero(), one = field.one(), i = field.root( 1 );
@@ -2258,7 +2258,7 @@ TEST_CASE( "solve_keeps_zero_and_unit_multiple_rows", "[egraph][solve]" )
     lower( got.circuit, field, rows );
 }
 
-TEST_CASE( "solve_integers_without_halves", "[egraph][solve]" )
+TEST_CASE( "solve_integers_without_halves", "[linear][solve]" )
 {
     // WHT4 and a 3-tap FIR over 3 inputs in Z/2^32, which has no 1/2: no butterflies, no Toom-3.
     Field            field( Ring_kind::Integer, 1, 32 );

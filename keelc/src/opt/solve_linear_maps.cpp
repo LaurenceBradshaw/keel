@@ -4,9 +4,9 @@
 #include "opt/solve_linear_maps.h"
 #include <map>
 #include <utility>
-#include "egraph/circuit_cache.h"
-#include "egraph/lower_circuit.h"
-#include "egraph/read_kernel.h"
+#include "linear/circuit_cache.h"
+#include "linear/lower_circuit.h"
+#include "linear/read_kernel.h"
 
 namespace keel
 {
@@ -108,17 +108,11 @@ void replace_body( Function& func, std::vector<Statement> body, Span span )
     func.compact_rvalues();
 }
 
-// A kernel too large to solve whole, planned from its exponent's laws; whether it replaced the body.
-bool plan_kernel(
-    Function&                    func,
-    const Read_kernel&           read,
-    const Type_table&            types,
-    Literal_pool&                literals,
-    const Solve_options&         options,
-    const std::filesystem::path& cache
+// A sum too large to solve whole, as planned; whether it replaced the body.
+bool place_plan(
+    Function& func, const Read_kernel& read, const Planned& planned, const Type_table& types, Literal_pool& literals
 )
 {
-    const Planned planned = plan_sum( read.kernel, { .solve = options, .cache = cache } );
     if( !cheaper( planned.cost, read.input ) )
     {
         return false;
@@ -156,11 +150,14 @@ Map_outcome solve_linear_maps(
     const Global_constants&      globals
 )
 {
-    // Past what solve takes whole, the loops are read as a kernel rather than run.
+    // Past what solve takes whole, the loops are read as a sum rather than run.
     if( const std::optional<Read_kernel> read = read_kernel( func, functions, purity, types, literals );
-        read && read->kernel.n > Plan_options {}.leaf_max )
+        read && read->sum.n > Plan_options {}.leaf_max )
     {
-        return { .solved = plan_kernel( func, *read, types, literals, options, cache ) };
+        if( const std::optional<Planned> planned = plan_sum( read->sum, { .solve = options, .cache = cache } ) )
+        {
+            return { .solved = place_plan( func, *read, *planned, types, literals ) };
+        }
     }
 
     std::variant<Recognised, Unrecognised> attempt = recognise( func, functions, purity, types, literals, globals );

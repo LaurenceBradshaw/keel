@@ -5,9 +5,9 @@
 #include <filesystem>
 #include <optional>
 #include <vector>
-#include "egraph/circuit.h"
-#include "egraph/field.h"
-#include "egraph/solve.h"
+#include "linear/circuit.h"
+#include "linear/field.h"
+#include "linear/solve.h"
 
 namespace keel
 {

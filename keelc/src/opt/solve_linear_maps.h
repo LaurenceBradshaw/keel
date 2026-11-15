@@ -6,10 +6,10 @@
 #include <optional>
 #include <vector>
 #include "common/literal_pool.h"
-#include "egraph/recognise.h"
-#include "egraph/solve.h"
 #include "ir/kir.h"
 #include "ir/purity.h"
+#include "linear/recognise.h"
+#include "linear/solve.h"
 #include "sema/type.h"
 
 namespace keel

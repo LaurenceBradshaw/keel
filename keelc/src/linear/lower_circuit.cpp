@@ -1,7 +1,7 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "egraph/lower_circuit.h"
+#include "linear/lower_circuit.h"
 #include <cassert>
 #include <cmath>
 #include <random>
@@ -480,7 +480,7 @@ std::vector<Statement> lower_nodes(
 
 #ifdef ENABLE_UNIT_TESTS
 #include <catch2/catch_test_macros.hpp>
-#include "egraph/solve.h"
+#include "linear/solve.h"
 
 namespace keel
 {
@@ -542,7 +542,7 @@ std::vector<Row> dft( Field& field, u32 n )
 }
 } // namespace
 
-TEST_CASE( "lower_circuit_writes_dft4_as_adds", "[egraph][lower]" )
+TEST_CASE( "lower_circuit_writes_dft4_as_adds", "[linear][lower]" )
 {
     const Type_table types;
     Literal_pool     literals;
@@ -569,7 +569,7 @@ TEST_CASE( "lower_circuit_writes_dft4_as_adds", "[egraph][lower]" )
     }
 }
 
-TEST_CASE( "lower_circuit_wraps_an_integer_wht4", "[egraph][lower]" )
+TEST_CASE( "lower_circuit_wraps_an_integer_wht4", "[linear][lower]" )
 {
     const Type_table types;
     Literal_pool     literals;
@@ -594,7 +594,7 @@ TEST_CASE( "lower_circuit_wraps_an_integer_wht4", "[egraph][lower]" )
 }
 
 // The debug build checks each lowering on random input; these cover the other constants and rings.
-TEST_CASE( "lower_circuit_computes_its_map", "[egraph][lower]" )
+TEST_CASE( "lower_circuit_computes_its_map", "[linear][lower]" )
 {
     const Type_table types;
     Literal_pool     literals;

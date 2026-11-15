@@ -1,7 +1,7 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "egraph/read_kernel.h"
+#include "linear/read_kernel.h"
 #include <algorithm>
 #include <array>
 #include <bit>
@@ -1385,35 +1385,25 @@ private:
         {
             return std::nullopt;
         }
-        const Wave K = sum( c[0][0], c[1][0], std::complex<f64> { 0, 1 } );
-        if( K.terms.size() != 1 || std::abs( K.terms.begin()->second - 1.0 ) > 1e-9 )
+        const Wave  K = sum( c[0][0], c[1][0], std::complex<f64> { 0, 1 } );
+        Read_kernel r { .sum = { static_cast<u32>( turns_[*j] ), static_cast<u32>( turns_[*k] ), K.M, {} } };
+        for( const auto& [e, coefficient] : K.terms )
         {
-            return std::nullopt;
+            Exponent in_jk;
+            for( const auto& [m, v] : e )
+            {
+                in_jk[{ m[*j], m[*k] }] = v;
+            }
+            r.sum.coefficient[in_jk] = coefficient;
         }
-        const Poly& e = K.terms.begin()->first;
-        Monomial    jk {};
-        jk[*j] = 1;
-        jk[*k] = 1;
-        if( e.size() > 1 || ( e.size() == 1 && e.begin()->first != jk ) )
-        {
-            return std::nullopt;
-        }
-
-        Read_kernel r {
-            .kernel =
-                { .n = static_cast<u32>( turns_[*j] ),
-                  .m = static_cast<u32>( turns_[*k] ),
-                  .M = K.M,
-                  .c = e.empty() ? 0 : static_cast<u64>( e.begin()->second ) },
-            .input =
-                { static_cast<u32>( std::min<u64>( adds_, ~u32 { 0 } ) ), static_cast<u32>( std::min<u64>( muls_, ~u32 { 0 } ) )
-                },
+        r.input = {
+            static_cast<u32>( std::min<u64>( adds_, ~u32 { 0 } ) ), static_cast<u32>( std::min<u64>( muls_, ~u32 { 0 } ) )
         };
-        for( u64 x = 0; x < r.kernel.n; ++x )
+        for( u64 x = 0; x < r.sum.n; ++x )
         {
             r.inputs.push_back( path( in[0], in[1], x ) );
         }
-        for( u64 y = 0; y < r.kernel.m; ++y )
+        for( u64 y = 0; y < r.sum.m; ++y )
         {
             r.outputs.push_back( path( out[0], out[1], y ) );
         }
@@ -1490,32 +1480,37 @@ std::string dft( std::string_view angle, std::string_view body = "sr += re[j] * 
 }
 } // namespace
 
-TEST_CASE( "a DFT loop nest reads as its kernel", "[egraph][read_kernel]" )
+TEST_CASE( "a DFT loop nest reads as its kernel", "[linear][read_kernel]" )
 {
     const std::optional<Read_kernel> r = read_first( dft( "-2.0 * 3.141592653589793 * cast<f64>( j * k % 96 ) / 96.0" ) );
     REQUIRE( r );
-    CHECK( r->kernel == Kernel { 96, 96, 96, 1 } );
+    CHECK( r->sum == exponent_kernel( 96, 96, 96, 1 ) );
     CHECK( r->inputs.size() == 96 );
     CHECK( r->outputs.size() == 96 );
     CHECK( r->input.muls == 4 * 96 * 96 );
 }
 
-TEST_CASE( "an inverse DFT reads as c = M - 1, without the remainder too", "[egraph][read_kernel]" )
+TEST_CASE( "an inverse DFT reads as c = M - 1, without the remainder too", "[linear][read_kernel]" )
 {
     const std::optional<Read_kernel> r = read_first( dft( "2.0 * 3.141592653589793 * cast<f64>( j * k ) / 96.0" ) );
     REQUIRE( r );
-    CHECK( r->kernel == Kernel { 96, 96, 96, 95 } );
+    CHECK( r->sum == exponent_kernel( 96, 96, 96, 95 ) );
 }
 
-TEST_CASE( "a loop that is not one complex kernel reads as none", "[egraph][read_kernel]" )
+TEST_CASE( "a loop that is not one complex kernel reads as none", "[linear][read_kernel]" )
 {
     // Two inputs multiplied.
     CHECK( !read_first( dft( "-2.0 * 3.141592653589793 * cast<f64>( j * k ) / 96.0", "sr += re[j] * im[j]; si += im[j] * c;" ) )
     );
     // Not a rotation: cos on both parts.
     CHECK( !read_first( dft( "-2.0 * 3.141592653589793 * cast<f64>( j * k ) / 96.0", "sr += re[j] * c; si += im[j] * s;" ) ) );
-    // An angle quadratic in j is no c j k kernel.
-    CHECK( !read_first( dft( "-2.0 * 3.141592653589793 * cast<f64>( j * j * k ) / 96.0" ) ) );
+}
+
+TEST_CASE( "an angle quadratic in j reads as its exponent", "[linear][read_kernel]" )
+{
+    const std::optional<Read_kernel> r = read_first( dft( "-2.0 * 3.141592653589793 * cast<f64>( j * j * k ) / 96.0" ) );
+    REQUIRE( r );
+    CHECK( r->sum == Sum { 96, 96, 96, { { Exponent { { { 2, 1 }, 1 } }, 1.0 } } } );
 }
 } // namespace keel
 #endif

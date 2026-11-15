@@ -1,19 +1,49 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "egraph/sums.h"
+#include "linear/sums.h"
 #include <map>
 #include <numbers>
 #include <numeric>
 #include <optional>
 #include <utility>
-#include "egraph/circuit_cache.h"
-#include "egraph/field.h"
+#include "linear/circuit_cache.h"
+#include "linear/field.h"
 
 namespace keel
 {
 namespace
 {
+// y[k] = sum over j < n of x[j] W_M^(c j k), for k < m.
+struct Kernel
+{
+    u32 n;
+    u32 m;
+    u64 M;
+    u64 c;
+
+    auto operator<=>( const Kernel& ) const = default;
+};
+
+// The one shape the planner takes so far.
+std::optional<Kernel> kernel_of( const Sum& s )
+{
+    if( s.coefficient.size() != 1 || std::abs( s.coefficient.begin()->second - 1.0 ) > 1e-9 )
+    {
+        return std::nullopt;
+    }
+    const Exponent& e = s.coefficient.begin()->first;
+    if( e.empty() )
+    {
+        return Kernel { s.n, s.m, s.M, 0 };
+    }
+    if( e.size() != 1 || e.begin()->first != std::array<u8, 2> { 1, 1 } || e.begin()->second < 0 )
+    {
+        return std::nullopt;
+    }
+    return Kernel { s.n, s.m, s.M, static_cast<u64>( e.begin()->second ) % s.M };
+}
+
 std::complex<f64> root( u64 e, u64 M )
 {
     return std::polar( 1.0, -2 * std::numbers::pi * static_cast<f64>( e % M ) / static_cast<f64>( M ) );
@@ -358,10 +388,22 @@ private:
 };
 } // namespace
 
-Planned plan_sum( const Kernel& kernel, const Plan_options& options )
+Sum exponent_kernel( u32 n, u32 m, u64 M, u64 c )
 {
+    Sum s { n, m, M, {} };
+    s.coefficient[c % M == 0 ? Exponent {} : Exponent { { { 1, 1 }, static_cast<i64>( c % M ) } }] = 1;
+    return s;
+}
+
+std::optional<Planned> plan_sum( const Sum& sum, const Plan_options& options )
+{
+    const std::optional<Kernel> kernel = kernel_of( sum );
+    if( !kernel )
+    {
+        return std::nullopt;
+    }
     Planner planner( options );
-    return planner.build( kernel );
+    return planner.build( *kernel );
 }
 } // namespace keel
 #ifdef ENABLE_UNIT_TESTS
@@ -375,6 +417,13 @@ namespace keel
 {
 namespace
 {
+Planned planned( const Kernel& k )
+{
+    const std::optional<Planned> p = plan_sum( exponent_kernel( k.n, k.m, k.M, k.c ) );
+    REQUIRE( p );
+    return *p;
+}
+
 // Largest error of the plan against the sum, relative to the input's size.
 f64 error( const Planned& p, const Kernel& k )
 {
@@ -399,19 +448,27 @@ f64 error( const Planned& p, const Kernel& k )
     return worst / std::sqrt( static_cast<f64>( k.n ) );
 }
 
-TEST_CASE( "a_256_point_dft_splits_to_within_1_percent_of_split_radix", "[egraph][sums]" )
+TEST_CASE( "a_256_point_dft_splits_to_within_1_percent_of_split_radix", "[linear][sums]" )
 {
     const Kernel  k { 256, 256, 256, 1 };
-    const Planned p = plan_sum( k );
+    const Planned p = planned( k );
     INFO( p.how << " " << p.cost.adds << "/" << p.cost.muls );
     CHECK( p.cost.adds + p.cost.muls <= 6664 * 101 / 100 );
     CHECK( error( p, k ) < 1e-12 );
 }
 
-TEST_CASE( "a_kernel_longer_than_its_period_folds_its_columns", "[egraph][sums]" )
+TEST_CASE( "a_sum_with_no_rule_is_not_planned", "[linear][sums]" )
+{
+    Sum s                         = exponent_kernel( 96, 96, 96, 1 );
+    s.coefficient.begin()->second = 2;
+    CHECK( !plan_sum( s ) );
+    CHECK( !plan_sum( Sum { 96, 96, 96, { { Exponent { { { 2, 1 }, 1 } }, 1.0 } } } ) );
+}
+
+TEST_CASE( "a_kernel_longer_than_its_period_folds_its_columns", "[linear][sums]" )
 {
     const Kernel  k { 24, 16, 8, 3 };
-    const Planned p = plan_sum( k );
+    const Planned p = planned( k );
     INFO( p.how );
     CHECK( error( p, k ) < 1e-12 );
 }
@@ -428,7 +485,7 @@ TEST_CASE( "a_large_kernel_is_planned", "[.][sums_large]" )
         k.m = k.n;
     }
     const auto    start = std::chrono::steady_clock::now();
-    const Planned p     = plan_sum( k );
+    const Planned p     = planned( k );
     const f64     secs  = std::chrono::duration<f64>( std::chrono::steady_clock::now() - start ).count();
     const f64     err   = error( p, k );
     std::cout << "sum " << k.n << ": " << p.cost.adds << "/" << p.cost.muls << " plan " << secs << "s err " << err << "\n"

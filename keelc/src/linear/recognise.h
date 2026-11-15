@@ -9,10 +9,10 @@
 #include <vector>
 #include "common/literal_pool.h"
 #include "common/span.h"
-#include "egraph/circuit.h"
-#include "egraph/field.h"
 #include "ir/kir.h"
 #include "ir/purity.h"
+#include "linear/circuit.h"
+#include "linear/field.h"
 #include "sema/type.h"
 #include "sema/type_checker.h"
 

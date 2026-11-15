@@ -1,7 +1,7 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "egraph/sum_graph.h"
+#include "linear/sum_graph.h"
 #include <algorithm>
 #include <bit>
 #include <cassert>
