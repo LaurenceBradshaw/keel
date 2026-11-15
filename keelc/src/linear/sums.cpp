@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "linear/sums.h"
+#include <bit>
 #include <functional>
 #include <limits>
 #include <map>
@@ -209,6 +210,7 @@ struct Use
     Cost                             own;
     std::string                      how;
     std::optional<Planned>           leaf {};
+    std::array<u64, 2>               chosen {}; // sizes the rule picked
 };
 
 // A fact the planner may use. `match` gives each way it takes a sum, its side conditions met;
@@ -294,10 +296,12 @@ Cost on_real_inputs( const Circuit& circuit, const std::vector<u32>& outputs, u3
     return probe.cost();
 }
 
+// A side not dividing M has no structure the solver finds, and costs it minutes.
 std::vector<Use> solved_match( const Sum& s, const Plan_options& options )
 {
     const std::optional<Kernel> k = kernel_of( s );
-    if( !k || k->n > options.leaf_max || k->m > options.leaf_max || k->M > 4 * options.leaf_max || k->n * k->m < 4 )
+    if( !k || k->n > options.leaf_max || k->m > options.leaf_max || k->M > 4 * options.leaf_max || k->n * k->m < 4 ||
+        k->M % k->n != 0 || k->M % k->m != 0 )
     {
         return {};
     }
@@ -310,23 +314,29 @@ std::vector<Use> solved_match( const Sum& s, const Plan_options& options )
             rows[o].push_back( field.root( static_cast<u32>( k->c * j % k->M * o % k->M ) ) );
         }
     }
-    std::optional<Circuit> found =
-        options.cache.empty() ? std::nullopt : cached_circuit( options.cache, field, rows, options.solve );
-    if( !found )
+    const std::array<u64, 4> key { k->n, k->m, k->M, k->c };
+    auto                     at = options.solved.find( key );
+    if( at == options.solved.end() )
     {
-        found = solve( field, rows, options.solve ).circuit;
-        if( !options.cache.empty() )
+        std::optional<Circuit> found =
+            options.cache.empty() ? std::nullopt : cached_circuit( options.cache, field, rows, options.solve );
+        if( !found )
         {
-            cache_circuit( options.cache, field, rows, options.solve, *found );
+            found = solve( field, rows, options.solve ).circuit;
+            if( !options.cache.empty() )
+            {
+                cache_circuit( options.cache, field, rows, options.solve, *found );
+            }
         }
+        at = options.solved.emplace( key, std::move( *found ) ).first;
     }
     Planned leaf;
     for( const Row& r : rows )
     {
-        leaf.outputs.push_back( found->outputs.at( r ) );
+        leaf.outputs.push_back( at->second.outputs.at( r ) );
     }
-    leaf.cost    = s.real ? on_real_inputs( *found, leaf.outputs, k->n ) : found->cost();
-    leaf.circuit = std::move( *found );
+    leaf.cost    = s.real ? on_real_inputs( at->second, leaf.outputs, k->n ) : at->second.cost();
+    leaf.circuit = at->second;
     return { { {}, leaf.cost, "solved " + sides( s ) + " W" + std::to_string( k->M ), std::move( leaf ) } };
 }
 
@@ -373,7 +383,37 @@ periodic_build( Circuit& c, const Sum& s, const Use& use, const std::vector<u32>
     return out;
 }
 
-// The smallest R for each P.
+// How many j < n are r mod P.
+u32 ragged( u32 n, u64 P, u64 r )
+{
+    return static_cast<u32>( ( n - r + P - 1 ) / P );
+}
+
+// One more of `part`.
+void add_part( Use& use, Sum part )
+{
+    for( auto& [count, p] : use.parts )
+    {
+        if( p == part )
+        {
+            ++count;
+            return;
+        }
+    }
+    use.parts.push_back( { 1, std::move( part ) } );
+}
+
+Sum inner_sum( const Kernel& k, u64 P, u64 R, u64 j1, bool real )
+{
+    return kernel_sum( { ragged( k.n, P, j1 ), static_cast<u32>( R ), k.M, k.c * P % k.M }, real );
+}
+
+Sum outer_sum( const Kernel& k, u64 P, u64 R, u64 k2 )
+{
+    return kernel_sum( { static_cast<u32>( P ), ragged( k.m, R, k2 ), k.M, k.c * R % k.M }, false );
+}
+
+// Each P dividing n or M, with the smallest R; a P or R not dividing n or m leaves ragged parts.
 std::vector<Use> split_match( const Sum& s, const Plan_options& )
 {
     const std::optional<Kernel> found = kernel_of( s );
@@ -385,47 +425,42 @@ std::vector<Use> split_match( const Sum& s, const Plan_options& )
     std::vector<Use> uses;
     for( u32 P = 2; P < k.n; ++P )
     {
-        if( k.n % P != 0 )
+        if( k.n % P != 0 && k.M % P != 0 )
         {
             continue;
         }
-        const u64 r0 = k.M / std::gcd( k.M, static_cast<u64>( P ) );
-        for( u64 R = r0; R <= k.m; R += r0 )
+        const u64 R = std::min<u64>( k.M / std::gcd( k.M, u64 { P } ), k.m );
+        Cost      own {};
+        for( u32 j1 = 1; j1 < P; ++j1 )
         {
-            if( k.m % R != 0 )
+            for( u64 k2 = 1; k2 < R; ++k2 )
             {
-                continue;
+                own = own + twiddle_cost( k.c * j1 % k.M * k2, k.M );
             }
-            Cost own {};
-            for( u32 j1 = 1; j1 < P; ++j1 )
-            {
-                for( u64 k2 = 1; k2 < R; ++k2 )
-                {
-                    own = own + twiddle_cost( k.c * j1 % k.M * k2, k.M );
-                }
-            }
-            const Kernel inner { k.n / P, static_cast<u32>( R ), k.M, k.c * P % k.M };
-            const Kernel outer { P, k.m / static_cast<u32>( R ), k.M, k.c * R % k.M };
-            uses.push_back(
-                { { { P, kernel_sum( inner, s.real ) }, { static_cast<u32>( R ), kernel_sum( outer, false ) } },
-                  own,
-                  "split " + std::to_string( P ) + "x" + std::to_string( k.n / P ) }
-            );
-            break;
         }
+        Use use { {}, own, "split " + std::to_string( P ) + "x" + std::to_string( k.n / P ), {}, { P, R } };
+        for( u32 j1 = 0; j1 < P; ++j1 )
+        {
+            add_part( use, inner_sum( k, P, R, j1, s.real ) );
+        }
+        for( u64 k2 = 0; k2 < R; ++k2 )
+        {
+            add_part( use, outer_sum( k, P, R, k2 ) );
+        }
+        uses.push_back( std::move( use ) );
     }
     return uses;
 }
 
 std::vector<u32> split_build( Circuit& c, const Sum& s, const Use& use, const std::vector<u32>& x, const Part_builder& part )
 {
-    const Kernel k         = *kernel_of( s );
-    const auto& [P, inner] = use.parts[0];
-    const auto& [R, outer] = use.parts[1];
+    const Kernel k    = *kernel_of( s );
+    const auto [P, R] = use.chosen;
 
     std::vector<std::vector<u32>> z( P );
     for( u32 j1 = 0; j1 < P; ++j1 )
     {
+        const Sum        inner = inner_sum( k, P, R, j1, s.real );
         std::vector<u32> in( inner.n );
         for( u32 j2 = 0; j2 < inner.n; ++j2 )
         {
@@ -450,13 +485,154 @@ std::vector<u32> split_build( Circuit& c, const Sum& s, const Use& use, const st
         {
             in[j1] = z[j1][k2];
         }
-        const std::vector<u32> y = part( c, outer, in );
+        const Sum              outer = outer_sum( k, P, R, k2 );
+        const std::vector<u32> y     = part( c, outer, in );
         for( u32 k1 = 0; k1 < outer.m; ++k1 )
         {
             out[k2 + R * k1] = y[k1];
         }
     }
     return out;
+}
+
+// The least power of 2 at least n + m - 1, when M is not one, so a convolution's transforms never
+// need another. Other lengths' leaves cost the solver minutes.
+std::optional<u64> length( u32 n, u32 m, u64 M )
+{
+    if( std::has_single_bit( M ) )
+    {
+        return std::nullopt;
+    }
+    return std::bit_ceil( u64 { n } + m - 1 );
+}
+
+// The sum chirp leaves of a kernel, in M or 2M so (k - j)^2 / 2 is whole; and its half c.
+std::pair<Sum, i64> chirped( const Kernel& k )
+{
+    const u64 M = k.c % 2 == 0 ? k.M : 2 * k.M;
+    const i64 h = static_cast<i64>( k.c % 2 == 0 ? k.c / 2 : k.c );
+    return { Sum { k.n, k.m, M, { { Exponent { { { 2, 0 }, -h }, { { 1, 1 }, 2 * h }, { { 0, 2 }, -h } }, 1 } } }, h };
+}
+
+// W^(c j k) = W^(c j^2 / 2) W^(-c (k - j)^2 / 2) W^(c k^2 / 2).
+std::vector<Use> chirp_match( const Sum& s, const Plan_options& )
+{
+    const std::optional<Kernel> k = kernel_of( s );
+    if( !k || k->c == 0 || k->n < 2 || k->m < 2 )
+    {
+        return {};
+    }
+    const auto [part, h] = chirped( *k );
+    if( !length( k->n, k->m, part.M ) )
+    {
+        return {};
+    }
+    Cost own {};
+    for( u64 j = 0; j < k->n; ++j )
+    {
+        own = own + scale_cost( root( mod( h, part.M ) * j % part.M * j, part.M ), s.real );
+    }
+    for( u64 o = 0; o < k->m; ++o )
+    {
+        own = own + scale_cost( root( mod( h, part.M ) * o % part.M * o, part.M ), false );
+    }
+    return { { { { 1, part } }, own, "chirp" } };
+}
+
+std::vector<u32> chirp_build( Circuit& c, const Sum& s, const Use& use, const std::vector<u32>& x0, const Part_builder& part )
+{
+    const auto [sum, h] = chirped( *kernel_of( s ) );
+    std::vector<u32> x  = x0;
+    for( u64 j = 0; j < s.n; ++j )
+    {
+        x[j] = c.scale( x[j], root( mod( h, sum.M ) * j % sum.M * j, sum.M ) );
+    }
+    std::vector<u32> y = part( c, use.parts[0].second, x );
+    for( u64 o = 0; o < s.m; ++o )
+    {
+        y[o] = c.scale( y[o], root( mod( h, sum.M ) * o % sum.M * o, sum.M ) );
+    }
+    return y;
+}
+
+// Whether e(j, k) is q(k - j) for q(d) = e(0, d), mod M.
+bool in_difference( const Exponent& e, u64 M )
+{
+    Exponent expanded;
+    for( const auto& [powers, v] : e )
+    {
+        if( powers[0] != 0 )
+        {
+            continue;
+        }
+        i64 binomial = 1;
+        for( u8 i = 0; i <= powers[1]; ++i )
+        {
+            const i128 term = i128 { v } * binomial * ( i % 2 == 0 ? 1 : -1 );
+            i64&       at   = expanded[{ i, static_cast<u8>( powers[1] - i ) }];
+            at              = static_cast<i64>( mod( static_cast<i64>( ( i128 { at } + term ) % M ), M ) );
+            binomial        = binomial * ( powers[1] - i ) / ( i + 1 );
+        }
+    }
+    return canonical( expanded, 1, M ).first == canonical( e, 1, M ).first;
+}
+
+// A sum in k - j is a convolution: zero-padded to a cyclic one of length L, it is DFT_L, a product
+// with the kernel's transform, and DFT_L back.
+std::vector<Use> convolution_match( const Sum& s, const Plan_options& )
+{
+    if( s.coefficient.size() != 1 )
+    {
+        return {};
+    }
+    const Exponent& e = s.coefficient.begin()->first;
+    if( !e.contains( { 1, 1 } ) || !in_difference( e, s.M ) )
+    {
+        return {};
+    }
+    const std::optional<u64> L = length( s.n, s.m, s.M );
+    if( !L )
+    {
+        return {};
+    }
+    const u32 l = static_cast<u32>( *L );
+    return {
+        { { { 1, kernel_sum( { s.n, l, *L, 1 }, s.real ) }, { 1, kernel_sum( { l, s.m, *L, *L - 1 }, false ) } },
+          l * scale_cost( { 0.3, 0.7 }, false ),
+          "convolution " + std::to_string( *L ),
+          {},
+          { *L, 0 } }
+    };
+}
+
+std::vector<u32>
+convolution_build( Circuit& c, const Sum& s, const Use& use, const std::vector<u32>& x, const Part_builder& part )
+{
+    const u64                      L = use.chosen[0];
+    std::vector<std::complex<f64>> h( L ), W( L ), H( L );
+    for( i64 t = 1 - i64 { s.n }; t < i64 { s.m }; ++t )
+    {
+        h[mod( t, L )] = t >= 0 ? entry( s, 0, static_cast<u64>( t ) ) : entry( s, static_cast<u64>( -t ), 0 );
+    }
+    for( u64 i = 0; i < L; ++i )
+    {
+        W[i] = root( i, L );
+    }
+    for( u64 f = 0; f < L; ++f )
+    {
+        for( i64 t = 1 - i64 { s.n }; t < i64 { s.m }; ++t )
+        {
+            const u64 at = mod( t, L );
+            H[f] += h[at] * W[f * at % L];
+        }
+        H[f] /= static_cast<f64>( L );
+    }
+    std::vector<u32> X = part( c, use.parts[0].second, x );
+    for( u64 f = 0; f < L; ++f )
+    {
+        X[f] = c.scale( X[f], H[f] );
+    }
+    return part( c, use.parts[1].second, X );
 }
 
 // One part a term.
@@ -608,6 +784,11 @@ const Rule rules[] = {
       "j = j1 + P j2, k = k2 + R k1: W^(c j k) = W^(c P j2 k2) W^(c j1 k2) W^(c R j1 k1) when c P R = 0 mod M",
       split_match,
       split_build },
+    { "chirp", "j k = (j^2 + k^2 - (k - j)^2) / 2", chirp_match, chirp_build },
+    { "convolution",
+      "sum over j of x[j] h(k - j) is a cyclic convolution once padded, and DFT_L takes one to a product",
+      convolution_match,
+      convolution_build },
 };
 
 // Every rule's uses ranked by their own cost plus their parts'; only the one chosen is built. A sum
@@ -866,6 +1047,12 @@ Sum random_sum( std::mt19937& rng )
     {
         return kernel_sum( { n, m, M, below( rng, M ) }, real );
     }
+    if( below( rng, 4 ) == 0 )
+    {
+        const i64 a = 1 + below( rng, M );
+        return normalised( Sum { n, m, M, { { Exponent { { { 2, 0 }, a }, { { 1, 1 }, -2 * a }, { { 0, 2 }, a } }, 1 } }, real }
+        );
+    }
     Sum s { n, m, M, {}, real };
     for( u32 t = below( rng, 3 ); t < 3; ++t )
     {
@@ -954,6 +1141,20 @@ TEST_CASE( "a_256_point_dft_splits_to_within_1_percent_of_split_radix", "[linear
     INFO( p.how << " " << p.cost.adds << "/" << p.cost.muls );
     CHECK( p.cost.adds + p.cost.muls <= 6664 * 101 / 100 );
     CHECK( error( p, s ) < 1e-12 );
+}
+
+TEST_CASE( "a_prime_dft_is_a_convolution_of_a_power_of_2", "[linear][sums]" )
+{
+    for( const u32 N : { 67u, 127u } )
+    {
+        const Sum     s = exponent_kernel( N, N, N, 1 );
+        const Planned p = planned( s );
+        INFO( N << " " << p.how << " " << p.cost.adds << "/" << p.cost.muls );
+        CHECK( p.how.starts_with( "chirp(" ) );
+        const Cost naive = direct_match( s, {} )[0].own;
+        CHECK( 2 * ( p.cost.adds + p.cost.muls ) < naive.adds + naive.muls );
+        CHECK( error( p, s ) < 1e-12 );
+    }
 }
 
 TEST_CASE( "a_sum_no_other_rule_takes_is_summed_directly", "[linear][sums]" )
