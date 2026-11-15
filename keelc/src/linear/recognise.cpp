@@ -1668,6 +1668,28 @@ private:
         return make( Kind::Angle, { .i = std::move( i ), .a = a, .b = b } );
     }
 
+    static sym::Poly scaled_poly( const sym::Poly& p, i64 c )
+    {
+        return sym::product( p, sym::constant( c ) );
+    }
+
+    // (a i + b)(a' i' + b') with b/a = n/d and b'/a' = n'/d': a a'/(d d') (d i + n)(d' i' + n').
+    Value angle_product( Symbolic s, Symbolic t )
+    {
+        const auto u = s.i.q == 0 && s.a != 0 ? sym::rational( s.b / s.a ) : std::nullopt;
+        const auto w = t.i.q == 0 && t.a != 0 ? sym::rational( t.b / t.a ) : std::nullopt;
+        if( !u || !w )
+        {
+            sym::fail();
+        }
+        const i64       d = static_cast<i64>( u->second ), e = static_cast<i64>( w->second );
+        const sym::Poly p = sym::product(
+            sym::sum( scaled_poly( s.i.p, d ), sym::constant( u->first ) ),
+            sym::sum( scaled_poly( t.i.p, e ), sym::constant( w->first ) )
+        );
+        return angle( made( p, 0, 0, 0 ), s.a * t.a / static_cast<f64>( d * e ), 0 );
+    }
+
     Value terms( sym::Form f )
     {
         return make( Kind::Terms, { .f = std::move( f ) } );
@@ -1998,6 +2020,21 @@ private:
                 const Symbolic& t = symbolics_[y.index];
                 return angle( s.i, s.a + r * t.a, s.b + r * t.b );
             }
+            // a i + a p/q i' = a/q (q i + p i').
+            if( x.kind == Kind::Angle && y.kind == Kind::Angle )
+            {
+                const Symbolic s = symbolics_[x.index];
+                const Symbolic t = symbolics_[y.index];
+                if( const auto ratio = s.i.q == 0 && t.i.q == 0 && s.a != 0 ? sym::rational( t.a / s.a ) : std::nullopt )
+                {
+                    const i64 q = static_cast<i64>( ratio->second );
+                    return angle(
+                        made( sym::sum( scaled_poly( s.i.p, q ), scaled_poly( t.i.p, ratio->first ), sign ), 0, 0, 0 ),
+                        s.a / static_cast<f64>( q ),
+                        s.b + r * t.b
+                    );
+                }
+            }
             sym::fail();
         }
         return make( Kind::Wave, { .w = sym::sum( as_wave( x ), as_wave( y ), sign ) } );
@@ -2031,6 +2068,10 @@ private:
             {
                 const Symbolic& s = symbolics_[y.index];
                 v                 = angle( s.i, as_real( x ) * s.a, as_real( x ) * s.b );
+            }
+            else if( x.kind == Kind::Angle && y.kind == Kind::Angle )
+            {
+                v = angle_product( symbolics_[x.index], symbolics_[y.index] );
             }
             else
             {
@@ -2438,8 +2479,8 @@ private:
         return std::popcount( mask ) == 1 ? std::optional<u32>( static_cast<u32>( std::countr_zero( mask ) ) ) : std::nullopt;
     }
 
-    // Element e of each of two streams.
-    Value_path stream_path( u32 a, u32 b, u64 e ) const
+    // Element e of stream a, and of b unless the map is real.
+    Value_path stream_path( u32 a, std::optional<u32> b, u64 e ) const
     {
         const auto one = [&]( const Stream& s )
         {
@@ -2451,10 +2492,10 @@ private:
             }
             return p;
         };
-        return { one( streams_[a] ), one( streams_[b] ) };
+        return { one( streams_[a] ), b ? one( streams_[*b] ) : Param_path {} };
     }
 
-    // y = x * K, complex, from the four real forms.
+    // y = x * K: complex from the four real forms, or real from one.
     std::optional<Read_kernel> collect_sum() const
     {
         std::vector<u32> in, out;
@@ -2469,7 +2510,8 @@ private:
         };
         std::ranges::sort( in, order );
         std::ranges::sort( out, order );
-        if( in.size() != 2 || out.size() != 2 || stores_.size() != 2 )
+        const u32 parts = static_cast<u32>( in.size() );
+        if( parts < 1 || parts > 2 || out.size() != parts || stores_.size() != parts )
         {
             return std::nullopt;
         }
@@ -2479,24 +2521,25 @@ private:
         {
             stored[s.stream == out[0] ? 0 : 1] = &s;
         }
-        if( stored[0] == nullptr || stored[1] == nullptr || stored[0]->bound != stored[1]->bound )
+        if( stored[0] == nullptr || ( parts == 2 && ( stored[1] == nullptr || stored[0]->bound != stored[1]->bound ) ) )
         {
             return std::nullopt;
         }
         const std::optional<u32> k = one_bit( stored[0]->bound );
-        if( !k || stored[0]->index != sym::symbol( *k ) || stored[1]->index != sym::symbol( *k ) )
+        if( !k || stored[0]->index != sym::symbol( *k ) || ( parts == 2 && stored[1]->index != sym::symbol( *k ) ) )
         {
             return std::nullopt;
         }
 
         std::optional<u32> j;
         sym::Wave          c[2][2];
-        for( u32 o = 0; o < 2; ++o )
+        for( u32 o = 0; o < parts; ++o )
         {
             for( const auto& [key, w] : stored[o]->value.terms )
             {
                 const std::optional<u32> b = one_bit( key.bound );
-                if( !b || *b == *k || ( j && *b != *j ) || key.index != sym::symbol( *b ) )
+                if( !b || *b == *k || ( j && *b != *j ) || key.index != sym::symbol( *b ) ||
+                    ( parts == 1 && key.stream != in[0] ) )
                 {
                     return std::nullopt;
                 }
@@ -2520,12 +2563,12 @@ private:
         }
 
         // re y = A re x - B im x and im y = B re x + A im x for a complex K = A + i B.
-        if( !sym::sum( c[0][0], c[1][1], -1 ).terms.empty() || !sym::sum( c[0][1], c[1][0] ).terms.empty() )
+        if( parts == 2 && ( !sym::sum( c[0][0], c[1][1], -1 ).terms.empty() || !sym::sum( c[0][1], c[1][0] ).terms.empty() ) )
         {
             return std::nullopt;
         }
-        const sym::Wave K = sym::sum( c[0][0], sym::product( c[1][0], sym::imaginary() ) );
-        Read_kernel     r { .sum = { static_cast<u32>( turns_[*j] ), static_cast<u32>( turns_[*k] ), K.M, {} } };
+        const sym::Wave K = parts == 1 ? c[0][0] : sym::sum( c[0][0], sym::product( c[1][0], sym::imaginary() ) );
+        Read_kernel     r { .sum = { static_cast<u32>( turns_[*j] ), static_cast<u32>( turns_[*k] ), K.M, {}, parts == 1 } };
         for( const auto& [e, coefficient] : K.terms )
         {
             Exponent in_jk;
@@ -2540,11 +2583,11 @@ private:
         };
         for( u64 x = 0; x < r.sum.n; ++x )
         {
-            r.inputs.push_back( stream_path( in[0], in[1], x ) );
+            r.inputs.push_back( stream_path( in[0], parts == 2 ? std::optional( in[1] ) : std::nullopt, x ) );
         }
         for( u64 y = 0; y < r.sum.m; ++y )
         {
-            r.outputs.push_back( stream_path( out[0], out[1], y ) );
+            r.outputs.push_back( stream_path( out[0], parts == 2 ? std::optional( out[1] ) : std::nullopt, y ) );
         }
         return r;
     }
@@ -3129,6 +3172,27 @@ TEST_CASE( "a loop that is not one complex kernel reads as none", "[linear][reco
     );
     // Not a rotation: cos on both parts.
     CHECK( !read_first( dft( "-2.0 * 3.141592653589793 * cast<f64>( j * k ) / 96.0", "sr += re[j] * c; si += im[j] * s;" ) ) );
+}
+
+TEST_CASE( "a real DCT loop reads as a real sum", "[linear][recognise]" )
+{
+    const std::optional<Read_kernel> r = read_first(
+        "@real_arithmetic void f( const ref f64[96] x, ref f64[96] y ) {\n"
+        "for( u64 k = 0; k < 96; k += 1 ) { f64 s = 0.0;\n"
+        "for( u64 n = 0; n < 96; n += 1 ) { s += x[n] * cosine( 3.141592653589793 / 96.0 * ( cast<f64>( n ) + 0.5 ) * "
+        "cast<f64>( k ) ); }\n y[k] = s; } }\n"
+    );
+    REQUIRE( r );
+    const Sum dct {
+        96,
+        96,
+        384,
+        { { Exponent { { { 1, 1 }, 2 }, { { 0, 1 }, 1 } }, Rational( 1, 2 ) },
+          { Exponent { { { 1, 1 }, 382 }, { { 0, 1 }, 383 } }, Rational( 1, 2 ) } },
+        true
+    };
+    CHECK( r->sum == dct );
+    CHECK( !r->inputs[0].imaginary.local.is_valid() );
 }
 
 TEST_CASE( "an angle quadratic in j reads as its exponent", "[linear][recognise]" )

@@ -25,7 +25,7 @@ struct Rational
     Rational() = default;
     Rational( i64 n, i64 d = 1 );
 
-    bool     operator==( const Rational& ) const = default;
+    auto     operator<=>( const Rational& ) const = default;
     Rational operator+( Rational o ) const;
     Rational operator*( Rational o ) const;
 
@@ -43,8 +43,9 @@ struct Sum
     u32                          m;
     u64                          M;
     std::map<Exponent, Rational> coefficient;
+    bool                         real = false; // x is real
 
-    bool operator==( const Sum& ) const = default;
+    auto operator<=>( const Sum& ) const = default;
 };
 
 // y[k] = sum over j < n of x[j] W_M^(c j k).
@@ -65,9 +66,9 @@ struct Plan_options
     std::filesystem::path cache {}; // where solved leaves are kept, as solve_linear_maps keeps whole maps
 };
 
-// The cheapest circuit the planner's rules find, each a law of the exponent: W^M = 1 folds equal
-// columns and rows, and j = j1 + P j2, k = k2 + R k1 splits the sum into sums over j2, a twiddle
-// W^(c j1 k2) and sums over j1, once the cross term c P R j2 k1 is 0 mod M. Small kernels are
-// solved. Nothing when no rule takes the sum.
+// The cheapest circuit the planner's rules find, each a law of the sum: terms in j or k alone factor
+// out, a real x pairs conjugate terms, W^M = 1 folds equal columns and rows, and j = j1 + P j2,
+// k = k2 + R k1 splits the sum into sums over j2, a twiddle W^(c j1 k2) and sums over j1, once the
+// cross term c P R j2 k1 is 0 mod M. Small kernels are solved. Nothing when no rule takes the sum.
 std::optional<Planned> plan_sum( const Sum& sum, const Plan_options& options = {} );
 } // namespace keel

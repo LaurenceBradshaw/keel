@@ -123,19 +123,20 @@ public:
     )
     {
         assert( nodes.size() == outputs.size() );
-        const std::vector<Op>&  ops  = circuit.ops();
-        const std::vector<bool> live = circuit.live();
-        std::vector<Value>      v( ops.size() );
+        const std::vector<Op>&                 ops  = circuit.ops();
+        const std::vector<std::array<bool, 2>> live = circuit.live_parts();
+        std::vector<Value>                     v( ops.size() );
         for( u32 o = 0; o < ops.size(); ++o )
         {
-            if( live[o] && ops[o].kind == Op_kind::Input )
+            if( ops[o].kind == Op_kind::Input )
             {
-                v[o] = { load( inputs[ops[o].a].real ), paired_ ? load( inputs[ops[o].a].imaginary ) : Part {} };
+                const Value_place& in = inputs[ops[o].a];
+                v[o] = { live[o][0] ? load( in.real ) : Part {}, live[o][1] && paired_ ? load( in.imaginary ) : Part {} };
             }
         }
         for( u32 o = 0; o < ops.size(); ++o )
         {
-            if( !live[o] || ops[o].kind == Op_kind::Input )
+            if( ( !live[o][0] && !live[o][1] ) || ops[o].kind == Op_kind::Input )
             {
                 continue;
             }
@@ -143,7 +144,12 @@ public:
             if( ops[o].kind == Op_kind::Add )
             {
                 const Value& b = v[ops[o].b];
-                v[o]           = { plus( a.re, b.re ), plus( a.im, b.im ) };
+                v[o]           = { live[o][0] ? plus( a.re, b.re ) : Part {}, live[o][1] ? plus( a.im, b.im ) : Part {} };
+                continue;
+            }
+            if( ops[o].kind == Op_kind::Real )
+            {
+                v[o] = { a.re, {} };
                 continue;
             }
 
@@ -152,13 +158,13 @@ public:
                                       : std::pair<Number, Number> {
                                             { circuit.constant( ops[o].b ).real() }, { circuit.constant( ops[o].b ).imag() }
                                         };
-            v[o]                = scale( a, cr, ci );
+            v[o]                = scale( a, cr, ci, live[o] );
         }
         for( size_t i = 0; i < nodes.size(); ++i )
         {
             const Value y = nodes[i] == Circuit::k_zero ? Value {} : v[nodes[i]];
             store( outputs[i].real, y.re );
-            if( paired_ )
+            if( paired_ && outputs[i].imaginary.local.is_valid() )
             {
                 store( outputs[i].imaginary, y.im );
             }
@@ -253,7 +259,8 @@ private:
     }
 
     // (cr + ci i)(re + im i); k(+-1 +-i) takes its sums first, so 2 muls and not 4.
-    Value scale( Value x, Number cr, Number ci )
+    // Only the parts `want` says.
+    Value scale( Value x, Number cr, Number ci, std::array<bool, 2> want )
     {
         if( !paired_ )
         {
@@ -265,13 +272,13 @@ private:
             const Number sr = z_.negative( cr ) ? z_.negated( one() ) : one();
             const Number si = z_.negative( ci ) ? z_.negated( one() ) : one();
             return {
-                times( k, plus( times( sr, x.re ), times( z_.negated( si ), x.im ) ) ),
-                times( k, plus( times( sr, x.im ), times( si, x.re ) ) ),
+                want[0] ? times( k, plus( times( sr, x.re ), times( z_.negated( si ), x.im ) ) ) : Part {},
+                want[1] ? times( k, plus( times( sr, x.im ), times( si, x.re ) ) ) : Part {},
             };
         }
         return {
-            plus( times( cr, x.re ), times( z_.negated( ci ), x.im ) ),
-            plus( times( cr, x.im ), times( ci, x.re ) ),
+            want[0] ? plus( times( cr, x.re ), times( z_.negated( ci ), x.im ) ) : Part {},
+            want[1] ? plus( times( cr, x.im ), times( ci, x.re ) ) : Part {},
         };
     }
 

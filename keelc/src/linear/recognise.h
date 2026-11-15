@@ -117,7 +117,7 @@ struct Read_kernel
 
 // As `recognise`, but each counted loop runs once with its index a symbol, an accumulator's step is
 // summed over it, an index is a polynomial in the symbols, and a `@trig_*` call at a rational multiple
-// of pi times one becomes powers of W. Nothing when the body is not one complex sum y[k] = sum over j
+// of pi times one becomes powers of W. Nothing when the body is not one sum y[k] = sum over j, complex or real,
 // of x[j] times powers of W in j and k.
 std::optional<Read_kernel> read_kernel(
     const Function&              func,

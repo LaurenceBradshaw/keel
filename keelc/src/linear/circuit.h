@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #pragma once
+#include <array>
 #include <complex>
 #include <map>
 #include <optional>
@@ -20,9 +21,10 @@ enum class Op_kind : u8
     Input,
     Add,
     Scale,
+    Real,
 };
 
-// Input: `a` is the input. Add: `a <= b` are nodes. Scale: node `a` times constant `b`.
+// Input: `a` is the input. Add: `a <= b` are nodes. Scale: node `a` times constant `b`. Real: node `a`'s real part.
 struct Op
 {
     Op_kind kind;
@@ -57,14 +59,17 @@ struct Cost
 // A row of a linear map, the key of the output that computes it.
 using Row = std::vector<Element>;
 
-// What scaling by `c` costs, as Circuit::cost counts it; `unit` when the ring says it is free.
+// What scaling a value by `c` costs, as Circuit::cost counts it, `real` when the value is;
+// `unit` when the ring says it is free.
 Cost scale_cost( std::complex<f64> c, bool real, bool unit = false );
 
-// A hash-consed straight-line circuit over inputs, adds and scalings. Constants are snapped complex
-// floats, since sub-circuits from other fields are pasted in; an integer ring's stay exact.
+// A hash-consed straight-line circuit over inputs, adds, scalings and real parts. Constants are snapped
+// complex floats, since sub-circuits from other fields are pasted in; an integer ring's stay exact.
+// A node is real when its inputs are and its constants keep it so; only live parts are counted.
 class Circuit
 {
 public:
+    // `real`: the inputs are.
     explicit Circuit( bool real );
     explicit Circuit( Field& integers );
 
@@ -72,9 +77,16 @@ public:
     u32 add( u32 a, u32 b );
     u32 scale( u32 a, std::complex<f64> c );
     u32 scale( u32 a, Element c );
+    u32 real_part( u32 a );
 
-    // Builds `sub` here with its inputs bound to `inputs`; maps each of sub's nodes to one here.
-    std::vector<u32> paste( const Circuit& sub, const std::vector<u32>& inputs );
+    bool real() const
+    {
+        return real_;
+    }
+
+    // Builds `sub` here with its inputs bound to `inputs`, its float constants conjugated when
+    // `conjugate`, so computing the conjugate map; maps each of sub's nodes to one here.
+    std::vector<u32> paste( const Circuit& sub, const std::vector<u32>& inputs, bool conjugate = false );
 
     // The live nodes, with a(bx) folded to (ab)x where bx has no other user.
     Circuit pruned() const;
@@ -111,6 +123,9 @@ public:
     // The nodes some output reaches.
     std::vector<bool> live() const;
 
+    // Which of each node's real and imaginary parts some output reaches; a real node has no imaginary part.
+    std::vector<std::array<bool, 2>> live_parts() const;
+
     static constexpr u32 k_zero = ~u32 { 0 };
 
     // Each row's output node, or k_zero for a row with none.
@@ -137,6 +152,7 @@ private:
     Field* integers_ = nullptr;
 
     std::vector<Op>                    ops_;
+    std::vector<bool>                  real_ops_; // each op's value is real
     std::unordered_map<u64, u32>       memo_;
     std::vector<Constant>              constants_;
     std::map<std::pair<f64, f64>, u32> constant_ids_;

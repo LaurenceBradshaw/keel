@@ -16,13 +16,48 @@ namespace
 constexpr std::complex<f64> k_real_units[]    = { { 1, 0 }, { -1, 0 } };
 constexpr std::complex<f64> k_complex_units[] = { { 1, 0 }, { 0, 1 }, { -1, 0 }, { 0, -1 } };
 
-std::span<const std::complex<f64>> float_units( bool real )
+// A real constant's orbit stays real, so a real node scaled stays real.
+std::span<const std::complex<f64>> float_units( std::complex<f64> c )
 {
-    if( real )
+    if( std::abs( c.imag() ) < 1e-12 )
     {
         return k_real_units;
     }
     return k_complex_units;
+}
+
+bool is_float_unit( std::complex<f64> c )
+{
+    return std::ranges::any_of( k_complex_units, [&]( std::complex<f64> u ) { return std::abs( c - u ) < 1e-12; } );
+}
+
+// One multiply by a part other than 0 and +-1.
+u32 part_mul( f64 v )
+{
+    return std::abs( v ) > 1e-9 && std::abs( std::abs( v ) - 1 ) > 1e-9 ? 1 : 0;
+}
+
+// The live parts of `c` times a value, as lower_circuit computes them: re = x a - y b, im = x b + y a.
+Cost scaled_parts( std::complex<f64> c, bool real, bool re, bool im )
+{
+    if( re && im && !real )
+    {
+        return scale_cost( c, false );
+    }
+    const f64 x = c.real(), y = c.imag();
+    if( real )
+    {
+        return { 0, ( re ? part_mul( x ) : 0 ) + ( im ? part_mul( y ) : 0 ) };
+    }
+    if( std::abs( x ) < 1e-9 || std::abs( y ) < 1e-9 )
+    {
+        return { 0, part_mul( x ) + part_mul( y ) };
+    }
+    if( std::abs( std::abs( x ) - std::abs( y ) ) < 1e-9 )
+    {
+        return { 1, part_mul( x ) };
+    }
+    return { 1, part_mul( x ) + part_mul( y ) };
 }
 
 // Cleans float noise so units and real or imaginary constants are recognised.
@@ -51,6 +86,8 @@ std::string op_line( const Op& op )
         return "a " + std::to_string( op.a ) + ' ' + std::to_string( op.b ) + '\n';
     case Op_kind::Scale:
         return "m " + std::to_string( op.a ) + ' ' + std::to_string( op.b ) + '\n';
+    case Op_kind::Real:
+        return "r " + std::to_string( op.a ) + '\n';
     }
     return {};
 }
@@ -76,6 +113,11 @@ u32 Circuit::put( Op op )
     if( is_new )
     {
         ops_.push_back( op );
+        const bool real = op.kind == Op_kind::Input   ? real_
+                          : op.kind == Op_kind::Add   ? real_ops_[op.a] && real_ops_[op.b]
+                          : op.kind == Op_kind::Scale ? real_ops_[op.a] && std::abs( constants_[op.b].value.imag() ) < 1e-12
+                                                      : true;
+        real_ops_.push_back( real );
     }
     return found->second;
 }
@@ -98,6 +140,11 @@ u32 Circuit::scale( u32 a, std::complex<f64> c )
 u32 Circuit::scale( u32 a, Element c )
 {
     return scale_by( a, make( c ) );
+}
+
+u32 Circuit::real_part( u32 a )
+{
+    return real_ops_[a] ? a : put( { Op_kind::Real, a, 0 } );
 }
 
 Circuit::Constant Circuit::make( std::complex<f64> c ) const
@@ -123,7 +170,7 @@ bool Circuit::is_unit( Constant c ) const
     {
         return integers_->is_unit( c.exact );
     }
-    return std::ranges::any_of( float_units( real_ ), [&]( std::complex<f64> u ) { return std::abs( c.value - u ) < 1e-12; } );
+    return is_float_unit( c.value );
 }
 
 u32 Circuit::scale_node( u32 a, Constant c )
@@ -161,7 +208,7 @@ u32 Circuit::scale_by( u32 a, Constant c )
     {
         return c.value == 1.0 ? a : scale_node( a, c );
     }
-    const auto        units = float_units( real_ );
+    const auto        units = float_units( c.value );
     std::complex<f64> v     = units[0];
     for( const std::complex<f64> u : units )
     {
@@ -171,9 +218,9 @@ u32 Circuit::scale_by( u32 a, Constant c )
     return v == 1.0 ? inner : scale_node( inner, make( 1.0 / v ) );
 }
 
-std::vector<u32> Circuit::paste( const Circuit& sub, const std::vector<u32>& inputs )
+std::vector<u32> Circuit::paste( const Circuit& sub, const std::vector<u32>& inputs, bool conjugate )
 {
-    assert( integers_ == sub.integers_ );
+    assert( integers_ == sub.integers_ && !( conjugate && integers_ ) );
     std::vector<u32> m;
     m.reserve( sub.ops_.size() );
     for( const Op& op : sub.ops_ )
@@ -187,7 +234,11 @@ std::vector<u32> Circuit::paste( const Circuit& sub, const std::vector<u32>& inp
             m.push_back( add( m[op.a], m[op.b] ) );
             break;
         case Op_kind::Scale:
-            m.push_back( scale_by( m[op.a], sub.constants_[op.b] ) );
+            m.push_back( scale_by( m[op.a], conjugate ? make( std::conj( sub.constants_[op.b].value ) ) : sub.constants_[op.b] )
+            );
+            break;
+        case Op_kind::Real:
+            m.push_back( real_part( m[op.a] ) );
             break;
         }
     }
@@ -216,12 +267,47 @@ std::vector<bool> Circuit::live() const
             stack.push_back( ops_[o].a );
             stack.push_back( ops_[o].b );
         }
-        else if( ops_[o].kind == Op_kind::Scale )
+        else if( ops_[o].kind != Op_kind::Input )
         {
             stack.push_back( ops_[o].a );
         }
     }
     return seen;
+}
+
+std::vector<std::array<bool, 2>> Circuit::live_parts() const
+{
+    std::vector<std::array<bool, 2>> live( ops_.size(), { false, false } );
+    const auto                       need = [&]( u32 a, bool re, bool im )
+    {
+        live[a][0] = live[a][0] || re;
+        live[a][1] = live[a][1] || ( im && !real_ops_[a] );
+    };
+    for( const auto& [row, o] : outputs )
+    {
+        need( o, true, true );
+    }
+    for( u32 o = static_cast<u32>( ops_.size() ); o-- > 0; )
+    {
+        const auto [re, im] = live[o];
+        const Op& op        = ops_[o];
+        if( op.kind == Op_kind::Add )
+        {
+            need( op.a, re, im );
+            need( op.b, re, im );
+        }
+        else if( op.kind == Op_kind::Scale )
+        {
+            const std::complex<f64> c = constants_[op.b].value;
+            const bool              x = std::abs( c.real() ) > 1e-12, y = std::abs( c.imag() ) > 1e-12;
+            need( op.a, ( re && x ) || ( im && y ), ( re && y ) || ( im && x ) );
+        }
+        else if( op.kind == Op_kind::Real )
+        {
+            need( op.a, re, false );
+        }
+    }
+    return live;
 }
 
 Circuit Circuit::pruned() const
@@ -260,6 +346,10 @@ Circuit Circuit::pruned() const
         {
             m[o] = c.add( m[op.a], m[op.b] );
         }
+        else if( op.kind == Op_kind::Real )
+        {
+            m[o] = c.real_part( m[op.a] );
+        }
         else if( const Op& inner = ops_[op.a]; inner.kind == Op_kind::Scale && users[op.a] == 1 &&
                                                !is_unit( constants_[op.b] ) && !is_unit( constants_[inner.b] ) )
         {
@@ -278,11 +368,11 @@ Circuit Circuit::pruned() const
     return folded ? c.pruned() : c;
 }
 
-// Complex: real or imaginary 0+2, |Re| = |Im| or a part +-1 2+2, else 2+4. Real: 0+1. A unit is free.
+// Complex: real or imaginary 0+2, |Re| = |Im| or a part +-1 2+2, else 2+4. Real: a multiply a part. A unit is free.
 Cost scale_cost( std::complex<f64> c, bool real, bool unit )
 {
     c = snap( c );
-    if( unit || std::ranges::any_of( float_units( real ), [&]( std::complex<f64> u ) { return std::abs( c - u ) < 1e-12; } ) )
+    if( unit || is_float_unit( c ) )
     {
         return {};
     }
@@ -290,7 +380,7 @@ Cost scale_cost( std::complex<f64> c, bool real, bool unit )
     const f64 y = std::abs( c.imag() );
     if( real )
     {
-        return { 0, 1 };
+        return { 0, part_mul( x ) + part_mul( y ) };
     }
     if( x < 1e-9 || y < 1e-9 )
     {
@@ -305,8 +395,9 @@ Cost scale_cost( std::complex<f64> c, bool real, bool unit )
 
 Cost Circuit::cost( bool fma ) const
 {
-    const std::vector<bool> lv = live();
-    fma                        = fma && integers_ == nullptr;
+    const std::vector<std::array<bool, 2>> parts = live_parts();
+    const std::vector<bool>                lv    = live();
+    fma                                          = fma && integers_ == nullptr;
     std::vector<u32> users( fma ? ops_.size() : 0 );
     if( fma )
     {
@@ -326,11 +417,11 @@ Cost Circuit::cost( bool fma ) const
 
     // A constant's lowering ends in its multiplies when a part is 0 or |Re| = |Im| (k(+-1 +-i)), and
     // otherwise ends in adds that each take one of them.
-    const auto ends_in_muls = [&]( const Constant& c )
+    const auto ends_in_muls = [&]( u32 n, const Constant& c )
     {
         const f64 x = std::abs( c.value.real() );
         const f64 y = std::abs( c.value.imag() );
-        return real_ || x < 1e-9 || y < 1e-9 || ( std::abs( x - y ) < 1e-9 && std::abs( x - 1 ) >= 1e-9 );
+        return real_ops_[ops_[n].a] || x < 1e-9 || y < 1e-9 || ( std::abs( x - y ) < 1e-9 && std::abs( x - 1 ) >= 1e-9 );
     };
     // The add after a multiply takes it when that is its only user, through a unit (a sign or swap).
     const auto feeds = [&]( u32 n )
@@ -340,36 +431,40 @@ Cost Circuit::cost( bool fma ) const
             n = ops_[n].a;
         }
         return ops_[n].kind == Op_kind::Scale && users[n] == 1 && !is_unit( constants_[ops_[n].b] ) &&
-               ends_in_muls( constants_[ops_[n].b] );
+               ends_in_muls( n, constants_[ops_[n].b] );
     };
 
     Cost total;
     u32  fused = 0;
     for( u32 o = 0; o < ops_.size(); ++o )
     {
-        if( !lv[o] || ops_[o].kind == Op_kind::Input )
+        const Op& op = ops_[o];
+        if( !lv[o] || op.kind == Op_kind::Input || op.kind == Op_kind::Real )
         {
             continue;
         }
-        if( ops_[o].kind == Op_kind::Add )
+        const auto [re, im] = parts[o];
+        if( op.kind == Op_kind::Add )
         {
-            total.adds += real_ ? 1 : 2;
-            if( fma && ( feeds( ops_[o].a ) || feeds( ops_[o].b ) ) )
+            // An imaginary part only one side has is a copy.
+            const u32 adds = ( re ? 1 : 0 ) + ( im && !real_ops_[op.a] && !real_ops_[op.b] ? 1 : 0 );
+            total.adds += adds;
+            if( fma && ( feeds( op.a ) || feeds( op.b ) ) )
             {
-                fused += real_ ? 1 : 2;
+                fused += adds;
             }
             continue;
         }
 
-        const Constant& c = constants_[ops_[o].b];
+        const Constant& c = constants_[op.b];
         if( is_unit( c ) )
         {
             continue;
         }
-        const Cost s = scale_cost( c.value, real_ );
+        const Cost s = scaled_parts( c.value, real_ops_[op.a], re, im );
         total.adds += s.adds;
         total.muls += s.muls;
-        if( fma && !ends_in_muls( c ) )
+        if( fma && re && im && !ends_in_muls( o, c ) )
         {
             fused += 2;
         }
@@ -406,6 +501,9 @@ std::vector<std::complex<f64>> Circuit::evaluate( const std::vector<std::complex
         case Op_kind::Scale:
             v.push_back( constants_[op.b].value * v[op.a] );
             break;
+        case Op_kind::Real:
+            v.push_back( v[op.a].real() );
+            break;
         }
     }
     return v;
@@ -428,6 +526,9 @@ std::string Circuit::text() const
             break;
         case Op_kind::Scale:
             out << o << " mul " << op.a << ' ' << constants_[op.b].value.real() << ' ' << constants_[op.b].value.imag() << '\n';
+            break;
+        case Op_kind::Real:
+            out << o << " re " << op.a << '\n';
             break;
         }
     }
@@ -586,6 +687,11 @@ std::optional<Circuit> Circuit::load( std::string_view text, Field& field, const
             a = whole( o );
             b = whole( *constants );
         }
+        else if( kind == "r" )
+        {
+            k = Op_kind::Real;
+            a = whole( o );
+        }
         if( !a || !b || c.put( { k, *a, *b } ) != o )
         {
             return std::nullopt;
@@ -738,6 +844,41 @@ TEST_CASE( "circuit_pastes_one_into_another", "[linear][circuit]" )
     CHECK( v[c.outputs.at( k_row0 )] == std::complex<f64> { 2, 4 } );
     CHECK( v[c.outputs.at( k_row1 )] == std::complex<f64> { 6, -2 } );
     CHECK( c.cost() == Cost { 8, 0 } );
+}
+
+TEST_CASE( "circuit_counts_only_the_parts_an_output_reaches", "[linear][circuit]" )
+{
+    // A real input times 0.6 + 0.8i: a multiply a part, and one when only the real part is kept.
+    Circuit   r( true );
+    const u32 x       = r.input( 0 );
+    const u32 y       = r.scale( x, { 0.6, 0.8 } );
+    r.outputs[k_row0] = y;
+    CHECK( r.cost() == Cost { 0, 2 } );
+    r.outputs[k_row0] = r.real_part( y );
+    CHECK( r.cost() == Cost { 0, 1 } );
+    CHECK( r.real_part( x ) == x );
+
+    // A complex input's real part of the same product: 0.6 re - 0.8 im.
+    Circuit c( false );
+    c.outputs[k_row0] = c.real_part( c.scale( c.input( 0 ), { 0.6, 0.8 } ) );
+    CHECK( c.cost() == Cost { 1, 2 } );
+    CHECK( c.evaluate( { { 1, 2 } } ).back() == std::complex<f64>( 0.6 - 1.6, 0 ) );
+
+    // A real plus a complex value adds only the real parts.
+    Circuit   m( true );
+    const u32 a       = m.input( 0 );
+    m.outputs[k_row0] = m.add( a, m.scale( m.input( 1 ), { 0.6, 0.8 } ) );
+    CHECK( m.cost() == Cost { 1, 2 } );
+}
+
+TEST_CASE( "circuit_pastes_the_conjugate_map", "[linear][circuit]" )
+{
+    Circuit sub( false );
+    sub.outputs[k_row0] = sub.add( sub.input( 0 ), sub.scale( sub.input( 1 ), { 0.6, 0.8 } ) );
+    Circuit                 c( false );
+    const std::vector<u32>  m   = c.paste( sub, { c.input( 0 ), c.input( 1 ) }, true );
+    const std::complex<f64> got = c.evaluate( { { 1, 0 }, { 0, 1 } } )[m[sub.outputs.at( k_row0 )]];
+    CHECK( std::abs( got - std::complex<f64>( 1 + 0.8, 0.6 ) ) < 1e-12 );
 }
 
 TEST_CASE( "circuit_keeps_integer_constants_exact", "[linear][circuit]" )
