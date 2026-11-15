@@ -285,6 +285,10 @@ std::vector<u32> direct( Circuit& c, const Sum& s, const std::vector<u32>& x )
                     acc            = acc ? c.add( *acc, term ) : term;
                 }
             }
+            if( const std::complex<f64> b = offset_at( s, o ); !is_zero( b ) )
+            {
+                acc = acc ? c.add( *acc, c.scale( c.one(), b ) ) : c.scale( c.one(), b );
+            }
             out.push_back( acc ? *acc : c.scale( x[t * s.n], 0.0 ) );
         }
     }
@@ -1351,17 +1355,13 @@ std::vector<u32> offset_build( Circuit& c, const Sum& s, const Use& use, const s
     return y;
 }
 
-// b(k) = a f(j, k) for every k, a real for a real x: a added to x[j] before. Use::chosen holds j.
-std::vector<Use> column_match( const Sum& s, const Plan_options& )
+// The column j and multiple a with b(k) - r(k) = a f(j, k) for every k, r the offset `rest` leaves; a real for a real x.
+std::optional<std::pair<u32, std::complex<f64>>> column_of( const Sum& s, const Sum& rest )
 {
-    if( s.offset.empty() )
-    {
-        return {};
-    }
     std::vector<std::complex<f64>> b( s.m );
     for( u32 k = 0; k < s.m; ++k )
     {
-        b[k] = offset_at( s, k );
+        b[k] = offset_at( s, k ) - offset_at( rest, k );
     }
     for( u32 j = 0; j < s.n; ++j )
     {
@@ -1378,25 +1378,41 @@ std::vector<Use> column_match( const Sum& s, const Plan_options& )
         }
         if( multiple && a && ( !s.real || std::abs( a->imag() ) < 1e-12 ) )
         {
-            const Cost own { std::abs( a->imag() ) < 1e-12 ? 1u : 2u, 0 };
-            return { { { { 1, without_offset( s ) } }, own, "column", std::nullopt, { j, 0 } } };
+            return std::pair { j, *a };
         }
     }
     return {};
 }
 
-std::vector<u32> column_build( Circuit& c, const Sum& s, const Use& use, const std::vector<u32>& x0, const Part_builder& part )
+// The whole offset as a column multiple, or one of its terms, the rest left to the part.
+std::vector<Use> column_match( const Sum& s, const Plan_options& )
 {
-    const u32         j = static_cast<u32>( use.chosen[0] );
-    std::complex<f64> a = 0;
-    for( u32 k = 0; k < s.m; ++k )
+    std::vector<Sum> rests;
+    if( !s.offset.empty() )
     {
-        if( const std::complex<f64> f = entry( s, j, k ); !is_zero( f ) )
+        rests.push_back( without_offset( s ) );
+    }
+    for( auto it = s.offset.begin(); s.offset.size() > 1 && it != s.offset.end(); ++it )
+    {
+        Sum rest = s;
+        rest.offset.erase( it->first );
+        rests.push_back( rest );
+    }
+    std::vector<Use> uses;
+    for( const Sum& rest : rests )
+    {
+        if( const auto ja = column_of( s, rest ) )
         {
-            a = offset_at( s, k ) / f;
-            break;
+            const Cost own { std::abs( ja->second.imag() ) < 1e-12 ? 1u : 2u, 0 };
+            uses.push_back( { { { 1, rest } }, own, "column" } );
         }
     }
+    return uses;
+}
+
+std::vector<u32> column_build( Circuit& c, const Sum& s, const Use& use, const std::vector<u32>& x0, const Part_builder& part )
+{
+    const auto [j, a]  = *column_of( s, use.parts[0].second );
     std::vector<u32> x = x0;
     x[j]               = c.add( x[j], c.scale( c.one(), a ) );
     return part( c, use.parts[0].second, x );
@@ -1987,6 +2003,18 @@ TEST_CASE( "a_dft_plus_a_constant_adds_it_to_x0", "[linear][sums]" )
     CHECK( error( p, s ) < 1e-12 );
 }
 
+TEST_CASE( "a_dft_plus_multiples_of_two_columns_adds_each_to_its_input", "[linear][sums]" )
+{
+    Sum        s    = exponent_kernel( 64, 64, 64, 1 );
+    const Cost bare = planned( s ).cost;
+    s.offset = { { Exponent { { { 0, 1 }, 5 }, { { 0, 0 }, 1 } }, Rational( 3, 2 ) }, { Exponent {}, Rational( 1, 2 ) } };
+    const Planned p = planned( s );
+    INFO( p.how );
+    CHECK( p.how.starts_with( "column(" ) );
+    CHECK( p.cost == bare + Cost { 3, 0 } );
+    CHECK( error( p, s ) < 1e-12 );
+}
+
 TEST_CASE( "an_offset_no_column_matches_is_added_to_each_output", "[linear][sums]" )
 {
     Sum        s    = exponent_kernel( 64, 64, 64, 1 );
@@ -2210,7 +2238,7 @@ TEST_CASE( "the_planner_measures_unfamiliar_kernels", "[.][sums_measure]" )
         { "dft-10-padded-to-256", exponent_kernel( 10, 256, 256, 1 ), 0 },
         { "dft-64-stride-3", exponent_kernel( 64, 64, 64, 3 ), 1160 },
         { "two-dfts-64", sum( 64, 64, 64, { { ex( 1, 0, 0, 0 ), 1 }, { ex( 3, 0, 0, 0 ), 1 } } ), 2 * 1160 + 128 },
-        { "dft-64-plus-offset", dft_offset, 1160 + 2 },
+        { "dft-64-plus-offset", dft_offset, 1160 + 3 },
         { "real-batch-3-48", mixed_batch, 0 },
         { "nonsense-quadratic", sum( 100, 60, 210, { { ex( 7, 0, 5, 0, 3 ), Rational( 2, 3 ) } } ), 0 },
         { "nonsense-three-terms",
