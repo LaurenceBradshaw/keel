@@ -285,6 +285,9 @@ struct Key
     auto operator<=>( const Key& ) const = default;
 };
 
+// The stream of the input fixed at 1, a constant's key with no index or bound.
+constexpr u32 k_one_stream = ~0u;
+
 // A linear form over input elements; `carried` is a local's value at the turn's start, added once.
 struct Form
 {
@@ -1995,7 +1998,7 @@ private:
         return symbolics_[v.index].w;
     }
 
-    sym::Form as_form( Value v ) const
+    sym::Form as_form( Value v )
     {
         if( v.kind == Kind::Terms )
         {
@@ -2004,6 +2007,10 @@ private:
         if( v.kind == Kind::Number && as_real( v ) == 0 )
         {
             return {};
+        }
+        if( v.kind == Kind::Number || v.kind == Kind::Wave )
+        {
+            return { .terms = { { sym::Key { sym::k_one_stream, {}, 0 }, as_wave( v ) } } };
         }
         sym::fail();
     }
@@ -2546,10 +2553,31 @@ private:
 
         std::optional<u32> j;
         sym::Wave          c[2][2];
+        sym::Wave          offset[2];
         for( u32 o = 0; o < parts; ++o )
         {
             for( const auto& [key, w] : stored[o]->value.terms )
             {
+                if( key.stream == sym::k_one_stream )
+                {
+                    // b(k), in k alone.
+                    for( const auto& [e, coefficient] : w.terms )
+                    {
+                        for( u32 s = 0; s < sym::k_symbols; ++s )
+                        {
+                            if( s != *k && sym::depends( e, s ) )
+                            {
+                                return std::nullopt;
+                            }
+                        }
+                    }
+                    if( key.bound != 0 )
+                    {
+                        return std::nullopt;
+                    }
+                    offset[o] = w;
+                    continue;
+                }
                 const std::optional<u32> b = one_bit( key.bound );
                 if( !b || *b == *k || ( j && *b != *j ) || key.index != sym::symbol( *b ) ||
                     ( parts == 1 && key.stream != in[0] ) )
@@ -2580,16 +2608,31 @@ private:
         {
             return std::nullopt;
         }
-        const sym::Wave K = parts == 1 ? c[0][0] : sym::sum( c[0][0], sym::product( c[1][0], sym::imaginary() ) );
-        Read_kernel     r { .sum = { static_cast<u32>( turns_[*j] ), static_cast<u32>( turns_[*k] ), K.M, {}, parts == 1 } };
-        for( const auto& [e, coefficient] : K.terms )
+        sym::Wave K = parts == 1 ? c[0][0] : sym::sum( c[0][0], sym::product( c[1][0], sym::imaginary() ) );
+        sym::Wave b = parts == 1 ? offset[0] : sym::sum( offset[0], sym::product( offset[1], sym::imaginary() ) );
+        if( !b.terms.empty() )
         {
-            Exponent in_jk;
+            const u64 M = sym::common( K.M, b.M );
+            K           = sym::lifted( K, M );
+            b           = sym::lifted( b, M );
+        }
+        Read_kernel r { .sum = { static_cast<u32>( turns_[*j] ), static_cast<u32>( turns_[*k] ), K.M, {}, parts == 1 } };
+        const auto  in_jk = [&]( const sym::Poly& e )
+        {
+            Exponent out;
             for( const auto& [m, v] : e )
             {
-                in_jk[{ m[*j], m[*k] }] = v;
+                out[{ m[*j], m[*k] }] = v;
             }
-            r.sum.coefficient[in_jk] = coefficient;
+            return out;
+        };
+        for( const auto& [e, coefficient] : K.terms )
+        {
+            r.sum.coefficient[in_jk( e )] = coefficient;
+        }
+        for( const auto& [e, coefficient] : b.terms )
+        {
+            r.sum.offset[in_jk( e )] = coefficient;
         }
         r.input = {
             static_cast<u32>( std::min<u64>( adds_, ~u32 { 0 } ) ), static_cast<u32>( std::min<u64>( muls_, ~u32 { 0 } ) )
@@ -3204,6 +3247,24 @@ TEST_CASE( "a DFT loop nest reads as its kernel", "[linear][recognise]" )
     CHECK( r->inputs.size() == 96 );
     CHECK( r->outputs.size() == 96 );
     CHECK( r->input.muls == 4 * 96 * 96 );
+}
+
+TEST_CASE( "a DFT loop's starting values read as its offset", "[linear][recognise]" )
+{
+    std::string source = dft( "-2.0 * 3.141592653589793 * cast<f64>( j * k ) / 96.0" );
+    const auto  at     = source.find( "f64 sr = 0.0; f64 si = 0.0;" );
+    REQUIRE( at != std::string::npos );
+    source.replace( at, 27, "f64 sr = 1.0; f64 si = cosine( 2.0 * 3.141592653589793 * cast<f64>( k ) / 96.0 );" );
+    const std::optional<Read_kernel> r = read_first( source );
+    REQUIRE( r );
+    // 1 + i cos(2 pi k / 96), i = -W^24.
+    Sum want    = exponent_kernel( 96, 96, 96, 1 );
+    want.offset = {
+        { Exponent {}, 1 },
+        { Exponent { { { 0, 1 }, 1 }, { { 0, 0 }, 24 } }, Rational( -1, 2 ) },
+        { Exponent { { { 0, 1 }, 95 }, { { 0, 0 }, 24 } }, Rational( -1, 2 ) },
+    };
+    CHECK( r->sum == want );
 }
 
 TEST_CASE( "an inverse DFT reads as c = M - 1, without the remainder too", "[linear][recognise]" )

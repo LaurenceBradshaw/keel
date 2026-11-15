@@ -88,6 +88,17 @@ bool is_zero( std::complex<f64> v )
     return std::abs( v ) < 1e-12;
 }
 
+// b(k).
+std::complex<f64> offset_at( const Sum& s, u64 k )
+{
+    std::complex<f64> v = 0;
+    for( const auto& [e, c] : s.offset )
+    {
+        v += value( c ) * root( exponent_at( e, s.M, 0, k ), s.M );
+    }
+    return v;
+}
+
 // A term with each power's coefficient below M, and the constant below M/2, as W^(M/2) = -1.
 std::pair<Exponent, Rational> canonical( const Exponent& e, Rational c, u64 M )
 {
@@ -111,51 +122,66 @@ std::pair<Exponent, Rational> canonical( const Exponent& e, Rational c, u64 M )
     return { r, c };
 }
 
-// Terms canonical and merged, and M the least that writes them.
+using Terms = std::map<Exponent, Rational>;
+
+// Terms and offset canonical and merged, and M the least that writes them.
 Sum normalised( const Sum& s )
 {
     Sum out { s.n, s.m, s.M, {}, s.real };
     u64 g = s.M;
-    for( const auto& [e, c] : s.coefficient )
+    for( const Terms* terms : { &s.coefficient, &s.offset } )
     {
-        for( const auto& [powers, v] : canonical( e, c, s.M ).first )
+        for( const auto& [e, c] : *terms )
         {
-            g = std::gcd( g, static_cast<u64>( v ) );
+            for( const auto& [powers, v] : canonical( e, c, s.M ).first )
+            {
+                g = std::gcd( g, static_cast<u64>( v ) );
+            }
         }
     }
-    out.M = s.M / g;
-    for( const auto& [e, c] : s.coefficient )
+    out.M             = s.M / g;
+    const auto merged = [&]( const Terms& from, Terms& to )
     {
-        Exponent scaled;
-        for( const auto& [powers, v] : canonical( e, c, s.M ).first )
+        for( const auto& [e, c] : from )
         {
-            scaled[powers] = v / static_cast<i64>( g );
+            Exponent scaled;
+            for( const auto& [powers, v] : canonical( e, c, s.M ).first )
+            {
+                scaled[powers] = v / static_cast<i64>( g );
+            }
+            const auto [r, d] = canonical( scaled, canonical( e, c, s.M ).second, out.M );
+            Rational& t       = to[r];
+            t                 = t + d;
+            if( t == Rational {} )
+            {
+                to.erase( r );
+            }
         }
-        const auto [r, d] = canonical( scaled, canonical( e, c, s.M ).second, out.M );
-        Rational& t       = out.coefficient[r];
-        t                 = t + d;
-        if( t == Rational {} )
-        {
-            out.coefficient.erase( r );
-        }
-    }
+    };
+    merged( s.coefficient, out.coefficient );
+    merged( s.offset, out.offset );
     return out;
 }
 
 // Every exponent negated: the conjugate map, so the conjugate circuit at the same cost.
 Sum conjugate_sum( const Sum& s )
 {
-    Sum c { s.n, s.m, s.M, {}, s.real };
-    for( const auto& [e, v] : s.coefficient )
+    Sum        c { s.n, s.m, s.M, {}, s.real };
+    const auto negated = [&]( const Terms& from, Terms& to )
     {
-        Exponent negated;
-        for( const auto& [powers, x] : e )
+        for( const auto& [e, v] : from )
         {
-            negated[powers] = -x;
+            Exponent n;
+            for( const auto& [powers, x] : e )
+            {
+                n[powers] = -x;
+            }
+            const auto [r, d] = canonical( n, v, s.M );
+            to[r]             = d;
         }
-        const auto [r, d] = canonical( negated, v, s.M );
-        c.coefficient[r]  = d;
-    }
+    };
+    negated( s.coefficient, c.coefficient );
+    negated( s.offset, c.offset );
     return c;
 }
 
@@ -221,7 +247,13 @@ struct Rule
     const char* identity;
     std::vector<Use> ( *match )( const Sum&, const Plan_options& );
     std::vector<u32> ( *build )( Circuit&, const Sum&, const Use&, const std::vector<u32>&, const Part_builder& );
+    bool affine = false; // takes a sum with an offset, which no other rule does
 };
+
+std::vector<Use> matches( const Rule& rule, const Sum& s, const Plan_options& options )
+{
+    return s.offset.empty() || rule.affine ? rule.match( s, options ) : std::vector<Use> {};
+}
 
 // Every product, summed in j order; a row of zeros is x[0] times 0.
 std::vector<u32> direct( Circuit& c, const Sum& s, const std::vector<u32>& x )
@@ -866,7 +898,97 @@ hermitian_build( Circuit& c, const Sum& s, const Use& use, const std::vector<u32
 }
 
 // First, so a call wins a tie.
+Sum without_offset( const Sum& s )
+{
+    Sum part    = s;
+    part.offset = {};
+    return part;
+}
+
+std::vector<Use> offset_match( const Sum& s, const Plan_options& )
+{
+    if( s.offset.empty() )
+    {
+        return {};
+    }
+    Cost own {};
+    for( u32 k = 0; k < s.m; ++k )
+    {
+        if( const std::complex<f64> b = offset_at( s, k ); !is_zero( b ) )
+        {
+            own.adds += std::abs( b.imag() ) < 1e-12 ? 1 : 2;
+        }
+    }
+    return { { { { 1, without_offset( s ) } }, own, "offset" } };
+}
+
+std::vector<u32> offset_build( Circuit& c, const Sum& s, const Use& use, const std::vector<u32>& x, const Part_builder& part )
+{
+    std::vector<u32> y = part( c, use.parts[0].second, x );
+    for( u32 k = 0; k < s.m; ++k )
+    {
+        if( const std::complex<f64> b = offset_at( s, k ); !is_zero( b ) )
+        {
+            y[k] = c.add( y[k], c.scale( c.one(), b ) );
+        }
+    }
+    return y;
+}
+
+// b(k) = a f(j, k) for every k, a real for a real x: a added to x[j] before. Use::chosen holds j.
+std::vector<Use> column_match( const Sum& s, const Plan_options& )
+{
+    if( s.offset.empty() )
+    {
+        return {};
+    }
+    std::vector<std::complex<f64>> b( s.m );
+    for( u32 k = 0; k < s.m; ++k )
+    {
+        b[k] = offset_at( s, k );
+    }
+    for( u32 j = 0; j < s.n; ++j )
+    {
+        std::optional<std::complex<f64>> a;
+        bool                             multiple = true;
+        for( u32 k = 0; k < s.m && multiple; ++k )
+        {
+            const std::complex<f64> f = entry( s, j, k );
+            if( !a && !is_zero( f ) )
+            {
+                a = b[k] / f;
+            }
+            multiple = is_zero( b[k] - a.value_or( 0 ) * f );
+        }
+        if( multiple && a && ( !s.real || std::abs( a->imag() ) < 1e-12 ) )
+        {
+            const Cost own { std::abs( a->imag() ) < 1e-12 ? 1u : 2u, 0 };
+            return { { { { 1, without_offset( s ) } }, own, "column", std::nullopt, { j, 0 } } };
+        }
+    }
+    return {};
+}
+
+std::vector<u32> column_build( Circuit& c, const Sum& s, const Use& use, const std::vector<u32>& x0, const Part_builder& part )
+{
+    const u32         j = static_cast<u32>( use.chosen[0] );
+    std::complex<f64> a = 0;
+    for( u32 k = 0; k < s.m; ++k )
+    {
+        if( const std::complex<f64> f = entry( s, j, k ); !is_zero( f ) )
+        {
+            a = offset_at( s, k ) / f;
+            break;
+        }
+    }
+    std::vector<u32> x = x0;
+    x[j]               = c.add( x[j], c.scale( c.one(), a ) );
+    return part( c, use.parts[0].second, x );
+}
+
 const Rule rules[] = {
+    { "offset", "y[k] + b(k) adds b(k) to each output", offset_match, offset_build, true },
+    { "column", "b(k) = a f(j, k) is the sum of x with a added to x[j]", column_match, column_build, true },
     { "promised", "a function promising DFT_M computes it", promised_match, promised_build },
     { "direct", "y[k] = sum over j of x[j] times its coefficient", direct_match, direct_build },
     { "solved", "the dense solve computes its matrix", solved_match, solved_build },
@@ -979,7 +1101,7 @@ private:
         Choice  chosen;
         for( const Rule& rule : rules )
         {
-            for( Use& use : rule.match( s, options_ ) )
+            for( Use& use : matches( rule, s, options_ ) )
             {
                 Cost        cost = use.own;
                 std::string how  = use.how;
@@ -1127,6 +1249,7 @@ f64 error( const Circuit& circuit, const std::vector<u32>& outputs, const Sum& s
         {
             want += x[j] * entry( s, j, o );
         }
+        want += offset_at( s, o );
         worst = std::max( worst, std::abs( got[outputs[o]] - want ) );
     }
     return worst / std::sqrt( static_cast<f64>( s.n ) );
@@ -1144,7 +1267,7 @@ u32 below( std::mt19937& rng, u32 n )
 
 // A kernel, or terms in j, k, jk, j^2 and constants with rational coefficients; a real x's terms
 // are sometimes conjugate pairs.
-Sum random_sum( std::mt19937& rng )
+Sum linear_sum( std::mt19937& rng )
 {
     const u32  n = 1 + below( rng, 16 ), m = 1 + below( rng, 16 ), M = 1 + below( rng, 16 );
     const bool real = below( rng, 2 ) == 0;
@@ -1184,6 +1307,33 @@ Sum random_sum( std::mt19937& rng )
     return normalised( s );
 }
 
+// As linear_sum, a third of the time with an offset: a term in k, or a rational multiple of a column.
+Sum random_sum( std::mt19937& rng )
+{
+    Sum s = linear_sum( rng );
+    if( below( rng, 3 ) != 0 )
+    {
+        return s;
+    }
+    const Rational a( 1 + below( rng, 3 ), 1 + below( rng, 2 ) );
+    if( below( rng, 2 ) == 0 )
+    {
+        s.offset[Exponent {
+            { { 0, 1 }, below( rng, static_cast<u32>( s.M ) ) }, { { 0, 0 }, below( rng, static_cast<u32>( s.M ) ) }
+        }] = a;
+    }
+    else
+    {
+        const i64 j = below( rng, s.n );
+        for( const auto& [e, c] : s.coefficient )
+        {
+            Rational& t = s.offset[substituted( e, 0, 0, j, s.M )];
+            t           = t + c * a;
+        }
+    }
+    return normalised( s );
+}
+
 Sum dct_ii( u32 N )
 {
     const i64 M = 4 * N;
@@ -1216,7 +1366,7 @@ TEST_CASE( "every_planner_rule_computes_the_naive_sum", "[linear][sums]" )
             {
                 continue;
             }
-            for( const Use& use : rule.match( s, options ) )
+            for( const Use& use : matches( rule, s, options ) )
             {
                 Circuit          c( s.real );
                 std::vector<u32> x( s.n );
@@ -1247,6 +1397,30 @@ TEST_CASE( "a_256_point_dft_splits_to_within_1_percent_of_split_radix", "[linear
     const Planned p = planned( s );
     INFO( p.how << " " << p.cost.adds << "/" << p.cost.muls );
     CHECK( p.cost.adds + p.cost.muls <= 6664 * 101 / 100 );
+    CHECK( error( p, s ) < 1e-12 );
+}
+
+TEST_CASE( "a_dft_plus_a_constant_adds_it_to_x0", "[linear][sums]" )
+{
+    Sum        s    = exponent_kernel( 256, 256, 256, 1 );
+    const Cost bare = planned( s ).cost;
+    s.offset        = { { Exponent {}, Rational( 3, 2 ) }, { Exponent { { { 0, 0 }, 64 } }, Rational( 1, 2 ) } };
+    const Planned p = planned( s );
+    INFO( p.how );
+    CHECK( p.how.starts_with( "column(" ) );
+    CHECK( p.cost == bare + Cost { 2, 0 } );
+    CHECK( error( p, s ) < 1e-12 );
+}
+
+TEST_CASE( "an_offset_no_column_matches_is_added_to_each_output", "[linear][sums]" )
+{
+    Sum        s    = exponent_kernel( 64, 64, 64, 1 );
+    const Cost bare = planned( s ).cost;
+    s.offset        = { { Exponent { { { 0, 2 }, 1 } }, 1 } };
+    const Planned p = planned( s );
+    INFO( p.how );
+    CHECK( p.how.starts_with( "offset(" ) );
+    CHECK( p.cost.adds + p.cost.muls <= bare.adds + bare.muls + 2 * 64 );
     CHECK( error( p, s ) < 1e-12 );
 }
 
