@@ -279,12 +279,13 @@ std::vector<u32> direct_build( Circuit& c, const Sum& s, const Use&, const std::
     return direct( c, s, x );
 }
 
-// A side not dividing M has no structure the solver finds, and costs it minutes.
+// A side not dividing M has no structure the solver finds, and costs it minutes; so has a side below
+// an M that is not a power of 2.
 std::vector<Use> solved_match( const Sum& s, const Plan_options& options )
 {
     const std::optional<Kernel> k = kernel_of( s );
     if( !k || k->n > options.leaf_max || k->m > options.leaf_max || k->M > 4 * options.leaf_max || k->n * k->m < 4 ||
-        k->M % k->n != 0 || k->M % k->m != 0 )
+        k->M % k->n != 0 || k->M % k->m != 0 || ( ( k->n < k->M || k->m < k->M ) && !std::has_single_bit( k->M ) ) )
     {
         return {};
     }
@@ -781,39 +782,41 @@ std::vector<u32> conjugate_build( Circuit& c, const Sum&, const Use& use, const 
     return y;
 }
 
-// e with j replaced by a j + b, mod M.
-Exponent substituted( const Exponent& e, i64 a, i64 b, u64 M )
+// e with symbol `at` (0 for j, 1 for k) replaced by a times it plus b, mod M.
+Exponent substituted( const Exponent& e, u8 at, i64 a, i64 b, u64 M )
 {
     Exponent out;
     for( const auto& [powers, v] : e )
     {
         i128 binomial = 1;
-        for( u8 i = 0; i <= powers[0]; ++i )
+        for( u8 i = 0; i <= powers[at]; ++i )
         {
             i128 term = i128 { v } % M * binomial % M;
             for( u8 t = 0; t < i; ++t )
             {
                 term = term * a % M;
             }
-            for( u8 t = i; t < powers[0]; ++t )
+            for( u8 t = i; t < powers[at]; ++t )
             {
                 term = term * b % M;
             }
-            i64& at  = out[{ i, powers[1] }];
-            at       = static_cast<i64>( mod( static_cast<i64>( ( i128 { at } + term ) % M ), M ) );
-            binomial = binomial * ( powers[0] - i ) / ( i + 1 );
+            std::array<u8, 2> to = powers;
+            to[at]               = i;
+            i64& sum             = out[to];
+            sum                  = static_cast<i64>( mod( static_cast<i64>( ( i128 { sum } + term ) % M ), M ) );
+            binomial             = binomial * ( powers[at] - i ) / ( i + 1 );
         }
     }
     return out;
 }
 
-// The sum's terms with j replaced by a j + b.
-Sum reindexed( const Sum& s, i64 a, i64 b )
+// The sum's terms with symbol `at` replaced by a times it plus b.
+Sum reindexed( const Sum& s, u8 at, i64 a, i64 b )
 {
     Sum out { s.n, s.m, s.M, {}, s.real };
     for( const auto& [e, c] : s.coefficient )
     {
-        Rational& t = out.coefficient[substituted( e, a, b, s.M )];
+        Rational& t = out.coefficient[substituted( e, at, a, b, s.M )];
         t           = t + c;
     }
     return normalised( out );
@@ -822,8 +825,8 @@ Sum reindexed( const Sum& s, i64 a, i64 b )
 // Columns f(j) = f(2n - 1 - j): x[j] at j' = j / 2 for even j, n - 1 - (j - 1) / 2 for odd, gives f(2 j').
 std::vector<Use> reflect_match( const Sum& s, const Plan_options& )
 {
-    const Sum even = reindexed( s, 2, 0 );
-    if( s.n < 2 || even == normalised( s ) || reindexed( s, -2, 2 * i64 { s.n } - 1 ) != even )
+    const Sum even = reindexed( s, 0, 2, 0 );
+    if( s.n < 2 || even == normalised( s ) || reindexed( s, 0, -2, 2 * i64 { s.n } - 1 ) != even )
     {
         return {};
     }
@@ -838,6 +841,28 @@ std::vector<u32> reflect_build( Circuit& c, const Sum& s, const Use& use, const 
         v[j % 2 == 0 ? j / 2 : s.n - 1 - ( j - 1 ) / 2] = x[j];
     }
     return part( c, use.parts[0].second, v );
+}
+
+// Real x and f(j, -k) = conj f(j, k): y[M - k] = conj y[k], so outputs past M / 2 are conjugates.
+std::vector<Use> hermitian_match( const Sum& s, const Plan_options& )
+{
+    const u32 half = static_cast<u32>( s.M / 2 + 1 );
+    if( !s.real || s.m <= half || s.m > s.M || reindexed( s, 1, -1, 0 ) != normalised( conjugate_sum( s ) ) )
+    {
+        return {};
+    }
+    return { { { { 1, Sum { s.n, half, s.M, s.coefficient, true } } }, {}, "hermitian" } };
+}
+
+std::vector<u32>
+hermitian_build( Circuit& c, const Sum& s, const Use& use, const std::vector<u32>& x, const Part_builder& part )
+{
+    std::vector<u32> y = part( c, use.parts[0].second, x );
+    for( u32 k = static_cast<u32>( y.size() ); k < s.m; ++k )
+    {
+        y.push_back( c.conj( y[s.M - k] ) );
+    }
+    return y;
 }
 
 // First, so a call wins a tie.
@@ -858,6 +883,7 @@ const Rule rules[] = {
       "f(j) = f(2n - 1 - j): the odd j read reversed are the even columns past n, so the sum is over f(2 j')",
       reflect_match,
       reflect_build },
+    { "hermitian", "for real x and f(j, -k) = conj f(j, k), y[M - k] = conj y[k]", hermitian_match, hermitian_build },
     { "periodic", "W^M = 1: columns j and j + M are equal, and so are rows k and k + M", periodic_match, periodic_build },
     { "split",
       "j = j1 + P j2, k = k2 + R k1: W^(c j k) = W^(c P j2 k2) W^(c j1 k2) W^(c R j1 k1) when c P R = 0 mod M",
@@ -1293,7 +1319,9 @@ TEST_CASE( "an_odd_length_dct_ii_reflects", "[linear][sums]" )
     CHECK( error( c, out, s ) < 1e-12 );
 }
 
-// KEEL_SUM="n M c" plans a large kernel and prints it, and "dct n" a DCT-II: keel_tests "[sums_large]".
+// KEEL_SUM="n M c" plans a large kernel and prints it, "real n M c" one on real x, a fourth number m outputs, and "dct n" a
+// DCT-II: keel_tests
+// "[sums_large]".
 TEST_CASE( "a_large_kernel_is_planned", "[.][sums_large]" )
 {
     const char* spec = std::getenv( "KEEL_SUM" );
@@ -1310,10 +1338,18 @@ TEST_CASE( "a_large_kernel_is_planned", "[.][sums_large]" )
         }
         else
         {
-            u32 n = 0;
-            u64 M = 0, c = 0;
-            in >> n >> M >> c;
-            s = exponent_kernel( n, n, M, c );
+            const bool  real = std::string( spec ).starts_with( "real" );
+            std::string word;
+            u32         n = 0;
+            u64         M = 0, c = 0;
+            if( real )
+            {
+                in >> word;
+            }
+            u32 m = 0;
+            in >> n >> M >> c >> m;
+            s      = exponent_kernel( n, m ? m : n, M, c );
+            s.real = real;
         }
     }
     const auto    start = std::chrono::steady_clock::now();

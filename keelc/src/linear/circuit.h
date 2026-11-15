@@ -23,11 +23,12 @@ enum class Op_kind : u8
     Add,
     Scale,
     Real,
+    Conj,
     Result,
 };
 
 // Input: `a` is the input. Add: `a <= b` are nodes. Scale: node `a` times constant `b`. Real: node `a`'s real part.
-// Result: output `b` of call `a`.
+// Conj: node `a`'s conjugate, free as a sign is. Result: output `b` of call `a`.
 struct Op
 {
     Op_kind kind;
@@ -76,7 +77,7 @@ struct Call
     std::vector<u32> arguments;
 };
 
-// A hash-consed straight-line circuit over inputs, adds, scalings and real parts. Constants are snapped
+// A hash-consed straight-line circuit over inputs, adds, scalings, real parts and conjugates. Constants are snapped
 // complex floats, since sub-circuits from other fields are pasted in; an integer ring's stay exact.
 // A node is real when its inputs are and its constants keep it so; only live parts are counted.
 class Circuit
@@ -91,6 +92,7 @@ public:
     u32 scale( u32 a, std::complex<f64> c );
     u32 scale( u32 a, Element c );
     u32 real_part( u32 a );
+    u32 conj( u32 a );
     // `call`, made once however often it is asked for; result( id, k ) is its output k.
     u32 call( Call call );
     u32 result( u32 call, u32 k );

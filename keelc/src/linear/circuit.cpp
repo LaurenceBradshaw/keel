@@ -89,6 +89,8 @@ std::string op_line( const Op& op )
         return "m " + std::to_string( op.a ) + ' ' + std::to_string( op.b ) + '\n';
     case Op_kind::Real:
         return "r " + std::to_string( op.a ) + '\n';
+    case Op_kind::Conj:
+        return "c " + std::to_string( op.a ) + '\n';
     case Op_kind::Result:
         break;
     }
@@ -119,6 +121,7 @@ u32 Circuit::put( Op op )
         const bool real = op.kind == Op_kind::Input   ? real_
                           : op.kind == Op_kind::Add   ? real_ops_[op.a] && real_ops_[op.b]
                           : op.kind == Op_kind::Scale ? real_ops_[op.a] && std::abs( constants_[op.b].value.imag() ) < 1e-12
+                          : op.kind == Op_kind::Conj  ? real_ops_[op.a]
                                                       : op.kind == Op_kind::Real;
         real_ops_.push_back( real );
     }
@@ -148,6 +151,11 @@ u32 Circuit::scale( u32 a, Element c )
 u32 Circuit::real_part( u32 a )
 {
     return real_ops_[a] ? a : put( { Op_kind::Real, a, 0 } );
+}
+
+u32 Circuit::conj( u32 a )
+{
+    return real_ops_[a] ? a : ops_[a].kind == Op_kind::Conj ? ops_[a].a : put( { Op_kind::Conj, a, 0 } );
 }
 
 u32 Circuit::call( Call call )
@@ -279,6 +287,9 @@ std::vector<u32> Circuit::paste( const Circuit& sub, const std::vector<u32>& inp
         case Op_kind::Real:
             m.push_back( real_part( m[op.a] ) );
             break;
+        case Op_kind::Conj:
+            m.push_back( conj( m[op.a] ) );
+            break;
         }
     }
     return m;
@@ -354,6 +365,10 @@ std::vector<std::array<bool, 2>> Circuit::live_parts() const
         else if( op.kind == Op_kind::Real )
         {
             need( op.a, re, false );
+        }
+        else if( op.kind == Op_kind::Conj )
+        {
+            need( op.a, re, im );
         }
         // The callee reads every argument whole.
         else if( op.kind == Op_kind::Result && ( re || im ) )
@@ -439,6 +454,10 @@ Circuit Circuit::pruned() const
         {
             m[o] = c.real_part( m[op.a] );
         }
+        else if( op.kind == Op_kind::Conj )
+        {
+            m[o] = c.conj( m[op.a] );
+        }
         else if( const Op& inner = ops_[op.a]; inner.kind == Op_kind::Scale && users[op.a] == 1 &&
                                                !is_unit( constants_[op.b] ) && !is_unit( constants_[inner.b] ) )
         {
@@ -519,7 +538,8 @@ Cost Circuit::cost( bool fma ) const
             called[op.a] = true;
             total        = total + calls_[op.a].cost;
         }
-        if( !lv[o] || op.kind == Op_kind::Input || op.kind == Op_kind::Real || op.kind == Op_kind::Result )
+        if( !lv[o] || op.kind == Op_kind::Input || op.kind == Op_kind::Real || op.kind == Op_kind::Conj ||
+            op.kind == Op_kind::Result )
         {
             continue;
         }
@@ -604,6 +624,9 @@ std::vector<std::complex<f64>> Circuit::evaluate( const std::vector<std::complex
         case Op_kind::Real:
             v.push_back( v[op.a].real() );
             break;
+        case Op_kind::Conj:
+            v.push_back( std::conj( v[op.a] ) );
+            break;
         }
     }
     return v;
@@ -629,6 +652,9 @@ std::string Circuit::text() const
             break;
         case Op_kind::Real:
             out << o << " re " << op.a << '\n';
+            break;
+        case Op_kind::Conj:
+            out << o << " conj " << op.a << '\n';
             break;
         case Op_kind::Result:
             out << o << " result " << op.a << ' ' << op.b << '\n';
@@ -803,6 +829,11 @@ std::optional<Circuit> Circuit::load( std::string_view text, Field& field, const
         else if( kind == "r" )
         {
             k = Op_kind::Real;
+            a = whole( o );
+        }
+        else if( kind == "c" )
+        {
+            k = Op_kind::Conj;
             a = whole( o );
         }
         if( !a || !b || c.put( { k, *a, *b } ) != o )

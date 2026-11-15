@@ -168,6 +168,11 @@ public:
                 v[o] = { a.re, {} };
                 continue;
             }
+            if( ops[o].kind == Op_kind::Conj )
+            {
+                v[o] = { a.re, negated( a.im ) };
+                continue;
+            }
 
             const auto [cr, ci] = z_.integer
                                       ? parts( field_, circuit.exact( ops[o].b ) )

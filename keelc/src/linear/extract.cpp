@@ -901,7 +901,8 @@ std::optional<Extraction> Extractor::run( const std::vector<Row>& rows )
             case Op_kind::Scale:
                 v = scale( self( self, n.exact[0] ), Element { n.k } );
                 break;
-            case Op_kind::Real: // the graph has none
+            case Op_kind::Real: // the graph has neither
+            case Op_kind::Conj:
             case Op_kind::Result:
                 break;
             }
