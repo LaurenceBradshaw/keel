@@ -82,6 +82,50 @@ struct Plan_options
     std::function<std::optional<Promised>( u64 n )> promised {};
 };
 
+// Element i of copy t of a buffer: offset + step i + batch t, plus each enclosing loop's index times its coefficient.
+struct Stride
+{
+    u32                              buffer = 0;
+    u64                              offset = 0;
+    u64                              step   = 1;
+    u64                              batch  = 0;
+    std::vector<std::pair<u32, u64>> loops {};
+};
+
+enum class Loop_kind : u8
+{
+    Leaf,    // leaves[leaf] from its `count` inputs at `in` to `out`
+    Loop,    // `body` `count` times, its index loop `loop`
+    Twiddle, // element a R + b of `out` times tables[table][c a b mod M], for 0 < a < count, 0 < b < R
+    Scale,   // out[i] = in[i] times tables[table][i], for i < count
+};
+
+struct Loop_step
+{
+    Loop_kind              kind;
+    u32                    count = 0;
+    u32                    loop  = 0;
+    std::vector<Loop_step> body {};
+    u32                    leaf  = 0;
+    u32                    table = 0;
+    u64                    R     = 0;
+    u64                    M     = 0;
+    u64                    c     = 0;
+    Stride                 in {};
+    Stride                 out {};
+};
+
+// A plan as loops over straight-line leaves. Buffer 0 is x and 1 is y; the rest are temporaries of buffers[b] elements.
+struct Loop_program
+{
+    std::vector<Planned>                        leaves;
+    std::vector<std::vector<std::complex<f64>>> tables;
+    std::vector<u64>                            buffers { 0, 0 };
+    std::vector<Loop_step>                      steps;
+    u32                                         loops = 0;
+    Cost                                        cost;
+};
+
 // The cheapest circuit the planner's rules find, each a law of the sum: an offset is added after, or to
 // the one input whose column it is a multiple of, terms in j or k alone factor
 // out, a real x pairs conjugate terms, W^M = 1 folds equal columns and rows, and j = j1 + P j2,
@@ -92,4 +136,7 @@ struct Plan_options
 // theirs with no twiddle (Good-Thomas), and a prime one a cyclic convolution of length p - 1 (Rader).
 // Small kernels are solved. Nothing when no rule takes the sum.
 std::optional<Planned> plan_sum( const Sum& sum, const Plan_options& options = {} );
+
+// The same plan with each split, chirp and convolution wider than leaf_max a loop over its parts; a complex x only.
+std::optional<Loop_program> plan_loops( const Sum& sum, const Plan_options& options = {} );
 } // namespace keel

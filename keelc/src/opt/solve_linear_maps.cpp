@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "opt/solve_linear_maps.h"
+#include <algorithm>
 #include <map>
+#include <optional>
 #include <utility>
 #include "linear/circuit_cache.h"
 #include "linear/lower_circuit.h"
@@ -32,6 +34,44 @@ public:
             return {};
         }
         return { place( v.real ), v.imaginary.local.is_valid() ? place( v.imaginary ) : Place {} };
+    }
+
+    // The arrays holding a contiguous run of values, value j element j of each part; nothing when they don't.
+    std::optional<Value_place> arrays( const std::vector<Value_path>& v )
+    {
+        const auto run = [&]( auto part ) -> std::optional<Param_path>
+        {
+            Param_path whole = part( v[0] );
+            if( !whole.local.is_valid() || whole.steps.empty() )
+            {
+                return std::nullopt;
+            }
+            whole.steps.pop_back();
+            for( u64 j = 0; j < v.size(); ++j )
+            {
+                const Param_path& p = part( v[j] );
+                if( p.local != whole.local || p.through != whole.through || p.steps.size() != whole.steps.size() + 1 ||
+                    !p.steps.back().index || p.steps.back().element != j ||
+                    !std::equal(
+                        whole.steps.begin(),
+                        whole.steps.end(),
+                        p.steps.begin(),
+                        []( const Step& a, const Step& b )
+                        { return a.index == b.index && a.element == b.element && a.field == b.field; }
+                    ) )
+                {
+                    return std::nullopt;
+                }
+            }
+            return whole;
+        };
+        const std::optional<Param_path> re = run( []( const Value_path& x ) { return x.real; } );
+        const std::optional<Param_path> im = run( []( const Value_path& x ) { return x.imaginary; } );
+        if( !re || !im )
+        {
+            return std::nullopt;
+        }
+        return Value_place { place( *re ), place( *im ) };
     }
 
     // The index locals, each assigned its constant.
@@ -155,7 +195,7 @@ Map_outcome solve_linear_maps(
     Function&                                              func,
     const std::vector<Function>&                           functions,
     const Purity&                                          purity,
-    const Type_table&                                      types,
+    Type_table&                                            types,
     Literal_pool&                                          literals,
     const std::filesystem::path&                           cache,
     const Solve_options&                                   options,
@@ -187,8 +227,22 @@ Map_outcome solve_linear_maps(
     if( const std::optional<Read_kernel> read = read_kernel( func, functions, purity, types, literals, globals );
         read && read->sum.n > Plan_options {}.leaf_max )
     {
-        if( const std::optional<Planned> planned =
-                plan_sum( read->sum, { .solve = options, .cache = cache, .promised = promised } ) )
+        const Plan_options plan { .solve = options, .cache = cache, .promised = promised };
+        // Arrays in and out take the plan as loops, when it has any.
+        const Span                       span = body_span( func );
+        Places                           places( func, types, literals, span );
+        const std::optional<Value_place> x = places.arrays( read->inputs ), y = places.arrays( read->outputs );
+        if( const std::optional<Loop_program> program = x && y ? plan_loops( read->sum, plan ) : std::nullopt;
+            program && program->loops > 0 )
+        {
+            if( program->cost >= read->input )
+            {
+                return { .cost = read->input };
+            }
+            lower_program( func, *program, *x, *y, places.take_prologue(), types, literals, span, callees );
+            return { .solved = true, .cost = program->cost };
+        }
+        if( const std::optional<Planned> planned = plan_sum( read->sum, plan ) )
         {
             const Field complex( Ring_kind::Complex, 4 );
             const bool  solved = replace_with(

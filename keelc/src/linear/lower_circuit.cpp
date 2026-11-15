@@ -536,6 +536,310 @@ private:
     }
     return true;
 }
+
+// A program's loops as blocks; each leaf lowered by Circuit_lowering on the elements its strides reach.
+class Loop_lowering
+{
+public:
+    Loop_lowering(
+        Function&           func,
+        const Loop_program& program,
+        Type_table&         types,
+        Literal_pool&       literals,
+        Span                span,
+        const Callees&      callees
+    )
+        : func_( func ),
+          program_( program ),
+          types_( types ),
+          literals_( literals ),
+          span_( span ),
+          callees_( callees ),
+          real_( types.floating( 64 ) ),
+          index_( types.integer( 64, false ) ),
+          field_( Ring_kind::Complex, 4 ),
+          loops_( program.loops )
+    {
+        blocks_.emplace_back();
+    }
+
+    void lower( Value_place x, Value_place y, std::vector<Statement> prologue )
+    {
+        blocks_[0].statements = std::move( prologue );
+        buffers_              = { x, y };
+        for( u64 b = 2; b < program_.buffers.size(); ++b )
+        {
+            buffers_.push_back( array( program_.buffers[b] ) );
+        }
+        for( const std::vector<std::complex<f64>>& t : program_.tables )
+        {
+            const Value_place at = array( t.size() );
+            for( u64 i = 0; i < t.size(); ++i )
+            {
+                const Local_id k = number( i );
+                assign( element( at.real, k ), use( literal( t[i].real() ) ) );
+                assign( element( at.imaginary, k ), use( literal( t[i].imag() ) ) );
+            }
+            tables_.push_back( at );
+        }
+        run( program_.steps );
+        blocks_.back().terminator = { .kind = Terminator_kind::Return, .span = span_ };
+
+        func_.statements = {};
+        func_.blocks     = {};
+        for( Pending& b : blocks_ )
+        {
+            const u32 first = static_cast<u32>( func_.statements.size() );
+            for( Statement& st : b.statements )
+            {
+                func_.statements.push_back( std::move( st ) );
+            }
+            func_.blocks.push_back( Block {
+                .first_statement = first,
+                .statement_count = static_cast<u32>( b.statements.size() ),
+                .terminator      = b.terminator,
+            } );
+        }
+        func_.compact_rvalues();
+    }
+
+private:
+    struct Pending
+    {
+        std::vector<Statement> statements;
+        Terminator             terminator {};
+    };
+
+    void run( const std::vector<Loop_step>& steps )
+    {
+        for( const Loop_step& s : steps )
+        {
+            switch( s.kind )
+            {
+            case Loop_kind::Leaf:
+                leaf( s );
+                break;
+            case Loop_kind::Loop:
+                loop(
+                    0,
+                    s.count,
+                    [&]( Local_id t )
+                    {
+                        loops_[s.loop] = t;
+                        run( s.body );
+                    }
+                );
+                break;
+            case Loop_kind::Twiddle:
+                loop(
+                    1,
+                    s.count,
+                    [&]( Local_id a )
+                    {
+                        const Local_id ca =
+                            emit( binary( Token_kind::Percent, read( times( a, s.c ) ), number_operand( s.M ), index_ ) );
+                        const Local_id row = times( a, s.R );
+                        loop(
+                            1,
+                            s.R,
+                            [&]( Local_id b )
+                            {
+                                const Local_id e  = emit( binary(
+                                    Token_kind::Percent,
+                                    read( emit( binary( Token_kind::Star, read( ca ), read( b ), index_ ) ) ),
+                                    number_operand( s.M ),
+                                    index_
+                                ) );
+                                const Local_id at = emit( binary( Token_kind::Plus, read( row ), read( b ), index_ ) );
+                                product( buffers_[s.out.buffer], at, tables_[s.table], e, buffers_[s.out.buffer], at );
+                            }
+                        );
+                    }
+                );
+                break;
+            case Loop_kind::Scale:
+                loop(
+                    0,
+                    s.count,
+                    [&]( Local_id i ) {
+                        product(
+                            buffers_[s.in.buffer],
+                            offset( s.in, i ),
+                            tables_[s.table],
+                            i,
+                            buffers_[s.out.buffer],
+                            offset( s.out, i )
+                        );
+                    }
+                );
+                break;
+            }
+        }
+    }
+
+    // Leaf `s` on the elements its strides reach, each a constant from the loops' part.
+    void leaf( const Loop_step& s )
+    {
+        const Planned&           l = program_.leaves[s.leaf];
+        std::vector<Value_place> in, out;
+        const Local_id           from = base( s.in ), to = base( s.out );
+        for( u32 j = 0; j < s.count; ++j )
+        {
+            in.push_back( at( buffers_[s.in.buffer], plus( from, s.in.offset + s.in.step * j ) ) );
+        }
+        for( u32 o = 0; o < l.outputs.size(); ++o )
+        {
+            out.push_back( at( buffers_[s.out.buffer], plus( to, s.out.offset + s.out.step * o ) ) );
+        }
+        for( Statement& st :
+             Circuit_lowering( func_, field_, real_, literals_, span_, callees_ ).lower( l.circuit, l.outputs, in, out ) )
+        {
+            blocks_.back().statements.push_back( std::move( st ) );
+        }
+    }
+
+    // out[o] = x[i] w[e], complex.
+    void product( Value_place x, Local_id i, Value_place w, Local_id e, Value_place out, Local_id o )
+    {
+        const Local_id xr = load( element( x.real, i ) ), xi = load( element( x.imaginary, i ) );
+        const Local_id wr = load( element( w.real, e ) ), wi = load( element( w.imaginary, e ) );
+        const auto     mul = [&]( Local_id a, Local_id b )
+        { return emit( binary( Token_kind::Star, read( a ), read( b ), real_ ) ); };
+        const Local_id re = emit( binary( Token_kind::Minus, read( mul( xr, wr ) ), read( mul( xi, wi ) ), real_ ) );
+        const Local_id im = emit( binary( Token_kind::Plus, read( mul( xr, wi ) ), read( mul( xi, wr ) ), real_ ) );
+        assign( element( out.real, o ), use( read( re ) ) );
+        assign( element( out.imaginary, o ), use( read( im ) ) );
+    }
+
+    // `body` with t from `first` below `count`: a head testing t, the body, t + 1 back to the head.
+    template <class Body>
+    void loop( u64 first, u64 count, Body body )
+    {
+        const Local_id t = func_.locals.push_back( Local { .type = index_, .span = span_ } );
+        assign( Place { .local = t }, use( number_operand( first ) ) );
+        const u32      head = goto_next();
+        const Local_id more =
+            emit( binary( Token_kind::Less, read( t ), number_operand( count ), types_.builtin( Type_kind::Bool ) ) );
+        goto_next();
+        body( t );
+        assign( Place { .local = t }, binary( Token_kind::Plus, read( t ), number_operand( 1 ), index_ ) );
+        blocks_.back().terminator = { .kind = Terminator_kind::Goto, .span = span_, .targets = { Block_id { head } } };
+        blocks_.emplace_back();
+        blocks_[head].terminator = {
+            .kind      = Terminator_kind::Branch,
+            .span      = span_,
+            .condition = read( more ),
+            .targets   = { Block_id { head + 1 }, Block_id { static_cast<u32>( blocks_.size() - 1 ) } },
+        };
+    }
+
+    // Ends the current block with a goto to a new one; the new one's index.
+    u32 goto_next()
+    {
+        const u32 to              = static_cast<u32>( blocks_.size() );
+        blocks_.back().terminator = { .kind = Terminator_kind::Goto, .span = span_, .targets = { Block_id { to } } };
+        blocks_.emplace_back();
+        return to;
+    }
+
+    // The loops' part of a stride's element.
+    Local_id base( const Stride& a )
+    {
+        Local_id acc = number( 0 );
+        for( const auto& [l, coefficient] : a.loops )
+        {
+            acc = emit( binary( Token_kind::Plus, read( acc ), read( times( loops_[l], coefficient ) ), index_ ) );
+        }
+        return acc;
+    }
+
+    Local_id offset( const Stride& a, Local_id i )
+    {
+        return emit( binary( Token_kind::Plus, read( plus( base( a ), a.offset ) ), read( times( i, a.step ) ), index_ ) );
+    }
+
+    Local_id times( Local_id a, u64 k )
+    {
+        return emit( binary( Token_kind::Star, read( a ), number_operand( k ), index_ ) );
+    }
+
+    Local_id plus( Local_id a, u64 k )
+    {
+        return emit( binary( Token_kind::Plus, read( a ), number_operand( k ), index_ ) );
+    }
+
+    Value_place array( u64 size )
+    {
+        const Type_id t = types_.array_of( real_, size );
+        return {
+            Place { .local = func_.locals.push_back( Local { .type = t, .span = span_ } ) },
+            Place { .local = func_.locals.push_back( Local { .type = t, .span = span_ } ) }
+        };
+    }
+
+    Value_place at( Value_place buffer, Local_id i )
+    {
+        return { element( buffer.real, i ), element( buffer.imaginary, i ) };
+    }
+
+    Place element( Place array, Local_id i )
+    {
+        return projected( func_, array, Projection { .kind = Projection_kind::Index, .index = i } );
+    }
+
+    Local_id load( const Place& p )
+    {
+        return emit( use( copy( p, real_ ) ) );
+    }
+
+    Local_id number( u64 k )
+    {
+        return emit( use( number_operand( k ) ) );
+    }
+
+    Operand number_operand( u64 k ) const
+    {
+        return constant( literals_.add_integer( k ), index_ );
+    }
+
+    Operand literal( f64 v ) const
+    {
+        return constant( literals_.add_float( v, static_cast<f32>( v ) ), real_ );
+    }
+
+    Operand read( Local_id l ) const
+    {
+        return copy( Place { .local = l }, func_.locals[l].type );
+    }
+
+    Local_id emit( Rvalue value )
+    {
+        const Local_id t = func_.locals.push_back( Local { .type = value.type, .span = span_ } );
+        assign( Place { .local = t }, std::move( value ) );
+        return t;
+    }
+
+    void assign( Place place, Rvalue value )
+    {
+        blocks_.back().statements.push_back(
+            Statement { .span = span_, .place = place, .value = func_.add_rvalue( std::move( value ) ) }
+        );
+    }
+
+    Function&                func_;
+    const Loop_program&      program_;
+    Type_table&              types_;
+    Literal_pool&            literals_;
+    Span                     span_;
+    const Callees&           callees_;
+    Type_id                  real_;
+    Type_id                  index_;
+    Field                    field_;
+    std::vector<Local_id>    loops_;
+    std::vector<Pending>     blocks_;
+    std::vector<Value_place> buffers_;
+    std::vector<Value_place> tables_;
+};
 } // namespace
 
 std::vector<Statement> lower_circuit(
@@ -559,6 +863,21 @@ std::vector<Statement> lower_circuit(
         "a lowered circuit disagrees with its map"
     );
     return body;
+}
+
+void lower_program(
+    Function&              func,
+    const Loop_program&    program,
+    Value_place            x,
+    Value_place            y,
+    std::vector<Statement> prologue,
+    Type_table&            types,
+    Literal_pool&          literals,
+    Span                   span,
+    const Callees&         callees
+)
+{
+    Loop_lowering( func, program, types, literals, span, callees ).lower( x, y, std::move( prologue ) );
 }
 } // namespace keel
 

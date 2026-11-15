@@ -10,6 +10,8 @@
 #include "ir/kir.h"
 #include "linear/circuit.h"
 #include "linear/field.h"
+#include "linear/sums.h"
+#include "sema/type.h"
 
 namespace keel
 {
@@ -50,5 +52,19 @@ std::vector<Statement> lower_circuit(
     Span                            span,
     const std::vector<Row>&         rows    = {},
     const Callees&                  callees = {}
+);
+
+// `program` in place of `func`'s body, after `prologue`: loops over its leaves' statements, from x's arrays (buffer 0)
+// to y's (buffer 1), each part a whole f64 array. Temporaries and tables are local arrays, the tables filled first.
+void lower_program(
+    Function&              func,
+    const Loop_program&    program,
+    Value_place            x,
+    Value_place            y,
+    std::vector<Statement> prologue,
+    Type_table&            types,
+    Literal_pool&          literals,
+    Span                   span,
+    const Callees&         callees = {}
 );
 } // namespace keel

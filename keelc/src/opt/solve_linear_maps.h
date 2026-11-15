@@ -31,7 +31,7 @@ Map_outcome solve_linear_maps(
     Function&                                              func,
     const std::vector<Function>&                           functions,
     const Purity&                                          purity,
-    const Type_table&                                      types,
+    Type_table&                                            types,
     Literal_pool&                                          literals,
     const std::filesystem::path&                           cache    = {},
     const Solve_options&                                   options  = {},

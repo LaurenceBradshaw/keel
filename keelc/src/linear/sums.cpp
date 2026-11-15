@@ -4,6 +4,7 @@
 #include "linear/sums.h"
 #include <algorithm>
 #include <bit>
+#include <cassert>
 #include <functional>
 #include <limits>
 #include <map>
@@ -216,6 +217,12 @@ std::optional<Kernel> kernel_of( const Sum& s )
 Cost twiddle_cost( u64 e, u64 M )
 {
     return e % M == 0 ? Cost {} : scale_cost( root( e, M ), false );
+}
+
+// Whether a split, chirp or convolution of s runs as a loop, which multiplies each twiddle and chirp in full.
+bool looped( const Sum& s, const Plan_options& options )
+{
+    return !s.real && ( s.n > options.leaf_max || s.m > options.leaf_max );
 }
 
 std::string sides( const Sum& s )
@@ -500,7 +507,7 @@ Sum outer_sum( const Kernel& k, u64 P, u64 R, u64 k2 )
 }
 
 // Each P dividing n or M, with the smallest R; a P or R not dividing n or m leaves ragged parts.
-std::vector<Use> split_match( const Sum& s, const Plan_options& )
+std::vector<Use> split_match( const Sum& s, const Plan_options& options )
 {
     const std::optional<Kernel> found = kernel_of( s );
     if( !found )
@@ -521,7 +528,7 @@ std::vector<Use> split_match( const Sum& s, const Plan_options& )
         {
             for( u64 k2 = 1; k2 < R; ++k2 )
             {
-                own = own + twiddle_cost( k.c * j1 % k.M * k2, k.M );
+                own = own + ( looped( s, options ) ? Cost { 2, 4 } : twiddle_cost( k.c * j1 % k.M * k2, k.M ) );
             }
         }
         Use use { {}, own, "split " + std::to_string( P ) + "x" + std::to_string( k.n / P ), {}, { P, R } };
@@ -682,7 +689,7 @@ std::pair<Sum, i64> chirped( const Kernel& k )
 }
 
 // W^(c j k) = W^(c j^2 / 2) W^(-c (k - j)^2 / 2) W^(c k^2 / 2).
-std::vector<Use> chirp_match( const Sum& s, const Plan_options& )
+std::vector<Use> chirp_match( const Sum& s, const Plan_options& options )
 {
     const std::optional<Kernel> k = kernel_of( s );
     if( !k || k->c == 0 || k->n < 2 || k->m < 2 )
@@ -694,12 +701,12 @@ std::vector<Use> chirp_match( const Sum& s, const Plan_options& )
     {
         return {};
     }
-    Cost own {};
-    for( u64 j = 0; j < k->n; ++j )
+    Cost own = looped( s, options ) ? ( k->n + k->m ) * Cost { 2, 4 } : Cost {};
+    for( u64 j = 0; j < k->n && !looped( s, options ); ++j )
     {
         own = own + scale_cost( root( mod( h, part.M ) * j % part.M * j, part.M ), s.real );
     }
-    for( u64 o = 0; o < k->m; ++o )
+    for( u64 o = 0; o < k->m && !looped( s, options ); ++o )
     {
         own = own + scale_cost( root( mod( h, part.M ) * o % part.M * o, part.M ), false );
     }
@@ -772,10 +779,23 @@ std::vector<Use> convolution_match( const Sum& s, const Plan_options& )
     };
 }
 
+std::vector<std::complex<f64>> transform( const Sum& s, u64 L );
+
 std::vector<u32>
 convolution_build( Circuit& c, const Sum& s, const Use& use, const std::vector<u32>& x, const Part_builder& part )
 {
-    const u64                      L = use.chosen[0];
+    std::vector<std::complex<f64>> H = transform( s, use.chosen[0] );
+    std::vector<u32>               X = part( c, use.parts[0].second, x );
+    for( u64 f = 0; f < H.size(); ++f )
+    {
+        X[f] = c.scale( X[f], H[f] );
+    }
+    return part( c, use.parts[1].second, X );
+}
+
+// The kernel h(k - j)'s DFT_L, over L, so the product's inverse needs no scaling.
+std::vector<std::complex<f64>> transform( const Sum& s, u64 L )
+{
     std::vector<std::complex<f64>> h( L ), W( L ), H( L );
     for( i64 t = 1 - i64 { s.n }; t < i64 { s.m }; ++t )
     {
@@ -794,12 +814,7 @@ convolution_build( Circuit& c, const Sum& s, const Use& use, const std::vector<u
         }
         H[f] /= static_cast<f64>( L );
     }
-    std::vector<u32> X = part( c, use.parts[0].second, x );
-    for( u64 f = 0; f < L; ++f )
-    {
-        X[f] = c.scale( X[f], H[f] );
-    }
-    return part( c, use.parts[1].second, X );
+    return H;
 }
 
 // A generator of the units mod p, or 0 when p is not prime.
@@ -1652,6 +1667,15 @@ public:
         return p;
     }
 
+    Loop_program program( const Sum& s )
+    {
+        Loop_program p;
+        emit( p, p.steps, s, { 0, 0, 1, s.n }, { 1, 0, 1, s.m }, false );
+        p.cost = cost( p, p.steps );
+        assert( p.cost <= choose( s ).cost && "a loop program costs more than its rules ranked it" );
+        return p;
+    }
+
 private:
     struct Choice
     {
@@ -1660,6 +1684,261 @@ private:
         Cost        cost;
         std::string how;
     };
+
+    static Stride in_loop( Stride a, u32 loop )
+    {
+        a.loops.push_back( { loop, a.batch } );
+        a.batch = 0;
+        return a;
+    }
+
+    u32 buffer( Loop_program& p, u64 size )
+    {
+        p.buffers.push_back( size );
+        return static_cast<u32>( p.buffers.size() - 1 );
+    }
+
+    // Equal tables are one.
+    u32 table( Loop_program& p, std::vector<std::complex<f64>> t )
+    {
+        if( const auto at = std::ranges::find( p.tables, t ); at != p.tables.end() )
+        {
+            return static_cast<u32>( at - p.tables.begin() );
+        }
+        p.tables.push_back( std::move( t ) );
+        return static_cast<u32>( p.tables.size() - 1 );
+    }
+
+    // W_M^e for e < M, made once per M.
+    u32 roots( Loop_program& p, u64 M )
+    {
+        const auto [it, fresh] = roots_.try_emplace( M );
+        if( fresh )
+        {
+            std::vector<std::complex<f64>> t( M );
+            for( u64 e = 0; e < M; ++e )
+            {
+                t[e] = root( e, M );
+            }
+            it->second = table( p, std::move( t ) );
+        }
+        return it->second;
+    }
+
+    // The leaf computing s, or its conjugate.
+    u32 leaf( Loop_program& p, const Sum& s, bool conj )
+    {
+        const auto [it, fresh] = leaves_.try_emplace( { s, conj } );
+        if( fresh )
+        {
+            Planned l;
+            l.circuit = Circuit( s.real );
+            std::vector<u32> x( s.n * s.batch );
+            for( u32 j = 0; j < x.size(); ++j )
+            {
+                x[j] = l.circuit.input( j );
+            }
+            l.outputs = paste_conjugated( l.circuit, s, x, conj );
+            for( u32 o = 0; o < l.outputs.size(); ++o )
+            {
+                l.circuit.outputs[Row { Element { o } }] = l.outputs[o];
+            }
+            l.cost = l.circuit.cost();
+            p.leaves.push_back( std::move( l ) );
+            it->second = static_cast<u32>( p.leaves.size() - 1 );
+        }
+        return it->second;
+    }
+
+    // Steps computing s, or its conjugate, from `in` to `out`.
+    void emit( Loop_program& p, std::vector<Loop_step>& into, const Sum& s0, const Stride& in, const Stride& out, bool conj )
+    {
+        const auto [s, flipped] = representative( normalised( s0 ) );
+        conj                    = conj != flipped;
+        if( s.batch > 1 )
+        {
+            Loop_step loop { .kind = Loop_kind::Loop, .count = s.batch, .loop = p.loops++ };
+            emit( p, loop.body, single( s ), in_loop( in, loop.loop ), in_loop( out, loop.loop ), conj );
+            into.push_back( std::move( loop ) );
+            return;
+        }
+        const Choice& choice = choose( s );
+        if( looped( s, options_ ) )
+        {
+            if( choice.rule->build == split_build )
+            {
+                return emit_split( p, into, s, choice.use, in, out, conj );
+            }
+            if( choice.rule->build == chirp_build )
+            {
+                return emit_chirp( p, into, s, choice.use, in, out, conj );
+            }
+            if( choice.rule->build == convolution_build )
+            {
+                return emit_convolution( p, into, s, choice.use, in, out, conj );
+            }
+        }
+        into.push_back( Loop_step { .kind = Loop_kind::Leaf, .count = s.n, .leaf = leaf( p, s, conj ), .in = in, .out = out } );
+    }
+
+    // Inner sums into z[j1 R + k2], twiddles, outer sums from z, each run of equal parts one loop.
+    void emit_split(
+        Loop_program&           p,
+        std::vector<Loop_step>& into,
+        const Sum&              s,
+        const Use&              use,
+        const Stride&           in,
+        const Stride&           out,
+        bool                    conj
+    )
+    {
+        const Kernel k    = *kernel_of( s );
+        const auto [P, R] = use.chosen;
+        const u32 z       = buffer( p, P * R );
+        for( const auto& [first, inner] : inner_batches( k, P, R, s.real ) )
+        {
+            emit(
+                p,
+                into,
+                inner,
+                { in.buffer, in.offset + first * in.step, P * in.step, in.step, in.loops },
+                { z, first * R, 1, R },
+                conj
+            );
+        }
+        const u64 c = conj ? ( k.M - k.c % k.M ) % k.M : k.c % k.M;
+        into.push_back( Loop_step {
+            .kind  = Loop_kind::Twiddle,
+            .count = static_cast<u32>( P ),
+            .table = roots( p, k.M ),
+            .R     = R,
+            .M     = k.M,
+            .c     = c,
+            .out   = { z }
+        } );
+        for( u64 k2 = 0; k2 < R; )
+        {
+            Sum outer = outer_sum( k, P, R, k2 );
+            u64 next  = k2 + 1;
+            while( next < R && outer_sum( k, P, R, next ) == outer )
+            {
+                ++next;
+            }
+            outer.batch = static_cast<u32>( next - k2 );
+            emit(
+                p,
+                into,
+                outer,
+                { z, k2, R, 1 },
+                { out.buffer, out.offset + k2 * out.step, R * out.step, out.step, out.loops },
+                conj
+            );
+            k2 = next;
+        }
+    }
+
+    // x scaled by the chirp, the sum in k - j, y scaled by the chirp.
+    void emit_chirp(
+        Loop_program&           p,
+        std::vector<Loop_step>& into,
+        const Sum&              s,
+        const Use&              use,
+        const Stride&           in,
+        const Stride&           out,
+        bool                    conj
+    )
+    {
+        const auto [sum, h] = chirped( *kernel_of( s ) );
+        const auto chirp    = [&]( u32 n )
+        {
+            std::vector<std::complex<f64>> t( n );
+            for( u64 j = 0; j < n; ++j )
+            {
+                t[j] = root( mod( h, sum.M ) * j % sum.M * j, sum.M );
+                t[j] = conj ? std::conj( t[j] ) : t[j];
+            }
+            return t;
+        };
+        const u32 a = buffer( p, s.n ), b = buffer( p, s.m );
+        into.push_back(
+            Loop_step { .kind = Loop_kind::Scale, .count = s.n, .table = table( p, chirp( s.n ) ), .in = in, .out = { a } }
+        );
+        emit( p, into, use.parts[0].second, { a }, { b }, conj );
+        into.push_back(
+            Loop_step { .kind = Loop_kind::Scale, .count = s.m, .table = table( p, chirp( s.m ) ), .in = { b }, .out = out }
+        );
+    }
+
+    // DFT_L of x, times the kernel's transform, DFT_L back.
+    void emit_convolution(
+        Loop_program&           p,
+        std::vector<Loop_step>& into,
+        const Sum&              s,
+        const Use&              use,
+        const Stride&           in,
+        const Stride&           out,
+        bool                    conj
+    )
+    {
+        const u64                      L = use.chosen[0];
+        std::vector<std::complex<f64>> H = transform( s, L );
+        for( std::complex<f64>& v : H )
+        {
+            v = conj ? std::conj( v ) : v;
+        }
+        const u32 X = buffer( p, L );
+        emit( p, into, use.parts[0].second, in, { X }, conj );
+        into.push_back( Loop_step {
+            .kind  = Loop_kind::Scale,
+            .count = static_cast<u32>( L ),
+            .table = table( p, std::move( H ) ),
+            .in    = { X },
+            .out   = { X }
+        } );
+        emit( p, into, use.parts[1].second, { X }, out, conj );
+    }
+
+    Cost cost( const Loop_program& p, const std::vector<Loop_step>& steps ) const
+    {
+        Cost total {};
+        for( const Loop_step& s : steps )
+        {
+            switch( s.kind )
+            {
+            case Loop_kind::Leaf:
+                total = total + p.leaves[s.leaf].cost;
+                break;
+            case Loop_kind::Loop:
+                total = total + s.count * cost( p, s.body );
+                break;
+            case Loop_kind::Twiddle:
+                total = total + static_cast<u32>( ( s.count - 1 ) * ( s.R - 1 ) ) * Cost { 2, 4 };
+                break;
+            case Loop_kind::Scale:
+                total = total + s.count * Cost { 2, 4 };
+                break;
+            }
+        }
+        return total;
+    }
+
+    // The part's circuit pasted onto `x`, conjugated when `conj`.
+    std::vector<u32> paste_conjugated( Circuit& c, const Sum& part, const std::vector<u32>& x, bool conj )
+    {
+        const auto [key, conjugated] = representative( normalised( part ) );
+        auto it                      = built_.find( key );
+        if( it == built_.end() )
+        {
+            it = built_.emplace( key, build( key ) ).first;
+        }
+        const std::vector<u32> m = c.paste( it->second.circuit, x, conjugated != conj );
+        std::vector<u32>       out;
+        for( const u32 o : it->second.outputs )
+        {
+            out.push_back( m[o] );
+        }
+        return out;
+    }
 
     const Choice& choose( const Sum& s0 )
     {
@@ -1701,24 +1980,14 @@ private:
     // The part's circuit, built once, pasted onto `x`.
     std::vector<u32> paste( Circuit& c, const Sum& part, const std::vector<u32>& x )
     {
-        const auto [key, conjugated] = representative( normalised( part ) );
-        auto it                      = built_.find( key );
-        if( it == built_.end() )
-        {
-            it = built_.emplace( key, build( key ) ).first;
-        }
-        const std::vector<u32> m = c.paste( it->second.circuit, x, conjugated );
-        std::vector<u32>       out;
-        for( const u32 o : it->second.outputs )
-        {
-            out.push_back( m[o] );
-        }
-        return out;
+        return paste_conjugated( c, part, x, false );
     }
 
-    const Plan_options&    options_;
-    std::map<Sum, Choice>  choices_;
-    std::map<Sum, Planned> built_;
+    const Plan_options&                 options_;
+    std::map<Sum, Choice>               choices_;
+    std::map<Sum, Planned>              built_;
+    std::map<u64, u32>                  roots_;  // a program's root table of each M
+    std::map<std::pair<Sum, bool>, u32> leaves_; // a program's leaf of each sum, conjugated or not
 };
 
 i128 gcd( i128 a, i128 b )
@@ -1779,6 +2048,17 @@ std::optional<Planned> plan_sum( const Sum& sum, const Plan_options& options )
         return std::nullopt;
     }
     return planner.build( s );
+}
+
+std::optional<Loop_program> plan_loops( const Sum& sum, const Plan_options& options )
+{
+    const Sum s = normalised( sum );
+    Planner   planner( options );
+    if( s.real || s.coefficient.empty() || !s.offset.empty() || !planner.plannable( s ) )
+    {
+        return std::nullopt;
+    }
+    return planner.program( s );
 }
 } // namespace keel
 #ifdef ENABLE_UNIT_TESTS
@@ -1983,6 +2263,116 @@ TEST_CASE( "every_planner_rule_computes_the_naive_sum", "[linear][sums]" )
             }
         }
         CHECK( checked > 0 );
+    }
+}
+
+u64 element( const Stride& a, const std::vector<u64>& index, u64 i )
+{
+    u64 at = a.offset + a.step * i;
+    for( const auto& [loop, coefficient] : a.loops )
+    {
+        at += coefficient * index[loop];
+    }
+    return at;
+}
+
+// Runs `steps` on the buffers as the lowered loops do.
+void run(
+    const Loop_program&                          p,
+    const std::vector<Loop_step>&                steps,
+    std::vector<std::vector<std::complex<f64>>>& b,
+    std::vector<u64>&                            index
+)
+{
+    for( const Loop_step& s : steps )
+    {
+        switch( s.kind )
+        {
+        case Loop_kind::Leaf:
+        {
+            const Planned&                 leaf = p.leaves[s.leaf];
+            std::vector<std::complex<f64>> x( s.count );
+            for( u32 j = 0; j < s.count; ++j )
+            {
+                x[j] = b[s.in.buffer].at( element( s.in, index, j ) );
+            }
+            const std::vector<std::complex<f64>> v = leaf.circuit.evaluate( x );
+            for( u32 o = 0; o < leaf.outputs.size(); ++o )
+            {
+                b[s.out.buffer].at( element( s.out, index, o ) ) = v[leaf.outputs[o]];
+            }
+            break;
+        }
+        case Loop_kind::Loop:
+            for( index[s.loop] = 0; index[s.loop] < s.count; ++index[s.loop] )
+            {
+                run( p, s.body, b, index );
+            }
+            break;
+        case Loop_kind::Twiddle:
+            for( u64 a = 1; a < s.count; ++a )
+            {
+                for( u64 r = 1; r < s.R; ++r )
+                {
+                    b[s.out.buffer].at( a * s.R + r ) *= p.tables[s.table].at( s.c * a % s.M * r % s.M );
+                }
+            }
+            break;
+        case Loop_kind::Scale:
+            for( u32 i = 0; i < s.count; ++i )
+            {
+                b[s.out.buffer].at( element( s.out, index, i ) ) =
+                    b[s.in.buffer].at( element( s.in, index, i ) ) * p.tables[s.table].at( i );
+            }
+            break;
+        }
+    }
+}
+
+f64 error( const Loop_program& p, const Sum& s )
+{
+    std::mt19937                                rng( 5 );
+    std::uniform_real_distribution              d( -1.0, 1.0 );
+    std::vector<std::vector<std::complex<f64>>> b;
+    for( const u64 size : p.buffers )
+    {
+        b.emplace_back( size );
+    }
+    b[0].resize( s.n );
+    b[1].resize( s.m );
+    for( auto& v : b[0] )
+    {
+        v = { d( rng ), d( rng ) };
+    }
+    std::vector<u64> index( p.loops );
+    run( p, p.steps, b, index );
+    f64 worst = 0;
+    for( u32 o = 0; o < s.m; ++o )
+    {
+        std::complex<f64> want = 0;
+        for( u32 j = 0; j < s.n; ++j )
+        {
+            want += b[0][j] * entry( s, j, o );
+        }
+        worst = std::max( worst, std::abs( b[1][o] - want ) );
+    }
+    return worst / std::sqrt( static_cast<f64>( s.n ) );
+}
+
+TEST_CASE( "a_planned_dft_runs_as_loops_over_its_leaves", "[linear][sums]" )
+{
+    // Forward and inverse, a power of 2 and a prime by Bluestein, its splits ragged, at 8-point leaves.
+    Plan_options small;
+    small.leaf_max = 8;
+    for( const auto [n, c] : { std::pair { 256u, 1u }, { 256u, 255u }, { 1019u, 1u }, { 1019u, 1018u } } )
+    {
+        const Sum                         s = exponent_kernel( n, n, n, c );
+        const std::optional<Loop_program> p = plan_loops( s, small );
+        REQUIRE( p );
+        INFO( n << " " << c );
+        CHECK( p->loops > 0 );
+        CHECK( p->leaves.size() < 12 );
+        CHECK( error( *p, s ) < 1e-12 );
     }
 }
 
