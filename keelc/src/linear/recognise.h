@@ -13,6 +13,7 @@
 #include "ir/purity.h"
 #include "linear/circuit.h"
 #include "linear/field.h"
+#include "linear/sums.h"
 #include "sema/type.h"
 #include "sema/type_checker.h"
 
@@ -104,5 +105,26 @@ std::variant<Recognised, Unrecognised> recognise(
     const Literal_pool&          literals,
     const Global_constants&      globals = {},
     u64                          budget  = 4'000'000
+);
+
+struct Read_kernel
+{
+    Sum                     sum;
+    std::vector<Value_path> inputs {};  // x[j], real and imaginary
+    std::vector<Value_path> outputs {}; // y[k]
+    Cost                    input {};   // the adds and muls the loops ran
+};
+
+// As `recognise`, but each counted loop runs once with its index a symbol, an accumulator's step is
+// summed over it, an index is a polynomial in the symbols, and a `@trig_*` call at a rational multiple
+// of pi times one becomes powers of W. Nothing when the body is not one complex sum y[k] = sum over j
+// of x[j] times powers of W in j and k.
+std::optional<Read_kernel> read_kernel(
+    const Function&              func,
+    const std::vector<Function>& functions,
+    const Purity&                purity,
+    const Type_table&            types,
+    const Literal_pool&          literals,
+    const Global_constants&      globals = {}
 );
 } // namespace keel

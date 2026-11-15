@@ -3,14 +3,20 @@
 
 #include "linear/recognise.h"
 #include <algorithm>
+#include <array>
 #include <bit>
 #include <cmath>
+#include <complex>
+#include <limits>
 #include <map>
 #include <numbers>
 #include <numeric>
 #include <optional>
 #include <unordered_map>
+#include "ir/loops.h"
 #include "opt/fold_constants.h"
+#include "opt/forward_reads.h"
+#include "opt/reduce_inductions.h"
 
 namespace keel
 {
@@ -19,6 +25,349 @@ namespace
 constexpr u32 k_largest_root  = 256;  // the largest M a constant or an angle is matched at
 constexpr u32 k_largest_field = 1024; // the largest M a coefficient may need
 constexpr u32 k_deepest_call  = 64;
+
+// The symbolic loop reader's values: polynomials in the loop indices, and sums over input elements.
+namespace sym
+{
+using i128 = __int128;
+
+constexpr u32 k_symbols      = 8;
+constexpr u64 k_largest_root = u64 { 1 } << 24; // the largest M an angle is matched at
+constexpr f64 k_zero         = 1e-12;           // a coefficient this small is gone
+
+[[noreturn]] void fail()
+{
+    throw Unrecognised { Ending::Unsupported, {} };
+}
+
+i64 narrowed( i128 x )
+{
+    if( x > std::numeric_limits<i64>::max() || x < std::numeric_limits<i64>::min() )
+    {
+        fail();
+    }
+    return static_cast<i64>( x );
+}
+
+// Integer polynomials in the loop symbols, no zero coefficient.
+using Monomial = std::array<u8, k_symbols>;
+using Poly     = std::map<Monomial, i64>;
+
+Poly constant( i64 c )
+{
+    return c == 0 ? Poly {} : Poly { { Monomial {}, c } };
+}
+
+Poly symbol( u32 s )
+{
+    Monomial m {};
+    m[s] = 1;
+    return { { m, 1 } };
+}
+
+void add_to( Poly& p, const Monomial& m, i128 c )
+{
+    const i64 v = narrowed( i128 { p[m] } + c );
+    if( v == 0 )
+    {
+        p.erase( m );
+    }
+    else
+    {
+        p[m] = v;
+    }
+}
+
+Poly sum( Poly a, const Poly& b, i64 sign = 1 )
+{
+    for( const auto& [m, c] : b )
+    {
+        add_to( a, m, i128 { c } * sign );
+    }
+    return a;
+}
+
+Poly product( const Poly& a, const Poly& b )
+{
+    Poly p;
+    for( const auto& [ma, ca] : a )
+    {
+        for( const auto& [mb, cb] : b )
+        {
+            Monomial m;
+            for( u32 s = 0; s < k_symbols; ++s )
+            {
+                if( ma[s] + mb[s] > 8 )
+                {
+                    fail();
+                }
+                m[s] = static_cast<u8>( ma[s] + mb[s] );
+            }
+            add_to( p, m, i128 { ca } * cb );
+        }
+    }
+    return p;
+}
+
+std::optional<i64> constant_of( const Poly& p )
+{
+    if( p.empty() )
+    {
+        return 0;
+    }
+    if( p.size() == 1 && p.begin()->first == Monomial {} )
+    {
+        return p.begin()->second;
+    }
+    return std::nullopt;
+}
+
+bool depends( const Poly& p, u32 s )
+{
+    return std::ranges::any_of( p, [s]( const auto& t ) { return t.first[s] != 0; } );
+}
+
+// Coefficients in [0, M).
+Poly reduced( const Poly& p, u64 M )
+{
+    Poly r;
+    for( const auto& [m, c] : p )
+    {
+        i128 v = i128 { c } % static_cast<i128>( M );
+        v      = v < 0 ? v + M : v;
+        if( v != 0 )
+        {
+            r[m] = static_cast<i64>( v );
+        }
+    }
+    return r;
+}
+
+// A value known to be p, or p mod q when q is not 0, and within [lo, hi].
+struct Int
+{
+    Poly p;
+    u64  q  = 0;
+    i128 lo = 0;
+    i128 hi = 0;
+};
+
+Int number( i64 c )
+{
+    return { constant( c ), 0, c, c };
+}
+
+bool concrete( const Int& x )
+{
+    return x.q == 0 && constant_of( x.p ).has_value();
+}
+
+bool same( const Int& x, const Int& y )
+{
+    const auto reduced_in = [&]( const Int& v ) { return v.q == 0 || ( v.lo >= 0 && v.hi < static_cast<i128>( v.q ) ); };
+    return x.p == y.p && x.q == y.q && reduced_in( x ) && reduced_in( y );
+}
+
+// sum over Poly e of c W_M^e: a function of the symbols.
+struct Wave
+{
+    u64                               M = 1;
+    std::map<Poly, std::complex<f64>> terms;
+};
+
+void add_term( Wave& w, const Poly& e, std::complex<f64> c )
+{
+    std::complex<f64>& t = w.terms[e];
+    t += c;
+    if( std::abs( t ) < k_zero )
+    {
+        w.terms.erase( e );
+    }
+}
+
+Wave wave( std::complex<f64> c )
+{
+    Wave w;
+    add_term( w, {}, c );
+    return w;
+}
+
+u64 common( u64 a, u64 b )
+{
+    const u64 m = std::lcm( a, b );
+    if( m > k_largest_root )
+    {
+        fail();
+    }
+    return m;
+}
+
+Wave lifted( const Wave& w, u64 M )
+{
+    if( w.M == M )
+    {
+        return w;
+    }
+    Wave out { M, {} };
+    for( const auto& [e, c] : w.terms )
+    {
+        add_term( out, reduced( product( e, constant( narrowed( M / w.M ) ) ), M ), c );
+    }
+    return out;
+}
+
+Wave sum( const Wave& a, const Wave& b, std::complex<f64> sign = 1 )
+{
+    const u64 M   = common( a.M, b.M );
+    Wave      out = lifted( a, M );
+    for( const auto& [e, c] : lifted( b, M ).terms )
+    {
+        add_term( out, e, sign * c );
+    }
+    return out;
+}
+
+Wave product( const Wave& a, const Wave& b )
+{
+    const u64  M  = common( a.M, b.M );
+    const Wave la = lifted( a, M );
+    const Wave lb = lifted( b, M );
+    Wave       out { M, {} };
+    for( const auto& [ea, ca] : la.terms )
+    {
+        for( const auto& [eb, cb] : lb.terms )
+        {
+            add_term( out, reduced( sum( ea, eb ), M ), ca * cb );
+        }
+    }
+    return out;
+}
+
+Wave scaled( const Wave& a, std::complex<f64> c )
+{
+    Wave out { a.M, {} };
+    for( const auto& [e, t] : a.terms )
+    {
+        add_term( out, e, c * t );
+    }
+    return out;
+}
+
+bool depends( const Wave& w, u32 s )
+{
+    return std::ranges::any_of( w.terms, [s]( const auto& t ) { return depends( t.first, s ); } );
+}
+
+// An input element, `stream` at `index`, summed over the symbols in `bound`.
+struct Key
+{
+    u32  stream;
+    Poly index;
+    u8   bound;
+
+    auto operator<=>( const Key& ) const = default;
+};
+
+// A linear form over input elements; `carried` is a local's value at the turn's start, added once.
+struct Form
+{
+    std::map<Key, Wave> terms {};
+    Local_id            carried {};
+};
+
+Form sum( const Form& a, const Form& b, f64 sign )
+{
+    if( b.carried.is_valid() && ( sign < 0 || a.carried.is_valid() ) )
+    {
+        fail();
+    }
+    Form out = a;
+    if( b.carried.is_valid() )
+    {
+        out.carried = b.carried;
+    }
+    for( const auto& [k, w] : b.terms )
+    {
+        const auto found = out.terms.find( k );
+        Wave       n     = found == out.terms.end() ? scaled( w, sign ) : sum( found->second, w, sign );
+        if( n.terms.empty() )
+        {
+            out.terms.erase( k );
+        }
+        else
+        {
+            out.terms[k] = std::move( n );
+        }
+    }
+    return out;
+}
+
+Form scaled( const Form& a, const Wave& w )
+{
+    if( a.carried.is_valid() )
+    {
+        fail();
+    }
+    Form out;
+    for( const auto& [k, t] : a.terms )
+    {
+        Wave n = product( t, w );
+        if( !n.terms.empty() )
+        {
+            out.terms.emplace( k, std::move( n ) );
+        }
+    }
+    return out;
+}
+
+// `value` written to `stream` at `index`, for each value of the symbols in `bound`.
+struct Store
+{
+    u32  stream;
+    Poly index;
+    Form value;
+    u8   bound = 0;
+};
+
+// An approximation p/q of x within rounding, q at most k_largest_root.
+std::optional<std::pair<i64, u64>> rational( f64 x )
+{
+    if( x == 0 )
+    {
+        return std::pair<i64, u64> { 0, 1 };
+    }
+    if( !std::isfinite( x ) || std::abs( x ) > 1e15 )
+    {
+        return std::nullopt;
+    }
+    const f64 tolerance = 16 * std::numeric_limits<f64>::epsilon() * std::abs( x );
+    i128      h0 = 0, h1 = 1, k0 = 1, k1 = 0;
+    f64       r = x;
+    for( u32 n = 0; n < 64; ++n )
+    {
+        const f64  a  = std::floor( r );
+        const i128 h2 = static_cast<i128>( a ) * h1 + h0;
+        const i128 k2 = static_cast<i128>( a ) * k1 + k0;
+        if( k2 > static_cast<i128>( k_largest_root ) )
+        {
+            return std::nullopt;
+        }
+        h0 = h1, h1 = h2, k0 = k1, k1 = k2;
+        if( std::abs( x - static_cast<f64>( h1 ) / static_cast<f64>( k1 ) ) <= tolerance )
+        {
+            return std::pair<i64, u64> { narrowed( h1 ), static_cast<u64>( k1 ) };
+        }
+        if( r == a )
+        {
+            return std::nullopt;
+        }
+        r = 1 / ( r - a );
+    }
+    return std::nullopt;
+}
+} // namespace sym
+
+using sym::i128;
 
 // An element of Q(W_m), in fields_[m].
 struct Exact
@@ -33,6 +382,11 @@ enum class Kind : u8
     Number,
     Form,
     Address,
+    // Symbolic mode only, each in symbolics_.
+    Int,   // a polynomial in the loop indices
+    Angle, // a i + b
+    Wave,
+    Terms, // a sum over input elements
 };
 
 struct Value
@@ -41,16 +395,37 @@ struct Value
     u64   bits  = 0;     // Number: an integer's bits, or an f64's
     bool  exact = false; // Number: an f64 whose exact value is `value`
     Exact value {};
-    u32   index = 0; // Form: into forms_; Address: into locations_
+    u32   index = 0; // Form: into forms_; Address: into locations_; symbolic: into symbolics_
 };
 
-// A root, then fields (odd) and elements (even).
+struct Symbolic
+{
+    sym::Int  i {};
+    f64       a = 0;
+    f64       b = 0;
+    sym::Wave w {};
+    sym::Form f {};
+};
+
+// A root, then steps: a field f is 4f + 1, element e is 4e, and the symbolic element polys_[poly] is 2.
 struct Location
 {
     u32              root = 0;
     std::vector<u64> steps;
+    u32              poly = 0;
 
     auto operator<=>( const Location& ) const = default;
+};
+
+constexpr u64 k_symbolic_step = 2;
+
+// What a parameter's elements are read or written through: a root, an element, then the fields in `rest`.
+struct Stream
+{
+    u32              root;
+    std::vector<u64> rest;
+    bool             read    = false;
+    bool             written = false;
 };
 
 struct Root
@@ -118,6 +493,33 @@ public:
         catch( const Field::Overflow& )
         {
             return Unrecognised { Ending::Coefficient, span_ };
+        }
+    }
+
+    // Symbolic mode: the kernel the loops compute, or nothing.
+    std::optional<Read_kernel> read_sum( const Function& func )
+    {
+        if( func.returns_a_value )
+        {
+            return std::nullopt;
+        }
+        symbolic_  = true;
+        loops_     = find_loops( func );
+        addressed_ = addressed_locals_of( func );
+        try
+        {
+            Frame top = frame( func );
+            set_up( top );
+            run_from( top, k_entry_block, k_no_loop );
+            return collect_sum();
+        }
+        catch( const Unrecognised& )
+        {
+            return std::nullopt;
+        }
+        catch( const Field::Overflow& )
+        {
+            return std::nullopt;
         }
     }
 
@@ -570,6 +972,10 @@ private:
         {
             return found->second.value;
         }
+        if( symbolic_ && roots_[at.root].input )
+        {
+            return stream_read( at, type );
+        }
         if( const auto found = read_.find( at ); found != read_.end() )
         {
             return found->second;
@@ -584,6 +990,15 @@ private:
 
     void write( const Location& at, Value v )
     {
+        if( symbolic_ && roots_[at.root].output )
+        {
+            stream_write( at, v );
+            return;
+        }
+        if( at.poly != 0 )
+        {
+            end( Ending::Unsupported );
+        }
         memory_[at] = { v, span_ };
     }
 
@@ -596,7 +1011,7 @@ private:
     // Everything written under `from`, now under `to` instead of what was there.
     void copy_whole( const Location& to, const Location& from )
     {
-        if( roots_[from.root].input )
+        if( roots_[from.root].input || ( symbolic_ && roots_[to.root].output ) || from.poly != 0 || to.poly != 0 )
         {
             end( Ending::Unsupported );
         }
@@ -650,7 +1065,7 @@ private:
             for( u64 i = 0; i < t.count; ++i )
             {
                 Location e = at;
-                e.steps.push_back( i << 1 );
+                e.steps.push_back( i << 2 );
                 store( e, v.elements[v.kind == Constant_value::Kind::Fill ? 0 : i], t.element );
             }
         }
@@ -684,16 +1099,29 @@ private:
             switch( p.kind )
             {
             case Projection_kind::Field:
-                at.steps.push_back( u64 { p.field.v } << 1 | 1 );
+                at.steps.push_back( u64 { p.field.v } << 2 | 1 );
                 break;
             case Projection_kind::Index:
             {
                 const Value i = read( Location { root( fr, p.index ), {} }, fr.func->locals[p.index].type );
+                if( i.kind == Kind::Int )
+                {
+                    // Only a parameter's elements are taken at a symbolic index.
+                    const sym::Int& x = symbolics_[i.index].i;
+                    if( at.poly != 0 || !roots_[at.root].input || x.q != 0 || x.lo < 0 )
+                    {
+                        end( Ending::Branch );
+                    }
+                    polys_.push_back( x.p );
+                    at.poly = static_cast<u32>( polys_.size() - 1 );
+                    at.steps.push_back( k_symbolic_step );
+                    break;
+                }
                 if( i.kind != Kind::Number )
                 {
                     end( Ending::Branch );
                 }
-                at.steps.push_back( i.bits << 1 );
+                at.steps.push_back( i.bits << 2 );
                 break;
             }
             case Projection_kind::Deref:
@@ -887,6 +1315,10 @@ private:
 
     Value binary( const Rvalue& r, Value a, Value b )
     {
+        if( is_symbolic( a ) || is_symbolic( b ) )
+        {
+            return sym_binary( r, a, b );
+        }
         if( a.kind == Kind::Form || b.kind == Kind::Form )
         {
             return symbolic( r.op, a, b );
@@ -905,6 +1337,10 @@ private:
 
     Value unary( const Rvalue& r, Value a )
     {
+        if( is_symbolic( a ) )
+        {
+            return sym_unary( r, a );
+        }
         if( a.kind == Kind::Form )
         {
             if( r.op != Token_kind::Minus )
@@ -930,6 +1366,10 @@ private:
 
     Value cast( const Rvalue& r, Value a )
     {
+        if( is_symbolic( a ) )
+        {
+            return sym_cast( r, a );
+        }
         if( a.kind == Kind::Form )
         {
             if( r.type != r.a.type )
@@ -1009,7 +1449,7 @@ private:
         const Function& g = functions_[*c];
         if( g.trig != Trig::None )
         {
-            write( to, trig( fr, r, g.trig ) );
+            write( to, symbolic_ ? sym_trig( fr, r, g.trig ) : trig( fr, r, g.trig ) );
             return;
         }
         if( !purity_.pure( r ) )
@@ -1017,7 +1457,7 @@ private:
             bool symbolic = false;
             for( const Operand& argument : r.arguments )
             {
-                symbolic = symbolic || operand( fr, argument ).kind == Kind::Form;
+                symbolic = symbolic || linear( operand( fr, argument ) );
             }
             end( symbolic ? Ending::Escape : Ending::Effect );
         }
@@ -1069,7 +1509,7 @@ private:
         {
             const Value a = operand( fr, r.a );
             const Value b = operand( fr, r.b );
-            if( a.kind == Kind::Form || b.kind == Kind::Form )
+            if( linear( a ) || linear( b ) )
             {
                 end( Ending::Unsupported );
             }
@@ -1085,7 +1525,7 @@ private:
         case Rvalue_kind::Bits:
         {
             const Value a = operand( fr, r.a );
-            if( a.kind == Kind::Form )
+            if( linear( a ) )
             {
                 end( Ending::Bits );
             }
@@ -1094,7 +1534,7 @@ private:
         case Rvalue_kind::Sqrt:
         {
             const Value a = operand( fr, r.a );
-            if( a.kind == Kind::Form )
+            if( linear( a ) )
             {
                 end( Ending::Unsupported );
             }
@@ -1118,7 +1558,7 @@ private:
         if( s.place.is_global() )
         {
             const Value v = r.kind == Rvalue_kind::Call ? Value {} : value( fr, r );
-            end( v.kind == Kind::Form ? Ending::Escape : Ending::Effect );
+            end( linear( v ) ? Ending::Escape : Ending::Effect );
         }
         if( r.kind == Rvalue_kind::Call )
         {
@@ -1135,6 +1575,20 @@ private:
         write( locate( fr, s.place ), v );
     }
 
+    void statement( Frame& fr, const Statement& s )
+    {
+        spend();
+        span_ = s.span;
+        if( s.kind == Statement_kind::Assign )
+        {
+            assign( fr, s );
+        }
+        else if( s.kind == Statement_kind::Drop )
+        {
+            end( Ending::Unsupported );
+        }
+    }
+
     void execute( Frame& fr )
     {
         ++depth_;
@@ -1143,16 +1597,7 @@ private:
         {
             for( const Statement& s : fr.func->statements_of( b ) )
             {
-                spend();
-                span_ = s.span;
-                if( s.kind == Statement_kind::Assign )
-                {
-                    assign( fr, s );
-                }
-                else if( s.kind == Statement_kind::Drop )
-                {
-                    end( Ending::Unsupported );
-                }
+                statement( fr, s );
             }
             spend();
             const Terminator& t = fr.func->blocks[b].terminator;
@@ -1181,6 +1626,894 @@ private:
                 end( Ending::Panic );
             }
         }
+    }
+
+    // Symbolic mode: each counted loop of the function read runs once with its index a symbol.
+
+    static bool is_symbolic( Value v )
+    {
+        return v.kind >= Kind::Int;
+    }
+
+    static bool linear( Value v )
+    {
+        return v.kind == Kind::Form || is_symbolic( v );
+    }
+
+    Value make( Kind kind, Symbolic s )
+    {
+        symbolics_.push_back( std::move( s ) );
+        return { .kind = kind, .index = static_cast<u32>( symbolics_.size() - 1 ) };
+    }
+
+    Value angle( sym::Int i, f64 a, f64 b )
+    {
+        return make( Kind::Angle, { .i = std::move( i ), .a = a, .b = b } );
+    }
+
+    Value terms( sym::Form f )
+    {
+        return make( Kind::Terms, { .f = std::move( f ) } );
+    }
+
+    u8 width_of( Type_id type ) const
+    {
+        return types_.is_integer( type ) ? types_.get( type ).width : 64;
+    }
+
+    // `x` as a value of integer `type`: a number once it is one.
+    Value integer( sym::Int x, Type_id type )
+    {
+        if( const std::optional<i64> c = sym::constant_of( x.p ); c && x.q == 0 )
+        {
+            return number( truncate( static_cast<u64>( *c ), width_of( type ) ) );
+        }
+        return make( Kind::Int, { .i = std::move( x ) } );
+    }
+
+    sym::Int int_of( Value v, Type_id type ) const
+    {
+        if( v.kind == Kind::Int )
+        {
+            return symbolics_[v.index].i;
+        }
+        if( v.kind != Kind::Number || is_float( type ) )
+        {
+            sym::fail();
+        }
+        const bool is_signed = types_.is_integer( type ) && types_.get( type ).is_signed;
+        if( !is_signed && v.bits > static_cast<u64>( std::numeric_limits<i64>::max() ) )
+        {
+            sym::fail();
+        }
+        return sym::number( is_signed ? as_signed( v.bits, width_of( type ) ) : static_cast<i64>( v.bits ) );
+    }
+
+    bool depends( Value v, u32 s ) const
+    {
+        switch( v.kind )
+        {
+        case Kind::Int:
+        case Kind::Angle:
+            return sym::depends( symbolics_[v.index].i.p, s );
+        case Kind::Wave:
+            return sym::depends( symbolics_[v.index].w, s );
+        case Kind::Terms:
+            return std::ranges::any_of(
+                symbolics_[v.index].f.terms,
+                [s]( const auto& t ) {
+                    return ( ( t.first.bound >> s & 1 ) == 0 && sym::depends( t.first.index, s ) ) ||
+                           sym::depends( t.second, s );
+                }
+            );
+        default:
+            return false;
+        }
+    }
+
+    // The range a value of integer `type` may take.
+    std::pair<i128, i128> limits( Type_id type ) const
+    {
+        const Type& t = types_.get( type );
+        if( t.is_signed )
+        {
+            return { -( i128 { 1 } << ( t.width - 1 ) ), ( i128 { 1 } << ( t.width - 1 ) ) - 1 };
+        }
+        return { 0, ( i128 { 1 } << t.width ) - 1 };
+    }
+
+    sym::Int within( sym::Int x, Type_id type ) const
+    {
+        const auto [lo, hi] = limits( type );
+        if( x.lo < lo || x.hi > hi )
+        {
+            sym::fail();
+        }
+        return x;
+    }
+
+    // The exact range of p over the symbols' ranges, which start at 0.
+    std::pair<i128, i128> range( const sym::Poly& p ) const
+    {
+        i128 lo = 0, hi = 0;
+        for( const auto& [m, c] : p )
+        {
+            i128 top = 1;
+            for( u32 s = 0; s < sym::k_symbols; ++s )
+            {
+                for( u8 e = 0; e < m[s]; ++e )
+                {
+                    top *= static_cast<i128>( turns_[s] ) - 1;
+                    if( top > ( i128 { 1 } << 64 ) )
+                    {
+                        sym::fail();
+                    }
+                }
+            }
+            if( m == sym::Monomial {} )
+            {
+                lo += c;
+                hi += c;
+            }
+            else if( c > 0 )
+            {
+                hi += c * top;
+            }
+            else
+            {
+                lo += c * top;
+            }
+        }
+        return { lo, hi };
+    }
+
+    sym::Int made( sym::Poly p, u64 q, i128 lo, i128 hi ) const
+    {
+        if( q == 0 )
+        {
+            const auto [l, h] = range( p );
+            return { std::move( p ), 0, l, h };
+        }
+        return { std::move( p ), q, lo, hi };
+    }
+
+    Value sym_binary( const Rvalue& r, Value x, Value y )
+    {
+        if( compares( r.op ) )
+        {
+            return compare( r.op, x, y, r.a.type );
+        }
+        if( is_float( r.a.type ) )
+        {
+            return arithmetic( r.op, x, y );
+        }
+        const sym::Int a = int_of( x, r.a.type );
+        const sym::Int b = int_of( y, r.b.type );
+        const u64      q = std::gcd( a.q, b.q );
+        switch( r.op )
+        {
+        case Token_kind::Plus:
+            return integer( within( made( sym::sum( a.p, b.p ), q, a.lo + b.lo, a.hi + b.hi ), r.type ), r.type );
+        case Token_kind::Minus:
+            return integer( within( made( sym::sum( a.p, b.p, -1 ), q, a.lo - b.hi, a.hi - b.lo ), r.type ), r.type );
+        case Token_kind::Star:
+        {
+            const i128 c[] { a.lo * b.lo, a.lo * b.hi, a.hi * b.lo, a.hi * b.hi };
+            return integer(
+                within(
+                    made( sym::product( a.p, b.p ), q, *std::ranges::min_element( c ), *std::ranges::max_element( c ) ), r.type
+                ),
+                r.type
+            );
+        }
+        case Token_kind::Percent:
+        {
+            if( !sym::concrete( b ) || *sym::constant_of( b.p ) <= 0 || a.lo < 0 )
+            {
+                sym::fail();
+            }
+            const i64 n = *sym::constant_of( b.p );
+            if( a.hi < n )
+            {
+                return x;
+            }
+            return integer(
+                { a.p,
+                  a.q == 0 ? static_cast<u64>( n ) : std::gcd( a.q, static_cast<u64>( n ) ),
+                  0,
+                  std::min<i128>( n - 1, a.hi ) },
+                r.type
+            );
+        }
+        default:
+            sym::fail();
+        }
+    }
+
+    static bool compares( Token_kind op )
+    {
+        switch( op )
+        {
+        case Token_kind::Less:
+        case Token_kind::Less_equal:
+        case Token_kind::Greater:
+        case Token_kind::Greater_equal:
+        case Token_kind::Equal_equal:
+        case Token_kind::Bang_equal:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    // [lo, hi] of an integer or a real value.
+    std::optional<std::pair<f64, f64>> span_of( Value v, Type_id type ) const
+    {
+        switch( v.kind )
+        {
+        case Kind::Int:
+            return std::pair { static_cast<f64>( symbolics_[v.index].i.lo ), static_cast<f64>( symbolics_[v.index].i.hi ) };
+        case Kind::Number:
+        {
+            const f64 x = is_float( type ) ? as_real( v ) : static_cast<f64>( int_of( v, type ).lo );
+            return std::pair { x, x };
+        }
+        case Kind::Angle:
+        {
+            const Symbolic& s = symbolics_[v.index];
+            const f64       l = s.a * static_cast<f64>( s.i.lo ) + s.b;
+            const f64       h = s.a * static_cast<f64>( s.i.hi ) + s.b;
+            return std::pair { std::min( l, h ), std::max( l, h ) };
+        }
+        default:
+            return std::nullopt;
+        }
+    }
+
+    // Decided from the ranges, or by being the same value.
+    Value compare( Token_kind op, Value x, Value y, Type_id type ) const
+    {
+        const auto same = [&]
+        {
+            if( x.kind != y.kind || ( x.kind != Kind::Int && x.kind != Kind::Angle ) )
+            {
+                return false;
+            }
+            const Symbolic& a = symbolics_[x.index];
+            const Symbolic& b = symbolics_[y.index];
+            return sym::same( a.i, b.i ) && a.a == b.a && a.b == b.b;
+        };
+        const bool equal = same();
+        const auto sx    = span_of( x, type );
+        const auto sy    = span_of( y, type );
+        if( !sx || !sy )
+        {
+            return {};
+        }
+        const auto [xl, xh] = *sx;
+        const auto [yl, yh] = *sy;
+        switch( op )
+        {
+        case Token_kind::Less:
+            return xh < yl ? number( 1 ) : xl >= yh ? number( 0 ) : Value {};
+        case Token_kind::Less_equal:
+            return xh <= yl ? number( 1 ) : xl > yh ? number( 0 ) : Value {};
+        case Token_kind::Greater:
+            return compare( Token_kind::Less, y, x, type );
+        case Token_kind::Greater_equal:
+            return compare( Token_kind::Less_equal, y, x, type );
+        case Token_kind::Equal_equal:
+            return equal ? number( 1 ) : xh < yl || yh < xl ? number( 0 ) : Value {};
+        case Token_kind::Bang_equal:
+            return equal ? number( 0 ) : xh < yl || yh < xl ? number( 1 ) : Value {};
+        default:
+            return {};
+        }
+    }
+
+    sym::Wave as_wave( Value v ) const
+    {
+        if( v.kind == Kind::Number )
+        {
+            return sym::wave( as_real( v ) );
+        }
+        if( v.kind != Kind::Wave )
+        {
+            sym::fail();
+        }
+        return symbolics_[v.index].w;
+    }
+
+    sym::Form as_form( Value v ) const
+    {
+        if( v.kind == Kind::Terms )
+        {
+            return symbolics_[v.index].f;
+        }
+        if( v.kind == Kind::Number && as_real( v ) == 0 )
+        {
+            return {};
+        }
+        sym::fail();
+    }
+
+    Value add( Value x, Value y, f64 sign )
+    {
+        if( x.kind == Kind::Terms || y.kind == Kind::Terms )
+        {
+            return terms( sym::sum( as_form( x ), as_form( y ), sign ) );
+        }
+        if( x.kind == Kind::Angle || y.kind == Kind::Angle )
+        {
+            if( x.kind == Kind::Angle && y.kind == Kind::Number )
+            {
+                const Symbolic& s = symbolics_[x.index];
+                return angle( s.i, s.a, s.b + sign * as_real( y ) );
+            }
+            if( x.kind == Kind::Number && y.kind == Kind::Angle )
+            {
+                const Symbolic& s = symbolics_[y.index];
+                return angle( s.i, sign * s.a, as_real( x ) + sign * s.b );
+            }
+            if( x.kind == Kind::Angle && y.kind == Kind::Angle && sym::same( symbolics_[x.index].i, symbolics_[y.index].i ) )
+            {
+                const Symbolic& s = symbolics_[x.index];
+                const Symbolic& t = symbolics_[y.index];
+                return angle( s.i, s.a + sign * t.a, s.b + sign * t.b );
+            }
+            sym::fail();
+        }
+        return make( Kind::Wave, { .w = sym::sum( as_wave( x ), as_wave( y ), sign ) } );
+    }
+
+    Value arithmetic( Token_kind op, Value x, Value y )
+    {
+        Value v;
+        switch( op )
+        {
+        case Token_kind::Plus:
+        case Token_kind::Minus:
+            v = add( x, y, op == Token_kind::Plus ? 1 : -1 );
+            break;
+        case Token_kind::Star:
+            if( x.kind == Kind::Terms && y.kind == Kind::Terms )
+            {
+                sym::fail();
+            }
+            if( x.kind == Kind::Terms || y.kind == Kind::Terms )
+            {
+                v = x.kind == Kind::Terms ? terms( sym::scaled( symbolics_[x.index].f, as_wave( y ) ) )
+                                          : terms( sym::scaled( symbolics_[y.index].f, as_wave( x ) ) );
+            }
+            else if( x.kind == Kind::Angle && y.kind == Kind::Number )
+            {
+                const Symbolic& s = symbolics_[x.index];
+                v                 = angle( s.i, s.a * as_real( y ), s.b * as_real( y ) );
+            }
+            else if( x.kind == Kind::Number && y.kind == Kind::Angle )
+            {
+                const Symbolic& s = symbolics_[y.index];
+                v                 = angle( s.i, as_real( x ) * s.a, as_real( x ) * s.b );
+            }
+            else
+            {
+                v = make( Kind::Wave, { .w = sym::product( as_wave( x ), as_wave( y ) ) } );
+            }
+            break;
+        case Token_kind::Slash:
+        {
+            if( y.kind != Kind::Number || as_real( y ) == 0 )
+            {
+                sym::fail();
+            }
+            const f64 d = as_real( y );
+            if( x.kind == Kind::Angle )
+            {
+                const Symbolic& s = symbolics_[x.index];
+                v                 = angle( s.i, s.a / d, s.b / d );
+            }
+            else if( x.kind == Kind::Terms )
+            {
+                v = terms( sym::scaled( symbolics_[x.index].f, sym::wave( 1 / d ) ) );
+            }
+            else
+            {
+                v = make( Kind::Wave, { .w = sym::scaled( as_wave( x ), 1 / d ) } );
+            }
+            break;
+        }
+        default:
+            sym::fail();
+        }
+        if( v.kind == Kind::Terms )
+        {
+            ( op == Token_kind::Star || op == Token_kind::Slash ? muls_ : adds_ ) += multiplicity_;
+        }
+        return v;
+    }
+
+    Value sym_unary( const Rvalue& r, Value x )
+    {
+        if( r.op != Token_kind::Minus )
+        {
+            sym::fail();
+        }
+        const Symbolic& s = symbolics_[x.index];
+        switch( x.kind )
+        {
+        case Kind::Int:
+            return integer( within( made( sym::sum( {}, s.i.p, -1 ), s.i.q, -s.i.hi, -s.i.lo ), r.type ), r.type );
+        case Kind::Angle:
+            return angle( s.i, -s.a, -s.b );
+        case Kind::Wave:
+            return make( Kind::Wave, { .w = sym::scaled( s.w, -1 ) } );
+        case Kind::Terms:
+            return terms( sym::scaled( s.f, sym::wave( -1 ) ) );
+        default:
+            sym::fail();
+        }
+    }
+
+    Value sym_cast( const Rvalue& r, Value x )
+    {
+        const bool from_int = types_.is_integer( r.a.type );
+        const bool to_int   = types_.is_integer( r.type );
+        if( from_int && to_int && x.kind == Kind::Int )
+        {
+            return integer( within( symbolics_[x.index].i, r.type ), r.type );
+        }
+        if( from_int && is_f64( r.type ) && x.kind == Kind::Int )
+        {
+            const sym::Int& i     = symbolics_[x.index].i;
+            const i128      exact = i128 { 1 } << 53;
+            if( i.lo < -exact || i.hi > exact )
+            {
+                sym::fail();
+            }
+            return angle( i, 1, 0 );
+        }
+        if( to_int && x.kind == Kind::Angle && symbolics_[x.index].a == 1 && symbolics_[x.index].b == 0 )
+        {
+            return integer( within( symbolics_[x.index].i, r.type ), r.type );
+        }
+        if( r.a.type == r.type )
+        {
+            return x;
+        }
+        sym::fail();
+    }
+
+    // A `@trig_*` call at an angle 2 pi (p/q i + p'/q'): powers of W.
+    Value sym_trig( Frame& fr, const Rvalue& r, Trig kind )
+    {
+        if( r.arguments.size() != 1 || ( kind != Trig::Sin && kind != Trig::Cos ) )
+        {
+            sym::fail();
+        }
+        const Value x = operand( fr, r.arguments[0] );
+        if( x.kind != Kind::Angle && x.kind != Kind::Number )
+        {
+            sym::fail();
+        }
+        const sym::Int i  = x.kind == Kind::Angle ? symbolics_[x.index].i : sym::number( 0 );
+        const f64      a  = x.kind == Kind::Angle ? symbolics_[x.index].a : 0;
+        const f64      b  = x.kind == Kind::Angle ? symbolics_[x.index].b : as_real( x );
+        const auto     r1 = sym::rational( a / ( 2 * std::numbers::pi ) );
+        const auto     r0 = sym::rational( b / ( 2 * std::numbers::pi ) );
+        if( !r1 || !r0 || ( i.q != 0 && i128 { r1->first } * i.q % static_cast<i128>( r1->second ) != 0 ) )
+        {
+            sym::fail();
+        }
+        const u64 M = sym::common( r1->second, r0->second );
+        // e^(i angle) = W_M^e, W_M = e^(-2 pi i / M).
+        const sym::Poly e = sym::reduced(
+            sym::sum(
+                sym::product(
+                    i.p, sym::constant( sym::narrowed( -i128 { r1->first } * static_cast<i128>( M / r1->second ) ) )
+                ),
+                sym::constant( sym::narrowed( -i128 { r0->first } * static_cast<i128>( M / r0->second ) ) )
+            ),
+            M
+        );
+        const sym::Poly minus = sym::reduced( sym::sum( {}, e, -1 ), M );
+        sym::Wave       w { M, {} };
+        if( kind == Trig::Cos )
+        {
+            sym::add_term( w, e, 0.5 );
+            sym::add_term( w, minus, 0.5 );
+        }
+        else
+        {
+            sym::add_term( w, e, std::complex<f64> { 0, -0.5 } );
+            sym::add_term( w, minus, std::complex<f64> { 0, 0.5 } );
+        }
+        return make( Kind::Wave, { .w = std::move( w ) } );
+    }
+
+    // The stream `at` is in and the element's index: a parameter's element, then only fields.
+    std::pair<u32, sym::Poly> element( const Location& at )
+    {
+        if( at.steps.empty() || ( at.steps[0] & 3 ) == 1 )
+        {
+            sym::fail();
+        }
+        sym::Poly index =
+            at.steps[0] == k_symbolic_step ? polys_[at.poly] : sym::constant( static_cast<i64>( at.steps[0] >> 2 ) );
+        std::vector<u64> rest( at.steps.begin() + 1, at.steps.end() );
+        if( std::ranges::any_of( rest, []( u64 s ) { return ( s & 3 ) != 1; } ) )
+        {
+            sym::fail();
+        }
+        for( u32 k = 0; k < streams_.size(); ++k )
+        {
+            if( streams_[k].root == at.root && streams_[k].rest == rest )
+            {
+                return { k, std::move( index ) };
+            }
+        }
+        streams_.push_back( { at.root, std::move( rest ) } );
+        return { static_cast<u32>( streams_.size() - 1 ), std::move( index ) };
+    }
+
+    Value stream_read( const Location& at, Type_id type )
+    {
+        if( at.steps.empty() )
+        {
+            return {}; // a by-value parameter
+        }
+        if( !is_f64( type ) )
+        {
+            sym::fail();
+        }
+        auto [stream, index] = element( at );
+        if( streams_[stream].written )
+        {
+            sym::fail();
+        }
+        streams_[stream].read = true;
+        sym::Form f;
+        f.terms.emplace( sym::Key { stream, std::move( index ), 0 }, sym::wave( 1 ) );
+        return terms( std::move( f ) );
+    }
+
+    void stream_write( const Location& at, Value v )
+    {
+        auto [stream, index] = element( at );
+        if( streams_[stream].read )
+        {
+            sym::fail();
+        }
+        streams_[stream].written = true;
+        sym::Form f              = as_form( v );
+        if( f.carried.is_valid() )
+        {
+            sym::fail();
+        }
+        stores_.push_back( { .stream = stream, .index = std::move( index ), .value = std::move( f ), .bound = 0 } );
+    }
+
+    // Runs from `b` to a return, or within `loop` to the end of its latch's statements.
+    void run_from( Frame& fr, Block_id b, u32 loop )
+    {
+        const Function& func = *fr.func;
+        for( ;; )
+        {
+            spend();
+            if( const u32 inner = loop_at( b ); inner != k_no_loop && inner != loop )
+            {
+                if( loops_.loops[inner].parent != loop )
+                {
+                    sym::fail();
+                }
+                b = run_loop( fr, inner );
+                continue;
+            }
+            for( const Statement& s : func.statements_of( b ) )
+            {
+                statement( fr, s );
+            }
+            if( loop != k_no_loop && b == loops_.loops[loop].latch )
+            {
+                return;
+            }
+            const Terminator& t = func.blocks[b].terminator;
+            span_               = t.span;
+            switch( t.kind )
+            {
+            case Terminator_kind::Goto:
+                b = t.targets[0];
+                break;
+            case Terminator_kind::Branch:
+            {
+                const Value c = operand( fr, t.condition );
+                if( c.kind != Kind::Number )
+                {
+                    sym::fail();
+                }
+                b = t.targets[c.bits != 0 ? 0 : 1];
+                break;
+            }
+            case Terminator_kind::Return:
+                if( loop != k_no_loop )
+                {
+                    sym::fail();
+                }
+                return;
+            default:
+                sym::fail();
+            }
+            if( loop != k_no_loop && !loops_.loops[loop].contains( b ) )
+            {
+                sym::fail();
+            }
+        }
+    }
+
+    u32 loop_at( Block_id b ) const
+    {
+        for( u32 l = 0; l < loops_.loops.size(); ++l )
+        {
+            if( loops_.loops[l].header == b )
+            {
+                return l;
+            }
+        }
+        return k_no_loop;
+    }
+
+    Value value_of( Frame& fr, Local_id x )
+    {
+        const auto found = memory_.find( Location { root( fr, x ), {} } );
+        return found == memory_.end() ? Value {} : found->second.value;
+    }
+
+    // One turn with the index a new symbol; the locals as they are after the last turn. Returns the exit.
+    Block_id run_loop( Frame& fr, u32 l )
+    {
+        const Function& func = *fr.func;
+        const Loop&     loop = loops_.loops[l];
+        if( !loop.latch.is_valid() || symbols_ == sym::k_symbols )
+        {
+            sym::fail();
+        }
+        const Terminator& test = func.blocks[loop.latch].terminator;
+        if( test.kind != Terminator_kind::Branch || test.targets[0] != loop.header || loop.contains( test.targets[1] ) )
+        {
+            sym::fail();
+        }
+        const std::optional<Trip> trip = trip_count( func, types_, literals_, loop, addressed_ );
+        if( !trip || trip->test != loop.latch )
+        {
+            sym::fail();
+        }
+        Local_id index {};
+        for( const Induction& i : inductions_of( func, loop, addressed_ ) )
+        {
+            if( !types_.is_integer( func.locals[i.local].type ) )
+            {
+                continue;
+            }
+            if( index.is_valid() || i.step.kind != Operand_kind::Constant || literals_.integer( i.step.constant ) != 1 )
+            {
+                sym::fail();
+            }
+            index = i.local;
+        }
+        if( !index.is_valid() )
+        {
+            sym::fail();
+        }
+        const Value start = value_of( fr, index );
+        if( start.kind != Kind::Number || start.bits != 0 )
+        {
+            sym::fail();
+        }
+
+        // Whole scalar locals only; anything else written in the loop is a parameter's element.
+        std::vector<Local_id> written;
+        for( const Block_id b : loop.blocks )
+        {
+            for( const Statement& s : func.statements_of( b ) )
+            {
+                if( s.kind != Statement_kind::Assign )
+                {
+                    continue;
+                }
+                if( !s.place.is_whole_local() )
+                {
+                    if( s.place.is_global() || s.place.local.v == 0 || s.place.local.v > func.parameter_count ||
+                        !types_.is_pointer( func.locals[s.place.local].type ) )
+                    {
+                        sym::fail();
+                    }
+                }
+                else if( std::ranges::find( written, s.place.local ) == written.end() )
+                {
+                    if( is_aggregate( func.locals[s.place.local].type ) )
+                    {
+                        sym::fail();
+                    }
+                    written.push_back( s.place.local );
+                }
+            }
+        }
+
+        std::vector<Value> before;
+        for( const Local_id x : written )
+        {
+            before.push_back( value_of( fr, x ) );
+            write( { root( fr, x ), {} }, is_float( func.locals[x].type ) ? terms( { .carried = x } ) : Value {} );
+        }
+        const u32 s      = symbols_++;
+        const u64 turns  = trip->turns;
+        turns_[s]        = turns;
+        const Type_id it = func.locals[index].type;
+        write(
+            { root( fr, index ), {} }, make( Kind::Int, { .i = { sym::symbol( s ), 0, 0, static_cast<i128>( turns ) - 1 } } )
+        );
+        const size_t first_store = stores_.size();
+        const u64    outer       = multiplicity_;
+        multiplicity_            = std::min<u64>( multiplicity_ * turns, u64 { 1 } << 40 );
+        run_from( fr, loop.header, l );
+        multiplicity_ = outer;
+
+        for( size_t w = 0; w < written.size(); ++w )
+        {
+            const Local_id x = written[w];
+            const Location at { root( fr, x ), {} };
+            const Value    v = value_of( fr, x );
+            if( x == index )
+            {
+                if( v.kind != Kind::Int || symbolics_[v.index].i.q != 0 ||
+                    symbolics_[v.index].i.p != sym::sum( sym::symbol( s ), sym::constant( 1 ) ) )
+                {
+                    sym::fail();
+                }
+                write( at, integer( sym::number( static_cast<i64>( turns ) ), it ) );
+            }
+            else if( v.kind == Kind::Terms && symbolics_[v.index].f.carried == x )
+            {
+                sym::Form step = symbolics_[v.index].f;
+                step.carried   = {};
+                sym::Form total;
+                for( auto& [k, t] : step.terms )
+                {
+                    sym::Key bound = k;
+                    bound.bound |= static_cast<u8>( 1u << s );
+                    total.terms.emplace( std::move( bound ), std::move( t ) );
+                }
+                write( at, add( before[w], terms( std::move( total ) ), 1 ) );
+            }
+            else if( v.kind == Kind::Terms && symbolics_[v.index].f.carried.is_valid() )
+            {
+                sym::fail();
+            }
+            else if( depends( v, s ) )
+            {
+                write( at, Value {} );
+            }
+        }
+        for( size_t i = first_store; i < stores_.size(); ++i )
+        {
+            stores_[i].bound |= static_cast<u8>( 1u << s );
+        }
+        return test.targets[1];
+    }
+
+    static std::optional<u32> one_bit( u8 mask )
+    {
+        return std::popcount( mask ) == 1 ? std::optional<u32>( static_cast<u32>( std::countr_zero( mask ) ) ) : std::nullopt;
+    }
+
+    // Element e of each of two streams.
+    Value_path stream_path( u32 a, u32 b, u64 e ) const
+    {
+        const auto one = [&]( const Stream& s )
+        {
+            Param_path p = roots_[s.root].path;
+            p.steps.push_back( { .index = true, .element = e } );
+            for( const u64 f : s.rest )
+            {
+                p.steps.push_back( { .field = Node_id { static_cast<u32>( f >> 2 ) } } );
+            }
+            return p;
+        };
+        return { one( streams_[a] ), one( streams_[b] ) };
+    }
+
+    // y = x * K, complex, from the four real forms.
+    std::optional<Read_kernel> collect_sum() const
+    {
+        std::vector<u32> in, out;
+        for( u32 k = 0; k < streams_.size(); ++k )
+        {
+            ( streams_[k].written ? out : in ).push_back( k );
+        }
+        const auto order = [&]( u32 a, u32 b )
+        {
+            return std::pair { roots_[streams_[a].root].path.local, streams_[a].rest } <
+                   std::pair { roots_[streams_[b].root].path.local, streams_[b].rest };
+        };
+        std::ranges::sort( in, order );
+        std::ranges::sort( out, order );
+        if( in.size() != 2 || out.size() != 2 || stores_.size() != 2 )
+        {
+            return std::nullopt;
+        }
+
+        const sym::Store* stored[2] {};
+        for( const sym::Store& s : stores_ )
+        {
+            stored[s.stream == out[0] ? 0 : 1] = &s;
+        }
+        if( stored[0] == nullptr || stored[1] == nullptr || stored[0]->bound != stored[1]->bound )
+        {
+            return std::nullopt;
+        }
+        const std::optional<u32> k = one_bit( stored[0]->bound );
+        if( !k || stored[0]->index != sym::symbol( *k ) || stored[1]->index != sym::symbol( *k ) )
+        {
+            return std::nullopt;
+        }
+
+        std::optional<u32> j;
+        sym::Wave          c[2][2];
+        for( u32 o = 0; o < 2; ++o )
+        {
+            for( const auto& [key, w] : stored[o]->value.terms )
+            {
+                const std::optional<u32> b = one_bit( key.bound );
+                if( !b || *b == *k || ( j && *b != *j ) || key.index != sym::symbol( *b ) )
+                {
+                    return std::nullopt;
+                }
+                j = b;
+                for( const auto& [e, coefficient] : w.terms )
+                {
+                    for( u32 s = 0; s < sym::k_symbols; ++s )
+                    {
+                        if( s != *k && s != *j && sym::depends( e, s ) )
+                        {
+                            return std::nullopt;
+                        }
+                    }
+                }
+                c[o][key.stream == in[0] ? 0 : 1] = w;
+            }
+        }
+        if( !j )
+        {
+            return std::nullopt;
+        }
+
+        // re y = A re x - B im x and im y = B re x + A im x for a complex K = A + i B.
+        if( !sym::sum( c[0][0], c[1][1], -1 ).terms.empty() || !sym::sum( c[0][1], c[1][0] ).terms.empty() )
+        {
+            return std::nullopt;
+        }
+        const sym::Wave K = sym::sum( c[0][0], c[1][0], std::complex<f64> { 0, 1 } );
+        Read_kernel     r { .sum = { static_cast<u32>( turns_[*j] ), static_cast<u32>( turns_[*k] ), K.M, {} } };
+        for( const auto& [e, coefficient] : K.terms )
+        {
+            Exponent in_jk;
+            for( const auto& [m, v] : e )
+            {
+                in_jk[{ m[*j], m[*k] }] = v;
+            }
+            r.sum.coefficient[in_jk] = coefficient;
+        }
+        r.input = {
+            static_cast<u32>( std::min<u64>( adds_, ~u32 { 0 } ) ), static_cast<u32>( std::min<u64>( muls_, ~u32 { 0 } ) )
+        };
+        for( u64 x = 0; x < r.sum.n; ++x )
+        {
+            r.inputs.push_back( stream_path( in[0], in[1], x ) );
+        }
+        for( u64 y = 0; y < r.sum.m; ++y )
+        {
+            r.outputs.push_back( stream_path( out[0], out[1], y ) );
+        }
+        return r;
     }
 
     // The return slot is an output; a pointer parameter's referent is an input and an output, and any
@@ -1214,8 +2547,8 @@ private:
         for( const u64 step : at.steps )
         {
             a.steps.push_back(
-                step & 1 ? Step { .field = Node_id { static_cast<u32>( step >> 1 ) } }
-                         : Step { .index = true, .element = step >> 1 }
+                ( step & 3 ) == 1 ? Step { .field = Node_id { static_cast<u32>( step >> 2 ) } }
+                                  : Step { .index = true, .element = step >> 2 }
             );
         }
         return a;
@@ -1406,6 +2739,20 @@ private:
     u8                                               width_   = 64;
     Type_id                                          type_ {};
     Cost                                             cost_ {};
+
+    // Symbolic mode.
+    bool                            symbolic_ = false;
+    Loops                           loops_ {};
+    Local_set                       addressed_ {};
+    std::vector<Symbolic>           symbolics_;
+    std::vector<sym::Poly>          polys_ { {} }; // 0 is none
+    std::vector<Stream>             streams_;
+    std::vector<sym::Store>         stores_;
+    std::array<u64, sym::k_symbols> turns_ {};
+    u32                             symbols_      = 0;
+    u64                             multiplicity_ = 1;
+    u64                             adds_         = 0;
+    u64                             muls_         = 0;
 };
 } // namespace
 
@@ -1453,6 +2800,18 @@ std::string_view describe( Ending why )
         return "runs for too long";
     }
     return "";
+}
+
+std::optional<Read_kernel> read_kernel(
+    const Function&              func,
+    const std::vector<Function>& functions,
+    const Purity&                purity,
+    const Type_table&            types,
+    const Literal_pool&          literals,
+    const Global_constants&      globals
+)
+{
+    return Recogniser( functions, purity, types, literals, 4'000'000, globals ).read_sum( func );
 }
 
 std::variant<Recognised, Unrecognised> recognise(
@@ -1554,6 +2913,32 @@ bool is_dft4( const Recognised& r )
         }
     }
     return true;
+}
+// As Attempt, read as a kernel.
+std::optional<Read_kernel> read_first( std::string_view source )
+{
+    const Compiled c(
+        std::string( source ) + std::string( k_trig ) + "i32 main() { return 0; }\n",
+        Stage::Elaborated,
+        Build { .level = 3, .loops = std::nullopt }
+    );
+    INFO( c.rendered() );
+    REQUIRE( c.clean() );
+    Purity purity( c.all, c.ast );
+    for( const std::vector<u32>& group : callees_first( c.all ) )
+    {
+        purity.decide( group );
+    }
+    return read_kernel( c.functions.front(), c.all, purity, c.types.table(), c.literals );
+}
+
+std::string dft( std::string_view angle, std::string_view body = "sr += re[j] * c - im[j] * s;\n si += re[j] * s + im[j] * c;" )
+{
+    return "@real_arithmetic void f( const ref f64[96] re, const ref f64[96] im, ref f64[96] yr, ref f64[96] yi ) {\n"
+           "for( u64 k = 0; k < 96; k += 1 ) { f64 sr = 0.0; f64 si = 0.0;\n"
+           "for( u64 j = 0; j < 96; j += 1 ) { const f64 t = " +
+           std::string( angle ) + ";\n const f64 c = cosine( t ); const f64 s = sine( t );\n" + std::string( body ) +
+           " }\n yr[k] = sr; yi[k] = si; } }\n";
 }
 } // namespace
 
@@ -1685,6 +3070,50 @@ TEST_CASE( "recognise_ends_with_the_operation_that_stops_it", "[linear][recognis
         ending( "f64 f( f64 x ) { f64 s = 0.0; for( u64 i = 0; i < 1000; i += 1 ) { s += x; } return s; }\n", 100 ) ==
         Ending::Budget
     );
+}
+
+TEST_CASE( "a DFT loop nest reads as its kernel", "[linear][recognise]" )
+{
+    const std::optional<Read_kernel> r = read_first( dft( "-2.0 * 3.141592653589793 * cast<f64>( j * k % 96 ) / 96.0" ) );
+    REQUIRE( r );
+    CHECK( r->sum == exponent_kernel( 96, 96, 96, 1 ) );
+    CHECK( r->inputs.size() == 96 );
+    CHECK( r->outputs.size() == 96 );
+    CHECK( r->input.muls == 4 * 96 * 96 );
+}
+
+TEST_CASE( "an inverse DFT reads as c = M - 1, without the remainder too", "[linear][recognise]" )
+{
+    const std::optional<Read_kernel> r = read_first( dft( "2.0 * 3.141592653589793 * cast<f64>( j * k ) / 96.0" ) );
+    REQUIRE( r );
+    CHECK( r->sum == exponent_kernel( 96, 96, 96, 95 ) );
+}
+
+TEST_CASE( "a loop that is not one complex kernel reads as none", "[linear][recognise]" )
+{
+    // Two inputs multiplied.
+    CHECK( !read_first( dft( "-2.0 * 3.141592653589793 * cast<f64>( j * k ) / 96.0", "sr += re[j] * im[j]; si += im[j] * c;" ) )
+    );
+    // Not a rotation: cos on both parts.
+    CHECK( !read_first( dft( "-2.0 * 3.141592653589793 * cast<f64>( j * k ) / 96.0", "sr += re[j] * c; si += im[j] * s;" ) ) );
+}
+
+TEST_CASE( "an angle quadratic in j reads as its exponent", "[linear][recognise]" )
+{
+    const std::optional<Read_kernel> r = read_first( dft( "-2.0 * 3.141592653589793 * cast<f64>( j * j * k ) / 96.0" ) );
+    REQUIRE( r );
+    CHECK( r->sum == Sum { 96, 96, 96, { { Exponent { { { 2, 1 }, 1 } }, 1.0 } } } );
+}
+
+TEST_CASE( "a kernel's pure calls run as the rest of recognition runs them", "[linear][recognise]" )
+{
+    const std::optional<Read_kernel> r = read_first(
+        dft( "-2.0 * 3.141592653589793 * cast<f64>( j * k ) / 96.0",
+             "sr += rot( re[j], im[j], c, s ); si += rot( im[j], re[j], c, -s );" ) +
+        "f64 rot( f64 a, f64 b, f64 c, f64 s ) { return a * c - b * s; }\n"
+    );
+    REQUIRE( r );
+    CHECK( r->sum == exponent_kernel( 96, 96, 96, 1 ) );
 }
 } // namespace keel
 #endif // ENABLE_UNIT_TESTS

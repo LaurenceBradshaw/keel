@@ -6,7 +6,8 @@
 #include <utility>
 #include "linear/circuit_cache.h"
 #include "linear/lower_circuit.h"
-#include "linear/read_kernel.h"
+#include "linear/recognise.h"
+#include "linear/sums.h"
 
 namespace keel
 {
@@ -151,7 +152,7 @@ Map_outcome solve_linear_maps(
 )
 {
     // Past what solve takes whole, the loops are read as a sum rather than run.
-    if( const std::optional<Read_kernel> read = read_kernel( func, functions, purity, types, literals );
+    if( const std::optional<Read_kernel> read = read_kernel( func, functions, purity, types, literals, globals );
         read && read->sum.n > Plan_options {}.leaf_max )
     {
         if( const std::optional<Planned> planned = plan_sum( read->sum, { .solve = options, .cache = cache } ) )
