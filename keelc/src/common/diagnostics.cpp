@@ -440,6 +440,16 @@ void Diagnostics::keep_first_after_unbalanced( std::vector<bool>& keep ) const
     }
 }
 
+std::vector<Diagnostic> Diagnostics::shown() const
+{
+    std::vector<Diagnostic> out;
+    for( const u32 index : in_source_order() )
+    {
+        out.push_back( items_[index] );
+    }
+    return out;
+}
+
 void Diagnostics::render( const Source_manager& sm, std::ostream& out, bool colour ) const
 {
     bool first = true;

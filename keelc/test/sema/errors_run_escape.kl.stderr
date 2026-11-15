@@ -1,7 +1,0 @@
-error: `size` and `data` describe the run, so they cannot be returned by reference
-  --> sema/errors_run_escape.kl:94:12
-   |
-94 |     return text.size;
-   |            ^^^^^^^^^ return a copy
-
-1 error generated

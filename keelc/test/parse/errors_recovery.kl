@@ -1,9 +1,0 @@
-i32 broken()
-{
-    return 0
-}
-
-i32 fine()
-{
-    return 1;
-}

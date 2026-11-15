@@ -1,7 +1,0 @@
-error: expected `;`, found `}`
- --> parse/errors_recovery.kl:3:13
-  |
-3 |     return 0
-  |             ^
-
-1 error generated

@@ -1432,6 +1432,12 @@ header. Use unit tests for anything with an invariant expressible in C++. A test
 that emits the diagnostic it asserts. **Test what the compiler calls**: a suite that is cheap to
 write is not evidence that the code under it is used.
 
+**A program that only draws diagnostics is a unit test**, not a golden: `lex/`, `parse/` and
+`sema/diagnostics_tests.cpp` hold one test per program, named as its golden was, giving its source and
+every diagnostic `Diagnostics::shown` returns for it, as `line:col-line:col severity: message [-Wname]
+= help`. Such a test asserts what several classes report together, so it belongs to the stage, not to
+one class. A program needing modules, packages or `kl` stays a golden until `Compiled` can load them.
+
 ### Golden-file tests cover language behaviour
 
 `keelc/test/<suite>/`, one directory per stage: `lex`, `parse`, `sema`, `kir`, `codegen`, `driver`.
@@ -1888,11 +1894,11 @@ major), no longer blocked now that D81 has settled lambdas.
 
 ### Tests
 
-- **Goldens that could be unit tests**, before the M16 leftovers close: go through every golden suite
-  and say, per fixture, whether it could be a unit test with what keel_tests can already reach, and if
-  not, what it would take (a fixture that loads a source string through `run_front_end`, a way to
-  assert a diagnostic by its text and span). Most of `sema` is expected to move, since its fixtures
-  assert diagnostics, not run output. A golden that builds and runs a program stays one.
+- **Goldens that could be unit tests**, the rest of them. 279 single-file diagnostic goldens moved
+  2026-11-15 (§10). Left: 25 that need `Compiled` to take files and packages, as `Typed` does, 22
+  that need keel_tests to know where keel_stl/src is, 12 `sema` programs that check clean, and
+  `opt3/errors_dft_promise`, which needs an `-O3` front end. A golden that builds and runs a
+  program, or asserts a dump, stays one.
 
 ### Compiler structure
 

@@ -1,7 +1,0 @@
-error: `i32[*]` has no walk
- --> sema/errors_for_container.kl:6:28
-  |
-6 |     for( const ref i32 x : xs )
-  |                            ^^ count over it: `for(u64 i : 0..xs.size())`
-
-1 error generated

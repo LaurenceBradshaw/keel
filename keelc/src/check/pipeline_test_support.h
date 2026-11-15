@@ -69,6 +69,40 @@ struct Compiled
         diags.render( sm, out );
         return out.str();
     }
+
+    std::vector<std::string> shown() const
+    {
+        return shown( diags, sm );
+    }
+
+    // Each diagnostic render() shows, as `line:col-line:col severity: message [-Wname] = help`.
+    static std::vector<std::string> shown( const Diagnostics& diags, const Source_manager& sm )
+    {
+        std::vector<std::string> lines;
+        for( const Diagnostic& d : diags.shown() )
+        {
+            std::string line;
+            if( d.span.is_valid() )
+            {
+                const Line_col start = sm.line_col( d.span.file, d.span.start );
+                const Line_col end   = sm.line_col( d.span.file, d.span.end );
+                line = std::to_string( start.line ) + ":" + std::to_string( start.col ) + "-" + std::to_string( end.line ) +
+                       ":" + std::to_string( end.col ) + " ";
+            }
+            line += d.severity == Severity::Error ? "error: " : d.severity == Severity::Warning ? "warning: " : "note: ";
+            line += d.message;
+            if( d.warning )
+            {
+                line += " [-W" + std::string( warning_name( *d.warning ) ) + "]";
+            }
+            if( !d.help.empty() )
+            {
+                line += " = " + d.help;
+            }
+            lines.push_back( std::move( line ) );
+        }
+        return lines;
+    }
 };
 
 } // namespace

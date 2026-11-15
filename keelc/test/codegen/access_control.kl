@@ -1,5 +1,5 @@
 // PLAN D29, M7. The half of access control the sema fixture cannot show: what is *accepted*. Every
-// refusal is a diagnostic and lives beside the others in sema/errors_access_control.kl; what is left
+// refusal is a diagnostic and lives beside the others in the errors_access_control test of sema/diagnostics_tests.cpp; what is left
 // here is that a type still works from the inside once its representation is hidden.
 //
 // Run rather than only compiled. Access control exists entirely in sema - it adds no node, changes

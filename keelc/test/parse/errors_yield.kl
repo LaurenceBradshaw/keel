@@ -1,6 +1,0 @@
-// D74: `yield` takes its arguments as a call does, so without parentheses it is one error.
-i32 main()
-{
-    yield 1;
-    return 0;
-}

@@ -1,6 +1,6 @@
 // M8's acceptance program: what the milestone added that runs, in one program that checks its own
 // answer. Each check returns its own code, and the last returns the live count of an owning type.
-// The refusals the acceptance names are sema/errors_sample_m8.kl; a failed `assert` is
+// The refusals the acceptance names are the errors_sample_m8 test of sema/diagnostics_tests.cpp; a failed `assert` is
 // codegen/assert_fails.kl.
 import kl::list;
 import kl::string;

@@ -1,7 +1,0 @@
-error: expected `;`, found `}`
- --> parse/errors_missing_semicolon.kl:3:13
-  |
-3 |     return 0
-  |             ^
-
-1 error generated
