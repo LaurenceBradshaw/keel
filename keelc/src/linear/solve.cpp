@@ -39,8 +39,7 @@ using Maybe = std::optional<Result>;
 // `b` is cheaper than `a`: by total, then by multiplies.
 bool improves( const Maybe& a, const Maybe& b )
 {
-    const auto key = []( Cost c ) { return std::pair { c.adds + c.muls, c.muls }; };
-    return b && ( !a || key( b->cost ) < key( a->cost ) );
+    return b && ( !a || b->cost < a->cost );
 }
 
 // Exact small rationals, for Toom's weights.
@@ -2234,11 +2233,6 @@ std::map<std::string, Cost> expected()
     return out;
 }
 
-bool no_worse( Cost got, Cost want )
-{
-    return std::pair { got.adds + got.muls, got.muls } <= std::pair { want.adds + want.muls, want.muls };
-}
-
 // The circuit computes every row on random input.
 bool computes( const Circuit& c, const Field& field, const std::vector<Row>& rows )
 {
@@ -2284,7 +2278,7 @@ void lower( const Circuit& c, const Field& field, const std::vector<Row>& rows )
     };
     std::generate_n( std::back_inserter( in ), rows[0].size(), value );
     std::generate_n( std::back_inserter( out ), rows.size(), value );
-    CHECK( lower_circuit( func, c, field, rows, in, out, type, literals, {} ).size() >= rows.size() );
+    CHECK( lower_circuit( func, c, field, c.nodes( rows ), in, out, type, literals, {}, rows ).size() >= rows.size() );
 }
 
 // A random map from a small family over a random field: dense, two blocks, Toeplitz, circulant,
@@ -2428,8 +2422,8 @@ void check_specs( const std::vector<std::string>& names )
         Spec           spec = read_spec( name );
         const Solution got  = solve( *spec.field, spec.rows );
         INFO( got.cost.adds << "/" << got.cost.muls << " against " << want.at( name ).adds << "/" << want.at( name ).muls );
-        CHECK( no_worse( got.cost, want.at( name ) ) );
-        CHECK( no_worse( got.cost, got.input ) );
+        CHECK( got.cost <= want.at( name ) );
+        CHECK( got.cost <= got.input );
         CHECK( computes( got.circuit, *spec.field, spec.rows ) );
         lower( got.circuit, *spec.field, spec.rows );
     }
@@ -2516,7 +2510,7 @@ TEST_CASE( "solve_integers_without_halves", "[linear][solve]" )
         fir.push_back( std::move( row ) );
     }
     const Solution f = solve( field, fir );
-    CHECK( no_worse( f.cost, f.input ) );
+    CHECK( f.cost <= f.input );
     CHECK( computes( f.circuit, field, fir ) );
     lower( f.circuit, field, fir );
 }

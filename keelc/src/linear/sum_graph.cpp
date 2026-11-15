@@ -394,33 +394,6 @@ void Sum_graph::contain()
     }
 }
 
-// Complex: +-1, +-i free, real or imaginary 0+2, |Re| = |Im| or a part +-1 2+2, else 2+4. Real: 0+1.
-Cost Sum_graph::scale_cost( Element a )
-{
-    const Element s = field_->mul( a, a );
-    if( field_->mul( s, s ) == field_->one() )
-    {
-        return {};
-    }
-    if( real_ )
-    {
-        return { 0, 1 };
-    }
-    const Element c = field_->conjugate( a );
-    if( c == a || c == field_->neg( a ) )
-    {
-        return { 0, 2 };
-    }
-    const Element re = field_->add( a, c );                // 2 Re
-    const Element im = field_->add( a, field_->neg( c ) ); // 2i Im
-    if( field_->conjugate( s ) == field_->neg( s ) || re == field_->rational( 2 ) || re == field_->rational( -2 ) ||
-        field_->mul( im, im ) == field_->rational( -4 ) )
-    {
-        return { 2, 2 };
-    }
-    return { 2, 4 };
-}
-
 // Orbits under the free units, with rep = u * form where u makes the lead canonical; then costs.
 void Sum_graph::finish()
 {
@@ -442,7 +415,7 @@ void Sum_graph::finish()
             }
             else if( n.kind == Op_kind::Scale )
             {
-                n.cost = scale_cost( Element { n.k } );
+                n.cost = keel::scale_cost( field_->value( Element { n.k } ), real_, field_->is_unit( Element { n.k } ) );
             }
         }
     }

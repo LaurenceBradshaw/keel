@@ -107,7 +107,6 @@ private:
     u32              groups( const Form& f, const Form* r = nullptr );
     void             contain();
     void             finish();
-    Cost             scale_cost( Element a );
     Element          lead( const Form& f, u64 s ) const;
     Form             scaled( Form f, Element c );
     Form             restricted( Form f, u64 mask ) const;

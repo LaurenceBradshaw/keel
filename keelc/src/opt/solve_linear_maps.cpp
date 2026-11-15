@@ -13,12 +13,6 @@ namespace keel
 {
 namespace
 {
-// `b` costs less than `a`: by total, then by multiplies, as solve ranks.
-bool cheaper( Cost b, Cost a )
-{
-    return std::pair { b.adds + b.muls, b.muls } < std::pair { a.adds + a.muls, a.muls };
-}
-
 class Places
 {
 public:
@@ -109,32 +103,43 @@ void replace_body( Function& func, std::vector<Statement> body, Span span )
     func.compact_rvalues();
 }
 
-// A sum too large to solve whole, as planned; whether it replaced the body.
-bool place_plan(
-    Function& func, const Read_kernel& read, const Planned& planned, const Type_table& types, Literal_pool& literals
+// The body replaced by `circuit` writing each output its node, when that costs less than the body
+// ran; whether it did. The comparison counts every multiply, fused or not.
+bool replace_with(
+    Function&                      func,
+    const Circuit&                 circuit,
+    const Field&                   field,
+    const std::vector<u32>&        nodes,
+    const std::vector<Value_path>& in,
+    const std::vector<Value_path>& out,
+    Type_id                        type,
+    Cost                           input,
+    const Type_table&              types,
+    Literal_pool&                  literals,
+    const std::vector<Row>&        rows = {}
 )
 {
-    if( !cheaper( planned.cost, read.input ) )
+    if( circuit.cost() >= input )
     {
         return false;
     }
     const Span               span = body_span( func );
     Places                   places( func, types, literals, span );
     std::vector<Value_place> inputs, outputs;
-    for( const Value_path& v : read.inputs )
+    for( const Value_path& v : in )
     {
         inputs.push_back( places.place( v ) );
     }
-    for( const Value_path& v : read.outputs )
+    for( const Value_path& v : out )
     {
         outputs.push_back( places.place( v ) );
     }
     std::vector<Statement> body = places.take_prologue();
-    for( Statement& s :
-         lower_nodes( func, planned.circuit, planned.outputs, inputs, outputs, types.floating( 64 ), literals, span ) )
+    for( Statement& s : lower_circuit( func, circuit, field, nodes, inputs, outputs, type, literals, span, rows ) )
     {
         body.push_back( std::move( s ) );
     }
+    // A read body's only effects are its outputs, so the circuit replaces all of it.
     replace_body( func, std::move( body ), span );
     return true;
 }
@@ -157,7 +162,21 @@ Map_outcome solve_linear_maps(
     {
         if( const std::optional<Planned> planned = plan_sum( read->sum, { .solve = options, .cache = cache } ) )
         {
-            return { .solved = place_plan( func, *read, *planned, types, literals ) };
+            const Field complex( Ring_kind::Complex, 4 );
+            return {
+                .solved = replace_with(
+                    func,
+                    planned->circuit,
+                    complex,
+                    planned->outputs,
+                    read->inputs,
+                    read->outputs,
+                    types.floating( 64 ),
+                    read->input,
+                    types,
+                    literals
+                )
+            };
         }
     }
 
@@ -178,31 +197,19 @@ Map_outcome solve_linear_maps(
             cache_circuit( cache, map.field, map.rows, options, *found );
         }
     }
-    if( !cheaper( found->cost(), map.input ) )
-    {
-        return { .cached = cached };
-    }
-
-    const Span               span = body_span( func );
-    Places                   places( func, types, literals, span );
-    std::vector<Value_place> inputs, outputs;
-    for( const Value_path& v : map.inputs )
-    {
-        inputs.push_back( places.place( v ) );
-    }
-    for( const Value_path& v : map.outputs )
-    {
-        outputs.push_back( places.place( v ) );
-    }
-
-    std::vector<Statement> body = places.take_prologue();
-    for( Statement& s : lower_circuit( func, *found, map.field, map.rows, inputs, outputs, map.type, literals, span ) )
-    {
-        body.push_back( std::move( s ) );
-    }
-
-    // A recognised body's only effects are its outputs, so the circuit replaces all of it.
-    replace_body( func, std::move( body ), span );
-    return { .solved = true, .cached = cached, .ending = std::nullopt };
+    const bool solved = replace_with(
+        func,
+        *found,
+        map.field,
+        found->nodes( map.rows ),
+        map.inputs,
+        map.outputs,
+        map.type,
+        map.input,
+        types,
+        literals,
+        map.rows
+    );
+    return { .solved = solved, .cached = cached, .ending = std::nullopt };
 }
 } // namespace keel

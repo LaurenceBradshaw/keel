@@ -279,10 +279,10 @@ Circuit Circuit::pruned() const
 }
 
 // Complex: real or imaginary 0+2, |Re| = |Im| or a part +-1 2+2, else 2+4. Real: 0+1. A unit is free.
-Cost scale_cost( std::complex<f64> c, bool real )
+Cost scale_cost( std::complex<f64> c, bool real, bool unit )
 {
     c = snap( c );
-    if( std::ranges::any_of( float_units( real ), [&]( std::complex<f64> u ) { return std::abs( c - u ) < 1e-12; } ) )
+    if( unit || std::ranges::any_of( float_units( real ), [&]( std::complex<f64> u ) { return std::abs( c - u ) < 1e-12; } ) )
     {
         return {};
     }
@@ -376,6 +376,17 @@ Cost Circuit::cost( bool fma ) const
     }
     total.muls -= fused;
     return total;
+}
+
+std::vector<u32> Circuit::nodes( const std::vector<Row>& rows ) const
+{
+    std::vector<u32> out;
+    for( const Row& row : rows )
+    {
+        const auto found = outputs.find( row );
+        out.push_back( found == outputs.end() ? k_zero : found->second );
+    }
+    return out;
 }
 
 std::vector<std::complex<f64>> Circuit::evaluate( const std::vector<std::complex<f64>>& inputs ) const

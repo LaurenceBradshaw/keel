@@ -18,30 +18,20 @@ struct Value_place
     Place imaginary;
 };
 
-// Statements computing each of `rows` by `circuit` into its `outputs` entry, from `inputs`, at
-// `type`: f64 parts, or wrapping integers of the ring's width. Units fold into signs, so x + (-y)
-// is one subtract. Every input is read before any output is written, so the two may share places.
+// Statements writing each output the value of its node in `nodes` (Circuit::k_zero for zero), from
+// `inputs`, at `type`: f64 parts, or wrapping integers of the ring's width. Units fold into signs, so
+// x + (-y) is one subtract. Every input is read before any output is written, so the two may share
+// places. A debug build checks the statements against `rows` on random input, when given.
 std::vector<Statement> lower_circuit(
     Function&                       func,
     const Circuit&                  circuit,
     const Field&                    field,
-    const std::vector<Row>&         rows,
-    const std::vector<Value_place>& inputs,
-    const std::vector<Value_place>& outputs,
-    Type_id                         type,
-    Literal_pool&                   literals,
-    Span                            span
-);
-
-// The same for a complex f64 circuit whose outputs are `nodes`, one per entry of `outputs`.
-std::vector<Statement> lower_nodes(
-    Function&                       func,
-    const Circuit&                  circuit,
     const std::vector<u32>&         nodes,
     const std::vector<Value_place>& inputs,
     const std::vector<Value_place>& outputs,
     Type_id                         type,
     Literal_pool&                   literals,
-    Span                            span
+    Span                            span,
+    const std::vector<Row>&         rows = {}
 );
 } // namespace keel

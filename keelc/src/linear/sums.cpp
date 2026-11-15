@@ -50,11 +50,6 @@ std::complex<f64> root( u64 e, u64 M )
     return std::polar( 1.0, -2 * std::numbers::pi * static_cast<f64>( e % M ) / static_cast<f64>( M ) );
 }
 
-bool cheaper( Cost b, Cost a )
-{
-    return std::pair { b.adds + b.muls, b.muls } < std::pair { a.adds + a.muls, a.muls };
-}
-
 // c coprime to M, or M = 1.
 Kernel normalised( Kernel k )
 {
@@ -63,16 +58,6 @@ Kernel normalised( Kernel k )
     k.M         = k.c == 0 ? 1 : k.M / g;
     k.c         = k.c == 0 ? 0 : k.c / g;
     return k;
-}
-
-Cost operator+( Cost a, Cost b )
-{
-    return { a.adds + b.adds, a.muls + b.muls };
-}
-
-Cost operator*( u32 k, Cost a )
-{
-    return { k * a.adds, k * a.muls };
 }
 
 Cost twiddle_cost( u64 e, u64 M )
@@ -181,7 +166,7 @@ std::vector<Use> solved_match( const Kernel& k, const Plan_options& options )
     {
         leaf.outputs.push_back( found->outputs.at( r ) );
     }
-    leaf.cost    = found->cost( options.solve.fma );
+    leaf.cost    = found->cost();
     leaf.circuit = std::move( *found );
     return { { {}, leaf.cost, "solved " + sides( k ) + " W" + std::to_string( k.M ), std::move( leaf ) } };
 }
@@ -346,7 +331,7 @@ public:
         {
             p.circuit.outputs[Row { Element { o } }] = p.outputs[o];
         }
-        p.cost = p.circuit.cost( options_.solve.fma );
+        p.cost = p.circuit.cost();
         return p;
     }
 
@@ -383,7 +368,7 @@ private:
                 {
                     how += ")";
                 }
-                if( !best.rule || cheaper( cost, best.cost ) )
+                if( !best.rule || cost < best.cost )
                 {
                     best = { &rule, std::move( use ), cost, std::move( how ) };
                 }

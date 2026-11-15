@@ -8,6 +8,7 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 #include "common/types.h"
 #include "linear/field.h"
@@ -29,19 +30,35 @@ struct Op
     u32     b;
 };
 
+// The one cost every stage ranks by: fewer adds and multiplies in all, then fewer multiplies.
 struct Cost
 {
     u32 adds = 0;
     u32 muls = 0;
 
     bool operator==( const Cost& ) const = default;
+
+    auto operator<=>( const Cost& o ) const
+    {
+        return std::pair { adds + muls, muls } <=> std::pair { o.adds + o.muls, o.muls };
+    }
+
+    Cost operator+( Cost o ) const
+    {
+        return { adds + o.adds, muls + o.muls };
+    }
+
+    friend Cost operator*( u32 k, Cost c )
+    {
+        return { k * c.adds, k * c.muls };
+    }
 };
 
 // A row of a linear map, the key of the output that computes it.
 using Row = std::vector<Element>;
 
-// What scaling by `c` costs, as Circuit::cost counts it.
-Cost scale_cost( std::complex<f64> c, bool real );
+// What scaling by `c` costs, as Circuit::cost counts it; `unit` when the ring says it is free.
+Cost scale_cost( std::complex<f64> c, bool real, bool unit = false );
 
 // A hash-consed straight-line circuit over inputs, adds and scalings. Constants are snapped complex
 // floats, since sub-circuits from other fields are pasted in; an integer ring's stay exact.
@@ -93,6 +110,11 @@ public:
 
     // The nodes some output reaches.
     std::vector<bool> live() const;
+
+    static constexpr u32 k_zero = ~u32 { 0 };
+
+    // Each row's output node, or k_zero for a row with none.
+    std::vector<u32> nodes( const std::vector<Row>& rows ) const;
 
     std::map<Row, u32> outputs;
 
