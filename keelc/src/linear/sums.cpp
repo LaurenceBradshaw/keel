@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "linear/sums.h"
+#include <functional>
 #include <map>
 #include <numbers>
 #include <numeric>
@@ -84,7 +85,237 @@ std::string sides( const Kernel& k )
     return std::to_string( k.n ) + "x" + std::to_string( k.m );
 }
 
-// Candidates are ranked by their parts' costs added up; only the one chosen is built.
+// The circuit of a part, pasted onto its inputs.
+using Part_builder = std::function<std::vector<u32>( Circuit&, const Kernel&, const std::vector<u32>& )>;
+
+// One way a rule takes a kernel: `count` copies of each part, and what the rule adds to them.
+struct Use
+{
+    std::vector<std::pair<u32, Kernel>> parts;
+    Cost                                own;
+    std::string                         how;
+    std::optional<Planned>              leaf {};
+};
+
+// A fact the planner may use. `match` gives each way it takes a kernel, its side conditions met;
+// `build` makes the kernel from one of them and its parts' circuits.
+struct Rule
+{
+    const char* name;
+    const char* identity;
+    std::vector<Use> ( *match )( const Kernel&, const Plan_options& );
+    std::vector<u32> ( *build )( Circuit&, const Kernel&, const Use&, const std::vector<u32>&, const Part_builder& );
+};
+
+// Every product, summed in j order.
+std::vector<u32> direct( Circuit& c, const Kernel& k, const std::vector<u32>& x )
+{
+    std::vector<u32> out;
+    for( u32 o = 0; o < k.m; ++o )
+    {
+        u32 acc = 0;
+        for( u32 j = 0; j < k.n; ++j )
+        {
+            const u64 e    = k.c * j % k.M * o % k.M;
+            const u32 term = e == 0 ? x[j] : c.scale( x[j], root( e, k.M ) );
+            acc            = j == 0 ? term : c.add( acc, term );
+        }
+        out.push_back( acc );
+    }
+    return out;
+}
+
+// Every product a general one past 2^16 of them.
+std::vector<Use> direct_match( const Kernel& k, const Plan_options& )
+{
+    Cost cost { 2 * ( k.n - 1 ) * k.m, 0 };
+    if( u64 { k.n } * k.m > 1 << 16 )
+    {
+        cost = cost + k.n * k.m * Cost { 2, 4 };
+    }
+    else
+    {
+        for( u32 o = 0; o < k.m; ++o )
+        {
+            for( u32 j = 0; j < k.n; ++j )
+            {
+                cost = cost + twiddle_cost( k.c * j % k.M * o, k.M );
+            }
+        }
+    }
+    return { { {}, cost, "direct " + sides( k ) } };
+}
+
+std::vector<u32> direct_build( Circuit& c, const Kernel& k, const Use&, const std::vector<u32>& x, const Part_builder& )
+{
+    return direct( c, k, x );
+}
+
+std::vector<Use> solved_match( const Kernel& k, const Plan_options& options )
+{
+    if( k.n > options.leaf_max || k.m > options.leaf_max || k.M > 4 * options.leaf_max || k.n * k.m < 4 )
+    {
+        return {};
+    }
+    Field            field( Ring_kind::Complex, static_cast<u32>( k.M ) );
+    std::vector<Row> rows( k.m );
+    for( u32 o = 0; o < k.m; ++o )
+    {
+        for( u32 j = 0; j < k.n; ++j )
+        {
+            rows[o].push_back( field.root( static_cast<u32>( k.c * j % k.M * o % k.M ) ) );
+        }
+    }
+    std::optional<Circuit> found =
+        options.cache.empty() ? std::nullopt : cached_circuit( options.cache, field, rows, options.solve );
+    if( !found )
+    {
+        found = solve( field, rows, options.solve ).circuit;
+        if( !options.cache.empty() )
+        {
+            cache_circuit( options.cache, field, rows, options.solve, *found );
+        }
+    }
+    Planned leaf;
+    for( const Row& r : rows )
+    {
+        leaf.outputs.push_back( found->outputs.at( r ) );
+    }
+    leaf.cost    = found->cost( options.solve.fma );
+    leaf.circuit = std::move( *found );
+    return { { {}, leaf.cost, "solved " + sides( k ) + " W" + std::to_string( k.M ), std::move( leaf ) } };
+}
+
+std::vector<u32> solved_build( Circuit& c, const Kernel&, const Use& use, const std::vector<u32>& x, const Part_builder& )
+{
+    const std::vector<u32> m = c.paste( use.leaf->circuit, x );
+    std::vector<u32>       out;
+    for( const u32 o : use.leaf->outputs )
+    {
+        out.push_back( m[o] );
+    }
+    return out;
+}
+
+std::vector<Use> periodic_match( const Kernel& k, const Plan_options& )
+{
+    if( k.n <= k.M && k.m <= k.M )
+    {
+        return {};
+    }
+    const Kernel in { std::min<u32>( k.n, static_cast<u32>( k.M ) ), std::min<u32>( k.m, static_cast<u32>( k.M ) ), k.M, k.c };
+    return { { { { 1, in } }, Cost { 2 * ( k.n - in.n ), 0 }, "periodic" } };
+}
+
+std::vector<u32>
+periodic_build( Circuit& c, const Kernel& k, const Use& use, const std::vector<u32>& x0, const Part_builder& part )
+{
+    std::vector<u32> x  = x0;
+    const Kernel&    in = use.parts[0].second;
+    for( u32 j = in.n; j < k.n; ++j )
+    {
+        x[j % in.n] = c.add( x[j % in.n], x[j] );
+    }
+    x.resize( in.n );
+    const std::vector<u32> sub = part( c, in, x );
+    std::vector<u32>       out;
+    for( u32 o = 0; o < k.m; ++o )
+    {
+        out.push_back( sub[o % in.m] );
+    }
+    return out;
+}
+
+// The smallest R for each P.
+std::vector<Use> split_match( const Kernel& k, const Plan_options& )
+{
+    std::vector<Use> uses;
+    for( u32 P = 2; P < k.n; ++P )
+    {
+        if( k.n % P != 0 )
+        {
+            continue;
+        }
+        const u64 r0 = k.M / std::gcd( k.M, static_cast<u64>( P ) );
+        for( u64 R = r0; R <= k.m; R += r0 )
+        {
+            if( k.m % R != 0 )
+            {
+                continue;
+            }
+            Cost own {};
+            for( u32 j1 = 1; j1 < P; ++j1 )
+            {
+                for( u64 k2 = 1; k2 < R; ++k2 )
+                {
+                    own = own + twiddle_cost( k.c * j1 % k.M * k2, k.M );
+                }
+            }
+            const Kernel inner { k.n / P, static_cast<u32>( R ), k.M, k.c * P % k.M };
+            const Kernel outer { P, k.m / static_cast<u32>( R ), k.M, k.c * R % k.M };
+            uses.push_back(
+                { { { P, inner }, { static_cast<u32>( R ), outer } },
+                  own,
+                  "split " + std::to_string( P ) + "x" + std::to_string( k.n / P ) }
+            );
+            break;
+        }
+    }
+    return uses;
+}
+
+std::vector<u32> split_build( Circuit& c, const Kernel& k, const Use& use, const std::vector<u32>& x, const Part_builder& part )
+{
+    const auto& [P, inner] = use.parts[0];
+    const auto& [R, outer] = use.parts[1];
+
+    std::vector<std::vector<u32>> z( P );
+    for( u32 j1 = 0; j1 < P; ++j1 )
+    {
+        std::vector<u32> in( inner.n );
+        for( u32 j2 = 0; j2 < inner.n; ++j2 )
+        {
+            in[j2] = x[j1 + P * j2];
+        }
+        z[j1] = part( c, inner, in );
+        for( u32 k2 = 0; k2 < R; ++k2 )
+        {
+            const u64 e = k.c * j1 % k.M * k2 % k.M;
+            if( e != 0 )
+            {
+                z[j1][k2] = c.scale( z[j1][k2], root( e, k.M ) );
+            }
+        }
+    }
+
+    std::vector<u32> out( k.m );
+    for( u32 k2 = 0; k2 < R; ++k2 )
+    {
+        std::vector<u32> in( P );
+        for( u32 j1 = 0; j1 < P; ++j1 )
+        {
+            in[j1] = z[j1][k2];
+        }
+        const std::vector<u32> y = part( c, outer, in );
+        for( u32 k1 = 0; k1 < outer.m; ++k1 )
+        {
+            out[k2 + R * k1] = y[k1];
+        }
+    }
+    return out;
+}
+
+const Rule rules[] = {
+    { "direct", "y[k] = sum over j of x[j] W^(c j k)", direct_match, direct_build },
+    { "solved", "the dense solve computes its matrix", solved_match, solved_build },
+    { "periodic", "W^M = 1: columns j and j + M are equal, and so are rows k and k + M", periodic_match, periodic_build },
+    { "split",
+      "j = j1 + P j2, k = k2 + R k1: W^(c j k) = W^(c P j2 k2) W^(c j1 k2) W^(c R j1 k1) when c P R = 0 mod M",
+      split_match,
+      split_build },
+};
+
+// Every rule's uses ranked by their own cost plus their parts'; only the one chosen is built.
 class Planner
 {
 public:
@@ -104,28 +335,13 @@ public:
         {
             x[j] = p.circuit.input( j );
         }
-        switch( choice.kind )
-        {
-        case Kind::Direct:
-            p.outputs = direct( p.circuit, k, x );
-            break;
-        case Kind::Solved:
-        {
-            const std::vector<u32> m = p.circuit.paste( choice.solved, x );
-            p.outputs                = choice.solved_outputs;
-            for( u32& o : p.outputs )
-            {
-                o = m[o];
-            }
-            break;
-        }
-        case Kind::Periodic:
-            p.outputs = periodic( p.circuit, k, x );
-            break;
-        case Kind::Split:
-            p.outputs = split( p.circuit, k, choice.P, choice.R, x );
-            break;
-        }
+        p.outputs = choice.rule->build(
+            p.circuit,
+            k,
+            choice.use,
+            x,
+            [this]( Circuit& c, const Kernel& part, const std::vector<u32>& in ) { return paste( c, part, in ); }
+        );
         for( u32 o = 0; o < k.m; ++o )
         {
             p.circuit.outputs[Row { Element { o } }] = p.outputs[o];
@@ -135,23 +351,12 @@ public:
     }
 
 private:
-    enum class Kind : u8
-    {
-        Direct,
-        Solved,
-        Periodic,
-        Split,
-    };
-
     struct Choice
     {
-        Kind             kind;
-        Cost             cost;
-        std::string      how;
-        u32              P = 0;
-        u32              R = 0;
-        Circuit          solved { false };
-        std::vector<u32> solved_outputs {};
+        const Rule* rule = nullptr;
+        Use         use;
+        Cost        cost;
+        std::string how;
     };
 
     const Choice& choose( Kernel k )
@@ -161,207 +366,30 @@ private:
         {
             return found->second;
         }
-
         Choice best;
-        if( k.n > k.M || k.m > k.M )
+        for( const Rule& rule : rules )
         {
-            const Kernel  in  = folded( k );
-            const Choice& sub = choose( in );
-            best              = {
-                             .kind = Kind::Periodic, .cost = sub.cost + Cost { 2 * ( k.n - in.n ), 0 }, .how = "periodic(" + sub.how + ")"
-            };
-            return choices_.emplace( k, std::move( best ) ).first->second;
-        }
-
-        best                = { .kind = Kind::Direct, .cost = direct_cost( k ), .how = "direct " + sides( k ) };
-        const auto consider = [&]( Choice c )
-        {
-            if( cheaper( c.cost, best.cost ) )
+            for( Use& use : rule.match( k, options_ ) )
             {
-                best = std::move( c );
-            }
-        };
-        if( std::optional<Choice> s = solved( k ) )
-        {
-            consider( std::move( *s ) );
-        }
-        for( u32 P = 2; P < k.n; ++P )
-        {
-            if( k.n % P != 0 )
-            {
-                continue;
-            }
-            const u64 r0 = k.M / std::gcd( k.M, static_cast<u64>( P ) );
-            for( u64 R = r0; R <= k.m; R += r0 )
-            {
-                if( k.m % R != 0 )
+                Cost        cost = use.own;
+                std::string how  = use.how;
+                for( u32 i = 0; i < use.parts.size(); ++i )
                 {
-                    continue;
+                    const Choice& part = choose( use.parts[i].second );
+                    cost               = cost + use.parts[i].first * part.cost;
+                    how += ( i == 0 ? "(" : "; " ) + part.how;
                 }
-                const u32     Q     = k.n / P;
-                const u32     S     = k.m / static_cast<u32>( R );
-                const Choice& inner = choose( { Q, static_cast<u32>( R ), k.M, k.c * P % k.M } );
-                const Choice& outer = choose( { P, S, k.M, k.c * R % k.M } );
-                Cost          cost  = P * inner.cost + static_cast<u32>( R ) * outer.cost;
-                for( u32 j1 = 1; j1 < P; ++j1 )
+                if( !use.parts.empty() )
                 {
-                    for( u64 k2 = 1; k2 < R; ++k2 )
-                    {
-                        cost = cost + twiddle_cost( k.c * j1 % k.M * k2, k.M );
-                    }
+                    how += ")";
                 }
-                consider(
-                    { .kind = Kind::Split,
-                      .cost = cost,
-                      .how =
-                          "split " + std::to_string( P ) + "x" + std::to_string( Q ) + "(" + inner.how + "; " + outer.how + ")",
-                      .P = P,
-                      .R = static_cast<u32>( R ) }
-                );
-                break;
+                if( !best.rule || cheaper( cost, best.cost ) )
+                {
+                    best = { &rule, std::move( use ), cost, std::move( how ) };
+                }
             }
         }
         return choices_.emplace( k, std::move( best ) ).first->second;
-    }
-
-    static Kernel folded( const Kernel& k )
-    {
-        return { std::min<u32>( k.n, static_cast<u32>( k.M ) ), std::min<u32>( k.m, static_cast<u32>( k.M ) ), k.M, k.c };
-    }
-
-    // Every product a general one past 2^16 of them.
-    static Cost direct_cost( const Kernel& k )
-    {
-        Cost cost { 2 * ( k.n - 1 ) * k.m, 0 };
-        if( u64 { k.n } * k.m > 1 << 16 )
-        {
-            return cost + k.n * k.m * Cost { 2, 4 };
-        }
-        for( u32 o = 0; o < k.m; ++o )
-        {
-            for( u32 j = 0; j < k.n; ++j )
-            {
-                cost = cost + twiddle_cost( k.c * j % k.M * o, k.M );
-            }
-        }
-        return cost;
-    }
-
-    // Every product, summed in j order.
-    static std::vector<u32> direct( Circuit& c, const Kernel& k, const std::vector<u32>& x )
-    {
-        std::vector<u32> out;
-        for( u32 o = 0; o < k.m; ++o )
-        {
-            u32 acc = 0;
-            for( u32 j = 0; j < k.n; ++j )
-            {
-                const u64 e    = k.c * j % k.M * o % k.M;
-                const u32 term = e == 0 ? x[j] : c.scale( x[j], root( e, k.M ) );
-                acc            = j == 0 ? term : c.add( acc, term );
-            }
-            out.push_back( acc );
-        }
-        return out;
-    }
-
-    std::optional<Choice> solved( const Kernel& k ) const
-    {
-        if( k.n > options_.leaf_max || k.m > options_.leaf_max || k.M > 4 * options_.leaf_max || k.n * k.m < 4 )
-        {
-            return std::nullopt;
-        }
-        Field            field( Ring_kind::Complex, static_cast<u32>( k.M ) );
-        std::vector<Row> rows( k.m );
-        for( u32 o = 0; o < k.m; ++o )
-        {
-            for( u32 j = 0; j < k.n; ++j )
-            {
-                rows[o].push_back( field.root( static_cast<u32>( k.c * j % k.M * o % k.M ) ) );
-            }
-        }
-        std::optional<Circuit> found =
-            options_.cache.empty() ? std::nullopt : cached_circuit( options_.cache, field, rows, options_.solve );
-        if( !found )
-        {
-            found = solve( field, rows, options_.solve ).circuit;
-            if( !options_.cache.empty() )
-            {
-                cache_circuit( options_.cache, field, rows, options_.solve, *found );
-            }
-        }
-        Choice c {
-            .kind = Kind::Solved,
-            .cost = found->cost( options_.solve.fma ),
-            .how  = "solved " + sides( k ) + " W" + std::to_string( k.M )
-        };
-        for( const Row& r : rows )
-        {
-            c.solved_outputs.push_back( found->outputs.at( r ) );
-        }
-        c.solved = std::move( *found );
-        return c;
-    }
-
-    // W^M = 1: columns j and j + M are equal, and so are rows k and k + M.
-    std::vector<u32> periodic( Circuit& c, const Kernel& k, std::vector<u32> x )
-    {
-        const Kernel in = folded( k );
-        for( u32 j = in.n; j < k.n; ++j )
-        {
-            x[j % in.n] = c.add( x[j % in.n], x[j] );
-        }
-        x.resize( in.n );
-        const std::vector<u32> sub = paste( c, in, x );
-        std::vector<u32>       out;
-        for( u32 o = 0; o < k.m; ++o )
-        {
-            out.push_back( sub[o % in.m] );
-        }
-        return out;
-    }
-
-    std::vector<u32> split( Circuit& c, const Kernel& k, u32 P, u32 R, const std::vector<u32>& x )
-    {
-        const u32    Q = k.n / P;
-        const u32    S = k.m / R;
-        const Kernel inner { Q, R, k.M, k.c * P % k.M };
-        const Kernel outer { P, S, k.M, k.c * R % k.M };
-
-        std::vector<std::vector<u32>> z( P );
-        for( u32 j1 = 0; j1 < P; ++j1 )
-        {
-            std::vector<u32> in( Q );
-            for( u32 j2 = 0; j2 < Q; ++j2 )
-            {
-                in[j2] = x[j1 + P * j2];
-            }
-            z[j1] = paste( c, inner, in );
-            for( u32 k2 = 0; k2 < R; ++k2 )
-            {
-                const u64 e = k.c * j1 % k.M * k2 % k.M;
-                if( e != 0 )
-                {
-                    z[j1][k2] = c.scale( z[j1][k2], root( e, k.M ) );
-                }
-            }
-        }
-
-        std::vector<u32> out( k.m );
-        for( u32 k2 = 0; k2 < R; ++k2 )
-        {
-            std::vector<u32> in( P );
-            for( u32 j1 = 0; j1 < P; ++j1 )
-            {
-                in[j1] = z[j1][k2];
-            }
-            const std::vector<u32> y = paste( c, outer, in );
-            for( u32 k1 = 0; k1 < S; ++k1 )
-            {
-                out[k2 + R * k1] = y[k1];
-            }
-        }
-        return out;
     }
 
     // The sub-kernel's circuit, built once, pasted onto `x`.
@@ -424,8 +452,8 @@ Planned planned( const Kernel& k )
     return *p;
 }
 
-// Largest error of the plan against the sum, relative to the input's size.
-f64 error( const Planned& p, const Kernel& k )
+// Largest error of the circuit's outputs against the sum, relative to the input's size.
+f64 error( const Circuit& circuit, const std::vector<u32>& outputs, const Kernel& k )
 {
     std::mt19937                   rng( 5 );
     std::uniform_real_distribution d( -1.0, 1.0 );
@@ -434,7 +462,7 @@ f64 error( const Planned& p, const Kernel& k )
     {
         v = { d( rng ), d( rng ) };
     }
-    const std::vector<std::complex<f64>> got   = p.circuit.evaluate( x );
+    const std::vector<std::complex<f64>> got   = circuit.evaluate( x );
     f64                                  worst = 0;
     for( u32 o = 0; o < k.m; ++o )
     {
@@ -443,9 +471,53 @@ f64 error( const Planned& p, const Kernel& k )
         {
             want += x[j] * root( k.c * j % k.M * o % k.M, k.M );
         }
-        worst = std::max( worst, std::abs( got[p.outputs[o]] - want ) );
+        worst = std::max( worst, std::abs( got[outputs[o]] - want ) );
     }
     return worst / std::sqrt( static_cast<f64>( k.n ) );
+}
+
+f64 error( const Planned& p, const Kernel& k )
+{
+    return error( p.circuit, p.outputs, k );
+}
+
+// Each rule alone, its parts summed directly, on random kernels it takes.
+TEST_CASE( "every_planner_rule_computes_the_naive_sum", "[linear][sums]" )
+{
+    std::mt19937 rng( 11 );
+    Plan_options options;
+    options.leaf_max = 6;
+    for( const Rule& rule : rules )
+    {
+        INFO( rule.name << ": " << rule.identity );
+        u32 checked = 0;
+        for( u32 t = 0; t < 1000 && checked < 20; ++t )
+        {
+            const u64    M = 1 + rng() % 16;
+            const Kernel k { 1 + static_cast<u32>( rng() % 16 ), 1 + static_cast<u32>( rng() % 16 ), M, rng() % M };
+            for( const Use& use : rule.match( k, options ) )
+            {
+                Circuit          c( false );
+                std::vector<u32> x( k.n );
+                for( u32 j = 0; j < k.n; ++j )
+                {
+                    x[j] = c.input( j );
+                }
+                const std::vector<u32> out = rule.build(
+                    c,
+                    k,
+                    use,
+                    x,
+                    []( Circuit& c, const Kernel& part, const std::vector<u32>& in ) { return direct( c, part, in ); }
+                );
+                INFO( sides( k ) << " W" << k.M << "^" << k.c << " " << use.how );
+                REQUIRE( out.size() == k.m );
+                CHECK( error( c, out, k ) < 1e-12 );
+                ++checked;
+            }
+        }
+        CHECK( checked > 0 );
+    }
 }
 
 TEST_CASE( "a_256_point_dft_splits_to_within_1_percent_of_split_radix", "[linear][sums]" )

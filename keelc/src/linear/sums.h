@@ -46,9 +46,9 @@ struct Plan_options
     std::filesystem::path cache {}; // where solved leaves are kept, as solve_linear_maps keeps whole maps
 };
 
-// The cheapest circuit found from the exponent's laws alone: W^(a+b) = W^a W^b and W^M = 1 make
-// equal columns and rows, and split j = j1 + P j2, k = k2 + R k1 into a sum over j2 for each j1,
-// a twiddle W^(c j1 k2), and a sum over j1 for each k2, once the cross term c P R j2 k1 is 0 mod M.
-// Small kernels are solved. Nothing when no rule takes the sum.
+// The cheapest circuit the planner's rules find, each a law of the exponent: W^M = 1 folds equal
+// columns and rows, and j = j1 + P j2, k = k2 + R k1 splits the sum into sums over j2, a twiddle
+// W^(c j1 k2) and sums over j1, once the cross term c P R j2 k1 is 0 mod M. Small kernels are
+// solved. Nothing when no rule takes the sum.
 std::optional<Planned> plan_sum( const Sum& sum, const Plan_options& options = {} );
 } // namespace keel
