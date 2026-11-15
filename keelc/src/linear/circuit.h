@@ -114,6 +114,11 @@ public:
     // `conjugate`, so computing the conjugate map; maps each of sub's nodes to one here.
     std::vector<u32> paste( const Circuit& sub, const std::vector<u32>& inputs, bool conjugate = false );
 
+    // The transpose over the reals, built in `into`: seeds[o] stands for output node outs[o], and node j of the
+    // result is input j's, real when it is. A complex map's transpose is its conjugate transpose, a call's the
+    // conjugate call; constants drop out.
+    std::vector<u32> transposed( Circuit& into, const std::vector<u32>& outs, const std::vector<u32>& seeds, u32 inputs ) const;
+
     // This circuit with input `j` the constant 1.
     Circuit bound( u32 j ) const;
 

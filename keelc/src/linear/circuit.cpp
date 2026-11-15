@@ -354,6 +354,92 @@ std::vector<u32> Circuit::paste( const Circuit& sub, const std::vector<u32>& inp
     return m;
 }
 
+std::vector<u32>
+Circuit::transposed( Circuit& into, const std::vector<u32>& outs, const std::vector<u32>& seeds, u32 inputs ) const
+{
+    assert( !integers_ && !into.integers_ );
+    std::vector<u32> adjoint( ops_.size(), k_zero );
+    const auto       give = [&]( u32 a, u32 v )
+    {
+        v          = real_ops_[a] ? into.real_part( v ) : v;
+        adjoint[a] = adjoint[a] == k_zero ? v : into.add( adjoint[a], v );
+    };
+    for( u32 o = 0; o < outs.size(); ++o )
+    {
+        give( outs[o], seeds[o] );
+    }
+    // Each call is transposed at its first result, once every result's adjoint is whole.
+    std::vector<std::vector<std::pair<u32, u32>>> results( calls_.size() ); // each result's output and node
+    for( u32 i = 0; i < ops_.size(); ++i )
+    {
+        if( ops_[i].kind == Op_kind::Result )
+        {
+            results[ops_[i].a].push_back( { ops_[i].b, i } );
+        }
+    }
+    std::vector<u32> out( inputs, k_zero );
+    for( u32 i = static_cast<u32>( ops_.size() ); i-- > 0; )
+    {
+        const Op& op = ops_[i];
+        if( op.kind == Op_kind::Result && results[op.a].front().second == i )
+        {
+            Call made = calls_[op.a];
+            made.arguments.assign( made.arguments.size(), k_zero );
+            for( const auto& [k, at] : results[op.a] )
+            {
+                made.arguments[k] = adjoint[at];
+            }
+            made.conjugate = !made.conjugate;
+            if( std::ranges::any_of( made.arguments, []( u32 a ) { return a != k_zero; } ) )
+            {
+                const u32 call = into.call( made );
+                for( u32 t = 0; t < made.arguments.size(); ++t )
+                {
+                    if( const u32 a = calls_[op.a].arguments[t]; a != k_zero )
+                    {
+                        give( a, into.result( call, t ) );
+                    }
+                }
+            }
+        }
+        const u32 v = adjoint[i];
+        if( v == k_zero || is_constant( i ) )
+        {
+            continue;
+        }
+        switch( op.kind )
+        {
+        case Op_kind::Input:
+            out[op.a] = v;
+            break;
+        case Op_kind::Add:
+            give( op.a, v );
+            give( op.b, v );
+            break;
+        case Op_kind::Scale:
+            if( constants_[op.b].value != 0.0 )
+            {
+                give( op.a, into.scale( v, std::conj( constants_[op.b].value ) ) );
+            }
+            break;
+        case Op_kind::Real:
+            give( op.a, v );
+            break;
+        case Op_kind::Conj:
+            give( op.a, into.conj( v ) );
+            break;
+        case Op_kind::One:
+        case Op_kind::Result:
+            break;
+        }
+    }
+    for( u32& o : out )
+    {
+        o = o == k_zero ? into.scale( seeds[0], 0.0 ) : o;
+    }
+    return out;
+}
+
 std::vector<bool> Circuit::live() const
 {
     std::vector<bool> seen( ops_.size(), false );

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "linear/sums.h"
+#include <algorithm>
 #include <bit>
 #include <functional>
 #include <limits>
@@ -897,15 +898,52 @@ Sum reindexed( const Sum& s, u8 at, i64 a, i64 b )
     return normalised( out );
 }
 
-// Columns f(j) = f(2n - 1 - j): x[j] at j' = j / 2 for even j, n - 1 - (j - 1) / 2 for odd, gives f(2 j').
+// -s.
+Sum negated( const Sum& s )
+{
+    Sum r = s;
+    for( auto& [e, c] : r.coefficient )
+    {
+        c = -c;
+    }
+    return normalised( r );
+}
+
+// Each t < below with a t = b mod M.
+std::vector<u64> solutions( i64 a, i64 b, u64 M, u64 below )
+{
+    std::vector<u64> out;
+    for( u64 t = 0; t < below; ++t )
+    {
+        if( mod( static_cast<i64>( ( i128 { a } * static_cast<i64>( t ) - b ) % M ), M ) == 0 )
+        {
+            out.push_back( t );
+        }
+    }
+    return out;
+}
+
+i64 power( const Exponent& e, std::array<u8, 2> p )
+{
+    const auto it = e.find( p );
+    return it == e.end() ? 0 : it->second;
+}
+
+// Columns f(j) = +-f(2n - 1 - j): x[j] at j' = j / 2 for even j, n - 1 - (j - 1) / 2 for odd, gives f(2 j').
+// Use::chosen[0] is 1 for the minus sign, which odd j's x takes.
 std::vector<Use> reflect_match( const Sum& s, const Plan_options& )
 {
     const Sum even = reindexed( s, 0, 2, 0 );
-    if( s.n < 2 || even == normalised( s ) || reindexed( s, 0, -2, 2 * i64 { s.n } - 1 ) != even )
+    if( s.n < 2 || even == normalised( s ) )
     {
         return {};
     }
-    return { { { { 1, even } }, {}, "reflect" } };
+    const Sum odd = reindexed( s, 0, -2, 2 * i64 { s.n } - 1 );
+    if( odd != even && odd != negated( even ) )
+    {
+        return {};
+    }
+    return { { { { 1, even } }, {}, "reflect", std::nullopt, { odd != even, 0 } } };
 }
 
 std::vector<u32> reflect_build( Circuit& c, const Sum& s, const Use& use, const std::vector<u32>& x, const Part_builder& part )
@@ -913,9 +951,150 @@ std::vector<u32> reflect_build( Circuit& c, const Sum& s, const Use& use, const 
     std::vector<u32> v( s.n );
     for( u32 j = 0; j < s.n; ++j )
     {
-        v[j % 2 == 0 ? j / 2 : s.n - 1 - ( j - 1 ) / 2] = x[j];
+        v[j % 2 == 0 ? j / 2 : s.n - 1 - ( j - 1 ) / 2] = j % 2 == 1 && use.chosen[0] ? c.scale( x[j], -1.0 ) : x[j];
     }
     return part( c, use.parts[0].second, v );
+}
+
+// f(a - j) = +-f(j) with both columns below n: x[a - j] added to x[j], or subtracted, keeping the columns up to
+// a / 2 when the pairs reach n - 1, or from a / 2 when they reach 0. Use::chosen holds a, and the sign and side.
+std::vector<Use> fold_match( const Sum& s, const Plan_options& )
+{
+    const auto first = std::ranges::find_if( s.coefficient, []( const auto& t ) { return power( t.first, { 1, 1 } ) != 0; } );
+    if( s.n < 2 || first == s.coefficient.end() )
+    {
+        return {};
+    }
+    // a takes jk to -jk and the k power C to A a + C, so the term goes to one with -A and A a + C.
+    const i64        A = power( first->first, { 1, 1 } ), C = power( first->first, { 0, 1 } );
+    std::vector<u64> centres;
+    for( const auto& [e, c] : s.coefficient )
+    {
+        if( mod( power( e, { 1, 1 } ) + A, s.M ) == 0 )
+        {
+            for( const u64 a : solutions( A, power( e, { 0, 1 } ) - C, s.M, 2 * u64 { s.n } - 2 ) )
+            {
+                centres.push_back( a );
+            }
+        }
+    }
+    std::ranges::sort( centres );
+    centres.erase( std::ranges::unique( centres ).begin(), centres.end() );
+    std::vector<Use> uses;
+    for( const u64 a : centres )
+    {
+        const u64 lo = a >= s.n ? a - ( s.n - 1 ) : 0, hi = std::min<u64>( s.n - 1, a );
+        const Sum r = reindexed( s, 0, -1, static_cast<i64>( a ) );
+        if( hi <= lo || ( r != normalised( s ) && r != negated( s ) ) )
+        {
+            continue;
+        }
+        const bool minus = r != normalised( s );
+        const Cost own { static_cast<u32>( ( hi - lo + 1 ) / 2 ) * ( s.real ? 1u : 2u ), 0 };
+        if( hi == s.n - 1 )
+        {
+            Sum kept = s;
+            kept.n   = static_cast<u32>( a / 2 + 1 );
+            uses.push_back( { { { 1, kept } }, own, "fold " + std::to_string( a ), std::nullopt, { a, minus } } );
+        }
+        if( lo == 0 )
+        {
+            Sum kept = reindexed( s, 0, 1, static_cast<i64>( ( a + 1 ) / 2 ) );
+            kept.n   = static_cast<u32>( s.n - ( a + 1 ) / 2 );
+            uses.push_back( { { { 1, kept } }, own, "fold " + std::to_string( a ), std::nullopt, { a, 2u | minus } } );
+        }
+    }
+    return uses;
+}
+
+std::vector<u32> fold_build( Circuit& c, const Sum& s, const Use& use, const std::vector<u32>& x, const Part_builder& part )
+{
+    const u64        a    = use.chosen[0];
+    const u32        from = use.chosen[1] & 2 ? static_cast<u32>( ( a + 1 ) / 2 ) : 0;
+    std::vector<u32> v( x.begin() + from, x.begin() + from + use.parts[0].second.n );
+    for( u32 j = from; j < from + v.size(); ++j )
+    {
+        if( a >= j && a - j < s.n && a - j != j )
+        {
+            v[j - from] = c.add( x[j], c.scale( x[a - j], use.chosen[1] & 1 ? -1.0 : 1.0 ) );
+        }
+    }
+    return part( c, use.parts[0].second, v );
+}
+
+// A power b j beside a j k, b = a t: W^(a j (k + t)), so y[k] is output k + t of the sum with k - t for k.
+std::vector<Use> shift_match( const Sum& s, const Plan_options& )
+{
+    const auto first = std::ranges::find_if(
+        s.coefficient, []( const auto& t ) { return power( t.first, { 1, 1 } ) != 0 && power( t.first, { 1, 0 } ) != 0; }
+    );
+    if( first == s.coefficient.end() )
+    {
+        return {};
+    }
+    const std::vector<u64> t = solutions( power( first->first, { 1, 1 } ), power( first->first, { 1, 0 } ), s.M, s.M );
+    if( t.empty() )
+    {
+        return {};
+    }
+    Sum part = reindexed( s, 1, 1, -static_cast<i64>( t[0] ) );
+    part.m   = static_cast<u32>( s.m + t[0] );
+    for( const auto& [e, c] : part.coefficient )
+    {
+        if( std::ranges::any_of( e, []( const auto& p ) { return p.first[1] == 0 && p.first[0] > 0; } ) )
+        {
+            return {};
+        }
+    }
+    return { { { { 1, part } }, {}, "shift " + std::to_string( t[0] ), std::nullopt, { t[0], 0 } } };
+}
+
+std::vector<u32> shift_build( Circuit& c, const Sum& s, const Use& use, const std::vector<u32>& x, const Part_builder& part )
+{
+    const std::vector<u32> y = part( c, use.parts[0].second, x );
+    return { y.begin() + static_cast<i64>( use.chosen[0] ), y.begin() + static_cast<i64>( use.chosen[0] + s.m ) };
+}
+
+// The sum with j and k swapped, so its matrix transposed.
+Sum swapped( const Sum& s )
+{
+    Sum t { s.m, s.n, s.M, {}, s.real };
+    for( const auto& [e, c] : s.coefficient )
+    {
+        Exponent f;
+        for( const auto& [p, v] : e )
+        {
+            f[{ p[1], p[0] }] = v;
+        }
+        t.coefficient[f] = c;
+    }
+    return normalised( t );
+}
+
+// A circuit's transpose costs its multiplies and adds less inputs plus outputs. For complex x it is the conjugate
+// transpose, so of the swapped sum's conjugate; for real x the matrix must be real.
+std::vector<Use> transpose_match( const Sum& s, const Plan_options& )
+{
+    const Sum t = s.real ? swapped( s ) : normalised( conjugate_sum( swapped( s ) ) );
+    if( ( s.real && normalised( conjugate_sum( s ) ) != normalised( s ) ) ||
+        representative( t ).first == representative( normalised( s ) ).first )
+    {
+        return {};
+    }
+    const u32 dim = s.real ? 1 : 2;
+    return { { { { 1, t } }, Cost { s.n > s.m ? dim * ( s.n - s.m ) : 0, 0 }, "transpose" } };
+}
+
+std::vector<u32> transpose_build( Circuit& c, const Sum&, const Use& use, const std::vector<u32>& x, const Part_builder& part )
+{
+    const Sum&       t = use.parts[0].second;
+    Circuit          sub( t.real );
+    std::vector<u32> in( t.n );
+    for( u32 j = 0; j < t.n; ++j )
+    {
+        in[j] = sub.input( j );
+    }
+    return sub.transposed( c, part( sub, t, in ), x, t.n );
 }
 
 // Real x and f(j, -k) = conj f(j, k): y[M - k] = conj y[k], so outputs past M / 2 are conjugates.
@@ -1145,9 +1324,15 @@ const Rule rules[] = {
       conjugate_match,
       conjugate_build },
     { "reflect",
-      "f(j) = f(2n - 1 - j): the odd j read reversed are the even columns past n, so the sum is over f(2 j')",
+      "f(j) = +-f(2n - 1 - j): the odd j read reversed, signed, are the even columns past n, so the sum is over f(2 j')",
       reflect_match,
       reflect_build },
+    { "fold", "f(a - j) = +-f(j): x[j] f(j) + x[a - j] f(a - j) = (x[j] +- x[a - j]) f(j)", fold_match, fold_build },
+    { "shift", "W^(a j k + a t j) = W^(a j (k + t)): y[k] is output k + t of a sum without j alone", shift_match, shift_build },
+    { "transpose",
+      "a circuit run backwards computes the transposed map, conjugated for complex x, at its multiplies",
+      transpose_match,
+      transpose_build },
     { "hermitian", "for real x and f(j, -k) = conj f(j, k), y[M - k] = conj y[k]", hermitian_match, hermitian_build },
     { "batch", "copies on separate inputs are each summed alone", batch_match, batch_build, false, true },
     { "paired",
@@ -1429,6 +1614,22 @@ Sum linear_sum( std::mt19937& rng )
     {
         return kernel_sum( { n, m, M, below( rng, M ) }, real );
     }
+    // cos or sin of (2j + p)(2k + q) pi / 4n on real x, as the DCTs, DSTs and the MDCT are.
+    if( below( rng, 4 ) == 0 )
+    {
+        const i64 p = below( rng, 2 ) == 0 ? 1 : below( rng, 2 * n ), q = below( rng, 2 * n ), M8 = 8 * n;
+        Exponent  e { { { 1, 1 }, 4 }, { { 1, 0 }, 2 * q }, { { 0, 1 }, 2 * p }, { { 0, 0 }, p * q } }, neg;
+        for( const auto& [powers, v] : e )
+        {
+            neg[powers] = -v;
+        }
+        const bool sine = below( rng, 2 ) == 0;
+        neg[{ 0, 0 }] += sine ? 2 * n : 0;
+        e[{ 0, 0 }] += sine ? 2 * n : 0;
+        return normalised(
+            Sum { n, m, static_cast<u64>( M8 ), { { e, Rational( 1, 2 ) }, { neg, Rational( sine ? -1 : 1, 2 ) } }, true }
+        );
+    }
     if( below( rng, 4 ) == 0 )
     {
         const i64 a = 1 + below( rng, M );
@@ -1680,6 +1881,77 @@ Exponent ex( i64 a, i64 b, i64 c, i64 d, i64 e = 0, i64 f = 0 )
     return out;
 }
 
+// cos(2pi e / M) and sin(2pi e / M) as sums of W_M^(-+e); sin's 1/(2i) is W^(M/4) / 2.
+std::map<Exponent, Rational> cosine( Exponent e )
+{
+    Exponent neg;
+    for( const auto& [p, v] : e )
+    {
+        neg[p] = -v;
+    }
+    return { { e, Rational( 1, 2 ) }, { neg, Rational( 1, 2 ) } };
+}
+
+std::map<Exponent, Rational> sine( u64 M, Exponent e )
+{
+    Exponent neg;
+    for( const auto& [p, v] : e )
+    {
+        neg[p] = -v;
+    }
+    neg[{ 0, 0 }] += static_cast<i64>( M / 4 );
+    e[{ 0, 0 }] += static_cast<i64>( M / 4 );
+    return { { neg, Rational( 1, 2 ) }, { e, Rational( -1, 2 ) } };
+}
+
+Sum real_sum( u32 n, u32 m, u64 M, std::map<Exponent, Rational> c )
+{
+    return normalised( Sum { n, m, M, std::move( c ), true } );
+}
+
+// cos(pi j (2k + 1) / 2N): DCT-II's transpose.
+TEST_CASE( "a_dct_iii_is_a_transposed_dct_ii", "[linear][sums]" )
+{
+    const Sum     s = real_sum( 32, 32, 128, cosine( ex( 2, 1, 0, 0 ) ) );
+    const Planned p = planned( s );
+    INFO( p.how << " " << p.cost.adds << "/" << p.cost.muls );
+    CHECK( p.how.starts_with( "transpose(reflect(" ) );
+    CHECK( p.cost.adds + p.cost.muls <= 389 ); // DCT-II-32 planned
+    CHECK( error( p, s ) < 1e-12 );
+}
+
+// sin(pi (2j + 1)(k + 1) / 2N): x[j] reflected with odd j negated, W^(4 j k + 4 j) shifted to W^(4 j (k + 1)).
+TEST_CASE( "a_dst_ii_reflects_and_shifts_to_a_dct_ii_s_cost", "[linear][sums]" )
+{
+    const Sum     s = real_sum( 32, 32, 128, sine( 128, ex( 2, 2, 1, 1 ) ) );
+    const Planned p = planned( s );
+    INFO( p.how << " " << p.cost.adds << "/" << p.cost.muls );
+    CHECK( p.how.find( "shift 1(" ) != std::string::npos );
+    CHECK( p.cost.adds + p.cost.muls <= 389 ); // DCT-II-32 planned
+    CHECK( error( p, s ) < 1e-12 );
+}
+
+// cos(pi (2j + 1)(2k + 1) / 4N): reflected on both sides it is a complex DFT_N/2 twiddled, 2N lg N + N in all.
+TEST_CASE( "a_dct_iv_reflects_both_sides_to_2n_lg_n_plus_n", "[linear][sums]" )
+{
+    const Sum     s = real_sum( 32, 32, 256, cosine( ex( 4, 2, 2, 1 ) ) );
+    const Planned p = planned( s );
+    INFO( p.how << " " << p.cost.adds << "/" << p.cost.muls );
+    CHECK( p.cost.adds + p.cost.muls <= 2 * 32 * 5 + 32 );
+    CHECK( error( p, s ) < 1e-12 );
+}
+
+// cos(pi (2j + 1 + N)(2k + 1) / 4N), 2N inputs: columns fold to N, then a DCT-IV, N more adds.
+TEST_CASE( "an_mdct_folds_its_columns_to_a_dct_iv", "[linear][sums]" )
+{
+    const Sum     s = real_sum( 32, 16, 128, cosine( ex( 4, 2, 34, 17 ) ) );
+    const Planned p = planned( s );
+    INFO( p.how << " " << p.cost.adds << "/" << p.cost.muls );
+    CHECK( p.how.starts_with( "fold " ) );
+    CHECK( p.cost.adds + p.cost.muls <= 2 * 16 * 4 + 16 + 16 );
+    CHECK( error( p, s ) < 1e-12 );
+}
+
 // Kernels outside the ones the rules were built for, known and meaningless, each planned and printed
 // against its direct sum and, where there is one, the best known count: keel_tests "[sums_measure]".
 // KEEL_SUM_CASES="a b" plans only those.
@@ -1691,32 +1963,11 @@ TEST_CASE( "the_planner_measures_unfamiliar_kernels", "[.][sums_measure]" )
         Sum         s;
         u32         best; // 0 when none is known
     };
-    const Rational h( 1, 2 ), mh( -1, 2 );
-    // cos(2pi e / M) and sin(2pi e / M) as sums of W_M^(-+e); sin's 1/(2i) is W^(M/4) / 2.
-    const auto cos_of = [&]( Exponent e )
-    {
-        Exponent neg;
-        for( const auto& [p, v] : e )
-        {
-            neg[p] = -v;
-        }
-        return std::map<Exponent, Rational> { { e, h }, { neg, h } };
-    };
-    const auto sin_of = [&]( u64 M, Exponent e )
-    {
-        Exponent neg;
-        for( const auto& [p, v] : e )
-        {
-            neg[p] = -v;
-        }
-        neg[{ 0, 0 }] += static_cast<i64>( M / 4 );
-        e[{ 0, 0 }] += static_cast<i64>( M / 4 );
-        return std::map<Exponent, Rational> { { neg, h }, { e, mh } };
-    };
-    const auto sum = [&]( u32 n, u32 m, u64 M, std::map<Exponent, Rational> c, bool real = false )
+    const Rational h( 1, 2 );
+    const auto     sum = [&]( u32 n, u32 m, u64 M, std::map<Exponent, Rational> c, bool real = false )
     { return normalised( Sum { n, m, M, std::move( c ), real } ); };
-    std::map<Exponent, Rational> cas = cos_of( ex( 1, 0, 0, 0 ) );
-    for( const auto& [e, c] : sin_of( 64, ex( 1, 0, 0, 0 ) ) )
+    std::map<Exponent, Rational> cas = cosine( ex( 1, 0, 0, 0 ) );
+    for( const auto& [e, c] : sine( 64, ex( 1, 0, 0, 0 ) ) )
     {
         cas[e] = cas[e] + c;
     }
@@ -1727,10 +1978,10 @@ TEST_CASE( "the_planner_measures_unfamiliar_kernels", "[.][sums_measure]" )
     // 2N lg N - N + 1 for DCT-II/III and DST-II, 2N lg N + N for DCT-IV, 4N lg N - 6N + 8 for a complex
     // DFT, 2N lg N - 4N + 6 for a real one; others add what they add to one of those.
     const std::vector<Case> cases {
-        { "dct3-64", sum( 64, 64, 256, cos_of( ex( 2, 1, 0, 0 ) ), true ), 705 },
-        { "dct4-64", sum( 64, 64, 512, cos_of( ex( 4, 2, 2, 1 ) ), true ), 832 },
-        { "dst2-64", sum( 64, 64, 256, sin_of( 256, ex( 2, 2, 1, 1 ) ), true ), 705 },
-        { "mdct-64to32", sum( 64, 32, 256, cos_of( ex( 4, 2, 66, 33 ) ), true ), 384 },
+        { "dct3-64", sum( 64, 64, 256, cosine( ex( 2, 1, 0, 0 ) ), true ), 705 },
+        { "dct4-64", sum( 64, 64, 512, cosine( ex( 4, 2, 2, 1 ) ), true ), 832 },
+        { "dst2-64", sum( 64, 64, 256, sine( 256, ex( 2, 2, 1, 1 ) ), true ), 705 },
+        { "mdct-64to32", sum( 64, 32, 256, cosine( ex( 4, 2, 66, 33 ) ), true ), 384 },
         { "dht-64", sum( 64, 64, 64, cas, true ), 518 },
         { "odd-freq-dft-64", sum( 64, 64, 128, { { ex( 2, 1, 0, 0 ), 1 } } ), 1160 + 6 * 64 },
         { "fresnel-64", sum( 64, 64, 128, { { ex( -2, 0, 0, 0, 1, 1 ), 1 } } ), 1160 + 12 * 64 },

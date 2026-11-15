@@ -85,7 +85,9 @@ struct Plan_options
 // the one input whose column it is a multiple of, terms in j or k alone factor
 // out, a real x pairs conjugate terms, W^M = 1 folds equal columns and rows, and j = j1 + P j2,
 // k = k2 + R k1 splits the sum into sums over j2, a twiddle W^(c j1 k2) and sums over j1, once the
-// cross term c P R j2 k1 is 0 mod M; two real copies of a hermitian kernel are one complex sum.
+// cross term c P R j2 k1 is 0 mod M; two real copies of a hermitian kernel are one complex sum. Columns
+// equal up to sign under a reflection fold or reorder, a j power that is a multiple of the jk one shifts
+// the outputs, and a sum may be its transpose's circuit run backwards.
 // Small kernels are solved. Nothing when no rule takes the sum.
 std::optional<Planned> plan_sum( const Sum& sum, const Plan_options& options = {} );
 } // namespace keel
