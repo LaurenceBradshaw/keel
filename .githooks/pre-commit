@@ -149,21 +149,31 @@ check_headers()
 # Each Keel project's golden suite, every run fixture built by both backends where both run. keel_rt's tests are a C binary instead, run as its own step.
 check_goldens()
 {
-    local any=0
-
+    # At once, each into its own file, since neither keeps every core busy on its own.
+    local runners=() logs=() pids=() bad=0 i
     for runner in keelc/test/run_tests.sh keel_stl/test/run_tests.sh; do
         [ -x "$runner" ] || continue
 
-        any=1
-        KEEL_COMPARE="$compare" "$runner" "${debug_bin}/keelc${exe}" || return 1
+        runners+=( "$runner" )
+        logs+=( "$( mktemp )" )
+        KEEL_COMPARE="$compare" "$runner" "${debug_bin}/keelc${exe}" > "${logs[-1]}" 2>&1 &
+        pids+=( $! )
     done
 
-    if [ "$any" -eq 0 ]; then
+    if [ "${#runners[@]}" -eq 0 ]; then
         echo "no golden runners found - has the layout moved?"
         return 1
     fi
 
-    return 0
+    # A failing runner's log last, so the tail the step shows is its.
+    local failed=()
+    for i in "${!runners[@]}"; do
+        if wait "${pids[$i]}"; then cat "${logs[$i]}"; else failed+=( "$i" ); bad=1; fi
+    done
+    for i in "${failed[@]}"; do cat "${logs[$i]}"; done
+    rm -f "${logs[@]}"
+
+    return "$bad"
 }
 
 # keeldoc's own pages for its test package, then the stl's pages: regenerated into a scratch

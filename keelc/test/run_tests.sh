@@ -50,6 +50,8 @@
 #   KEEL_RT     the runtime library, as --runtime (default: the one built beside keelc; an ASan
 #               build needs one built without sanitizers)
 #   KEEL_ARTIFACTS  where the .c and binaries go  (default: ../../build/test-artifacts)
+#                 and `durations`, each fixture's seconds last run, which start the slowest first, and
+#                 `circuits/`, the solved circuits of the fixtures testing `@real_arithmetic`
 #   KEEL_RUN=0  check a run fixture's keelc output only, building and running nothing
 #
 #   run_tests.sh <path-to-keelc>            check
@@ -80,6 +82,9 @@ fi
 # Resolve before cd, since the caller's path is relative to their working directory.
 keelc="$( absolute "$( dirname "$1" )" )/$( basename "$1" )"
 shift
+
+# What the solver's circuits depend on, beside the map they compute: a change to any of it solves afresh.
+solver="$( cat "$( dirname "$0" )"/../src/linear/* "$( dirname "$0" )"/../src/opt/solve_linear_maps.* | sha256sum | cut -c1-16 )"
 
 update=0
 tests="$( dirname "$0" )"
@@ -155,6 +160,10 @@ ulimit -c 0
 mkdir -p "$artifacts" || exit 2
 # Absolute, since a program runs inside its own build directory.
 artifacts="$( absolute "$artifacts" )"
+# A fixture testing `@real_arithmetic` keeps its circuits across runs, until the solver changes.
+kept="${artifacts}/circuits/${solver}"
+mkdir -p "$kept" || exit 2
+find "${artifacts}/circuits" -mindepth 1 -maxdepth 1 ! -name "$solver" -exec rm -rf {} +
 
 if [ -t 1 ]; then
     red=$'\033[31m'; green=$'\033[32m'; dim=$'\033[2m'; reset=$'\033[0m'
@@ -462,6 +471,12 @@ run_one()
     local index="$1" src="$2"
     local out="${results}/${index}.out" err="${results}/${index}.err"
 
+    # Read by the builds below; a program's modules are beside its main.kl.
+    local circuits="$circuits"
+    if grep -rqs --include='*.kl' '@real_arithmetic' "$( [ "${src##*/}" = main.kl ] && dirname "$src" || echo "$src" )"; then
+        circuits="$kept"
+    fi
+
     # Word splitting is wanted here, unlike for filenames: FLAGS holds one or more arguments.
     local suite_flags
     read -ra suite_flags < "$( dirname "$src" )/FLAGS"
@@ -534,17 +549,33 @@ run_one()
     { echo "$verdict"; [ -n "$messages" ] && echo "$messages"; } > "${results}/${index}"
 }
 
+# Slowest first, by the last run's times, so a long fixture does not start last; a new one first of all.
+durations="${artifacts}/durations"
+order=( "${!sources[@]}" )
+if [ -f "$durations" ]; then
+    mapfile -t order < <(
+        for index in "${!sources[@]}"; do echo "$index ${sources[$index]#./}"; done |
+            awk 'NR == FNR { t[$2] = $1; next } { print ( $2 in t ? t[$2] : 1e9 ), $1 }' "$durations" - |
+            sort -k1,1gr | cut -d' ' -f2
+    )
+fi
+
 running=0
-for index in "${!sources[@]}"; do
+for index in "${order[@]}"; do
     if [ "$running" -ge "$parallel_jobs" ]; then
         wait -n
         running=$(( running - 1 ))
     fi
 
-    run_one "$index" "${sources[$index]#./}" &
+    { start="$EPOCHREALTIME"; run_one "$index" "${sources[$index]#./}"; echo "$start $EPOCHREALTIME" > "${results}/${index}.time"; } &
     running=$(( running + 1 ))
 done
 wait
+
+for index in "${!sources[@]}"; do
+    read -r start end < "${results}/${index}.time"
+    echo "$start $end ${sources[$index]#./}"
+done | awk '{ print $2 - $1, $3 }' > "$durations"
 
 # In fixture order, whatever order they finished in.
 for index in "${!sources[@]}"; do

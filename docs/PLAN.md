@@ -1437,7 +1437,8 @@ write is not evidence that the code under it is used.
 `keelc/test/<suite>/`, one directory per stage: `lex`, `parse`, `sema`, `kir`, `codegen`, `driver`.
 `run_tests.sh <keelc>` runs them all; it is a shell script, not a framework, and the directory holds
 only `.kl` files and expectations. Every compiler works this way (rustc's UI tests, clang's
-`lit`/FileCheck).
+`lit`/FileCheck). A program that only draws diagnostics stays a golden too: its `.stderr` shows
+them as a reader sees them, which a list of strings in C++ does not.
 
 - Each suite has a `FLAGS` file naming the compiler flags it runs with; a suite without one is an
   error, so a new directory cannot quietly test the wrong thing.
@@ -1885,14 +1886,6 @@ major), no longer blocked now that D81 has settled lambdas.
   a Linux and a Windows build hands keelc an object it refuses. The hook gives each host its own
   cache; keelb should rebuild such an object.
 - **`kl::is_linux()` and `kl::is_windows()`**, wrappers over `get_platform()`, if callers want them.
-
-### Tests
-
-- **Goldens that could be unit tests**, before the M16 leftovers close: go through every golden suite
-  and say, per fixture, whether it could be a unit test with what keel_tests can already reach, and if
-  not, what it would take (a fixture that loads a source string through `run_front_end`, a way to
-  assert a diagnostic by its text and span). Most of `sema` is expected to move, since its fixtures
-  assert diagnostics, not run output. A golden that builds and runs a program stays one.
 
 ### Compiler structure
 
