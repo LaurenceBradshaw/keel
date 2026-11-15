@@ -33,7 +33,6 @@ using i128 = __int128;
 
 constexpr u32 k_symbols      = 8;
 constexpr u64 k_largest_root = u64 { 1 } << 24; // the largest M an angle is matched at
-constexpr f64 k_zero         = 1e-12;           // a coefficient this small is gone
 
 [[noreturn]] void fail()
 {
@@ -168,27 +167,45 @@ bool same( const Int& x, const Int& y )
     return x.p == y.p && x.q == y.q && reduced_in( x ) && reduced_in( y );
 }
 
-// sum over Poly e of c W_M^e: a function of the symbols.
+// sum over Poly e of c W_M^e: a function of the symbols. As W^(M/2) = -1, an exponent's constant is below M/2.
 struct Wave
 {
-    u64                               M = 1;
-    std::map<Poly, std::complex<f64>> terms;
+    u64                      M = 1;
+    std::map<Poly, Rational> terms;
 };
 
-void add_term( Wave& w, const Poly& e, std::complex<f64> c )
+// `e` reduced mod M.
+void add_term( Wave& w, Poly e, Rational c )
 {
-    std::complex<f64>& t = w.terms[e];
-    t += c;
-    if( std::abs( t ) < k_zero )
+    if( const auto at = e.find( Monomial {} ); w.M % 2 == 0 && at != e.end() && static_cast<u64>( at->second ) >= w.M / 2 )
+    {
+        c = -c;
+        at->second -= static_cast<i64>( w.M / 2 );
+        if( at->second == 0 )
+        {
+            e.erase( at );
+        }
+    }
+    Rational& t = w.terms[e];
+    t           = t + c;
+    if( t == 0 )
     {
         w.terms.erase( e );
     }
 }
 
-Wave wave( std::complex<f64> c )
+Wave wave( Rational c )
 {
     Wave w;
     add_term( w, {}, c );
+    return w;
+}
+
+// i = -W_4.
+Wave imaginary()
+{
+    Wave w { 4, {} };
+    add_term( w, constant( 1 ), -1 );
     return w;
 }
 
@@ -216,7 +233,7 @@ Wave lifted( const Wave& w, u64 M )
     return out;
 }
 
-Wave sum( const Wave& a, const Wave& b, std::complex<f64> sign = 1 )
+Wave sum( const Wave& a, const Wave& b, Rational sign = 1 )
 {
     const u64 M   = common( a.M, b.M );
     Wave      out = lifted( a, M );
@@ -243,7 +260,7 @@ Wave product( const Wave& a, const Wave& b )
     return out;
 }
 
-Wave scaled( const Wave& a, std::complex<f64> c )
+Wave scaled( const Wave& a, Rational c )
 {
     Wave out { a.M, {} };
     for( const auto& [e, t] : a.terms )
@@ -275,9 +292,9 @@ struct Form
     Local_id            carried {};
 };
 
-Form sum( const Form& a, const Form& b, f64 sign )
+Form sum( const Form& a, const Form& b, Rational sign )
 {
-    if( b.carried.is_valid() && ( sign < 0 || a.carried.is_valid() ) )
+    if( b.carried.is_valid() && ( sign != 1 || a.carried.is_valid() ) )
     {
         fail();
     }
@@ -1911,11 +1928,30 @@ private:
         }
     }
 
-    sym::Wave as_wave( Value v ) const
+    // An exact number as powers of W_m with rational coefficients.
+    sym::Wave wave_of( std::optional<Exact> a )
+    {
+        if( !a )
+        {
+            sym::fail();
+        }
+        Field&    f = field( a->m );
+        sym::Wave w { a->m, {} };
+        for( u32 k = 0; k < f.degree(); ++k )
+        {
+            if( const auto [n, d] = f.coefficient( a->e, k ); n != 0 )
+            {
+                sym::add_term( w, sym::constant( k ), Rational( n, d ) );
+            }
+        }
+        return w;
+    }
+
+    sym::Wave as_wave( Value v )
     {
         if( v.kind == Kind::Number )
         {
-            return sym::wave( as_real( v ) );
+            return wave_of( exact_of( v ) );
         }
         if( v.kind != Kind::Wave )
         {
@@ -1937,7 +1973,7 @@ private:
         sym::fail();
     }
 
-    Value add( Value x, Value y, f64 sign )
+    Value add( Value x, Value y, i64 sign )
     {
         if( x.kind == Kind::Terms || y.kind == Kind::Terms )
         {
@@ -1945,21 +1981,22 @@ private:
         }
         if( x.kind == Kind::Angle || y.kind == Kind::Angle )
         {
+            const f64 r = static_cast<f64>( sign );
             if( x.kind == Kind::Angle && y.kind == Kind::Number )
             {
                 const Symbolic& s = symbolics_[x.index];
-                return angle( s.i, s.a, s.b + sign * as_real( y ) );
+                return angle( s.i, s.a, s.b + r * as_real( y ) );
             }
             if( x.kind == Kind::Number && y.kind == Kind::Angle )
             {
                 const Symbolic& s = symbolics_[y.index];
-                return angle( s.i, sign * s.a, as_real( x ) + sign * s.b );
+                return angle( s.i, r * s.a, as_real( x ) + r * s.b );
             }
             if( x.kind == Kind::Angle && y.kind == Kind::Angle && sym::same( symbolics_[x.index].i, symbolics_[y.index].i ) )
             {
                 const Symbolic& s = symbolics_[x.index];
                 const Symbolic& t = symbolics_[y.index];
-                return angle( s.i, s.a + sign * t.a, s.b + sign * t.b );
+                return angle( s.i, s.a + r * t.a, s.b + r * t.b );
             }
             sym::fail();
         }
@@ -2006,7 +2043,9 @@ private:
             {
                 sym::fail();
             }
-            const f64 d = as_real( y );
+            const f64       d       = as_real( y );
+            const auto      e       = exact_of( y );
+            const sym::Wave reverse = wave_of( e ? inverse( *e ) : std::nullopt );
             if( x.kind == Kind::Angle )
             {
                 const Symbolic& s = symbolics_[x.index];
@@ -2014,11 +2053,11 @@ private:
             }
             else if( x.kind == Kind::Terms )
             {
-                v = terms( sym::scaled( symbolics_[x.index].f, sym::wave( 1 / d ) ) );
+                v = terms( sym::scaled( symbolics_[x.index].f, reverse ) );
             }
             else
             {
-                v = make( Kind::Wave, { .w = sym::scaled( as_wave( x ), 1 / d ) } );
+                v = make( Kind::Wave, { .w = sym::product( as_wave( x ), reverse ) } );
             }
             break;
         }
@@ -2116,18 +2155,12 @@ private:
             M
         );
         const sym::Poly minus = sym::reduced( sym::sum( {}, e, -1 ), M );
-        sym::Wave       w { M, {} };
-        if( kind == Trig::Cos )
-        {
-            sym::add_term( w, e, 0.5 );
-            sym::add_term( w, minus, 0.5 );
-        }
-        else
-        {
-            sym::add_term( w, e, std::complex<f64> { 0, -0.5 } );
-            sym::add_term( w, minus, std::complex<f64> { 0, 0.5 } );
-        }
-        return make( Kind::Wave, { .w = std::move( w ) } );
+        // cos = (W^e + W^-e) / 2, sin = -i (W^e - W^-e) / 2.
+        const i64 sign = kind == Trig::Cos ? 1 : -1;
+        sym::Wave w { M, {} };
+        sym::add_term( w, e, Rational( 1, 2 ) );
+        sym::add_term( w, minus, Rational( sign, 2 ) );
+        return make( Kind::Wave, { .w = kind == Trig::Cos ? w : sym::product( w, sym::scaled( sym::imaginary(), -1 ) ) } );
     }
 
     // The stream `at` is in and the element's index: a parameter's element, then only fields.
@@ -2491,7 +2524,7 @@ private:
         {
             return std::nullopt;
         }
-        const sym::Wave K = sym::sum( c[0][0], c[1][0], std::complex<f64> { 0, 1 } );
+        const sym::Wave K = sym::sum( c[0][0], sym::product( c[1][0], sym::imaginary() ) );
         Read_kernel     r { .sum = { static_cast<u32>( turns_[*j] ), static_cast<u32>( turns_[*k] ), K.M, {} } };
         for( const auto& [e, coefficient] : K.terms )
         {
@@ -3102,7 +3135,19 @@ TEST_CASE( "an angle quadratic in j reads as its exponent", "[linear][recognise]
 {
     const std::optional<Read_kernel> r = read_first( dft( "-2.0 * 3.141592653589793 * cast<f64>( j * j * k ) / 96.0" ) );
     REQUIRE( r );
-    CHECK( r->sum == Sum { 96, 96, 96, { { Exponent { { { 2, 1 }, 1 } }, 1.0 } } } );
+    CHECK( r->sum == Sum { 96, 96, 96, { { Exponent { { { 2, 1 }, 1 } }, 1 } } } );
+}
+
+TEST_CASE( "a kernel's coefficients are exact", "[linear][recognise]" )
+{
+    const std::optional<Read_kernel> r = read_first(
+        dft( "-2.0 * 3.141592653589793 * cast<f64>( j * k ) / 96.0",
+             "sr += ( re[j] * c - im[j] * s ) / 3.0;\n si += ( re[j] * s + im[j] * c ) / 3.0;" )
+    );
+    REQUIRE( r );
+    Sum third                         = exponent_kernel( 96, 96, 96, 1 );
+    third.coefficient.begin()->second = Rational( 1, 3 );
+    CHECK( r->sum == third );
 }
 
 TEST_CASE( "a kernel's pure calls run as the rest of recognition runs them", "[linear][recognise]" )

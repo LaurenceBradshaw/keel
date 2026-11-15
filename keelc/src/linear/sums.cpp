@@ -3,6 +3,7 @@
 
 #include "linear/sums.h"
 #include <functional>
+#include <limits>
 #include <map>
 #include <numbers>
 #include <numeric>
@@ -29,7 +30,7 @@ struct Kernel
 // The one shape the planner takes so far.
 std::optional<Kernel> kernel_of( const Sum& s )
 {
-    if( s.coefficient.size() != 1 || std::abs( s.coefficient.begin()->second - 1.0 ) > 1e-9 )
+    if( s.coefficient.size() != 1 || s.coefficient.begin()->second != 1 )
     {
         return std::nullopt;
     }
@@ -401,6 +402,52 @@ private:
 };
 } // namespace
 
+namespace
+{
+using i128 = __int128;
+
+i128 gcd( i128 a, i128 b )
+{
+    a = a < 0 ? -a : a;
+    b = b < 0 ? -b : b;
+    while( b != 0 )
+    {
+        a = std::exchange( b, a % b );
+    }
+    return a;
+}
+
+Rational reduced( i128 n, i128 d )
+{
+    const i128 g = gcd( n, d );
+    n /= d < 0 ? -g : g;
+    d /= d < 0 ? -g : g;
+    if( n > std::numeric_limits<i64>::max() || n < -std::numeric_limits<i64>::max() || d > std::numeric_limits<i64>::max() )
+    {
+        throw Field::Overflow {};
+    }
+    Rational r;
+    r.num = static_cast<i64>( n );
+    r.den = static_cast<i64>( d );
+    return r;
+}
+} // namespace
+
+Rational::Rational( i64 n, i64 d )
+{
+    *this = reduced( n, d );
+}
+
+Rational Rational::operator+( Rational o ) const
+{
+    return reduced( i128 { num } * o.den + i128 { o.num } * den, i128 { den } * o.den );
+}
+
+Rational Rational::operator*( Rational o ) const
+{
+    return reduced( i128 { num } * o.num, i128 { den } * o.den );
+}
+
 Sum exponent_kernel( u32 n, u32 m, u64 M, u64 c )
 {
     Sum s { n, m, M, {} };
@@ -519,7 +566,7 @@ TEST_CASE( "a_sum_with_no_rule_is_not_planned", "[linear][sums]" )
     Sum s                         = exponent_kernel( 96, 96, 96, 1 );
     s.coefficient.begin()->second = 2;
     CHECK( !plan_sum( s ) );
-    CHECK( !plan_sum( Sum { 96, 96, 96, { { Exponent { { { 2, 1 }, 1 } }, 1.0 } } } ) );
+    CHECK( !plan_sum( Sum { 96, 96, 96, { { Exponent { { { 2, 1 }, 1 } }, 1 } } } ) );
 }
 
 TEST_CASE( "a_kernel_longer_than_its_period_folds_its_columns", "[linear][sums]" )

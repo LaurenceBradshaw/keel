@@ -3,7 +3,6 @@
 
 #pragma once
 #include <array>
-#include <complex>
 #include <filesystem>
 #include <map>
 #include <optional>
@@ -17,13 +16,33 @@ namespace keel
 // An integer polynomial in j and k, keyed by the power of each; no zero coefficient.
 using Exponent = std::map<std::array<u8, 2>, i64>;
 
+// An exact rational in lowest terms, its denominator positive; Field::Overflow past i64.
+struct Rational
+{
+    i64 num = 0;
+    i64 den = 1;
+
+    Rational() = default;
+    Rational( i64 n, i64 d = 1 );
+
+    bool     operator==( const Rational& ) const = default;
+    Rational operator+( Rational o ) const;
+    Rational operator*( Rational o ) const;
+
+    Rational operator-() const
+    {
+        return { -num, den };
+    }
+};
+
 // y[k] = sum over j < n of x[j] times the sum over e of c W_M^e(j, k), for k < m, W_M = exp(-2pii/M).
+// Each c is rational, as an irrational is a sum of powers of W.
 struct Sum
 {
-    u32                                   n;
-    u32                                   m;
-    u64                                   M;
-    std::map<Exponent, std::complex<f64>> coefficient;
+    u32                          n;
+    u32                          m;
+    u64                          M;
+    std::map<Exponent, Rational> coefficient;
 
     bool operator==( const Sum& ) const = default;
 };
