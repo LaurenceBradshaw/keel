@@ -4,6 +4,7 @@
 #include "linear/solve.h"
 #include <algorithm>
 #include <cassert>
+#include <complex>
 #include <functional>
 #include <map>
 #include <memory>
@@ -215,6 +216,9 @@ private:
     void  match_rotations( const std::vector<Row>& rows, Candidates& cands );
     void  match_convolution( const std::vector<Row>& rows, Candidates& cands );
     void  match_toom( const std::vector<Row>& rows, Candidates& cands );
+    void  match_rank( const std::vector<Row>& rows, Candidates& cands );
+    void  match_kernel( const std::vector<Row>& rows, Candidates& cands );
+    void  match_roots( const std::vector<Row>& rows, Candidates& cands );
     void  match_direct( const std::vector<Row>& rows, Candidates& cands );
     Canon canon( const std::vector<Row>& rows ) const;
     Maybe direct( const std::vector<Row>& rows );
@@ -237,9 +241,15 @@ private:
     Routed                               crt_route( Circuit& c, const std::vector<u32>& u, const Row& f, u32 extra );
     Maybe                                via_product( const std::vector<Row>& md, u32 d );
     Maybe via_convolution( const std::vector<Row>& rows, u32 rb, u32 cb, const Hankel& h, Route route );
-    std::optional<std::pair<i64, Row>> toeplitz( const std::vector<Row>& rows ) const;
-    std::vector<Row>                   linconv( const Row& g, size_t q ) const;
-    Maybe                              via_toom( const std::vector<Row>& rows, i64 dlo, Row g, u32 k );
+    std::optional<std::pair<i64, Row>>            toeplitz( const std::vector<Row>& rows ) const;
+    std::vector<Row>                              linconv( const Row& g, size_t q ) const;
+    Maybe                                         via_toom( const std::vector<Row>& rows, i64 dlo, Row g, u32 k );
+    std::pair<std::vector<u32>, std::vector<u32>> echelon( const std::vector<Row>& rows ) const;
+    std::vector<Row>                              inverse( std::vector<Row> a ) const;
+    std::vector<Row>
+          coordinates( const std::vector<Row>& rows, const std::vector<u32>& basis, const std::vector<u32>& pivots ) const;
+    Maybe via_layers( const std::vector<Row>& rows, const std::vector<Row>& b, const std::vector<Row>& a );
+    void  layered( const std::vector<Row>& rows, std::vector<Row> b, std::vector<Row> a, Candidates& cands );
 
     const Solve_options&                                            options_;
     Field*                                                          F_;
@@ -1572,6 +1582,146 @@ Maybe Solver::via_toom( const std::vector<Row>& rows, i64 dlo, Row g, u32 k )
     return finish( c );
 }
 
+// The rows independent of those before them and each one's pivot column; Cannot when a pivot is not invertible.
+std::pair<std::vector<u32>, std::vector<u32>> Solver::echelon( const std::vector<Row>& rows ) const
+{
+    std::vector<Row> e;
+    std::vector<u32> basis, pivots;
+    for( u32 i = 0; i < rows.size(); ++i )
+    {
+        Row r = rows[i];
+        for( size_t k = 0; k < e.size(); ++k )
+        {
+            const Element f = r[pivots[k]];
+            for( size_t j = 0; f != F_->zero() && j < r.size(); ++j )
+            {
+                r[j] = F_->add( r[j], F_->neg( F_->mul( f, e[k][j] ) ) );
+            }
+        }
+        const auto p = std::ranges::find_if( r, [&]( Element x ) { return x != F_->zero(); } );
+        if( p == r.end() )
+        {
+            continue;
+        }
+        const Element lead = *p;
+        pivots.push_back( static_cast<u32>( p - r.begin() ) );
+        for( Element& x : r )
+        {
+            x = divide( x, lead );
+        }
+        e.push_back( std::move( r ) );
+        basis.push_back( i );
+    }
+    return { basis, pivots };
+}
+
+// Gauss-Jordan; Cannot when singular.
+std::vector<Row> Solver::inverse( std::vector<Row> a ) const
+{
+    const size_t     n = a.size();
+    std::vector<Row> b( n, Row( n, F_->zero() ) );
+    for( size_t i = 0; i < n; ++i )
+    {
+        b[i][i] = F_->one();
+    }
+    for( size_t k = 0; k < n; ++k )
+    {
+        size_t p = k;
+        while( p < n && !F_->invertible( a[p][k] ) )
+        {
+            ++p;
+        }
+        if( p == n )
+        {
+            throw Cannot {};
+        }
+        std::swap( a[k], a[p] );
+        std::swap( b[k], b[p] );
+        const Element d = F_->inv( a[k][k] );
+        for( size_t j = 0; j < n; ++j )
+        {
+            a[k][j] = F_->mul( a[k][j], d );
+            b[k][j] = F_->mul( b[k][j], d );
+        }
+        for( size_t i = 0; i < n; ++i )
+        {
+            const Element f = a[i][k];
+            for( size_t j = 0; i != k && f != F_->zero() && j < n; ++j )
+            {
+                a[i][j] = F_->add( a[i][j], F_->neg( F_->mul( f, a[k][j] ) ) );
+                b[i][j] = F_->add( b[i][j], F_->neg( F_->mul( f, b[k][j] ) ) );
+            }
+        }
+    }
+    return b;
+}
+
+// Each row as a combination of the `basis` rows, solved on their `pivots` columns.
+std::vector<Row>
+Solver::coordinates( const std::vector<Row>& rows, const std::vector<u32>& basis, const std::vector<u32>& pivots ) const
+{
+    std::vector<Row> square;
+    for( const u32 i : basis )
+    {
+        Row r;
+        for( const u32 j : pivots )
+        {
+            r.push_back( rows[i][j] );
+        }
+        square.push_back( std::move( r ) );
+    }
+    const std::vector<Row> inv = inverse( square );
+    std::vector<Row>       out;
+    for( const Row& r : rows )
+    {
+        Row u( basis.size(), F_->zero() );
+        for( size_t k = 0; k < basis.size(); ++k )
+        {
+            for( size_t j = 0; j < pivots.size(); ++j )
+            {
+                u[k] = F_->add( u[k], F_->mul( r[pivots[j]], inv[j][k] ) );
+            }
+        }
+        out.push_back( std::move( u ) );
+    }
+    return out;
+}
+
+// M = A B: B's rows on the inputs, then A's on those.
+Maybe Solver::via_layers( const std::vector<Row>& rows, const std::vector<Row>& b, const std::vector<Row>& a )
+{
+    Circuit          c = circuit();
+    std::vector<u32> ins;
+    for( u32 j = 0; j < rows[0].size(); ++j )
+    {
+        ins.push_back( c.input( j ) );
+    }
+    const std::optional<std::vector<u32>> mid = stage( c, b, ins );
+    if( !mid )
+    {
+        return std::nullopt;
+    }
+    const std::optional<std::vector<u32>> y = stage( c, a, *mid );
+    if( !y || std::ranges::find( *y, k_none ) != y->end() )
+    {
+        return std::nullopt;
+    }
+    for( size_t i = 0; i < rows.size(); ++i )
+    {
+        c.outputs[rows[i]] = ( *y )[i];
+    }
+    return finish( c );
+}
+
+// M = A B as a candidate when its layers' input programs cost less than M's.
+void Solver::layered( const std::vector<Row>& rows, std::vector<Row> b, std::vector<Row> a, Candidates& cands )
+{
+    if( naive( b ).cost + naive( a ).cost < naive( rows ).cost )
+    {
+        cands.emplace_back( [&, a = std::move( a ), b = std::move( b )] { return via_layers( rows, b, a ); } );
+    }
+}
+
 // The map up to row and column order and free units on rows and columns. Signatures (entries up
 // to units) are refined until the classes stop splitting; ties are then broken by content until the
 // order is stable. Not a full canonical form: two equal maps may still differ, a memo miss but never
@@ -1964,6 +2114,277 @@ void Solver::match_toom( const std::vector<Row>& rows, Candidates& cands )
     }
 }
 
+using Approx = std::vector<std::vector<std::complex<f64>>>;
+
+// M's rank in floats and, when square and full, its inverse: a screen before exact elimination.
+std::pair<size_t, Approx> approximate( const Field& f, const std::vector<Row>& rows )
+{
+    const size_t m = rows.size(), n = rows[0].size();
+    Approx       a( m, std::vector<std::complex<f64>>( n + m ) );
+    f64          big = 0;
+    for( size_t i = 0; i < m; ++i )
+    {
+        for( size_t j = 0; j < n; ++j )
+        {
+            a[i][j] = f.value( rows[i][j] );
+            big     = std::max( big, std::abs( a[i][j] ) );
+        }
+        a[i][n + i] = 1;
+    }
+    size_t rank = 0;
+    for( size_t k = 0; k < n && rank < m; ++k )
+    {
+        size_t p = rank;
+        for( size_t i = rank; i < m; ++i )
+        {
+            p = std::abs( a[i][k] ) > std::abs( a[p][k] ) ? i : p;
+        }
+        if( std::abs( a[p][k] ) <= 1e-9 * big )
+        {
+            continue;
+        }
+        std::swap( a[rank], a[p] );
+        const std::complex<f64> d = a[rank][k];
+        for( auto& x : a[rank] )
+        {
+            x /= d;
+        }
+        for( size_t i = 0; i < m; ++i )
+        {
+            const std::complex<f64> g = a[i][k];
+            for( size_t j = 0; i != rank && j < n + m; ++j )
+            {
+                a[i][j] -= g * a[rank][j];
+            }
+        }
+        ++rank;
+    }
+    Approx inv;
+    if( m == n && rank == n )
+    {
+        for( auto& r : a )
+        {
+            inv.emplace_back( r.begin() + static_cast<std::ptrdiff_t>( n ), r.end() );
+        }
+    }
+    return { rank, inv };
+}
+
+std::vector<Row> transpose( const std::vector<Row>& rows )
+{
+    std::vector<Row> t( rows[0].size(), Row( rows.size() ) );
+    for( size_t i = 0; i < rows.size(); ++i )
+    {
+        for( size_t j = 0; j < rows[0].size(); ++j )
+        {
+            t[j][i] = rows[i][j];
+        }
+    }
+    return t;
+}
+
+void Solver::match_rank( const std::vector<Row>& rows, Candidates& cands )
+{
+    if( F_->kind() != Ring_kind::Integer && approximate( *F_, rows ).first >= std::min( rows.size(), rows[0].size() ) )
+    {
+        return;
+    }
+    guarded(
+        [&]
+        {
+            const auto [basis, pivots] = echelon( rows );
+            if( basis.size() >= std::min( rows.size(), rows[0].size() ) )
+            {
+                return;
+            }
+            std::vector<Row> v;
+            for( const u32 i : basis )
+            {
+                v.push_back( rows[i] );
+            }
+            layered( rows, std::move( v ), coordinates( rows, basis, pivots ), cands );
+            const std::vector<Row> t            = transpose( rows );
+            const auto [columns, column_pivots] = echelon( t );
+            std::vector<Row> m;
+            for( const u32 j : columns )
+            {
+                m.push_back( t[j] );
+            }
+            layered( rows, transpose( coordinates( t, columns, column_pivots ) ), transpose( m ), cands );
+        }
+    );
+}
+
+// Column r of M^-1 is v, the kernel of the other rows: they factor through the sums x_a - (v_a / v_b) x_b
+// along v's support, free when v's entries are equal up to units.
+void Solver::match_kernel( const std::vector<Row>& rows, Candidates& cands )
+{
+    const size_t n = rows.size();
+    if( n != rows[0].size() || n < 3 )
+    {
+        return;
+    }
+    std::vector<size_t> columns; // those whose entries are equal up to units in floats
+    if( F_->kind() == Ring_kind::Integer )
+    {
+        columns.resize( n );
+        std::iota( columns.begin(), columns.end(), 0 );
+    }
+    else
+    {
+        const auto unit = [&]( std::complex<f64> x )
+        { return std::ranges::any_of( F_->units(), [&]( Element u ) { return std::abs( x - F_->value( u ) ) < 1e-9; } ); };
+        const auto ops = [&]( std::complex<f64> x ) {
+            return std::abs( x ) < 1e-9 ? 0 : unit( x ) ? 1 : 2;
+        }; // its add, its multiply
+        const Approx inv = approximate( *F_, rows ).second;
+        for( size_t r = 0; r < inv.size(); ++r )
+        {
+            std::vector<size_t> chain;
+            for( size_t j = 0; j < n; ++j )
+            {
+                if( std::abs( inv[j][r] ) > 1e-9 )
+                {
+                    chain.push_back( j );
+                }
+            }
+            std::vector<std::complex<f64>> s;
+            for( size_t k = 0; k + 1 < chain.size(); ++k )
+            {
+                s.push_back( -inv[chain[k]][r] / inv[chain[k + 1]][r] );
+            }
+            if( chain.size() < 2 || !std::ranges::all_of( s, [&]( std::complex<f64> x ) { return unit( -x ); } ) )
+            {
+                continue;
+            }
+            i64 gain = -static_cast<i64>( s.size() ); // the sums, against each other row's adds and multiplies saved
+            for( size_t i = 0; i < n; ++i )
+            {
+                std::complex<f64> carry = 0;
+                for( size_t k = 0; i != r && k < s.size(); ++k )
+                {
+                    const std::complex<f64> m = F_->value( rows[i][chain[k]] );
+                    carry                     = m - carry;
+                    gain += ops( m ) - ops( carry );
+                    carry *= s[k];
+                }
+                gain += i != r ? ops( F_->value( rows[i][chain.back()] ) ) : 0;
+            }
+            if( gain > 0 )
+            {
+                columns.push_back( r );
+            }
+        }
+    }
+    if( columns.empty() )
+    {
+        return;
+    }
+    guarded(
+        [&]
+        {
+            const std::vector<Row> inv = inverse( rows );
+            for( const size_t r : columns )
+            {
+                std::vector<u32> chain;
+                for( u32 j = 0; j < n; ++j )
+                {
+                    if( inv[j][r] != F_->zero() )
+                    {
+                        chain.push_back( j );
+                    }
+                }
+                const auto same = [&]( u32 j ) { return F_->orbit( inv[j][r] ).first == F_->orbit( inv[chain[0]][r] ).first; };
+                if( chain.size() < 2 || !std::ranges::all_of( chain, same ) )
+                {
+                    continue;
+                }
+                std::vector<Row> b, a;
+                Row              s; // t_k = x_(chain k) + s_k x_(chain k+1)
+                for( size_t k = 0; k + 1 < chain.size(); ++k )
+                {
+                    s.push_back( F_->neg( F_->div( inv[chain[k]][r], inv[chain[k + 1]][r] ) ) );
+                    Row row( n, F_->zero() );
+                    row[chain[k]]     = F_->one();
+                    row[chain[k + 1]] = s.back();
+                    b.push_back( std::move( row ) );
+                }
+                for( u32 j = 0; j < n; ++j )
+                {
+                    Row row( n, F_->zero() );
+                    row[j] = F_->one();
+                    b.push_back( std::move( row ) );
+                }
+                for( size_t i = 0; i < n; ++i )
+                {
+                    Row row( b.size(), F_->zero() );
+                    if( i == r )
+                    {
+                        std::ranges::copy( rows[i], row.begin() + static_cast<std::ptrdiff_t>( s.size() ) );
+                    }
+                    else
+                    {
+                        Element carry = F_->zero();
+                        for( size_t k = 0; k < s.size(); ++k ) // a_k = M[i][chain k] - s_(k-1) a_(k-1)
+                        {
+                            row[k] = carry = F_->add( rows[i][chain[k]], F_->neg( carry ) );
+                            carry          = F_->mul( carry, s[k] );
+                        }
+                        for( u32 j = 0; j < n; ++j )
+                        {
+                            if( std::ranges::find( chain, j ) == chain.end() )
+                            {
+                                row[s.size() + j] = rows[i][j];
+                            }
+                        }
+                    }
+                    a.push_back( std::move( row ) );
+                }
+                layered( rows, std::move( b ), std::move( a ), cands );
+            }
+        }
+    );
+}
+
+// A Toeplitz g with a unit root u: g * x = h * ((z - u) * x), the first factor an add per output.
+void Solver::match_roots( const std::vector<Row>& rows, Candidates& cands )
+{
+    const auto t = toeplitz( rows );
+    if( !t )
+    {
+        return;
+    }
+    const auto& [dlo, g] = *t;
+    for( const Element u : F_->units() )
+    {
+        Row     h( g.size() - 1 ); // g_k = h_(k-1) - u h_k
+        Element carry = F_->zero();
+        for( size_t k = g.size() - 1; k > 0; --k )
+        {
+            h[k - 1] = carry = F_->add( g[k], F_->mul( u, carry ) );
+        }
+        if( F_->add( g[0], F_->mul( u, carry ) ) != F_->zero() )
+        {
+            continue;
+        }
+        const size_t     q = rows[0].size();
+        std::vector<Row> a( rows.size(), Row( q + 1, F_->zero() ) );
+        for( size_t i = 0; i < rows.size(); ++i )
+        {
+            for( size_t j = 0; j <= q; ++j )
+            {
+                const i64 d = static_cast<i64>( i ) - dlo - static_cast<i64>( j );
+                if( d >= 0 && d < static_cast<i64>( h.size() ) )
+                {
+                    a[i][j] = h[static_cast<size_t>( d )];
+                }
+            }
+        }
+        cands.emplace_back( [&, a = std::move( a ), b = linconv( { F_->neg( u ), F_->one() }, q )]
+                            { return via_layers( rows, b, a ); } );
+    }
+}
+
 void Solver::match_direct( const std::vector<Row>& rows, Candidates& cands )
 {
     const bool scales = std::ranges::all_of(
@@ -1986,6 +2407,9 @@ const Solver::Rule Solver::rules[] = {
     { "row_scales", "M = diag(d) M', d each row's first nonzero entry", &Solver::match_row_scales },
     { "rotations", "M = M' B, B 2x2 rotations or reflections on input pairs", &Solver::match_rotations },
     { "convolution", "a Hankel core f(r_i + c_j) is a cyclic convolution, by DFT or CRT", &Solver::match_convolution },
+    { "rank", "M = U V through r < min(m, n) of its rows or columns", &Solver::match_rank },
+    { "kernel", "M's rows but one factor through free pairwise sums orthogonal to their kernel", &Solver::match_kernel },
+    { "roots", "a Toeplitz map by g = (z - u) h, u a unit, is h's after (z - u)'s", &Solver::match_roots },
     { "toom", "a Toeplitz map is a linear convolution, by Toom-2 or Toom-3", &Solver::match_toom, false, "convolution" },
     { "direct", "a graph search over sums of the inputs", &Solver::match_direct },
 };
@@ -2480,6 +2904,21 @@ TEST_CASE( "solve_with_fma_finds_fewer_fused_ops", "[linear][solve]" )
     CHECK( plain.circuit.cost( true ) == Cost { 10, 3 } );
     CHECK( fused.cost == Cost { 6, 3 } );
     CHECK( computes( fused.circuit, *b.field, b.rows ) );
+}
+
+TEST_CASE( "solve_factors_through_kernels_roots_and_rank", "[linear][solve]" )
+{
+    // Pascal's rows but the first factor through x_k + x_(k+1) to Pascal's again; (1 + z)^2 / 4 is two
+    // sums and a scale; a rank-2 map is its two rows and their mixes.
+    for( const auto& [name, cost] :
+         { std::pair { "pascal6", Cost { 15, 0 } }, { "tri8", Cost { 15, 8 } }, { "rank2x6", Cost { 12, 18 } } } )
+    {
+        INFO( name );
+        Spec           spec = read_spec( name );
+        const Solution got  = solve( *spec.field, spec.rows );
+        CHECK( got.cost == cost );
+        CHECK( computes( got.circuit, *spec.field, spec.rows ) );
+    }
 }
 
 TEST_CASE( "solve_gives_one_circuit", "[linear][solve]" )

@@ -31,7 +31,8 @@ struct Solution
 };
 
 // The cheapest circuit found for the map: the input program, or a split into sub-maps (components,
-// input blocks, a diagonal, rotations, a Hankel core by DFT or CRT, Toom-2/3) solved the same way,
-// memoised up to row and column order and units, or a direct graph search.
+// input blocks, a diagonal, rotations, a Hankel core by DFT or CRT, a rank or kernel factorisation,
+// a Toeplitz kernel's unit root, Toom-2/3) solved the same way, memoised up to row and column order
+// and units, or a direct graph search.
 Solution solve( Field& field, const std::vector<Row>& rows, const Solve_options& options = {} );
 } // namespace keel
