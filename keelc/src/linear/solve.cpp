@@ -12,6 +12,7 @@
 #include <optional>
 #include <set>
 #include <span>
+#include <string_view>
 #include <tuple>
 #include "linear/extract.h"
 #include "linear/sum_graph.h"
@@ -131,6 +132,20 @@ struct Hankel
 // The sum of the route's inputs and its outputs.
 using Routed = std::optional<std::pair<u32, std::vector<u32>>>;
 
+void guarded( const std::function<void()>& f )
+{
+    try
+    {
+        f();
+    }
+    catch( const Field::Overflow& )
+    {
+    }
+    catch( const Cannot& )
+    {
+    }
+}
+
 class Solver
 {
 public:
@@ -177,6 +192,31 @@ private:
     Maybe solve( const std::vector<Row>& rows );
     Maybe solve_in( u32 n, const std::vector<Row>& rows );
     Maybe solve_map( const std::vector<Row>& rows );
+
+    using Candidates = std::vector<std::function<Maybe()>>; // an empty one is the direct search
+
+    // A route splits a map into sub-maps solved the same way: `match` adds a candidate per way it
+    // takes the map. Once an `alone` route has one no later route is tried, nor one whose `unless`
+    // route has one.
+    struct Rule
+    {
+        const char* name;
+        const char* identity;
+        void ( Solver::*match )( const std::vector<Row>&, Candidates& );
+        bool        alone  = false;
+        const char* unless = nullptr;
+    };
+    static const Rule rules[];
+    friend struct Route_check;
+
+    void  match_components( const std::vector<Row>& rows, Candidates& cands );
+    void  match_blocks( const std::vector<Row>& rows, Candidates& cands );
+    void  match_diagonal( const std::vector<Row>& rows, Candidates& cands );
+    void  match_row_scales( const std::vector<Row>& rows, Candidates& cands );
+    void  match_rotations( const std::vector<Row>& rows, Candidates& cands );
+    void  match_convolution( const std::vector<Row>& rows, Candidates& cands );
+    void  match_toom( const std::vector<Row>& rows, Candidates& cands );
+    void  match_direct( const std::vector<Row>& rows, Candidates& cands );
     Canon canon( const std::vector<Row>& rows ) const;
     Maybe direct( const std::vector<Row>& rows );
 
@@ -605,6 +645,10 @@ Maybe Solver::via_components( const std::vector<Row>& rows, const std::vector<st
             {
                 sub.push_back( std::move( k ) );
             }
+        }
+        if( sub.empty() ) // an input no row reads
+        {
+            continue;
         }
         const Maybe sc = solve( sub );
         if( !sc )
@@ -1761,167 +1805,216 @@ Maybe Solver::solve_in( u32 n, const std::vector<Row>& rows )
     }
 }
 
+void Solver::match_components( const std::vector<Row>& rows, Candidates& cands )
+{
+    if( auto groups = components( rows ); groups.size() > 1 )
+    {
+        cands.emplace_back( [&, groups = std::move( groups )] { return via_components( rows, groups ); } );
+    }
+}
+
+void Solver::match_blocks( const std::vector<Row>& rows, Candidates& cands )
+{
+    guarded(
+        [&]
+        {
+            for( const Blocks& part : partitions( rows ) )
+            {
+                guarded(
+                    [&]
+                    {
+                        Factored f      = factor( rows, part );
+                        size_t   firsts = 0;
+                        for( const auto& x : f.firsts )
+                        {
+                            firsts += x.size();
+                        }
+                        if( firsts < rows.size() * part.size() ) // a piece is shared
+                        {
+                            cands.emplace_back( [&, part, f = std::move( f )] { return via_blocks( rows, part, f ); } );
+                        }
+                    }
+                );
+            }
+        }
+    );
+}
+
+void Solver::match_diagonal( const std::vector<Row>& rows, Candidates& cands )
+{
+    for( const Row& r : rows ) // a full row as the diagonal
+    {
+        const bool full  = std::ranges::all_of( r, [&]( Element e ) { return e != F_->zero() && F_->invertible( e ); } );
+        const bool units = std::ranges::all_of( r, [&]( Element e ) { return F_->is_unit( e ); } );
+        if( full && !units )
+        {
+            cands.emplace_back( [&, r] { return via_diagonal( rows, r ); } );
+        }
+    }
+}
+
+void Solver::match_row_scales( const std::vector<Row>& rows, Candidates& cands )
+{
+    guarded(
+        [&]
+        {
+            Row  d; // each row's first nonzero entry
+            bool scaled = false;
+            for( const Row& r : rows )
+            {
+                const auto first = std::ranges::find_if( r, [&]( Element e ) { return e != F_->zero(); } );
+                if( first == r.end() )
+                {
+                    return;
+                }
+                d.push_back( *first );
+                scaled = scaled || !F_->is_unit( d.back() );
+            }
+            if( scaled && std::ranges::all_of( d, [&]( Element e ) { return F_->invertible( e ); } ) )
+            {
+                cands.emplace_back( [&, d] { return via_row_scales( rows, d ); } );
+            }
+        }
+    );
+}
+
+void Solver::match_rotations( const std::vector<Row>& rows, Candidates& cands )
+{
+    if( F_->kind() != Ring_kind::Real ) // complex: a rotation is a constant
+    {
+        return;
+    }
+    std::set<std::vector<std::tuple<u32, u32, Element, Element, Element>>> seen;
+    for( u32 r1 = 0; r1 < rows.size(); ++r1 )
+    {
+        for( u32 r2 = r1 + 1; r2 < rows.size(); ++r2 )
+        {
+            guarded(
+                [&]
+                {
+                    const auto b = rotations( rows, r1, r2 );
+                    if( !b )
+                    {
+                        return;
+                    }
+                    std::vector<std::tuple<u32, u32, Element, Element, Element>> key; // B up to scale
+                    for( const Rotation& x : *b )
+                    {
+                        key.emplace_back( x.j, x.k, F_->div( x.q, x.p ), F_->div( x.r, x.p ), F_->div( x.s, x.p ) );
+                    }
+                    if( seen.insert( key ).second )
+                    {
+                        cands.emplace_back( [&, b = *b] { return via_rotations( rows, b ); } );
+                    }
+                }
+            );
+        }
+    }
+}
+
+void Solver::match_convolution( const std::vector<Row>& rows, Candidates& cands )
+{
+    if( F_->kind() == Ring_kind::Integer )
+    {
+        return;
+    }
+    for( const auto [rb, cb] : peels( rows ) )
+    {
+        std::vector<Row> core;
+        for( u32 i = 0; i < rows.size(); ++i )
+        {
+            if( i == rb )
+            {
+                continue;
+            }
+            Row row;
+            for( u32 j = 0; j < rows[0].size(); ++j )
+            {
+                if( j != cb )
+                {
+                    row.push_back( rows[i][j] );
+                }
+            }
+            core.push_back( std::move( row ) );
+        }
+        const std::optional<Hankel> h = hankel( core );
+        if( !h )
+        {
+            continue;
+        }
+        if( F_->kind() != Ring_kind::Real ) // real data: the complex DFT route is not costed
+        {
+            cands.emplace_back( [&, rb, cb, h = *h] { return via_convolution( rows, rb, cb, h, &Solver::dft_route ); } );
+        }
+        cands.emplace_back( [&, rb, cb, h = *h] { return via_convolution( rows, rb, cb, h, &Solver::crt_route ); } );
+        return;
+    }
+}
+
+void Solver::match_toom( const std::vector<Row>& rows, Candidates& cands )
+{
+    if( const auto t = toeplitz( rows ) )
+    {
+        for( const u32 k : { 2u, 3u } )
+        {
+            if( k <= std::max( t->second.size(), rows[0].size() ) )
+            {
+                cands.emplace_back( [&, k, t = *t] { return via_toom( rows, t.first, t.second, k ); } );
+            }
+        }
+    }
+}
+
+void Solver::match_direct( const std::vector<Row>& rows, Candidates& cands )
+{
+    const bool scales = std::ranges::all_of(
+        rows, [&]( const Row& r ) { return std::ranges::count_if( r, [&]( Element e ) { return e != F_->zero(); } ) == 1; }
+    );
+    if( !scales ) // scales only: the input is the circuit
+    {
+        cands.emplace_back();
+    }
+}
+
+// The routes in the order they run, each holding fuel for those after it.
+const Solver::Rule Solver::rules[] = {
+    { "components",
+      "M = diag(M_1, ..., M_g) up to order, inputs grouped by the rows that reach them",
+      &Solver::match_components,
+      true },
+    { "blocks", "M = sum over input blocks B of S_B F_B, pieces F_B shared between rows", &Solver::match_blocks },
+    { "diagonal", "M = M' diag(d), d a full row", &Solver::match_diagonal },
+    { "row_scales", "M = diag(d) M', d each row's first nonzero entry", &Solver::match_row_scales },
+    { "rotations", "M = M' B, B 2x2 rotations or reflections on input pairs", &Solver::match_rotations },
+    { "convolution", "a Hankel core f(r_i + c_j) is a cyclic convolution, by DFT or CRT", &Solver::match_convolution },
+    { "toom", "a Toeplitz map is a linear convolution, by Toom-2 or Toom-3", &Solver::match_toom, false, "convolution" },
+    { "direct", "a graph search over sums of the inputs", &Solver::match_direct },
+};
+
 // The input program, then each candidate on an equal share of what is left, unused fuel passing on.
 // A candidate that overflows or needs a division the ring lacks is dropped.
 Maybe Solver::solve_map( const std::vector<Row>& rows )
 {
     own_ += rows.size() * rows[0].size();
-    const size_t                        n       = rows[0].size();
-    Maybe                               best    = naive( rows );
-    const auto                          groups  = components( rows );
-    const bool                          real    = F_->kind() == Ring_kind::Real;
-    const bool                          integer = F_->kind() == Ring_kind::Integer;
-    std::vector<std::function<Maybe()>> cands; // an empty one is the direct search
-    const auto                          guarded = [&]( const std::function<void()>& f )
+    const size_t               n    = rows[0].size();
+    Maybe                      best = naive( rows );
+    Candidates                 cands;
+    std::set<std::string_view> taken;
+    for( const Rule& rule : rules )
     {
-        try
+        if( rule.unless && taken.contains( rule.unless ) )
         {
-            f();
+            continue;
         }
-        catch( const Field::Overflow& )
+        const size_t had = cands.size();
+        ( this->*rule.match )( rows, cands );
+        if( cands.size() > had )
         {
-        }
-        catch( const Cannot& )
-        {
-        }
-    };
-    if( groups.size() > 1 )
-    {
-        cands.emplace_back( [&] { return via_components( rows, groups ); } );
-    }
-    else
-    {
-        guarded(
-            [&]
+            if( rule.alone )
             {
-                for( const Blocks& part : partitions( rows ) )
-                {
-                    guarded(
-                        [&]
-                        {
-                            Factored f      = factor( rows, part );
-                            size_t   firsts = 0;
-                            for( const auto& x : f.firsts )
-                            {
-                                firsts += x.size();
-                            }
-                            if( firsts < rows.size() * part.size() ) // a piece is shared
-                            {
-                                cands.emplace_back( [&, part, f = std::move( f )] { return via_blocks( rows, part, f ); } );
-                            }
-                        }
-                    );
-                }
+                break;
             }
-        );
-        for( const Row& r : rows ) // a full row as the diagonal
-        {
-            const bool full  = std::ranges::all_of( r, [&]( Element e ) { return e != F_->zero() && F_->invertible( e ); } );
-            const bool units = std::ranges::all_of( r, [&]( Element e ) { return F_->is_unit( e ); } );
-            if( full && !units )
-            {
-                cands.emplace_back( [&, r] { return via_diagonal( rows, r ); } );
-            }
-        }
-        guarded(
-            [&]
-            {
-                Row  d; // each row's first nonzero entry
-                bool scaled = false;
-                for( const Row& r : rows )
-                {
-                    const auto first = std::ranges::find_if( r, [&]( Element e ) { return e != F_->zero(); } );
-                    if( first == r.end() )
-                    {
-                        return;
-                    }
-                    d.push_back( *first );
-                    scaled = scaled || !F_->is_unit( d.back() );
-                }
-                if( scaled && std::ranges::all_of( d, [&]( Element e ) { return F_->invertible( e ); } ) )
-                {
-                    cands.emplace_back( [&, d] { return via_row_scales( rows, d ); } );
-                }
-            }
-        );
-        if( real ) // complex: a rotation is a constant
-        {
-            std::set<std::vector<std::tuple<u32, u32, Element, Element, Element>>> seen;
-            for( u32 r1 = 0; r1 < rows.size(); ++r1 )
-            {
-                for( u32 r2 = r1 + 1; r2 < rows.size(); ++r2 )
-                {
-                    guarded(
-                        [&]
-                        {
-                            const auto b = rotations( rows, r1, r2 );
-                            if( !b )
-                            {
-                                return;
-                            }
-                            std::vector<std::tuple<u32, u32, Element, Element, Element>> key; // B up to scale
-                            for( const Rotation& x : *b )
-                            {
-                                key.emplace_back( x.j, x.k, F_->div( x.q, x.p ), F_->div( x.r, x.p ), F_->div( x.s, x.p ) );
-                            }
-                            if( seen.insert( key ).second )
-                            {
-                                cands.emplace_back( [&, b = *b] { return via_rotations( rows, b ); } );
-                            }
-                        }
-                    );
-                }
-            }
-        }
-        bool convolution = false;
-        for( const auto [rb, cb] : integer ? std::vector<std::pair<u32, u32>> {} : peels( rows ) )
-        {
-            std::vector<Row> core;
-            for( u32 i = 0; i < rows.size(); ++i )
-            {
-                if( i == rb )
-                {
-                    continue;
-                }
-                Row row;
-                for( u32 j = 0; j < n; ++j )
-                {
-                    if( j != cb )
-                    {
-                        row.push_back( rows[i][j] );
-                    }
-                }
-                core.push_back( std::move( row ) );
-            }
-            const std::optional<Hankel> h = hankel( core );
-            if( !h )
-            {
-                continue;
-            }
-            if( !real ) // real data: the complex DFT route is not costed
-            {
-                cands.emplace_back( [&, rb, cb, h = *h] { return via_convolution( rows, rb, cb, h, &Solver::dft_route ); } );
-            }
-            cands.emplace_back( [&, rb, cb, h = *h] { return via_convolution( rows, rb, cb, h, &Solver::crt_route ); } );
-            convolution = true;
-            break;
-        }
-        if( const auto t = convolution ? std::optional<std::pair<i64, Row>> {} : toeplitz( rows ) ) // a cyclic map goes by CRT
-        {
-            for( const u32 k : { 2u, 3u } )
-            {
-                if( k <= std::max( t->second.size(), n ) )
-                {
-                    cands.emplace_back( [&, k, t = *t] { return via_toom( rows, t.first, t.second, k ); } );
-                }
-            }
-        }
-        const bool scales = std::ranges::all_of(
-            rows, [&]( const Row& r ) { return std::ranges::count_if( r, [&]( Element e ) { return e != F_->zero(); } ) == 1; }
-        );
-        if( !scales ) // scales only: the input is the circuit
-        {
-            cands.emplace_back();
+            taken.insert( rule.name );
         }
     }
 
@@ -2194,6 +2287,138 @@ void lower( const Circuit& c, const Field& field, const std::vector<Row>& rows )
     CHECK( lower_circuit( func, c, field, rows, in, out, type, literals, {} ).size() >= rows.size() );
 }
 
+// A random map from a small family over a random field: dense, two blocks, Toeplitz, circulant,
+// rotation pairs or W^(c j k).
+std::vector<Row> random_map( std::mt19937& rng, Field& field )
+{
+    const auto pick = [&]( u32 n ) { return static_cast<u32>( rng() % n ); };
+    const auto any  = [&]
+    {
+        switch( pick( 4 ) )
+        {
+        case 0:
+            return field.zero();
+        case 1:
+            return field.rational( 1 + pick( 3 ), 1 + pick( 2 ) );
+        default:
+            return field.root( pick( field.n() ) );
+        }
+    };
+    const u32        n = 2 + pick( 3 );
+    std::vector<Row> rows( n, Row( n, field.zero() ) );
+    switch( pick( 6 ) )
+    {
+    case 0:
+        for( Row& r : rows )
+        {
+            std::ranges::generate( r, any );
+        }
+        break;
+    case 1:
+        for( u32 i = 0; i < n; ++i )
+        {
+            for( u32 j = 0; j < n; ++j )
+            {
+                rows[i][j] = ( i < n / 2 ) == ( j < n / 2 ) ? any() : field.zero();
+            }
+        }
+        break;
+    case 2:
+    {
+        Row g( 2 * n );
+        std::ranges::generate( g, any );
+        for( u32 i = 0; i < n; ++i )
+        {
+            for( u32 j = 0; j < n; ++j )
+            {
+                rows[i][j] = g[n + i - j];
+            }
+        }
+        break;
+    }
+    case 3: // circulant, its entries distinct
+        for( u32 i = 0; i < n; ++i )
+        {
+            for( u32 j = 0; j < n; ++j )
+            {
+                rows[i][j] = field.rational( 2 + ( i + n - j ) % n );
+            }
+        }
+        break;
+    case 4: // one rotation on each input pair
+    {
+        const Element p = field.rational( 2 + pick( 3 ) ), q = field.rational( 2 + pick( 3 ) );
+        for( u32 i = 0; i + 1 < n; i += 2 )
+        {
+            for( u32 j = 0; j + 1 < n; j += 2 )
+            {
+                rows[i][j]         = p;
+                rows[i][j + 1]     = q;
+                rows[i + 1][j]     = field.neg( q );
+                rows[i + 1][j + 1] = p;
+            }
+        }
+        break;
+    }
+    default:
+    {
+        const u32 c = 1 + pick( field.n() - 1 );
+        for( u32 i = 0; i < n; ++i )
+        {
+            for( u32 j = 0; j < n; ++j )
+            {
+                rows[i][j] = field.root( c * i * j % field.n() );
+            }
+        }
+    }
+    }
+    return rows;
+}
+
+// Each route on its own, its sub-maps solved as usual.
+struct Route_check
+{
+    static void run()
+    {
+        const Solve_options        options { .fuel = 2'000'000, .graph_fuel = 200'000, .restart_fuel = 50'000, .restarts = 4 };
+        std::mt19937               rng( 11 );
+        std::map<std::string, u32> checked;
+        for( u32 trial = 0; trial < 80; ++trial )
+        {
+            const Ring_kind  kind = rng() % 2 ? Ring_kind::Real : Ring_kind::Complex;
+            Field            field( kind, std::array { 4u, 6u, 8u }[rng() % 3] );
+            std::vector<Row> rows = random_map( rng, field );
+            std::erase( rows, Row( rows[0].size(), field.zero() ) ); // as run drops them
+            if( rows.empty() )
+            {
+                continue;
+            }
+            for( const Solver::Rule& rule : Solver::rules )
+            {
+                Solver             solver( field, options );
+                Solver::Candidates cands;
+                guarded( [&] { ( solver.*rule.match )( rows, cands ); } );
+                for( const auto& cand : cands )
+                {
+                    Maybe got;
+                    guarded( [&] { got = cand ? cand() : solver.direct( rows ); } );
+                    if( got )
+                    {
+                        INFO( rule.name << ": " << rule.identity << ", trial " << trial );
+                        CHECK( computes( *got->circuit, field, rows ) );
+                        ++checked[rule.name];
+                    }
+                }
+            }
+        }
+        for( const Solver::Rule& rule : Solver::rules )
+        {
+            INFO( rule.name );
+            CHECK( checked[rule.name] > 0 );
+        }
+    }
+};
+
 void check_specs( const std::vector<std::string>& names )
 {
     const std::map<std::string, Cost> want = expected();
@@ -2225,6 +2450,11 @@ TEST_CASE( "solve_gives_every_recorded_cost", "[.][specs]" )
         names.push_back( name );
     }
     check_specs( names );
+}
+
+TEST_CASE( "every_solve_route_computes_its_map", "[linear][solve]" )
+{
+    Route_check::run();
 }
 
 TEST_CASE( "solve_with_fma_finds_fewer_fused_ops", "[linear][solve]" )
