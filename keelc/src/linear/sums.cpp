@@ -279,23 +279,6 @@ std::vector<u32> direct_build( Circuit& c, const Sum& s, const Use&, const std::
     return direct( c, s, x );
 }
 
-// What `circuit` costs on real inputs.
-Cost on_real_inputs( const Circuit& circuit, const std::vector<u32>& outputs, u32 n )
-{
-    Circuit          probe( true );
-    std::vector<u32> x( n );
-    for( u32 j = 0; j < n; ++j )
-    {
-        x[j] = probe.input( j );
-    }
-    const std::vector<u32> m = probe.paste( circuit, x );
-    for( u32 o = 0; o < outputs.size(); ++o )
-    {
-        probe.outputs[Row { Element { o } }] = m[outputs[o]];
-    }
-    return probe.cost();
-}
-
 // A side not dividing M has no structure the solver finds, and costs it minutes.
 std::vector<Use> solved_match( const Sum& s, const Plan_options& options )
 {
@@ -305,7 +288,7 @@ std::vector<Use> solved_match( const Sum& s, const Plan_options& options )
     {
         return {};
     }
-    Field            field( Ring_kind::Complex, static_cast<u32>( k->M ) );
+    Field            field( s.real ? Ring_kind::Real : Ring_kind::Complex, static_cast<u32>( k->M ) );
     std::vector<Row> rows( k->m );
     for( u32 o = 0; o < k->m; ++o )
     {
@@ -314,7 +297,7 @@ std::vector<Use> solved_match( const Sum& s, const Plan_options& options )
             rows[o].push_back( field.root( static_cast<u32>( k->c * j % k->M * o % k->M ) ) );
         }
     }
-    const std::array<u64, 4> key { k->n, k->m, k->M, k->c };
+    const std::array<u64, 5> key { k->n, k->m, k->M, k->c, s.real };
     auto                     at = options.solved.find( key );
     if( at == options.solved.end() )
     {
@@ -335,7 +318,7 @@ std::vector<Use> solved_match( const Sum& s, const Plan_options& options )
     {
         leaf.outputs.push_back( at->second.outputs.at( r ) );
     }
-    leaf.cost    = s.real ? on_real_inputs( at->second, leaf.outputs, k->n ) : at->second.cost();
+    leaf.cost    = at->second.cost();
     leaf.circuit = at->second;
     return { { {}, leaf.cost, "solved " + sides( s ) + " W" + std::to_string( k->M ), std::move( leaf ) } };
 }
