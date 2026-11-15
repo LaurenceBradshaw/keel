@@ -781,6 +781,65 @@ std::vector<u32> conjugate_build( Circuit& c, const Sum&, const Use& use, const 
     return y;
 }
 
+// e with j replaced by a j + b, mod M.
+Exponent substituted( const Exponent& e, i64 a, i64 b, u64 M )
+{
+    Exponent out;
+    for( const auto& [powers, v] : e )
+    {
+        i128 binomial = 1;
+        for( u8 i = 0; i <= powers[0]; ++i )
+        {
+            i128 term = i128 { v } % M * binomial % M;
+            for( u8 t = 0; t < i; ++t )
+            {
+                term = term * a % M;
+            }
+            for( u8 t = i; t < powers[0]; ++t )
+            {
+                term = term * b % M;
+            }
+            i64& at  = out[{ i, powers[1] }];
+            at       = static_cast<i64>( mod( static_cast<i64>( ( i128 { at } + term ) % M ), M ) );
+            binomial = binomial * ( powers[0] - i ) / ( i + 1 );
+        }
+    }
+    return out;
+}
+
+// The sum's terms with j replaced by a j + b.
+Sum reindexed( const Sum& s, i64 a, i64 b )
+{
+    Sum out { s.n, s.m, s.M, {}, s.real };
+    for( const auto& [e, c] : s.coefficient )
+    {
+        Rational& t = out.coefficient[substituted( e, a, b, s.M )];
+        t           = t + c;
+    }
+    return normalised( out );
+}
+
+// Columns f(j) = f(2n - 1 - j): x[j] at j' = j / 2 for even j, n - 1 - (j - 1) / 2 for odd, gives f(2 j').
+std::vector<Use> reflect_match( const Sum& s, const Plan_options& )
+{
+    const Sum even = reindexed( s, 2, 0 );
+    if( s.n < 2 || even == normalised( s ) || reindexed( s, -2, 2 * i64 { s.n } - 1 ) != even )
+    {
+        return {};
+    }
+    return { { { { 1, even } }, {}, "reflect" } };
+}
+
+std::vector<u32> reflect_build( Circuit& c, const Sum& s, const Use& use, const std::vector<u32>& x, const Part_builder& part )
+{
+    std::vector<u32> v( s.n );
+    for( u32 j = 0; j < s.n; ++j )
+    {
+        v[j % 2 == 0 ? j / 2 : s.n - 1 - ( j - 1 ) / 2] = x[j];
+    }
+    return part( c, use.parts[0].second, v );
+}
+
 // First, so a call wins a tie.
 const Rule rules[] = {
     { "promised", "a function promising DFT_M computes it", promised_match, promised_build },
@@ -795,6 +854,10 @@ const Rule rules[] = {
       "for real x, the sum over x of conj(K) is conj of the sum of K, so c W^e + c W^-e is 2 Re(c W^e)",
       conjugate_match,
       conjugate_build },
+    { "reflect",
+      "f(j) = f(2n - 1 - j): the odd j read reversed are the even columns past n, so the sum is over f(2 j')",
+      reflect_match,
+      reflect_build },
     { "periodic", "W^M = 1: columns j and j + M are equal, and so are rows k and k + M", periodic_match, periodic_build },
     { "split",
       "j = j1 + P j2, k = k2 + R k1: W^(c j k) = W^(c P j2 k2) W^(c j1 k2) W^(c R j1 k1) when c P R = 0 mod M",
@@ -1207,9 +1270,27 @@ TEST_CASE( "a_128_point_dct_ii_pairs_its_conjugate_terms", "[linear][sums]" )
     const Sum     s = dct_ii( 128 );
     const Planned p = planned( s );
     INFO( p.how << " " << p.cost.adds << "/" << p.cost.muls );
-    CHECK( p.how.starts_with( "conjugate(factor(" ) );
-    CHECK( p.cost.adds + p.cost.muls <= ( 128 * 128 + 127 * 128 ) / 5 ); // a fifth of the direct sum
+    CHECK( p.how.starts_with( "reflect(conjugate(factor(" ) );
+    CHECK( p.cost.adds + p.cost.muls <= ( 128 * 128 + 127 * 128 ) / 10 ); // a tenth of the direct sum
     CHECK( error( p, s ) < 1e-12 );
+}
+
+// The rule alone, its part summed directly.
+TEST_CASE( "an_odd_length_dct_ii_reflects", "[linear][sums]" )
+{
+    const Sum              s    = dct_ii( 15 );
+    const std::vector<Use> uses = reflect_match( s, {} );
+    REQUIRE( uses.size() == 1 );
+    Circuit          c( true );
+    std::vector<u32> x( s.n );
+    for( u32 j = 0; j < s.n; ++j )
+    {
+        x[j] = c.input( j );
+    }
+    const std::vector<u32> out = reflect_build(
+        c, s, uses[0], x, []( Circuit& c, const Sum& part, const std::vector<u32>& in ) { return direct( c, part, in ); }
+    );
+    CHECK( error( c, out, s ) < 1e-12 );
 }
 
 // KEEL_SUM="n M c" plans a large kernel and prints it, and "dct n" a DCT-II: keel_tests "[sums_large]".
