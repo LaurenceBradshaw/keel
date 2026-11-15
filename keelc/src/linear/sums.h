@@ -72,7 +72,8 @@ struct Promised
 
 struct Plan_options
 {
-    u32                   leaf_max = 64; // largest side handed to solve
+    u32                   leaf_max  = 64;         // largest side handed to solve
+    u64                   leaf_fuel = 10'000'000; // most of solve's fuel a leaf gets, as other routes compete with it
     Solve_options         solve;
     std::filesystem::path cache {}; // where solved leaves are kept, as solve_linear_maps keeps whole maps
     // Leaves solved with these options, by n, m, M, c and whether x is real.

@@ -347,6 +347,7 @@ bool prime_power( u64 M )
 
 // A side not dividing M has no structure the solver finds, and costs it minutes; so has a side below
 // an M that is not a power of 2. A complex M of coprime factors is theirs by pfa; a real one keeps its symmetry.
+// A unit c on a full side relabels it: output k is c = 1's output c k, or input j its input c j.
 std::vector<Use> solved_match( const Sum& s, const Plan_options& options )
 {
     const std::optional<Kernel> k = kernel_of( s );
@@ -356,38 +357,53 @@ std::vector<Use> solved_match( const Sum& s, const Plan_options& options )
     {
         return {};
     }
+    const bool       outs = k->m == k->M, ins = !outs && k->n == k->M;
+    const u64        c = std::gcd( k->c, k->M ) == 1 && ( outs || ins ) ? 1 : k->c;
     Field            field( s.real ? Ring_kind::Real : Ring_kind::Complex, static_cast<u32>( k->M ) );
     std::vector<Row> rows( k->m );
     for( u32 o = 0; o < k->m; ++o )
     {
         for( u32 j = 0; j < k->n; ++j )
         {
-            rows[o].push_back( field.root( static_cast<u32>( k->c * j % k->M * o % k->M ) ) );
+            rows[o].push_back( field.root( static_cast<u32>( c * j % k->M * o % k->M ) ) );
         }
     }
-    const std::array<u64, 5> key { k->n, k->m, k->M, k->c, s.real };
+    const std::array<u64, 5> key { k->n, k->m, k->M, c, s.real };
     auto                     at = options.solved.find( key );
     if( at == options.solved.end() )
     {
+        Solve_options solve_options = options.solve;
+        if( solve_options.fuel == 0 || solve_options.fuel > options.leaf_fuel )
+        {
+            solve_options.fuel = options.leaf_fuel;
+        }
         std::optional<Circuit> found =
-            options.cache.empty() ? std::nullopt : cached_circuit( options.cache, field, rows, options.solve );
+            options.cache.empty() ? std::nullopt : cached_circuit( options.cache, field, rows, solve_options );
         if( !found )
         {
-            found = solve( field, rows, options.solve ).circuit;
+            found = solve( field, rows, solve_options ).circuit;
             if( !options.cache.empty() )
             {
-                cache_circuit( options.cache, field, rows, options.solve, *found );
+                cache_circuit( options.cache, field, rows, solve_options, *found );
             }
         }
         at = options.solved.emplace( key, std::move( *found ) ).first;
     }
-    Planned leaf;
-    for( const Row& r : rows )
+    const u64 u = c == k->c ? 1 : k->c;
+    Planned   leaf;
+    leaf.circuit = Circuit( s.real );
+    std::vector<u32> x( k->n );
+    for( u32 j = 0; j < k->n; ++j )
     {
-        leaf.outputs.push_back( at->second.outputs.at( r ) );
+        x[ins ? u * j % k->M : j] = leaf.circuit.input( j );
     }
-    leaf.cost    = at->second.cost();
-    leaf.circuit = at->second;
+    const std::vector<u32> nodes = leaf.circuit.paste( at->second, x );
+    for( u32 o = 0; o < k->m; ++o )
+    {
+        leaf.outputs.push_back( nodes[at->second.outputs.at( rows[outs ? u * o % k->M : o] )] );
+        leaf.circuit.outputs[Row { Element { o } }] = leaf.outputs.back();
+    }
+    leaf.cost = leaf.circuit.cost();
     return { { {}, leaf.cost, "solved " + sides( s ) + " W" + std::to_string( k->M ), std::move( leaf ) } };
 }
 
@@ -2050,6 +2066,26 @@ TEST_CASE( "a_dft_of_coprime_factors_costs_its_factors_alone", "[linear][sums]" 
     CHECK( p.how.starts_with( "pfa " ) );
     CHECK( p.cost == 5 * planned( exponent_kernel( 3, 3, 3, 1 ) ).cost + 3 * planned( exponent_kernel( 5, 5, 5, 1 ) ).cost );
     CHECK( error( p, s ) < 1e-12 );
+}
+
+TEST_CASE( "a_unit_multiple_kernel_on_a_full_side_reuses_the_plain_leaf", "[linear][sums]" )
+{
+    Plan_options options;
+    for( const auto& [n, m] : { std::pair<u32, u32> { 16, 16 }, { 2, 16 }, { 16, 4 } } )
+    {
+        INFO( n << "x" << m );
+        const std::optional<Planned> plain = plan_sum( exponent_kernel( n, m, 16, 1 ), options );
+        const Sum                    s     = exponent_kernel( n, m, 16, 3 );
+        const std::optional<Planned> p     = plan_sum( s, options );
+        REQUIRE( plain );
+        REQUIRE( p );
+        CHECK( p->cost == plain->cost );
+        CHECK( error( *p, s ) < 1e-12 );
+    }
+    for( const auto& [key, circuit] : options.solved )
+    {
+        CHECK( ( key[3] == 1 || std::gcd( key[3], key[2] ) != 1 || ( key[0] < key[2] && key[1] < key[2] ) ) );
+    }
 }
 
 TEST_CASE( "a_sum_no_other_rule_takes_is_summed_directly", "[linear][sums]" )
