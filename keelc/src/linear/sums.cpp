@@ -327,13 +327,28 @@ std::vector<u32> direct_build( Circuit& c, const Sum& s, const Use&, const std::
     return direct( c, s, x );
 }
 
+bool prime_power( u64 M )
+{
+    u64 p = 2;
+    while( M > 1 && M % p != 0 )
+    {
+        ++p;
+    }
+    while( M % p == 0 )
+    {
+        M /= p;
+    }
+    return M == 1;
+}
+
 // A side not dividing M has no structure the solver finds, and costs it minutes; so has a side below
-// an M that is not a power of 2.
+// an M that is not a power of 2. A complex M of coprime factors is theirs by pfa; a real one keeps its symmetry.
 std::vector<Use> solved_match( const Sum& s, const Plan_options& options )
 {
     const std::optional<Kernel> k = kernel_of( s );
     if( !k || k->n > options.leaf_max || k->m > options.leaf_max || k->M > 4 * options.leaf_max || k->n * k->m < 4 ||
-        k->M % k->n != 0 || k->M % k->m != 0 || ( ( k->n < k->M || k->m < k->M ) && !std::has_single_bit( k->M ) ) )
+        k->M % k->n != 0 || k->M % k->m != 0 || ( ( k->n < k->M || k->m < k->M ) && !std::has_single_bit( k->M ) ) ||
+        ( !s.real && !prime_power( k->M ) ) )
     {
         return {};
     }
@@ -555,6 +570,78 @@ std::vector<u32> split_build( Circuit& c, const Sum& s, const Use& use, const st
     return out;
 }
 
+// The inverse of a mod m, for coprime a and m.
+u64 inverse_mod( u64 a, u64 m )
+{
+    u64 x = 1;
+    while( a * x % m != 1 % m )
+    {
+        ++x;
+    }
+    return x;
+}
+
+// DFT_N for N = N1 N2 coprime, by j = N2 j1 + N1 j2 and k = N2 (N2^-1 mod N1) k1 + N1 (N1^-1 mod N2) k2.
+// Not on real x: its second stage would lose the symmetry hermitian keeps.
+std::vector<Use> pfa_match( const Sum& s, const Plan_options& )
+{
+    const std::optional<Kernel> k = kernel_of( s );
+    if( !k || s.real || k->n != k->M || k->m != k->M || k->c == 0 || std::gcd( k->c, k->M ) != 1 )
+    {
+        return {};
+    }
+    std::vector<Use> uses;
+    for( u64 N1 = 2; N1 < k->M; ++N1 )
+    {
+        const u64 N2 = k->M / N1;
+        if( k->M % N1 != 0 || std::gcd( N1, N2 ) != 1 )
+        {
+            continue;
+        }
+        Sum a   = kernel_sum( { static_cast<u32>( N1 ), static_cast<u32>( N1 ), N1, k->c % N1 }, false );
+        Sum b   = kernel_sum( { static_cast<u32>( N2 ), static_cast<u32>( N2 ), N2, k->c % N2 }, false );
+        a.batch = static_cast<u32>( N2 );
+        b.batch = static_cast<u32>( N1 );
+        uses.push_back(
+            { { { 1, a }, { 1, b } }, {}, "pfa " + std::to_string( N1 ) + "x" + std::to_string( N2 ), {}, { N1, N2 } }
+        );
+    }
+    return uses;
+}
+
+std::vector<u32> pfa_build( Circuit& c, const Sum& s, const Use& use, const std::vector<u32>& x, const Part_builder& part )
+{
+    const auto [N1, N2] = use.chosen;
+    const u64        N  = s.M;
+    std::vector<u32> in( N );
+    for( u64 j2 = 0; j2 < N2; ++j2 )
+    {
+        for( u64 j1 = 0; j1 < N1; ++j1 )
+        {
+            in[j2 * N1 + j1] = x[( N2 * j1 + N1 * j2 ) % N];
+        }
+    }
+    const std::vector<u32> z = part( c, use.parts[0].second, in );
+    for( u64 k1 = 0; k1 < N1; ++k1 )
+    {
+        for( u64 j2 = 0; j2 < N2; ++j2 )
+        {
+            in[k1 * N2 + j2] = z[j2 * N1 + k1];
+        }
+    }
+    const std::vector<u32> w  = part( c, use.parts[1].second, in );
+    const u64              e1 = N2 * inverse_mod( N2 % N1, N1 ), e2 = N1 * inverse_mod( N1 % N2, N2 );
+    std::vector<u32>       y( N );
+    for( u64 k1 = 0; k1 < N1; ++k1 )
+    {
+        for( u64 k2 = 0; k2 < N2; ++k2 )
+        {
+            y[( e1 * k1 + e2 * k2 ) % N] = w[k1 * N2 + k2];
+        }
+    }
+    return y;
+}
+
 // The least power of 2 at least n + m - 1, when M is not one, so a convolution's transforms never
 // need another. Other lengths' leaves cost the solver minutes.
 std::optional<u64> length( u32 n, u32 m, u64 M )
@@ -693,6 +780,113 @@ convolution_build( Circuit& c, const Sum& s, const Use& use, const std::vector<u
         X[f] = c.scale( X[f], H[f] );
     }
     return part( c, use.parts[1].second, X );
+}
+
+// A generator of the units mod p, or 0 when p is not prime.
+u64 primitive_root( u64 p )
+{
+    std::vector<u64> factors;
+    u64              r = p - 1;
+    for( u64 q = 2; q * q <= p; ++q )
+    {
+        if( p % q == 0 )
+        {
+            return 0;
+        }
+    }
+    for( u64 q = 2; q * q <= r; ++q )
+    {
+        if( r % q == 0 )
+        {
+            factors.push_back( q );
+            while( r % q == 0 )
+            {
+                r /= q;
+            }
+        }
+    }
+    if( r > 1 )
+    {
+        factors.push_back( r );
+    }
+    const auto power = [p]( u64 b, u64 e )
+    {
+        u64 v = 1;
+        for( ; e != 0; e >>= 1, b = b * b % p )
+        {
+            v = e & 1 ? v * b % p : v;
+        }
+        return v;
+    };
+    for( u64 g = 2; g < p; ++g )
+    {
+        if( std::ranges::all_of( factors, [&]( u64 q ) { return power( g, ( p - 1 ) / q ) != 1; } ) )
+        {
+            return g;
+        }
+    }
+    return 0;
+}
+
+// DFT_p for prime p, inputs at j = g^a and outputs at k = g^-b, is x[0] plus a cyclic convolution of length p - 1.
+std::vector<Use> rader_match( const Sum& s, const Plan_options& )
+{
+    const std::optional<Kernel> k = kernel_of( s );
+    if( !k || k->c == 0 || k->n != k->M || k->m != k->M || k->M < 3 || k->M > 1 << 20 || primitive_root( k->M ) == 0 )
+    {
+        return {};
+    }
+    const u32  L = static_cast<u32>( k->M - 1 );
+    const Cost own =
+        Cost { s.real ? 2u : 4u, 0 } + scale_cost( -1.0 / L, true ) + ( L - 1 ) * scale_cost( { 0.3, 0.7 }, false );
+    return {
+        { { { 1, kernel_sum( { L, L, L, 1 }, s.real ) }, { 1, kernel_sum( { L, L, L, L - 1 }, false ) } },
+          own,
+          "rader " + std::to_string( k->M ) }
+    };
+}
+
+std::vector<u32> rader_build( Circuit& c, const Sum& s, const Use& use, const std::vector<u32>& x, const Part_builder& part )
+{
+    const Kernel     k = *kernel_of( s );
+    const u64        p = k.M, L = p - 1, g = primitive_root( p );
+    std::vector<u64> at( L ); // g^a
+    at[0] = 1;
+    for( u64 a = 1; a < L; ++a )
+    {
+        at[a] = at[a - 1] * g % p;
+    }
+    std::vector<u32> u( L );
+    for( u64 a = 0; a < L; ++a )
+    {
+        u[a] = x[at[a]];
+    }
+    std::vector<u32>               U = part( c, use.parts[0].second, u );
+    std::vector<u32>               V( L );
+    std::vector<std::complex<f64>> w( L ), W( L );
+    for( u64 t = 0; t < L; ++t )
+    {
+        w[t] = root( k.c * at[( L - t ) % L] % p, p );
+        W[t] = root( t, L );
+    }
+    for( u64 f = 0; f < L; ++f )
+    {
+        std::complex<f64> H = 0;
+        for( u64 t = 0; t < L; ++t )
+        {
+            H += w[t] * W[f * t % L];
+        }
+        V[f] = c.scale( U[f], H / static_cast<f64>( L ) );
+    }
+    V[0]               = c.add( V[0], x[0] );
+    std::vector<u32> v = part( c, use.parts[1].second, V );
+    std::vector<u32> y( p );
+    y[0] = c.add( x[0], U[0] );
+    for( u64 b = 0; b < L; ++b )
+    {
+        y[at[( L - b ) % L]] = v[b];
+    }
+    return y;
 }
 
 // DFT_M taking x[j] for j < n, zero past it, and giving y[k] for k < m, by a function that promises it.
@@ -1343,11 +1537,20 @@ const Rule rules[] = {
       false,
       true },
     { "periodic", "W^M = 1: columns j and j + M are equal, and so are rows k and k + M", periodic_match, periodic_build },
+    { "pfa",
+      "for coprime N1 N2 = N, j = N2 j1 + N1 j2 and k = k1 mod N1, k2 mod N2: W_N^(jk) = W_N1^(j1 k1) W_N2^(j2 k2)",
+      pfa_match,
+      pfa_build },
     { "split",
       "j = j1 + P j2, k = k2 + R k1: W^(c j k) = W^(c P j2 k2) W^(c j1 k2) W^(c R j1 k1) when c P R = 0 mod M",
       split_match,
       split_build },
     { "chirp", "j k = (j^2 + k^2 - (k - j)^2) / 2", chirp_match, chirp_build },
+    { "rader",
+      "for prime p and a generator g, W^(c g^a g^-b) = W^(c g^(a - b)): DFT_p less x[0] is a cyclic convolution of length p - "
+      "1",
+      rader_match,
+      rader_build },
     { "convolution",
       "sum over j of x[j] h(k - j) is a cyclic convolution once padded, and DFT_L takes one to a product",
       convolution_match,
@@ -1796,18 +1999,29 @@ TEST_CASE( "an_offset_no_column_matches_is_added_to_each_output", "[linear][sums
     CHECK( error( p, s ) < 1e-12 );
 }
 
-TEST_CASE( "a_prime_dft_is_a_convolution_of_a_power_of_2", "[linear][sums]" )
+TEST_CASE( "a_prime_dft_is_a_cyclic_convolution_of_length_p_minus_1", "[linear][sums]" )
 {
     for( const u32 N : { 67u, 127u } )
     {
         const Sum     s = exponent_kernel( N, N, N, 1 );
         const Planned p = planned( s );
         INFO( N << " " << p.how << " " << p.cost.adds << "/" << p.cost.muls );
-        CHECK( p.how.starts_with( "chirp(" ) );
+        CHECK( p.how.starts_with( "rader " ) );
         const Cost naive = direct_match( s, {} )[0].own;
         CHECK( 2 * ( p.cost.adds + p.cost.muls ) < naive.adds + naive.muls );
         CHECK( error( p, s ) < 1e-12 );
     }
+}
+
+// 5 DFT_3 then 3 DFT_5, with no twiddles between.
+TEST_CASE( "a_dft_of_coprime_factors_costs_its_factors_alone", "[linear][sums]" )
+{
+    const Sum     s = exponent_kernel( 15, 15, 15, 1 );
+    const Planned p = planned( s );
+    INFO( p.how << " " << p.cost.adds << "/" << p.cost.muls );
+    CHECK( p.how.starts_with( "pfa " ) );
+    CHECK( p.cost == 5 * planned( exponent_kernel( 3, 3, 3, 1 ) ).cost + 3 * planned( exponent_kernel( 5, 5, 5, 1 ) ).cost );
+    CHECK( error( p, s ) < 1e-12 );
 }
 
 TEST_CASE( "a_sum_no_other_rule_takes_is_summed_directly", "[linear][sums]" )

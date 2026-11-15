@@ -87,7 +87,8 @@ struct Plan_options
 // k = k2 + R k1 splits the sum into sums over j2, a twiddle W^(c j1 k2) and sums over j1, once the
 // cross term c P R j2 k1 is 0 mod M; two real copies of a hermitian kernel are one complex sum. Columns
 // equal up to sign under a reflection fold or reorder, a j power that is a multiple of the jk one shifts
-// the outputs, and a sum may be its transpose's circuit run backwards.
+// the outputs, and a sum may be its transpose's circuit run backwards. A complex DFT of coprime factors is
+// theirs with no twiddle (Good-Thomas), and a prime one a cyclic convolution of length p - 1 (Rader).
 // Small kernels are solved. Nothing when no rule takes the sum.
 std::optional<Planned> plan_sum( const Sum& sum, const Plan_options& options = {} );
 } // namespace keel
