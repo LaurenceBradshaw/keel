@@ -236,14 +236,20 @@ enum class Aux_meaning : u8
 
 Aux_meaning aux_meaning( Node_kind kind );
 
-// Which of `@trig_sin`, `@trig_cos` and `@trig_tan` a function is written with.
-enum class Trig : u8
+// Which of `@trig_sin`, `@trig_cos`, `@trig_tan` and `@dft` a function is written with.
+enum class Promise : u8
 {
     None,
     Sin,
     Cos,
-    Tan
+    Tan,
+    Dft
 };
+
+constexpr bool is_trig( Promise promise )
+{
+    return promise == Promise::Sin || promise == Promise::Cos || promise == Promise::Tan;
+}
 
 // D29: a struct and a class differ in rules, not shape. Field layout, containment ordering and C
 // emission treat them identically; only the rule checks read the kind directly.

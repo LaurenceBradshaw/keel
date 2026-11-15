@@ -8,6 +8,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -22,9 +23,11 @@ enum class Op_kind : u8
     Add,
     Scale,
     Real,
+    Result,
 };
 
 // Input: `a` is the input. Add: `a <= b` are nodes. Scale: node `a` times constant `b`. Real: node `a`'s real part.
+// Result: output `b` of call `a`.
 struct Op
 {
     Op_kind kind;
@@ -63,6 +66,16 @@ using Row = std::vector<Element>;
 // `unit` when the ring says it is free.
 Cost scale_cost( std::complex<f64> c, bool real, bool unit = false );
 
+// A call of a function promising y[k] = sum over j < n of x[j] W_n^(j k), n the arguments' count, with x
+// and y conjugated when `conjugate`, so the inverse. An argument of k_zero is zero; `cost` is the callee's.
+struct Call
+{
+    u32              callee;
+    Cost             cost;
+    bool             conjugate = false;
+    std::vector<u32> arguments;
+};
+
 // A hash-consed straight-line circuit over inputs, adds, scalings and real parts. Constants are snapped
 // complex floats, since sub-circuits from other fields are pasted in; an integer ring's stay exact.
 // A node is real when its inputs are and its constants keep it so; only live parts are counted.
@@ -78,6 +91,14 @@ public:
     u32 scale( u32 a, std::complex<f64> c );
     u32 scale( u32 a, Element c );
     u32 real_part( u32 a );
+    // `call`, made once however often it is asked for; result( id, k ) is its output k.
+    u32 call( Call call );
+    u32 result( u32 call, u32 k );
+
+    const std::vector<Call>& calls() const
+    {
+        return calls_;
+    }
 
     bool real() const
     {
@@ -100,7 +121,7 @@ public:
     std::string text() const;
 
     // Every op and constant verbatim, and each of `rows`' outputs by its index; load() reads it back
-    // as the same circuit, or nothing for text it did not write.
+    // as the same circuit, or nothing for text it did not write. A circuit with calls is never saved.
     std::string                   saved( const std::vector<Row>& rows ) const;
     static std::optional<Circuit> load( std::string_view text, Field& field, const std::vector<Row>& rows );
 
@@ -140,21 +161,26 @@ private:
         Element           exact; // in `integers_` only
     };
 
-    u32      put( Op op );
-    u32      scale_by( u32 a, Constant c );
-    u32      scale_node( u32 a, Constant c );
-    Constant make( std::complex<f64> c ) const;
-    Constant make( Element c ) const;
-    Constant times( Constant x, Constant y ) const;
-    bool     is_unit( Constant c ) const;
+    u32 put( Op op );
+    u32 call_from( const Circuit& sub, u32 c, const std::vector<u32>& nodes, bool conjugate );
+    // Each live node's users, an output counting as one.
+    std::vector<u32> uses( const std::vector<bool>& lv ) const;
+    u32              scale_by( u32 a, Constant c );
+    u32              scale_node( u32 a, Constant c );
+    Constant         make( std::complex<f64> c ) const;
+    Constant         make( Element c ) const;
+    Constant         times( Constant x, Constant y ) const;
+    bool             is_unit( Constant c ) const;
 
     bool   real_;
     Field* integers_ = nullptr;
 
-    std::vector<Op>                    ops_;
-    std::vector<bool>                  real_ops_; // each op's value is real
-    std::unordered_map<u64, u32>       memo_;
-    std::vector<Constant>              constants_;
-    std::map<std::pair<f64, f64>, u32> constant_ids_;
+    std::vector<Op>                                        ops_;
+    std::vector<bool>                                      real_ops_; // each op's value is real
+    std::unordered_map<u64, u32>                           memo_;
+    std::vector<Constant>                                  constants_;
+    std::map<std::pair<f64, f64>, u32>                     constant_ids_;
+    std::vector<Call>                                      calls_;
+    std::map<std::tuple<u32, bool, std::vector<u32>>, u32> call_ids_;
 };
 } // namespace keel

@@ -420,8 +420,8 @@ struct Function
 
     bool diverges = false; // returns `never`, so no path may reach a Return
 
-    bool real_arithmetic = false;      // written `@real_arithmetic`
-    Trig trig            = Trig::None; // written `@trig_sin`, `@trig_cos` or `@trig_tan`
+    bool    real_arithmetic = false;         // written `@real_arithmetic`
+    Promise promise         = Promise::None; // written `@trig_sin`, `@trig_cos`, `@trig_tan` or `@dft`
 
     Run<Statement> statements_of( const Block& block )
     {

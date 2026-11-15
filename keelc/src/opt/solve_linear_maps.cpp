@@ -116,7 +116,8 @@ bool replace_with(
     Cost                           input,
     const Type_table&              types,
     Literal_pool&                  literals,
-    const std::vector<Row>&        rows = {}
+    const std::vector<Row>&        rows    = {},
+    const Callees&                 callees = {}
 )
 {
     if( circuit.cost() >= input )
@@ -135,7 +136,7 @@ bool replace_with(
         outputs.push_back( places.place( v ) );
     }
     std::vector<Statement> body = places.take_prologue();
-    for( Statement& s : lower_circuit( func, circuit, field, nodes, inputs, outputs, type, literals, span, rows ) )
+    for( Statement& s : lower_circuit( func, circuit, field, nodes, inputs, outputs, type, literals, span, rows, callees ) )
     {
         body.push_back( std::move( s ) );
     }
@@ -146,37 +147,60 @@ bool replace_with(
 } // namespace
 
 Map_outcome solve_linear_maps(
-    Function&                    func,
-    const std::vector<Function>& functions,
-    const Purity&                purity,
-    const Type_table&            types,
-    Literal_pool&                literals,
-    const std::filesystem::path& cache,
-    const Solve_options&         options,
-    const Global_constants&      globals
+    Function&                                              func,
+    const std::vector<Function>&                           functions,
+    const Purity&                                          purity,
+    const Type_table&                                      types,
+    Literal_pool&                                          literals,
+    const std::filesystem::path&                           cache,
+    const Solve_options&                                   options,
+    const Global_constants&                                globals,
+    const std::function<std::optional<Promised>( u64 n )>& promised
 )
 {
+    // A call's callee, its parameters `f64[N]*`.
+    const Callees callees = [&]( u32 f )
+    {
+        const Function& to = functions[f];
+        Callee          callee {
+                     .declaration    = to.declaration,
+                     .type_arguments = to.type_arguments,
+                     .parameters     = {},
+                     .array          = {},
+                     .index          = types.integer( 64, false ),
+                     .none           = types.builtin( Type_kind::Void ),
+        };
+        for( u32 p = 0; p < 4; ++p )
+        {
+            callee.parameters[p] = to.locals[Local_id { p + 1 }].type;
+        }
+        callee.array = types.get( callee.parameters[0] ).element;
+        return callee;
+    };
+
     // Past what solve takes whole, the loops are read as a sum rather than run.
     if( const std::optional<Read_kernel> read = read_kernel( func, functions, purity, types, literals, globals );
         read && read->sum.n > Plan_options {}.leaf_max )
     {
-        if( const std::optional<Planned> planned = plan_sum( read->sum, { .solve = options, .cache = cache } ) )
+        if( const std::optional<Planned> planned =
+                plan_sum( read->sum, { .solve = options, .cache = cache, .promised = promised } ) )
         {
             const Field complex( Ring_kind::Complex, 4 );
-            return {
-                .solved = replace_with(
-                    func,
-                    planned->circuit,
-                    complex,
-                    planned->outputs,
-                    read->inputs,
-                    read->outputs,
-                    types.floating( 64 ),
-                    read->input,
-                    types,
-                    literals
-                )
-            };
+            const bool  solved = replace_with(
+                func,
+                planned->circuit,
+                complex,
+                planned->outputs,
+                read->inputs,
+                read->outputs,
+                types.floating( 64 ),
+                read->input,
+                types,
+                literals,
+                {},
+                callees
+            );
+            return { .solved = solved, .cost = solved ? planned->circuit.cost() : read->input };
         }
     }
 
@@ -210,6 +234,6 @@ Map_outcome solve_linear_maps(
         literals,
         map.rows
     );
-    return { .solved = solved, .cached = cached, .ending = std::nullopt };
+    return { .solved = solved, .cached = cached, .ending = std::nullopt, .cost = solved ? found->cost() : map.input };
 }
 } // namespace keel

@@ -1,0 +1,54 @@
+// Each `@dft` below but `kept` is not the transform it promises, one error apiece at its directive.
+import kl::math;
+
+@dft
+void kept<u64 N>( const ref f64[N] re, const ref f64[N] im, ref f64[N] yr, ref f64[N] yi )
+{
+    for( u64 k = 0; k < N; k += 1 )
+    {
+        f64 sr = 0.0;
+        f64 si = 0.0;
+        for( u64 j = 0; j < N; j += 1 )
+        {
+            const f64 t = -2.0 * kl::pi * cast<f64>( j * k % N ) / cast<f64>( N );
+            sr += re[j] * kl::cos( t ) - im[j] * kl::sin( t );
+            si += re[j] * kl::sin( t ) + im[j] * kl::cos( t );
+        }
+        yr[k] = sr;
+        yi[k] = si;
+    }
+}
+
+// The inverse: the wrong sign.
+@dft
+void inverse( const ref f64[4] re, const ref f64[4] im, ref f64[4] yr, ref f64[4] yi )
+{
+    for( u64 k = 0; k < 4; k += 1 )
+    {
+        f64 sr = 0.0;
+        f64 si = 0.0;
+        for( u64 j = 0; j < 4; j += 1 )
+        {
+            const f64 t = 2.0 * kl::pi * cast<f64>( j * k % 4 ) / cast<f64>( 4 );
+            sr += re[j] * kl::cos( t ) - im[j] * kl::sin( t );
+            si += re[j] * kl::sin( t ) + im[j] * kl::cos( t );
+        }
+        yr[k] = sr;
+        yi[k] = si;
+    }
+}
+
+@dft
+void copies( const ref f64[8] re, const ref f64[8] im, ref f64[8] yr, ref f64[8] yi )
+{
+    yr = re;
+    yi = im;
+}
+
+@dft
+void squares( const ref f64[2] re, const ref f64[2] _, ref f64[2] yr, ref f64[2] _ )
+{
+    yr[0] = re[0] * re[0];
+}
+
+i32 main() { return 0; }

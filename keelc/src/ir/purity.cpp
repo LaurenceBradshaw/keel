@@ -8,13 +8,18 @@ namespace keel
 {
 Purity::Purity( const std::vector<Function>& functions, const Ast& ast )
     : functions_( functions ),
-      ast_( ast ),
-      pure_( functions.size(), false ),
-      removable_( functions.size(), false )
+      ast_( ast )
 {
-    for( u32 f = 0; f < functions.size(); ++f )
+    add();
+}
+
+void Purity::add()
+{
+    for( u32 f = u32( pure_.size() ); f < functions_.size(); ++f )
     {
-        const Function& func = functions[f];
+        pure_.push_back( false );
+        removable_.push_back( false );
+        const Function& func = functions_[f];
         by_declaration_[func.declaration.v].push_back( f );
 
         for( const Statement& statement : func.statements )

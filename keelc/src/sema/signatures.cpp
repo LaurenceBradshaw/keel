@@ -124,6 +124,7 @@ void Signatures::declare()
     check_operators();
     check_struct_ownership();
     declare_functions();
+    check_promise_ties();
     declare_globals();
     places_.record_borrowed_parameters();
     overloads_.check_overload_sets();
@@ -771,7 +772,7 @@ void Signatures::declare_functions()
             extern_types_.check( child );
         }
 
-        check_trig( child );
+        check_promise( child );
 
         if( ast_.is_intrinsic( child ) && child != table_.prelude().sqrt_f64 && child != table_.prelude().sqrt_f32 )
         {
@@ -889,21 +890,22 @@ void Signatures::declare_member_functions()
                 }
             }
 
-            check_trig( member );
+            check_promise( member );
         }
     }
 }
 
-void Signatures::check_trig( Node_id decl )
+void Signatures::check_promise( Node_id decl )
 {
-    if( ast_.trig( decl ) == Trig::None )
+    const Promise promise = ast_.promise( decl );
+    if( promise == Promise::None )
     {
         return;
     }
 
-    const Type_id f64    = table_.floating( 64 );
-    const auto    params = ast_.params( decl );
-    bool          fits   = types_.type_of( decl ) == f64 && params.size() == 1;
+    const Type_id f64      = table_.floating( 64 );
+    const Type_id returned = types_.type_of( decl );
+    const auto    params   = ast_.params( decl );
     std::string   taken;
 
     for( const Node_id param : params )
@@ -911,32 +913,121 @@ void Signatures::check_trig( Node_id decl )
         const Keyword mode = ast_.parameter_mode( param );
         const Type_id type = types_.type_of( param );
 
-        fits = fits && mode == Keyword::Count && type == f64;
-
         taken += taken.empty() ? "" : ", ";
-        const Node_id annotation = ast_.annotation( param );
-        taken += annotation.is_valid() && ast_.kind( annotation ) == Node_kind::Const_type ? "const " : "";
+        taken += is_const_annotated( param ) ? "const " : "";
         taken += mode == Keyword::Count ? "" : std::string( interner_.text( Interner::keyword( mode ) ) ) + " ";
         taken += table_.is_error( type ) ? "?" : table_.name( type );
     }
 
+    const bool fits = promise == Promise::Dft
+                          ? fits_dft( decl )
+                          : returned == f64 && params.size() == 1 && ast_.parameter_mode( params[0] ) == Keyword::Count &&
+                                types_.type_of( params[0] ) == f64;
     if( fits )
     {
         return;
     }
 
-    const Type_id returned = types_.type_of( decl );
-
     reporter_.error_at(
-        ast_.trig_span( decl ),
+        ast_.promise_span( decl ),
         fmt::format(
-            "`{}` is `{}{}`, but a `@trig_` function is `f64( f64 )`",
+            "`{}` is `{}{}`, but a `{}` function is `{}`",
             interner_.text( ast_.name( decl ) ),
             table_.is_error( returned ) ? "?" : table_.name( returned ),
-            taken.empty() ? "()" : "( " + taken + " )"
+            taken.empty() ? "()" : "( " + taken + " )",
+            promise == Promise::Dft ? "@dft" : "@trig_",
+            promise == Promise::Dft ? "void( const ref f64[N], const ref f64[N], ref f64[N], ref f64[N] )" : "f64( f64 )"
         ),
-        "it takes one `f64` by value and returns an `f64`"
+        promise == Promise::Dft ? "it reads `re` and `im` and writes their transform; `N` is a constant or its one `u64` "
+                                  "type parameter"
+                                : "it takes one `f64` by value and returns an `f64`"
     );
+}
+
+// One `@dft` for each N a module finds: a fixed one is taken over a generic at its N, so two generics,
+// or two fixed at one N, both found from one module, are an error, once a pair.
+void Signatures::check_promise_ties()
+{
+    std::vector<Node_id> dfts;
+    std::vector<File_id> files;
+    for( const Node_id decl : ast_.declarations( ast_.root() ) )
+    {
+        if( ast_.promise( decl ) == Promise::Dft && fits_dft( decl ) )
+        {
+            dfts.push_back( decl );
+        }
+        const File_id file = ast_.span( decl ).file;
+        if( std::ranges::find( files, file ) == files.end() )
+        {
+            files.push_back( file );
+        }
+    }
+    const Module_graph& modules = resolution_.modules();
+    const auto          size    = [&]( Node_id dft ) { return table_.get( types_.type_of( ast_.params( dft )[0] ) ).count; };
+    for( std::size_t b = 1; b < dfts.size(); ++b )
+    {
+        for( std::size_t a = 0; a < b; ++a )
+        {
+            const bool generic = ast_.is_generic( dfts[a] ) && ast_.is_generic( dfts[b] );
+            const bool fixed = !ast_.is_generic( dfts[a] ) && !ast_.is_generic( dfts[b] ) && size( dfts[a] ) == size( dfts[b] );
+            if( ( !generic && !fixed ) ||
+                std::ranges::none_of(
+                    files,
+                    [&]( File_id from )
+                    { return finds_promise( modules, ast_, from, dfts[a] ) && finds_promise( modules, ast_, from, dfts[b] ); }
+                ) )
+            {
+                continue;
+            }
+            reporter_.error_at(
+                ast_.promise_span( dfts[b] ),
+                fmt::format(
+                    "`{}` and `{}` are both `@dft` {}, and one module finds both",
+                    interner_.text( ast_.name( dfts[a] ) ),
+                    interner_.text( ast_.name( dfts[b] ) ),
+                    generic ? "for every N" : fmt::format( "at N = {}", size( dfts[b] ) )
+                ),
+                "a module finds one `@dft` for each N; a fixed one is taken over a generic at its N"
+            );
+        }
+    }
+}
+
+bool Signatures::is_const_annotated( Node_id param ) const
+{
+    const Node_id annotation = ast_.annotation( param );
+    return annotation.is_valid() && ast_.kind( annotation ) == Node_kind::Const_type;
+}
+
+// `void( const ref f64[N], const ref f64[N], ref f64[N], ref f64[N] )`, N a constant or the one type parameter.
+bool Signatures::fits_dft( Node_id decl ) const
+{
+    const auto params = ast_.params( decl );
+    if( !table_.is_void( types_.type_of( decl ) ) || params.size() != 4 )
+    {
+        return false;
+    }
+
+    const Type_id array = types_.type_of( params[0] );
+    if( !table_.is_array( array ) || table_.get( array ).element != table_.floating( 64 ) )
+    {
+        return false;
+    }
+    for( std::size_t p = 0; p < 4; ++p )
+    {
+        if( types_.type_of( params[p] ) != array || ast_.parameter_mode( params[p] ) != Keyword::Ref ||
+            is_const_annotated( params[p] ) != ( p < 2 ) )
+        {
+            return false;
+        }
+    }
+
+    const std::vector<Node_id> parameters = ast_.type_parameters( ast_.type_param_list( decl ) );
+    if( parameters.empty() )
+    {
+        return table_.is_sized_array( array );
+    }
+    return parameters.size() == 1 && table_.get( array ).arguments[0] == types_.type_of( parameters[0] );
 }
 
 Node_id Signatures::bare_type( Node_id annotation ) const

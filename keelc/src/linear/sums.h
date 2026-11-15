@@ -4,6 +4,7 @@
 #pragma once
 #include <array>
 #include <filesystem>
+#include <functional>
 #include <map>
 #include <optional>
 #include <string>
@@ -59,6 +60,13 @@ struct Planned
     std::string      how;
 };
 
+// A function promising DFT_n that a plan may call, and what its planned body costs.
+struct Promised
+{
+    u32  callee;
+    Cost cost;
+};
+
 struct Plan_options
 {
     u32                   leaf_max = 64; // largest side handed to solve
@@ -66,6 +74,8 @@ struct Plan_options
     std::filesystem::path cache {}; // where solved leaves are kept, as solve_linear_maps keeps whole maps
     // Leaves solved with these options, by n, m, M and c; a real x changes only their cost.
     mutable std::map<std::array<u64, 4>, Circuit> solved {};
+    // The cheapest function promising DFT_n, made when first asked for; nothing when none is.
+    std::function<std::optional<Promised>( u64 n )> promised {};
 };
 
 // The cheapest circuit the planner's rules find, each a law of the sum: terms in j or k alone factor

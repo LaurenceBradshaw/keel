@@ -4,10 +4,12 @@
 #include "front_end.h"
 #include <fmt/core.h>
 #include <algorithm>
+#include <functional>
 #include "check/drop_flags.h"
 #include "check/report.h"
 #include "codegen_llvm/emit_llvm.h"
 #include "ir/call_graph.h"
+#include "ir/group_order.h"
 #include "ir/lower.h"
 #include "ir/lower_dispatch.h"
 #include "ir/main_shim.h"
@@ -26,6 +28,7 @@
 #include "opt/inline_calls.h"
 #include "opt/loop_self_calls.h"
 #include "opt/merge_blocks.h"
+#include "opt/promises.h"
 #include "opt/propagate_constants.h"
 #include "opt/propagate_values.h"
 #include "opt/reduce_inductions.h"
@@ -138,23 +141,25 @@ Front_end run_front_end(
 
     // Lowered once, for everything downstream: the move check, --dump-kir and the emitter all read
     // the same functions.
-    front.functions =
-        lower( ast, front.resolution, front.types, literals, sm, interner, build.overflow_checks, std::move( loaded ) );
+    Lowerer lowerer( ast, front.resolution, front.types, literals, sm, interner, build.overflow_checks );
+    front.functions = lowerer.lower( std::move( loaded ) );
     lap( "lower" );
 
     // A debug keelc checks what each pass leaves, so a malformed statement names the pass that made it.
-    const Type_verifier verifier( ast, front.types, interner, front.functions );
-    const auto          verified = [&]( [[maybe_unused]] const Function& function, [[maybe_unused]] std::string_view pass )
+    // Made again whenever a late instance moves the functions it reads.
+    std::optional<Type_verifier> verifier;
+    verifier.emplace( ast, front.types, interner, front.functions );
+    const auto verified = [&]( [[maybe_unused]] const Function& function, [[maybe_unused]] std::string_view pass )
     {
 #ifndef NDEBUG
-        verifier.require( function, pass );
+        verifier->require( function, pass );
 #endif
     };
 
 #ifndef NDEBUG
     for( const Function& function : std::span( front.functions ).subspan( given ) )
     {
-        verifier.require_types( function, "lowering" );
+        verifier->require_types( function, "lowering" );
     }
 #endif
 
@@ -309,7 +314,52 @@ Front_end run_front_end(
     const std::vector<std::vector<u32>> dispatched =
         build.level >= 2 ? dispatch_edges( front.functions, ast, front.types ) : std::vector<std::vector<u32>> {};
 
-    for( const std::vector<u32>& group : callees_first( front.functions, dispatched ) )
+    // A group of `callees_first`, optimised.
+    std::function<void( const std::vector<u32>& )> optimise_group;
+    Group_order order( front.functions, dispatched, [&]( const std::vector<u32>& group ) { optimise_group( group ); } );
+
+    // An instance no call site named, which a pass asks for: lowered with what it reaches, checked,
+    // and optimised callees first, as the program's were. Its index.
+    const auto instantiate = [&]( Instantiation instance ) -> u32
+    {
+        const std::size_t before = front.functions.size();
+        const u32         index  = lowerer.instantiate( front.functions, std::move( instance ) );
+        if( front.functions.size() > before )
+        {
+            verifier.emplace( ast, front.types, interner, front.functions );
+            for( Function& function : std::span( front.functions ).subspan( before ) )
+            {
+#ifndef NDEBUG
+                verifier->require_types( function, "lowering" );
+#endif
+                simplify( function, literals );
+                verified( function, "simplify" );
+            }
+            const std::vector<Global_effects> effects = global_effects_of( front.functions, ast, front.types );
+            report_dataflow_errors(
+                std::span( front.functions ).subspan( before ),
+                std::span( effects ).subspan( before ),
+                ast,
+                sm,
+                interner,
+                literals,
+                front.types,
+                diags
+            );
+            saved.resize( front.functions.size() );
+            finished.resize( front.functions.size(), false );
+            purity.add();
+            order.add( static_cast<u32>( before ) );
+        }
+        order.want( index );
+        return index;
+    };
+
+    Promises promises(
+        ast, front.types, front.resolution.modules(), front.functions, instantiate, [&]( u32 f ) { return order.want( f ); }
+    );
+
+    optimise_group = [&]( const std::vector<u32>& group )
     {
         for( const u32 f : group )
         {
@@ -368,146 +418,152 @@ Front_end run_front_end(
                 continue;
             }
 
-            Function& function = front.functions[f];
+            // Fetched afresh, as a plan's late instance can move the functions.
+            const auto current = [&]() -> Function& { return front.functions[f]; };
 
-            elaborate_drops( function, vocabulary );
-            verified( function, "elaborate_drops" );
+            elaborate_drops( current(), vocabulary );
+            verified( current(), "elaborate_drops" );
 
             if( build.level >= 1 )
             {
-                settle_drops( function );
-                verified( function, "settle_drops" );
+                settle_drops( current() );
+                verified( current(), "settle_drops" );
                 if( build.level >= 2 && build.inlining )
                 {
-                    inline_drops( function, front.functions, finished, literals, *build.inlining );
-                    verified( function, "inline_drops" );
+                    inline_drops( current(), front.functions, finished, literals, *build.inlining );
+                    verified( current(), "inline_drops" );
                 }
                 // Twice by default, as a late pass uncovers work for an earlier one; a third round finds none.
                 for( u32 round = 0; round < build.rounds; ++round )
                 {
-                    optimise_round( function );
+                    optimise_round( current() );
                 }
                 // Again, for the copy chains into a field that splitting and inlining leave.
                 if( build.recoalescing )
                 {
                     if( build.level >= 2 )
                     {
-                        coalesce_moves( function, ast );
-                        verified( function, "coalesce_moves" );
+                        coalesce_moves( current(), ast );
+                        verified( current(), "coalesce_moves" );
                     }
                     // Merging two locals can make `a != a`.
-                    fold_identities( function, front.types.table(), literals );
-                    verified( function, "fold_identities" );
+                    fold_identities( current(), front.types.table(), literals );
+                    verified( current(), "fold_identities" );
                 }
-                remove_unused_locals( function, pin_named );
-                verified( function, "remove_unused_locals" );
+                remove_unused_locals( current(), pin_named );
+                verified( current(), "remove_unused_locals" );
                 // The loop passes, and a round to tidy what they leave; §3.3 gives each its level.
                 if( build.loops )
                 {
-                    if( build.level >= 3 && function.real_arithmetic )
+                    if( build.level >= 3 && current().real_arithmetic )
                     {
-                        const Map_outcome outcome = solve_linear_maps(
-                            function,
+                        // A copy stays behind for what reads its signature while a plan adds instances.
+                        Function          planning = current();
+                        const Map_outcome outcome  = solve_linear_maps(
+                            planning,
                             front.functions,
                             purity,
                             front.types.table(),
                             literals,
                             build.cache,
                             { .fma = target_has_fma() },
-                            constants
+                            constants,
+                            promises.for_plan( planning )
                         );
+                        current() = std::move( planning );
+                        promises.planned( f, outcome.cost );
                         if( clock != nullptr && !outcome.ending )
                         {
                             clock->note( fmt::format(
                                 "linear map `{}` {}",
-                                interner.text( ast.name( function.declaration ) ),
+                                interner.text( ast.name( current().declaration ) ),
                                 outcome.cached ? "from the cache" : "solved"
                             ) );
                         }
                         if( outcome.solved )
                         {
-                            verified( function, "solve_linear_maps" );
-                            remove_unused_locals( function, pin_named );
-                            verified( function, "remove_unused_locals" );
+                            verified( current(), "solve_linear_maps" );
+                            remove_unused_locals( current(), pin_named );
+                            verified( current(), "remove_unused_locals" );
                             // Callers inline the circuit; it has no owning locals, so no drops to elaborate.
-                            saved[f] = function;
+                            saved[f] = current();
                         }
                         // Without parameters there are no inputs, so no map to miss: a mark for the folds alone.
-                        else if( outcome.ending && function.parameter_count > 0 &&
-                                 std::ranges::find( warned_maps, function.declaration ) == warned_maps.end() )
+                        else if( outcome.ending && current().parameter_count > 0 &&
+                                 std::ranges::find( warned_maps, current().declaration ) == warned_maps.end() )
                         {
-                            warned_maps.push_back( function.declaration );
+                            warned_maps.push_back( current().declaration );
                             const Span at =
-                                outcome.ending->span.is_valid() ? outcome.ending->span : ast.name_span( function.declaration );
+                                outcome.ending->span.is_valid() ? outcome.ending->span : ast.name_span( current().declaration );
                             diags.warning(
                                 Warning::Linear_map,
                                 at,
                                 fmt::format(
                                     "`{}` is `@real_arithmetic` but computes no linear map: it {}",
-                                    interner.text( ast.name( function.declaration ) ),
+                                    interner.text( ast.name( current().declaration ) ),
                                     describe( outcome.ending->why )
                                 ),
                                 "each output must be a sum of inputs scaled by constants"
                             );
                         }
                     }
-                    bool shaped = rotate_loops( function, *build.loops );
-                    verified( function, "rotate_loops" );
+                    bool shaped = rotate_loops( current(), *build.loops );
+                    verified( current(), "rotate_loops" );
                     // After rotation, so the guard's read and the latch's both reach the body.
-                    if( forward_reads( function ) )
+                    if( forward_reads( current() ) )
                     {
-                        verified( function, "forward_reads" );
+                        verified( current(), "forward_reads" );
                         shaped = true;
                     }
                     // At -O3 always: a repeat eliminate_common finds is threaded only by a third round.
                     if( shaped || build.level >= 3 )
                     {
-                        optimise_round( function );
+                        optimise_round( current() );
                     }
                     // After the round folds the checks that would exit before an invariant.
-                    if( hoist_invariants( function, literals, pin_named ) )
+                    if( hoist_invariants( current(), literals, pin_named ) )
                     {
-                        verified( function, "hoist_invariants" );
+                        verified( current(), "hoist_invariants" );
                     }
                     // After hoisting, so only what no proof could take is checked at run time.
-                    bool moved = build.level >= 3 && version_loops( function, front.types.table(), literals, *build.loops );
+                    bool moved = build.level >= 3 && version_loops( current(), front.types.table(), literals, *build.loops );
                     if( moved )
                     {
-                        verified( function, "version_loops" );
+                        verified( current(), "version_loops" );
                         // The copy reads its bounds once, so its checks can leave it.
-                        hoist_invariants( function, literals, pin_named );
-                        verified( function, "hoist_invariants" );
+                        hoist_invariants( current(), literals, pin_named );
+                        verified( current(), "hoist_invariants" );
                     }
                     // After hoisting, so `i * n` has an invariant `n`.
-                    if( build.level >= 2 && reduce_inductions( function, front.types.table(), literals ) )
+                    if( build.level >= 2 && reduce_inductions( current(), front.types.table(), literals ) )
                     {
-                        verified( function, "reduce_inductions" );
+                        verified( current(), "reduce_inductions" );
                         moved = true;
                     }
                     // Last, so the round after folds each copy's index.
                     if( build.level >= 2 &&
-                        unroll_loops( function, front.types.table(), literals, *build.loops, build.level >= 3 ) )
+                        unroll_loops( current(), front.types.table(), literals, *build.loops, build.level >= 3 ) )
                     {
-                        verified( function, "unroll_loops" );
+                        verified( current(), "unroll_loops" );
                         moved = true;
                     }
                     if( moved )
                     {
-                        optimise_round( function );
+                        optimise_round( current() );
                     }
                     // Else only the empty blocks normalising added and a hoist went through are left.
                     else
                     {
-                        simplify( function, literals );
-                        verified( function, "simplify" );
-                        merge_blocks( function );
-                        verified( function, "merge_blocks" );
+                        simplify( current(), literals );
+                        verified( current(), "simplify" );
+                        merge_blocks( current() );
+                        verified( current(), "merge_blocks" );
                     }
                 }
             }
 
-            lower_dispatch( function, ast, front.types.table() );
-            verified( function, "lower_dispatch" );
+            lower_dispatch( current(), ast, front.types.table() );
+            verified( current(), "lower_dispatch" );
         }
 
         if( build.level >= 2 && build.inlining )
@@ -518,6 +574,14 @@ Front_end run_front_end(
             }
         }
         purity.decide( group );
+    };
+
+    order.want_all();
+
+    // Where the rules use it.
+    if( build.level >= 3 && build.loops )
+    {
+        promises.check( purity, literals, constants, interner, diags );
     }
     lap( build.level >= 1 ? "optimise" : "drops" );
 
@@ -558,6 +622,64 @@ std::string printed( const Compiled& p )
     return text;
 }
 
+// `name<u64 N>`, or `name` at `fixed`, computing the DFT by its definition, under `directives`.
+std::string dft_loop( std::string_view directives, std::string_view name, std::string_view fixed = {} )
+{
+    const std::string n = fixed.empty() ? "N" : std::string( fixed );
+    return std::string( directives ) + "\nvoid " + std::string( name ) + ( fixed.empty() ? "<u64 N>" : "" ) +
+           "( const ref f64[" + n + "] re, const ref f64[" + n + "] im, ref f64[" + n + "] yr, ref f64[" + n +
+           "] yi )\n{\n"
+           "    for( u64 k = 0; k < " +
+           n +
+           "; k += 1 )\n"
+           "    {\n"
+           "        f64 sr = 0.0;\n"
+           "        f64 si = 0.0;\n"
+           "        for( u64 j = 0; j < " +
+           n +
+           "; j += 1 )\n"
+           "        {\n"
+           "            const f64 t = -6.283185307179586 * cast<f64>( j * k % " +
+           n + " ) / cast<f64>( " + n +
+           " );\n"
+           "            sr += re[j] * cosine( t ) - im[j] * sine( t );\n"
+           "            si += re[j] * sine( t ) + im[j] * cosine( t );\n"
+           "        }\n"
+           "        yr[k] = sr;\n"
+           "        yi[k] = si;\n"
+           "    }\n"
+           "}\n";
+}
+
+constexpr std::string_view k_trig = "@trig_cos f64 cosine( f64 x ) { return x; }\n"
+                                    "@trig_sin f64 sine( f64 x ) { return x; }\n";
+constexpr std::string_view k_main_128 =
+    "i32 main() { f64[128] a = [ 0.0, .. ]; f64[128] b = [ 0.0, .. ]; map<128>( a, a, ref b, ref b ); return 0; }\n";
+
+// The sizes of `fft` instances, and the calls of `callee` in `map`.
+std::pair<std::vector<u64>, u32> dft_calls( const Compiled& p, std::string_view callee )
+{
+    const auto named = [&]( Node_id d, std::string_view name )
+    { return d.is_valid() && p.interner.text( p.ast.name( d ) ) == name; };
+    std::vector<u64> sizes;
+    u32              calls = 0;
+    for( const Function& f : p.all )
+    {
+        if( named( f.declaration, "fft" ) )
+        {
+            sizes.push_back( p.types.table().get( f.type_arguments[0] ).count );
+        }
+        for( const Statement& statement : f.statements )
+        {
+            const Rvalue& value = f.rvalue( statement );
+            calls += named( f.declaration, "map" ) && statement.kind == Statement_kind::Assign &&
+                     value.kind == Rvalue_kind::Call && named( value.callee, callee );
+        }
+    }
+    std::ranges::sort( sizes );
+    return { sizes, calls };
+}
+
 } // namespace
 
 TEST_CASE( "front_end_O3_without_the_loop_phase_is_O2", "[front_end]" )
@@ -570,6 +692,40 @@ TEST_CASE( "front_end_O3_without_the_loop_phase_is_O2", "[front_end]" )
     REQUIRE( o2.clean() );
     REQUIRE( o3.clean() );
     REQUIRE( printed( o3 ) == printed( o2 ) );
+}
+
+// A map that is a whole DFT calls the `@dft` instance at its size, as cheap and smaller; the promise
+// is checked at 2, 4 and 8.
+TEST_CASE( "front_end_O3_calls_a_promised_dft_it_matches", "[front_end][linear]" )
+{
+    const Compiled p(
+        std::string( k_trig ) + dft_loop( "@dft @real_arithmetic", "fft" ) + dft_loop( "@real_arithmetic", "map" ) +
+            std::string( k_main_128 ),
+        Stage::Elaborated,
+        Build { .level = 3 }
+    );
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+    const auto [sizes, calls] = dft_calls( p, "fft" );
+    CHECK( sizes == std::vector<u64> { 2, 4, 8, 128 } );
+    CHECK( calls == 1 );
+}
+
+// A fixed `@dft` at the map's size is taken over the generic, which is then made only to be checked.
+TEST_CASE( "front_end_O3_calls_a_fixed_dft_over_a_generic", "[front_end][linear]" )
+{
+    const Compiled p(
+        std::string( k_trig ) + dft_loop( "@dft @real_arithmetic", "fft" ) +
+            dft_loop( "@dft @real_arithmetic", "fixed", "128" ) + dft_loop( "@real_arithmetic", "map" ) +
+            std::string( k_main_128 ),
+        Stage::Elaborated,
+        Build { .level = 3 }
+    );
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+    const auto [sizes, calls] = dft_calls( p, "fixed" );
+    CHECK( sizes == std::vector<u64> { 2, 4, 8 } );
+    CHECK( calls == 1 );
 }
 
 } // namespace keel

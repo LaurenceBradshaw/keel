@@ -23,43 +23,6 @@ bool addresses( const Function& caller, const Statement& statement, const Functi
     return value.kind == Rvalue_kind::Function_address && names( value, callee );
 }
 
-// Which functions each one calls or takes the address of; a call to a body-less extern has no edge.
-std::vector<std::vector<u32>> call_edges( const std::vector<Function>& functions )
-{
-    // Only a function of the statement's declaration can match: each declaration's instances, in order.
-    std::unordered_map<u32, std::vector<u32>> by_declaration;
-    for( u32 c = 0; c < functions.size(); c++ )
-    {
-        by_declaration[functions[c].declaration.v].push_back( c );
-    }
-
-    std::vector<std::vector<u32>> edges( functions.size() );
-    for( u32 f = 0; f < functions.size(); f++ )
-    {
-        for( const Statement& statement : functions[f].statements )
-        {
-            const auto instances = by_declaration.find( functions[f].rvalue( statement ).callee.v );
-            if( instances == by_declaration.end() )
-            {
-                continue;
-            }
-
-            for( const u32 c : instances->second )
-            {
-                const Function& callee = functions[c];
-
-                if( calls( functions[f], statement, callee ) || addresses( functions[f], statement, callee ) )
-                {
-                    edges[f].push_back( c );
-                    break;
-                }
-            }
-        }
-    }
-
-    return edges;
-}
-
 // `order` is when a function was reached, k_invalid_kir_id until then; `low` the earliest still-open
 // function it reaches back to.
 struct Walk
@@ -116,6 +79,42 @@ void visit( Walk& walk, u32 f )
 }
 
 } // namespace
+
+std::vector<std::vector<u32>> call_edges( const std::vector<Function>& functions )
+{
+    // Only a function of the statement's declaration can match: each declaration's instances, in order.
+    std::unordered_map<u32, std::vector<u32>> by_declaration;
+    for( u32 c = 0; c < functions.size(); c++ )
+    {
+        by_declaration[functions[c].declaration.v].push_back( c );
+    }
+
+    std::vector<std::vector<u32>> edges( functions.size() );
+    for( u32 f = 0; f < functions.size(); f++ )
+    {
+        for( const Statement& statement : functions[f].statements )
+        {
+            const auto instances = by_declaration.find( functions[f].rvalue( statement ).callee.v );
+            if( instances == by_declaration.end() )
+            {
+                continue;
+            }
+
+            for( const u32 c : instances->second )
+            {
+                const Function& callee = functions[c];
+
+                if( calls( functions[f], statement, callee ) || addresses( functions[f], statement, callee ) )
+                {
+                    edges[f].push_back( c );
+                    break;
+                }
+            }
+        }
+    }
+
+    return edges;
+}
 
 std::vector<std::vector<u32>> callees_first( const std::vector<Function>& functions, const std::vector<std::vector<u32>>& also )
 {

@@ -19,6 +19,9 @@ class Purity
 public:
     Purity( const std::vector<Function>& functions, const Ast& ast );
 
+    // The functions appended since, undecided. A global one writes does not undo a purity decided already.
+    void add();
+
     // Decides `group`, once its bodies are final; every group it calls is decided already.
     void decide( const std::vector<u32>& group );
 

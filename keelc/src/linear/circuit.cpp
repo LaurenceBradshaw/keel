@@ -6,6 +6,7 @@
 #include <cassert>
 #include <charconv>
 #include <cmath>
+#include <numbers>
 #include <span>
 #include <sstream>
 
@@ -88,6 +89,8 @@ std::string op_line( const Op& op )
         return "m " + std::to_string( op.a ) + ' ' + std::to_string( op.b ) + '\n';
     case Op_kind::Real:
         return "r " + std::to_string( op.a ) + '\n';
+    case Op_kind::Result:
+        break;
     }
     return {};
 }
@@ -107,8 +110,8 @@ Circuit::Circuit( Field& integers )
 
 u32 Circuit::put( Op op )
 {
-    assert( op.a < 1u << 31 && op.b < 1u << 31 );
-    const u64 packed           = u64( op.a ) << 33 | u64( op.b ) << 2 | u64( op.kind );
+    assert( op.a < 1u << 30 && op.b < 1u << 31 );
+    const u64 packed           = u64( op.a ) << 34 | u64( op.b ) << 3 | u64( op.kind );
     const auto [found, is_new] = memo_.try_emplace( packed, static_cast<u32>( ops_.size() ) );
     if( is_new )
     {
@@ -116,7 +119,7 @@ u32 Circuit::put( Op op )
         const bool real = op.kind == Op_kind::Input   ? real_
                           : op.kind == Op_kind::Add   ? real_ops_[op.a] && real_ops_[op.b]
                           : op.kind == Op_kind::Scale ? real_ops_[op.a] && std::abs( constants_[op.b].value.imag() ) < 1e-12
-                                                      : true;
+                                                      : op.kind == Op_kind::Real;
         real_ops_.push_back( real );
     }
     return found->second;
@@ -145,6 +148,34 @@ u32 Circuit::scale( u32 a, Element c )
 u32 Circuit::real_part( u32 a )
 {
     return real_ops_[a] ? a : put( { Op_kind::Real, a, 0 } );
+}
+
+u32 Circuit::call( Call call )
+{
+    const auto [found, is_new] =
+        call_ids_.try_emplace( { call.callee, call.conjugate, call.arguments }, static_cast<u32>( calls_.size() ) );
+    if( is_new )
+    {
+        calls_.push_back( std::move( call ) );
+    }
+    return found->second;
+}
+
+u32 Circuit::result( u32 call, u32 k )
+{
+    return put( { Op_kind::Result, call, k } );
+}
+
+// `sub`'s call `c` made here, its arguments mapped through `nodes`.
+u32 Circuit::call_from( const Circuit& sub, u32 c, const std::vector<u32>& nodes, bool conjugate )
+{
+    Call made = sub.calls_[c];
+    for( u32& a : made.arguments )
+    {
+        a = a == k_zero ? k_zero : nodes[a];
+    }
+    made.conjugate = made.conjugate != conjugate;
+    return call( std::move( made ) );
 }
 
 Circuit::Constant Circuit::make( std::complex<f64> c ) const
@@ -222,11 +253,19 @@ std::vector<u32> Circuit::paste( const Circuit& sub, const std::vector<u32>& inp
 {
     assert( integers_ == sub.integers_ && !( conjugate && integers_ ) );
     std::vector<u32> m;
+    std::vector<u32> made( sub.calls_.size(), k_zero );
     m.reserve( sub.ops_.size() );
     for( const Op& op : sub.ops_ )
     {
         switch( op.kind )
         {
+        case Op_kind::Result:
+            if( made[op.a] == k_zero )
+            {
+                made[op.a] = call_from( sub, op.a, m, conjugate );
+            }
+            m.push_back( result( made[op.a], op.b ) );
+            break;
         case Op_kind::Input:
             m.push_back( inputs[op.a] );
             break;
@@ -267,6 +306,16 @@ std::vector<bool> Circuit::live() const
             stack.push_back( ops_[o].a );
             stack.push_back( ops_[o].b );
         }
+        else if( ops_[o].kind == Op_kind::Result )
+        {
+            for( const u32 a : calls_[ops_[o].a].arguments )
+            {
+                if( a != k_zero )
+                {
+                    stack.push_back( a );
+                }
+            }
+        }
         else if( ops_[o].kind != Op_kind::Input )
         {
             stack.push_back( ops_[o].a );
@@ -306,29 +355,61 @@ std::vector<std::array<bool, 2>> Circuit::live_parts() const
         {
             need( op.a, re, false );
         }
+        // The callee reads every argument whole.
+        else if( op.kind == Op_kind::Result && ( re || im ) )
+        {
+            for( const u32 a : calls_[op.a].arguments )
+            {
+                if( a != k_zero )
+                {
+                    need( a, true, true );
+                }
+            }
+        }
     }
     return live;
 }
 
-Circuit Circuit::pruned() const
+std::vector<u32> Circuit::uses( const std::vector<bool>& lv ) const
 {
-    const std::vector<bool> lv = live();
-    std::vector<u32>        users( ops_.size(), 0 );
+    std::vector<u32>  users( ops_.size(), 0 );
+    std::vector<bool> counted( calls_.size(), false );
     for( u32 o = 0; o < ops_.size(); ++o )
     {
-        if( lv[o] && ops_[o].kind != Op_kind::Input )
+        if( !lv[o] || ops_[o].kind == Op_kind::Input )
         {
-            ++users[ops_[o].a];
-            users[ops_[o].b] += ops_[o].kind == Op_kind::Add;
+            continue;
         }
+        if( ops_[o].kind == Op_kind::Result )
+        {
+            for( const u32 a : calls_[ops_[o].a].arguments )
+            {
+                if( a != k_zero && !counted[ops_[o].a] )
+                {
+                    ++users[a];
+                }
+            }
+            counted[ops_[o].a] = true;
+            continue;
+        }
+        ++users[ops_[o].a];
+        users[ops_[o].b] += ops_[o].kind == Op_kind::Add;
     }
     for( const auto& [row, o] : outputs )
     {
         ++users[o];
     }
+    return users;
+}
+
+Circuit Circuit::pruned() const
+{
+    const std::vector<bool> lv    = live();
+    const std::vector<u32>  users = uses( lv );
 
     Circuit          c = integers_ ? Circuit( *integers_ ) : Circuit( real_ );
     std::vector<u32> m( ops_.size(), 0 );
+    std::vector<u32> made( calls_.size(), k_zero );
     bool             folded = false;
     for( u32 o = 0; o < ops_.size(); ++o )
     {
@@ -345,6 +426,14 @@ Circuit Circuit::pruned() const
         else if( op.kind == Op_kind::Add )
         {
             m[o] = c.add( m[op.a], m[op.b] );
+        }
+        else if( op.kind == Op_kind::Result )
+        {
+            if( made[op.a] == k_zero )
+            {
+                made[op.a] = c.call_from( *this, op.a, m, false );
+            }
+            m[o] = c.result( made[op.a], op.b );
         }
         else if( op.kind == Op_kind::Real )
         {
@@ -398,22 +487,7 @@ Cost Circuit::cost( bool fma ) const
     const std::vector<std::array<bool, 2>> parts = live_parts();
     const std::vector<bool>                lv    = live();
     fma                                          = fma && integers_ == nullptr;
-    std::vector<u32> users( fma ? ops_.size() : 0 );
-    if( fma )
-    {
-        for( const auto& [row, o] : outputs )
-        {
-            ++users[o];
-        }
-        for( u32 o = 0; o < ops_.size(); ++o )
-        {
-            if( lv[o] && ops_[o].kind != Op_kind::Input )
-            {
-                ++users[ops_[o].a];
-                users[ops_[o].b] += ops_[o].kind == Op_kind::Add;
-            }
-        }
-    }
+    const std::vector<u32> users                 = fma ? uses( lv ) : std::vector<u32> {};
 
     // A constant's lowering ends in its multiplies when a part is 0 or |Re| = |Im| (k(+-1 +-i)), and
     // otherwise ends in adds that each take one of them.
@@ -434,12 +508,18 @@ Cost Circuit::cost( bool fma ) const
                ends_in_muls( n, constants_[ops_[n].b] );
     };
 
-    Cost total;
-    u32  fused = 0;
+    Cost              total;
+    u32               fused = 0;
+    std::vector<bool> called( calls_.size(), false );
     for( u32 o = 0; o < ops_.size(); ++o )
     {
         const Op& op = ops_[o];
-        if( !lv[o] || op.kind == Op_kind::Input || op.kind == Op_kind::Real )
+        if( lv[o] && op.kind == Op_kind::Result && !called[op.a] )
+        {
+            called[op.a] = true;
+            total        = total + calls_[op.a].cost;
+        }
+        if( !lv[o] || op.kind == Op_kind::Input || op.kind == Op_kind::Real || op.kind == Op_kind::Result )
         {
             continue;
         }
@@ -486,7 +566,8 @@ std::vector<u32> Circuit::nodes( const std::vector<Row>& rows ) const
 
 std::vector<std::complex<f64>> Circuit::evaluate( const std::vector<std::complex<f64>>& inputs ) const
 {
-    std::vector<std::complex<f64>> v;
+    std::vector<std::complex<f64>>              v;
+    std::vector<std::vector<std::complex<f64>>> results( calls_.size() );
     v.reserve( ops_.size() );
     for( const Op& op : ops_ )
     {
@@ -494,6 +575,25 @@ std::vector<std::complex<f64>> Circuit::evaluate( const std::vector<std::complex
         {
         case Op_kind::Input:
             v.push_back( inputs[op.a] );
+            break;
+        case Op_kind::Result:
+            if( results[op.a].empty() )
+            {
+                const Call& c = calls_[op.a];
+                const u64   n = c.arguments.size();
+                results[op.a].assign( n, 0 );
+                for( u64 k = 0; k < n; ++k )
+                {
+                    for( u64 j = 0; j < n; ++j )
+                    {
+                        const std::complex<f64> x = c.arguments[j] == k_zero ? 0 : v[c.arguments[j]];
+                        const f64 t = -2.0 * std::numbers::pi * static_cast<f64>( j * k % n ) / static_cast<f64>( n );
+                        results[op.a][k] += ( c.conjugate ? std::conj( x ) : x ) * std::polar( 1.0, t );
+                    }
+                    results[op.a][k] = c.conjugate ? std::conj( results[op.a][k] ) : results[op.a][k];
+                }
+            }
+            v.push_back( results[op.a][op.b] );
             break;
         case Op_kind::Add:
             v.push_back( v[op.a] + v[op.b] );
@@ -530,7 +630,19 @@ std::string Circuit::text() const
         case Op_kind::Real:
             out << o << " re " << op.a << '\n';
             break;
+        case Op_kind::Result:
+            out << o << " result " << op.a << ' ' << op.b << '\n';
+            break;
         }
+    }
+    for( u32 c = 0; c < calls_.size(); ++c )
+    {
+        out << "call " << c << " of " << calls_[c].callee << ( calls_[c].conjugate ? " conjugated" : "" );
+        for( const u32 a : calls_[c].arguments )
+        {
+            out << ' ' << ( a == k_zero ? std::string( "0" ) : std::to_string( a ) );
+        }
+        out << '\n';
     }
     for( const auto& [row, o] : outputs )
     {
@@ -546,6 +658,7 @@ std::string Circuit::text() const
 
 std::string Circuit::saved( const std::vector<Row>& rows ) const
 {
+    assert( calls_.empty() && "a call's callee is this build's" );
     std::string out    = std::to_string( ops_.size() ) + ' ' + std::to_string( constants_.size() ) + '\n';
     const auto  number = [&]( f64 v )
     {
@@ -879,6 +992,43 @@ TEST_CASE( "circuit_pastes_the_conjugate_map", "[linear][circuit]" )
     const std::vector<u32>  m   = c.paste( sub, { c.input( 0 ), c.input( 1 ) }, true );
     const std::complex<f64> got = c.evaluate( { { 1, 0 }, { 0, 1 } } )[m[sub.outputs.at( k_row0 )]];
     CHECK( std::abs( got - std::complex<f64>( 1 + 0.8, 0.6 ) ) < 1e-12 );
+}
+
+// A call is made once, costs its callee once, evaluates as the transform, and pastes conjugated as the inverse.
+TEST_CASE( "circuit_calls_a_promised_transform", "[linear][circuit]" )
+{
+    Circuit   sub( false );
+    const u32 x0 = sub.input( 0 ), x1 = sub.input( 1 );
+    const u32 call = sub.call( { 7, { 10, 3 }, false, { x0, x1, Circuit::k_zero, Circuit::k_zero } } );
+    REQUIRE( sub.call( { 7, { 10, 3 }, false, { x0, x1, Circuit::k_zero, Circuit::k_zero } } ) == call );
+    for( u32 k = 0; k < 3; ++k )
+    {
+        sub.outputs[Row { Element { k } }] = sub.result( call, k );
+    }
+    CHECK( sub.cost() == Cost { 10, 3 } );
+
+    const std::complex<f64>              i { 0, 1 };
+    const std::vector<std::complex<f64>> v = sub.evaluate( { 1.0, i } );
+    // y[k] = 1 + i W_4^k
+    for( u32 k = 0; k < 3; ++k )
+    {
+        CHECK(
+            std::abs(
+                v[sub.outputs.at( Row { Element { k } } )] - ( 1.0 + i * std::polar( 1.0, -std::numbers::pi * k / 2 ) )
+            ) < 1e-12
+        );
+    }
+
+    Circuit                c( false );
+    const std::vector<u32> m = c.paste( sub, { c.input( 0 ), c.input( 1 ) }, true );
+    REQUIRE( c.calls().size() == 1 );
+    CHECK( c.calls()[0].conjugate );
+    const std::vector<std::complex<f64>> w = c.evaluate( { 1.0, i } );
+    CHECK( std::abs( w[m[sub.outputs.at( Row { Element { 1 } } )]] - ( 1.0 + i * i ) ) < 1e-12 );
+
+    const Circuit p = sub.pruned();
+    CHECK( p.calls().size() == 1 );
+    CHECK( p.cost() == Cost { 10, 3 } );
 }
 
 TEST_CASE( "circuit_keeps_integer_constants_exact", "[linear][circuit]" )

@@ -100,11 +100,14 @@ std::pair<Number, Number> parts( const Field& field, Element e )
     return { a, z.negated( b ) };
 }
 
-class Lowerer
+class Circuit_lowering
 {
 public:
-    Lowerer( Function& func, const Field& field, Type_id type, Literal_pool& literals, Span span )
+    Circuit_lowering(
+        Function& func, const Field& field, Type_id type, Literal_pool& literals, Span span, const Callees& callees
+    )
         : func_( func ),
+          callees_( callees ),
           field_( field ),
           z_( arithmetic_of( field ) ),
           paired_( paired( field ) ),
@@ -134,10 +137,23 @@ public:
                 v[o] = { live[o][0] ? load( in.real ) : Part {}, live[o][1] && paired_ ? load( in.imaginary ) : Part {} };
             }
         }
+        std::vector<std::array<Local_id, 4>> called( circuit.calls().size() );
         for( u32 o = 0; o < ops.size(); ++o )
         {
             if( ( !live[o][0] && !live[o][1] ) || ops[o].kind == Op_kind::Input )
             {
+                continue;
+            }
+            if( ops[o].kind == Op_kind::Result )
+            {
+                const Call& c = circuit.calls()[ops[o].a];
+                if( !called[ops[o].a][0].is_valid() )
+                {
+                    called[ops[o].a] = call( c, v );
+                }
+                const Callee& to = callees_( c.callee );
+                const Part    im = load( element( to, called[ops[o].a][3], ops[o].b ) );
+                v[o]             = { load( element( to, called[ops[o].a][2], ops[o].b ) ), c.conjugate ? negated( im ) : im };
                 continue;
             }
             const Value& a = v[ops[o].a];
@@ -282,19 +298,73 @@ private:
         };
     }
 
+    static Part negated( Part p )
+    {
+        return { p.local, !p.negated };
+    }
+
+    // Element `k` of local array `array`.
+    Place element( const Callee& to, Local_id array, u64 k )
+    {
+        const auto [it, fresh] = indices_.try_emplace( k );
+        if( fresh )
+        {
+            it->second = func_.locals.push_back( Local { .type = to.index, .span = span_ } );
+            assign( Place { .local = it->second }, use( constant( literals_.add_integer( k ), to.index ) ) );
+        }
+        return projected( func_, Place { .local = array }, Projection { .kind = Projection_kind::Index, .index = it->second } );
+    }
+
+    // `c` called on arrays holding its arguments' values; the four arrays, the last two its outputs.
+    std::array<Local_id, 4> call( const Call& c, const std::vector<Value>& v )
+    {
+        const Callee&           to = callees_( c.callee );
+        std::array<Local_id, 4> arrays;
+        for( Local_id& a : arrays )
+        {
+            a = func_.locals.push_back( Local { .type = to.array, .span = span_ } );
+        }
+        for( u64 j = 0; j < c.arguments.size(); ++j )
+        {
+            const Value x = c.arguments[j] == Circuit::k_zero ? Value {} : v[c.arguments[j]];
+            store( element( to, arrays[0], j ), x.re );
+            store( element( to, arrays[1], j ), c.conjugate ? negated( x.im ) : x.im );
+        }
+        std::vector<Operand> arguments;
+        for( u32 a = 0; a < 4; ++a )
+        {
+            const Local_id p = func_.locals.push_back( Local { .type = to.parameters[a], .span = span_ } );
+            assign(
+                Place { .local = p },
+                address_of(
+                    Place { .local = arrays[a] },
+                    to.parameters[a],
+                    a < 2 ? Address_purpose::Read : Address_purpose::Borrow,
+                    span_
+                )
+            );
+            arguments.push_back( copy( Place { .local = p }, to.parameters[a] ) );
+        }
+        const Local_id done = func_.locals.push_back( Local { .type = to.none, .span = span_ } );
+        assign( Place { .local = done }, keel::call( to.declaration, std::move( arguments ), to.none, to.type_arguments ) );
+        return arrays;
+    }
+
     Number one() const
     {
         return z_.integer ? Number { 0, 1 } : Number { 1 };
     }
 
-    Function&              func_;
-    const Field&           field_;
-    Arithmetic             z_;
-    bool                   paired_;
-    Type_id                type_;
-    Literal_pool&          literals_;
-    Span                   span_;
-    std::vector<Statement> out_;
+    Function&                         func_;
+    const Callees&                    callees_;
+    std::unordered_map<u64, Local_id> indices_;
+    const Field&                      field_;
+    Arithmetic                        z_;
+    bool                              paired_;
+    Type_id                           type_;
+    Literal_pool&                     literals_;
+    Span                              span_;
+    std::vector<Statement>            out_;
 };
 
 // Runs straight-line statements of uses, negations, sums, differences and products.
@@ -454,10 +524,12 @@ std::vector<Statement> lower_circuit(
     Type_id                         type,
     Literal_pool&                   literals,
     Span                            span,
-    const std::vector<Row>&         rows
+    const std::vector<Row>&         rows,
+    const Callees&                  callees
 )
 {
-    std::vector<Statement> body = Lowerer( func, field, type, literals, span ).lower( circuit, nodes, inputs, outputs );
+    std::vector<Statement> body =
+        Circuit_lowering( func, field, type, literals, span, callees ).lower( circuit, nodes, inputs, outputs );
     assert(
         ( rows.empty() || computes( func, body, field, rows, inputs, outputs, literals ) ) &&
         "a lowered circuit disagrees with its map"

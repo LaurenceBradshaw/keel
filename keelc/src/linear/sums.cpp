@@ -635,6 +635,37 @@ convolution_build( Circuit& c, const Sum& s, const Use& use, const std::vector<u
     return part( c, use.parts[1].second, X );
 }
 
+// DFT_M taking x[j] for j < n, zero past it, and giving y[k] for k < m, by a function that promises it.
+std::vector<Use> promised_match( const Sum& s, const Plan_options& options )
+{
+    const std::optional<Kernel> k = kernel_of( s );
+    if( !options.promised || !k || k->c != 1 || k->M <= options.leaf_max || k->n > k->M || k->m > k->M )
+    {
+        return {};
+    }
+    const std::optional<Promised> p = options.promised( k->M );
+    if( !p )
+    {
+        return {};
+    }
+    Use use { {}, p->cost, "call " + sides( s ) + " W" + std::to_string( k->M ) };
+    use.chosen = { p->callee, k->M };
+    return { std::move( use ) };
+}
+
+std::vector<u32> promised_build( Circuit& c, const Sum& s, const Use& use, const std::vector<u32>& x, const Part_builder& )
+{
+    std::vector<u32> arguments( use.chosen[1], Circuit::k_zero );
+    std::copy( x.begin(), x.end(), arguments.begin() );
+    const u32        call = c.call( { static_cast<u32>( use.chosen[0] ), use.own, false, std::move( arguments ) } );
+    std::vector<u32> out;
+    for( u32 o = 0; o < s.m; ++o )
+    {
+        out.push_back( c.result( call, o ) );
+    }
+    return out;
+}
+
 // One part a term.
 std::vector<Use> terms_match( const Sum& s, const Plan_options& )
 {
@@ -767,7 +798,9 @@ std::vector<u32> conjugate_build( Circuit& c, const Sum&, const Use& use, const 
     return y;
 }
 
+// First, so a call wins a tie.
 const Rule rules[] = {
+    { "promised", "a function promising DFT_M computes it", promised_match, promised_build },
     { "direct", "y[k] = sum over j of x[j] times its coefficient", direct_match, direct_build },
     { "solved", "the dense solve computes its matrix", solved_match, solved_build },
     { "terms", "a sum of terms is the sum of each term's sum", terms_match, terms_build },
@@ -1098,6 +1131,8 @@ TEST_CASE( "every_planner_rule_computes_the_naive_sum", "[linear][sums]" )
     std::mt19937 rng( 11 );
     Plan_options options;
     options.leaf_max = 6;
+    // A call evaluates as the transform it promises.
+    options.promised = []( u64 ) { return std::optional<Promised>( Promised { 0, { 1, 1 } } ); };
     for( const Rule& rule : rules )
     {
         INFO( rule.name << ": " << rule.identity );

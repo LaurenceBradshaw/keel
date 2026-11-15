@@ -18,6 +18,9 @@ inline bool calls( const Function& caller, const Statement& statement, const Fun
     return ( call || drop ) && names( value, callee );
 }
 
+// Which functions each one calls or takes the address of; a call to a body-less extern has no edge.
+std::vector<std::vector<u32>> call_edges( const std::vector<Function>& functions );
+
 // Indices into `functions`, grouped into the sets that call each other (Tarjan), each group after
 // every group it calls into or takes the address of. A function calling nothing, or only itself, is
 // a group of one. `also` adds edges the statements do not show.

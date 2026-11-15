@@ -567,7 +567,7 @@ void inline_calls(
                     const Function&      callee   = *saved[j];
                     const Function&      finished = functions[j];
                     std::optional<Place> receiver;
-                    bool                 fits = !( keep_trig && callee.trig != Trig::None ) && inlinable( callee ) &&
+                    bool                 fits = !( keep_trig && is_trig( callee.promise ) ) && inlinable( callee ) &&
                                 inline_cost( finished, weights ) <= threshold( statement_count, finished, weights );
                     if( fits && callee.constructed.is_valid() )
                     {

@@ -188,11 +188,11 @@ std::string write_state(
     write_table(
         tree,
         refs,
-        nodes_where( refs, [&]( Node_id id ) { return ast.trig( id ) != Trig::None; } ),
+        nodes_where( refs, [&]( Node_id id ) { return ast.promise( id ) != Promise::None; } ),
         [&]( Node_id id )
         {
-            tree.put_u8( u8( ast.trig( id ) ) );
-            put_span( ast.trig_span( id ) );
+            tree.put_u8( u8( ast.promise( id ) ) );
+            put_span( ast.promise_span( id ) );
         }
     );
     write_table(
@@ -422,8 +422,8 @@ std::optional<Loaded_state> read_state(
         refs,
         [&]( Node_id id )
         {
-            const Trig trig = Trig( in.get_u8() );
-            ast.set_trig( id, trig, get_span() );
+            const Promise trig = Promise( in.get_u8() );
+            ast.set_promise( id, trig, get_span() );
         }
     );
     read_table( in, refs, [&]( Node_id id ) { ast.set_name_span( id, get_span() ); } );
@@ -732,8 +732,8 @@ TEST_CASE( "state_round_trips_a_module_through_another_compile", "[object][state
         REQUIRE( a.access( x ) == b.access( y ) );
         REQUIRE( a.doc_span( x ).is_valid() == b.doc_span( y ).is_valid() );
         REQUIRE( a.is_real_arithmetic( x ) == b.is_real_arithmetic( y ) );
-        REQUIRE( a.trig( x ) == b.trig( y ) );
-        REQUIRE( a.trig_span( x ).start == b.trig_span( y ).start );
+        REQUIRE( a.promise( x ) == b.promise( y ) );
+        REQUIRE( a.promise_span( x ).start == b.promise_span( y ).start );
 
         const Type_id type_a = front.types.type_of( x );
         const Type_id type_b = types_b.contains( y.v ) ? types_b.at( y.v ) : Type_id {};
@@ -791,7 +791,7 @@ TEST_CASE( "state_round_trips_a_module_through_another_compile", "[object][state
     REQUIRE( named );
 
     // `twice( f64 )` keeps both marks.
-    REQUIRE( std::ranges::count_if( loaded->functions, []( const Function& f ) { return f.trig == Trig::Cos; } ) == 1 );
+    REQUIRE( std::ranges::count_if( loaded->functions, []( const Function& f ) { return f.promise == Promise::Cos; } ) == 1 );
 
     // The part's KIR reads as it did, from the same declarations and types.
     REQUIRE( loaded->functions.size() == built.printed.size() );
@@ -800,7 +800,7 @@ TEST_CASE( "state_round_trips_a_module_through_another_compile", "[object][state
     {
         const Function& function = loaded->functions[f];
         REQUIRE( print( function, b, types.table(), second.literals, second.interner ) == built.printed[f] );
-        REQUIRE( function.real_arithmetic == ( function.trig == Trig::Cos ) ); // only `twice( f64 )` is marked
+        REQUIRE( function.real_arithmetic == ( function.promise == Promise::Cos ) ); // only `twice( f64 )` is marked
         REQUIRE( verify( function ).empty() );
     }
 }

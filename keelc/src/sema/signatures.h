@@ -93,7 +93,10 @@ private:
     void    declare_fields();
     void    declare_functions();
     void    declare_member_functions();
-    void    check_trig( Node_id decl );
+    void    check_promise( Node_id decl );
+    void    check_promise_ties();
+    bool    is_const_annotated( Node_id param ) const;
+    bool    fits_dft( Node_id decl ) const;
     void    declare_globals();
     void    declare_enums();
     void    declare_payloads(); // an enum's variant fields

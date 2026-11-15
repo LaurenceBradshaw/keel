@@ -31,6 +31,9 @@ public:
     // conformance is the next.
     std::optional<Instantiation> next();
 
+    // One more to lower, as a later pass asks for it.
+    void seed( Instantiation instance );
+
     // The generic blocks' methods a lowered function calls or converts to an interface through,
     // which no call site the checker saw names.
     void reached_by( const Function& function );
