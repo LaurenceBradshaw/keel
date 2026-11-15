@@ -385,7 +385,8 @@ cmake --preset debug
 cmake --build build/debug
 ```
 
-Presets are `debug`, `asan` (ASan + UBSan) and `release`. Programs keelc builds link against glibc's
+Presets are `debug`, `asan` (ASan + UBSan), `release`, and `checked`, the release build's
+optimisation with keelc's asserts kept, which runs the goldens in about half the debug build's time. Programs keelc builds link against glibc's
 start files, so the C library's development package (`libc6-dev`) must be installed.
 
 On Windows, the `windows-debug` and `windows-release` presets build one standalone `keelc.exe` with
@@ -484,8 +485,8 @@ build/debug/bin/keeldoc -o keel_stl/docs kl=keel_stl/src
 ```sh
 ctest --preset debug                                    # the first six below
 build/debug/bin/keel_tests                              # unit tests
-keelc/test/run_tests.sh build/debug/bin/keelc           # golden-file tests
-keel_stl/test/run_tests.sh build/debug/bin/keelc        # the kl package's tests
+keelc/test/run_tests.sh build/checked/bin/keelc         # golden-file tests
+keel_stl/test/run_tests.sh build/checked/bin/keelc      # the kl package's tests
 build/debug/bin/keel_rt_tests                           # the runtime's edge cases
 build/debug/bin/keeldoc_tests                           # keeldoc's unit tests
 keeldoc/test/run_tests.sh build/debug/bin/keeldoc build/debug/bin/keelc   # keeldoc's pages
@@ -500,7 +501,8 @@ The golden runner links the runtime built beside the `keelc` it is given. Under 
 point `KEEL_RT` at a library built without sanitizers, such as the `debug` one. Set `KEEL_VALGRIND=1`
 to run every executed fixture under valgrind.
 
-`.githooks/pre-commit` runs formatting, every suite, the docs check and the release build; install it
+`.githooks/pre-commit` runs formatting, every suite (the goldens with the `checked` keelc), the docs
+check and the release build; install it
 with `git config core.hooksPath .githooks`, once in each clone, as git keeps the setting per clone.
 On Windows it runs under Git Bash, with the `windows-` presets.
 

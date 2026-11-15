@@ -32,6 +32,7 @@ case "$( uname -s )" in
 esac
 debug_bin="./build/${prefix}debug/bin"
 release_bin="./build/${prefix}release/bin"
+checked_bin="./build/${prefix}checked/bin" # optimised with asserts: the goldens' keelc
 export KEEL_FORMAT="$format"
 
 # Only Markdown changed (staged, unstaged or untracked): nothing a check reads, so none run.
@@ -62,7 +63,7 @@ step()
 }
 
 # Configure any preset whose build directory is missing, so a fresh clone's first commit works.
-for preset in "${prefix}debug" "${prefix}release"; do
+for preset in "${prefix}debug" "${prefix}release" "${prefix}checked"; do
     if [ ! -d "build/${preset}" ]; then
         printf '  %sconfiguring %s...%s\n' "$dim" "$preset" "$reset"
         cmake --preset "$preset" > /dev/null 2>&1 || {
@@ -156,7 +157,7 @@ check_goldens()
 
         runners+=( "$runner" )
         logs+=( "$( mktemp )" )
-        KEEL_COMPARE="$compare" "$runner" "${debug_bin}/keelc${exe}" > "${logs[-1]}" 2>&1 &
+        KEEL_COMPARE="$compare" "$runner" "${checked_bin}/keelc${exe}" > "${logs[-1]}" 2>&1 &
         pids+=( $! )
     done
 
@@ -211,6 +212,7 @@ step "build (debug)"       cmake --build --preset "${prefix}debug"   || exit 1
 step "unit tests"          "${debug_bin}/keel_tests${exe}"           || exit 1
 step "keeldoc unit tests"  "${debug_bin}/keeldoc_tests${exe}"        || exit 1
 step "runtime tests"       "${debug_bin}/keel_rt_tests${exe}"        || exit 1
+step "build (checked)"     cmake --build --preset "${prefix}checked" --target keelc || exit 1
 step "golden tests"        check_goldens                             || exit 1
 if [ -z "$prefix" ]; then # Windows has lldb, checked by hand
     step "debug -O1 stepping"  editors/gdb/check_levels.sh "${debug_bin}/keelc" || exit 1

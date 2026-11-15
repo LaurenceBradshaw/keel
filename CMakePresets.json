@@ -45,6 +45,16 @@
             }
         },
         {
+            "name": "checked",
+            "displayName": "RelWithDebInfo with asserts, for the goldens (clang-18)",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "CMAKE_CXX_FLAGS_RELWITHDEBINFO": "-O2 -g",
+                "KEEL_TESTS": "OFF"
+            }
+        },
+        {
             "name": "windows-base",
             "hidden": true,
             "generator": "Ninja",
@@ -82,14 +92,26 @@
                 "KEEL_TESTS": "OFF",
                 "KEEL_WERROR": "ON"
             }
+        },
+        {
+            "name": "windows-checked",
+            "displayName": "RelWithDebInfo with asserts, for the goldens (clang-cl)",
+            "inherits": "windows-base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "CMAKE_CXX_FLAGS_RELWITHDEBINFO": "/Zi /O2 /Ob1",
+                "KEEL_TESTS": "OFF"
+            }
         }
     ],
     "buildPresets": [
         { "name": "debug",   "configurePreset": "debug" },
         { "name": "asan",    "configurePreset": "asan" },
         { "name": "release", "configurePreset": "release" },
+        { "name": "checked", "configurePreset": "checked" },
         { "name": "windows-debug",   "configurePreset": "windows-debug" },
-        { "name": "windows-release", "configurePreset": "windows-release" }
+        { "name": "windows-release", "configurePreset": "windows-release" },
+        { "name": "windows-checked", "configurePreset": "windows-checked" }
     ],
     "testPresets": [
         {
