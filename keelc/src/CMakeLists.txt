@@ -6,6 +6,10 @@
 # Only src/ goes on the include path, so two directories may hold files of the same name.
 file(GLOB_RECURSE keel_sources CONFIGURE_DEPENDS "*.cpp")
 
+# The linear-map solver at -O0 makes a cold solve ten times slower, which dominates the goldens.
+file(GLOB_RECURSE keel_linear_sources CONFIGURE_DEPENDS "linear/*.cpp")
+set_source_files_properties(${keel_linear_sources} PROPERTIES COMPILE_OPTIONS $<$<CONFIG:Debug>:-O2>)
+
 # The prelude is Keel source compiled into keelc as a string, so keelc reads no file to find it.
 # Editing prelude.kl re-runs CMake, which regenerates the string.
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS prelude/prelude.kl)
