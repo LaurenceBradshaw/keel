@@ -140,6 +140,7 @@ Sum normalised( const Sum& s )
         }
     }
     out.M             = s.M / g;
+    out.batch         = s.batch;
     const auto merged = [&]( const Terms& from, Terms& to )
     {
         for( const auto& [e, c] : from )
@@ -182,6 +183,7 @@ Sum conjugate_sum( const Sum& s )
     };
     negated( s.coefficient, c.coefficient );
     negated( s.offset, c.offset );
+    c.batch = s.batch;
     return c;
 }
 
@@ -247,30 +249,43 @@ struct Rule
     const char* identity;
     std::vector<Use> ( *match )( const Sum&, const Plan_options& );
     std::vector<u32> ( *build )( Circuit&, const Sum&, const Use&, const std::vector<u32>&, const Part_builder& );
-    bool affine = false; // takes a sum with an offset, which no other rule does
+    bool affine  = false; // takes a sum with an offset, which no other rule does
+    bool batched = false; // takes a batch, which no other rule does
 };
 
 std::vector<Use> matches( const Rule& rule, const Sum& s, const Plan_options& options )
 {
-    return s.offset.empty() || rule.affine ? rule.match( s, options ) : std::vector<Use> {};
+    return ( s.offset.empty() || rule.affine ) && ( s.batch == 1 || rule.batched ) ? rule.match( s, options )
+                                                                                   : std::vector<Use> {};
 }
 
-// Every product, summed in j order; a row of zeros is x[0] times 0.
+// One copy of a batch.
+Sum single( const Sum& s )
+{
+    Sum one   = s;
+    one.batch = 1;
+    return one;
+}
+
+// Every product, summed in j order, each copy of a batch alone; a row of zeros is x[0] times 0.
 std::vector<u32> direct( Circuit& c, const Sum& s, const std::vector<u32>& x )
 {
     std::vector<u32> out;
-    for( u32 o = 0; o < s.m; ++o )
+    for( u32 t = 0; t < s.batch; ++t )
     {
-        std::optional<u32> acc;
-        for( u32 j = 0; j < s.n; ++j )
+        for( u32 o = 0; o < s.m; ++o )
         {
-            if( const std::complex<f64> v = entry( s, j, o ); !is_zero( v ) )
+            std::optional<u32> acc;
+            for( u32 j = 0; j < s.n; ++j )
             {
-                const u32 term = c.scale( x[j], v );
-                acc            = acc ? c.add( *acc, term ) : term;
+                if( const std::complex<f64> v = entry( s, j, o ); !is_zero( v ) )
+                {
+                    const u32 term = c.scale( x[t * s.n + j], v );
+                    acc            = acc ? c.add( *acc, term ) : term;
+                }
             }
+            out.push_back( acc ? *acc : c.scale( x[t * s.n], 0.0 ) );
         }
-        out.push_back( acc ? *acc : c.scale( x[0], 0.0 ) );
     }
     return out;
 }
@@ -424,6 +439,25 @@ Sum inner_sum( const Kernel& k, u64 P, u64 R, u64 j1, bool real )
     return kernel_sum( { ragged( k.n, P, j1 ), static_cast<u32>( R ), k.M, k.c * P % k.M }, real );
 }
 
+// Each inner sum with the j1 it starts at, equal ones one batch; ragged ones are longer first.
+std::vector<std::pair<u32, Sum>> inner_batches( const Kernel& k, u64 P, u64 R, bool real )
+{
+    std::vector<std::pair<u32, Sum>> out;
+    for( u32 j1 = 0; j1 < P; ++j1 )
+    {
+        const Sum inner = inner_sum( k, P, R, j1, real );
+        if( !out.empty() && single( out.back().second ) == inner )
+        {
+            ++out.back().second.batch;
+        }
+        else
+        {
+            out.push_back( { j1, inner } );
+        }
+    }
+    return out;
+}
+
 Sum outer_sum( const Kernel& k, u64 P, u64 R, u64 k2 )
 {
     return kernel_sum( { static_cast<u32>( P ), ragged( k.m, R, k2 ), k.M, k.c * R % k.M }, false );
@@ -455,9 +489,9 @@ std::vector<Use> split_match( const Sum& s, const Plan_options& )
             }
         }
         Use use { {}, own, "split " + std::to_string( P ) + "x" + std::to_string( k.n / P ), {}, { P, R } };
-        for( u32 j1 = 0; j1 < P; ++j1 )
+        for( const auto& [first, inner] : inner_batches( k, P, R, s.real ) )
         {
-            add_part( use, inner_sum( k, P, R, j1, s.real ) );
+            add_part( use, inner );
         }
         for( u64 k2 = 0; k2 < R; ++k2 )
         {
@@ -474,15 +508,24 @@ std::vector<u32> split_build( Circuit& c, const Sum& s, const Use& use, const st
     const auto [P, R] = use.chosen;
 
     std::vector<std::vector<u32>> z( P );
+    for( const auto& [first, inner] : inner_batches( k, P, R, s.real ) )
+    {
+        std::vector<u32> in;
+        for( u32 t = 0; t < inner.batch; ++t )
+        {
+            for( u32 j2 = 0; j2 < inner.n; ++j2 )
+            {
+                in.push_back( x[first + t + P * j2] );
+            }
+        }
+        const std::vector<u32> y = part( c, inner, in );
+        for( u32 t = 0; t < inner.batch; ++t )
+        {
+            z[first + t].assign( y.begin() + t * inner.m, y.begin() + ( t + 1 ) * inner.m );
+        }
+    }
     for( u32 j1 = 0; j1 < P; ++j1 )
     {
-        const Sum        inner = inner_sum( k, P, R, j1, s.real );
-        std::vector<u32> in( inner.n );
-        for( u32 j2 = 0; j2 < inner.n; ++j2 )
-        {
-            in[j2] = x[j1 + P * j2];
-        }
-        z[j1] = part( c, inner, in );
         for( u32 k2 = 0; k2 < R; ++k2 )
         {
             const u64 e = k.c * j1 % k.M * k2 % k.M;
@@ -986,6 +1029,106 @@ std::vector<u32> column_build( Circuit& c, const Sum& s, const Use& use, const s
     return part( c, use.parts[0].second, x );
 }
 
+std::vector<Use> batch_match( const Sum& s, const Plan_options& )
+{
+    if( s.batch < 2 || !s.offset.empty() )
+    {
+        return {};
+    }
+    return { { { { s.batch, single( s ) } }, {}, "batch " + std::to_string( s.batch ) } };
+}
+
+std::vector<u32> batch_build( Circuit& c, const Sum& s, const Use&, const std::vector<u32>& x, const Part_builder& part )
+{
+    std::vector<u32> out;
+    for( u32 t = 0; t < s.batch; ++t )
+    {
+        const std::vector<u32> y = part( c, single( s ), { x.begin() + t * s.n, x.begin() + ( t + 1 ) * s.n } );
+        out.insert( out.end(), y.begin(), y.end() );
+    }
+    return out;
+}
+
+// Real copies of f(j, -k) = conj f(j, k), two at a time: Z, the sum of a + i b, gives
+// B[k] = (Z[k] - conj Z[-k]) / 2i and A[k] = Z[k] - i B[k], A[-k] and B[-k] their conjugates. Z
+// takes every -k too, so max(m, M) outputs, at most 2m; an odd copy is summed alone.
+std::vector<Use> paired_match( const Sum& s, const Plan_options& )
+{
+    const Sum one     = single( s );
+    const u64 outputs = s.m > 1 ? std::max<u64>( s.m, s.M ) : s.m;
+    if( !s.real || s.batch < 2 || !s.offset.empty() || outputs > 2 * u64 { s.m } ||
+        reindexed( one, 1, -1, 0 ) != normalised( conjugate_sum( one ) ) )
+    {
+        return {};
+    }
+    Cost untangle {};
+    for( u64 k = 0; k < std::min<u64>( s.m, s.M ); ++k )
+    {
+        if( const u64 nk = ( s.M - k ) % s.M; k != nk && ( k < nk || nk >= s.m ) )
+        {
+            untangle = untangle + Cost { 4, 2 };
+        }
+    }
+    Use use {
+        { { s.batch / 2, Sum { s.n, static_cast<u32>( outputs ), s.M, s.coefficient, false } } },
+        ( s.batch / 2 ) * untangle,
+        "paired"
+    };
+    if( s.batch % 2 == 1 )
+    {
+        use.parts.push_back( { 1, one } );
+    }
+    return { std::move( use ) };
+}
+
+std::vector<u32> paired_build( Circuit& c, const Sum& s, const Use& use, const std::vector<u32>& x, const Part_builder& part )
+{
+    const std::complex<f64> i { 0, 1 };
+    std::vector<u32>        out( s.batch * s.m );
+    for( u32 t = 0; t + 1 < s.batch; t += 2 )
+    {
+        std::vector<u32> z( s.n );
+        for( u32 j = 0; j < s.n; ++j )
+        {
+            z[j] = c.add( x[t * s.n + j], c.scale( x[( t + 1 ) * s.n + j], i ) );
+        }
+        const std::vector<u32> Z = part( c, use.parts[0].second, z );
+        u32*                   a = &out[t * s.m];
+        u32*                   b = &out[( t + 1 ) * s.m];
+        for( u32 k = 0; k < s.m; ++k )
+        {
+            const u32 nk = static_cast<u32>( ( s.M - k % s.M ) % s.M );
+            if( k >= s.M )
+            {
+                a[k] = a[k % s.M];
+                b[k] = b[k % s.M];
+            }
+            else if( k == nk )
+            {
+                a[k] = c.real_part( Z[k] );
+                b[k] = c.real_part( c.scale( Z[k], -i ) );
+            }
+            else if( k < nk || nk >= s.m )
+            {
+                b[k] = c.scale( c.add( Z[k], c.scale( c.conj( Z[nk] ), -1.0 ) ), -0.5 * i );
+                a[k] = c.add( Z[k], c.scale( b[k], -i ) );
+                if( nk < s.m )
+                {
+                    a[nk] = c.conj( a[k] );
+                    b[nk] = c.conj( b[k] );
+                }
+            }
+        }
+    }
+    if( s.batch % 2 == 1 )
+    {
+        const u32              t = s.batch - 1;
+        const std::vector<u32> y = part( c, use.parts[1].second, { x.begin() + t * s.n, x.end() } );
+        std::copy( y.begin(), y.end(), out.begin() + t * s.m );
+    }
+    return out;
+}
+
 const Rule rules[] = {
     { "offset", "y[k] + b(k) adds b(k) to each output", offset_match, offset_build, true },
     { "column", "b(k) = a f(j, k) is the sum of x with a added to x[j]", column_match, column_build, true },
@@ -1006,6 +1149,14 @@ const Rule rules[] = {
       reflect_match,
       reflect_build },
     { "hermitian", "for real x and f(j, -k) = conj f(j, k), y[M - k] = conj y[k]", hermitian_match, hermitian_build },
+    { "batch", "copies on separate inputs are each summed alone", batch_match, batch_build, false, true },
+    { "paired",
+      "for real a, b and f(j, -k) = conj f(j, k), Z = the sum of a + i b gives A[k] = (Z[k] + conj Z[-k]) / 2 and B[k] = "
+      "(Z[k] - conj Z[-k]) / 2i",
+      paired_match,
+      paired_build,
+      false,
+      true },
     { "periodic", "W^M = 1: columns j and j + M are equal, and so are rows k and k + M", periodic_match, periodic_build },
     { "split",
       "j = j1 + P j2, k = k2 + R k1: W^(c j k) = W^(c P j2 k2) W^(c j1 k2) W^(c R j1 k1) when c P R = 0 mod M",
@@ -1043,13 +1194,13 @@ public:
             Planned       p;
             p.how     = "conjugate of " + r.how;
             p.circuit = Circuit( s.real );
-            std::vector<u32> x( s.n );
-            for( u32 j = 0; j < s.n; ++j )
+            std::vector<u32> x( s.n * s.batch );
+            for( u32 j = 0; j < s.n * s.batch; ++j )
             {
                 x[j] = p.circuit.input( j );
             }
             const std::vector<u32> m = p.circuit.paste( r.circuit, x, true );
-            for( u32 o = 0; o < s.m; ++o )
+            for( u32 o = 0; o < s.m * s.batch; ++o )
             {
                 p.outputs.push_back( m[r.outputs[o]] );
                 p.circuit.outputs[Row { Element { o } }] = p.outputs[o];
@@ -1061,8 +1212,8 @@ public:
         Planned       p;
         p.how     = choice.how;
         p.circuit = Circuit( s.real );
-        std::vector<u32> x( s.n );
-        for( u32 j = 0; j < s.n; ++j )
+        std::vector<u32> x( s.n * s.batch );
+        for( u32 j = 0; j < s.n * s.batch; ++j )
         {
             x[j] = p.circuit.input( j );
         }
@@ -1073,7 +1224,7 @@ public:
             x,
             [this]( Circuit& c, const Sum& part, const std::vector<u32>& in ) { return paste( c, part, in ); }
         );
-        for( u32 o = 0; o < s.m; ++o )
+        for( u32 o = 0; o < s.m * s.batch; ++o )
         {
             p.circuit.outputs[Row { Element { o } }] = p.outputs[o];
         }
@@ -1235,22 +1386,25 @@ f64 error( const Circuit& circuit, const std::vector<u32>& outputs, const Sum& s
 {
     std::mt19937                   rng( 5 );
     std::uniform_real_distribution d( -1.0, 1.0 );
-    std::vector<std::complex<f64>> x( s.n );
+    std::vector<std::complex<f64>> x( s.n * s.batch );
     for( auto& v : x )
     {
         v = { d( rng ), s.real ? 0.0 : d( rng ) };
     }
     const std::vector<std::complex<f64>> got   = circuit.evaluate( x );
     f64                                  worst = 0;
-    for( u32 o = 0; o < s.m; ++o )
+    for( u32 t = 0; t < s.batch; ++t )
     {
-        std::complex<f64> want = 0;
-        for( u32 j = 0; j < s.n; ++j )
+        for( u32 o = 0; o < s.m; ++o )
         {
-            want += x[j] * entry( s, j, o );
+            std::complex<f64> want = 0;
+            for( u32 j = 0; j < s.n; ++j )
+            {
+                want += x[t * s.n + j] * entry( s, j, o );
+            }
+            want += offset_at( s, o );
+            worst = std::max( worst, std::abs( got[outputs[t * s.m + o]] - want ) );
         }
-        want += offset_at( s, o );
-        worst = std::max( worst, std::abs( got[outputs[o]] - want ) );
     }
     return worst / std::sqrt( static_cast<f64>( s.n ) );
 }
@@ -1307,10 +1461,15 @@ Sum linear_sum( std::mt19937& rng )
     return normalised( s );
 }
 
-// As linear_sum, a third of the time with an offset: a term in k, or a rational multiple of a column.
+// As linear_sum, a quarter of the time a batch of 2 or 3, and a third of the time with an offset: a
+// term in k, or a rational multiple of a column.
 Sum random_sum( std::mt19937& rng )
 {
     Sum s = linear_sum( rng );
+    if( below( rng, 4 ) == 0 )
+    {
+        s.batch = 2 + below( rng, 2 );
+    }
     if( below( rng, 3 ) != 0 )
     {
         return s;
@@ -1359,7 +1518,7 @@ TEST_CASE( "every_planner_rule_computes_the_naive_sum", "[linear][sums]" )
     {
         INFO( rule.name << ": " << rule.identity );
         u32 checked = 0;
-        for( u32 t = 0; t < 4000 && checked < 20; ++t )
+        for( u32 t = 0; t < 10000 && checked < 20; ++t )
         {
             const Sum s = random_sum( rng );
             if( s.coefficient.empty() )
@@ -1369,8 +1528,8 @@ TEST_CASE( "every_planner_rule_computes_the_naive_sum", "[linear][sums]" )
             for( const Use& use : matches( rule, s, options ) )
             {
                 Circuit          c( s.real );
-                std::vector<u32> x( s.n );
-                for( u32 j = 0; j < s.n; ++j )
+                std::vector<u32> x( s.n * s.batch );
+                for( u32 j = 0; j < x.size(); ++j )
                 {
                     x[j] = c.input( j );
                 }
@@ -1382,7 +1541,7 @@ TEST_CASE( "every_planner_rule_computes_the_naive_sum", "[linear][sums]" )
                     []( Circuit& c, const Sum& part, const std::vector<u32>& in ) { return direct( c, part, in ); }
                 );
                 INFO( sides( s ) << " W" << s.M << " " << s.coefficient.size() << " terms " << use.how );
-                REQUIRE( out.size() == s.m );
+                REQUIRE( out.size() == s.m * s.batch );
                 CHECK( error( c, out, s ) < 1e-12 );
                 ++checked;
             }
@@ -1397,6 +1556,18 @@ TEST_CASE( "a_256_point_dft_splits_to_within_1_percent_of_split_radix", "[linear
     const Planned p = planned( s );
     INFO( p.how << " " << p.cost.adds << "/" << p.cost.muls );
     CHECK( p.cost.adds + p.cost.muls <= 6664 * 101 / 100 );
+    CHECK( error( p, s ) < 1e-12 );
+}
+
+// Real split radix takes 3N/2 log N - 5N/2 + 4 adds and N/2 log N - 3N/2 + 2 multiplies, 3078 at 256.
+TEST_CASE( "a_256_point_real_dft_pairs_its_halves_to_within_30_percent_of_real_split_radix", "[linear][sums]" )
+{
+    Sum s           = exponent_kernel( 256, 256, 256, 1 );
+    s.real          = true;
+    const Planned p = planned( s );
+    INFO( p.how << " " << p.cost.adds << "/" << p.cost.muls );
+    CHECK( p.how.find( "paired(" ) != std::string::npos );
+    CHECK( p.cost.adds + p.cost.muls <= 3078 * 130 / 100 );
     CHECK( error( p, s ) < 1e-12 );
 }
 

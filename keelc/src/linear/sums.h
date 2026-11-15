@@ -38,6 +38,7 @@ struct Rational
 
 // y[k] = sum over j < n of x[j] times the sum over e of c W_M^e(j, k), plus b(k), for k < m, W_M = exp(-2pii/M);
 // b(k) is the sum over e of c W_M^e(k). Each c is rational, as an irrational is a sum of powers of W.
+// A batch is that many copies on separate inputs, x[t n + j] giving y[t m + k].
 struct Sum
 {
     u32                          n;
@@ -46,6 +47,7 @@ struct Sum
     std::map<Exponent, Rational> coefficient;
     bool                         real = false; // x is real
     std::map<Exponent, Rational> offset {};    // b, its exponents in k alone
+    u32                          batch = 1;
 
     auto operator<=>( const Sum& ) const = default;
 };
@@ -83,6 +85,7 @@ struct Plan_options
 // the one input whose column it is a multiple of, terms in j or k alone factor
 // out, a real x pairs conjugate terms, W^M = 1 folds equal columns and rows, and j = j1 + P j2,
 // k = k2 + R k1 splits the sum into sums over j2, a twiddle W^(c j1 k2) and sums over j1, once the
-// cross term c P R j2 k1 is 0 mod M. Small kernels are solved. Nothing when no rule takes the sum.
+// cross term c P R j2 k1 is 0 mod M; two real copies of a hermitian kernel are one complex sum.
+// Small kernels are solved. Nothing when no rule takes the sum.
 std::optional<Planned> plan_sum( const Sum& sum, const Plan_options& options = {} );
 } // namespace keel

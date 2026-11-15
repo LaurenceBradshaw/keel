@@ -126,6 +126,13 @@ u32 Circuit::put( Op op )
                           : op.kind == Op_kind::Conj  ? real_ops_[op.a]
                                                       : op.kind == Op_kind::Real || op.kind == Op_kind::One;
         real_ops_.push_back( real );
+        const bool imaginary = op.kind == Op_kind::Add ? imaginary_ops_[op.a] && imaginary_ops_[op.b]
+                               : op.kind == Op_kind::Scale
+                                   ? ( real_ops_[op.a] && std::abs( constants_[op.b].value.real() ) < 1e-12 ) ||
+                                         ( imaginary_ops_[op.a] && std::abs( constants_[op.b].value.imag() ) < 1e-12 )
+                               : op.kind == Op_kind::Conj ? imaginary_ops_[op.a]
+                                                          : false;
+        imaginary_ops_.push_back( imaginary );
     }
     return found->second;
 }
@@ -274,6 +281,11 @@ u32 Circuit::scale_by( u32 a, Constant c )
     {
         c = times( c, constants_[ops_[a].b] );
         a = ops_[a].a;
+    }
+    // c conj(x) = conj(conj(c) x), so conjugate scalings share one multiply.
+    if( !integers_ && ops_[a].kind == Op_kind::Conj )
+    {
+        return conj( scale_by( ops_[a].a, make( std::conj( c.value ) ) ) );
     }
 
     if( integers_ )
@@ -617,8 +629,9 @@ Cost Circuit::cost( bool fma ) const
         const auto [re, im] = parts[o];
         if( op.kind == Op_kind::Add )
         {
-            // An imaginary part only one side has is a copy.
-            const u32 adds = ( re ? 1 : 0 ) + ( im && !real_ops_[op.a] && !real_ops_[op.b] ? 1 : 0 );
+            // A part only one side has is a copy.
+            const u32 adds = ( re && !imaginary_ops_[op.a] && !imaginary_ops_[op.b] ? 1 : 0 ) +
+                             ( im && !real_ops_[op.a] && !real_ops_[op.b] ? 1 : 0 );
             total.adds += adds;
             if( fma && ( feeds( op.a ) || feeds( op.b ) ) )
             {

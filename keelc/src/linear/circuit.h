@@ -187,7 +187,8 @@ private:
     Field* integers_ = nullptr;
 
     std::vector<Op>                                        ops_;
-    std::vector<bool>                                      real_ops_; // each op's value is real
+    std::vector<bool>                                      real_ops_;      // each op's value is real
+    std::vector<bool>                                      imaginary_ops_; // each op's real part is 0
     std::unordered_map<u64, u32>                           memo_;
     std::vector<Constant>                                  constants_;
     std::map<std::pair<f64, f64>, u32>                     constant_ids_;
