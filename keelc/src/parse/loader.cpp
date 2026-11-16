@@ -260,6 +260,16 @@ Program load_program(
                 const std::string_view module_name    = interner.text( ast.name( decl ) );
                 const std::string      qualified_name = qualified( interner, package_id, module_name );
 
+                // Reported, then loaded as written, so the names it brings still resolve.
+                if( ast.package( decl ).is_valid() && package_id == modules.package_of( current ) )
+                {
+                    diags.error(
+                        ast.span( decl ),
+                        fmt::format( "`{}` is in this file's own package", qualified_name ),
+                        fmt::format( "write `import {};`", module_name )
+                    );
+                }
+
                 if( const auto [first, fresh] = imported.try_emplace( qualified_name, ast.span( decl ) ); !fresh )
                 {
                     const Line_col at = sm.line_col( first->second.file, first->second.start );
@@ -804,8 +814,8 @@ TEST_CASE( "loader_loads_modules_from_a_package", "[parse][loader][packages]" )
         REQUIRE( p.sees( "kl/geom.kl", "kl/shape.kl" ) );
     }
 
-    // Inside `kl` the qualifier is optional, so both spellings reach the same file.
-    SECTION( "a package may name itself" )
+    // Refused, and still loaded, so its names resolve.
+    SECTION( "a package naming itself is refused" )
     {
         const Loaded p( {
             { "main.kl", "import kl::geom;\ni32 main() { return 0; }\n" },
@@ -814,7 +824,8 @@ TEST_CASE( "loader_loads_modules_from_a_package", "[parse][loader][packages]" )
         } );
 
         INFO( p.rendered() );
-        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`kl::shape` is in this file's own package" ) != std::string::npos );
         REQUIRE( p.functions() == std::vector<std::string_view> { "area", "main", "side" } );
     }
 

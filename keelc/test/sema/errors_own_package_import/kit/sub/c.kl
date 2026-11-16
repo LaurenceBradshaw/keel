@@ -1,0 +1,7 @@
+import kit::b;
+import kit::sub::d;
+
+i32 three()
+{
+    return four() - kit::two() + 1;
+}

@@ -1,0 +1,13 @@
+error: `kit::b` is in this file's own package
+ --> sema/errors_own_package_import/kit/a.kl:1:1
+  |
+1 | import kit::b;
+  | ^^^^^^^^^^^^^^ write `import b;`
+
+error: `kit::sub::d` is in this file's own package
+ --> sema/errors_own_package_import/kit/sub/c.kl:2:1
+  |
+2 | import kit::sub::d;
+  | ^^^^^^^^^^^^^^^^^^^ write `import d;`
+
+2 errors generated

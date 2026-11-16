@@ -1,0 +1,8 @@
+// A module importing a sibling through its own package's name: `kit::a` and `kit::sub::c` do.
+import kit::a;
+import kit::sub::c;
+
+i32 main()
+{
+    return kit::one() + kit::sub::three();
+}

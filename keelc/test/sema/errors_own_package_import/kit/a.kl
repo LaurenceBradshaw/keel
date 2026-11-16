@@ -1,0 +1,6 @@
+import kit::b;
+
+i32 one()
+{
+    return two() - 1;
+}
