@@ -1,0 +1,7 @@
+error: `T` does not promise `copyable`, and `holds` requires it of `T`
+ --> sema/errors_bound_argument_order.kl:8:48
+  |
+8 | T first<G, T>( const ref G g ) where G : holds<T> { return g.get(); }
+  |                                                ^ add `copyable` to the `where` clause for `T` on `first`
+
+1 error generated

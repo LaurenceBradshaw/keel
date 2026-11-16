@@ -1,0 +1,33 @@
+// An interface bound's argument is checked once every clause is recorded, so `G : holds<T>` sees
+// `T`'s `copyable` whichever clause comes first. Exits with the failing check.
+interface holds<T> where T : copyable
+{
+    T get() const;
+};
+
+struct cell implements holds<i32>
+{
+    i32 v;
+
+    i32 get() const { return v; }
+};
+
+T before<G, T>( const ref G g ) where G : holds<T>, where T : copyable { return g.get(); }
+T after<G, T>( const ref G g ) where T : copyable, where G : holds<T> { return g.get(); }
+
+i32 main( const ref str[] _ )
+{
+    cell c = cell { 7 };
+
+    if( before<cell, i32>( c ) != 7 )
+    {
+        return 1;
+    }
+
+    if( after<cell, i32>( c ) != 7 )
+    {
+        return 2;
+    }
+
+    return 0;
+}

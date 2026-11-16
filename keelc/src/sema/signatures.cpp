@@ -206,8 +206,10 @@ void Signatures::declare_parameters( Node_id list )
 void Signatures::declare_bounds( Node_id declaration, Node_id list )
 {
     declare_parameters( list );
+    bounds_.hold_checks();
     resolve_clause_bounds( list );
     bounds_.declare_type_parameters( declaration, list );
+    bounds_.release_checks();
 }
 
 // What each clause's bounds name: an interface, or an `fn` signature.
@@ -852,9 +854,11 @@ void Signatures::declare_member_functions()
             }
 
             declare_bounds( member, ast_.own_type_param_list( member ) );
+            bounds_.hold_checks();
             resolve_clause_bounds( ast_.conditions( member ) );
             bounds_.declare_conditions( member );
             bounds_.enter_conditions( member ); // the signature resolves under them
+            bounds_.release_checks();
 
             // A constructor and a destructor return nothing and have no annotation to read; a
             // method has both. The return type is invalid for the two

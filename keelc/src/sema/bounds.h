@@ -109,6 +109,9 @@ public:
     void check_bounds( Node_id parameter, Span at, Type_id argument, std::string_view callee, const Bindings& arguments );
     // The `copyable` checks that came before the struct order, which is what answers them.
     void check_deferred();
+    // Checks wait while a list's clauses are resolved: `G : I<T>` needs `T`'s clause recorded.
+    void hold_checks();
+    void release_checks();
 
     // The bound set recorded for a parameter, or an empty set when it carries no `where` clause.
     Bound_set bounds_for( Type_id parameter ) const;
@@ -241,6 +244,17 @@ private:
         std::string callee;
     };
     std::vector<Deferred> deferred_;
+
+    struct Held
+    {
+        Node_id     parameter;
+        Span        at;
+        Type_id     argument;
+        std::string callee;
+        Bindings    arguments;
+    };
+    std::vector<Held> held_;
+    bool              holding_ = false;
 };
 
 } // namespace keel::sema

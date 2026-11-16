@@ -1,0 +1,13 @@
+// An interface bound's argument that misses the interface's own bound is reported, naming the
+// parameter to bound.
+interface holds<T> where T : copyable
+{
+    T get() const;
+};
+
+T first<G, T>( const ref G g ) where G : holds<T> { return g.get(); }
+
+i32 main( const ref str[] _ )
+{
+    return 0;
+}

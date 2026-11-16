@@ -345,6 +345,12 @@ bool Bounds::adopts_joined( Type_id type, Type_id value ) const
 // A span rather than a node, because a deduced type argument has no annotation to underline.
 void Bounds::check_bounds( Node_id parameter, Span at, Type_id argument, std::string_view callee, const Bindings& arguments )
 {
+    if( holding_ )
+    {
+        held_.push_back( { parameter, at, argument, std::string( callee ), arguments } );
+        return;
+    }
+
     // A type's instance is one type however often it is named, so `Sorted<Plain> s = Sorted( x );` is one mistake.
     const auto owner   = owner_of_.find( parameter.v );
     const bool of_type = owner != owner_of_.end() &&
@@ -502,6 +508,23 @@ void Bounds::check_deferred()
     }
 
     deferred_.clear();
+}
+
+void Bounds::hold_checks()
+{
+    holding_ = true;
+}
+
+void Bounds::release_checks()
+{
+    holding_                     = false;
+    const std::vector<Held> held = std::move( held_ );
+    held_.clear();
+
+    for( const Held& check : held )
+    {
+        check_bounds( check.parameter, check.at, check.argument, check.callee, check.arguments );
+    }
 }
 
 void Bounds::report_unmet(
