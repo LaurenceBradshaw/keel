@@ -23,6 +23,7 @@ struct Map_outcome
     bool                        cached = false; // the circuit came from the cache, not a solve
     std::optional<Unrecognised> ending = {};    // why no map was found
     std::optional<Cost>         cost   = {};    // what the body costs after, when a map was read
+    std::optional<Cost>         input  = {};    // what it cost before
 };
 
 // keelc's functions for the kernels plans call, made once a program: the kernels made, and how one joins the

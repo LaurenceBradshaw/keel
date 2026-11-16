@@ -4,6 +4,7 @@
 #include "front_end.h"
 #include <fmt/core.h>
 #include <algorithm>
+#include <chrono>
 #include <functional>
 #include "check/drop_flags.h"
 #include "check/report.h"
@@ -442,6 +443,7 @@ Front_end run_front_end(
                     {
                         // A copy, as a planned kernel's function can move the functions.
                         Function          planning = current();
+                        const auto        start    = std::chrono::steady_clock::now();
                         const Map_outcome outcome  = solve_linear_maps(
                             planning,
                             front.functions,
@@ -457,9 +459,16 @@ Front_end run_front_end(
                         if( clock != nullptr && !outcome.ending )
                         {
                             clock->note( fmt::format(
-                                "linear map `{}` {}",
+                                "linear map `{}` {}: {}/{} adds/multiplies, from {}/{}, in {:.2f}s",
                                 interner.text( ast.name( current().declaration ) ),
-                                outcome.cached ? "from the cache" : "solved"
+                                outcome.cached   ? "from the cache"
+                                : outcome.solved ? "solved"
+                                                 : "kept",
+                                outcome.cost->adds,
+                                outcome.cost->muls,
+                                outcome.input->adds,
+                                outcome.input->muls,
+                                std::chrono::duration<double>( std::chrono::steady_clock::now() - start ).count()
                             ) );
                         }
                         if( outcome.solved )

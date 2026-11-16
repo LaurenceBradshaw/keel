@@ -252,10 +252,10 @@ Map_outcome solve_linear_maps(
         {
             if( program->cost >= read->input )
             {
-                return { .cost = read->input };
+                return { .cost = read->input, .input = read->input };
             }
             lower_program( func, *program, *x, *y, places.take_prologue(), types, literals, span, called );
-            return { .solved = true, .cost = program->cost };
+            return { .solved = true, .cost = program->cost, .input = read->input };
         }
         if( const std::optional<Planned> planned = plan_sum( read->sum, plan ) )
         {
@@ -272,7 +272,7 @@ Map_outcome solve_linear_maps(
                 types,
                 literals
             );
-            return { .solved = solved, .cost = solved ? planned->circuit.cost() : read->input };
+            return { .solved = solved, .cost = solved ? planned->circuit.cost() : read->input, .input = read->input };
         }
     }
 
@@ -313,6 +313,12 @@ Map_outcome solve_linear_maps(
         literals,
         map.rows
     );
-    return { .solved = solved, .cached = cached, .ending = std::nullopt, .cost = solved ? found->cost() : map.input };
+    return {
+        .solved = solved,
+        .cached = cached,
+        .ending = std::nullopt,
+        .cost   = solved ? found->cost() : map.input,
+        .input  = map.input
+    };
 }
 } // namespace keel
