@@ -1,0 +1,8 @@
+// A name written bare is told to write it through the import's `as` name.
+import shapes::kind as sh;
+
+i32 main()
+{
+    kind k = round;
+    return 0;
+}

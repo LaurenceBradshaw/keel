@@ -1,0 +1,13 @@
+error: an `as` name is one name, not a path
+ --> sema/errors_import_alias_path/main.kl:2:24
+  |
+2 | import shapes::kind as a::b;
+  |                        ^^^^ write a single name
+
+error: expected an identifier, found `;`
+ --> sema/errors_import_alias_path/main.kl:3:25
+  |
+3 | import shapes::colour as;
+  |                         ^
+
+2 errors generated

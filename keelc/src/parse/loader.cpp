@@ -374,6 +374,34 @@ Program load_program(
                     );
                 }
 
+                if( const Node_id alias = ast.import_alias( decl ); alias.is_valid() )
+                {
+                    const Symbol_id name  = ast.name( alias );
+                    const Symbol_id other = modules.alias_package( current, name );
+                    if( modules.is_package( name ) )
+                    {
+                        diags.error(
+                            ast.span( alias ),
+                            fmt::format( "`{}` is already the name of a package", interner.text( name ) ),
+                            "choose another"
+                        );
+                    }
+                    else if( other.is_valid() && other != package_id )
+                    {
+                        diags.error(
+                            ast.span( alias ),
+                            fmt::format(
+                                "`{}` already names the package `{}` here", interner.text( name ), interner.text( other )
+                            ),
+                            "choose another"
+                        );
+                    }
+                    else if( !other.is_valid() )
+                    {
+                        modules.add_alias( current, { name, package_id, ast.span( alias ) } );
+                    }
+                }
+
                 if( const auto [first, fresh] = imported.try_emplace( qualified_name, ast.span( decl ) ); !fresh )
                 {
                     const Line_col at = sm.line_col( first->second.file, first->second.start );

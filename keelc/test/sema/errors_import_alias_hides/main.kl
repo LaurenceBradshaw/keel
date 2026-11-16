@@ -1,0 +1,12 @@
+// An `as` name a type already has is refused.
+import shapes::kind as point;
+
+struct point
+{
+    i32 x;
+};
+
+i32 main()
+{
+    return 0;
+}

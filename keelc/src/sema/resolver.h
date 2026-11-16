@@ -119,6 +119,12 @@ public:
         return modules_.is_package( package );
     }
 
+    // `name` is an `as` name in `file`.
+    bool is_alias( File_id file, Symbol_id name ) const
+    {
+        return modules_.alias_package( file, name ).is_valid();
+    }
+
     Symbol_id prelude_package() const
     {
         return modules_.prelude_package();

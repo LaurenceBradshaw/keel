@@ -1,0 +1,7 @@
+error: `point` is already declared here
+ --> sema/errors_import_alias_hides/main.kl:2:24
+  |
+2 | import shapes::kind as point;
+  |                        ^^^^^ choose another name
+
+1 error generated

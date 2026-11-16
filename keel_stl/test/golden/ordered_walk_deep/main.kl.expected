@@ -6217,12 +6217,12 @@ void kl_2kl11ordered_set_4grow__I3i32E__SQ2kl11ordered_setI3i32E( struct kl_2kl1
     if ( kl_t7 ) goto bb1; else goto bb2;
     bb1:
 #line 380 "../../src/ordered_set.kl"
-    kl_rt_panic( "../../src/ordered_set.kl", 380, "arithmetic overflow: nodes * kl::_core::ORDERED_KEYS" );
+    kl_rt_panic( "../../src/ordered_set.kl", 380, "arithmetic overflow: nodes * control::ORDERED_KEYS" );
     bb2:
 #line 380 "../../src/ordered_set.kl"
     kl_t8 = kl_nodes_2 * kl_t6;
 #line 380 "../../src/ordered_set.kl"
-    kl_t9 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_t8, 4, "../../src/ordered_set.kl", 380, "out of memory: alloc<K>( nodes * kl::_core::ORDERED_KEYS )" );
+    kl_t9 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_t8, 4, "../../src/ordered_set.kl", 380, "out of memory: alloc<K>( nodes * control::ORDERED_KEYS )" );
 #line 380 "../../src/ordered_set.kl"
     kl_keys_5 = kl_t9;
 #line 383 "../../src/ordered_set.kl"
@@ -6965,12 +6965,12 @@ void kl_2kl11ordered_map_4grow__I3i32_3i32E__SQ2kl11ordered_mapI3i32_3i32E( stru
     if ( kl_t8 ) goto bb1; else goto bb2;
     bb1:
 #line 466 "../../src/ordered_map.kl"
-    kl_rt_panic( "../../src/ordered_map.kl", 466, "arithmetic overflow: nodes * kl::_core::ORDERED_KEYS" );
+    kl_rt_panic( "../../src/ordered_map.kl", 466, "arithmetic overflow: nodes * control::ORDERED_KEYS" );
     bb2:
 #line 466 "../../src/ordered_map.kl"
     kl_t9 = kl_nodes_2 * kl_t7;
 #line 466 "../../src/ordered_map.kl"
-    kl_t10 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_t9, 4, "../../src/ordered_map.kl", 466, "out of memory: alloc<K>( nodes * kl::_core::ORDERED_KEYS )" );
+    kl_t10 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_t9, 4, "../../src/ordered_map.kl", 466, "out of memory: alloc<K>( nodes * control::ORDERED_KEYS )" );
 #line 466 "../../src/ordered_map.kl"
     kl_keys_5 = kl_t10;
     kl_t11 = ( uint64_t ) 11;
@@ -6980,12 +6980,12 @@ void kl_2kl11ordered_map_4grow__I3i32_3i32E__SQ2kl11ordered_mapI3i32_3i32E( stru
     if ( kl_t12 ) goto bb3; else goto bb4;
     bb3:
 #line 467 "../../src/ordered_map.kl"
-    kl_rt_panic( "../../src/ordered_map.kl", 467, "arithmetic overflow: nodes * kl::_core::ORDERED_KEYS" );
+    kl_rt_panic( "../../src/ordered_map.kl", 467, "arithmetic overflow: nodes * control::ORDERED_KEYS" );
     bb4:
 #line 467 "../../src/ordered_map.kl"
     kl_t13 = kl_nodes_2 * kl_t11;
 #line 467 "../../src/ordered_map.kl"
-    kl_t14 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_t13, 4, "../../src/ordered_map.kl", 467, "out of memory: alloc<V>( nodes * kl::_core::ORDERED_KEYS )" );
+    kl_t14 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_t13, 4, "../../src/ordered_map.kl", 467, "out of memory: alloc<V>( nodes * control::ORDERED_KEYS )" );
 #line 467 "../../src/ordered_map.kl"
     kl_values_6 = kl_t14;
 #line 470 "../../src/ordered_map.kl"

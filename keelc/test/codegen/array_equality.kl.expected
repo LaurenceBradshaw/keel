@@ -12540,12 +12540,12 @@ void kl_2kl3map_6resize__IA2_3i32_3i32E__SQ2kl3mapIA2_3i32_3i32E_3u64( struct kl
 #line 324 "<kl>/map.kl"
     kl_t5 = kl_2kl5_core12hash_control_6usable__SQ2klQ5_core12hash_control_3u64( kl_slots_2 );
 #line 324 "<kl>/map.kl"
-    kl_t6 = ( struct kl__A2_3i32* ) kl_rt_alloc_many( ( size_t ) kl_t5, 8, "<kl>/map.kl", 324, "out of memory: alloc<K>( kl::_core::hash_control::usable( slots ) )" );
+    kl_t6 = ( struct kl__A2_3i32* ) kl_rt_alloc_many( ( size_t ) kl_t5, 8, "<kl>/map.kl", 324, "out of memory: alloc<K>( control::hash_control::usable( slots ) )" );
 #line 324 "<kl>/map.kl"
     kl_keys_3 = kl_t6;
     kl_t7 = kl_2kl5_core12hash_control_6usable__SQ2klQ5_core12hash_control_3u64( kl_slots_2 );
 #line 325 "<kl>/map.kl"
-    kl_t8 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_t7, 4, "<kl>/map.kl", 325, "out of memory: alloc<V>( kl::_core::hash_control::usable( slots ) )" );
+    kl_t8 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_t7, 4, "<kl>/map.kl", 325, "out of memory: alloc<V>( control::hash_control::usable( slots ) )" );
 #line 325 "<kl>/map.kl"
     kl_values_4 = kl_t8;
 #line 328 "<kl>/map.kl"

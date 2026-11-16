@@ -85,6 +85,7 @@ private:
     Prelude_items prelude_items() const;
     Node_id       lookup_qualified( Node_id package, Node_id use );
     Symbol_id     package_named( Node_id qualifier ) const;
+    void          refuse_hiding_aliases();
     bool          is_name_chain( Node_id qualifier ) const;
     bool          refuse_module( Node_id named, Node_id use );
     void          note_hidden_function( Node_id local );
@@ -203,6 +204,7 @@ Resolution Resolver::run()
         }
     }
 
+    refuse_hiding_aliases();
     visit( ast_.root() );
     refuse_private_in_public();
 
@@ -1237,7 +1239,10 @@ Node_id Resolver::lookup( Symbol_id name, Node_id use )
 Node_id Resolver::lookup_qualified( Node_id package, Node_id use )
 {
     const std::string package_spelt = package_text( ast_, interner_, package );
-    const Symbol_id   package_name  = interner_.find( package_spelt );
+    const Symbol_id   aliased       = ast_.kind( package ) == Node_kind::Name_expr
+                                          ? modules_.alias_package( ast_.span( package ).file, ast_.name( package ) )
+                                          : Symbol_id {};
+    const Symbol_id   package_name  = aliased.is_valid() ? aliased : interner_.find( package_spelt );
     const Symbol_id   name          = ast_.name( use );
     const Node_id     decl          = lookup_in( package_name, name, use );
 
@@ -1336,12 +1341,45 @@ bool Resolver::refuse_module( Node_id named, Node_id use )
     return true;
 }
 
+// An `as` name that a type of the file's package or the prelude already has would hide it as a qualifier.
+void Resolver::refuse_hiding_aliases()
+{
+    for( const auto& [file, aliases] : modules_.all_aliases() )
+    {
+        for( const Module_graph::Alias& alias : aliases )
+        {
+            for( const Symbol_id owner : { modules_.package_of( File_id { file } ), modules_.prelude_package() } )
+            {
+                const auto scope = packages_.find( owner );
+                if( scope != packages_.end() && scope->second.names.contains( alias.name ) )
+                {
+                    reporter_.error_at(
+                        alias.span,
+                        fmt::format( "`{}` is already declared here", interner_.text( alias.name ) ),
+                        "choose another name"
+                    );
+                    break;
+                }
+            }
+        }
+    }
+}
+
 // The package `qualifier` spells, when it is a chain of names with no type arguments; invalid otherwise.
 Symbol_id Resolver::package_named( Node_id qualifier ) const
 {
     if( !is_name_chain( qualifier ) )
     {
         return Symbol_id {};
+    }
+
+    const File_id file = ast_.span( qualifier ).file;
+    if( ast_.kind( qualifier ) == Node_kind::Name_expr )
+    {
+        if( const Symbol_id aliased = modules_.alias_package( file, ast_.name( qualifier ) ); aliased.is_valid() )
+        {
+            return aliased;
+        }
     }
 
     const Symbol_id package = interner_.find( package_text( ast_, interner_, qualifier ) );
@@ -1352,7 +1390,6 @@ Symbol_id Resolver::package_named( Node_id qualifier ) const
 
     // A package the file is not in and imports nothing from gives way to a type of its own package's
     // or the prelude's of that name, as kl's `optional` to a program named `optional`.
-    const File_id file = ast_.span( qualifier ).file;
     if( ast_.kind( qualifier ) == Node_kind::Name_expr && package != modules_.package_of( file ) &&
         !modules_.imports_from( file, package ) )
     {
@@ -1487,8 +1524,11 @@ std::string Resolver::variant_hint( Symbol_id name, Node_id use ) const
             const auto variants = ast_.variants( decl );
             if( std::ranges::any_of( variants, [&]( Node_id v ) { return ast_.name( v ) == name; } ) )
             {
-                // The file's own package is written bare.
-                const Symbol_id written = package == modules_.package_of( file ) ? Symbol_id {} : Symbol_id { package };
+                // The file's own package is written bare, and one it names with `as` by that name.
+                const Symbol_id alias   = modules_.alias_of( file, package );
+                const Symbol_id written = package == modules_.package_of( file ) ? Symbol_id {}
+                                          : alias.is_valid()                     ? alias
+                                                                                 : Symbol_id { package };
                 spelt.push_back( fmt::format(
                     "`{}::{}`", qualified( interner_, written, interner_.text( ast_.name( decl ) ) ), interner_.text( name )
                 ) );
@@ -1873,12 +1913,13 @@ void Resolver::refuse_private_types( Node_id type, std::string_view owner, std::
 void Resolver::refuse_other_package( Node_id use, Node_id decl )
 {
     const Symbol_id  package = modules_.package_of( ast_.span( decl ).file );
+    const Symbol_id  alias   = modules_.alias_of( ast_.span( use ).file, package );
     std::string_view name    = interner_.text( ast_.name( decl ) );
 
     reporter_.error_at(
         ast_.span( use ),
         fmt::format( "`{}` is in the package `{}`", name, interner_.text( package ) ),
-        fmt::format( "write `{}`", qualified( interner_, package, name ) )
+        fmt::format( "write `{}`", qualified( interner_, alias.is_valid() ? alias : package, name ) )
     );
 }
 

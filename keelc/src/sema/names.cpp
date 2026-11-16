@@ -175,6 +175,11 @@ bool Name_collector::is_package( Node_id id ) const
         return false;
     }
 
+    if( kind == Node_kind::Name_expr && resolution_.is_alias( ast_.span( id ).file, ast_.name( id ) ) )
+    {
+        return true;
+    }
+
     if( kind == Node_kind::Path_expr && !is_package( ast_.qualifier( id ) ) )
     {
         return false;

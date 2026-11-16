@@ -3156,7 +3156,7 @@ void kl_2kl3set_6resize__IQ2kl4pairI3i32_3i32EE__SQ2kl3setIQ2kl4pairI3i32_3i32EE
 #line 230 "../../src/set.kl"
     kl_t4 = kl_2kl5_core12hash_control_6usable__SQ2klQ5_core12hash_control_3u64( kl_slots_2 );
 #line 230 "../../src/set.kl"
-    kl_t5 = ( struct kl_2kl4pair_pair__I3i32_3i32E* ) kl_rt_alloc_many( ( size_t ) kl_t4, 8, "../../src/set.kl", 230, "out of memory: alloc<K>( kl::_core::hash_control::usable( slots ) )" );
+    kl_t5 = ( struct kl_2kl4pair_pair__I3i32_3i32E* ) kl_rt_alloc_many( ( size_t ) kl_t4, 8, "../../src/set.kl", 230, "out of memory: alloc<K>( control::hash_control::usable( slots ) )" );
 #line 230 "../../src/set.kl"
     kl_keys_3 = kl_t5;
 #line 233 "../../src/set.kl"
@@ -3421,7 +3421,7 @@ void kl_2kl3set_6resize__IQ2kl4pairIQ2kl4listI3i32E_4boolEE__SQ2kl3setIQ2kl4pair
 #line 230 "../../src/set.kl"
     kl_t4 = kl_2kl5_core12hash_control_6usable__SQ2klQ5_core12hash_control_3u64( kl_slots_2 );
 #line 230 "../../src/set.kl"
-    kl_t5 = ( struct kl_2kl4pair_pair__IQ2kl4listI3i32E_4boolE* ) kl_rt_alloc_many( ( size_t ) kl_t4, 32, "../../src/set.kl", 230, "out of memory: alloc<K>( kl::_core::hash_control::usable( slots ) )" );
+    kl_t5 = ( struct kl_2kl4pair_pair__IQ2kl4listI3i32E_4boolE* ) kl_rt_alloc_many( ( size_t ) kl_t4, 32, "../../src/set.kl", 230, "out of memory: alloc<K>( control::hash_control::usable( slots ) )" );
 #line 230 "../../src/set.kl"
     kl_keys_3 = kl_t5;
 #line 233 "../../src/set.kl"

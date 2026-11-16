@@ -687,7 +687,7 @@ std::vector<Node_id> Parser::parse_declarations()
                 );
             }
         }
-        else
+        else if( chunk.head->kind != Declaration_kind::Import ) // a broken import is still an import
         {
             declared = true;
         }
@@ -723,15 +723,51 @@ Node_id Parser::parse_import()
         package_node = extend_package( package_node, names[i].first, names[i].second );
     }
 
+    // `as` is a keyword only here, so it stays a name everywhere else.
+    Node_id alias {};
+    if( cursor_.check( Token_kind::Identifier ) && sm_.text( cursor_.peek().span ) == "as" )
+    {
+        const Span as_span = cursor_.peek().span;
+        cursor_.advance();
+        const Span      span = cursor_.peek().span;
+        const Symbol_id name = expect_name();
+        well_formed &= name.is_valid();
+
+        if( name.is_valid() && cursor_.check( Token_kind::Colon_colon ) )
+        {
+            Span path = span;
+            while( cursor_.match( Token_kind::Colon_colon ) && cursor_.check( Token_kind::Identifier ) )
+            {
+                path = Span::merge( path, cursor_.peek().span );
+                cursor_.advance();
+            }
+            recovery_.error_at( path, "an `as` name is one name, not a path", "write a single name" );
+        }
+        else if( name.is_valid() && !package_node.is_valid() )
+        {
+            recovery_.error_at(
+                Span::merge( as_span, span ), "a module imported without a package has none to rename", "remove the `as`"
+            );
+        }
+        else if( name.is_valid() )
+        {
+            alias = ast_.add( Node_kind::Name_expr, span, name.v, {} );
+        }
+    }
+
     well_formed &= recovery_.expect( Token_kind::Semicolon );
 
-    return module.is_valid() && well_formed
-               ? package_node.is_valid()
-                     ? ast_.add(
-                           Node_kind::Import_decl, Span::merge( start, cursor_.previous().span ), module.v, { package_node }
-                       )
-                     : ast_.add( Node_kind::Import_decl, Span::merge( start, cursor_.previous().span ), module.v, {} )
-               : error_node( Span::merge( start, cursor_.previous().span ) );
+    const Span span = Span::merge( start, cursor_.previous().span );
+    if( !module.is_valid() || !well_formed )
+    {
+        return error_node( span );
+    }
+    if( !package_node.is_valid() )
+    {
+        return ast_.add( Node_kind::Import_decl, span, module.v, {} );
+    }
+    return alias.is_valid() ? ast_.add( Node_kind::Import_decl, span, module.v, { package_node, alias } )
+                            : ast_.add( Node_kind::Import_decl, span, module.v, { package_node } );
 }
 
 Node_id Parser::parse_declaration( const Declaration_head& head )
@@ -13786,6 +13822,48 @@ TEST_CASE( "parser_reads_an_import_from_a_package", "[parse][import]" )
         REQUIRE( p.children( decl ).size() == 1 );
         REQUIRE( p.kind( p.child( decl, 0 ) ) == Node_kind::Path_expr );
         REQUIRE( p.text( p.child( decl, 0 ) ) == "kl::test" );
+    }
+}
+
+// `as` is read only after an import's path: there it names the package, a second child; elsewhere it is a name.
+TEST_CASE( "parser_reads_an_import_alias", "[parse][import]" )
+{
+    SECTION( "an alias" )
+    {
+        const Parsed p( "import kl::_core::trig as trig;\ni32 main() { return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl = p.child( p.root(), 0 );
+        REQUIRE( p.name( decl ) == "trig" );
+        REQUIRE( p.children( decl ).size() == 2 );
+        REQUIRE( p.text( p.ast().import_alias( decl ) ) == "trig" );
+    }
+
+    SECTION( "`as` as a name" )
+    {
+        const Parsed p( "import kl::list;\ni32 as( i32 as ) { return as; }\ni32 main() { return as( 0 ); }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( !p.ast().import_alias( p.child( p.root(), 0 ) ).is_valid() );
+    }
+
+    SECTION( "refused" )
+    {
+        for( const auto& [source, message] : std::initializer_list<std::pair<const char*, const char*>> {
+                 { "import kl::list as a::b;", "an `as` name is one name, not a path" },
+                 { "import list as l;", "a module imported without a package has none to rename" },
+                 { "import kl::list as;", "expected an identifier" },
+             } )
+        {
+            const Parsed p( std::string( source ) + "\nimport kl::string;\ni32 main() { return 0; }" );
+
+            INFO( source << "\n" << p.errors() );
+            REQUIRE( p.errors().find( message ) != std::string::npos );
+            REQUIRE( p.errors().find( "goes before every declaration" ) == std::string::npos );
+        }
     }
 }
 

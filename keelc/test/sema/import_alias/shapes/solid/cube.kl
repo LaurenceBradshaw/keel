@@ -1,0 +1,15 @@
+struct cube
+{
+    i32 side;
+};
+
+enum fill
+{
+    hollow,
+    full,
+};
+
+i32 volume( cube c )
+{
+    return c.side * c.side * c.side;
+}

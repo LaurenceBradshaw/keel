@@ -1,0 +1,9 @@
+// An `as` name that is a path, or missing; neither makes the import after it misplaced.
+import shapes::kind as a::b;
+import shapes::colour as;
+import kl::console;
+
+i32 main()
+{
+    return 0;
+}

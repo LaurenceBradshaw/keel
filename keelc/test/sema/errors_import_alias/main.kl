@@ -1,0 +1,10 @@
+// What an import's `as` refuses: a package's name, one name for two packages, and a bare import.
+import shapes::kind as shapes;
+import shapes::colour as paint;
+import kl::console as paint;
+import sibling as s;
+
+i32 main()
+{
+    return 0;
+}

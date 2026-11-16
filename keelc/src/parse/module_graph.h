@@ -310,6 +310,55 @@ public:
         return std::find( loaded_.begin(), loaded_.end(), file ) != loaded_.end();
     }
 
+    // `import a::b::m as name;`: `name::` in `file` is the package `a::b`.
+    struct Alias
+    {
+        Symbol_id name;
+        Symbol_id package;
+        Span      span;
+    };
+
+    void add_alias( File_id file, Alias alias )
+    {
+        aliases_[file.v].push_back( alias );
+    }
+
+    std::span<const Alias> aliases( File_id file ) const
+    {
+        const auto it = aliases_.find( file.v );
+        return it == aliases_.end() ? std::span<const Alias> {} : std::span<const Alias>( it->second );
+    }
+
+    const std::unordered_map<u32, std::vector<Alias>>& all_aliases() const
+    {
+        return aliases_;
+    }
+
+    // The name `file` gives `package` with `as`; invalid if none.
+    Symbol_id alias_of( File_id file, Symbol_id package ) const
+    {
+        for( const Alias& alias : aliases( file ) )
+        {
+            if( alias.package == package )
+            {
+                return alias.name;
+            }
+        }
+        return Symbol_id {};
+    }
+
+    Symbol_id alias_package( File_id file, Symbol_id name ) const
+    {
+        for( const Alias& alias : aliases( file ) )
+        {
+            if( alias.name == name )
+            {
+                return alias.package;
+            }
+        }
+        return Symbol_id {};
+    }
+
 private:
     static u64 edge( File_id from, File_id to )
     {
@@ -317,16 +366,17 @@ private:
     }
 
     // The graph is sparse, so an adjacency list is better than a matrix.
-    std::vector<std::vector<File_id>> edges_;
-    std::unordered_map<u64, Span>     import_spans_;
-    std::vector<Symbol_id>            packages_;
-    std::vector<Symbol_id>            missing_packages_;
-    std::unordered_map<u32, u32>      file_to_package_;
-    File_id                           prelude_;
-    Symbol_id                         prelude_package_;
-    File_id                           program_;
-    Symbol_id                         program_package_;
-    std::vector<File_id>              loaded_;
+    std::vector<std::vector<File_id>>           edges_;
+    std::unordered_map<u64, Span>               import_spans_;
+    std::vector<Symbol_id>                      packages_;
+    std::vector<Symbol_id>                      missing_packages_;
+    std::unordered_map<u32, u32>                file_to_package_;
+    File_id                                     prelude_;
+    Symbol_id                                   prelude_package_;
+    File_id                                     program_;
+    Symbol_id                                   program_package_;
+    std::vector<File_id>                        loaded_;
+    std::unordered_map<u32, std::vector<Alias>> aliases_;
 };
 
 // `name`, or `package::name` when there is a package. A program whose folder names no package has none.

@@ -10045,7 +10045,7 @@ void kl_2kl3set_6resize__I3i32E__SQ2kl3setI3i32E_3u64( struct kl_2kl3set_set__I3
 #line 230 "../../src/set.kl"
     kl_t4 = kl_2kl5_core12hash_control_6usable__SQ2klQ5_core12hash_control_3u64( kl_slots_2 );
 #line 230 "../../src/set.kl"
-    kl_t5 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_t4, 4, "../../src/set.kl", 230, "out of memory: alloc<K>( kl::_core::hash_control::usable( slots ) )" );
+    kl_t5 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_t4, 4, "../../src/set.kl", 230, "out of memory: alloc<K>( control::hash_control::usable( slots ) )" );
 #line 230 "../../src/set.kl"
     kl_keys_3 = kl_t5;
 #line 233 "../../src/set.kl"
@@ -10242,12 +10242,12 @@ void kl_2kl11ordered_set_4grow__I3i32E__SQ2kl11ordered_setI3i32E( struct kl_2kl1
     if ( kl_t7 ) goto bb1; else goto bb2;
     bb1:
 #line 380 "../../src/ordered_set.kl"
-    kl_rt_panic( "../../src/ordered_set.kl", 380, "arithmetic overflow: nodes * kl::_core::ORDERED_KEYS" );
+    kl_rt_panic( "../../src/ordered_set.kl", 380, "arithmetic overflow: nodes * control::ORDERED_KEYS" );
     bb2:
 #line 380 "../../src/ordered_set.kl"
     kl_t8 = kl_nodes_2 * kl_t6;
 #line 380 "../../src/ordered_set.kl"
-    kl_t9 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_t8, 4, "../../src/ordered_set.kl", 380, "out of memory: alloc<K>( nodes * kl::_core::ORDERED_KEYS )" );
+    kl_t9 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_t8, 4, "../../src/ordered_set.kl", 380, "out of memory: alloc<K>( nodes * control::ORDERED_KEYS )" );
 #line 380 "../../src/ordered_set.kl"
     kl_keys_5 = kl_t9;
 #line 383 "../../src/ordered_set.kl"

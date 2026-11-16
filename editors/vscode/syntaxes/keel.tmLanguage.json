@@ -173,10 +173,16 @@
         "keywords": {
             "patterns": [
                 {
-                    "match": "\\b(import)\\s+((?:[A-Za-z_]\\w*\\s*::\\s*)*[A-Za-z_]\\w*)",
+                    "match": "\\b(import)\\s+((?:[A-Za-z_]\\w*\\s*::\\s*)*[A-Za-z_]\\w*)(?:\\s+(as)\\s+([A-Za-z_]\\w*))?",
                     "captures": {
                         "1": {
                             "name": "keyword.control.directive.import.keel"
+                        },
+                        "3": {
+                            "name": "keyword.control.directive.import.keel"
+                        },
+                        "4": {
+                            "name": "entity.name.namespace.keel"
                         },
                         "2": {
                             "patterns": [

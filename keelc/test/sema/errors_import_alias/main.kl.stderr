@@ -1,0 +1,19 @@
+error: `shapes` is already the name of a package
+ --> sema/errors_import_alias/main.kl:2:24
+  |
+2 | import shapes::kind as shapes;
+  |                        ^^^^^^ choose another
+
+error: `paint` already names the package `shapes` here
+ --> sema/errors_import_alias/main.kl:4:23
+  |
+4 | import kl::console as paint;
+  |                       ^^^^^ choose another
+
+error: a module imported without a package has none to rename
+ --> sema/errors_import_alias/main.kl:5:16
+  |
+5 | import sibling as s;
+  |                ^^^^ remove the `as`
+
+3 errors generated

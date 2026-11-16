@@ -108,7 +108,8 @@ public:
 
     // Declarations.
     std::span<const Node_id> declarations( Node_id source_file ) const;
-    Node_id                  package( Node_id id ) const; // Import_decl, Named_type, Struct_literal
+    Node_id                  package( Node_id id ) const;          // Import_decl, Named_type, Struct_literal
+    Node_id                  import_alias( Node_id import ) const; // `as name`, a Name_expr; invalid if none
 
     // Function-like declarations, and Function_type for the first three.
     Node_id                  return_type( Node_id id ) const; // invalid for a constructor or destructor

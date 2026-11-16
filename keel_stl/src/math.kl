@@ -28,7 +28,7 @@
 // ====================================================
 
 // Numbers beyond the operators.
-import kl::_core::trig;
+import kl::_core::trig as trig;
 
 /// --- Bits ---
 
@@ -187,34 +187,34 @@ const f64 pi = 3.14159265358979311600e+00;
 @trig_sin
 f64 sin( f64 x )
 {
-    u32 ix = kl::_core::high_word( x ) & 0x7fffffff;
+    u32 ix = trig::high_word( x ) & 0x7fffffff;
     if( ix <= 0x3fe921fb )
     {
         if( ix < 0x3e500000 )
         {
             return x;
         }
-        return kl::_core::sine_kernel( x, 0.0, false );
+        return trig::sine_kernel( x, 0.0, false );
     }
     if( ix >= 0x7ff00000 )
     {
         return x - x;
     }
-    kl::_core::reduction r = kl::_core::reduced( x );
+    trig::reduction r = trig::reduced( x );
     i32 quadrant = r.n & 3;
     if( quadrant == 0 )
     {
-        return kl::_core::sine_kernel( r.hi, r.lo, true );
+        return trig::sine_kernel( r.hi, r.lo, true );
     }
     if( quadrant == 1 )
     {
-        return kl::_core::cosine_kernel( r.hi, r.lo );
+        return trig::cosine_kernel( r.hi, r.lo );
     }
     if( quadrant == 2 )
     {
-        return -kl::_core::sine_kernel( r.hi, r.lo, true );
+        return -trig::sine_kernel( r.hi, r.lo, true );
     }
-    return -kl::_core::cosine_kernel( r.hi, r.lo );
+    return -trig::cosine_kernel( r.hi, r.lo );
 }
 
 /// The cosine of an angle in radians.
@@ -223,34 +223,34 @@ f64 sin( f64 x )
 @trig_cos
 f64 cos( f64 x )
 {
-    u32 ix = kl::_core::high_word( x ) & 0x7fffffff;
+    u32 ix = trig::high_word( x ) & 0x7fffffff;
     if( ix <= 0x3fe921fb )
     {
         if( ix < 0x3e46a09e )
         {
             return 1.0;
         }
-        return kl::_core::cosine_kernel( x, 0.0 );
+        return trig::cosine_kernel( x, 0.0 );
     }
     if( ix >= 0x7ff00000 )
     {
         return x - x;
     }
-    kl::_core::reduction r = kl::_core::reduced( x );
+    trig::reduction r = trig::reduced( x );
     i32 quadrant = r.n & 3;
     if( quadrant == 0 )
     {
-        return kl::_core::cosine_kernel( r.hi, r.lo );
+        return trig::cosine_kernel( r.hi, r.lo );
     }
     if( quadrant == 1 )
     {
-        return -kl::_core::sine_kernel( r.hi, r.lo, true );
+        return -trig::sine_kernel( r.hi, r.lo, true );
     }
     if( quadrant == 2 )
     {
-        return -kl::_core::cosine_kernel( r.hi, r.lo );
+        return -trig::cosine_kernel( r.hi, r.lo );
     }
-    return kl::_core::sine_kernel( r.hi, r.lo, true );
+    return trig::sine_kernel( r.hi, r.lo, true );
 }
 
 /// The tangent of an angle in radians.
@@ -259,21 +259,21 @@ f64 cos( f64 x )
 @trig_tan
 f64 tan( f64 x )
 {
-    u32 ix = kl::_core::high_word( x ) & 0x7fffffff;
+    u32 ix = trig::high_word( x ) & 0x7fffffff;
     if( ix <= 0x3fe921fb )
     {
         if( ix < 0x3e400000 )
         {
             return x;
         }
-        return kl::_core::tangent_kernel( x, 0.0, 1 );
+        return trig::tangent_kernel( x, 0.0, 1 );
     }
     if( ix >= 0x7ff00000 )
     {
         return x - x;
     }
-    kl::_core::reduction r = kl::_core::reduced( x );
-    return kl::_core::tangent_kernel( r.hi, r.lo, 1 - ( ( r.n & 1 ) << 1 ) );
+    trig::reduction r = trig::reduced( x );
+    return trig::tangent_kernel( r.hi, r.lo, 1 - ( ( r.n & 1 ) << 1 ) );
 }
 
 /// The angle in [-pi/2, pi/2] whose sine is given.
@@ -281,11 +281,11 @@ f64 tan( f64 x )
 /// Within an ulp of the true value. Outside [-1, 1], or at NaN, it is NaN.
 f64 asin( f64 x )
 {
-    u32 hx = kl::_core::high_word( x );
+    u32 hx = trig::high_word( x );
     u32 ix = hx & 0x7fffffff;
     if( ix >= 0x3ff00000 )
     {
-        if( ( ( ix - 0x3ff00000 ) | kl::_core::low_word( x ) ) == 0 )
+        if( ( ( ix - 0x3ff00000 ) | trig::low_word( x ) ) == 0 )
         {
             return x * PIO2_HI + x * PIO2_LO;
         }
@@ -297,20 +297,20 @@ f64 asin( f64 x )
         {
             return x;
         }
-        return x + x * kl::_core::arcsine_ratio( x * x );
+        return x + x * trig::arcsine_ratio( x * x );
     }
-    f64 t = ( 1.0 - kl::_core::magnitude( x ) ) * 0.5;
+    f64 t = ( 1.0 - trig::magnitude( x ) ) * 0.5;
     f64 s = sqrt( t );
     f64 angle = 0.0;
     if( ix >= 0x3fef3333 )
     {
-        angle = PIO2_HI - ( 2.0 * ( s + s * kl::_core::arcsine_ratio( t ) ) - PIO2_LO );
+        angle = PIO2_HI - ( 2.0 * ( s + s * trig::arcsine_ratio( t ) ) - PIO2_LO );
     }
     else
     {
-        f64 w = kl::_core::low_word_cleared( s );
+        f64 w = trig::low_word_cleared( s );
         f64 c = ( t - w * w ) / ( s + w );
-        f64 p = 2.0 * s * kl::_core::arcsine_ratio( t ) - ( PIO2_LO - 2.0 * c );
+        f64 p = 2.0 * s * trig::arcsine_ratio( t ) - ( PIO2_LO - 2.0 * c );
         f64 q = PIO4_HI - 2.0 * w;
         angle = PIO4_HI - ( p - q );
     }
@@ -322,11 +322,11 @@ f64 asin( f64 x )
 /// Within an ulp of the true value. Outside [-1, 1], or at NaN, it is NaN.
 f64 acos( f64 x )
 {
-    u32 hx = kl::_core::high_word( x );
+    u32 hx = trig::high_word( x );
     u32 ix = hx & 0x7fffffff;
     if( ix >= 0x3ff00000 )
     {
-        if( ( ( ix - 0x3ff00000 ) | kl::_core::low_word( x ) ) == 0 )
+        if( ( ( ix - 0x3ff00000 ) | trig::low_word( x ) ) == 0 )
         {
             return ( hx >> 31 ) == 0 ? 0.0 : pi + 2.0 * PIO2_LO;
         }
@@ -338,20 +338,20 @@ f64 acos( f64 x )
         {
             return PIO2_HI + PIO2_LO;
         }
-        return PIO2_HI - ( x - ( PIO2_LO - x * kl::_core::arcsine_ratio( x * x ) ) );
+        return PIO2_HI - ( x - ( PIO2_LO - x * trig::arcsine_ratio( x * x ) ) );
     }
     if( ( hx >> 31 ) != 0 )
     {
         f64 z = ( 1.0 + x ) * 0.5;
         f64 s = sqrt( z );
-        f64 w = kl::_core::arcsine_ratio( z ) * s - PIO2_LO;
+        f64 w = trig::arcsine_ratio( z ) * s - PIO2_LO;
         return pi - 2.0 * ( s + w );
     }
     f64 z = ( 1.0 - x ) * 0.5;
     f64 s = sqrt( z );
-    f64 df = kl::_core::low_word_cleared( s );
+    f64 df = trig::low_word_cleared( s );
     f64 c = ( z - df * df ) / ( s + df );
-    f64 w = kl::_core::arcsine_ratio( z ) * s + c;
+    f64 w = trig::arcsine_ratio( z ) * s + c;
     return 2.0 * ( df + w );
 }
 
@@ -360,12 +360,12 @@ f64 acos( f64 x )
 /// Within an ulp of the true value. NaN gives NaN, and `-0.0` stays `-0.0`.
 f64 atan( f64 x )
 {
-    u32 hx = kl::_core::high_word( x );
+    u32 hx = trig::high_word( x );
     u32 ix = hx & 0x7fffffff;
     bool negative = ( hx >> 31 ) != 0;
     if( ix >= 0x44100000 )
     {
-        if( ix > 0x7ff00000 || ( ix == 0x7ff00000 && kl::_core::low_word( x ) != 0 ) )
+        if( ix > 0x7ff00000 || ( ix == 0x7ff00000 && trig::low_word( x ) != 0 ) )
         {
             return x + x;
         }
@@ -381,7 +381,7 @@ f64 atan( f64 x )
     }
     else
     {
-        x = kl::_core::magnitude( x );
+        x = trig::magnitude( x );
         if( ix < 0x3ff30000 )
         {
             if( ix < 0x3fe60000 )
@@ -414,7 +414,7 @@ f64 atan( f64 x )
     {
         return x - x * ( s1 + s2 );
     }
-    f64 angle = ATANHI[kl::_core::at( id, 4 )] - ( ( x * ( s1 + s2 ) - ATANLO[kl::_core::at( id, 4 )] ) - x );
+    f64 angle = ATANHI[trig::at( id, 4 )] - ( ( x * ( s1 + s2 ) - ATANLO[trig::at( id, 4 )] ) - x );
     return negative ? -angle : angle;
 }
 

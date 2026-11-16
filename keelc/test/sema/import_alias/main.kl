@@ -1,0 +1,21 @@
+// `as` names an import's package for this file; elsewhere `as` is an ordinary name.
+import shapes::kind as sh;
+import shapes::solid::cube as solid;
+
+i32 as( i32 as )
+{
+    return as;
+}
+
+i32 main()
+{
+    solid::cube c = solid::cube { 2 };      // a type and a struct literal
+    solid::fill f = solid::fill::full;      // an enum variant, through its type
+    sh::kind k    = sh::kind::round;        // the parent's type, then its variant
+    shapes::kind j = shapes::kind::square; // the full spelling still reads
+    if( f == solid::fill::hollow || k == j )
+    {
+        return as( 0 );
+    }
+    return solid::volume( c ); // a function
+}

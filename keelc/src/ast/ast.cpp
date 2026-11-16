@@ -287,6 +287,13 @@ Node_id Ast::package( Node_id id ) const
     }
 }
 
+Node_id Ast::import_alias( Node_id import ) const
+{
+    assert( kind( import ) == Node_kind::Import_decl );
+    const std::span<const Node_id> all = children( import );
+    return all.size() > 1 ? all[1] : Node_id {};
+}
+
 Node_id Ast::return_type( Node_id id ) const
 {
     assert(
