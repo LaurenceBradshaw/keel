@@ -1,0 +1,2 @@
+before
+codegen/fixed_array_slice_out_of_range.kl:15: out of bounds: numbers[ 1..far ]

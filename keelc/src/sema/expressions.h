@@ -297,6 +297,7 @@ private:
 
     Type_id infer_index( Node_id id );
     Type_id infer_array_index( Node_id id, Type_id array );
+    Type_id infer_array_slice( Node_id id, Type_id array, Type_id lower, Type_id upper );
 
     Type_id read_only_field( bool read_only, Type_id field_type ) const;
 

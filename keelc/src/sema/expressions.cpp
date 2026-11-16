@@ -3108,13 +3108,7 @@ Type_id Expressions::infer_index( Node_id id )
 
     if( table_.is_array( base ) )
     {
-        if( is_range )
-        {
-            reporter_.error_at( ast_.span( id ), fmt::format( "`{}` cannot be sliced", table_.name( base ) ) );
-            return types_.poison( id );
-        }
-
-        return infer_array_index( id, base );
+        return is_range ? infer_array_slice( id, base, lower, upper ) : infer_array_index( id, base );
     }
 
     // A parameter's `[]` is its bound's, and find_operator reports a bound declaring none.
@@ -3713,6 +3707,54 @@ Type_id Expressions::infer_array_index( Node_id id, Type_id array )
     }
 
     return types_.record( id, table_.get( array ).element );
+}
+
+// `a[i..j]` lends the elements between as a run; a constant bound past `N` is refused here.
+Type_id Expressions::infer_array_slice( Node_id id, Type_id array, Type_id lower, Type_id upper )
+{
+    const Node_id range = ast_.index( id );
+
+    if( table_.is_error( lower ) || table_.is_error( upper ) )
+    {
+        return types_.poison( id );
+    }
+
+    bool integers = true;
+    for( const auto& [at, type] : { std::pair { ast_.lower( range ), lower }, std::pair { ast_.upper( range ), upper } } )
+    {
+        if( !table_.is_integer( type ) )
+        {
+            reporter_.error_at(
+                ast_.span( at ), fmt::format( "an index must be an integer, but got `{}`", table_.name( type ) )
+            );
+            integers = false;
+        }
+    }
+    if( !integers )
+    {
+        return types_.poison( id );
+    }
+
+    refuse_backwards( range );
+
+    // An extent over a size parameter is known only per instance, where the run-time check stands.
+    const u64 count = table_.get( array ).count;
+    for( const Node_id bound : { ast_.lower( range ), ast_.upper( range ) } )
+    {
+        const Folded folded = constant_folder_.fold_integer( bound );
+        if( folded.constant && !folded.overflowed && !folded.value.negative && table_.is_sized_array( array ) &&
+            folded.value.magnitude > count )
+        {
+            reporter_.error_at(
+                ast_.span( bound ),
+                fmt::format( "bound {} is past the end of `{}`", folded.value.magnitude, table_.name( array ) ),
+                fmt::format( "a slice's bounds run from 0 to {}", count )
+            );
+            return types_.poison( id );
+        }
+    }
+
+    return types_.record( id, table_.run_of( table_.get( array ).element ) );
 }
 
 // A literal's or a fill's array type, taken from context.
@@ -11538,6 +11580,18 @@ TEST_CASE( "type_checker_types_a_fixed_array", "[sema][fixed_array]" )
         INFO( p.rendered() );
         REQUIRE( p.clean() );
     }
+
+    SECTION( "it slices into a run, writable where the array is" )
+    {
+        const Typed p( "i32 sum( const ref i32[] v ) { return v[ 0 ]; }\n"
+                       "void fill( ref i32[] v ) { v[ 0 ] = 1; }\n"
+                       "const ref i32[] tail( const ref i32[3] a ) { return a[ 1..3 ]; }\n"
+                       "i32 main() { i32[3] a = [ 1, 2, 3 ]; fill( ref a[ 1..3 ] ); ref i32[] w = a[ 0..0 ];\n"
+                       "    return sum( a[ 2..3 ] ) + tail( a )[ 0 ] + cast<i32>( w.size ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
 }
 
 TEST_CASE( "type_checker_refuses_what_a_fixed_array_cannot_do", "[sema][fixed_array]" )
@@ -11565,7 +11619,14 @@ TEST_CASE( "type_checker_refuses_what_a_fixed_array_cannot_do", "[sema][fixed_ar
         { "i32 f( i32[4] a, i32 i ) { return a[ i ]; }", "expected `u64`, but got `i32`", "" },
         { "i32 f( i32[4] a ) { return a[ 4 ]; }", "index 4 is past the end of `i32[4]`", "its indices run from 0 to 3" },
         { "i32 f( i32[4] a ) { return a[ FOUR ]; }", "index 4 is past the end of `i32[4]`", "" },
-        { "void f( i32[4] a ) { const ref i32[] r = a[ 0..2 ]; }", "`i32[4]` cannot be sliced", "" },
+        { "void f( i32[4] a ) { const ref i32[] r = a[ 0..5 ]; }",
+          "bound 5 is past the end of `i32[4]`",
+          "a slice's bounds run from 0 to 4" },
+        { "void f( i32[4] a ) { const ref i32[] r = a[ FOUR..5 ]; }",
+          "bound 5 is past the end of `i32[4]`",
+          "a slice's bounds run from 0 to 4" },
+        { "void f( i32[4] a ) { const ref i32[] r = a[ 3..1 ]; }", "`3..1` runs backwards", "" },
+        { "void f( const ref i32[4] a ) { ref i32[] r = a[ 0..2 ]; }", "`a` is `const`", "" },
         { "void f() { const i32[2] a = [ 1, 2 ]; a[ 0 ] = 3; }", "`a` is `const`", "remove `const` to modify it" },
 
         // Ownership.

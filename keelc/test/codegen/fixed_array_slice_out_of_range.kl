@@ -1,0 +1,16 @@
+// A slice's upper bound past the array's size panics before the run is made.
+import t::console;
+
+i32 sum( const ref i32[] values )
+{
+    return cast<i32>( values.size );
+}
+
+i32 main()
+{
+    i32[2] numbers = [ 1, 2 ];
+    u64    far     = 3;
+
+    t::print( "before" );
+    return sum( numbers[ 1..far ] );
+}

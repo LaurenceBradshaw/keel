@@ -1,0 +1,49 @@
+// A `T[N]` slices into a run of the elements between its bounds, checked against N, and the run
+// writes the array where the array may be written.
+i32 sum( const ref i32[] values )
+{
+    i32 total = 0;
+
+    for( u64 i : 0..values.size )
+    {
+        total += values[ i ];
+    }
+
+    return total;
+}
+
+void clear( ref i32[] values )
+{
+    for( u64 i : 0..values.size )
+    {
+        values[ i ] = 0;
+    }
+}
+
+const ref i32[] middle( const ref i32[6] values )
+{
+    return values[ 1..5 ];
+}
+
+i32 main( const ref str[] args )
+{
+    i32[6] a = [ 1, 2, 3, 4, 5, 6 ];
+    const u64 n = args.size + 3; // unknown to the compiler
+
+    if( sum( a[ 0..3 ] ) != 6 || sum( a[ 2..2 ] ) != 0 || sum( middle( a ) ) != 14 )
+    {
+        return 1;
+    }
+
+    const ref i32[] tail = a[ n - 2..n ];
+    if( tail.size != 2 || tail[ 0 ] != 2 || tail[ 1 ] != 3 )
+    {
+        return 2;
+    }
+
+    clear( ref a[ 4..6 ] );
+    ref i32[] front = a[ 0..2 ];
+    front[ 1 ] = 40;
+
+    return sum( a ) == 1 + 40 + 3 + 4 ? 0 : 3;
+}

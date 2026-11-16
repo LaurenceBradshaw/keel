@@ -1438,16 +1438,28 @@ Place Lowering::lower_slice_or_run_index( Node_id id )
     const Node_id range    = ast_.index( id );
     const bool    is_range = ast_.kind( range ) == Node_kind::Range_expr;
     const bool    on_run   = types_.table().is_run( type_of( object ) );
+    const bool    on_array = types_.table().is_array( type_of( object ) );
     const Span    span     = ast_.span( id );
     const Type_id u64      = types_.table().integer( 64, false );
     const Type_id boolean  = types_.table().builtin( Type_kind::Bool );
 
-    // The object first, then the bounds; a run's data is its start, a `T[*]` is its own.
+    // The object first, then the bounds; a run's data is its start, an array's its first element's
+    // address, a `T[*]` is its own.
     Operand run {};
     Operand size {};
     Operand data {};
 
-    if( on_run )
+    if( on_array )
+    {
+        const Type_id  element_pointer = types_.table().many_pointer_to( types_.table().get( type_of( object ) ).element );
+        const Place    array           = lower_place( object );
+        const Local_id zero = builder_.into_temp( use( constant( literal_pool_.add_integer( 0 ), u64 ) ), u64, span );
+        size                = constant( literal_pool_.add_integer( types_.table().get( type_of( object ) ).count ), u64 );
+        data                = temporary(
+            address_of( builder_.index( array, zero ), element_pointer, Address_purpose::Borrow, span ), element_pointer, span
+        );
+    }
+    else if( on_run )
     {
         run                           = run_pointer( object );
         size                          = temporary( run_size( run, u64 ), u64, span );
@@ -1481,7 +1493,7 @@ Place Lowering::lower_slice_or_run_index( Node_id id )
     {
         require( Token_kind::Less_equal, low, high );
 
-        if( on_run )
+        if( on_run || on_array )
         {
             require( Token_kind::Less_equal, high, size );
         }
@@ -3837,12 +3849,14 @@ Place Lowering::lower_place( Node_id id )
             return is_borrowed_binding( ast_, types_, method ) ? result : builder_.deref( result );
         }
 
-        if( types_.table().is_array( type_of( ast_.object( id ) ) ) )
+        const bool is_slice = ast_.kind( ast_.index( id ) ) == Node_kind::Range_expr;
+
+        if( !is_slice && types_.table().is_array( type_of( ast_.object( id ) ) ) )
         {
             return lower_array_index( id );
         }
 
-        if( ast_.kind( ast_.index( id ) ) == Node_kind::Range_expr || types_.table().is_run( type_of( ast_.object( id ) ) ) )
+        if( is_slice || types_.table().is_run( type_of( ast_.object( id ) ) ) )
         {
             return lower_slice_or_run_index( id );
         }
