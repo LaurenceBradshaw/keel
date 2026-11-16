@@ -1,0 +1,35 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// Reductions. Each adds in index order with one accumulator, so a float answer is exact to that order.
+
+/// The total of every element; 0 when there are none.
+T sum<T>( const ref T[] a ) where T : numeric
+{
+    T total = 0;
+    for( u64 i : 0..a.size )
+    {
+        total += a[i];
+    }
+    return total;
+}
+
+/// The sum of `a[i] * b[i]`.
+///
+/// ### Panics
+///
+/// If the sizes differ.
+T dot<T>( const ref T[] a, const ref T[] b ) where T : numeric
+{
+    if( a.size != b.size )
+    {
+        panic( "the shapes differ" );
+    }
+
+    T total = 0;
+    for( u64 i : 0..a.size )
+    {
+        total += a[i] * b[i];
+    }
+    return total;
+}

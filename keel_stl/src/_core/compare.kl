@@ -1,0 +1,50 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// Whole-array equality, exact and within a tolerance.
+
+/// Whether `a` and `b` are the same size with every element equal.
+bool equal<T>( const ref T[] a, const ref T[] b ) where T : equatable
+{
+    if( a.size != b.size )
+    {
+        return false;
+    }
+
+    for( u64 i : 0..a.size )
+    {
+        if( a[i] != b[i] )
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/// Whether `a` and `b` are the same size with every `|a[i] - b[i]| <= atol + rtol * |b[i]|`. A NaN
+/// is close to nothing, and an infinity only to itself.
+bool approx_equal<T>( const ref T[] a, const ref T[] b, T rtol, T atol ) where T : floating
+{
+    if( a.size != b.size )
+    {
+        return false;
+    }
+
+    for( u64 i : 0..a.size )
+    {
+        if( a[i] == b[i] )
+        {
+            continue; // equal infinities, whose difference is a NaN
+        }
+
+        T d = a[i] > b[i] ? a[i] - b[i] : b[i] - a[i];
+        T m = b[i] < 0.0 ? 0.0 - b[i] : b[i];
+        if( d - d != 0.0 || d > atol + rtol * m ) // `d - d` is a NaN when `d` is a NaN or infinite
+        {
+            return false;
+        }
+    }
+
+    return true;
+}

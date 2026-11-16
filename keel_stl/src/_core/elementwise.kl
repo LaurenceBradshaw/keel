@@ -1,0 +1,95 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// The element-wise loops behind the array types' operators: `dest[i]` from `a[i]` (and `b[i]`),
+// the operation a lambda. Each element is read before it is written, so `dest` may be `a` or `b`.
+
+/// `dest[i] = op( a[i], b[i] )`.
+///
+/// ### Panics
+///
+/// If the three sizes differ.
+void zip<T, F>( ref T[] dest, const ref T[] a, const ref T[] b, F op ) where F : fn( T, T ) -> T
+{
+    if( a.size != dest.size || b.size != dest.size )
+    {
+        panic( "the shapes differ" );
+    }
+
+    for( u64 i : 0..dest.size )
+    {
+        dest[i] = op( a[i], b[i] );
+    }
+}
+
+/// `dest[i] = op( a[i], s )`. For `s op a[i]`, swap the lambda's arguments.
+///
+/// ### Panics
+///
+/// If the sizes differ.
+void zip_scalar<T, F>( ref T[] dest, const ref T[] a, T s, F op ) where F : fn( T, T ) -> T
+{
+    if( a.size != dest.size )
+    {
+        panic( "the shapes differ" );
+    }
+
+    for( u64 i : 0..dest.size )
+    {
+        dest[i] = op( a[i], s );
+    }
+}
+
+/// `dest[i] = op( a[i] )`, from one element type to another: negation, `cast<U>`, the roundings.
+///
+/// ### Panics
+///
+/// If the sizes differ.
+void map<T, U, F>( ref U[] dest, const ref T[] a, F op ) where F : fn( T ) -> U
+{
+    if( a.size != dest.size )
+    {
+        panic( "the shapes differ" );
+    }
+
+    for( u64 i : 0..dest.size )
+    {
+        dest[i] = op( a[i] );
+    }
+}
+
+/// `a[i] = op( a[i], b[i] )`, for the compound assignments.
+///
+/// ### Panics
+///
+/// If the sizes differ.
+void zip_into<T, F>( ref T[] a, const ref T[] b, F op ) where F : fn( T, T ) -> T
+{
+    if( b.size != a.size )
+    {
+        panic( "the shapes differ" );
+    }
+
+    for( u64 i : 0..a.size )
+    {
+        a[i] = op( a[i], b[i] );
+    }
+}
+
+/// `a[i] = op( a[i] )`. With a scalar captured, `a[i] op= s`.
+void map_into<T, F>( ref T[] a, F op ) where F : fn( T ) -> T
+{
+    for( u64 i : 0..a.size )
+    {
+        a[i] = op( a[i] );
+    }
+}
+
+/// `dest[i] = x`.
+void fill<T>( ref T[] dest, T x ) where T : copyable
+{
+    for( u64 i : 0..dest.size )
+    {
+        dest[i] = x;
+    }
+}

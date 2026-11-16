@@ -1,0 +1,78 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// Matrix loops over row-major runs: element `(r, c)` of an `R` by `C` matrix is at `r * C + c`.
+// `dest` must not be `a` or `b`.
+
+/// `dest` (`rows` by `cols`) = `a` (`rows` by `inner`) times `b` (`inner` by `cols`). Loops `i`,
+/// `k`, `j`, so the innermost walks `b` and `dest` in order.
+///
+/// ### Panics
+///
+/// If a size is not its shape's.
+void matmul<T>( ref T[] dest, const ref T[] a, const ref T[] b, u64 rows, u64 inner, u64 cols ) where T : numeric
+{
+    if( a.size != rows * inner || b.size != inner * cols || dest.size != rows * cols )
+    {
+        panic( "the shapes differ" );
+    }
+
+    for( u64 i : 0..dest.size )
+    {
+        dest[i] = 0;
+    }
+
+    for( u64 i : 0..rows )
+    {
+        for( u64 k : 0..inner )
+        {
+            T x = a[i * inner + k];
+            for( u64 j : 0..cols )
+            {
+                dest[i * cols + j] += x * b[k * cols + j];
+            }
+        }
+    }
+}
+
+/// `dest` (`cols` by `rows`) = `a` (`rows` by `cols`) transposed.
+///
+/// ### Panics
+///
+/// If a size is not its shape's.
+void transpose<T>( ref T[] dest, const ref T[] a, u64 rows, u64 cols ) where T : copyable
+{
+    if( a.size != rows * cols || dest.size != rows * cols )
+    {
+        panic( "the shapes differ" );
+    }
+
+    for( u64 r : 0..rows )
+    {
+        for( u64 c : 0..cols )
+        {
+            dest[c * rows + r] = a[r * cols + c];
+        }
+    }
+}
+
+/// `dest` = the `n` by `n` identity.
+///
+/// ### Panics
+///
+/// If `dest` is not `n` by `n`.
+void identity<T>( ref T[] dest, u64 n ) where T : numeric
+{
+    if( dest.size != n * n )
+    {
+        panic( "the shapes differ" );
+    }
+
+    for( u64 r : 0..n )
+    {
+        for( u64 c : 0..n )
+        {
+            dest[r * n + c] = r == c ? 1 : 0;
+        }
+    }
+}

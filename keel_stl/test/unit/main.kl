@@ -5,6 +5,7 @@ import bitset_tests;
 import command_line_tests;
 import fixed_list_tests;
 import hash_control_tests;
+import kernels_tests;
 import map_tests;
 import math_tests;
 import os_tests;
