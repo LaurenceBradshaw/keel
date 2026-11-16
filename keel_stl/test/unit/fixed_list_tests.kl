@@ -1,0 +1,229 @@
+// `kl::fixed_list` holds its elements inline: each one pushed, popped, swapped, truncated or left in
+// the list when it is dropped is destroyed exactly once, and a full list refuses what it cannot hold.
+import kl::algorithm;
+import kl::fixed_list;
+import kl::optional;
+import kl::test::context;
+import owned;
+
+// The list's values in order, as decimal digits: [3, 1, 2] is 312.
+private u64 digits<u64 N>( const ref kl::fixed_list<owned, N> values )
+{
+    u64 result = 0;
+    for( const ref owned v : values )
+    {
+        result = result * 10 + v.value();
+    }
+    return result;
+}
+
+// Pushing to capacity, then popping, moves each element in and out once.
+private void pushes_and_pops( ref kl::test::context c )
+{
+    {
+        kl::fixed_list<owned, 3> values = kl::fixed_list<owned, 3>();
+        c.check( values.is_empty() );
+        c.check_eq( values.capacity(), 3 );
+
+        for( u64 i = 1; i <= 3; i++ )
+        {
+            values.push( owned( i ) );
+        }
+        c.check( values.is_full() );
+        c.check_eq( values.size(), 3 );
+        c.check_eq( live, 3 );
+        c.check_eq( digits( values ), 123 );
+        c.check_eq( values.first().value(), 1 );
+        c.check_eq( values.last().value(), 3 );
+        c.check_eq( values[1].value(), 2 );
+
+        {
+            owned three = values.pop();
+            c.check_eq( three.value(), 3 );
+            c.check_eq( live, 3 );
+        }
+        c.check_eq( live, 2 );
+        c.check_eq( digits( values ), 12 );
+    }
+    c.check_eq( live, 0 );
+}
+
+// A full list hands back what `try_push` is given, and an empty one answers `none` to `try_pop`.
+private void refuses_past_its_ends( ref kl::test::context c )
+{
+    {
+        kl::fixed_list<owned, 1> values = kl::fixed_list<owned, 1>();
+        c.check( kl::is_none( values.try_pop() ) );
+        values.push( owned( 7 ) );
+
+        switch( values.try_push( owned( 8 ) ) )
+        {
+            case result::ok():
+                c.check( false );
+                break;
+            case result::err( refused ):
+                c.check_eq( refused.value(), 8 );
+                break;
+        }
+        c.check_eq( live, 1 );
+        c.check_eq( digits( values ), 7 );
+    }
+    c.check_eq( live, 0 );
+}
+
+// `truncate` and `clear` drop the tail, and the slots they free are written again.
+private void truncates_and_reuses( ref kl::test::context c )
+{
+    {
+        kl::fixed_list<owned, 4> values = kl::fixed_list<owned, 4>();
+        for( u64 i = 1; i <= 4; i++ )
+        {
+            values.push( owned( i ) );
+        }
+        values.truncate( 2 );
+        c.check_eq( live, 2 );
+        c.check_eq( digits( values ), 12 );
+
+        values.truncate( 5 );
+        c.check_eq( values.size(), 2 );
+
+        values.push( owned( 9 ) );
+        c.check_eq( digits( values ), 129 );
+
+        values.clear();
+        c.check( values.is_empty() );
+        c.check_eq( live, 0 );
+
+        values.push( owned( 5 ) );
+        c.check_eq( live, 1 );
+    }
+    c.check_eq( live, 0 );
+}
+
+// As a `dynamic_memory`, it sorts and swaps in place, and its run reads what it holds.
+private void sorts_in_place( ref kl::test::context c )
+{
+    {
+        kl::fixed_list<owned, 4> values = kl::fixed_list<owned, 4>();
+        values.push( owned( 3 ) );
+        values.push( owned( 1 ) );
+        values.push( owned( 2 ) );
+
+        kl::sort( ref values, fn[]( a, b ) { return a.value() < b.value(); } );
+        c.check_eq( digits( values ), 123 );
+
+        values.swap( 0, 2 );
+        values.swap( 1, 1 );
+        c.check_eq( digits( values ), 321 );
+        c.check_eq( values.as_run().size, 3 );
+        c.check_eq( values.as_run()[2].value(), 1 );
+        c.check_eq( live, 3 );
+    }
+    c.check_eq( live, 0 );
+}
+
+// Numbers are written in place, and two lists of them compare and hash element by element.
+private void compares_numbers( ref kl::test::context c )
+{
+    kl::fixed_list<i32, 3> a = kl::fixed_list<i32, 3>();
+    kl::fixed_list<i32, 3> b = kl::fixed_list<i32, 3>();
+    a.push( 4 );
+    a.push( 5 );
+    b.push( 4 );
+    c.check( a != b );
+
+    b.push( 5 );
+    c.check( a == b );
+
+    _ = b.pop();
+    b.push( 5 );
+    c.check( a == b );
+
+    a[0] = 6;
+    for( ref i32 x : b )
+    {
+        x += 2;
+    }
+    c.check( a != b );
+    c.check_eq( cast<i64>( b[0] ), 6 );
+    c.check_eq( cast<i64>( b[1] ), 7 );
+}
+
+// Pushing onto a full list panics, naming the check in the library.
+private void panics_when_full( ref kl::test::context c )
+{
+    c.expect_panic(
+        "the list is full",
+        fn[]()
+        {
+            kl::fixed_list<i32, 1> values = kl::fixed_list<i32, 1>();
+            values.push( 1 );
+            values.push( 2 );
+        }
+    );
+}
+
+// `insert`, `remove`, `swap_remove`, `replace` and `reverse` move elements within the list, each
+// destroyed once, and `append` moves another list's onto the end.
+private void rearranges_in_place( ref kl::test::context c )
+{
+    {
+        kl::fixed_list<owned, 5> values = kl::fixed_list<owned, 5>();
+        values.push( owned( 1 ) );
+        values.push( owned( 3 ) );
+        values.insert( 1, owned( 2 ) );
+        values.insert( 3, owned( 4 ) );
+        c.check_eq( digits( values ), 1234 );
+
+        {
+            owned two = values.remove( 1 );
+            c.check_eq( two.value(), 2 );
+            owned one = values.swap_remove( 0 );
+            c.check_eq( one.value(), 1 );
+            owned three = values.replace( 1, owned( 7 ) );
+            c.check_eq( three.value(), 3 );
+        }
+        c.check_eq( live, 2 );
+        c.check_eq( digits( values ), 47 );
+
+        values.reverse();
+        c.check_eq( digits( values ), 74 );
+
+        kl::fixed_list<owned, 5> more = kl::fixed_list<owned, 5>();
+        more.push( owned( 5 ) );
+        more.push( owned( 6 ) );
+        values.append( move more );
+        c.check_eq( digits( values ), 7456 );
+        c.check_eq( live, 4 );
+    }
+    c.check_eq( live, 0 );
+}
+
+// `map` builds a new list of the same capacity, leaving this one as it was.
+private void maps_into_a_new_list( ref kl::test::context c )
+{
+    kl::fixed_list<i32, 3> values = kl::fixed_list<i32, 3>();
+    values.push( 2 );
+    values.push( 5 );
+
+    kl::fixed_list<i64, 3> doubled = values.map( fn[]( const ref i32 v ) -> i64 { return cast<i64>( v ) * 2; } );
+    c.check_eq( doubled.size(), 2 );
+    c.check_eq( doubled.capacity(), 3 );
+    c.check_eq( doubled[0], 4 );
+    c.check_eq( doubled[1], 10 );
+    c.check_eq( cast<i64>( values[1] ), 5 );
+}
+
+// Inserting into a full list panics before anything moves.
+private void insert_panics_when_full( ref kl::test::context c )
+{
+    c.expect_panic(
+        "the list is full",
+        fn[]()
+        {
+            kl::fixed_list<i32, 1> values = kl::fixed_list<i32, 1>();
+            values.push( 1 );
+            values.insert( 0, 2 );
+        }
+    );
+}

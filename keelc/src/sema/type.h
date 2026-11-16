@@ -105,6 +105,7 @@ struct Type
     Param_mode return_mode   = Param_mode::Value;
     bool       const_element = false; // Pointer and Many_pointer: the element is read-only through it.
     u64        count         = 0;     // Array: the number of elements, or 0 while its extent is not a constant
+    bool       raw           = false; // Array: `T[?N]`, slots no drop or conversion treats as live
 };
 
 bool is_builtin_type_name( std::string_view spelling );
@@ -125,8 +126,8 @@ public:
     Type_id pointer_to( Type_id element, bool const_element = false ); // interns; same element -> same id
     Type_id many_pointer_to( Type_id element, bool const_element = false );
     Type_id run_of( Type_id element );
-    Type_id array_of( Type_id element, u64 count );
-    Type_id array_of( Type_id element, Type_id extent ); // the extent, a Size, is `arguments[0]`
+    Type_id array_of( Type_id element, u64 count, bool raw = false );
+    Type_id array_of( Type_id element, Type_id extent, bool raw = false ); // the extent, a Size, is `arguments[0]`
     Type_id size( u64 value );
     // Two constants fold; an overflow or a division by 0 is the Error type.
     Type_id size_op( Size_op op, Type_id lhs, Type_id rhs );
@@ -208,6 +209,9 @@ public:
     bool is_run( Type_id id ) const;
     bool is_array( Type_id id ) const;
     bool is_sized_array( Type_id id ) const; // an array whose extent is a constant
+    bool is_raw_array( Type_id id ) const;   // `T[?N]`
+    bool is_live_array( Type_id id ) const;  // `T[N]`, every element live
+    bool needs_no_value( Type_id id ) const; // `T[?N]`, or a `T[N]` of them: declaring it is its initialisation
     bool is_size( Type_id id ) const;
     bool is_size_parameter( Type_id id ) const;
     bool points_to_const( Type_id id ) const;
@@ -301,12 +305,12 @@ private:
     Type_id integers_[4][2];              // [width index][0 = signed, 1 = unsigned]
     Type_id floats_[2];
 
-    std::unordered_map<u32, Type_id>            pointers_;      // element.v * 2 + const -> pointer id
-    std::unordered_map<u32, Type_id>            many_pointers_; // element.v * 2 + const -> many pointer id
-    std::unordered_map<u32, Type_id>            runs_;          // element.v -> run id
-    std::map<std::pair<u32, u32>, Type_id>      arrays_;        // (element.v, extent.v) -> array id
-    std::unordered_map<u64, Type_id>            sizes_;         // value -> constant size
-    std::map<std::tuple<u8, u32, u32>, Type_id> size_ops_;      // (op, lhs.v, rhs.v) -> computed size
+    std::unordered_map<u32, Type_id>              pointers_;      // element.v * 2 + const -> pointer id
+    std::unordered_map<u32, Type_id>              many_pointers_; // element.v * 2 + const -> many pointer id
+    std::unordered_map<u32, Type_id>              runs_;          // element.v -> run id
+    std::map<std::tuple<u32, u32, bool>, Type_id> arrays_;        // (element.v, extent.v, raw) -> array id
+    std::unordered_map<u64, Type_id>              sizes_;         // value -> constant size
+    std::map<std::tuple<u8, u32, u32>, Type_id>   size_ops_;      // (op, lhs.v, rhs.v) -> computed size
     // Struct_decl node -> every instantiation of it. A list scanned linearly rather than a map
     // keyed on the arguments: a program has a handful of instantiations per generic, and hashing a
     // vector of Type_ids to avoid a handful of comparisons is not a trade worth making - the same

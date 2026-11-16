@@ -38,6 +38,7 @@ enum class Default_kind : u8
     Zero,        // a number, `bool` or pointer
     Literal,     // a struct whose every field has a default
     Constructor, // a class's public constructor taking nothing
+    Raw,         // `T[?N]`, or a `T[N]` of them, which holds nothing to make
 };
 
 // Setting a bit is the only mutation a set has.

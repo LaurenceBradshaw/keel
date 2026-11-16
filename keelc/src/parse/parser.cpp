@@ -1536,10 +1536,13 @@ Node_id Parser::parse_aggregate_decl()
         );
     }
 
-    // D77: a class with no constructor whose every field has a default is built by `C()`.
+    // D77: a class with no constructor whose every field has a default is built by `C()`. Raw storage
+    // needs none.
     const auto is_kind     = [&]( Node_kind kind ) { return [this, kind]( Node_id m ) { return ast_.kind( m ) == kind; }; };
     const bool all_default = std::ranges::all_of(
-        members, [&]( Node_id m ) { return ast_.kind( m ) != Node_kind::Field_decl || ast_.default_value( m ).is_valid(); }
+        members,
+        [&]( Node_id m )
+        { return ast_.kind( m ) != Node_kind::Field_decl || ast_.default_value( m ).is_valid() || ast_.needs_no_value( m ); }
     );
 
     if( is_class && wrote_field && !dropped && all_default &&
@@ -2610,6 +2613,9 @@ Node_id Parser::parse_array_suffix( Node_id type, Span start )
 
     cursor_.advance(); // the `[`
 
+    // `T[?N]`: raw inline storage, marked in the node's aux.
+    const u32 raw = cursor_.match( Token_kind::Question ) ? 1 : 0;
+
     const Node_id size = parse_expression( 0 );
 
     if( !adjacent )
@@ -2617,7 +2623,7 @@ Node_id Parser::parse_array_suffix( Node_id type, Span start )
         recovery_.error_at(
             bracket,
             "`[` must touch the type it modifies",
-            fmt::format( "write `{}[{}]`", sm_.text( ast_.span( type ) ), sm_.text( ast_.span( size ) ) )
+            fmt::format( "write `{}[{}{}]`", sm_.text( ast_.span( type ) ), raw ? "?" : "", sm_.text( ast_.span( size ) ) )
         );
     }
 
@@ -2627,11 +2633,11 @@ Node_id Parser::parse_array_suffix( Node_id type, Span start )
     const Span span = Span::merge( start, cursor_.previous().span );
     if( ast_.kind( type ) == Node_kind::Const_type )
     {
-        const Node_id array = ast_.add( Node_kind::Array_type, span, 0, { ast_.inner_type( type ), size } );
+        const Node_id array = ast_.add( Node_kind::Array_type, span, raw, { ast_.inner_type( type ), size } );
         return ast_.add( Node_kind::Const_type, span, 0, { array } );
     }
 
-    return ast_.add( Node_kind::Array_type, span, 0, { type, size } );
+    return ast_.add( Node_kind::Array_type, span, raw, { type, size } );
 }
 
 Node_id Parser::adjacent_suffix( Node_id type, Span start, u32 tokens, std::string_view spelling, Node_kind kind )
@@ -14515,6 +14521,30 @@ TEST_CASE( "parser_attaches_doc_comments_to_an_interface", "[parse][docs][interf
     REQUIRE( doc_comment( p.text( p.ast().doc_span( decl ) ), "///" ) == "A shape." );
     REQUIRE( p.ast().doc_span( method ).is_valid() );
     REQUIRE( doc_comment( p.text( p.ast().doc_span( method ) ), "///" ) == "Its area." );
+}
+
+// `T[?N]` is a `T[N]` suffix marked raw, in every position a `T[N]` takes.
+TEST_CASE( "parser_parses_raw_storage", "[parse][raw_storage]" )
+{
+    for( const char* source : {
+             "void f() { i32[?4] s; }",
+             "void f( const ref i32[?N] s ) { }",
+             "class C { T[?N] slots; };",
+             "void f() { auto p = make<i32[?4]>(); }",
+             "void f() { i32[?4][2] s; }",
+         } )
+    {
+        const Parsed p( source );
+
+        INFO( source << "\n" << p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        const Node_id array = first_named( p, "Array_type" );
+        REQUIRE( array.is_valid() );
+        REQUIRE( ( p.ast().is_raw_array( array ) || p.ast().is_raw_array( p.ast().inner_type( array ) ) ) );
+    }
+
+    const Parsed live( "void f( i32[4] a ) { }" );
+    REQUIRE_FALSE( live.ast().is_raw_array( first_named( live, "Array_type" ) ) );
 }
 
 // D60: `T[N]` is a suffix like `[]`, so `i32[4][2]` is two `i32[4]`s. The size is any expression

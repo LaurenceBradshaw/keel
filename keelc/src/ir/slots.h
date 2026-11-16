@@ -43,6 +43,7 @@ public:
     u32      field( u32 slot ) const;  // into Function::fields; k_no_field for a local's own slot
     u32      parent( u32 slot ) const; // the enclosing field or local; k_no_field for a local
     bool     built_whole( u32 slot ) const;
+    bool     raw( u32 slot ) const; // `T[?N]`, which needs no value
 
 private:
     const Function&  func_;

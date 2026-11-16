@@ -103,10 +103,10 @@ void encode_type( std::string& out, Type_id id, const Type_table& types )
         return;
     }
 
-    // `i32[4]` is `A4_3i32`: `A` starts no other encoding, and the `_` ends the count.
+    // `i32[4]` is `A4_3i32`: `A` starts no other encoding, and the `_` ends the count; `i32[?4]` is `AR4_3i32`.
     if( types.is_array( id ) )
     {
-        out += fmt::format( "A{}_", types.get( id ).count );
+        out += fmt::format( "A{}{}_", types.is_raw_array( id ) ? "R" : "", types.get( id ).count );
         encode_type( out, types.get( id ).element, types );
         return;
     }

@@ -1,0 +1,2 @@
+before
+codegen/raw_storage_out_of_range.kl:12: out of bounds: slots[ far ]

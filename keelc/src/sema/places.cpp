@@ -713,6 +713,11 @@ bool Places::is_array_index( Node_id id ) const
     return type.is_valid() && table_.is_array( type );
 }
 
+bool Places::is_raw_index( Node_id id ) const
+{
+    return is_array_index( id ) && table_.is_raw_array( types_.type_of( ast_.object( id ) ) );
+}
+
 bool Places::describes_run( Node_id place ) const
 {
     return ast_.kind( place ) == Node_kind::Field_expr && is_run_typed( ast_.object( place ) );
@@ -1130,7 +1135,7 @@ void Places::check_owning_source( Node_id value, Type_id type )
         return;
     }
 
-    if( is_array_index( value ) )
+    if( is_array_index( value ) && !is_raw_index( value ) )
     {
         reporter_.error_at(
             ast_.span( value ),
@@ -1181,7 +1186,8 @@ bool Places::check_owning_return( Node_id value, Type_id type )
     const Span  span    = ast_.span( value );
     std::string message = "an owning value is transferred, not copied";
 
-    if( ast_.kind( value ) == Node_kind::Index_expr && !is_operator_index( value ) && !is_array_index( value ) )
+    if( ast_.kind( value ) == Node_kind::Index_expr && !is_operator_index( value ) &&
+        ( !is_array_index( value ) || is_raw_index( value ) ) )
     {
         reporter_.error_at( span, message, fmt::format( "write `move {}`", reporter_.text( span ) ) );
     }

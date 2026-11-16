@@ -69,6 +69,7 @@ public:
     bool    is_operator_index( Node_id id ) const;
     bool    is_run_index( Node_id id ) const;     // `r[i]` or `r[a..b]` on a run
     bool    is_array_index( Node_id id ) const;   // `a[i]` on a `T[N]`: part of `a`
+    bool    is_raw_index( Node_id id ) const;     // `s[i]` on a `T[?N]`: a slot, raw as a `T[*]`'s is
     bool    describes_run( Node_id place ) const; // `r.size` or `r.data`: the run itself, not its elements
 
     // The declaration whose storage ends when `current_function` returns, or invalid.

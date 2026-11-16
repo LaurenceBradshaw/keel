@@ -484,9 +484,10 @@ void Statements::visit_var( Node_id id )
             );
         }
 
-        // D60: every element holds a value from the declaration, so an array is never assigned later.
+        // D60: every element holds a value from the declaration, so an array is never assigned later. Raw
+        // storage holds none, so declaring it is all it needs.
         if( !init.is_valid() && !constant && mode == Keyword::Count && table_.is_array( type ) &&
-            expressions_.current_function().is_valid() )
+            !table_.needs_no_value( type ) && expressions_.current_function().is_valid() )
         {
             const std::string fill = plain_fill( table_, type );
 
@@ -889,7 +890,7 @@ void Statements::visit_walk( Node_id id )
     const Node_id walk = expressions_.check_walk( id, writes, owner );
     const Type_id held = types_.type_of( ast_.container( id ) );
 
-    if( !walk.is_valid() && held.is_valid() && ( table_.is_run( held ) || table_.is_array( held ) ) )
+    if( !walk.is_valid() && held.is_valid() && ( table_.is_run( held ) || table_.is_live_array( held ) ) )
     {
         const Type_id element = table_.get( held ).element;
 

@@ -98,6 +98,18 @@ void set_leaves( const Slot_map& slots, const Slots& range, Flow& flow, u8 value
     }
 }
 
+// Each leaf in `range` holding raw storage, which needs no value, counts as assigned.
+void assign_raw( const Slot_map& slots, const Slots& range, Flow& flow )
+{
+    for( u32 slot = range.first; slot < range.last; ++slot )
+    {
+        if( slot != k_return_slot.v && slots.is_leaf( slot ) && slots.raw( slot ) )
+        {
+            set_leaves( slots, slots.under( slot ), flow, 1 );
+        }
+    }
+}
+
 // D9's half. A constant or a global cannot be unassigned; a projection reads the leaves it reaches.
 void read_operand(
     const Function&                  func,
@@ -381,8 +393,12 @@ void transfer_block( const Function& func, const Slot_map& slots, Block_id block
 
             break;
         case Statement_kind::Storage_dead:
+            set_leaves( slots, slots.under( statement.place.local.v ), flow, 0 );
+            break;
+        // Raw storage holds all it needs once its storage begins.
         case Statement_kind::Storage_live:
             set_leaves( slots, slots.under( statement.place.local.v ), flow, 0 );
+            assign_raw( slots, slots.under( statement.place.local.v ), flow );
             break;
         case Statement_kind::Drop:
             // Silent: whether a drop of something unassigned is reachable is drop elaboration's question.
@@ -423,6 +439,9 @@ Flow entry_flow( const Function& func, const Slot_map& slots )
     {
         set_leaves( slots, slots.under( k_return_slot.v ), flow, 0 );
     }
+
+    // Raw storage needs no value, so declaring it, or entering its constructor, is enough.
+    assign_raw( slots, Slots { .node = 0, .first = 0, .last = slots.count() }, flow );
 
     return flow;
 }

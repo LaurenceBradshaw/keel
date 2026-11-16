@@ -1,0 +1,96 @@
+// `T[?N]` lays its slots out as `T[N]` but drops nothing: a slot written by `[]` in `unsafe` holds a
+// value only until it is moved out, and its holder drops the ones it knows are live.
+i64 live;
+
+class Tok
+{
+    public Tok( i64 v )
+    {
+        value = v;
+        live += 1;
+    }
+
+    ~Tok()
+    {
+        live -= 1;
+    }
+
+    public i64 value;
+};
+
+class Few
+{
+    ~Few()
+    {
+        while( count > 0 )
+        {
+            count -= 1;
+            unsafe
+            {
+                _ = move slots[ count ];
+            }
+        }
+    }
+
+    public void push( move Tok t )
+    {
+        unsafe
+        {
+            slots[ count ] = move t;
+        }
+        count += 1;
+    }
+
+    public i64 sum() const
+    {
+        i64 total = 0;
+        for( u64 i : 0..count )
+        {
+            unsafe
+            {
+                total += slots[ i ].value;
+            }
+        }
+        return total;
+    }
+
+    Tok[?4] slots;
+    u64     count = 0;
+};
+
+i32 main()
+{
+    {
+        Few few = Few();
+        few.push( Tok( 3 ) );
+        few.push( Tok( 4 ) );
+        if( few.sum() != 7 || live != 2 )
+        {
+            return 1;
+        }
+    }
+    if( live != 0 )
+    {
+        return 2;
+    }
+
+    i32[?3] numbers;
+    unsafe
+    {
+        numbers[ 0 ] = 7;
+        numbers[ 1 ] = 8;
+        const ref i32[] run = numbers[ 0..2 ];
+        i32[*] data = numbers.data();
+        if( run.size != 2 || run[ 1 ] != 8 || data[ 0 ] != 7 )
+        {
+            return 3;
+        }
+    }
+
+    // A copy of numbers copies its slots, live or not.
+    i32[?3] copied = numbers;
+    unsafe
+    {
+        return copied[ 0 ] + copied[ 1 ] == 15 ? 0 : 4;
+    }
+}

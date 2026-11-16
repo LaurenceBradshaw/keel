@@ -125,19 +125,19 @@ Type_id Type_table::run_of( Type_id element )
     return id;
 }
 
-Type_id Type_table::array_of( Type_id element, u64 count )
+Type_id Type_table::array_of( Type_id element, u64 count, bool raw )
 {
-    return array_of( element, size( count ) );
+    return array_of( element, size( count ), raw );
 }
 
-Type_id Type_table::array_of( Type_id element, Type_id extent )
+Type_id Type_table::array_of( Type_id element, Type_id extent, bool raw )
 {
     if( is_error( extent ) )
     {
         return error_;
     }
 
-    const auto it = arrays_.find( { element.v, extent.v } );
+    const auto it = arrays_.find( { element.v, extent.v, raw } );
     if( it != arrays_.end() )
     {
         return it->second;
@@ -150,9 +150,10 @@ Type_id Type_table::array_of( Type_id element, Type_id extent )
         add( { .kind      = Type_kind::Array,
                .element   = element,
                .arguments = stored,
-               .count     = described.width == 0 && described.kind == Type_kind::Size ? described.count : 0 },
-             fmt::format( "{}[{}]", name( element ), name( extent ) ) );
-    arrays_.emplace( std::pair { element.v, extent.v }, id );
+               .count     = described.width == 0 && described.kind == Type_kind::Size ? described.count : 0,
+               .raw       = raw },
+             fmt::format( "{}[{}{}]", name( element ), raw ? "?" : "", name( extent ) ) );
+    arrays_.emplace( std::tuple { element.v, extent.v, raw }, id );
     return id;
 }
 
@@ -527,7 +528,9 @@ Type_id Type_table::substitute( Type_id type, const Bindings& bindings )
     }
     case Type_kind::Array:
     {
-        return array_of( substitute( described.element, bindings ), substitute( described.arguments[0], bindings ) );
+        return array_of(
+            substitute( described.element, bindings ), substitute( described.arguments[0], bindings ), described.raw
+        );
     }
     case Type_kind::Size:
     {
@@ -719,7 +722,7 @@ bool Type_table::deduce( Type_id pattern, Type_id actual, Bindings& into ) const
     }
 
     // An array lent where a run is wanted is read as that run, as holds() has it.
-    if( p.kind == Type_kind::Run && a.kind == Type_kind::Array )
+    if( p.kind == Type_kind::Run && a.kind == Type_kind::Array && !a.raw )
     {
         return deduce( p.element, a.element, into );
     }
@@ -736,7 +739,7 @@ bool Type_table::deduce( Type_id pattern, Type_id actual, Bindings& into ) const
     case Type_kind::Run:
         return deduce( p.element, a.element, into );
     case Type_kind::Array:
-        return deduce( p.arguments[0], a.arguments[0], into ) && deduce( p.element, a.element, into );
+        return p.raw == a.raw && deduce( p.arguments[0], a.arguments[0], into ) && deduce( p.element, a.element, into );
     case Type_kind::Size:
         return pattern == actual;
     case Type_kind::Struct:
@@ -878,7 +881,8 @@ bool unify( const Type_table& table, Type_id a, Type_id b, Bindings& bound )
     case Type_kind::Run:
         return x.const_element == y.const_element && unify( table, x.element, y.element, bound );
     case Type_kind::Array:
-        return unify( table, x.arguments[0], y.arguments[0], bound ) && unify( table, x.element, y.element, bound );
+        return x.raw == y.raw && unify( table, x.arguments[0], y.arguments[0], bound ) &&
+               unify( table, x.element, y.element, bound );
     case Type_kind::Size:
         return x.width != 0 || y.width != 0; // a computed size may be any value
     case Type_kind::Struct:
@@ -1071,7 +1075,7 @@ bool Type_table::holds( Type_id from, Type_id to ) const
     }
 
     // Only a borrow reaches a run, so this is an array lent as a `T[]`.
-    if( f.kind == Type_kind::Array && t.kind == Type_kind::Run )
+    if( f.kind == Type_kind::Array && !f.raw && t.kind == Type_kind::Run )
     {
         return t.element == f.element;
     }
@@ -1327,6 +1331,21 @@ bool Type_table::is_sized_array( Type_id id ) const
     return is_array( id ) && get( id ).count != 0;
 }
 
+bool Type_table::is_raw_array( Type_id id ) const
+{
+    return is_array( id ) && get( id ).raw;
+}
+
+bool Type_table::is_live_array( Type_id id ) const
+{
+    return is_array( id ) && !get( id ).raw;
+}
+
+bool Type_table::needs_no_value( Type_id id ) const
+{
+    return is_raw_array( id ) || ( is_live_array( id ) && needs_no_value( get( id ).element ) );
+}
+
 bool Type_table::is_size( Type_id id ) const
 {
     assert( id.is_valid() );
@@ -1534,7 +1553,9 @@ std::string Type_table::stable_name( Type_id id ) const
     case Type_kind::Run:
         return fmt::format( "{}[]", stable_name( described.element ) );
     case Type_kind::Array:
-        return fmt::format( "{}[{}]", stable_name( described.element ), stable_name( described.arguments[0] ) );
+        return fmt::format(
+            "{}[{}{}]", stable_name( described.element ), described.raw ? "?" : "", stable_name( described.arguments[0] )
+        );
     case Type_kind::Field:
         return fmt::format( "field( {} ) -> {}", stable_name( described.arguments[0] ), stable_name( described.element ) );
     // Sorted by name, as the members' own order is by id, which differs between compiles.
@@ -1661,7 +1682,8 @@ bool Type_table::substitutes_to( Type_id pattern, const Bindings& bindings, Type
     case Type_kind::Run:
         return p.const_element == a.const_element && substitutes_to( p.element, bindings, a.element );
     case Type_kind::Array:
-        return substitutes_to( p.arguments[0], bindings, a.arguments[0] ) && substitutes_to( p.element, bindings, a.element );
+        return p.raw == a.raw && substitutes_to( p.arguments[0], bindings, a.arguments[0] ) &&
+               substitutes_to( p.element, bindings, a.element );
     case Type_kind::Size:
         return a.width == 0 && evaluate( pattern, bindings ) == a.count;
     case Type_kind::Struct:

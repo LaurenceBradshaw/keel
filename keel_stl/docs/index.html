@@ -88,6 +88,17 @@ end of input. A read error is also <code>false</code>; the careful path is <code
 </dl>
 </section>
 <section class="module">
+<h3><a href="fixed_list.html">fixed_list</a></h3>
+<dl class="summaries">
+<dt><a href="fixed_list.html#fixed_list"><code>fixed_list</code></a> <span class="kind">class</span></dt>
+<dd>A list of at most <code>N</code> elements of <code>T</code>, held inline: it never allocates.</dd>
+<dt><a href="fixed_list.html#equatable-for-fixed_list&lt;T,-N&gt;-where-T-:-equatable"><code>equatable for fixed_list&lt;T, N&gt; where T : equatable</code></a> <span class="kind">implements</span></dt>
+<dd>Two lists are equal when they hold equal elements in the same order.</dd>
+<dt><a href="fixed_list.html#hashable-for-fixed_list&lt;T,-N&gt;-where-T-:-hashable"><code>hashable for fixed_list&lt;T, N&gt; where T : hashable</code></a> <span class="kind">implements</span></dt>
+<dd>A list hashes each element in order, then its size.</dd>
+</dl>
+</section>
+<section class="module">
 <h3><a href="hash_control.html">hash_control</a></h3>
 <dl class="summaries">
 <dt><a href="hash_control.html#hash_control"><code>hash_control</code></a> <span class="kind">class</span></dt>

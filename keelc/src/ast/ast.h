@@ -147,6 +147,8 @@ public:
     // Types.
     Node_id inner_type( Node_id id ) const; // Pointer_, Many_pointer_, Run_, Array_, Mode_ and Const_type
     Node_id array_size( Node_id array_type ) const;
+    bool    is_raw_array( Node_id array_type ) const; // `T[?N]`
+    bool    needs_no_value( Node_id field ) const;    // a field spelled `T[?N]`, or an array of them
     Node_id generic_name( Node_id generic_type ) const;
 
     // Expressions.

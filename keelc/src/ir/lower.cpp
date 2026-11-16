@@ -178,6 +178,7 @@ private:
     Operand lower_field_default( Node_id field, Type_id instance );
     Operand lower_default( Type_id type, Span span );
     Operand lower_array_rearrange( Node_id id, Node_id object, Type_id array );
+    Operand lower_raw_method( Node_id id, Node_id object, Type_id array );
     Operand lower_array_literal( Node_id id );
     Operand lower_array_fill( Node_id id );
     // `@functions_of( T )`: each listed function's `<module>.<name>` and address, in a `T[N]`.
@@ -625,6 +626,7 @@ Function Lowering::finished()
         const Type_id type = through ? types_.table().get( function.locals[i].type ).element : function.locals[i].type;
 
         function.locals[i].built_whole = built_whole( ast_, types_.table(), type );
+        function.locals[i].raw         = types_.table().needs_no_value( type );
 
         if( local == function.constructed || splits_into_fields( ast_, types_.table(), type ) )
         {
@@ -657,6 +659,7 @@ void Lowering::add_fields( Function& function, Local_id local, Type_id aggregate
             .is_owning   = owns( type ),
             .is_const    = ast_.is_const_field( member ),
             .built_whole = built_whole( ast_, types_.table(), type ),
+            .raw         = types_.table().needs_no_value( type ),
         } );
 
         if( splits_into_fields( ast_, types_.table(), type ) )
@@ -1588,9 +1591,9 @@ bool Lowering::initialises_field( const Place& target ) const
 
 bool Lowering::writes_a_slot( Node_id target ) const
 {
-    // An array's element is part of it, so writing one replaces what was there.
+    // An array's element is part of it, so writing one replaces what was there; raw storage's is a slot.
     if( ast_.kind( target ) == Node_kind::Index_expr && !types_.callee_of( target ).is_valid() &&
-        !types_.table().is_array( types_.type_of( ast_.object( target ) ) ) )
+        !types_.table().is_live_array( types_.type_of( ast_.object( target ) ) ) )
     {
         return true;
     }
@@ -2944,6 +2947,15 @@ Operand Lowering::lower_default( Type_id type, Span span )
         return copy( builder_.place( local ), type );
     }
 
+    // Storage begun is all raw storage needs.
+    case sema::Default_kind::Raw:
+    {
+        const Local_id temp = builder_.add_local( type, span );
+        builder_.storage_live( temp, span );
+        drops_.own_temporary( temp );
+        return copy( builder_.place( temp ), type );
+    }
+
     case sema::Default_kind::None:
         break;
     }
@@ -3066,6 +3078,19 @@ Operand Lowering::lower_array_rearrange( Node_id id, Node_id object, Type_id arr
     return copy( builder_.place( taken ), element );
 }
 
+// `T[?N]`'s `data()`: the address of its first slot.
+Operand Lowering::lower_raw_method( Node_id id, Node_id object, Type_id array )
+{
+    const Span    span = ast_.span( id );
+    const Type_id u64  = types_.table().integer( 64, false );
+    assert( interner_.text( ast_.name( ast_.callee( id ) ) ) == "data" && types_.table().is_raw_array( array ) );
+
+    const Place    held = lower_place( object );
+    const Place    base = types_.table().is_pointer( type_of( object ) ) ? builder_.deref( held ) : held;
+    const Local_id zero = builder_.into_temp( use( constant( literal_pool_.add_integer( 0 ), u64 ) ), u64, span );
+    return temporary( address_of( builder_.index( base, zero ), type_of( id ), Address_purpose::Borrow ), type_of( id ), span );
+}
+
 Operand Lowering::lower_call( Node_id id )
 {
     if( ast_.kind( ast_.callee( id ) ) == Node_kind::Name_expr &&
@@ -3105,6 +3130,11 @@ Operand Lowering::lower_call( Node_id id )
                                                                               : type_of( object );
 
         const std::string_view name = interner_.text( ast_.name( ast_.callee( id ) ) );
+
+        if( types_.table().is_raw_array( held ) )
+        {
+            return lower_raw_method( id, object, held );
+        }
 
         if( ( types_.table().is_array( held ) || types_.table().is_run( held ) ) && ( name == "swap" || name == "replace" ) )
         {
@@ -5734,8 +5764,9 @@ void append_synthesised_drops(
     // Last, since an enum's destructor may intern an array but not the reverse.
     for( const Type_id type : types.table().array_types() )
     {
-        if( !types.table().mentions_parameter( type ) && instance_owns( ast, types.table(), type, types.recorded() ) &&
-            !loaded( {}, std::span( &type, 1 ) ) )
+        // `T[?N]` drops nothing: its holder drops the slots it knows are live.
+        if( !types.table().mentions_parameter( type ) && !types.table().is_raw_array( type ) &&
+            instance_owns( ast, types.table(), type, types.recorded() ) && !loaded( {}, std::span( &type, 1 ) ) )
         {
             functions.push_back( array_destructor( ast, types, literals, type ) );
         }

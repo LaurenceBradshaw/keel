@@ -839,6 +839,11 @@ Type_id Expressions::infer_array_method( Node_id id, Node_id object, Type_id arr
 
     const bool run = table_.is_run( array );
 
+    if( table_.is_raw_array( array ) )
+    {
+        return infer_raw_method( id, object, array );
+    }
+
     if( name == "size" && arguments.empty() && !run )
     {
         return types_.record( id, u64 );
@@ -877,6 +882,34 @@ Type_id Expressions::infer_array_method( Node_id id, Node_id object, Type_id arr
             : "an array has `size()`, `swap(i, j)` and `replace(i, move v)`"
     );
     return types_.poison( id );
+}
+
+// `T[?N]` has one method, `data()`, the `T[*]` of its first slot; its slots are reached by `[]` in `unsafe`.
+Type_id Expressions::infer_raw_method( Node_id id, Node_id object, Type_id array )
+{
+    const Node_id                  callee    = ast_.callee( id );
+    const std::string_view         name      = interner_.text( ast_.name( callee ) );
+    const std::span<const Node_id> arguments = ast_.arguments( id );
+
+    for( const Node_id argument : arguments )
+    {
+        infer( argument );
+    }
+
+    if( name != "data" || !arguments.empty() )
+    {
+        reporter_.error_at(
+            ast_.span( callee ),
+            name == "data" ? std::string( "`data` takes no arguments" )
+                           : fmt::format( "`{}` has no method `{}`", table_.name( array ), name ),
+            "raw storage has `data()`, and its slots are `s[i]` in `unsafe`"
+        );
+        return types_.poison( id );
+    }
+
+    return types_.record(
+        id, table_.many_pointer_to( table_.get( array ).element, places_.is_read_only( object, current_function_ ) )
+    );
 }
 
 // D77: `T()`, the default of a `defaultable` parameter.
@@ -1372,7 +1405,7 @@ Node_id Expressions::check_walk( Node_id walk_stmt, bool writes, Type_id& owner 
     }
 
     // The compiler walks a run's or an array's elements itself, so no method is chosen.
-    if( table_.is_run( type ) || table_.is_array( type ) )
+    if( table_.is_run( type ) || table_.is_live_array( type ) )
     {
         if( writes )
         {
@@ -1440,7 +1473,9 @@ Node_id Expressions::check_walk( Node_id walk_stmt, bool writes, Type_id& owner 
                 ast_.span( container ),
                 fmt::format( "`{}` has no walk", table_.name( type ) ),
                 bounded ? std::string( "bound it by an interface that requires `operator:`" )
-                        : fmt::format( "count over it: `for(u64 i : 0..{}.size())`", reporter_.text( ast_.span( container ) ) )
+                : table_.is_raw_array( type )
+                    ? std::string( "raw storage's slots may hold nothing; walk what holds it" )
+                    : fmt::format( "count over it: `for(u64 i : 0..{}.size())`", reporter_.text( ast_.span( container ) ) )
             );
         }
         return Node_id {};
@@ -3106,6 +3141,16 @@ Type_id Expressions::infer_index( Node_id id )
 
     const Type_id base = infer( ast_.object( id ) );
 
+    // A raw slot reads and writes as a `T[*]`'s does (D49): nothing says it holds a value.
+    if( table_.is_raw_array( base ) )
+    {
+        require_unsafe(
+            id,
+            is_range ? "slicing raw storage needs an `unsafe` block" : "indexing raw storage needs an `unsafe` block",
+            is_range ? "nothing checks that the slots hold values" : "nothing checks that the slot holds a value"
+        );
+    }
+
     if( table_.is_array( base ) )
     {
         return is_range ? infer_array_slice( id, base, lower, upper ) : infer_array_index( id, base );
@@ -3787,6 +3832,17 @@ Type_id Expressions::expected_array( Node_id id )
         return {};
     }
 
+    if( table_.is_raw_array( expectation ) )
+    {
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format( "an array literal cannot become `{}`", table_.name( expectation ) ),
+            "raw storage starts with no values, so it is declared without one"
+        );
+        absorb_all();
+        return {};
+    }
+
     if( !table_.is_array( expectation ) )
     {
         reporter_.error_at( ast_.span( id ), fmt::format( "an array literal cannot become `{}`", table_.name( expectation ) ) );
@@ -4243,7 +4299,9 @@ Type_id Expressions::infer_struct_literal( Node_id id )
     }
 
     // `P {}` for a type with defaults is the named form with every field left out (D77).
-    const bool defaults = std::ranges::any_of( fields, [&]( Node_id f ) { return ast_.default_value( f ).is_valid(); } );
+    const bool defaults = std::ranges::any_of(
+        fields, [&]( Node_id f ) { return ast_.default_value( f ).is_valid() || ast_.needs_no_value( f ); }
+    );
 
     if( named == 0 && ( !initialisers.empty() || !defaults ) )
     {
@@ -4320,7 +4378,7 @@ Type_id Expressions::infer_struct_literal( Node_id id )
     for( const Node_id field : fields )
     {
         if( ast_.name( field ).is_valid() && seen.find( ast_.name( field ).v ) == seen.end() &&
-            !ast_.default_value( field ).is_valid() )
+            !ast_.default_value( field ).is_valid() && !ast_.needs_no_value( field ) )
         {
             missing.push_back( field );
         }
@@ -4805,7 +4863,8 @@ Type_id Expressions::infer_marker( Node_id id )
         return types_.poison( id );
     }
 
-    if( places_.is_array_index( root ) )
+    // A raw slot is the container's own storage, so moving out of it is the `unsafe` author's to track.
+    if( places_.is_array_index( root ) && !places_.is_raw_index( root ) )
     {
         reporter_.error_at(
             ast_.span( operand ), "an element of an array cannot be moved out", "the array moves only as a whole"
@@ -11668,6 +11727,66 @@ TEST_CASE( "type_checker_refuses_what_a_fixed_array_cannot_do", "[sema][fixed_ar
         // The conversion is to a borrowed run of the same element, and only that.
         { "void f( i32[2] a ) { const ref i64[] r = a; }", "expected `i64[]`, but got `i32[2]`", "" },
         { "void f( i32[2] a ) { i32[3] b = a; }", "expected `i32[3]`, but got `i32[2]`", "" },
+    };
+
+    for( const Case& c : cases )
+    {
+        const Typed p( declared + c.source + "\ni32 main() { return 0; }" );
+
+        INFO( c.source << "\n" << p.rendered() );
+        const std::string rendered = p.rendered();
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( rendered.find( c.message ) != std::string::npos );
+        REQUIRE( rendered.find( c.help ) != std::string::npos );
+    }
+}
+
+// `T[?N]`: declared without a value, its slots reached by `[]` and sliced in `unsafe`, as a `T[*]`'s are.
+TEST_CASE( "type_checker_types_raw_storage", "[sema][raw_storage]" )
+{
+    const Typed p( "class Tok { public Tok() { } ~Tok() { } i32 x = 0; };\n"
+                   "class Few { ~Few() { for( u64 i : 0..n ) { unsafe { _ = move s[ i ]; } } } Tok[?2] s; u64 n = 0;\n"
+                   "    public void push( move Tok t ) { unsafe { s[ n ] = move t; } n += 1; }\n"
+                   "    public ref Tok first() const { unsafe { return s[ 0 ]; } } };\n"
+                   "struct Pair { i32[?2] raw; u64 n; };\n"
+                   "T made<T>() where T : defaultable { return T(); }\n"
+                   "i32 main() { Few f = Few(); f.push( Tok() ); i32[?3] a; i32[?3][2] grid; Pair q = Pair { .n = 1 };\n"
+                   "    i32[?3] b = made<i32[?3]>(); unsafe { a[ 0 ] = 1; grid[ 1 ][ 2 ] = 3; const ref i32[] r = a[ 0..1 ];\n"
+                   "    i32[*] d = a.data(); i32* e = &a[ 0 ]; return r[ 0 ] + d[ 0 ] + *e + grid[ 1 ][ 2 ] - 6; } }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+}
+
+TEST_CASE( "type_checker_refuses_what_raw_storage_cannot_do", "[sema][raw_storage]" )
+{
+    const std::string declared = "class Tok { public Tok() { } ~Tok() { } i32 x = 0; };\n";
+
+    struct Case
+    {
+        const char* source;
+        const char* message;
+        const char* help;
+    };
+
+    const Case cases[] = {
+        { "void f() { i32[?4] s; i32 x = s[ 0 ]; }", "indexing raw storage needs an `unsafe` block", "holds a value" },
+        { "void f() { i32[?4] s; const ref i32[] r = s[ 0..2 ]; }", "slicing raw storage needs an `unsafe` block", "" },
+        { "void f() { i32[?4] s; unsafe { s[ 4 ] = 1; } }", "index 4 is past the end of `i32[?4]`", "" },
+        { "void f( i32[?4] s ) { unsafe { const ref i32[] r = s[ 0..5 ]; } }", "bound 5 is past the end of `i32[?4]`", "" },
+        { "i32 sum( const ref i32[] r ) { return 0; }\nvoid f() { i32[?4] s; _ = sum( s ); }", "expected `i32[]`", "" },
+        { "void f() { i32[?4] s = [ 0, .. ]; }", "an array literal cannot become `i32[?4]`", "declared without one" },
+        { "void f( i32[?4] a, i32[?4] b ) { bool e = a == b; }", "no operator `==`", "" },
+        { "void f( i32[?4] s ) { for( i32 x : s ) { } }", "`i32[?4]` has no walk", "walk what holds it" },
+        { "void f( const ref i32[?4] s ) { unsafe { s[ 0 ] = 1; } }", "`s` is `const`", "" },
+        { "void f( const ref i32[?4] s ) { i32[*] p = s.data(); }", "expected `i32[*]`, but got `const i32[*]`", "" },
+        { "void f( i32[?4] s ) { u64 n = s.size(); }", "`i32[?4]` has no method `size`", "raw storage has `data()`" },
+        { "void f( Tok[?2] s ) { unsafe { Tok t = s[ 0 ]; } }", "an owning value is transferred, not copied", "write `move" },
+        { "struct S { Tok[?2] t; };", "a struct cannot contain `Tok[?2]`", "" },
+        { "class C { public C() { } Tok[?2] t; };",
+          "`C` holds `Tok[?2]`, which drops nothing, so it must declare a destructor",
+          "`~C()` drops the slots that hold a value" },
+        { "class G<T, u64 N> { public G() { } T[?N] t; };", "`G` holds `T[?N]`, which drops nothing", "" },
     };
 
     for( const Case& c : cases )

@@ -111,8 +111,8 @@ std::string_view bound_requirement( Bound bound )
     case Bound::Floating:
         return "it has to be a float";
     case Bound::Defaultable:
-        return "it needs a default: a number, `bool` or pointer, a struct whose every field has one, or a class with a "
-               "public constructor taking nothing";
+        return "it needs a default: a number, `bool` or pointer, raw storage, a struct whose every field has one, or a "
+               "class with a public constructor taking nothing";
     }
 
     return {};
@@ -225,6 +225,11 @@ Default_kind default_of( const Ast& ast_, const Type_table& table_, Type_id type
         return Default_kind::Zero;
     }
 
+    if( table_.needs_no_value( type ) )
+    {
+        return Default_kind::Raw;
+    }
+
     if( !table_.is_struct( type ) )
     {
         return Default_kind::None;
@@ -237,12 +242,14 @@ Default_kind default_of( const Ast& ast_, const Type_table& table_, Type_id type
         return ast_.default_constructor( declaration ).is_valid() ? Default_kind::Constructor : Default_kind::None;
     }
 
-    const bool every =
-        ast_.kind( declaration ) == Node_kind::Struct_decl &&
-        std::ranges::all_of(
-            ast_.members( declaration ),
-            [&]( Node_id m ) { return ast_.kind( m ) != Node_kind::Field_decl || ast_.default_value( m ).is_valid(); }
-        );
+    const bool every = ast_.kind( declaration ) == Node_kind::Struct_decl &&
+                       std::ranges::all_of(
+                           ast_.members( declaration ),
+                           [&]( Node_id m ) {
+                               return ast_.kind( m ) != Node_kind::Field_decl || ast_.default_value( m ).is_valid() ||
+                                      ast_.needs_no_value( m );
+                           }
+                       );
 
     return every ? Default_kind::Literal : Default_kind::None;
 }

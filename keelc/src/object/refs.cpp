@@ -181,6 +181,7 @@ u32 Ref_writer::type_index( Type_id id )
     case Type_kind::Array:
         type( entry, described.element );
         type( entry, described.arguments[0] );
+        entry.put_u8( described.raw );
         break;
     case Type_kind::Size:
         entry.put_u8( described.width );
@@ -452,9 +453,10 @@ void Ref_reader::read_types()
         {
             const Type_id element = type();
             const Type_id extent  = type();
+            const bool    raw     = in_.get_u8() != 0;
             if( !failed() && extent.is_valid() && ( table_.is_size( extent ) || table_.is_size_parameter( extent ) ) )
             {
-                id = table_.array_of( element, extent );
+                id = table_.array_of( element, extent, raw );
             }
             else
             {

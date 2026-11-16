@@ -506,6 +506,16 @@ bool Lookahead::looks_like_type_arguments( u32 at )
                 cursor_.advance(); // `[`
                 cursor_.advance(); // the size
             }
+            // `T[?N]`, which no expression spells.
+            else if( cursor_.peek( 1 ).kind == Token_kind::Question &&
+                     ( cursor_.peek( 2 ).kind == Token_kind::Int_literal || cursor_.peek( 2 ).kind == Token_kind::Identifier
+                     ) &&
+                     cursor_.peek( 3 ).kind == Token_kind::R_bracket )
+            {
+                cursor_.advance(); // `[`
+                cursor_.advance(); // `?`
+                cursor_.advance(); // the size
+            }
             else
             {
                 return false;

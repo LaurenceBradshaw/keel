@@ -180,7 +180,7 @@ bool supplied( const Type_table& table, Type_id type, Type_id interface, bool pa
         return false;
     }
 
-    if( table.is_array( type ) && table.is_interface( interface ) &&
+    if( table.is_live_array( type ) && table.is_interface( interface ) &&
         table.get( interface ).declaration == table.prelude().fixed_memory )
     {
         return table.get( interface ).arguments.size() == 1 && table.get( interface ).arguments[0] == table.get( type ).element;
@@ -499,7 +499,7 @@ std::vector<Type_id> Conformance_model::instances_of( Type_table& table, Type_id
         }
     }
 
-    if( table.is_array( type ) && interface == table.prelude().fixed_memory )
+    if( table.is_live_array( type ) && interface == table.prelude().fixed_memory )
     {
         add( table.interface( interface, std::array { table.get( type ).element }, "fixed_memory" ) );
     }

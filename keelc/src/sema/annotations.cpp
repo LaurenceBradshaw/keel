@@ -955,8 +955,9 @@ Type_id Annotations::resolve_array( Node_id annotation )
         {
             types_.record( suffix, extent ); // what Signature_printer reads back
         }
-        return table_.is_error( element ) || table_.is_error( extent ) ? table_.builtin( Type_kind::Error )
-                                                                       : table_.array_of( element, extent );
+        return table_.is_error( element ) || table_.is_error( extent )
+                   ? table_.builtin( Type_kind::Error )
+                   : table_.array_of( element, extent, ast_.is_raw_array( annotation ) );
     }
 
     const std::optional<u64> count = array_size( suffix );
@@ -991,7 +992,7 @@ Type_id Annotations::resolve_array( Node_id annotation )
         return table_.builtin( Type_kind::Error );
     }
 
-    return table_.array_of( element, *count );
+    return table_.array_of( element, *count, ast_.is_raw_array( annotation ) );
 }
 
 std::optional<u64> Annotations::array_size( Node_id size )

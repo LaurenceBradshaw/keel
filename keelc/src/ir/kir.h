@@ -77,6 +77,7 @@ struct Local
     Span      span {};
     Symbol_id name {};             // invalid for a temporary
     bool      built_whole = false; // a class with a constructor or destructor: assigned only whole
+    bool      raw         = false; // `T[?N]`: holds what it needs from its declaration on
 };
 
 enum class Projection_kind : u8
@@ -380,6 +381,7 @@ struct Field_slot
     bool     is_owning   = false;
     bool     is_const    = false;
     bool     built_whole = false;
+    bool     raw         = false; // `T[?N]`: assigned from the constructor's start
 };
 
 // Block 0 is the entry. Local 0 is the return slot, and locals 1..parameter_count are the

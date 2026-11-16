@@ -124,6 +124,11 @@ u32 Slot_map::parent( u32 slot ) const
     return entry.parent == k_no_field ? entry.local.v : base_ + entry.parent;
 }
 
+bool Slot_map::raw( u32 slot ) const
+{
+    return slot < base_ ? func_.locals[Local_id { slot }].raw : func_.fields[slot - base_].raw;
+}
+
 bool Slot_map::built_whole( u32 slot ) const
 {
     return slot < base_ ? func_.locals[Local_id { slot }].built_whole : func_.fields[slot - base_].built_whole;

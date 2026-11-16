@@ -123,6 +123,7 @@ void Signatures::declare()
     check_signatures();
     check_operators();
     check_struct_ownership();
+    check_raw_storage_destructors();
     declare_functions();
     declare_globals();
     places_.record_borrowed_parameters();
@@ -1281,6 +1282,54 @@ void Signatures::check_struct_ownership()
         if( ast_.kind( decl ) == Node_kind::Struct_decl && !ast_.has_destructor( decl ) )
         {
             check_struct_fields_are_not_owning( decl );
+        }
+    }
+}
+
+// Raw storage drops nothing, so a class holding it of an owning element must drop the live slots,
+// which only its own state knows.
+void Signatures::check_raw_storage_destructors()
+{
+    for( const Node_id decl : ast_.declarations( ast_.root() ) )
+    {
+        if( ast_.kind( decl ) != Node_kind::Class_decl || ast_.has_destructor( decl ) )
+        {
+            continue;
+        }
+
+        for( const Node_id field : ast_.members( decl ) )
+        {
+            if( ast_.kind( field ) != Node_kind::Field_decl )
+            {
+                continue;
+            }
+
+            const Type_id field_type = types_.type_of( field );
+            Type_id       held       = field_type;
+            while( held.is_valid() && table_.is_live_array( held ) )
+            {
+                held = table_.get( held ).element;
+            }
+
+            if( !held.is_valid() || !table_.is_raw_array( held ) ||
+                bounds_.satisfies( table_.get( held ).element, Bound::Copyable ) )
+            {
+                continue;
+            }
+
+            reporter_.error_at(
+                ast_.span( field ),
+                fmt::format(
+                    "`{}` holds `{}`, which drops nothing, so it must declare a destructor",
+                    interner_.text( ast_.name( decl ) ),
+                    table_.name( field_type )
+                ),
+                fmt::format(
+                    "`~{}()` drops the slots that hold a value, which only `{}` knows",
+                    interner_.text( ast_.name( decl ) ),
+                    interner_.text( ast_.name( decl ) )
+                )
+            );
         }
     }
 }

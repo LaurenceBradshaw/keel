@@ -558,6 +558,26 @@ Node_id Ast::array_size( Node_id array_type ) const
     return child( array_type, 1 );
 }
 
+bool Ast::is_raw_array( Node_id array_type ) const
+{
+    assert( kind( array_type ) == Node_kind::Array_type );
+    return aux( array_type ) == 1;
+}
+
+bool Ast::needs_no_value( Node_id field ) const
+{
+    Node_id spelled = annotation( field );
+    if( spelled.is_valid() && kind( spelled ) == Node_kind::Const_type )
+    {
+        spelled = inner_type( spelled );
+    }
+    while( spelled.is_valid() && kind( spelled ) == Node_kind::Array_type && !is_raw_array( spelled ) )
+    {
+        spelled = inner_type( spelled );
+    }
+    return spelled.is_valid() && kind( spelled ) == Node_kind::Array_type;
+}
+
 Node_id Ast::generic_name( Node_id generic_type ) const
 {
     assert( kind( generic_type ) == Node_kind::Generic_type );

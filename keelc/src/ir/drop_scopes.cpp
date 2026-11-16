@@ -10,7 +10,8 @@ namespace keel
 
 void drop_place( Builder& builder, const Ast& ast, Types& types, Place place, Type_id type, Span span, bool replacing )
 {
-    if( !instance_owns( ast, types.table(), type, types.recorded() ) )
+    // `T[?N]` drops nothing: its holder drops the slots it knows are live.
+    if( !instance_owns( ast, types.table(), type, types.recorded() ) || types.table().is_raw_array( type ) )
     {
         return;
     }

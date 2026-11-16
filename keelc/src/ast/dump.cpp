@@ -63,6 +63,10 @@ std::string aux_note( const Ast& ast, const Interner& interner, Node_id id, std:
     case Node_kind::Increment_stmt:
         return fmt::format( "op={}", token_kind_spelling( ast.op( id ) ) );
 
+    // `T[?N]` holds raw slots, `T[N]` live ones; only aux tells them apart.
+    case Node_kind::Array_type:
+        return ast.is_raw_array( id ) ? "raw" : std::string {};
+
     case Node_kind::Marker_expr:
     {
         return fmt::format( "marker={}", interner.text( Interner::keyword( ast.keyword( id ) ) ) );

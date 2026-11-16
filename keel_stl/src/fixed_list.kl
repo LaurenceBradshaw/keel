@@ -1,0 +1,434 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+import iterable;
+import optional;
+
+/// A list of at most `N` elements of `T`, held inline: it never allocates.
+///
+/// Elements sit side by side, indexed from 0, in a `T[?N]` of which the first `size()` slots hold
+/// a value. Pushing onto a full list panics, and `try_push` hands the element back instead.
+/// Dropping the list drops every element, last to first.
+class fixed_list<T, u64 N> implements iterable<T>, dynamic_memory<T>
+{
+    ~fixed_list()
+    {
+        truncate( 0 );
+    }
+
+    /// --- Size and capacity ---
+
+    /// The number of elements.
+    public u64 size() const
+    {
+        return count_;
+    }
+
+    /// The most elements the list can hold, `N`.
+    public u64 capacity() const
+    {
+        return N;
+    }
+
+    /// Whether the list holds no elements.
+    public bool is_empty() const
+    {
+        return count_ == 0;
+    }
+
+    /// Whether the list holds `N` elements, so a `push` would panic.
+    public bool is_full() const
+    {
+        return count_ == N;
+    }
+
+    /// --- Reading ---
+
+    /// The elements borrowed as a read-only run. The list cannot change while the run is held.
+    public const ref T[] as_run() const
+    {
+        unsafe
+        {
+            return slots_[0..count_];
+        }
+    }
+
+    /// The first element.
+    ///
+    /// ### Panics
+    ///
+    /// If the list is empty.
+    public ref T first() const
+    {
+        if( count_ == 0 )
+        {
+            panic( "the list is empty" );
+        }
+
+        return this[0];
+    }
+
+    /// The last element.
+    ///
+    /// ### Panics
+    ///
+    /// If the list is empty.
+    public ref T last() const
+    {
+        if( count_ == 0 )
+        {
+            panic( "the list is empty" );
+        }
+
+        return this[count_ - 1];
+    }
+
+    /// The element at `index`.
+    ///
+    /// ### Panics
+    ///
+    /// If `index` is not less than `size()`.
+    public ref T operator[]( u64 index ) const
+    {
+        if( index >= count_ )
+        {
+            panic( "index out of range" );
+        }
+
+        unsafe
+        {
+            return slots_[index];
+        }
+    }
+
+    /// Each element in order, read-only: `for( const ref T x : xs )`. The body may not change the
+    /// list.
+    public void operator:( const ref T item ) const
+    {
+        for( u64 i : 0..count_ )
+        {
+            unsafe
+            {
+                yield( slots_[i] );
+            }
+        }
+    }
+
+    /// Each element in order, writable in place: `for( ref T x : xs )`. The body may not change the
+    /// list itself.
+    public void operator:( ref T item )
+    {
+        for( u64 i : 0..count_ )
+        {
+            unsafe
+            {
+                yield( ref slots_[i] );
+            }
+        }
+    }
+
+    /// A new list holding `f` applied to each element, in order. This list is unchanged.
+    public fixed_list<U, N> map<U>( fn( const ref T ) -> U f ) const
+    {
+        fixed_list<U, N> result = fixed_list<U, N>();
+
+        for( u64 i : 0..count_ )
+        {
+            unsafe
+            {
+                U value = f( slots_[i] );
+                result.push( move value );
+            }
+        }
+
+        return result;
+    }
+
+    /// --- Adding ---
+
+    /// Adds `value` at the end.
+    ///
+    /// ### Panics
+    ///
+    /// If the list is full; `try_push` hands the value back instead.
+    public void push( move T value )
+    {
+        if( count_ == N )
+        {
+            panic( "the list is full" );
+        }
+
+        unsafe
+        {
+            slots_[count_] = move value;
+        }
+        count_ += 1;
+    }
+
+    /// Puts `value` at `index`, moving every element from there one place later.
+    ///
+    /// ### Panics
+    ///
+    /// If the list is full, or `index` is greater than `size()`. An index equal to it adds at the end.
+    public void insert( u64 index, move T value )
+    {
+        if( index > count_ )
+        {
+            panic( "index out of range" );
+        }
+
+        if( count_ == N )
+        {
+            panic( "the list is full" );
+        }
+
+        unsafe
+        {
+            for( u64 i = count_; i > index; i-- )
+            {
+                slots_[i] = move slots_[i - 1];
+            }
+
+            slots_[index] = move value;
+        }
+
+        count_ += 1;
+    }
+
+    /// Moves every element of `other` onto the end, in order.
+    ///
+    /// ### Panics
+    ///
+    /// If the elements of both do not fit in `N`, before any is moved.
+    public void append( move fixed_list<T, N> other )
+    {
+        if( count_ + other.count_ > N )
+        {
+            panic( "the list is full" );
+        }
+
+        unsafe
+        {
+            for( u64 i : 0..other.count_ )
+            {
+                slots_[count_ + i] = move other.slots_[i];
+            }
+        }
+
+        count_ += other.count_;
+        other.count_ = 0; // its slots are raw now, so its destructor drops nothing
+    }
+
+    /// Adds `value` at the end, or hands it back in an `err` if the list is full.
+    public result<void, T> try_push( move T value )
+    {
+        if( count_ == N )
+        {
+            return result::err( move value );
+        }
+
+        push( move value );
+        return result::ok();
+    }
+
+    /// --- Removing ---
+
+    /// Removes the last element and returns it.
+    ///
+    /// ### Panics
+    ///
+    /// If the list is empty; `try_pop` answers `none` instead.
+    public T pop()
+    {
+        if( count_ == 0 )
+        {
+            panic( "the list is empty" );
+        }
+
+        count_ -= 1;
+        unsafe
+        {
+            return move slots_[count_];
+        }
+    }
+
+    /// Removes the last element and returns it, or `none` if the list is empty.
+    public optional<T> try_pop()
+    {
+        if( count_ == 0 )
+        {
+            return optional::none;
+        }
+
+        return optional::some( pop() );
+    }
+
+    /// Removes the element at `index` and returns it, moving every later element one place earlier.
+    /// Keeps the order and takes linear time; `swap_remove` does neither.
+    ///
+    /// ### Panics
+    ///
+    /// If `index` is not less than `size()`.
+    public T remove( u64 index )
+    {
+        if( index >= count_ )
+        {
+            panic( "index out of range" );
+        }
+
+        unsafe
+        {
+            T result = move slots_[index];
+
+            for( u64 i = index; i < count_ - 1; i++ )
+            {
+                slots_[i] = move slots_[i + 1];
+            }
+
+            count_ -= 1;
+            return result;
+        }
+    }
+
+    /// Removes the element at `index` and returns it, moving the last element into its place.
+    /// Takes constant time and does not keep the order.
+    ///
+    /// ### Panics
+    ///
+    /// If `index` is not less than `size()`.
+    public T swap_remove( u64 index )
+    {
+        if( index >= count_ )
+        {
+            panic( "index out of range" );
+        }
+
+        count_ -= 1;
+        unsafe
+        {
+            T result = move slots_[index];
+
+            if( index != count_ )
+            {
+                slots_[index] = move slots_[count_];
+            }
+
+            return result;
+        }
+    }
+
+    /// Drops every element from index `n` on, last first, keeping the first `n`. Does nothing if `n`
+    /// is at least `size()`.
+    public void truncate( u64 n )
+    {
+        while( count_ > n )
+        {
+            count_ -= 1;
+            unsafe
+            {
+                _ = move slots_[count_];
+            }
+        }
+    }
+
+    /// Drops every element.
+    public void clear()
+    {
+        truncate( 0 );
+    }
+
+    /// --- Rearranging ---
+
+    /// Puts `value` at `index` and returns the element that was there.
+    ///
+    /// ### Panics
+    ///
+    /// If `index` is not less than `size()`.
+    public T replace( u64 index, move T value )
+    {
+        if( index >= count_ )
+        {
+            panic( "index out of range" );
+        }
+
+        unsafe
+        {
+            T result      = move slots_[index];
+            slots_[index] = move value;
+            return result;
+        }
+    }
+
+    /// Exchanges the elements at `a` and `b`.
+    ///
+    /// ### Panics
+    ///
+    /// If either is not less than `size()`.
+    public void swap( u64 a, u64 b )
+    {
+        if( a >= count_ || b >= count_ )
+        {
+            panic( "index out of range" );
+        }
+
+        if( a == b )
+        {
+            return;
+        }
+
+        unsafe
+        {
+            T temp     = move slots_[a];
+            slots_[a] = move slots_[b];
+            slots_[b] = move temp;
+        }
+    }
+
+    /// Reverses the order of the elements in place.
+    public void reverse()
+    {
+        for( u64 i = 0; i < count_ / 2; i++ )
+        {
+            swap( i, count_ - 1 - i );
+        }
+    }
+
+    private T[?N] slots_;
+    private u64   count_ = 0;
+};
+
+/// Two lists are equal when they hold equal elements in the same order.
+implements<T, u64 N> equatable for fixed_list<T, N> where T : equatable
+{
+    bool operator==( const ref fixed_list<T, N> other ) const
+    {
+        if( this.size() != other.size() )
+        {
+            return false;
+        }
+
+        for( u64 i : 0..this.size() )
+        {
+            if( this[i] != other[i] )
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+};
+
+/// A list hashes each element in order, then its size.
+implements<T, u64 N> hashable for fixed_list<T, N> where T : hashable
+{
+    void hash( ref hasher h ) const
+    {
+        for( u64 i : 0..this.size() )
+        {
+            this[i].hash( ref h );
+        }
+
+        h.write( this.size() );
+    }
+};

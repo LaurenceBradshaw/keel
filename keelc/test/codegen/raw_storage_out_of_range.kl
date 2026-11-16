@@ -1,0 +1,15 @@
+// A slot index past N panics, though nothing checks whether the slot holds a value.
+import t::console;
+
+i32 main()
+{
+    i32[?2] slots;
+    u64     far = 2;
+
+    t::print( "before" );
+    unsafe
+    {
+        slots[ far ] = 1;
+    }
+    return 0;
+}

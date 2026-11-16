@@ -108,6 +108,7 @@ private:
     void check_member_kind( Node_id decl, const Member_kind& kind );
     void check_signatures();
     void check_struct_ownership();
+    void check_raw_storage_destructors(); // a class holding `T[?N]` of an owning `T` drops its live slots itself
     void check_struct_fields_are_not_owning( Node_id decl );
     void check_operators();
     void check_comparison_operator( Node_id decl, Type_id result );
