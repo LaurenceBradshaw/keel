@@ -206,7 +206,13 @@ void Signatures::declare_parameters( Node_id list )
 void Signatures::declare_bounds( Node_id declaration, Node_id list )
 {
     declare_parameters( list );
+    resolve_clause_bounds( list );
+    bounds_.declare_type_parameters( declaration, list );
+}
 
+// What each clause's bounds name: an interface, or an `fn` signature.
+void Signatures::resolve_clause_bounds( Node_id list )
+{
     for( const Node_id clause : ast_.where_clauses( list ) )
     {
         if( ast_.kind( clause ) != Node_kind::Where_clause )
@@ -224,8 +230,6 @@ void Signatures::declare_bounds( Node_id declaration, Node_id list )
             annotations_.record_interface_bound( bound );
         }
     }
-
-    bounds_.declare_type_parameters( declaration, list );
 }
 
 // What each interface's `where` and `implements` name, once every type exists.
@@ -848,6 +852,9 @@ void Signatures::declare_member_functions()
             }
 
             declare_bounds( member, ast_.own_type_param_list( member ) );
+            resolve_clause_bounds( ast_.conditions( member ) );
+            bounds_.declare_conditions( member );
+            bounds_.enter_conditions( member ); // the signature resolves under them
 
             // A constructor and a destructor return nothing and have no annotation to read; a
             // method has both. The return type is invalid for the two
@@ -891,6 +898,7 @@ void Signatures::declare_member_functions()
             }
 
             check_trig( member );
+            bounds_.enter_conditions( Node_id {} );
         }
     }
 }

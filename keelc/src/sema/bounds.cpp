@@ -266,7 +266,7 @@ std::span<const Type_id> Bounds::interfaces_of( Type_id parameter ) const
         return {};
     }
 
-    const auto found = interfaces_.find( table_.get( parameter ).declaration.v );
+    const auto found = interfaces_.find( key_of( table_.get( parameter ).declaration ) );
 
     return found == interfaces_.end() ? std::span<const Type_id> {} : std::span<const Type_id>( found->second );
 }
@@ -587,11 +587,34 @@ std::string Bounds::forwarded_help( Type_id parameter, std::string_view promise 
         return fmt::format( "add `{}` to the block's `where` clause for `{}`", promise, table_.name( parameter ) );
     }
 
+    // In one of the owner's methods, a condition on the method also keeps it.
+    const std::string_view name = table_.name( parameter );
+    if( entered_.is_valid() && ast_.kind( entered_ ) == Node_kind::Method_decl &&
+        ast_.enclosing_aggregate( entered_ ) == owner && !ast_.is_requirement( entered_ ) )
+    {
+        const std::string_view method     = interner_.text( ast_.name( entered_ ) );
+        const auto             conditions = ast_.where_clauses( ast_.conditions( entered_ ) );
+        if( std::ranges::any_of(
+                conditions,
+                [&]( Node_id clause ) { return bounds_.contains( clause.v ) && interner_.text( ast_.name( clause ) ) == name; }
+            ) )
+        {
+            return fmt::format( "add `{}` to the `where` clause for `{}` on `{}`", promise, name, method );
+        }
+
+        return fmt::format(
+            "add `where {} : {}` to `{}`, or `{}` to the `where` clause for `{}` on `{}`",
+            name,
+            promise,
+            method,
+            promise,
+            name,
+            interner_.text( ast_.name( owner ) )
+        );
+    }
+
     return fmt::format(
-        "add `{}` to the `where` clause for `{}` on `{}`",
-        promise,
-        table_.name( parameter ),
-        interner_.text( ast_.name( owner ) )
+        "add `{}` to the `where` clause for `{}` on `{}`", promise, name, interner_.text( ast_.name( owner ) )
     );
 }
 
@@ -867,7 +890,7 @@ Bound_set Bounds::bounds_for( Type_id parameter ) const
     }
 
     const Node_id declaration = table_.get( parameter ).declaration;
-    const auto    found       = declaration.is_valid() ? bounds_.find( declaration.v ) : bounds_.end();
+    const auto    found       = declaration.is_valid() ? bounds_.find( key_of( declaration ) ) : bounds_.end();
 
     // An unbounded parameter has no entry rather than an empty one, and promises nothing.
     return found == bounds_.end() ? Bound_set { 0 } : found->second;
@@ -1105,111 +1128,7 @@ void Bounds::declare_type_parameters( Node_id declaration, Node_id list )
             continue;
         }
 
-        // The parser makes a signature the clause's only bound.
-        if( const std::span<const Node_id> written = ast_.bounds( where_clause );
-            written.size() == 1 && ast_.kind( written[0] ) == Node_kind::Function_type )
-        {
-            if( ast_.kind( declaration ) != Node_kind::Function_decl && ast_.kind( declaration ) != Node_kind::Method_decl )
-            {
-                reporter_.error_at(
-                    ast_.span( written[0] ),
-                    "an `fn` bound is written on a function's type parameter",
-                    "a type stores an `fn` value as a field of `fn` type"
-                );
-            }
-            else if( const Type_id signature = types_.type_of( written[0] );
-                     signature.is_valid() && !table_.is_error( signature ) )
-            {
-                signatures_.emplace( it->v, signature );
-            }
-            bounds_.emplace( it->v, Bound_set { 0 } );
-            continue;
-        }
-
-        Bound_set direct_bounds = 0;
-        Bound_set written       = 0;
-        for( const Node_id bound_node : ast_.bounds( where_clause ) )
-        {
-            // Already reported where it was resolved.
-            if( types_.type_of( bound_node ).is_valid() && table_.is_error( types_.type_of( bound_node ) ) )
-            {
-                continue;
-            }
-
-            std::string_view     bound_name = interner_.text( ast_.name( bound_node ) );
-            std::optional<Bound> bound      = bound_for_name( bound_name );
-
-            const auto report_repeat = [&]( std::string_view named )
-            {
-                reporter_.error_at(
-                    ast_.span( bound_node ),
-                    fmt::format( "`{}` is named twice for `{}`", named, interner_.text( subject_name ) ),
-                    "remove one"
-                );
-            };
-
-            if( !bound && types_.type_of( bound_node ).is_valid() && table_.is_interface( types_.type_of( bound_node ) ) )
-            {
-                std::vector<Type_id>& named = interfaces_[it->v];
-
-                if( std::ranges::find( named, types_.type_of( bound_node ) ) != named.end() )
-                {
-                    report_repeat( table_.name( types_.type_of( bound_node ) ) );
-                    continue;
-                }
-
-                named.push_back( types_.type_of( bound_node ) );
-                continue;
-            }
-
-            if( bound && contains( written, *bound ) )
-            {
-                report_repeat( bound_name );
-                continue;
-            }
-
-            if( bound )
-            {
-                written |= static_cast<Bound_set>( *bound );
-            }
-
-            if( !bound )
-            {
-                // A type that is not an interface is known, just not a bound. The span is the
-                // name, not the clause, and the list comes from the table rather than from this
-                // string - so adding a bound updates the message.
-                const bool known = resolution_.declaration_of( bound_node ).is_valid() || is_builtin_type_name( bound_name );
-                reporter_.error_at(
-                    ast_.span( bound_node ),
-                    known ? fmt::format( "`{}` is not an interface", bound_name )
-                          : fmt::format( "unknown bound `{}`", bound_name ),
-                    fmt::format( "a bound is an interface, or one of {}", known_bound_names() )
-                );
-                continue;
-            }
-
-            direct_bounds = closure( direct_bounds | static_cast<Bound_set>( bound.value() ) );
-        }
-
-        // A number orders, so `numeric` promises `comparable`, and through it `equatable`.
-        if( const Type_id comparable = table_.declared( table_.prelude().comparable );
-            contains( direct_bounds, Bound::Numeric ) && comparable.is_valid() )
-        {
-            std::vector<Type_id>& named = interfaces_[it->v];
-
-            if( std::find( named.begin(), named.end(), comparable ) == named.end() )
-            {
-                named.push_back( comparable );
-            }
-        }
-
-        if( const auto interfaces = interfaces_.find( it->v ); interfaces != interfaces_.end() )
-        {
-            require_refinements( interfaces->second );
-            where_sets_.emplace_back( *it, ast_.span( where_clause ) );
-        }
-
-        bounds_.emplace( it->v, direct_bounds );
+        record_clause( declaration, where_clause, *it, *it );
     }
 
     for( const Node_id type_param : type_params )
@@ -1219,6 +1138,254 @@ void Bounds::declare_type_parameters( Node_id declaration, Node_id list )
             types_.conformances().declare_promised( types_.type_of( type_param ), interfaces->second );
         }
     }
+}
+
+std::optional<std::size_t> Bounds::condition_subject( std::span<const Node_id> outer, Node_id clause ) const
+{
+    const auto it = std::ranges::find_if( outer, [&]( Node_id p ) { return ast_.name( p ) == ast_.name( clause ); } );
+    return it == outer.end() ? std::nullopt : std::optional<std::size_t>( it - outer.begin() );
+}
+
+void Bounds::declare_conditions( Node_id method )
+{
+    const Node_id              aggregate = ast_.enclosing_aggregate( method );
+    const std::vector<Node_id> outer     = ast_.type_parameters( ast_.type_param_list( aggregate ) );
+    std::vector<Node_id>       seen;
+
+    for( const Node_id clause : ast_.where_clauses( ast_.conditions( method ) ) )
+    {
+        const std::optional<std::size_t> index =
+            ast_.kind( clause ) == Node_kind::Where_clause ? condition_subject( outer, clause ) : std::nullopt;
+        if( !index )
+        {
+            continue;
+        }
+
+        const Node_id   subject = outer[*index];
+        const Symbol_id name    = ast_.name( clause );
+
+        if( ast_.is_requirement( method ) )
+        {
+            const std::string_view owner = interner_.text( ast_.name( aggregate ) );
+            reporter_.error_at(
+                ast_.span( clause ),
+                fmt::format( "`{}` is `{}`'s parameter, so its bounds go on `{}`", interner_.text( name ), owner, owner ),
+                fmt::format( "write the clause after `{}`'s parameters, or make this method a free generic function", owner )
+            );
+            continue;
+        }
+
+        if( table_.is_size_parameter( types_.type_of( subject ) ) )
+        {
+            reporter_.error_at(
+                ast_.span( clause ), fmt::format( "`{}` is a size; a `where` clause constrains a type", interner_.text( name ) )
+            );
+            continue;
+        }
+
+        if( std::ranges::find( seen, subject ) != seen.end() )
+        {
+            reporter_.error_at(
+                ast_.span( clause ), fmt::format( "duplicate where clause for type parameter `{}`", interner_.text( name ) )
+            );
+            continue;
+        }
+        seen.push_back( subject );
+
+        // The clause's own first, so restating one the aggregate promises is no repeat.
+        record_clause( method, clause, subject, clause );
+        bounds_[clause.v] |= bounds_.contains( subject.v ) ? bounds_.at( subject.v ) : Bound_set { 0 };
+
+        if( const auto inherited = interfaces_.find( subject.v ); inherited != interfaces_.end() )
+        {
+            std::vector<Type_id>& named = interfaces_[clause.v];
+            for( const Type_id interface : inherited->second )
+            {
+                if( std::ranges::find( named, interface ) == named.end() )
+                {
+                    named.push_back( interface );
+                }
+            }
+        }
+    }
+}
+
+u32 Bounds::key_of( Node_id parameter ) const
+{
+    const auto found = active_.find( parameter.v );
+    return found == active_.end() ? parameter.v : found->second.v;
+}
+
+void Bounds::enter_conditions( Node_id function )
+{
+    for( const auto& [param, clause] : active_ )
+    {
+        const auto own = interfaces_.find( param );
+        types_.conformances().declare_promised(
+            types_.type_of( Node_id { param } ), own == interfaces_.end() ? std::vector<Type_id> {} : own->second
+        );
+    }
+    active_.clear();
+    entered_ = function;
+
+    if( !function.is_valid() || !ast_.conditions( function ).is_valid() )
+    {
+        return;
+    }
+
+    const std::vector<Node_id> outer = ast_.type_parameters( ast_.type_param_list( ast_.enclosing_aggregate( function ) ) );
+
+    for( const Node_id clause : ast_.where_clauses( ast_.conditions( function ) ) )
+    {
+        const std::optional<std::size_t> index = ast_.kind( clause ) == Node_kind::Where_clause && bounds_.contains( clause.v )
+                                                     ? condition_subject( outer, clause )
+                                                     : std::nullopt;
+        if( !index )
+        {
+            continue;
+        }
+
+        active_.emplace( outer[*index].v, clause );
+
+        if( const auto named = interfaces_.find( clause.v ); named != interfaces_.end() )
+        {
+            types_.conformances().declare_promised( types_.type_of( outer[*index] ), named->second );
+        }
+    }
+}
+
+void Bounds::check_conditions( Node_id method, Span at, Type_id receiver )
+{
+    if( !ast_.conditions( method ).is_valid() || !receiver.is_valid() || !table_.is_struct( receiver ) )
+    {
+        return;
+    }
+
+    const std::span<const Type_id> arguments = table_.get( receiver ).arguments;
+    const std::vector<Node_id>     outer = ast_.type_parameters( ast_.type_param_list( ast_.enclosing_aggregate( method ) ) );
+    const Bindings                 bindings = aggregates_.bindings_of( receiver );
+
+    for( const Node_id clause : ast_.where_clauses( ast_.conditions( method ) ) )
+    {
+        const std::optional<std::size_t> index = ast_.kind( clause ) == Node_kind::Where_clause && bounds_.contains( clause.v )
+                                                     ? condition_subject( outer, clause )
+                                                     : std::nullopt;
+        if( index && *index < arguments.size() )
+        {
+            check_bounds( clause, at, arguments[*index], interner_.text( ast_.name( method ) ), bindings );
+        }
+    }
+}
+
+// One clause's bounds and interfaces on `subject`, kept under `key`: the subject itself, or a clause
+// whose method adds to the subject's own.
+void Bounds::record_clause( Node_id declaration, Node_id clause, Node_id subject, Node_id key )
+{
+    const Symbol_id subject_name = ast_.name( clause );
+
+    // The parser makes a signature the clause's only bound.
+    if( const std::span<const Node_id> written = ast_.bounds( clause );
+        written.size() == 1 && ast_.kind( written[0] ) == Node_kind::Function_type )
+    {
+        if( ast_.kind( declaration ) != Node_kind::Function_decl && ast_.kind( declaration ) != Node_kind::Method_decl )
+        {
+            reporter_.error_at(
+                ast_.span( written[0] ),
+                "an `fn` bound is written on a function's type parameter",
+                "a type stores an `fn` value as a field of `fn` type"
+            );
+        }
+        else if( const Type_id signature = types_.type_of( written[0] ); signature.is_valid() && !table_.is_error( signature ) )
+        {
+            signatures_.emplace( key.v, signature );
+        }
+        bounds_.try_emplace( key.v, Bound_set { 0 } );
+        return;
+    }
+
+    Bound_set direct_bounds = 0;
+    Bound_set written       = 0;
+    for( const Node_id bound_node : ast_.bounds( clause ) )
+    {
+        // Already reported where it was resolved.
+        if( types_.type_of( bound_node ).is_valid() && table_.is_error( types_.type_of( bound_node ) ) )
+        {
+            continue;
+        }
+
+        std::string_view     bound_name = interner_.text( ast_.name( bound_node ) );
+        std::optional<Bound> bound      = bound_for_name( bound_name );
+
+        const auto report_repeat = [&]( std::string_view named )
+        {
+            reporter_.error_at(
+                ast_.span( bound_node ),
+                fmt::format( "`{}` is named twice for `{}`", named, interner_.text( subject_name ) ),
+                "remove one"
+            );
+        };
+
+        if( !bound && types_.type_of( bound_node ).is_valid() && table_.is_interface( types_.type_of( bound_node ) ) )
+        {
+            std::vector<Type_id>& named = interfaces_[key.v];
+
+            if( std::ranges::find( named, types_.type_of( bound_node ) ) != named.end() )
+            {
+                report_repeat( table_.name( types_.type_of( bound_node ) ) );
+                continue;
+            }
+
+            named.push_back( types_.type_of( bound_node ) );
+            continue;
+        }
+
+        if( bound && contains( written, *bound ) )
+        {
+            report_repeat( bound_name );
+            continue;
+        }
+
+        if( bound )
+        {
+            written |= static_cast<Bound_set>( *bound );
+        }
+
+        if( !bound )
+        {
+            // A type that is not an interface is known, just not a bound. The span is the
+            // name, not the clause, and the list comes from the table rather than from this
+            // string - so adding a bound updates the message.
+            const bool known = resolution_.declaration_of( bound_node ).is_valid() || is_builtin_type_name( bound_name );
+            reporter_.error_at(
+                ast_.span( bound_node ),
+                known ? fmt::format( "`{}` is not an interface", bound_name ) : fmt::format( "unknown bound `{}`", bound_name ),
+                fmt::format( "a bound is an interface, or one of {}", known_bound_names() )
+            );
+            continue;
+        }
+
+        direct_bounds = closure( direct_bounds | static_cast<Bound_set>( bound.value() ) );
+    }
+
+    // A number orders, so `numeric` promises `comparable`, and through it `equatable`.
+    if( const Type_id comparable = table_.declared( table_.prelude().comparable );
+        contains( direct_bounds, Bound::Numeric ) && comparable.is_valid() )
+    {
+        std::vector<Type_id>& named = interfaces_[key.v];
+
+        if( std::find( named.begin(), named.end(), comparable ) == named.end() )
+        {
+            named.push_back( comparable );
+        }
+    }
+
+    if( const auto interfaces = interfaces_.find( key.v ); interfaces != interfaces_.end() )
+    {
+        require_refinements( interfaces->second );
+        where_sets_.push_back( { key, subject, ast_.span( clause ) } );
+    }
+
+    bounds_[key.v] |= direct_bounds;
 }
 
 // Appends what each interface requires, after the ones written, which stay first for the helps
@@ -1462,13 +1629,13 @@ void Bounds::check_requirement_sets()
         report_conflict( *conflict, at );
     }
 
-    for( const auto& [parameter, at] : where_sets_ )
+    for( const Where_set& clause : where_sets_ )
     {
-        const std::vector<Type_id>& set = interfaces_.at( parameter.v );
+        const std::vector<Type_id>& set = interfaces_.at( clause.key.v );
 
-        if( const auto conflict = conflicting_requirements( set, types_.type_of( parameter ), Type_id {} ) )
+        if( const auto conflict = conflicting_requirements( set, types_.type_of( clause.subject ), Type_id {} ) )
         {
-            report_conflict( *conflict, at );
+            report_conflict( *conflict, clause.at );
         }
     }
 }

@@ -1,0 +1,550 @@
+// codegen/method_conditions.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl_7prelude_str;
+struct kl__pair__I3i32E;
+struct kl__pair__I3f64E;
+struct kl__pair__I4boolE;
+
+struct kl__run__LQ7prelude3str__ref { struct kl_7prelude_str* data; uint64_t size; };
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
+};
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
+
+struct kl__pair__I3i32E
+{
+    int32_t kl_a;
+    int32_t kl_b;
+};
+_Static_assert( sizeof( struct kl__pair__I3i32E ) == 8 && _Alignof( struct kl__pair__I3i32E ) == 4 && offsetof( struct kl__pair__I3i32E, kl_a ) == 0 && offsetof( struct kl__pair__I3i32E, kl_b ) == 4, "layout" );
+
+struct kl__pair__I3f64E
+{
+    double kl_a;
+    double kl_b;
+};
+_Static_assert( sizeof( struct kl__pair__I3f64E ) == 16 && _Alignof( struct kl__pair__I3f64E ) == 8 && offsetof( struct kl__pair__I3f64E, kl_a ) == 0 && offsetof( struct kl__pair__I3f64E, kl_b ) == 8, "layout" );
+
+struct kl__pair__I4boolE
+{
+    bool kl_a;
+    bool kl_b;
+};
+_Static_assert( sizeof( struct kl__pair__I4boolE ) == 2 && _Alignof( struct kl__pair__I4boolE ) == 1 && offsetof( struct kl__pair__I4boolE, kl_a ) == 0 && offsetof( struct kl__pair__I4boolE, kl_b ) == 1, "layout" );
+
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
+void  kl_rt_free( void* );
+void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
+struct kl__pair__I3i32E kl__12operator_rem__I3i32E__S4pairI3i32E_3i32( struct kl__pair__I3i32E*, int32_t );
+int32_t kl__7sum_mod__I3i32E__S4pairI3i32E_3i32( struct kl__pair__I3i32E*, int32_t );
+int32_t kl__6folded__I3i32E__4pairI3i32E_3i32( struct kl__pair__I3i32E*, int32_t );
+double kl__10halved_sum__I3f64E__S4pairI3f64E( struct kl__pair__I3f64E* );
+double kl__3sum__I3f64E__S4pairI3f64E( struct kl__pair__I3f64E* );
+bool kl__4same__I4boolE__S4pairI4boolE( struct kl__pair__I4boolE* );
+int32_t kl__3sum__I3i32E__S4pairI3i32E( struct kl__pair__I3i32E* );
+
+#line 28 "codegen/method_conditions.kl"
+int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t kl_t1_size )
+{
+    int32_t kl_t0;
+#line 28 "codegen/method_conditions.kl"
+    struct kl__run__LQ7prelude3str__ref kl_t1 = { kl_t1_data, kl_t1_size };
+    struct kl__pair__I3i32E kl_p_2;
+    struct kl__pair__I3i32E kl_t3;
+    struct kl__pair__I3i32E kl_q_4;
+    struct kl__pair__I3i32E* kl_t5;
+    struct kl__pair__I3i32E kl_t6;
+    bool kl_t7;
+    bool kl_t8;
+    bool kl_t9;
+    struct kl__pair__I3i32E* kl_t10;
+    int32_t kl_t11;
+    bool kl_t12;
+    struct kl__pair__I3i32E* kl_t13;
+    int32_t kl_t14;
+    bool kl_t15;
+    struct kl__pair__I3f64E kl_f_16;
+    struct kl__pair__I3f64E kl_t17;
+    bool kl_t18;
+    struct kl__pair__I3f64E* kl_t19;
+    double kl_t20;
+    bool kl_t21;
+    struct kl__pair__I3f64E* kl_t22;
+    double kl_t23;
+    bool kl_t24;
+    struct kl__pair__I4boolE kl_s_25;
+    struct kl__pair__I4boolE kl_t26;
+    struct kl__pair__I4boolE* kl_t27;
+    bool kl_t28;
+    bool kl_t29;
+    ( void ) kl_t1;
+#line 30 "codegen/method_conditions.kl"
+    kl_t3.kl_a = 7;
+#line 30 "codegen/method_conditions.kl"
+    kl_t3.kl_b = 12;
+#line 30 "codegen/method_conditions.kl"
+    kl_p_2 = kl_t3;
+    kl_t5 = &kl_p_2;
+#line 31 "codegen/method_conditions.kl"
+    kl_t6 = kl__12operator_rem__I3i32E__S4pairI3i32E_3i32( kl_t5, 5 );
+#line 31 "codegen/method_conditions.kl"
+    kl_q_4 = kl_t6;
+#line 33 "codegen/method_conditions.kl"
+    kl_t8 = kl_q_4.kl_a != 2;
+#line 33 "codegen/method_conditions.kl"
+    kl_t7 = kl_t8;
+#line 33 "codegen/method_conditions.kl"
+    if ( kl_t7 ) goto bb2; else goto bb1;
+    bb1:
+#line 33 "codegen/method_conditions.kl"
+    kl_t9 = kl_q_4.kl_b != 2;
+#line 33 "codegen/method_conditions.kl"
+    kl_t7 = kl_t9;
+#line 33 "codegen/method_conditions.kl"
+    goto bb2;
+    bb2:
+#line 33 "codegen/method_conditions.kl"
+    if ( kl_t7 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t0 = 1;
+#line 35 "codegen/method_conditions.kl"
+    return kl_t0;
+    bb4:
+#line 38 "codegen/method_conditions.kl"
+    kl_t10 = &kl_p_2;
+#line 38 "codegen/method_conditions.kl"
+    kl_t11 = kl__7sum_mod__I3i32E__S4pairI3i32E_3i32( kl_t10, 5 );
+#line 38 "codegen/method_conditions.kl"
+    kl_t12 = kl_t11 != 4;
+#line 38 "codegen/method_conditions.kl"
+    if ( kl_t12 ) goto bb5; else goto bb6;
+    bb5:
+    kl_t0 = 2;
+#line 40 "codegen/method_conditions.kl"
+    return kl_t0;
+    bb6:
+#line 43 "codegen/method_conditions.kl"
+    kl_t13 = &kl_p_2;
+#line 43 "codegen/method_conditions.kl"
+    kl_t14 = kl__6folded__I3i32E__4pairI3i32E_3i32( kl_t13, 5 );
+#line 43 "codegen/method_conditions.kl"
+    kl_t15 = kl_t14 != 4;
+#line 43 "codegen/method_conditions.kl"
+    if ( kl_t15 ) goto bb7; else goto bb8;
+    bb7:
+    kl_t0 = 3;
+#line 45 "codegen/method_conditions.kl"
+    return kl_t0;
+    bb8:
+#line 48 "codegen/method_conditions.kl"
+    kl_t17.kl_a = 1.0;
+#line 48 "codegen/method_conditions.kl"
+    kl_t17.kl_b = 2.0;
+#line 48 "codegen/method_conditions.kl"
+    kl_f_16 = kl_t17;
+#line 50 "codegen/method_conditions.kl"
+    kl_t19 = &kl_f_16;
+#line 50 "codegen/method_conditions.kl"
+    kl_t20 = kl__10halved_sum__I3f64E__S4pairI3f64E( kl_t19 );
+#line 50 "codegen/method_conditions.kl"
+    kl_t21 = kl_t20 != 1.5;
+#line 50 "codegen/method_conditions.kl"
+    kl_t18 = kl_t21;
+#line 50 "codegen/method_conditions.kl"
+    if ( kl_t18 ) goto bb10; else goto bb9;
+    bb9:
+#line 50 "codegen/method_conditions.kl"
+    kl_t22 = &kl_f_16;
+#line 50 "codegen/method_conditions.kl"
+    kl_t23 = kl__3sum__I3f64E__S4pairI3f64E( kl_t22 );
+#line 50 "codegen/method_conditions.kl"
+    kl_t24 = kl_t23 != 3.0;
+#line 50 "codegen/method_conditions.kl"
+    kl_t18 = kl_t24;
+#line 50 "codegen/method_conditions.kl"
+    goto bb10;
+    bb10:
+#line 50 "codegen/method_conditions.kl"
+    if ( kl_t18 ) goto bb11; else goto bb12;
+    bb11:
+    kl_t0 = 4;
+#line 52 "codegen/method_conditions.kl"
+    return kl_t0;
+    bb12:
+#line 55 "codegen/method_conditions.kl"
+    kl_t26.kl_a = true;
+#line 55 "codegen/method_conditions.kl"
+    kl_t26.kl_b = true;
+#line 55 "codegen/method_conditions.kl"
+    kl_s_25 = kl_t26;
+#line 57 "codegen/method_conditions.kl"
+    kl_t27 = &kl_s_25;
+#line 57 "codegen/method_conditions.kl"
+    kl_t28 = kl__4same__I4boolE__S4pairI4boolE( kl_t27 );
+#line 57 "codegen/method_conditions.kl"
+    kl_t29 = !kl_t28;
+#line 57 "codegen/method_conditions.kl"
+    if ( kl_t29 ) goto bb13; else goto bb14;
+    bb13:
+    kl_t0 = 5;
+#line 59 "codegen/method_conditions.kl"
+    return kl_t0;
+    bb14:
+#line 62 "codegen/method_conditions.kl"
+    kl_t0 = 0;
+#line 62 "codegen/method_conditions.kl"
+    return kl_t0;
+}
+
+#line 8 "codegen/method_conditions.kl"
+struct kl__pair__I3i32E kl__12operator_rem__I3i32E__S4pairI3i32E_3i32( struct kl__pair__I3i32E* kl_this_1, int32_t kl_m_2 )
+{
+    struct kl__pair__I3i32E kl_t0;
+    struct kl__pair__I3i32E kl_t3;
+    bool kl_t4;
+    int32_t kl_t5;
+    bool kl_t6;
+    int32_t kl_t7;
+    bool kl_t8;
+    int32_t kl_t9;
+    bool kl_t10;
+    int32_t kl_t11;
+#line 8 "codegen/method_conditions.kl"
+    kl_t4 = kl_m_2 != 0;
+#line 8 "codegen/method_conditions.kl"
+    if ( kl_t4 ) goto bb2; else goto bb1;
+    bb1:
+#line 8 "codegen/method_conditions.kl"
+    kl_rt_panic( "codegen/method_conditions.kl", 8, "remainder by zero: a % m" );
+    bb2:
+#line 8 "codegen/method_conditions.kl"
+    kl_t6 = kl_m_2 == -1;
+#line 8 "codegen/method_conditions.kl"
+    if ( kl_t6 ) goto bb3; else goto bb4;
+    bb3:
+#line 8 "codegen/method_conditions.kl"
+    kl_t5 = 0;
+#line 8 "codegen/method_conditions.kl"
+    goto bb5;
+    bb4:
+#line 8 "codegen/method_conditions.kl"
+    kl_t5 = ( *kl_this_1 ).kl_a % kl_m_2;
+#line 8 "codegen/method_conditions.kl"
+    goto bb5;
+    bb5:
+#line 8 "codegen/method_conditions.kl"
+    kl_t7 = kl_t5;
+#line 8 "codegen/method_conditions.kl"
+    kl_t8 = kl_m_2 != 0;
+#line 8 "codegen/method_conditions.kl"
+    if ( kl_t8 ) goto bb7; else goto bb6;
+    bb6:
+#line 8 "codegen/method_conditions.kl"
+    kl_rt_panic( "codegen/method_conditions.kl", 8, "remainder by zero: b % m" );
+    bb7:
+#line 8 "codegen/method_conditions.kl"
+    kl_t10 = kl_m_2 == -1;
+#line 8 "codegen/method_conditions.kl"
+    if ( kl_t10 ) goto bb8; else goto bb9;
+    bb8:
+#line 8 "codegen/method_conditions.kl"
+    kl_t9 = 0;
+#line 8 "codegen/method_conditions.kl"
+    goto bb10;
+    bb9:
+#line 8 "codegen/method_conditions.kl"
+    kl_t9 = ( *kl_this_1 ).kl_b % kl_m_2;
+#line 8 "codegen/method_conditions.kl"
+    goto bb10;
+    bb10:
+#line 8 "codegen/method_conditions.kl"
+    kl_t11 = kl_t9;
+#line 8 "codegen/method_conditions.kl"
+    kl_t3.kl_a = kl_t7;
+#line 8 "codegen/method_conditions.kl"
+    kl_t3.kl_b = kl_t11;
+#line 8 "codegen/method_conditions.kl"
+    kl_t0 = kl_t3;
+#line 8 "codegen/method_conditions.kl"
+    return kl_t0;
+#line 8 "codegen/method_conditions.kl"
+}
+
+#line 14 "codegen/method_conditions.kl"
+int32_t kl__7sum_mod__I3i32E__S4pairI3i32E_3i32( struct kl__pair__I3i32E* kl_this_1, int32_t kl_m_2 )
+{
+    int32_t kl_t0;
+    struct kl__pair__I3i32E kl_r_3;
+    struct kl__pair__I3i32E kl_t4;
+    bool kl_t5;
+    int32_t kl_t6;
+    bool kl_t7;
+    int32_t kl_t8;
+    bool kl_t9;
+    int32_t kl_t10;
+    bool kl_t11;
+    int32_t kl_t12;
+    struct kl__pair__I3i32E* kl_t13;
+    int32_t kl_t14;
+#line 16 "codegen/method_conditions.kl"
+    kl_t5 = kl_m_2 != 0;
+#line 16 "codegen/method_conditions.kl"
+    if ( kl_t5 ) goto bb2; else goto bb1;
+    bb1:
+#line 16 "codegen/method_conditions.kl"
+    kl_rt_panic( "codegen/method_conditions.kl", 16, "remainder by zero: a % m" );
+    bb2:
+#line 16 "codegen/method_conditions.kl"
+    kl_t7 = kl_m_2 == -1;
+#line 16 "codegen/method_conditions.kl"
+    if ( kl_t7 ) goto bb3; else goto bb4;
+    bb3:
+#line 16 "codegen/method_conditions.kl"
+    kl_t6 = 0;
+#line 16 "codegen/method_conditions.kl"
+    goto bb5;
+    bb4:
+#line 16 "codegen/method_conditions.kl"
+    kl_t6 = ( *kl_this_1 ).kl_a % kl_m_2;
+#line 16 "codegen/method_conditions.kl"
+    goto bb5;
+    bb5:
+#line 16 "codegen/method_conditions.kl"
+    kl_t8 = kl_t6;
+#line 16 "codegen/method_conditions.kl"
+    kl_t9 = kl_m_2 != 0;
+#line 16 "codegen/method_conditions.kl"
+    if ( kl_t9 ) goto bb7; else goto bb6;
+    bb6:
+#line 16 "codegen/method_conditions.kl"
+    kl_rt_panic( "codegen/method_conditions.kl", 16, "remainder by zero: b % m" );
+    bb7:
+#line 16 "codegen/method_conditions.kl"
+    kl_t11 = kl_m_2 == -1;
+#line 16 "codegen/method_conditions.kl"
+    if ( kl_t11 ) goto bb8; else goto bb9;
+    bb8:
+#line 16 "codegen/method_conditions.kl"
+    kl_t10 = 0;
+#line 16 "codegen/method_conditions.kl"
+    goto bb10;
+    bb9:
+#line 16 "codegen/method_conditions.kl"
+    kl_t10 = ( *kl_this_1 ).kl_b % kl_m_2;
+#line 16 "codegen/method_conditions.kl"
+    goto bb10;
+    bb10:
+#line 16 "codegen/method_conditions.kl"
+    kl_t12 = kl_t10;
+#line 16 "codegen/method_conditions.kl"
+    kl_t4.kl_a = kl_t8;
+#line 16 "codegen/method_conditions.kl"
+    kl_t4.kl_b = kl_t12;
+#line 16 "codegen/method_conditions.kl"
+    kl_r_3 = kl_t4;
+    kl_t13 = &kl_r_3;
+#line 17 "codegen/method_conditions.kl"
+    kl_t14 = kl__3sum__I3i32E__S4pairI3i32E( kl_t13 );
+#line 17 "codegen/method_conditions.kl"
+    kl_t0 = kl_t14;
+#line 17 "codegen/method_conditions.kl"
+    return kl_t0;
+}
+
+#line 22 "codegen/method_conditions.kl"
+int32_t kl__6folded__I3i32E__4pairI3i32E_3i32( struct kl__pair__I3i32E* kl_p_1, int32_t kl_m_2 )
+{
+    int32_t kl_t0;
+    struct kl__pair__I3i32E kl_r_3;
+    struct kl__pair__I3i32E* kl_t4;
+    struct kl__pair__I3i32E kl_t5;
+    struct kl__pair__I3i32E* kl_t6;
+    int32_t kl_t7;
+#line 24 "codegen/method_conditions.kl"
+    kl_t4 = &( *kl_p_1 );
+#line 24 "codegen/method_conditions.kl"
+    kl_t5 = kl__12operator_rem__I3i32E__S4pairI3i32E_3i32( kl_t4, kl_m_2 );
+#line 24 "codegen/method_conditions.kl"
+    kl_r_3 = kl_t5;
+    kl_t6 = &kl_r_3;
+#line 25 "codegen/method_conditions.kl"
+    kl_t7 = kl__3sum__I3i32E__S4pairI3i32E( kl_t6 );
+#line 25 "codegen/method_conditions.kl"
+    kl_t0 = kl_t7;
+#line 25 "codegen/method_conditions.kl"
+    return kl_t0;
+}
+
+#line 10 "codegen/method_conditions.kl"
+double kl__10halved_sum__I3f64E__S4pairI3f64E( struct kl__pair__I3f64E* kl_this_1 )
+{
+    double kl_t0;
+    double kl_t2;
+    double kl_t3;
+#line 10 "codegen/method_conditions.kl"
+    kl_t2 = ( *kl_this_1 ).kl_a + ( *kl_this_1 ).kl_b;
+#line 10 "codegen/method_conditions.kl"
+    kl_t3 = kl_t2 / 2.0;
+#line 10 "codegen/method_conditions.kl"
+    kl_t0 = kl_t3;
+#line 10 "codegen/method_conditions.kl"
+    return kl_t0;
+#line 10 "codegen/method_conditions.kl"
+}
+
+#line 9 "codegen/method_conditions.kl"
+double kl__3sum__I3f64E__S4pairI3f64E( struct kl__pair__I3f64E* kl_this_1 )
+{
+    double kl_t0;
+    double kl_t2;
+#line 9 "codegen/method_conditions.kl"
+    kl_t2 = ( *kl_this_1 ).kl_a + ( *kl_this_1 ).kl_b;
+#line 9 "codegen/method_conditions.kl"
+    kl_t0 = kl_t2;
+#line 9 "codegen/method_conditions.kl"
+    return kl_t0;
+#line 9 "codegen/method_conditions.kl"
+}
+
+#line 11 "codegen/method_conditions.kl"
+bool kl__4same__I4boolE__S4pairI4boolE( struct kl__pair__I4boolE* kl_this_1 )
+{
+    bool kl_t0;
+    bool kl_t2;
+#line 11 "codegen/method_conditions.kl"
+    kl_t2 = ( *kl_this_1 ).kl_a == ( *kl_this_1 ).kl_b;
+#line 11 "codegen/method_conditions.kl"
+    kl_t0 = kl_t2;
+#line 11 "codegen/method_conditions.kl"
+    return kl_t0;
+#line 11 "codegen/method_conditions.kl"
+}
+
+#line 9 "codegen/method_conditions.kl"
+int32_t kl__3sum__I3i32E__S4pairI3i32E( struct kl__pair__I3i32E* kl_this_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+    int32_t kl_t3;
+#line 9 "codegen/method_conditions.kl"
+    kl_t2 = __builtin_add_overflow( ( *kl_this_1 ).kl_a, ( *kl_this_1 ).kl_b, &( int32_t ) { 0 } );
+#line 9 "codegen/method_conditions.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 9 "codegen/method_conditions.kl"
+    kl_rt_panic( "codegen/method_conditions.kl", 9, "arithmetic overflow: a + b" );
+    bb2:
+#line 9 "codegen/method_conditions.kl"
+    kl_t3 = ( *kl_this_1 ).kl_a + ( *kl_this_1 ).kl_b;
+#line 9 "codegen/method_conditions.kl"
+    kl_t0 = kl_t3;
+#line 9 "codegen/method_conditions.kl"
+    return kl_t0;
+#line 9 "codegen/method_conditions.kl"
+}
+
+int main( int argc, char** argv )
+{
+    int32_t kl_t1 = ( int32_t ) argc;
+    uint8_t** kl_t2 = ( uint8_t** ) argv;
+    int32_t kl_t0;
+    uint64_t kl_t3;
+    uint64_t kl_t4;
+    uint8_t* kl_t5;
+    uint64_t kl_t6;
+    struct kl_7prelude_str* kl_t7;
+    bool kl_t8;
+    uint64_t kl_t9;
+    bool kl_t10;
+    uint64_t kl_t11;
+    uint8_t** kl_t12;
+    uint8_t* kl_t13;
+    uint8_t kl_t14;
+    bool kl_t15;
+    struct kl_7prelude_str* kl_t16;
+    struct kl__run__LQ7prelude3str__ref kl_t17;
+#line 28 "codegen/method_conditions.kl"
+    kl_t8 = kl_t1 > 0;
+#line 28 "codegen/method_conditions.kl"
+    if ( kl_t8 ) goto bb1; else goto bb2;
+    bb1:
+#line 28 "codegen/method_conditions.kl"
+    kl_t9 = ( uint64_t ) kl_t1;
+#line 28 "codegen/method_conditions.kl"
+    kl_t3 = kl_t9 - 1;
+#line 28 "codegen/method_conditions.kl"
+    goto bb3;
+    bb2:
+#line 28 "codegen/method_conditions.kl"
+    kl_t3 = 0;
+#line 28 "codegen/method_conditions.kl"
+    goto bb3;
+    bb3:
+#line 28 "codegen/method_conditions.kl"
+    kl_t7 = ( struct kl_7prelude_str* ) kl_rt_alloc_many( ( size_t ) kl_t3, 16, "codegen/method_conditions.kl", 28, "out of memory: main" );
+#line 28 "codegen/method_conditions.kl"
+    kl_t4 = 0;
+#line 28 "codegen/method_conditions.kl"
+    goto bb4;
+    bb4:
+#line 28 "codegen/method_conditions.kl"
+    kl_t10 = kl_t4 < kl_t3;
+#line 28 "codegen/method_conditions.kl"
+    if ( kl_t10 ) goto bb5; else goto bb9;
+    bb5:
+#line 28 "codegen/method_conditions.kl"
+    kl_t11 = kl_t4 + 1;
+#line 28 "codegen/method_conditions.kl"
+    kl_t12 = kl_t2 + kl_t11;
+#line 28 "codegen/method_conditions.kl"
+    kl_t5 = ( *kl_t12 );
+#line 28 "codegen/method_conditions.kl"
+    kl_t6 = 0;
+#line 28 "codegen/method_conditions.kl"
+    goto bb6;
+    bb6:
+#line 28 "codegen/method_conditions.kl"
+    kl_t13 = kl_t5 + kl_t6;
+#line 28 "codegen/method_conditions.kl"
+    kl_t14 = ( *kl_t13 );
+#line 28 "codegen/method_conditions.kl"
+    kl_t15 = kl_t14 != 0;
+#line 28 "codegen/method_conditions.kl"
+    if ( kl_t15 ) goto bb7; else goto bb8;
+    bb7:
+#line 28 "codegen/method_conditions.kl"
+    kl_t6 = kl_t6 + 1;
+#line 28 "codegen/method_conditions.kl"
+    goto bb6;
+    bb8:
+#line 28 "codegen/method_conditions.kl"
+    kl_t16 = kl_t7 + kl_t4;
+#line 28 "codegen/method_conditions.kl"
+    ( *kl_t16 ).kl_data = kl_t5;
+#line 28 "codegen/method_conditions.kl"
+    ( *kl_t16 ).kl_size = kl_t6;
+#line 28 "codegen/method_conditions.kl"
+    kl_t4 = kl_t4 + 1;
+#line 28 "codegen/method_conditions.kl"
+    goto bb4;
+    bb9:
+#line 28 "codegen/method_conditions.kl"
+    kl_t17 = ( struct kl__run__LQ7prelude3str__ref ) { ( struct kl_7prelude_str* ) kl_t7, kl_t3 };
+#line 28 "codegen/method_conditions.kl"
+    kl_t0 = kl__4main__LQ7prelude3str( ( kl_t17 ).data, ( kl_t17 ).size );
+#line 28 "codegen/method_conditions.kl"
+    kl_rt_free( kl_t7 );
+#line 28 "codegen/method_conditions.kl"
+    return kl_t0;
+#line 28 "codegen/method_conditions.kl"
+}
+

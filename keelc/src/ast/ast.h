@@ -123,6 +123,7 @@ public:
     Node_id                  captured( Node_id capture ) const;       // the Name_expr or `ref` Marker_expr
     Node_id                  type_param_list( Node_id id ) const;     // aggregate, Enum_decl, function-like
     Node_id                  own_type_param_list( Node_id id ) const; // a method's own; invalid for anything else
+    Node_id                  conditions( Node_id id ) const;          // a method's clauses on its aggregate's parameters
     std::vector<Node_id>     type_parameters( Node_id list ) const;   // the Type_param_decls; empty for an invalid list
     std::span<const Node_id> where_clauses( Node_id list ) const;
     std::span<const Node_id> bounds( Node_id where_clause ) const;

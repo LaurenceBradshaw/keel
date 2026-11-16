@@ -1025,10 +1025,19 @@ generic static call writes its type arguments.
 trailing `const`. The receiver supplies the aggregate's arguments and the call supplies the
 method's, written (`b.map<i64>( f )`) or deduced as a function's are, the expectation included
 (`i64 w = b.map( f );`). Each set is its own instance, keyed on the receiver's arguments then the
-method's. A method's clause constrains only its own parameters, and its parameters may not reuse
-the aggregate's names, so there are no conditional methods: `Cell<T>` either requires `equatable`
-of every `T` or has no `same`, and a bound that only some instances meet goes on a free generic
-function. Three shapes are refused: **overloading** a method that has type parameters
+method's. A method's parameters may not reuse the aggregate's names.
+
+**Conditional methods (M17).** A method's `where` on its aggregate's parameter is a **condition**:
+`T sum() const where T : numeric` in `pair<T>` exists on the instances that meet it, and inside it
+`T` promises the aggregate's bounds and the condition's. Every use (a call, an operator, a walk,
+`&T::m`) checks the receiver's arguments against it, with the ordinary unmet-bound error, so
+`pair<str>.sum()` is refused at the call and a generic caller meets it with its own bound. One
+clause per parameter per method, as on a function. Conditions take no part in overload selection:
+the method is chosen first, then its conditions are checked, and two methods differing only in
+their conditions are duplicates. A conditional method cannot answer an interface, since an
+instance missing the condition would have nothing behind it, and an interface's requirement
+cannot have one. A generic block's methods take none: the block's own clause says it. Three shapes
+of generic method are refused: **overloading** a method that has type parameters
 of its own, since selection would have to bind them before the arguments chose; **an operator**
 with any, since its call has nowhere to write them; and **the address** of one, `&Box<i32>::map`,
 since nothing says what `U` is. `&Box<i32>::map<i64>` is not yet a spelling. Type arguments written

@@ -82,6 +82,7 @@ private:
     void    declare_interface_requirements();
     void    declare_parameters( Node_id list );
     void    declare_bounds( Node_id declaration, Node_id list ); // parameters, then each `where`
+    void    resolve_clause_bounds( Node_id list );               // the interfaces and signatures its clauses name
     void    declare_type_bounds();
     Node_id required_bound_only( Type_id interface ) const;
     void    declare_implements();

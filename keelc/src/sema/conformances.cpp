@@ -125,6 +125,11 @@ std::optional<Conformance_problem> answer(
             return Conformance_problem::Generic;
         }
 
+        if( ast.conditions( member ).is_valid() )
+        {
+            return Conformance_problem::Conditional;
+        }
+
         if( ast.is_const_method( requirement ) && !ast.is_const_method( member ) )
         {
             return Conformance_problem::Not_const;
@@ -1061,6 +1066,14 @@ void report_conformance_errors(
                 error.at,
                 fmt::format( "`{}`'s `{}` has type parameters, so it cannot answer `{}`'s", type, method, interface ),
                 "a call through the interface reaches one compiled method, which cannot be every instance"
+            );
+            break;
+        case Conformance_problem::Conditional:
+            reporter.error_at(
+                error.at,
+                fmt::
+                    format( "`{}`'s `{}` has a `where` on `{}`'s parameter, so it cannot answer `{}`'s", type, method, type, interface ),
+                "an instance that misses the condition would have no method behind the interface"
             );
             break;
         case Conformance_problem::Located:

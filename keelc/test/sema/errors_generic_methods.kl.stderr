@@ -16,18 +16,6 @@ error: `T` is already declared in this scope
 25 |     V over<T, V>( V v ) const where V : copyable { return v; }
    |            ^ previous declaration is at: sema/errors_generic_methods.kl:3:11
 
-error: `T` is `Box`'s parameter, so its bounds go on `Box`
-  --> sema/errors_generic_methods.kl:28:51
-   |
-28 |     U bounded<U>( U u ) const where U : copyable, where T : numeric { return u; }
-   |                                                   ^^^^^^^^^^^^^^^^^ write the clause after `Box`'s parameters, or make this method a free generic function
-
-error: `T` is `Box`'s parameter, so its bounds go on `Box`
-  --> sema/errors_generic_methods.kl:31:21
-   |
-31 |     T plain() const where T : numeric { return value; }
-   |                     ^^^^^^^^^^^^^^^^^ write the clause after `Box`'s parameters, or make this method a free generic function
-
 error: `get` is not a generic method
   --> sema/errors_generic_methods.kl:43:13
    |
@@ -82,4 +70,4 @@ error: `map` has type parameters of its own, so its address names no one functio
 63 |     auto a = &Box<i32>::map;
    |              ^^^^^^^^^^^^^^ wrap the call you want in a function, and take that function's address
 
-14 errors generated
+12 errors generated

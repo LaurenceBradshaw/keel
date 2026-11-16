@@ -35,6 +35,7 @@ enum class Conformance_problem : u8
     Static,      // the implementer's takes no object
     Not_static,  // the requirement takes no object, the implementer's does
     Generic,     // the implementer's has type parameters of its own
+    Conditional, // the implementer's has a condition some instances miss
     Private,     // the implementer's is hidden from a caller holding the interface
     Repeated,    // the type already conforms to the interface
     Overlapping, // another block or `implements` could make one instance conform as well

@@ -43,6 +43,7 @@ Source_file                             1:1-22:1
             <none>                      -
       <none>                            -
       <none>                            -
+      <none>                            -
   Function_decl                         13:1-21:2   name=f
     Named_type                          13:1-13:5   "void"
     Param_list                          13:7-13:9   "()"

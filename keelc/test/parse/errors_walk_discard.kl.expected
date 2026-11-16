@@ -32,6 +32,7 @@ Source_file                             1:1-29:1
             Name_expr                   13:16-13:22 "value_"
       <none>                            -
       <none>                            -
+      <none>                            -
   Function_decl                         17:1-28:2   name=main
     Named_type                          17:1-17:4   "i32"
     Param_list                          17:9-17:11  "()"

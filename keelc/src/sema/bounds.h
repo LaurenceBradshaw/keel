@@ -153,6 +153,13 @@ public:
     Type_id    type_the_literal_overflows( Node_id literal, bool negative, Bound_set bounds ) const;
 
     void declare_type_parameters( Node_id declaration, Node_id list );
+    // A method's clauses on its aggregate's parameters: each its subject's bounds plus its own.
+    void declare_conditions( Node_id method );
+    // The conditions of `function`, or of the method a lambda is in, become what their subjects
+    // promise; any others end.
+    void enter_conditions( Node_id function );
+    // A use of `method` on `receiver`, whose arguments must meet its conditions.
+    void check_conditions( Node_id method, Span at, Type_id receiver );
     // Each interface's closed requirements, then each `where` clause's: two that no one method can
     // answer are refused. Once every signature is typed.
     void check_requirement_sets();
@@ -167,6 +174,10 @@ public:
 
 private:
     void check_each_bound( Node_id parameter, Span at, Type_id argument, std::string_view callee, const Bindings& arguments );
+    void record_clause( Node_id declaration, Node_id clause, Node_id subject, Node_id key );
+    u32  key_of( Node_id parameter ) const; // the condition in force on it, or itself
+    // The aggregate parameter a condition names.
+    std::optional<std::size_t> condition_subject( std::span<const Node_id> outer, Node_id clause ) const;
     // `integral` promises everything `numeric` does, and so on. Expanded once at the `where` clause
     // rather than walked at each query, which is what makes every later test one mask.
     Bound_set closure( Bound_set direct );
@@ -207,12 +218,20 @@ private:
     Reporter&           reporter_;
 
     std::unordered_map<u32, Bound_set>            bounds_;     // Type_param_decl -> its closed bound set
+    std::unordered_map<u32, Node_id>              active_;     // Type_param_decl -> the condition in force on it
+    Node_id                                       entered_;    // the function enter_conditions last took
     std::unordered_map<u32, std::vector<Type_id>> interfaces_; // Type_param_decl -> the interfaces it names
     std::unordered_map<u32, Type_id>              signatures_; // Type_param_decl -> its `fn` bound
     std::unordered_map<u32, Node_id>              owner_of_;   // Type_param_decl -> the declaration that introduced it.
-    std::vector<std::pair<Node_id, Span>>         where_sets_; // each clause naming an interface, as written
-    std::unordered_set<u64>                       conflicted_; // Interface_decl node << 32 | name, per reported conflict
-    std::unordered_set<u64> unmet_; // Type_param_decl or its type << 32 | argument, per refused type instance
+    struct Where_set
+    {
+        Node_id key;
+        Node_id subject;
+        Span    at;
+    };
+    std::vector<Where_set>  where_sets_; // each clause naming an interface, as written
+    std::unordered_set<u64> conflicted_; // Interface_decl node << 32 | name, per reported conflict
+    std::unordered_set<u64> unmet_;      // Type_param_decl or its type << 32 | argument, per refused type instance
 
     struct Deferred
     {

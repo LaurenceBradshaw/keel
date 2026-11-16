@@ -75,7 +75,11 @@ std::string Signature_printer::declaration( Node_id decl ) const
             where_clauses( ast_.type_param_list( decl ) )
         );
     case Node_kind::Method_decl:
-        // Its own type parameters only: the aggregate's are on the aggregate's line.
+    {
+        // Its own type parameters only: the aggregate's are on the aggregate's line. Its
+        // conditions follow its own clauses.
+        const std::string own        = where_clauses( ast_.own_type_param_list( decl ) );
+        const std::string conditions = where_clauses( ast_.conditions( decl ) );
         return fmt::format(
             "{}{}{}{} {}{}{}{}{}",
             ast_.is_located( decl ) ? "@located " : "",
@@ -86,8 +90,9 @@ std::string Signature_printer::declaration( Node_id decl ) const
             type_parameters( ast_.own_type_param_list( decl ) ),
             parameters( decl ),
             ast_.is_const_method( decl ) ? " const" : "",
-            where_clauses( ast_.own_type_param_list( decl ) )
+            own + ( own.empty() || conditions.empty() ? "" : "," ) + conditions
         );
+    }
     case Node_kind::Constructor_decl:
         return fmt::format( "{}{}{}", access( decl ), text( ast_.name( decl ) ), parameters( decl ) );
     case Node_kind::Destructor_decl:
@@ -555,6 +560,19 @@ TEST_CASE( "signatures_print_members_with_their_access", "[sema][signature]" )
     REQUIRE( printed( Node_kind::Field_decl, "value" ) == "private T value" );
     REQUIRE( printed( Node_kind::Field_decl, "count" ) == "private const i32 count" );
     REQUIRE( printed( Node_kind::Var_decl, "made" ) == "private static i32 made" );
+}
+
+TEST_CASE( "signatures_print_a_method_s_conditions", "[sema][signature][generic]" )
+{
+    const Printed printed( "struct pair<T> where T : copyable\n"
+                           "{\n"
+                           "    T a;\n"
+                           "    T sum() const where T : numeric { return a + a; }\n"
+                           "    U as<U>( U u ) const where U : copyable, where T : integral { return u; }\n"
+                           "};\n" );
+
+    REQUIRE( printed( Node_kind::Method_decl, "sum" ) == "public T sum() const where T : numeric" );
+    REQUIRE( printed( Node_kind::Method_decl, "as" ) == "public U as<U>( U u ) const where U : copyable, where T : integral" );
 }
 
 TEST_CASE( "signatures_print_enums_and_variants", "[sema][signature]" )

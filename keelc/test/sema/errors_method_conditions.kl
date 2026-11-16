@@ -1,0 +1,45 @@
+// A method's `where` on its type's own parameter is refused where the instance does not meet it.
+interface summed
+{
+    i32 sum() const;
+};
+
+struct pair<T> where T : copyable
+{
+    T a;
+    T b;
+
+    pair<T> operator%( T m ) const where T : integral { return pair<T> { a % m, b % m }; }
+    T sum() const where T : numeric { return a + b; }
+
+    // Without the condition, `T` promises only `copyable`.
+    T total() const { return sum(); }
+    bool bigger() const where T : equatable { return a > b; }
+
+    // One clause per parameter, as on a function.
+    T twice() const where T : numeric, where T : equatable { return a + a; }
+};
+
+// A condition on the method's own type's parameter cannot answer an interface: some instances lack it.
+struct cell<T> implements summed where T : copyable
+{
+    T v;
+
+    i32 sum() const where T : numeric { return 0; }
+};
+
+void forwarded<T>( const ref pair<T> p ) where T : copyable
+{
+    p.sum();
+}
+
+i32 main( const ref str[] _ )
+{
+    pair<f64> f = pair<f64> { 1.5, 2.5 };
+    pair<f64> g = f % 2.0;
+
+    pair<str> s = pair<str> { "x", "y" };
+    s.sum();
+
+    return 0;
+}

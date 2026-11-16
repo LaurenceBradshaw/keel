@@ -107,7 +107,7 @@ public:
         const Resolution&  resolution,
         Types_builder&     types,
         const Aggregates&  aggregates,
-        const Bounds&      bounds,
+        Bounds&            bounds,
         const Places&      places,
         Annotations&       annotations,
         Generic_recursion& generic_recursion,
@@ -267,7 +267,7 @@ private:
     const Types_builder& types_;
     Type_table&          table_;
     const Aggregates&    aggregates_;
-    const Bounds&        bounds_;
+    Bounds&              bounds_;
     const Places&        places_;
     Annotations&         annotations_;
     Generic_recursion&   generic_recursion_;

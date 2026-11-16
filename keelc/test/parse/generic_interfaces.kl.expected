@@ -18,6 +18,7 @@ Source_file                             1:1-34:1
       Type_param_list                   3:15-3:18
         Type_param_decl                 3:16-3:17   "T"
       <none>                            -
+      <none>                            -
   Interface_decl                        8:1-11:3    name=pair_sink
     Type_param_list                     8:20-8:84
       Type_param_decl                   8:21-8:22   "A"
@@ -54,6 +55,7 @@ Source_file                             1:1-34:1
         Where_clause                    8:66-8:84
           Bound_name                    8:76-8:84   "copyable"
       <none>                            -
+      <none>                            -
   Class_decl                            13:1-19:3   name=log
     <none>                              -
     Implements_list                     13:11-13:43
@@ -78,6 +80,7 @@ Source_file                             1:1-34:1
       Block                             17:34-17:37 "{ }"
       <none>                            -
       <none>                            -
+      <none>                            -
     Method_decl                         18:12-18:38
       Named_type                        18:12-18:16 "void"
       Param_list                        18:20-18:34
@@ -87,6 +90,7 @@ Source_file                             1:1-34:1
         Param_decl                      18:22-18:32 name=value
           Named_type                    18:22-18:26 "bool"
       Block                             18:35-18:38 "{ }"
+      <none>                            -
       <none>                            -
       <none>                            -
   Enum_decl                             21:1-24:3   name=light
@@ -110,6 +114,7 @@ Source_file                             1:1-34:1
         Param_decl                      28:15-28:24 name=value
           Named_type                    28:15-28:18 "i64"
       Block                             28:27-28:30 "{ }"
+      <none>                            -
       <none>                            -
       <none>                            -
   Function_decl                         31:1-31:61  name=feed

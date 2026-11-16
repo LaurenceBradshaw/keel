@@ -1,0 +1,63 @@
+// A method's `where` on its type's own parameter: the method exists on the instances that meet it,
+// and its body may use the bound. Exits with the failing check.
+struct pair<T> where T : copyable
+{
+    T a;
+    T b;
+
+    pair<T> operator%( T m ) const where T : integral { return pair<T> { a % m, b % m }; }
+    T sum() const where T : numeric { return a + b; }
+    T halved_sum() const where T : floating { return ( a + b ) / 2.0; }
+    bool same() const where T : equatable { return a == b; }
+
+    // `integral` promises `numeric`, so one condition calls another.
+    T sum_mod( T m ) const where T : integral
+    {
+        pair<T> r = pair<T> { a % m, b % m };
+        return r.sum();
+    }
+};
+
+// A generic caller meets the condition with its own bound.
+T folded<T>( const ref pair<T> p, T m ) where T : integral
+{
+    pair<T> r = p % m;
+    return r.sum();
+}
+
+i32 main( const ref str[] _ )
+{
+    pair<i32> p = pair<i32> { 7, 12 };
+    pair<i32> q = p % 5;
+
+    if( q.a != 2 || q.b != 2 )
+    {
+        return 1;
+    }
+
+    if( p.sum_mod( 5 ) != 4 )
+    {
+        return 2;
+    }
+
+    if( folded( p, 5 ) != 4 )
+    {
+        return 3;
+    }
+
+    pair<f64> f = pair<f64> { 1.0, 2.0 };
+
+    if( f.halved_sum() != 1.5 || f.sum() != 3.0 )
+    {
+        return 4;
+    }
+
+    pair<bool> s = pair<bool> { true, true };
+
+    if( !s.same() )
+    {
+        return 5;
+    }
+
+    return 0;
+}

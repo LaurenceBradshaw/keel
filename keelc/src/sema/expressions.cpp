@@ -5818,6 +5818,7 @@ Node_id Expressions::enter_function( Node_id id, Node_id owner )
     const Node_id enclosing = current_function_;
     current_function_       = id;
     default_owner_          = owner;
+    bounds_.enter_conditions( home_function() );
 
     return enclosing;
 }
@@ -5825,6 +5826,7 @@ Node_id Expressions::enter_function( Node_id id, Node_id owner )
 void Expressions::leave_function( Node_id enclosing )
 {
     current_function_ = enclosing;
+    bounds_.enter_conditions( home_function() );
 }
 
 bool Expressions::enter_unsafe( Span at )

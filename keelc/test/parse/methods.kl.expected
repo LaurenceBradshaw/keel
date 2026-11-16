@@ -20,6 +20,7 @@ Source_file                             1:1-48:1
             Name_expr                   15:20-15:21 "y"
       <none>                            -
       <none>                            -
+      <none>                            -
     Method_decl                         18:5-22:6
       Named_type                        18:5-18:9   "void"
       Param_list                        18:15-18:25
@@ -39,6 +40,7 @@ Source_file                             1:1-48:1
           Binary_expr                   21:13-21:19 op=+
             Name_expr                   21:13-21:14 "y"
             Name_expr                   21:17-21:19 "by"
+      <none>                            -
       <none>                            -
       <none>                            -
   Class_decl                            25:1-42:3   name=Buffer
@@ -78,6 +80,7 @@ Source_file                             1:1-48:1
       Block                             39:5-41:6
         Return_stmt                     40:9-40:20
           Name_expr                     40:16-40:19 "len"
+      <none>                            -
       <none>                            -
       <none>                            -
   Function_decl                         44:1-47:2   name=main

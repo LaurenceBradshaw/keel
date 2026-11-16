@@ -1,0 +1,43 @@
+error: `T` does not promise `numeric`, and `sum` requires it of `T`
+  --> sema/errors_method_conditions.kl:16:30
+   |
+16 |     T total() const { return sum(); }
+   |                              ^^^^^ add `where T : numeric` to `total`, or `numeric` to the `where` clause for `T` on `pair`
+
+error: no operator `>` for `T` and `T`
+  --> sema/errors_method_conditions.kl:17:54
+   |
+17 |     bool bigger() const where T : equatable { return a > b; }
+   |                                                      ^^^^^ `>` needs `comparable`; add `comparable` to the `where` clause for `T` on `bigger`
+
+error: duplicate where clause for type parameter `T`
+  --> sema/errors_method_conditions.kl:20:40
+   |
+20 |     T twice() const where T : numeric, where T : equatable { return a + a; }
+   |                                        ^^^^^^^^^^^^^^^^^^^
+
+error: `cell`'s `sum` has a `where` on `cell`'s parameter, so it cannot answer `summed`'s
+  --> sema/errors_method_conditions.kl:24:27
+   |
+24 | struct cell<T> implements summed where T : copyable
+   |                           ^^^^^^ an instance that misses the condition would have no method behind the interface
+
+error: `T` does not promise `numeric`, and `sum` requires it of `T`
+  --> sema/errors_method_conditions.kl:33:5
+   |
+33 |     p.sum();
+   |     ^^^^^^^ add `numeric` to the `where` clause for `T` on `forwarded`
+
+error: `f64` is not `integral`, and `operator%` requires it of `T`
+  --> sema/errors_method_conditions.kl:39:19
+   |
+39 |     pair<f64> g = f % 2.0;
+   |                   ^^^^^^^ it has to be an integer
+
+error: `str` is not `numeric`, and `sum` requires it of `T`
+  --> sema/errors_method_conditions.kl:42:5
+   |
+42 |     s.sum();
+   |     ^^^^^^^ it has to be an integer or a float
+
+7 errors generated

@@ -1867,6 +1867,8 @@ void Overloads::record_method_instantiation(
     Node_id from, Node_id id, Node_id method, Type_id receiver, std::span<const Type_id> own
 )
 {
+    bounds_.check_conditions( method, ast_.span( id ), receiver );
+
     // A requirement has no body; lowering finds the implementer's at the instance.
     if( ast_.is_requirement( method ) )
     {
