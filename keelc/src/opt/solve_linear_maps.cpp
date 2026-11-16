@@ -36,8 +36,9 @@ public:
         return { place( v.real ), v.imaginary.local.is_valid() ? place( v.imaginary ) : Place {} };
     }
 
-    // The arrays holding a contiguous run of values, value j element j of each part; nothing when they don't.
-    std::optional<Value_place> arrays( const std::vector<Value_path>& v )
+    // The arrays holding a contiguous run of values, value j element j of each part, the real part alone when `real`;
+    // nothing when they don't.
+    std::optional<Value_place> arrays( const std::vector<Value_path>& v, bool real = false )
     {
         const auto run = [&]( auto part ) -> std::optional<Param_path>
         {
@@ -66,6 +67,10 @@ public:
             return whole;
         };
         const std::optional<Param_path> re = run( []( const Value_path& x ) { return x.real; } );
+        if( real && re && std::ranges::none_of( v, []( const Value_path& x ) { return x.imaginary.local.is_valid(); } ) )
+        {
+            return Value_place { place( *re ), {} };
+        }
         const std::optional<Param_path> im = run( []( const Value_path& x ) { return x.imaginary; } );
         if( !re || !im )
         {
@@ -241,7 +246,7 @@ Map_outcome solve_linear_maps(
             }
         };
         Places                           places( func, types, literals, span );
-        const std::optional<Value_place> x = places.arrays( read->inputs ), y = places.arrays( read->outputs );
+        const std::optional<Value_place> x = places.arrays( read->inputs, read->sum.real ), y = places.arrays( read->outputs );
         if( const std::optional<Loop_program> program = x && y ? plan_loops( read->sum, plan ) : std::nullopt;
             program && ( program->loops > 0 || !program->calls.empty() ) )
         {

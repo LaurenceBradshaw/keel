@@ -681,7 +681,7 @@ TEST_CASE( "front_end_O3_calls_one_planned_function_for_a_part_two_maps_share", 
         }
         return kernels;
     };
-    const u64 planned = std::ranges::count_if( p.all, []( const Function& f ) { return f.planned; } );
+    const auto planned = static_cast<u64>( std::ranges::count_if( p.all, []( const Function& f ) { return f.planned; } ) );
     CHECK( !called( "map" ).empty() );
     CHECK( called( "map" ) == called( "other" ) );
     std::set<std::vector<u64>> all = called( "map" );

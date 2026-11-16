@@ -600,9 +600,16 @@ private:
                         const Local_id to   = offset( s.out, i );
                         const Local_id at   = offset( s.in, from );
                         const Local_id re   = load( element( buffers_[s.in.buffer].real, at ) );
-                        const Local_id im   = load( element( buffers_[s.in.buffer].imaginary, at ) );
                         assign( element( buffers_[s.out.buffer].real, to ), use( read( re ) ) );
-                        assign( element( buffers_[s.out.buffer].imaginary, to ), use( read( im ) ) );
+                        assign(
+                            element( buffers_[s.out.buffer].imaginary, to ),
+                            s.real ? use( floating( 0 ) )
+                            : s.conj
+                                ? unary(
+                                      Token_kind::Minus, read( load( element( buffers_[s.in.buffer].imaginary, at ) ) ), real_
+                                  )
+                                : use( read( load( element( buffers_[s.in.buffer].imaginary, at ) ) ) )
+                        );
                     }
                 );
                 break;
@@ -622,7 +629,9 @@ private:
                                 real_
                             ) );
                         };
-                        const Local_id re = sum( &Value_place::real ), im = sum( &Value_place::imaginary );
+                        const Local_id re = sum( &Value_place::real );
+                        const Local_id im =
+                            s.real ? load( element( buffers_[s.also.buffer].imaginary, b ) ) : sum( &Value_place::imaginary );
                         assign( element( buffers_[s.out.buffer].real, o ), use( read( re ) ) );
                         assign( element( buffers_[s.out.buffer].imaginary, o ), use( read( im ) ) );
                     }
@@ -646,13 +655,31 @@ private:
             case Loop_kind::Call:
                 call( s );
                 break;
+            case Loop_kind::Pack:
+                loop(
+                    0,
+                    s.count,
+                    [&]( Local_id i )
+                    {
+                        const Local_id a = offset( s.in, i ), b = offset( s.also, i ), o = offset( s.out, i );
+                        const Local_id re = load( element( buffers_[s.in.buffer].real, a ) );
+                        const Local_id im = load( element( buffers_[s.also.buffer].real, b ) );
+                        assign( element( buffers_[s.out.buffer].real, o ), use( read( re ) ) );
+                        assign( element( buffers_[s.out.buffer].imaginary, o ), use( read( im ) ) );
+                    }
+                );
+                break;
+            case Loop_kind::Untangle:
+                untangle( s );
+                break;
             case Loop_kind::Scale:
                 loop(
                     0,
                     s.count,
-                    [&]( Local_id i ) {
+                    [&]( Local_id i )
+                    {
                         product(
-                            buffers_[s.in.buffer],
+                            s.real ? Value_place { buffers_[s.in.buffer].real, {} } : buffers_[s.in.buffer],
                             offset( s.in, i ),
                             tables_[s.table],
                             i,
@@ -686,10 +713,84 @@ private:
         }
     }
 
+    // Two real copies' sums a at `out` and b at `also` from Z, the sum of a + i b: b[k] = -i (Z[k] - conj Z[-k]) / 2 and
+    // a[k] = Z[k] - i b[k] for k below -k, a and b at -k their conjugates; a = Re Z and b = Im Z where k = -k, and at
+    // k past M as at k - M.
+    void untangle( const Loop_step& s )
+    {
+        const Value_place& Z = buffers_[s.in.buffer];
+        const Value_place &a = buffers_[s.out.buffer], &b = buffers_[s.also.buffer];
+        const auto         put = [&]( const Value_place& to, const Stride& at, Local_id k, Local_id re, Local_id im, bool conj )
+        {
+            const Local_id o = offset( at, k );
+            assign( element( to.real, o ), use( read( re ) ) );
+            assign( element( to.imaginary, o ), conj ? unary( Token_kind::Minus, read( im ), real_ ) : use( read( im ) ) );
+        };
+        const auto own = [&]( u64 k )
+        {
+            const Local_id at = number( k ), z = offset( s.in, at );
+            const Local_id zr = load( element( Z.real, z ) ), zi = load( element( Z.imaginary, z ) ),
+                           zero = emit( use( floating( 0 ) ) );
+            put( a, s.out, at, zr, zero, false );
+            put( b, s.also, at, zi, zero, false );
+        };
+        const auto pairs = [&]( u64 first, u64 end, bool mirrored )
+        {
+            loop(
+                first,
+                end,
+                [&]( Local_id k )
+                {
+                    const Local_id nk = emit( binary( Token_kind::Minus, number_operand( s.M ), read( k ), index_ ) );
+                    const Local_id z = offset( s.in, k ), w = offset( s.in, nk );
+                    const Local_id zr = load( element( Z.real, z ) ), zi = load( element( Z.imaginary, z ) );
+                    const Local_id wr = load( element( Z.real, w ) ), wi = load( element( Z.imaginary, w ) );
+                    const auto     f = [&]( Token_kind op, Local_id x, Local_id y )
+                    { return emit( binary( op, read( x ), read( y ), real_ ) ); };
+                    const auto half = [&]( Local_id x )
+                    { return emit( binary( Token_kind::Star, read( x ), floating( 0.5 ), real_ ) ); };
+                    const Local_id br = half( f( Token_kind::Plus, zi, wi ) ), bi = half( f( Token_kind::Minus, wr, zr ) );
+                    const Local_id ar = f( Token_kind::Plus, zr, bi ), ai = f( Token_kind::Minus, zi, br );
+                    put( a, s.out, k, ar, ai, false );
+                    put( b, s.also, k, br, bi, false );
+                    if( mirrored )
+                    {
+                        put( a, s.out, nk, ar, ai, true );
+                        put( b, s.also, nk, br, bi, true );
+                    }
+                }
+            );
+        };
+        // k below -k is below (M + 1) / 2, and -k is below m past M - m.
+        const u64 m = s.count, M = s.M, end = std::max<u64>( std::min( m, ( M + 1 ) / 2 ), 1 );
+        const u64 split = m >= M ? 1 : std::clamp<u64>( M - m + 1, 1, end );
+        own( 0 );
+        pairs( 1, split, false );
+        pairs( split, end, true );
+        if( M % 2 == 0 && M / 2 < m )
+        {
+            own( M / 2 );
+        }
+        loop(
+            M,
+            m,
+            [&]( Local_id k )
+            {
+                const Local_id from = emit( binary( Token_kind::Minus, read( k ), number_operand( M ), index_ ) );
+                for( const auto& [to, at] : { std::pair { &a, &s.out }, { &b, &s.also } } )
+                {
+                    const Local_id i = offset( *at, from );
+                    put( *to, *at, k, load( element( to->real, i ) ), load( element( to->imaginary, i ) ), false );
+                }
+            }
+        );
+    }
+
     // The callee on the addresses of the strides' first elements, cast to its parameters.
     void call( const Loop_step& s )
     {
         const Loop_call& callee = program_.calls[s.leaf];
+        assert( buffers_[s.in.buffer].imaginary.local.is_valid() && "a call reads a real buffer" );
         called_( callee.kernel, callee.program );
         const Local_id       from = plus( base( s.in ), s.in.offset ), into = plus( base( s.out ), s.out.offset );
         std::vector<Operand> arguments;
@@ -712,13 +813,20 @@ private:
         emit( std::move( c ) );
     }
 
-    // out[o] = x[i] w[e], complex.
+    // out[o] = x[i] w[e], complex; x real when it has no imaginary part.
     void product( Value_place x, Local_id i, Value_place w, Local_id e, Value_place out, Local_id o )
     {
-        const Local_id xr = load( element( x.real, i ) ), xi = load( element( x.imaginary, i ) );
+        const Local_id xr = load( element( x.real, i ) );
         const Local_id wr = load( element( w.real, e ) ), wi = load( element( w.imaginary, e ) );
         const auto     mul = [&]( Local_id a, Local_id b )
         { return emit( binary( Token_kind::Star, read( a ), read( b ), real_ ) ); };
+        if( !x.imaginary.local.is_valid() )
+        {
+            assign( element( out.real, o ), use( read( mul( xr, wr ) ) ) );
+            assign( element( out.imaginary, o ), use( read( mul( xr, wi ) ) ) );
+            return;
+        }
+        const Local_id xi = load( element( x.imaginary, i ) );
         const Local_id re = emit( binary( Token_kind::Minus, read( mul( xr, wr ) ), read( mul( xi, wi ) ), real_ ) );
         const Local_id im = emit( binary( Token_kind::Plus, read( mul( xr, wi ) ), read( mul( xi, wr ) ), real_ ) );
         assign( element( out.real, o ), use( read( re ) ) );
@@ -804,9 +912,10 @@ private:
         return projected( func_, Place { .local = p }, Projection { .kind = Projection_kind::Deref } );
     }
 
+    // No imaginary part for a real buffer's.
     Value_place at( Value_place buffer, Local_id i )
     {
-        return { element( buffer.real, i ), element( buffer.imaginary, i ) };
+        return { element( buffer.real, i ), buffer.imaginary.local.is_valid() ? element( buffer.imaginary, i ) : Place {} };
     }
 
     Place element( Place array, Local_id i )
@@ -827,6 +936,11 @@ private:
     Operand number_operand( u64 k ) const
     {
         return constant( literals_.add_integer( k ), index_ );
+    }
+
+    Operand floating( f64 v ) const
+    {
+        return constant( literals_.add_float( v, static_cast<f32>( v ) ), real_ );
     }
 
     Operand read( Local_id l ) const

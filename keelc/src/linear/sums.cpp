@@ -213,7 +213,7 @@ Cost twiddle_cost( u64 e, u64 M )
 // Whether a split, chirp or convolution of s runs as a loop, which multiplies each twiddle and chirp in full.
 bool looped( const Sum& s, const Plan_options& options )
 {
-    return !s.real && ( s.n > options.leaf_max || s.m > options.leaf_max );
+    return s.n > options.leaf_max || s.m > options.leaf_max;
 }
 
 std::string sides( const Sum& s )
@@ -692,7 +692,7 @@ std::vector<Use> chirp_match( const Sum& s, const Plan_options& options )
     {
         return {};
     }
-    Cost own = looped( s, options ) ? ( k->n + k->m ) * Cost { 2, 4 } : Cost {};
+    Cost own = looped( s, options ) ? k->n * Cost { s.real ? 0u : 2u, s.real ? 2u : 4u } + k->m * Cost { 2, 4 } : Cost {};
     for( u64 j = 0; j < k->n && !looped( s, options ); ++j )
     {
         own = own + scale_cost( root( mod( h, part.M ) * j % part.M * j, part.M ), s.real );
@@ -1263,8 +1263,13 @@ Sum swapped( const Sum& s )
 
 // A circuit's transpose costs its multiplies and adds less inputs plus outputs. For complex x it is the conjugate
 // transpose, so of the swapped sum's conjugate; for real x the matrix must be real.
-std::vector<Use> transpose_match( const Sum& s, const Plan_options& )
+std::vector<Use> transpose_match( const Sum& s, const Plan_options& options )
 {
+    // Not as loops, which run forwards only.
+    if( looped( s, options ) )
+    {
+        return {};
+    }
     const Sum t = s.real ? swapped( s ) : normalised( conjugate_sum( swapped( s ) ) );
     if( ( s.real && normalised( conjugate_sum( s ) ) != normalised( s ) ) ||
         representative( t ).first == representative( normalised( s ) ).first )
@@ -1429,6 +1434,20 @@ std::vector<u32> batch_build( Circuit& c, const Sum& s, const Use&, const std::v
     return out;
 }
 
+// Untangling one pair's m outputs: each k below its -k, or whose -k is past m; the rest are free.
+Cost untangle_cost( u64 m, u64 M )
+{
+    Cost untangle {};
+    for( u64 k = 0; k < std::min( m, M ); ++k )
+    {
+        if( const u64 nk = ( M - k ) % M; k != nk && ( k < nk || nk >= m ) )
+        {
+            untangle = untangle + Cost { 4, 2 };
+        }
+    }
+    return untangle;
+}
+
 // Real copies of f(j, -k) = conj f(j, k), two at a time: Z, the sum of a + i b, gives
 // B[k] = (Z[k] - conj Z[-k]) / 2i and A[k] = Z[k] - i B[k], A[-k] and B[-k] their conjugates. Z
 // takes every -k too, so max(m, M) outputs, at most 2m; an odd copy is summed alone.
@@ -1441,17 +1460,9 @@ std::vector<Use> paired_match( const Sum& s, const Plan_options& )
     {
         return {};
     }
-    Cost untangle {};
-    for( u64 k = 0; k < std::min<u64>( s.m, s.M ); ++k )
-    {
-        if( const u64 nk = ( s.M - k ) % s.M; k != nk && ( k < nk || nk >= s.m ) )
-        {
-            untangle = untangle + Cost { 4, 2 };
-        }
-    }
     Use use {
         { { s.batch / 2, Sum { s.n, static_cast<u32>( outputs ), s.M, s.coefficient, false } } },
-        ( s.batch / 2 ) * untangle,
+        ( s.batch / 2 ) * untangle_cost( s.m, s.M ),
         "paired"
     };
     if( s.batch % 2 == 1 )
@@ -1733,6 +1744,10 @@ private:
     {
         const auto [s, flipped] = representative( normalised( s0 ) );
         conj                    = conj != flipped;
+        if( s.batch > 1 && choose( s ).rule->build == paired_build )
+        {
+            return emit_paired( p, into, s, choose( s ).use, in, out, conj );
+        }
         if( s.batch > 1 )
         {
             Loop_step loop { .kind = Loop_kind::Loop, .count = s.batch, .loop = p.loops++ };
@@ -1743,9 +1758,13 @@ private:
         const Choice& choice = choose( s );
         if( looped( s, options_ ) )
         {
-            if( options_.calls && callable && kernel_of( s ) )
+            if( options_.calls && callable && !s.real && kernel_of( s ) )
             {
                 return emit_call( p, into, s, in, out, conj );
+            }
+            if( choice.rule->build == hermitian_build )
+            {
+                return emit_hermitian( p, into, s, choice.use, in, out, conj );
             }
             if( choice.rule->build == split_build )
             {
@@ -1811,6 +1830,80 @@ private:
             q.cost  = cost( q, q.steps );
         }
         return it->second;
+    }
+
+    // The outputs to M / 2, the rest their conjugates: y[k] = conj y[M - k].
+    void emit_hermitian(
+        Loop_program&           p,
+        std::vector<Loop_step>& into,
+        const Sum&              s,
+        const Use&              use,
+        const Stride&           in,
+        const Stride&           out,
+        bool                    conj
+    )
+    {
+        const Sum& half = use.parts[0].second;
+        emit( p, into, half, in, out, conj );
+        std::vector<u64> from;
+        for( u64 k = half.m; k < s.m; ++k )
+        {
+            from.push_back( s.M - k );
+        }
+        Stride rest = out;
+        rest.offset += half.m * out.step;
+        into.push_back( Loop_step {
+            .kind  = Loop_kind::Gather,
+            .count = static_cast<u32>( from.size() ),
+            .table = indices( p, std::move( from ) ),
+            .conj  = true,
+            .in    = out,
+            .out   = rest,
+        } );
+    }
+
+    // Each pair of real copies a + i b into z, its sum Z, untangled into theirs; an odd copy alone.
+    void emit_paired(
+        Loop_program&           p,
+        std::vector<Loop_step>& into,
+        const Sum&              s,
+        const Use&              use,
+        const Stride&           in,
+        const Stride&           out,
+        bool                    conj
+    )
+    {
+        const Sum& pair = use.parts[0].second;
+        const u32  z = buffer( p, s.n ), Z = buffer( p, pair.m );
+        Loop_step  loop { .kind = Loop_kind::Loop, .count = s.batch / 2, .loop = p.loops++ };
+        const auto copy = [&]( Stride a, u32 t )
+        {
+            a.offset += t * a.batch;
+            a.loops.push_back( { loop.loop, 2 * a.batch } );
+            a.batch = 0;
+            return a;
+        };
+        loop.body.push_back(
+            Loop_step { .kind = Loop_kind::Pack, .count = s.n, .in = copy( in, 0 ), .out = { z }, .also = copy( in, 1 ) }
+        );
+        emit( p, loop.body, pair, { z }, { Z }, conj );
+        loop.body.push_back( Loop_step {
+            .kind  = Loop_kind::Untangle,
+            .count = s.m,
+            .M     = s.M,
+            .in    = { Z },
+            .out   = copy( out, 0 ),
+            .also  = copy( out, 1 ),
+        } );
+        into.push_back( std::move( loop ) );
+        if( s.batch % 2 == 1 )
+        {
+            const u32 t    = s.batch - 1;
+            Stride    last = in, to = out;
+            last.offset += t * in.batch;
+            to.offset += t * out.batch;
+            emit( p, into, single( s ), last, to, conj );
+        }
     }
 
     // Inner sums into z[j1 R + k2], twiddles, outer sums from z, each run of equal parts one loop.
@@ -1892,9 +1985,9 @@ private:
             return t;
         };
         const u32 a = buffer( p, s.n ), b = buffer( p, s.m );
-        into.push_back(
-            Loop_step { .kind = Loop_kind::Scale, .count = s.n, .table = table( p, chirp( s.n ) ), .in = in, .out = { a } }
-        );
+        into.push_back( Loop_step {
+            .kind = Loop_kind::Scale, .count = s.n, .table = table( p, chirp( s.n ) ), .real = s.real, .in = in, .out = { a }
+        } );
         emit( p, into, use.parts[0].second, { a }, { b }, conj );
         into.push_back(
             Loop_step { .kind = Loop_kind::Scale, .count = s.m, .table = table( p, chirp( s.m ) ), .in = { b }, .out = out }
@@ -2002,13 +2095,15 @@ private:
         }
         const u32 n = static_cast<u32>( L );
         const u32 u = buffer( p, L ), U = buffer( p, L ), V = buffer( p, L ), v = buffer( p, L );
-        into.push_back( Loop_step { .kind = Loop_kind::Gather, .count = n, .table = indices( p, at ), .in = in, .out = { u } }
-        );
+        into.push_back( Loop_step {
+            .kind = Loop_kind::Gather, .count = n, .table = indices( p, at ), .real = s.real, .in = in, .out = { u }
+        } );
         emit( p, into, use.parts[0].second, { u }, { U }, conj );
         into.push_back( Loop_step { .kind = Loop_kind::Scale, .count = n, .table = table( p, H ), .in = { U }, .out = { V } } );
-        into.push_back( Loop_step { .kind = Loop_kind::Add, .count = 1, .in = in, .out = { V }, .also = { V } } );
+        into.push_back( Loop_step { .kind = Loop_kind::Add, .count = 1, .real = s.real, .in = in, .out = { V }, .also = { V } }
+        );
         emit( p, into, use.parts[1].second, { V }, { v }, conj );
-        into.push_back( Loop_step { .kind = Loop_kind::Add, .count = 1, .in = in, .out = out, .also = { U } } );
+        into.push_back( Loop_step { .kind = Loop_kind::Add, .count = 1, .real = s.real, .in = in, .out = out, .also = { U } } );
         Stride rest = out;
         rest.offset += out.step;
         into.push_back(
@@ -2033,13 +2128,17 @@ private:
                 total = total + static_cast<u32>( ( s.count - 1 ) * ( s.R - 1 ) ) * Cost { 2, 4 };
                 break;
             case Loop_kind::Scale:
-                total = total + s.count * Cost { 2, 4 };
+                total = total + s.count * ( s.real ? Cost { 0, 2 } : Cost { 2, 4 } );
                 break;
             case Loop_kind::Gather:
             case Loop_kind::Copy:
+            case Loop_kind::Pack:
+                break;
+            case Loop_kind::Untangle:
+                total = total + untangle_cost( s.count, s.M );
                 break;
             case Loop_kind::Add:
-                total = total + s.count * Cost { 2, 0 };
+                total = total + s.count * Cost { s.real ? 1u : 2u, 0 };
                 break;
             case Loop_kind::Call:
                 total = total + p.calls[s.leaf].program.cost;
@@ -2182,7 +2281,7 @@ std::optional<Loop_program> plan_loops( const Sum& sum, const Plan_options& opti
 {
     const Sum s = normalised( sum );
     Planner   planner( options );
-    if( s.real || s.coefficient.empty() || !s.offset.empty() || !planner.plannable( s ) )
+    if( s.coefficient.empty() || !s.offset.empty() || !planner.plannable( s ) )
     {
         return std::nullopt;
     }
@@ -2412,6 +2511,11 @@ void run(
 {
     for( const Loop_step& s : steps )
     {
+        const auto in = [&]( u64 at )
+        {
+            const std::complex<f64> v = b[s.in.buffer].at( at );
+            return s.real ? std::complex<f64> { v.real() } : v;
+        };
         switch( s.kind )
         {
         case Loop_kind::Leaf:
@@ -2447,22 +2551,39 @@ void run(
         case Loop_kind::Scale:
             for( u32 i = 0; i < s.count; ++i )
             {
-                b[s.out.buffer].at( element( s.out, index, i ) ) =
-                    b[s.in.buffer].at( element( s.in, index, i ) ) * p.tables[s.table].at( i );
+                b[s.out.buffer].at( element( s.out, index, i ) ) = in( element( s.in, index, i ) ) * p.tables[s.table].at( i );
             }
             break;
         case Loop_kind::Gather:
             for( u32 i = 0; i < s.count; ++i )
             {
-                b[s.out.buffer].at( element( s.out, index, i ) ) =
-                    b[s.in.buffer].at( element( s.in, index, p.indices[s.table].at( i ) ) );
+                const std::complex<f64> v                        = in( element( s.in, index, p.indices[s.table].at( i ) ) );
+                b[s.out.buffer].at( element( s.out, index, i ) ) = s.conj ? std::conj( v ) : v;
+            }
+            break;
+        case Loop_kind::Pack:
+            for( u32 i = 0; i < s.count; ++i )
+            {
+                b[s.out.buffer].at( element( s.out, index, i ) ) = {
+                    b[s.in.buffer].at( element( s.in, index, i ) ).real(),
+                    b[s.also.buffer].at( element( s.also, index, i ) ).real()
+                };
+            }
+            break;
+        case Loop_kind::Untangle:
+            for( u64 k = 0; k < s.count; ++k )
+            {
+                const std::complex<f64> z = b[s.in.buffer].at( element( s.in, index, k ) );
+                const std::complex<f64> w = std::conj( b[s.in.buffer].at( element( s.in, index, ( s.M - k % s.M ) % s.M ) ) );
+                b[s.out.buffer].at( element( s.out, index, k ) )   = ( z + w ) / 2.0;
+                b[s.also.buffer].at( element( s.also, index, k ) ) = ( z - w ) / std::complex<f64> { 0, 2 };
             }
             break;
         case Loop_kind::Add:
             for( u32 i = 0; i < s.count; ++i )
             {
                 b[s.out.buffer].at( element( s.out, index, i ) ) =
-                    b[s.in.buffer].at( element( s.in, index, i ) ) + b[s.also.buffer].at( element( s.also, index, i ) );
+                    in( element( s.in, index, i ) ) + b[s.also.buffer].at( element( s.also, index, i ) );
             }
             break;
         case Loop_kind::Copy:
@@ -2511,7 +2632,7 @@ f64 error( const Loop_program& p, const Sum& s )
     b[1].resize( s.m );
     for( auto& v : b[0] )
     {
-        v = { d( rng ), d( rng ) };
+        v = { d( rng ), s.real ? 0.0 : d( rng ) };
     }
     std::vector<u64> index( p.loops );
     run( p, p.steps, b, index );
@@ -2565,6 +2686,35 @@ TEST_CASE( "a_pfa_or_rader_plan_runs_as_loops_through_index_tables", "[linear][s
             INFO( n << " " << c );
             CHECK( plan_sum( s, small )->how.find( n == 97 ? "rader " : "pfa " ) < 16 );
             CHECK( gathers( p->steps ) );
+            CHECK( error( *p, s ) < 1e-12 );
+        }
+    }
+}
+
+bool has( const std::vector<Loop_step>& steps, bool ( *step )( const Loop_step& ) )
+{
+    return std::ranges::any_of( steps, [&]( const Loop_step& s ) { return step( s ) || has( s.body, step ); } );
+}
+
+TEST_CASE( "a_planned_real_dft_runs_as_loops_over_its_conjugate_half", "[linear][sums]" )
+{
+    // Forward and inverse at 8-point leaves: 256 and 97 pair their halves, 1019 is Bluestein's; 96 and 1018 outputs too.
+    Plan_options small;
+    small.leaf_max = 8;
+    for( const auto [n, m] : { std::pair { 256u, 256u }, { 97u, 97u }, { 1019u, 1019u }, { 97u, 96u }, { 1019u, 1018u } } )
+    {
+        for( const u32 c : { 1u, n - 1 } )
+        {
+            Sum s                               = exponent_kernel( n, m, n, c );
+            s.real                              = true;
+            const std::optional<Loop_program> p = plan_loops( s, small );
+            REQUIRE( p );
+            INFO( n << " " << m << " " << c );
+            CHECK( p->loops > 0 );
+            CHECK( has( p->steps, []( const Loop_step& s ) { return s.kind == Loop_kind::Gather && s.conj; } ) );
+            CHECK(
+                has( p->steps, []( const Loop_step& s ) { return s.kind == Loop_kind::Untangle; } ) == ( n == m && n < 1019 )
+            );
             CHECK( error( *p, s ) < 1e-12 );
         }
     }

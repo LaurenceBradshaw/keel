@@ -98,14 +98,16 @@ struct Stride
 
 enum class Loop_kind : u8
 {
-    Leaf,    // leaves[leaf] from its `count` inputs at `in` to `out`
-    Loop,    // `body` `count` times, its index loop `loop`
-    Twiddle, // element a R + b of `out` times tables[table][c a b mod M], for 0 < a < count, 0 < b < R
-    Scale,   // out[i] = in[i] times tables[table][i], for i < count
-    Gather,  // out[i] = in[indices[table][i]], for i < count
-    Add,     // out[i] = in[i] + also[i], for i < count
-    Copy,    // out[i] = in[i], for i < count
-    Call,    // calls[leaf]'s program from `count` inputs at `in` to `out`, both of step 1; conjugated when `conj`
+    Leaf,     // leaves[leaf] from its `count` inputs at `in` to `out`
+    Loop,     // `body` `count` times, its index loop `loop`
+    Twiddle,  // element a R + b of `out` times tables[table][c a b mod M], for 0 < a < count, 0 < b < R
+    Scale,    // out[i] = in[i] times tables[table][i], for i < count
+    Gather,   // out[i] = in[indices[table][i]], for i < count; conjugated when `conj`
+    Add,      // out[i] = in[i] + also[i], for i < count
+    Copy,     // out[i] = in[i], for i < count
+    Call,     // calls[leaf]'s program from `count` inputs at `in` to `out`, both of step 1; conjugated when `conj`
+    Pack,     // out[i] = in[i] + i also[i], both real, for i < count
+    Untangle, // Z at `in` into the two real copies' sums at `out` and `also`, for k < count, as `paired` does
 };
 
 struct Loop_step
@@ -120,6 +122,7 @@ struct Loop_step
     u64                    M     = 0;
     u64                    c     = 0;
     bool                   conj  = false;
+    bool                   real  = false; // only in's real part is read
     Stride                 in {};
     Stride                 out {};
     Stride                 also {};
@@ -127,7 +130,8 @@ struct Loop_step
 
 struct Loop_call;
 
-// A plan as loops over straight-line leaves. Buffer 0 is x and 1 is y; the rest are temporaries of buffers[b] elements.
+// A plan as loops over straight-line leaves. Buffer 0 is x, real for a real sum, and 1 is y; the rest are
+// temporaries of buffers[b] elements. A real sum reads only the real parts of its input.
 struct Loop_program
 {
     std::vector<Planned>                        leaves;
@@ -158,6 +162,7 @@ struct Loop_call
 // Small kernels are solved. Nothing when no rule takes the sum.
 std::optional<Planned> plan_sum( const Sum& sum, const Plan_options& options = {} );
 
-// The same plan with each split, chirp, convolution, pfa and rader wider than leaf_max a loop over its parts; a complex x only.
+// The same plan with each split, chirp, convolution, pfa, rader, hermitian and paired wider than leaf_max a loop over its
+// parts.
 std::optional<Loop_program> plan_loops( const Sum& sum, const Plan_options& options = {} );
 } // namespace keel

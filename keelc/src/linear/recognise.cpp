@@ -2544,7 +2544,7 @@ private:
         return { one( streams_[a] ), b ? one( streams_[*b] ) : Param_path {} };
     }
 
-    // y = x * K: complex from the four real forms, or real from one.
+    // y = x * K: complex from the four real forms, complex from a real x's two, or real from one.
     std::optional<Read_kernel> collect_sum() const
     {
         std::vector<u32> in, out;
@@ -2559,8 +2559,9 @@ private:
         };
         std::ranges::sort( in, order );
         std::ranges::sort( out, order );
-        const u32 parts = static_cast<u32>( in.size() );
-        if( parts < 1 || parts > 2 || out.size() != parts || stores_.size() != parts )
+        const u32  parts = static_cast<u32>( out.size() );
+        const bool real  = in.size() == 1;
+        if( parts < 1 || parts > 2 || in.size() < 1 || in.size() > parts || stores_.size() != parts )
         {
             return std::nullopt;
         }
@@ -2608,8 +2609,7 @@ private:
                     continue;
                 }
                 const std::optional<u32> b = one_bit( key.bound );
-                if( !b || *b == *k || ( j && *b != *j ) || key.index != sym::symbol( *b ) ||
-                    ( parts == 1 && key.stream != in[0] ) )
+                if( !b || *b == *k || ( j && *b != *j ) || key.index != sym::symbol( *b ) || ( real && key.stream != in[0] ) )
                 {
                     return std::nullopt;
                 }
@@ -2633,7 +2633,7 @@ private:
         }
 
         // re y = A re x - B im x and im y = B re x + A im x for a complex K = A + i B.
-        if( parts == 2 && ( !sym::sum( c[0][0], c[1][1], -1 ).terms.empty() || !sym::sum( c[0][1], c[1][0] ).terms.empty() ) )
+        if( !real && ( !sym::sum( c[0][0], c[1][1], -1 ).terms.empty() || !sym::sum( c[0][1], c[1][0] ).terms.empty() ) )
         {
             return std::nullopt;
         }
@@ -2645,7 +2645,7 @@ private:
             K           = sym::lifted( K, M );
             b           = sym::lifted( b, M );
         }
-        Read_kernel r { .sum = { static_cast<u32>( turns_[*j] ), static_cast<u32>( turns_[*k] ), K.M, {}, parts == 1 } };
+        Read_kernel r { .sum = { static_cast<u32>( turns_[*j] ), static_cast<u32>( turns_[*k] ), K.M, {}, real } };
         const auto  in_jk = [&]( const sym::Poly& e )
         {
             Exponent out;
@@ -2668,7 +2668,7 @@ private:
         };
         for( u64 x = 0; x < r.sum.n; ++x )
         {
-            r.inputs.push_back( stream_path( in[0], parts == 2 ? std::optional( in[1] ) : std::nullopt, x ) );
+            r.inputs.push_back( stream_path( in[0], real ? std::nullopt : std::optional( in[1] ), x ) );
         }
         for( u64 y = 0; y < r.sum.m; ++y )
         {
@@ -3277,6 +3277,18 @@ TEST_CASE( "a DFT loop nest reads as its kernel", "[linear][recognise]" )
     CHECK( r->inputs.size() == 96 );
     CHECK( r->outputs.size() == 96 );
     CHECK( r->input.muls == 4 * 96 * 96 );
+}
+
+TEST_CASE( "a DFT loop of real x reads as a real sum", "[linear][recognise]" )
+{
+    const std::optional<Read_kernel> r =
+        read_first( dft( "-2.0 * 3.141592653589793 * cast<f64>( j * k % 96 ) / 96.0", "sr += re[j] * c;\n si += re[j] * s;" ) );
+    REQUIRE( r );
+    Sum want  = exponent_kernel( 96, 96, 96, 1 );
+    want.real = true;
+    CHECK( r->sum == want );
+    CHECK( !r->inputs[0].imaginary.local.is_valid() );
+    CHECK( r->outputs[0].imaginary.local.is_valid() );
 }
 
 TEST_CASE( "a DFT loop's starting values read as its offset", "[linear][recognise]" )
