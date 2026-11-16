@@ -1061,6 +1061,9 @@ elsewhere would break a function that compiled yesterday.
 (`numeric`, or `integral` for `%`, the bitwise operators and the shifts), and `x` is checked against
 `T`, so a literal adopts it as above.
 
+**Unary operators on a `T`**: `~x` needs `integral`, and `-x` needs `floating`, since `numeric` and
+`integral` admit unsigned types, which have no negation.
+
 **The conditional expression is `?:`, and `if` has no value.** An expectation reaches both arms;
 with none, the arms must match exactly, with no widening between them. It may be the root of a
 place that is read, `( c ? a : b ).t`.

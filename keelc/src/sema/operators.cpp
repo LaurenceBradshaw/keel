@@ -226,16 +226,7 @@ Binary_result Operators::result_of_binary(
             const std::string_view required = interface.is_valid() ? table_.name( interface ) : name_of_bound( *bound );
             const std::string_view promise  = against_a_number ? "numeric" : required;
 
-            // The aggregate's `T` takes its clause on the aggregate, which may already have one.
-            const Node_id     owner = bounds_.owner_of( parameter );
-            const std::string fix   = owner.is_valid() && owner != current_function
-                                          ? bounds_.forwarded_help( parameter, promise )
-                                          : fmt::format(
-                                              "write `where {} : {}` on `{}`",
-                                              table_.name( parameter ),
-                                              promise,
-                                              interner_.text( ast_.name( current_function ) )
-                                          );
+            const std::string fix = where_help( parameter, promise, current_function );
 
             return reject(
                 against_a_number ? fmt::format(
@@ -393,7 +384,20 @@ Binary_result Operators::result_of_binary(
     return { common };
 }
 
-Type_id Operators::result_of_unary( Token_kind op, Type_id operand_type, Span at )
+// The aggregate's `T` takes its clause on the aggregate, which may already have one.
+std::string Operators::where_help( Type_id parameter, std::string_view promise, Node_id current_function ) const
+{
+    const Node_id owner = bounds_.owner_of( parameter );
+    return owner.is_valid() && owner != current_function ? bounds_.forwarded_help( parameter, promise )
+                                                         : fmt::format(
+                                                               "write `where {} : {}` on `{}`",
+                                                               table_.name( parameter ),
+                                                               promise,
+                                                               interner_.text( ast_.name( current_function ) )
+                                                           );
+}
+
+Type_id Operators::result_of_unary( Token_kind op, Type_id operand_type, Node_id current_function, Span at )
 {
     const Unary_rule* rule = unary_rule_for( op );
 
@@ -413,6 +417,26 @@ Type_id Operators::result_of_unary( Token_kind op, Type_id operand_type, Span at
 
         return {};
     };
+
+    // D11: a `T` has what its `where` clause promises. `-` needs `floating`, since `numeric` and
+    // `integral` admit unsigned types.
+    if( table_.is_parameter( operand_type ) && rule->operands != Operands::Bool )
+    {
+        const Bound needed = op == Token_kind::Minus ? Bound::Floating : Bound::Integral;
+
+        if( !bounds_.has_bound( operand_type, needed ) )
+        {
+            return reject( fmt::format(
+                "`{}` needs `{}`{}; {}",
+                token_kind_spelling( op ),
+                name_of_bound( needed ),
+                needed == Bound::Floating ? ", as `numeric` and `integral` admit unsigned types" : "",
+                where_help( operand_type, name_of_bound( needed ), current_function )
+            ) );
+        }
+
+        return operand_type;
+    }
 
     if( !accepts( table_, rule->operands, operand_type ) )
     {
@@ -660,7 +684,9 @@ TEST_CASE( "operators_refuse_to_negate_an_unsigned_type", "[sema][operator]" )
     // D5: C++ answers 4294967295 for `-u32( 1 )`, which is the silent wrong answer Keel refuses.
     SECTION( "an unsigned operand has no representable negation" )
     {
-        REQUIRE( !operators.result_of_unary( Token_kind::Minus, types.table().integer( 32, false ), Span {} ).is_valid() );
+        REQUIRE(
+            !operators.result_of_unary( Token_kind::Minus, types.table().integer( 32, false ), Node_id {}, Span {} ).is_valid()
+        );
         REQUIRE( diags.error_count() == 1 );
     }
 
@@ -668,7 +694,7 @@ TEST_CASE( "operators_refuse_to_negate_an_unsigned_type", "[sema][operator]" )
     {
         const Type_id i32 = types.table().integer( 32, true );
 
-        REQUIRE( operators.result_of_unary( Token_kind::Minus, i32, Span {} ) == i32 );
+        REQUIRE( operators.result_of_unary( Token_kind::Minus, i32, Node_id {}, Span {} ) == i32 );
         REQUIRE( diags.error_count() == 0 );
     }
 
@@ -678,9 +704,9 @@ TEST_CASE( "operators_refuse_to_negate_an_unsigned_type", "[sema][operator]" )
         const Type_id u32       = types.table().integer( 32, false );
         const Type_id bool_type = types.table().builtin( Type_kind::Bool );
 
-        REQUIRE( operators.result_of_unary( Token_kind::Plus, u32, Span {} ) == u32 );
-        REQUIRE( operators.result_of_unary( Token_kind::Tilde, u32, Span {} ) == u32 );
-        REQUIRE( operators.result_of_unary( Token_kind::Bang, bool_type, Span {} ) == bool_type );
+        REQUIRE( operators.result_of_unary( Token_kind::Plus, u32, Node_id {}, Span {} ) == u32 );
+        REQUIRE( operators.result_of_unary( Token_kind::Tilde, u32, Node_id {}, Span {} ) == u32 );
+        REQUIRE( operators.result_of_unary( Token_kind::Bang, bool_type, Node_id {}, Span {} ) == bool_type );
         REQUIRE( diags.error_count() == 0 );
     }
 }

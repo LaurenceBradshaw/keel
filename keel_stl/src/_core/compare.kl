@@ -39,7 +39,7 @@ bool approx_equal<T>( const ref T[] a, const ref T[] b, T rtol, T atol ) where T
         }
 
         T d = a[i] > b[i] ? a[i] - b[i] : b[i] - a[i];
-        T m = b[i] < 0.0 ? 0.0 - b[i] : b[i];
+        T m = b[i] < 0.0 ? -b[i] : b[i];
         if( d - d != 0.0 || d > atol + rtol * m ) // `d - d` is a NaN when `d` is a NaN or infinite
         {
             return false;

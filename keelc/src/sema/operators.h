@@ -77,8 +77,8 @@ public:
 
     // The four operators the rule table holds - `-`, `+`, `!`, `~`. Address-of and dereference are
     // not among them: both change the result type rather than keeping the operand's, and the first
-    // is a question about places rather than about types.
-    Type_id result_of_unary( Token_kind op, Type_id operand, Span at );
+    // is a question about places rather than about types. The node is as for result_of_binary.
+    Type_id result_of_unary( Token_kind op, Type_id operand, Node_id current_function, Span at );
 
     // The ternary, once both arms are typed. They must simply agree.
     Type_id result_of_conditional( Type_id then_type, Type_id else_type, Span at );
@@ -93,6 +93,9 @@ public:
     void refuse_single_pointer_arithmetic( Type_id pointer, Span at );
 
 private:
+    // How to add `promise` to `parameter`'s `where` clause.
+    std::string where_help( Type_id parameter, std::string_view promise, Node_id current_function ) const;
+
     const Ast&               ast_;
     const Interner&          interner_;
     const Type_table&        table_;

@@ -2438,6 +2438,48 @@ TEST_CASE( "type_checker_checks_a_generic_body_against_its_parameters", "[sema][
 }
 
 // An interface in a `where` clause is met by a declared `implements`, or by a parameter naming it in turn.
+TEST_CASE( "bounds_give_a_parameter_its_unary_operators", "[sema][generic][bound]" )
+{
+    SECTION( "`-` under `floating`, `~` under `integral`" )
+    {
+        const Typed p( "T neg<T>( T a ) where T : floating { return -a; }\n"
+                       "T flip<T>( T a ) where T : integral { return ~a; }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+    }
+
+    SECTION( "`-` is refused under `numeric`, which admits unsigned types" )
+    {
+        const Typed p( "T neg<T>( T a ) where T : numeric { return -a; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE(
+            p.rendered().find(
+                "`-` needs `floating`, as `numeric` and `integral` admit unsigned types; write `where T : floating` on `neg`"
+            ) != std::string::npos
+        );
+    }
+
+    SECTION( "`~` is refused without `integral`" )
+    {
+        const Typed p( "T flip<T>( T a ) where T : floating { return ~a; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "`~` needs `integral`; write `where T : integral` on `flip`" ) != std::string::npos );
+    }
+
+    SECTION( "`!` on a `T` still asks for a `bool`" )
+    {
+        const Typed p( "bool no<T>( T a ) where T : numeric { return !a; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "no operator `!` for `T`" ) != std::string::npos );
+    }
+}
+
 TEST_CASE( "bounds_meet_an_interface_only_by_implements", "[sema][interfaces]" )
 {
     const std::string declared = "interface Shape { f64 area() const; };\n"

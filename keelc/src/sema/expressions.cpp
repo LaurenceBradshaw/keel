@@ -2379,7 +2379,7 @@ Type_id Expressions::infer_unary( Node_id id )
         return types_.record( id, table_.get( operand_type ).element );
     }
 
-    const Type_id result = operators_.result_of_unary( op, operand_type, ast_.span( id ) );
+    const Type_id result = operators_.result_of_unary( op, operand_type, home_function(), ast_.span( id ) );
 
     if( !result.is_valid() )
     {
@@ -5599,7 +5599,7 @@ Type_id Expressions::check( Node_id id, Type_id expected )
                 return types_.record( id, expected );
             }
 
-            const Type_id result = operators_.result_of_unary( ast_.op( id ), expected, ast_.span( id ) );
+            const Type_id result = operators_.result_of_unary( ast_.op( id ), expected, home_function(), ast_.span( id ) );
 
             if( !result.is_valid() )
             {
