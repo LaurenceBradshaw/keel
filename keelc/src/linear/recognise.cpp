@@ -386,6 +386,38 @@ std::optional<std::pair<i64, u64>> rational( f64 x )
     }
     return std::nullopt;
 }
+
+// The simplest p/q, q at most 2^20, whose rounded f64 is x: a decimal of up to 6 places is its fraction.
+std::optional<std::pair<i64, u64>> fraction( f64 x )
+{
+    if( !std::isfinite( x ) || std::abs( x ) > 0x1p32 )
+    {
+        return std::nullopt;
+    }
+    i64 h0 = 0, h1 = 1, k0 = 1, k1 = 0;
+    f64 r = x;
+    for( u32 n = 0; n < 64; ++n )
+    {
+        const f64 a = std::floor( r );
+        if( a * static_cast<f64>( k1 ) + static_cast<f64>( k0 ) > 0x1p20 )
+        {
+            return std::nullopt;
+        }
+        const i64 h2 = static_cast<i64>( a ) * h1 + h0;
+        const i64 k2 = static_cast<i64>( a ) * k1 + k0;
+        h0 = h1, h1 = h2, k0 = k1, k1 = k2;
+        if( static_cast<f64>( h1 ) / static_cast<f64>( k1 ) == x )
+        {
+            return std::pair<i64, u64> { h1, static_cast<u64>( k1 ) };
+        }
+        if( r == a )
+        {
+            return std::nullopt;
+        }
+        r = 1 / ( r - a );
+    }
+    return std::nullopt;
+}
 } // namespace sym
 
 using sym::i128;
@@ -682,7 +714,7 @@ private:
         );
     }
 
-    // A short dyadic as it stands, else within rounding of 2^s cos(2 pi k / M).
+    // A short dyadic as it stands, else a fraction whose rounding it is, else within rounding of 2^s cos(2 pi k / M).
     std::optional<Exact> exact_literal( f64 x )
     {
         const u64 key = std::bit_cast<u64>( x );
@@ -701,6 +733,10 @@ private:
                     found = rational( static_cast<i64>( y ), i64 { 1 } << s );
                 }
             }
+        }
+        if( const auto q = found ? std::nullopt : sym::fraction( x ) )
+        {
+            found = rational( q->first, static_cast<i64>( q->second ) );
         }
         // 2^s cos(2 pi k / M), so a folded sqrt 2 or sqrt 3 is found too.
         for( u32 scale = 0; scale <= 3 && !found; ++scale )
@@ -3213,6 +3249,21 @@ TEST_CASE( "recognise_reads_cos_constants_and_roots_exactly", "[linear][recognis
     CHECK( std::abs( r.field.value( r.rows[2][2] ) - std::sqrt( 3.0 ) ) < 1e-15 );
 }
 
+// 0.1 is 1/10, so 0.2 is twice it and 0.3 their sum; 1.0 / 3.0 folds to 1/3.
+TEST_CASE( "recognise_reads_a_decimal_as_its_fraction", "[linear][recognise]" )
+{
+    const Attempt a( "@real_arithmetic\n"
+                     "void f( const ref f64[2] x, ref f64[2] y )\n"
+                     "{\n"
+                     "    y[0] = 0.1 * x[0] + 0.2 * x[1];\n"
+                     "    y[1] = 0.3 * x[0] + x[1] / 3.0;\n"
+                     "}\n" );
+    Recognised    r = a.map();
+    CHECK( r.rows[0][1] == r.field.add( r.rows[0][0], r.rows[0][0] ) );
+    CHECK( r.rows[1][0] == r.field.add( r.rows[0][0], r.rows[0][1] ) );
+    CHECK( r.field.mul( r.rows[1][1], r.field.rational( 3 ) ) == r.field.rational( 1 ) );
+}
+
 TEST_CASE( "recognise_reads_a_const_global_table", "[linear][recognise]" )
 {
     const Attempt     a( "@real_arithmetic\n"
@@ -3261,7 +3312,7 @@ TEST_CASE( "recognise_ends_with_the_operation_that_stops_it", "[linear][recognis
     CHECK( ending( "i64 f( i64 x ) { return x / 3; }\n" ) == Ending::Division );
     CHECK( ending( "i64 f( i64 x ) { return x % 3; }\n" ) == Ending::Remainder );
     CHECK( ending( "i64 f( i32 x ) { return cast<i64>( x ); }\n" ) == Ending::Cast );
-    CHECK( ending( "f64 f( f64 x ) { return x * 0.1; }\n" ) == Ending::Coefficient );
+    CHECK( ending( "f64 f( f64 x ) { return x * 0.123456789; }\n" ) == Ending::Coefficient );
     CHECK( ending( "f64 f( f64 x ) { return x * g; }\nf64 g = 0.5;\n" ) == Ending::Global );
     CHECK(
         ending( "f64 f( f64 x ) { f64 s = 0.0; for( u64 i = 0; i < 1000; i += 1 ) { s += x; } return s; }\n", 100 ) ==
