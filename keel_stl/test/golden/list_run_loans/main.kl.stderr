@@ -1,0 +1,7 @@
+error: this could change `l` while `r` still borrows from it
+ --> list_run_loans/main.kl:9:5
+  |
+9 |     l.push( 2 );
+  |     ^ `r` is used after this; it was bound at 8:5
+
+1 error generated

@@ -1,0 +1,7 @@
+error: `l` is `const`
+ --> list_run_const/main.kl:6:5
+  |
+6 |     l.as_run()[0] = 1;
+  |     ^ remove `const` to modify it
+
+1 error generated

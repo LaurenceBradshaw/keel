@@ -1,0 +1,12 @@
+// A list's run is as writable as the list, so not through a `const ref`.
+import kl::list;
+
+void through_const( const ref kl::list<i32> l )
+{
+    l.as_run()[0] = 1;
+}
+
+i32 main()
+{
+    return 0;
+}

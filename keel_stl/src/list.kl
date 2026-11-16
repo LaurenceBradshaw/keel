@@ -101,8 +101,8 @@ class list<T> implements iterable<T>, dynamic_memory<T>
 
     /// --- Reading ---
 
-    /// The elements borrowed as a read-only run. The list cannot change while the run is held.
-    public const ref T[] as_run() const
+    /// The elements borrowed as a run, writable where the list is. The list cannot grow while it is held.
+    public ref T[] as_run() const
     {
         unsafe
         {

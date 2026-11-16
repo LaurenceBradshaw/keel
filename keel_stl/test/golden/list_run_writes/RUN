@@ -1,0 +1,1 @@
+# stdout is C: compile it with $CC and require the program to exit as expected.

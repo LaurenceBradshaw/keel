@@ -1,0 +1,12 @@
+// The list cannot grow while its run is held, as the run would be left pointing at freed memory.
+import kl::list;
+
+i32 main()
+{
+    kl::list<i32> l = kl::list<i32>();
+    l.push( 1 );
+    ref i32[] r = l.as_run();
+    l.push( 2 );
+    r[0] = 3;
+    return 0;
+}

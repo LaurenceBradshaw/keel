@@ -1,0 +1,25 @@
+// A list's run is written in place, through a `ref` local and by a loop.
+import kl::list;
+
+i32 main()
+{
+    kl::list<i32> l = kl::list<i32>();
+    l.push( 1 );
+    l.push( 2 );
+    l.push( 3 );
+
+    ref i32[] r = l.as_run();
+    r[0] = 7;
+    for( u64 i = 0; i < r.size; i++ )
+    {
+        r[i] = r[i] * 2;
+    }
+
+    if( l[0] != 14 || l[1] != 4 || l[2] != 6 )
+    {
+        return 1;
+    }
+
+    l.as_run()[2] = 9;
+    return l[2] == 9 ? 0 : 2;
+}
