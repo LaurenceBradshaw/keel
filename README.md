@@ -228,7 +228,6 @@ i32 main()
 
 ```cpp
 import kl::math;
-import kl::trig;
 
 // A DFT written as its definition. At -O3 each N's body becomes a straight-line circuit of adds and
 // multiplies by constants, the cheapest an e-graph finds for that map: no sin or cos is left.

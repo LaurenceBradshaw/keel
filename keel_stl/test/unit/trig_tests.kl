@@ -1,7 +1,6 @@
-// `kl::trig`: each function against C's, and at its special values.
+// `kl::math`'s trigonometry: each function against C's, and at its special values.
 import kl::math;
 import kl::test::context;
-import kl::trig;
 
 // Trigonometry, against C's, within an ulp.
 extern f64 sin( f64 x );

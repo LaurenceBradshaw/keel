@@ -99,15 +99,6 @@ end of input. A read error is also <code>false</code>; the careful path is <code
 </dl>
 </section>
 <section class="module">
-<h3><a href="hash_control.html">hash_control</a></h3>
-<dl class="summaries">
-<dt><a href="hash_control.html#hash_control"><code>hash_control</code></a> <span class="kind">class</span></dt>
-<dd>The control bytes, counts and key of a hash table, without its keys or values.</dd>
-<dt><a href="hash_control.html#hash_probe"><code>hash_probe</code></a> <span class="kind">class</span></dt>
-<dd>The slots of a <code>hash_control</code> whose tag matches a hash, in probe order.</dd>
-</dl>
-</section>
-<section class="module">
 <h3><a href="iterable.html">iterable</a></h3>
 <dl class="summaries">
 <dt><a href="iterable.html#iterable"><code>iterable</code></a> <span class="kind">interface</span></dt>
@@ -171,6 +162,21 @@ end of input. A read error is also <code>false</code>; the careful path is <code
 <dt><a href="math.html#pi"><code>pi</code></a> <span class="kind">global</span></dt>
 <dd>The <code>f64</code> nearest to the ratio of a circle's circumference to its diameter.</dd>
 </dl>
+<h4 class="divider">Trigonometry</h4>
+<dl class="summaries">
+<dt><a href="math.html#sin"><code>sin</code></a> <span class="kind">function</span></dt>
+<dd>The sine of an angle in radians.</dd>
+<dt><a href="math.html#cos"><code>cos</code></a> <span class="kind">function</span></dt>
+<dd>The cosine of an angle in radians.</dd>
+<dt><a href="math.html#tan"><code>tan</code></a> <span class="kind">function</span></dt>
+<dd>The tangent of an angle in radians.</dd>
+<dt><a href="math.html#asin"><code>asin</code></a> <span class="kind">function</span></dt>
+<dd>The angle in [-pi/2, pi/2] whose sine is given.</dd>
+<dt><a href="math.html#acos"><code>acos</code></a> <span class="kind">function</span></dt>
+<dd>The angle in [0, pi] whose cosine is given.</dd>
+<dt><a href="math.html#atan"><code>atan</code></a> <span class="kind">function</span></dt>
+<dd>The angle in [-pi/2, pi/2] whose tangent is given.</dd>
+</dl>
 </section>
 <section class="module">
 <h3><a href="optional.html">optional</a></h3>
@@ -193,25 +199,6 @@ end of input. A read error is also <code>false</code>; the careful path is <code
 <dd>An empty optional comes before any that holds a value; two that hold values order by them.</dd>
 <dt><a href="optional.html#hashable-for-optional&lt;T&gt;-where-T-:-hashable"><code>hashable for optional&lt;T&gt; where T : hashable</code></a> <span class="kind">implements</span></dt>
 <dd>An optional hashes whether it holds a value, then the value.</dd>
-</dl>
-</section>
-<section class="module">
-<h3><a href="ordered_control.html">ordered_control</a></h3>
-<dl class="summaries">
-<dt><a href="ordered_control.html#ORDERED_KEYS"><code>ORDERED_KEYS</code></a> <span class="kind">global</span></dt>
-<dd></dd>
-<dt><a href="ordered_control.html#ORDERED_MIN"><code>ORDERED_MIN</code></a> <span class="kind">global</span></dt>
-<dd></dd>
-<dt><a href="ordered_control.html#ORDERED_NO_NODE"><code>ORDERED_NO_NODE</code></a> <span class="kind">global</span></dt>
-<dd></dd>
-<dt><a href="ordered_control.html#ORDERED_DEPTH"><code>ORDERED_DEPTH</code></a> <span class="kind">global</span></dt>
-<dd></dd>
-<dt><a href="ordered_control.html#key_run"><code>key_run</code></a> <span class="kind">struct</span></dt>
-<dd><code>count</code> key slots moving from <code>from..</code> to <code>to..</code>. The two may overlap.</dd>
-<dt><a href="ordered_control.html#key_moves"><code>key_moves</code></a> <span class="kind">struct</span></dt>
-<dd>Up to three runs, applied in order. A run not needed has <code>count</code> 0.</dd>
-<dt><a href="ordered_control.html#ordered_control"><code>ordered_control</code></a> <span class="kind">class</span></dt>
-<dd>The shape of a B-tree: each node's children, key count and subtree size, and the free nodes.</dd>
 </dl>
 </section>
 <section class="module">
@@ -379,24 +366,65 @@ against another's. Use <code>instant</code> for measuring.</dd>
 <code>instant</code>.</dd>
 </dl>
 </section>
+<h2><span class="kind">package</span> kl::_core</h2>
+<div class="doc">
+<p>kl's shared kernels: the pieces its public modules are built from.</p>
+<p>Public so that kl's modules can share them, not meant for programs: a kernel's contract is
+narrower than its name suggests, and it may change with the module it serves.</p>
+</div>
 <section class="module">
-<h3><a href="trig.html">trig</a></h3>
+<h3><a href="_core.hash_control.html">_core::hash_control</a></h3>
 <dl class="summaries">
+<dt><a href="_core.hash_control.html#hash_control"><code>hash_control</code></a> <span class="kind">class</span></dt>
+<dd>The control bytes, counts and key of a hash table, without its keys or values.</dd>
+<dt><a href="_core.hash_control.html#hash_probe"><code>hash_probe</code></a> <span class="kind">class</span></dt>
+<dd>The slots of a <code>hash_control</code> whose tag matches a hash, in probe order.</dd>
 </dl>
-<h4 class="divider">Trigonometry</h4>
+</section>
+<section class="module">
+<h3><a href="_core.ordered_control.html">_core::ordered_control</a></h3>
 <dl class="summaries">
-<dt><a href="trig.html#sin"><code>sin</code></a> <span class="kind">function</span></dt>
-<dd>The sine of an angle in radians.</dd>
-<dt><a href="trig.html#cos"><code>cos</code></a> <span class="kind">function</span></dt>
-<dd>The cosine of an angle in radians.</dd>
-<dt><a href="trig.html#tan"><code>tan</code></a> <span class="kind">function</span></dt>
-<dd>The tangent of an angle in radians.</dd>
-<dt><a href="trig.html#asin"><code>asin</code></a> <span class="kind">function</span></dt>
-<dd>The angle in [-π/2, π/2] whose sine is given.</dd>
-<dt><a href="trig.html#acos"><code>acos</code></a> <span class="kind">function</span></dt>
-<dd>The angle in [0, π] whose cosine is given.</dd>
-<dt><a href="trig.html#atan"><code>atan</code></a> <span class="kind">function</span></dt>
-<dd>The angle in [-π/2, π/2] whose tangent is given.</dd>
+<dt><a href="_core.ordered_control.html#ORDERED_KEYS"><code>ORDERED_KEYS</code></a> <span class="kind">global</span></dt>
+<dd></dd>
+<dt><a href="_core.ordered_control.html#ORDERED_MIN"><code>ORDERED_MIN</code></a> <span class="kind">global</span></dt>
+<dd></dd>
+<dt><a href="_core.ordered_control.html#ORDERED_NO_NODE"><code>ORDERED_NO_NODE</code></a> <span class="kind">global</span></dt>
+<dd></dd>
+<dt><a href="_core.ordered_control.html#ORDERED_DEPTH"><code>ORDERED_DEPTH</code></a> <span class="kind">global</span></dt>
+<dd></dd>
+<dt><a href="_core.ordered_control.html#key_run"><code>key_run</code></a> <span class="kind">struct</span></dt>
+<dd><code>count</code> key slots moving from <code>from..</code> to <code>to..</code>. The two may overlap.</dd>
+<dt><a href="_core.ordered_control.html#key_moves"><code>key_moves</code></a> <span class="kind">struct</span></dt>
+<dd>Up to three runs, applied in order. A run not needed has <code>count</code> 0.</dd>
+<dt><a href="_core.ordered_control.html#ordered_control"><code>ordered_control</code></a> <span class="kind">class</span></dt>
+<dd>The shape of a B-tree: each node's children, key count and subtree size, and the free nodes.</dd>
+</dl>
+</section>
+<section class="module">
+<h3><a href="_core.trig_core.html">_core::trig_core</a></h3>
+<dl class="summaries">
+<dt><a href="_core.trig_core.html#sine_kernel"><code>sine_kernel</code></a> <span class="kind">function</span></dt>
+<dd>sin of <code>x + y</code> on [-pi/4, pi/4], <code>y</code> the tail of <code>x</code> when <code>tail</code>.</dd>
+<dt><a href="_core.trig_core.html#cosine_kernel"><code>cosine_kernel</code></a> <span class="kind">function</span></dt>
+<dd>cos of <code>x + y</code> on [-pi/4, pi/4].</dd>
+<dt><a href="_core.trig_core.html#tangent_kernel"><code>tangent_kernel</code></a> <span class="kind">function</span></dt>
+<dd>tan of <code>x + y</code> on [-pi/4, pi/4] when <code>iy</code> is 1, and -1/tan when it is -1.</dd>
+<dt><a href="_core.trig_core.html#arcsine_ratio"><code>arcsine_ratio</code></a> <span class="kind">function</span></dt>
+<dd>The rational approximation p/q that asin and acos share, at <code>t</code>.</dd>
+<dt><a href="_core.trig_core.html#reduction"><code>reduction</code></a> <span class="kind">struct</span></dt>
+<dd><code>x</code> less the nearest multiple <code>n</code> of pi/2, as <code>hi + lo</code>.</dd>
+<dt><a href="_core.trig_core.html#reduced"><code>reduced</code></a> <span class="kind">function</span></dt>
+<dd><code>x</code> reduced by pi/2, for <code>|x|</code> past pi/4; an infinity or a NaN gives NaN.</dd>
+<dt><a href="_core.trig_core.html#high_word"><code>high_word</code></a> <span class="kind">function</span></dt>
+<dd>The high 32 bits of <code>x</code>: its sign, exponent and top of its fraction.</dd>
+<dt><a href="_core.trig_core.html#low_word"><code>low_word</code></a> <span class="kind">function</span></dt>
+<dd>The low 32 bits of <code>x</code>'s fraction.</dd>
+<dt><a href="_core.trig_core.html#low_word_cleared"><code>low_word_cleared</code></a> <span class="kind">function</span></dt>
+<dd><code>x</code> with its low 32 bits cleared.</dd>
+<dt><a href="_core.trig_core.html#magnitude"><code>magnitude</code></a> <span class="kind">function</span></dt>
+<dd><code>x</code> with its sign cleared.</dd>
+<dt><a href="_core.trig_core.html#at"><code>at</code></a> <span class="kind">function</span></dt>
+<dd><code>i</code> below a power-of-two <code>size</code>, masked so the index needs no bounds check.</dd>
 </dl>
 </section>
 <h2><span class="kind">package</span> kl::test</h2>

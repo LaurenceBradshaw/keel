@@ -1,11 +1,10 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// This file is ported from FreeBSD's msun: lib/msun/src/k_sin.c, k_cos.c, k_tan.c,
-// s_sin.c, s_cos.c, s_tan.c, e_rem_pio2.c, k_rem_pio2.c, e_asin.c, e_acos.c and s_atan.c. Those
-// files carry the notices below, reproduced as they appear there.
+// This file is ported from FreeBSD's msun: lib/msun/src/k_sin.c, k_cos.c, k_tan.c, e_rem_pio2.c,
+// k_rem_pio2.c and e_asin.c. Those files carry the notices below, reproduced as they appear there.
 //
-// k_sin.c, k_cos.c, e_rem_pio2.c, k_rem_pio2.c, e_asin.c and e_acos.c:
+// k_sin.c, k_cos.c, e_rem_pio2.c, k_rem_pio2.c and e_asin.c:
 //
 // ====================================================
 // Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
@@ -18,20 +17,8 @@
 //
 // e_rem_pio2.c adds: Optimized by Bruce D. Evans.
 //
-// s_sin.c, s_cos.c, s_tan.c and s_atan.c:
-//
-// ====================================================
-// Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
-//
-// Developed at SunPro, a Sun Microsystems, Inc. business.
-// Permission to use, copy, modify, and distribute this
-// software is freely granted, provided that this notice
-// is preserved.
-// ====================================================
-//
 // k_tan.c:
 //
-// ====================================================
 // Copyright 2004 Sun Microsystems, Inc.  All Rights Reserved.
 //
 // Permission to use, copy, modify, and distribute this
@@ -39,250 +26,10 @@
 // is preserved.
 // ====================================================
 
-// Trigonometry on `f64`, in radians.
-import math;
+// The kernels and argument reduction behind `kl::math`'s trigonometry.
 
-/// --- Trigonometry ---
-
-/// The sine of an angle in radians.
-///
-/// Within an ulp of the true value. An infinity or a NaN gives NaN, and `-0.0` stays `-0.0`.
-@trig_sin
-f64 sin( f64 x )
-{
-    u32 ix = high_word( x ) & 0x7fffffff;
-    if( ix <= 0x3fe921fb )
-    {
-        if( ix < 0x3e500000 )
-        {
-            return x;
-        }
-        return sine_kernel( x, 0.0, false );
-    }
-    if( ix >= 0x7ff00000 )
-    {
-        return x - x;
-    }
-    reduction r = reduced( x );
-    i32 quadrant = r.n & 3;
-    if( quadrant == 0 )
-    {
-        return sine_kernel( r.hi, r.lo, true );
-    }
-    if( quadrant == 1 )
-    {
-        return cosine_kernel( r.hi, r.lo );
-    }
-    if( quadrant == 2 )
-    {
-        return -sine_kernel( r.hi, r.lo, true );
-    }
-    return -cosine_kernel( r.hi, r.lo );
-}
-
-/// The cosine of an angle in radians.
-///
-/// Within an ulp of the true value. An infinity or a NaN gives NaN.
-@trig_cos
-f64 cos( f64 x )
-{
-    u32 ix = high_word( x ) & 0x7fffffff;
-    if( ix <= 0x3fe921fb )
-    {
-        if( ix < 0x3e46a09e )
-        {
-            return 1.0;
-        }
-        return cosine_kernel( x, 0.0 );
-    }
-    if( ix >= 0x7ff00000 )
-    {
-        return x - x;
-    }
-    reduction r = reduced( x );
-    i32 quadrant = r.n & 3;
-    if( quadrant == 0 )
-    {
-        return cosine_kernel( r.hi, r.lo );
-    }
-    if( quadrant == 1 )
-    {
-        return -sine_kernel( r.hi, r.lo, true );
-    }
-    if( quadrant == 2 )
-    {
-        return -cosine_kernel( r.hi, r.lo );
-    }
-    return sine_kernel( r.hi, r.lo, true );
-}
-
-/// The tangent of an angle in radians.
-///
-/// Within an ulp of the true value. An infinity or a NaN gives NaN, and `-0.0` stays `-0.0`.
-@trig_tan
-f64 tan( f64 x )
-{
-    u32 ix = high_word( x ) & 0x7fffffff;
-    if( ix <= 0x3fe921fb )
-    {
-        if( ix < 0x3e400000 )
-        {
-            return x;
-        }
-        return tangent_kernel( x, 0.0, 1 );
-    }
-    if( ix >= 0x7ff00000 )
-    {
-        return x - x;
-    }
-    reduction r = reduced( x );
-    return tangent_kernel( r.hi, r.lo, 1 - ( ( r.n & 1 ) << 1 ) );
-}
-
-/// The angle in [-π/2, π/2] whose sine is given.
-///
-/// Within an ulp of the true value. Outside [-1, 1], or at NaN, it is NaN.
-f64 asin( f64 x )
-{
-    u32 hx = high_word( x );
-    u32 ix = hx & 0x7fffffff;
-    if( ix >= 0x3ff00000 )
-    {
-        if( ( ( ix - 0x3ff00000 ) | low_word( x ) ) == 0 )
-        {
-            return x * PIO2_HI + x * PIO2_LO;
-        }
-        return ( x - x ) / ( x - x );
-    }
-    if( ix < 0x3fe00000 )
-    {
-        if( ix < 0x3e500000 )
-        {
-            return x;
-        }
-        return x + x * arcsine_ratio( x * x );
-    }
-    f64 t = ( 1.0 - magnitude( x ) ) * 0.5;
-    f64 s = sqrt( t );
-    f64 angle = 0.0;
-    if( ix >= 0x3fef3333 )
-    {
-        angle = PIO2_HI - ( 2.0 * ( s + s * arcsine_ratio( t ) ) - PIO2_LO );
-    }
-    else
-    {
-        f64 w = low_word_cleared( s );
-        f64 c = ( t - w * w ) / ( s + w );
-        f64 p = 2.0 * s * arcsine_ratio( t ) - ( PIO2_LO - 2.0 * c );
-        f64 q = PIO4_HI - 2.0 * w;
-        angle = PIO4_HI - ( p - q );
-    }
-    return ( hx >> 31 ) == 0 ? angle : -angle;
-}
-
-/// The angle in [0, π] whose cosine is given.
-///
-/// Within an ulp of the true value. Outside [-1, 1], or at NaN, it is NaN.
-f64 acos( f64 x )
-{
-    u32 hx = high_word( x );
-    u32 ix = hx & 0x7fffffff;
-    if( ix >= 0x3ff00000 )
-    {
-        if( ( ( ix - 0x3ff00000 ) | low_word( x ) ) == 0 )
-        {
-            return ( hx >> 31 ) == 0 ? 0.0 : pi + 2.0 * PIO2_LO;
-        }
-        return ( x - x ) / ( x - x );
-    }
-    if( ix < 0x3fe00000 )
-    {
-        if( ix <= 0x3c600000 )
-        {
-            return PIO2_HI + PIO2_LO;
-        }
-        return PIO2_HI - ( x - ( PIO2_LO - x * arcsine_ratio( x * x ) ) );
-    }
-    if( ( hx >> 31 ) != 0 )
-    {
-        f64 z = ( 1.0 + x ) * 0.5;
-        f64 s = sqrt( z );
-        f64 w = arcsine_ratio( z ) * s - PIO2_LO;
-        return pi - 2.0 * ( s + w );
-    }
-    f64 z = ( 1.0 - x ) * 0.5;
-    f64 s = sqrt( z );
-    f64 df = low_word_cleared( s );
-    f64 c = ( z - df * df ) / ( s + df );
-    f64 w = arcsine_ratio( z ) * s + c;
-    return 2.0 * ( df + w );
-}
-
-/// The angle in [-π/2, π/2] whose tangent is given.
-///
-/// Within an ulp of the true value. NaN gives NaN, and `-0.0` stays `-0.0`.
-f64 atan( f64 x )
-{
-    u32 hx = high_word( x );
-    u32 ix = hx & 0x7fffffff;
-    bool negative = ( hx >> 31 ) != 0;
-    if( ix >= 0x44100000 )
-    {
-        if( ix > 0x7ff00000 || ( ix == 0x7ff00000 && low_word( x ) != 0 ) )
-        {
-            return x + x;
-        }
-        return negative ? -ATANHI[3] - ATANLO[3] : ATANHI[3] + ATANLO[3];
-    }
-    i32 id = -1;
-    if( ix < 0x3fdc0000 )
-    {
-        if( ix < 0x3e400000 )
-        {
-            return x;
-        }
-    }
-    else
-    {
-        x = magnitude( x );
-        if( ix < 0x3ff30000 )
-        {
-            if( ix < 0x3fe60000 )
-            {
-                id = 0;
-                x = ( 2.0 * x - 1.0 ) / ( 2.0 + x );
-            }
-            else
-            {
-                id = 1;
-                x = ( x - 1.0 ) / ( x + 1.0 );
-            }
-        }
-        else if( ix < 0x40038000 )
-        {
-            id = 2;
-            x = ( x - 1.5 ) / ( 1.0 + 1.5 * x );
-        }
-        else
-        {
-            id = 3;
-            x = -1.0 / x;
-        }
-    }
-    f64 z = x * x;
-    f64 w = z * z;
-    f64 s1 = z * ( AT[0] + w * ( AT[2] + w * ( AT[4] + w * ( AT[6] + w * ( AT[8] + w * AT[10] ) ) ) ) );
-    f64 s2 = w * ( AT[1] + w * ( AT[3] + w * ( AT[5] + w * ( AT[7] + w * AT[9] ) ) ) );
-    if( id < 0 )
-    {
-        return x - x * ( s1 + s2 );
-    }
-    f64 angle = ATANHI[at( id, 4 )] - ( ( x * ( s1 + s2 ) - ATANLO[at( id, 4 )] ) - x );
-    return negative ? -angle : angle;
-}
-
-// sin on [-π/4, π/4] of `x + y`, `y` the tail of `x` when `tail`.
-private f64 sine_kernel( f64 x, f64 y, bool tail )
+/// sin of `x + y` on [-pi/4, pi/4], `y` the tail of `x` when `tail`.
+f64 sine_kernel( f64 x, f64 y, bool tail )
 {
     f64 z = x * x;
     f64 w = z * z;
@@ -295,8 +42,8 @@ private f64 sine_kernel( f64 x, f64 y, bool tail )
     return x - ( ( z * ( 0.5 * y - v * r ) - y ) - v * S1 );
 }
 
-// cos on [-π/4, π/4] of `x + y`.
-private f64 cosine_kernel( f64 x, f64 y )
+/// cos of `x + y` on [-pi/4, pi/4].
+f64 cosine_kernel( f64 x, f64 y )
 {
     f64 z = x * x;
     f64 w = z * z;
@@ -306,8 +53,8 @@ private f64 cosine_kernel( f64 x, f64 y )
     return w + ( ( ( 1.0 - w ) - hz ) + ( z * r - x * y ) );
 }
 
-// tan on [-π/4, π/4] of `x + y` when `iy` is 1, and -1/tan when it is -1.
-private f64 tangent_kernel( f64 x, f64 y, i32 iy )
+/// tan of `x + y` on [-pi/4, pi/4] when `iy` is 1, and -1/tan when it is -1.
+f64 tangent_kernel( f64 x, f64 y, i32 iy )
 {
     u32 hx = high_word( x );
     bool big = ( hx & 0x7fffffff ) >= 0x3fe59428;
@@ -347,27 +94,28 @@ private f64 tangent_kernel( f64 x, f64 y, i32 iy )
     return t + a * ( s + t * v );
 }
 
-// p/q for asin and acos.
-private f64 arcsine_ratio( f64 t )
+/// The rational approximation p/q that asin and acos share, at `t`.
+f64 arcsine_ratio( f64 t )
 {
     f64 p = t * ( PS0 + t * ( PS1 + t * ( PS2 + t * ( PS3 + t * ( PS4 + t * PS5 ) ) ) ) );
     f64 q = 1.0 + t * ( QS1 + t * ( QS2 + t * ( QS3 + t * QS4 ) ) );
     return p / q;
 }
 
-// `x` less the nearest multiple `n` of π/2, as `hi + lo`; `|x|` is past π/4 and finite or not.
-private struct reduction
+/// `x` less the nearest multiple `n` of pi/2, as `hi + lo`.
+struct reduction
 {
     i32 n;
     f64 hi;
     f64 lo;
 };
 
-private reduction reduced( f64 x )
+/// `x` reduced by pi/2, for `|x|` past pi/4; an infinity or a NaN gives NaN.
+reduction reduced( f64 x )
 {
     u32 ix = high_word( x ) & 0x7fffffff;
     bool negative = ( high_word( x ) >> 31 ) != 0;
-    // Up to 9π/4, one or two steps of a fixed multiple, unless x is near one and cancels.
+    // Up to 9pi/4, one or two steps of a fixed multiple, unless x is near one and cancels.
     if( ix <= 0x400f6a7a )
     {
         if( ( ix & 0xfffff ) != 0x921fb )
@@ -434,7 +182,7 @@ private reduction near_multiple( f64 x, bool negative, i32 k )
     return reduction { -k, hi, ( z - hi ) + m * PIO2_1T };
 }
 
-// Cody–Waite, |x| below 2^20·π/2, in up to three rounds of 33 bits of π/2.
+// Cody-Waite, |x| below 2^20*pi/2, in up to three rounds of 33 bits of pi/2.
 private reduction medium( f64 x, u32 ix )
 {
     f64 rounded = x * INVPIO2 + TOINT;
@@ -463,7 +211,7 @@ private reduction medium( f64 x, u32 ix )
     return reduction { n, hi, ( r - hi ) - w };
 }
 
-// Payne–Hanek: `x` is |x| in `nx` 24-bit pieces, scaled by 2^-e0, multiplied by enough bits of 2/π.
+// Payne-Hanek: `x` is |x| in `nx` 24-bit pieces, scaled by 2^-e0, multiplied by enough bits of 2/pi.
 private reduction reduced_large( f64[4] x, i32 e0, i32 nx )
 {
     i32 jk = 4;
@@ -581,7 +329,7 @@ private reduction reduced_large( f64[4] x, i32 e0, i32 nx )
         {
             break;
         }
-        // every piece past jk cancelled: take more terms of 2/π
+        // every piece past jk cancelled: take more terms of 2/pi
         i32 more = 1;
         while( iq[at( jk - more, 32 )] == 0 )
         {
@@ -656,22 +404,43 @@ private reduction reduced_large( f64[4] x, i32 e0, i32 nx )
     return reduction { n & 7, hi, ih == 0 ? sum : -sum };
 }
 
-private u32 high_word( f64 x )
+// `kl::bits_of` and `kl::from_bits` again, since `kl::math` imports this module.
+private u64 bits_of( f64 x )
+{
+    unsafe
+    {
+        return *cast<u64*>( &x );
+    }
+}
+
+private f64 from_bits( u64 x )
+{
+    unsafe
+    {
+        return *cast<f64*>( &x );
+    }
+}
+
+/// The high 32 bits of `x`: its sign, exponent and top of its fraction.
+u32 high_word( f64 x )
 {
     return wrap<u32>( bits_of( x ) >> 32 );
 }
 
-private u32 low_word( f64 x )
+/// The low 32 bits of `x`'s fraction.
+u32 low_word( f64 x )
 {
     return wrap<u32>( bits_of( x ) );
 }
 
-private f64 low_word_cleared( f64 x )
+/// `x` with its low 32 bits cleared.
+f64 low_word_cleared( f64 x )
 {
     return from_bits( bits_of( x ) & 0xffff_ffff_0000_0000 );
 }
 
-private f64 magnitude( f64 x )
+/// `x` with its sign cleared.
+f64 magnitude( f64 x )
 {
     return from_bits( bits_of( x ) & 0x7fff_ffff_ffff_ffff );
 }
@@ -701,8 +470,8 @@ private i32 whole( f64 x )
     return wrap<i32>( bits_of( x + TWO52 ) );
 }
 
-// `i` below a power-of-two `size`, masked so the index needs no bounds check.
-private u64 at( i32 i, u64 size )
+/// `i` below a power-of-two `size`, masked so the index needs no bounds check.
+u64 at( i32 i, u64 size )
 {
     return wrap<u64>( i ) & ( size - 1 );
 }
@@ -710,7 +479,7 @@ private u64 at( i32 i, u64 size )
 private const f64 TWO24 = 1.67772160000000000000e+07;
 private const f64 TWON24 = 5.96046447753906250000e-08;
 private const f64 TWO52 = 4503599627370496.0;
-private const f64 TOINT = 6755399441055744.0; // 1.5·2^52: adding it rounds to a whole number
+private const f64 TOINT = 6755399441055744.0; // 1.5*2^52: adding it rounds to a whole number
 
 private const f64 S1 = -1.66666666666666324348e-01;
 private const f64 S2 = 8.33333333332248946124e-03;
@@ -752,7 +521,7 @@ private const f64 PIO2_2T = 2.02226624879595063154e-21;
 private const f64 PIO2_3 = 2.02226624871116645580e-21;
 private const f64 PIO2_3T = 8.47842766036889956997e-32;
 
-// 2/π, 24 bits to an entry: the first 128 entries of msun's table.
+// 2/pi, 24 bits to an entry: the first 128 entries of msun's table.
 private const i32[128] IPIO2 = [
     0xA2F983, 0x6E4E44, 0x1529FC, 0x2757D1, 0xF534DD, 0xC0DB62,
     0x95993C, 0x439041, 0xFE5163, 0xABDEBB, 0xC561B7, 0x246E3A,
@@ -778,7 +547,7 @@ private const i32[128] IPIO2 = [
     0x89E832, 0x60BFE6
 ];
 
-// π/2 in 24-bit pieces.
+// pi/2 in 24-bit pieces.
 private const f64[8] PIO2 = [
     1.57079625129699707031e+00,
     7.54978941586159635335e-08,
@@ -790,9 +559,6 @@ private const f64[8] PIO2 = [
     2.16741683877804819444e-51
 ];
 
-private const f64 PIO2_HI = 1.57079632679489655800e+00;
-private const f64 PIO2_LO = 6.12323399573676603587e-17;
-private const f64 PIO4_HI = 7.85398163397448278999e-01;
 private const f64 PS0 = 1.66666666666666657415e-01;
 private const f64 PS1 = -3.25565818622400915405e-01;
 private const f64 PS2 = 2.01212532134862925881e-01;
@@ -803,30 +569,3 @@ private const f64 QS1 = -2.40339491173441421878e+00;
 private const f64 QS2 = 2.02094576023350569471e+00;
 private const f64 QS3 = -6.88283971605453293030e-01;
 private const f64 QS4 = 7.70381505559019352791e-02;
-
-// atan at 0.5, 1, 1.5 and ∞, each as hi + lo.
-private const f64[4] ATANHI = [
-    4.63647609000806093515e-01,
-    7.85398163397448278999e-01,
-    9.82793723247329054082e-01,
-    1.57079632679489655800e+00
-];
-private const f64[4] ATANLO = [
-    2.26987774529616870924e-17,
-    3.06161699786838301793e-17,
-    1.39033110312309984516e-17,
-    6.12323399573676603587e-17
-];
-private const f64[11] AT = [
-    3.33333333333329318027e-01,
-    -1.99999999998764832476e-01,
-    1.42857142725034663711e-01,
-    -1.11111104054623557880e-01,
-    9.09088713343650656196e-02,
-    -7.69187620504482999495e-02,
-    6.66107313738753120669e-02,
-    -5.83357013379057348645e-02,
-    4.97687799461593236017e-02,
-    -3.65315727442169155270e-02,
-    1.62858201153657823623e-02
-];

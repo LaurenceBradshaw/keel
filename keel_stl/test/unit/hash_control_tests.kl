@@ -1,6 +1,6 @@
-// `kl::hash_control`'s word tricks against byte-at-a-time answers, over control words mixing empty,
+// `kl::_core::hash_control`'s word tricks against byte-at-a-time answers, over control words mixing empty,
 // deleted and full bytes; then its slot sizes and its growth accounting.
-import kl::hash_control;
+import kl::_core::hash_control;
 import kl::test::context;
 
 // Byte `i` of `word`.
@@ -75,11 +75,11 @@ private void word_tricks( ref kl::test::context c )
             }
         }
 
-        c.check_eq( kl::hash_control::match_empty( word ), empty );
-        c.check_eq( kl::hash_control::match_free( word ), vacant );
+        c.check_eq( kl::_core::hash_control::match_empty( word ), empty );
+        c.check_eq( kl::_core::hash_control::match_free( word ), vacant );
 
         // Every true match is flagged; anything else flagged is a full byte, never a vacant one.
-        const u64 matched = kl::hash_control::match_tags( word, tags );
+        const u64 matched = kl::_core::hash_control::match_tags( word, tags );
         c.check_eq( matched & found, found );
         c.check_eq( matched & vacant, 0 );
 
@@ -92,25 +92,25 @@ private void word_tricks( ref kl::test::context c )
                 first++;
             }
 
-            c.check_eq( kl::hash_control::lowest( vacant ), first );
+            c.check_eq( kl::_core::hash_control::lowest( vacant ), first );
         }
     }
 }
 
 private void slots_for( ref kl::test::context c )
 {
-    c.check_eq( kl::hash_control::slots_for( 0 ), 0 );
-    c.check_eq( kl::hash_control::slots_for( 1 ), 8 );
-    c.check_eq( kl::hash_control::slots_for( 7 ), 8 );
-    c.check_eq( kl::hash_control::slots_for( 8 ), 16 );
-    c.check_eq( kl::hash_control::slots_for( 1000 ), 2048 );
+    c.check_eq( kl::_core::hash_control::slots_for( 0 ), 0 );
+    c.check_eq( kl::_core::hash_control::slots_for( 1 ), 8 );
+    c.check_eq( kl::_core::hash_control::slots_for( 7 ), 8 );
+    c.check_eq( kl::_core::hash_control::slots_for( 8 ), 16 );
+    c.check_eq( kl::_core::hash_control::slots_for( 1000 ), 2048 );
 }
 
 // Slot 3 filled and emptied: its group still has empty slots, so the slot is empty again and the
 // room comes back.
 private void vacate_gives_room_back( ref kl::test::context c )
 {
-    kl::hash_control control = kl::hash_control( 8, 1, 2 );
+    kl::_core::hash_control control = kl::_core::hash_control( 8, 1, 2 );
 
     control.occupy( 3, 5 );
     c.check( control.is_full( 3 ) );
@@ -129,7 +129,7 @@ private void vacate_gives_room_back( ref kl::test::context c )
 // a full group stays within the 7/8 a table may fill; even hashes all probe group 0.
 private void tombstones_and_rebuilds( ref kl::test::context c )
 {
-    kl::hash_control full = kl::hash_control( 16, 1, 2 );
+    kl::_core::hash_control full = kl::_core::hash_control( 16, 1, 2 );
 
     for( u64 i : 0..8 )
     {
@@ -154,7 +154,7 @@ private void tombstones_and_rebuilds( ref kl::test::context c )
     c.check_eq( full.size(), 7 );
 
     // A rebuild keeps every entry's index: entry e's hash is e * 2, except entry 3's, which is 14.
-    kl::hash_control grown = full.resized( 32 );
+    kl::_core::hash_control grown = full.resized( 32 );
 
     for( u64 e : 0..7 )
     {
@@ -164,7 +164,7 @@ private void tombstones_and_rebuilds( ref kl::test::context c )
             hash = 14;
         }
 
-        kl::hash_probe probe = grown.probe( hash );
+        kl::_core::hash_probe probe = grown.probe( hash );
         u64 slot = probe.next();
         while( slot != grown.slots() && grown.entry( slot ) != e )
         {

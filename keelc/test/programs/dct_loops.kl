@@ -3,7 +3,6 @@
 
 import kl::console;
 import kl::math;
-import kl::trig;
 
 @real_arithmetic
 void solved<u64 N>( const ref f64[N] x, ref f64[N] y )

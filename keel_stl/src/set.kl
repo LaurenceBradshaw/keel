@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 import iterable;
-import hash_control;
+import kl::_core::hash_control;
 
 /// A hash table of keys of type `K`, each held at most once.
 ///
@@ -16,7 +16,7 @@ class set<K> implements iterable<K> where K : hashable
     /// An empty set. Allocates nothing until the first key arrives.
     public set()
     {
-        control_ = hash_control::fresh();
+        control_ = kl::_core::hash_control::fresh();
         keys_ = nullptr;
     }
 
@@ -66,7 +66,7 @@ class set<K> implements iterable<K> where K : hashable
     {
         if( n > control_.capacity() )
         {
-            resize( hash_control::slots_for( n ) );
+            resize( kl::_core::hash_control::slots_for( n ) );
         }
     }
 
@@ -190,7 +190,7 @@ class set<K> implements iterable<K> where K : hashable
             return end;
         }
 
-        hash_probe probe = control_.probe( hash );
+        kl::_core::hash_probe probe = control_.probe( hash );
         u64 slot = probe.next();
 
         while( slot != end )
@@ -227,7 +227,7 @@ class set<K> implements iterable<K> where K : hashable
 
         unsafe
         {
-            keys = alloc<K>( hash_control::usable( slots ) );
+            keys = alloc<K>( kl::_core::hash_control::usable( slots ) );
         }
 
         for( u64 i : 0..control_.size() )
@@ -262,6 +262,6 @@ class set<K> implements iterable<K> where K : hashable
     }
 
     // Entries `0..control_.size()` of `keys_` are live.
-    private hash_control control_;
+    private kl::_core::hash_control control_;
     private K[*] keys_;
 };

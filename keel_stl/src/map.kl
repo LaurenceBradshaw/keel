@@ -1,7 +1,7 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-import hash_control;
+import kl::_core::hash_control;
 import optional;
 
 /// A hash table from keys of type `K` to values of type `V`, each key held at most once.
@@ -19,7 +19,7 @@ class map<K, V> where K : hashable
     /// An empty map. Allocates nothing until the first key arrives.
     public map()
     {
-        control_ = hash_control::fresh();
+        control_ = kl::_core::hash_control::fresh();
         keys_ = nullptr;
         values_ = nullptr;
     }
@@ -78,7 +78,7 @@ class map<K, V> where K : hashable
     {
         if( n > control_.capacity() )
         {
-            resize( hash_control::slots_for( n ) );
+            resize( kl::_core::hash_control::slots_for( n ) );
         }
     }
 
@@ -283,7 +283,7 @@ class map<K, V> where K : hashable
             return end;
         }
 
-        hash_probe probe = control_.probe( hash );
+        kl::_core::hash_probe probe = control_.probe( hash );
         u64 slot = probe.next();
 
         while( slot != end )
@@ -321,8 +321,8 @@ class map<K, V> where K : hashable
 
         unsafe
         {
-            keys = alloc<K>( hash_control::usable( slots ) );
-            values = alloc<V>( hash_control::usable( slots ) );
+            keys = alloc<K>( kl::_core::hash_control::usable( slots ) );
+            values = alloc<V>( kl::_core::hash_control::usable( slots ) );
         }
 
         for( u64 i : 0..control_.size() )
@@ -368,7 +368,7 @@ class map<K, V> where K : hashable
     }
 
     // Entries `0..control_.size()` of both arrays are live.
-    private hash_control control_;
+    private kl::_core::hash_control control_;
     private K[*] keys_;
     private V[*] values_;
 };

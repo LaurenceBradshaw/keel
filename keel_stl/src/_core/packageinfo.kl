@@ -1,0 +1,7 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+//! kl's shared kernels: the pieces its public modules are built from.
+//!
+//! Public so that kl's modules can share them, not meant for programs: a kernel's contract is
+//! narrower than its name suggests, and it may change with the module it serves.

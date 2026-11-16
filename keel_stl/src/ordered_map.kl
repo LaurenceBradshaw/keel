@@ -1,7 +1,7 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-import ordered_control;
+import kl::_core::ordered_control;
 import optional;
 
 /// A B-tree from keys of type `K` to values of type `V`, each key held at most once, in ascending
@@ -17,7 +17,7 @@ class ordered_map<K, V> where K : comparable
     /// An empty map. Allocates nothing until the first key arrives.
     public ordered_map()
     {
-        control_ = ordered_control();
+        control_ = kl::_core::ordered_control();
         keys_ = nullptr;
         values_ = nullptr;
     }
@@ -63,7 +63,7 @@ class ordered_map<K, V> where K : comparable
     {
         const u64 slot = slot_of( key );
 
-        if( slot == ORDERED_NO_NODE )
+        if( slot == kl::_core::ORDERED_NO_NODE )
         {
             return optional::none;
         }
@@ -83,7 +83,7 @@ class ordered_map<K, V> where K : comparable
     {
         const u64 slot = slot_of( key );
 
-        if( slot == ORDERED_NO_NODE )
+        if( slot == kl::_core::ORDERED_NO_NODE )
         {
             panic( "no such key in the map" );
         }
@@ -97,7 +97,7 @@ class ordered_map<K, V> where K : comparable
     /// Whether the map holds `key`.
     public bool contains( const ref K key ) const
     {
-        return slot_of( key ) != ORDERED_NO_NODE;
+        return slot_of( key ) != kl::_core::ORDERED_NO_NODE;
     }
 
     /// --- By position ---
@@ -208,7 +208,7 @@ class ordered_map<K, V> where K : comparable
     {
         const u64 found = slot_of( key );
 
-        if( found != ORDERED_NO_NODE )
+        if( found != kl::_core::ORDERED_NO_NODE )
         {
             unsafe
             {
@@ -233,7 +233,7 @@ class ordered_map<K, V> where K : comparable
             if( control_.is_leaf( n ) )
             {
                 move_run( control_.insert_in_leaf( n, j ) );
-                const u64 slot = ordered_control::key_slot( n, j );
+                const u64 slot = kl::_core::ordered_control::key_slot( n, j );
 
                 unsafe
                 {
@@ -244,13 +244,13 @@ class ordered_map<K, V> where K : comparable
                 return optional::none;
             }
 
-            if( control_.count( control_.child( n, j ) ) == ORDERED_KEYS )
+            if( control_.count( control_.child( n, j ) ) == kl::_core::ORDERED_KEYS )
             {
                 apply( control_.split_child( n, j ) );
 
                 unsafe
                 {
-                    if( keys_[ordered_control::key_slot( n, j )] < key )
+                    if( keys_[kl::_core::ordered_control::key_slot( n, j )] < key )
                     {
                         j++; // `key` belongs in the new right half
                     }
@@ -274,7 +274,7 @@ class ordered_map<K, V> where K : comparable
         while( true )
         {
             const u64 j = position( n, key );
-            const u64 slot = ordered_control::key_slot( n, j );
+            const u64 slot = kl::_core::ordered_control::key_slot( n, j );
 
             if( holds_at( n, j, key ) )
             {
@@ -285,14 +285,14 @@ class ordered_map<K, V> where K : comparable
                     return optional::some( move old );
                 }
 
-                if( control_.count( control_.child( n, j ) ) > ORDERED_MIN )
+                if( control_.count( control_.child( n, j ) ) > kl::_core::ORDERED_MIN )
                 {
                     V old = take_value( slot );
                     take_last( control_.descend_remove( n, j ), slot ); // the predecessor fills it
                     return optional::some( move old );
                 }
 
-                if( control_.count( control_.child( n, j + 1 ) ) > ORDERED_MIN )
+                if( control_.count( control_.child( n, j + 1 ) ) > kl::_core::ORDERED_MIN )
                 {
                     V old = take_value( slot );
                     take_first( control_.descend_remove( n, j + 1 ), slot ); // the successor fills it
@@ -323,7 +323,7 @@ class ordered_map<K, V> where K : comparable
     // The first key of `node` not less than `key`, or its count.
     private u64 position( u64 node, const ref K key ) const
     {
-        const u64 first = ordered_control::key_slot( node, 0 );
+        const u64 first = kl::_core::ordered_control::key_slot( node, 0 );
 
         for( u64 j : 0..control_.count( node ) )
         {
@@ -348,7 +348,7 @@ class ordered_map<K, V> where K : comparable
 
         unsafe
         {
-            return keys_[ordered_control::key_slot( node, j )] == key;
+            return keys_[kl::_core::ordered_control::key_slot( node, j )] == key;
         }
     }
 
@@ -357,7 +357,7 @@ class ordered_map<K, V> where K : comparable
     {
         if( control_.size() == 0 )
         {
-            return ORDERED_NO_NODE;
+            return kl::_core::ORDERED_NO_NODE;
         }
 
         u64 n = control_.root();
@@ -368,12 +368,12 @@ class ordered_map<K, V> where K : comparable
 
             if( holds_at( n, j, key ) )
             {
-                return ordered_control::key_slot( n, j );
+                return kl::_core::ordered_control::key_slot( n, j );
             }
 
             if( control_.is_leaf( n ) )
             {
-                return ORDERED_NO_NODE;
+                return kl::_core::ORDERED_NO_NODE;
             }
 
             n = control_.child( n, j );
@@ -403,7 +403,7 @@ class ordered_map<K, V> where K : comparable
         }
 
         const u64 j = control_.count( n ) - 1;
-        move_run( key_run { .from = ordered_control::key_slot( n, j ), .to = into, .count = 1 } );
+        move_run( kl::_core::key_run { .from = kl::_core::ordered_control::key_slot( n, j ), .to = into, .count = 1 } );
         move_run( control_.remove_from_leaf( n, j ) );
     }
 
@@ -419,11 +419,11 @@ class ordered_map<K, V> where K : comparable
             n = control_.descend_remove( n, c );
         }
 
-        move_run( key_run { .from = ordered_control::key_slot( n, 0 ), .to = into, .count = 1 } );
+        move_run( kl::_core::key_run { .from = kl::_core::ordered_control::key_slot( n, 0 ), .to = into, .count = 1 } );
         move_run( control_.remove_from_leaf( n, 0 ) );
     }
 
-    private void apply( key_moves moves )
+    private void apply( kl::_core::key_moves moves )
     {
         move_run( moves.first );
         move_run( moves.second );
@@ -431,7 +431,7 @@ class ordered_map<K, V> where K : comparable
     }
 
     // Moves the run's keys and values, in the direction that does not overwrite one not yet moved.
-    private void move_run( key_run run )
+    private void move_run( kl::_core::key_run run )
     {
         unsafe
         {
@@ -463,13 +463,13 @@ class ordered_map<K, V> where K : comparable
 
         unsafe
         {
-            keys = alloc<K>( nodes * ORDERED_KEYS );
-            values = alloc<V>( nodes * ORDERED_KEYS );
+            keys = alloc<K>( nodes * kl::_core::ORDERED_KEYS );
+            values = alloc<V>( nodes * kl::_core::ORDERED_KEYS );
         }
 
         for( u64 n : 0..control_.used() )
         {
-            const u64 first = ordered_control::key_slot( n, 0 );
+            const u64 first = kl::_core::ordered_control::key_slot( n, 0 );
 
             for( u64 j : 0..control_.count( n ) )
             {
@@ -508,14 +508,14 @@ class ordered_map<K, V> where K : comparable
         {
             unsafe
             {
-                destroy( keys_ + ordered_control::key_slot( n, 0 ), control_.count( n ) );
-                destroy( values_ + ordered_control::key_slot( n, 0 ), control_.count( n ) );
+                destroy( keys_ + kl::_core::ordered_control::key_slot( n, 0 ), control_.count( n ) );
+                destroy( values_ + kl::_core::ordered_control::key_slot( n, 0 ), control_.count( n ) );
             }
         }
     }
 
     // Node `n`'s first `control_.count( n )` slots from `key_slot( n, 0 )` are live.
-    private ordered_control control_;
+    private kl::_core::ordered_control control_;
     private K[*] keys_;
     private V[*] values_;
 };
