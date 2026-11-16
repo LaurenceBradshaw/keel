@@ -595,7 +595,8 @@ static int32_t start( const uint8_t* packed, uint64_t size, uint64_t count, int6
             execvp( argv[0], argv );
         }
 
-        int     saved  = errno;
+        int saved = errno;
+        free( argv ); // safe after fork: no threads yet
         ssize_t result = write( report[1], &saved, sizeof saved );
         (void) result;
         _exit( 127 );
