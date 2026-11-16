@@ -599,13 +599,13 @@ int32_t kl__4main__( void )
     return kl_t0;
 }
 
-#line 401 "<prelude>"
+#line 406 "<prelude>"
 struct kl__chain__I3i64E* kl_7prelude_3get__I5chainI3i64EE__SQ7prelude3boxI5chainI3i64EE( struct kl_7prelude_box__I5chainI3i64EE* kl_this_1 )
 {
     struct kl__chain__I3i64E* kl_t0;
-#line 403 "<prelude>"
+#line 408 "<prelude>"
     kl_t0 = &( *( *kl_this_1 ).kl_p_ );
-#line 403 "<prelude>"
+#line 408 "<prelude>"
     return kl_t0;
 }
 
@@ -774,39 +774,55 @@ int32_t kl__5count__I3f64E__5chainI3f64E( struct kl__chain__I3f64E* kl_c_1 )
 #line 391 "<prelude>"
 void kl_7prelude_3box__I5chainI3i64EE__dtor( struct kl_7prelude_box__I5chainI3i64EE* kl_this_1 )
 {
-    struct kl__chain__I3i64E* kl_t2;
+    bool kl_t2;
+    struct kl__chain__I3i64E* kl_t3;
     if( ( uintptr_t ) __builtin_frame_address( 0 ) < kl_rt_stack_low )
     {
         kl_rt_deeper( ( void ( * )( void* ) ) ( void ( * )( void ) ) kl_7prelude_3box__I5chainI3i64EE__dtor, kl_this_1 );
         return;
     }
-#line 395 "<prelude>"
-    kl_t2 = ( *kl_this_1 ).kl_p_;
-#line 395 "<prelude>"
-    kl__5chain__I3i64E__dtor( &( *kl_t2 ) );
-    kl_rt_free( ( *kl_this_1 ).kl_p_ );
-#line 398 "<prelude>"
+#line 393 "<prelude>"
+    kl_t2 = ( *kl_this_1 ).kl_p_ == NULL;
+#line 393 "<prelude>"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
     return;
-#line 398 "<prelude>"
+    bb2:
+#line 400 "<prelude>"
+    kl_t3 = ( *kl_this_1 ).kl_p_;
+#line 400 "<prelude>"
+    kl__5chain__I3i64E__dtor( &( *kl_t3 ) );
+    kl_rt_free( ( *kl_this_1 ).kl_p_ );
+#line 403 "<prelude>"
+    return;
+#line 403 "<prelude>"
 }
 
 #line 391 "<prelude>"
 void kl_7prelude_3box__I5chainI3f64EE__dtor( struct kl_7prelude_box__I5chainI3f64EE* kl_this_1 )
 {
-    struct kl__chain__I3f64E* kl_t2;
+    bool kl_t2;
+    struct kl__chain__I3f64E* kl_t3;
     if( ( uintptr_t ) __builtin_frame_address( 0 ) < kl_rt_stack_low )
     {
         kl_rt_deeper( ( void ( * )( void* ) ) ( void ( * )( void ) ) kl_7prelude_3box__I5chainI3f64EE__dtor, kl_this_1 );
         return;
     }
-#line 395 "<prelude>"
-    kl_t2 = ( *kl_this_1 ).kl_p_;
-#line 395 "<prelude>"
-    kl__5chain__I3f64E__dtor( &( *kl_t2 ) );
-    kl_rt_free( ( *kl_this_1 ).kl_p_ );
-#line 398 "<prelude>"
+#line 393 "<prelude>"
+    kl_t2 = ( *kl_this_1 ).kl_p_ == NULL;
+#line 393 "<prelude>"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
     return;
-#line 398 "<prelude>"
+    bb2:
+#line 400 "<prelude>"
+    kl_t3 = ( *kl_this_1 ).kl_p_;
+#line 400 "<prelude>"
+    kl__5chain__I3f64E__dtor( &( *kl_t3 ) );
+    kl_rt_free( ( *kl_this_1 ).kl_p_ );
+#line 403 "<prelude>"
+    return;
+#line 403 "<prelude>"
 }
 
 #line 382 "<prelude>"
@@ -835,13 +851,13 @@ void kl_7prelude_3box__I5chainI3i64EE__RQ7prelude3boxI5chainI3i64EE_M5chainI3i64
 #line 389 "<prelude>"
 }
 
-#line 401 "<prelude>"
+#line 406 "<prelude>"
 struct kl__chain__I3f64E* kl_7prelude_3get__I5chainI3f64EE__SQ7prelude3boxI5chainI3f64EE( struct kl_7prelude_box__I5chainI3f64EE* kl_this_1 )
 {
     struct kl__chain__I3f64E* kl_t0;
-#line 403 "<prelude>"
+#line 408 "<prelude>"
     kl_t0 = &( *( *kl_this_1 ).kl_p_ );
-#line 403 "<prelude>"
+#line 408 "<prelude>"
     return kl_t0;
 }
 

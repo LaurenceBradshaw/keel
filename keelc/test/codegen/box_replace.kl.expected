@@ -464,7 +464,7 @@ int32_t kl__4main__( void )
     return kl_t0;
 }
 
-#line 407 "<prelude>"
+#line 412 "<prelude>"
 struct kl__List kl_7prelude_7replace__I4ListE__SQ7prelude3boxI4ListE_M4List( struct kl_7prelude_box__I4ListE* kl_this_1, struct kl__List kl_value_2 )
 {
     struct kl__List kl_t0;
@@ -475,40 +475,40 @@ struct kl__List kl_7prelude_7replace__I4ListE__SQ7prelude3boxI4ListE_M4List( str
     struct kl__List* kl_t7;
     bool kl_t8;
     bool kl_t9;
-#line 412 "<prelude>"
+#line 417 "<prelude>"
     kl_t8 = true;
-#line 412 "<prelude>"
+#line 417 "<prelude>"
     kl_t9 = false;
-#line 412 "<prelude>"
+#line 417 "<prelude>"
     kl_t4 = ( struct kl__List* ) ( *kl_this_1 ).kl_p_;
-#line 412 "<prelude>"
+#line 417 "<prelude>"
     kl_slot_3 = kl_t4;
     kl_t9 = false;
-#line 413 "<prelude>"
+#line 418 "<prelude>"
     kl_t6 = kl_slot_3 + 0;
-#line 413 "<prelude>"
+#line 418 "<prelude>"
     kl_old_5 = ( *kl_t6 );
-#line 413 "<prelude>"
+#line 418 "<prelude>"
     kl_t9 = true;
     kl_t7 = kl_slot_3 + 0;
-#line 414 "<prelude>"
+#line 419 "<prelude>"
     ( *kl_t7 ) = kl_value_2;
-#line 414 "<prelude>"
+#line 419 "<prelude>"
     kl_t8 = false;
     kl_t0 = kl_old_5;
-#line 415 "<prelude>"
+#line 420 "<prelude>"
     kl_t9 = false;
-#line 415 "<prelude>"
+#line 420 "<prelude>"
     if ( kl_t9 ) kl__4List__dtor( &kl_old_5 );
-#line 415 "<prelude>"
+#line 420 "<prelude>"
     kl_t9 = false;
-#line 415 "<prelude>"
+#line 420 "<prelude>"
     if ( kl_t8 ) kl__4List__dtor( &kl_value_2 );
-#line 415 "<prelude>"
+#line 420 "<prelude>"
     kl_t8 = false;
-#line 415 "<prelude>"
+#line 420 "<prelude>"
     return kl_t0;
-#line 417 "<prelude>"
+#line 422 "<prelude>"
 }
 
 #line 382 "<prelude>"
@@ -563,7 +563,7 @@ void kl_7prelude_3box__I7CountedE__RQ7prelude3boxI7CountedE_M7Counted__ctor( str
 #line 389 "<prelude>"
 }
 
-#line 407 "<prelude>"
+#line 412 "<prelude>"
 struct kl__Counted kl_7prelude_7replace__I7CountedE__SQ7prelude3boxI7CountedE_M7Counted( struct kl_7prelude_box__I7CountedE* kl_this_1, struct kl__Counted kl_value_2 )
 {
     struct kl__Counted kl_t0;
@@ -574,73 +574,89 @@ struct kl__Counted kl_7prelude_7replace__I7CountedE__SQ7prelude3boxI7CountedE_M7
     struct kl__Counted* kl_t7;
     bool kl_t8;
     bool kl_t9;
-#line 412 "<prelude>"
+#line 417 "<prelude>"
     kl_t8 = true;
-#line 412 "<prelude>"
+#line 417 "<prelude>"
     kl_t9 = false;
-#line 412 "<prelude>"
+#line 417 "<prelude>"
     kl_t4 = ( struct kl__Counted* ) ( *kl_this_1 ).kl_p_;
-#line 412 "<prelude>"
+#line 417 "<prelude>"
     kl_slot_3 = kl_t4;
     kl_t9 = false;
-#line 413 "<prelude>"
+#line 418 "<prelude>"
     kl_t6 = kl_slot_3 + 0;
-#line 413 "<prelude>"
+#line 418 "<prelude>"
     kl_old_5 = ( *kl_t6 );
-#line 413 "<prelude>"
+#line 418 "<prelude>"
     kl_t9 = true;
     kl_t7 = kl_slot_3 + 0;
-#line 414 "<prelude>"
+#line 419 "<prelude>"
     ( *kl_t7 ) = kl_value_2;
-#line 414 "<prelude>"
+#line 419 "<prelude>"
     kl_t8 = false;
     kl_t0 = kl_old_5;
-#line 415 "<prelude>"
+#line 420 "<prelude>"
     kl_t9 = false;
-#line 415 "<prelude>"
+#line 420 "<prelude>"
     if ( kl_t9 ) kl__7Counted__dtor( &kl_old_5 );
-#line 415 "<prelude>"
+#line 420 "<prelude>"
     kl_t9 = false;
-#line 415 "<prelude>"
+#line 420 "<prelude>"
     if ( kl_t8 ) kl__7Counted__dtor( &kl_value_2 );
-#line 415 "<prelude>"
+#line 420 "<prelude>"
     kl_t8 = false;
-#line 415 "<prelude>"
+#line 420 "<prelude>"
     return kl_t0;
-#line 417 "<prelude>"
+#line 422 "<prelude>"
 }
 
 #line 391 "<prelude>"
 void kl_7prelude_3box__I4ListE__dtor( struct kl_7prelude_box__I4ListE* kl_this_1 )
 {
-    struct kl__List* kl_t2;
+    bool kl_t2;
+    struct kl__List* kl_t3;
     if( ( uintptr_t ) __builtin_frame_address( 0 ) < kl_rt_stack_low )
     {
         kl_rt_deeper( ( void ( * )( void* ) ) ( void ( * )( void ) ) kl_7prelude_3box__I4ListE__dtor, kl_this_1 );
         return;
     }
-#line 395 "<prelude>"
-    kl_t2 = ( *kl_this_1 ).kl_p_;
-#line 395 "<prelude>"
-    kl__4List__dtor( &( *kl_t2 ) );
-    kl_rt_free( ( *kl_this_1 ).kl_p_ );
-#line 398 "<prelude>"
+#line 393 "<prelude>"
+    kl_t2 = ( *kl_this_1 ).kl_p_ == NULL;
+#line 393 "<prelude>"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
     return;
-#line 398 "<prelude>"
+    bb2:
+#line 400 "<prelude>"
+    kl_t3 = ( *kl_this_1 ).kl_p_;
+#line 400 "<prelude>"
+    kl__4List__dtor( &( *kl_t3 ) );
+    kl_rt_free( ( *kl_this_1 ).kl_p_ );
+#line 403 "<prelude>"
+    return;
+#line 403 "<prelude>"
 }
 
 #line 391 "<prelude>"
 void kl_7prelude_3box__I7CountedE__dtor( struct kl_7prelude_box__I7CountedE* kl_this_1 )
 {
-    struct kl__Counted* kl_t2;
-#line 395 "<prelude>"
-    kl_t2 = ( *kl_this_1 ).kl_p_;
-#line 395 "<prelude>"
-    kl__7Counted__dtor( &( *kl_t2 ) );
-    kl_rt_free( ( *kl_this_1 ).kl_p_ );
-#line 398 "<prelude>"
+    bool kl_t2;
+    struct kl__Counted* kl_t3;
+#line 393 "<prelude>"
+    kl_t2 = ( *kl_this_1 ).kl_p_ == NULL;
+#line 393 "<prelude>"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
     return;
-#line 398 "<prelude>"
+    bb2:
+#line 400 "<prelude>"
+    kl_t3 = ( *kl_this_1 ).kl_p_;
+#line 400 "<prelude>"
+    kl__7Counted__dtor( &( *kl_t3 ) );
+    kl_rt_free( ( *kl_this_1 ).kl_p_ );
+#line 403 "<prelude>"
+    return;
+#line 403 "<prelude>"
 }
 
 #line 4 "codegen/box_replace.kl"

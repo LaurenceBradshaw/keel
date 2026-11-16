@@ -1,0 +1,40 @@
+// `box::take` ends the box and hands back its value, which then lives on the stack: the value is
+// dropped once, by its new owner, and the box frees its memory without dropping it. Exits with the
+// failing check.
+class Counted
+{
+    i64* drops_;
+
+    public Counted( i64* drops ) { drops_ = drops; }
+
+    ~Counted() { *drops_ = *drops_ + 1; }
+};
+
+i32 main()
+{
+    i64 drops = 0;
+    {
+        box<Counted> b = box<Counted>( Counted( &drops ) );
+        Counted c = box<Counted>::take( move b );
+        if( drops != 0 )
+        {
+            return 1;
+        }
+    }
+
+    if( drops != 1 )
+    {
+        return 2;
+    }
+
+    // An array moved to the heap and back.
+    box<i32[3]> heaped = box<i32[3]>( [ 4, 5, 6 ] );
+    heaped.get()[1] = 7;
+    i32[3] back = box<i32[3]>::take( move heaped );
+    if( back[0] + back[1] + back[2] != 17 )
+    {
+        return 3;
+    }
+
+    return 0;
+}

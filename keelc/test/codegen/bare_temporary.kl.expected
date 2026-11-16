@@ -451,15 +451,23 @@ void kl_7prelude_3box__I7TrackedE__RQ7prelude3boxI7TrackedE_M7Tracked__ctor( str
 #line 391 "<prelude>"
 void kl_7prelude_3box__I7TrackedE__dtor( struct kl_7prelude_box__I7TrackedE* kl_this_1 )
 {
-    struct kl__Tracked* kl_t2;
-#line 395 "<prelude>"
-    kl_t2 = ( *kl_this_1 ).kl_p_;
-#line 395 "<prelude>"
-    kl__7Tracked__dtor( &( *kl_t2 ) );
-    kl_rt_free( ( *kl_this_1 ).kl_p_ );
-#line 398 "<prelude>"
+    bool kl_t2;
+    struct kl__Tracked* kl_t3;
+#line 393 "<prelude>"
+    kl_t2 = ( *kl_this_1 ).kl_p_ == NULL;
+#line 393 "<prelude>"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
     return;
-#line 398 "<prelude>"
+    bb2:
+#line 400 "<prelude>"
+    kl_t3 = ( *kl_this_1 ).kl_p_;
+#line 400 "<prelude>"
+    kl__7Tracked__dtor( &( *kl_t3 ) );
+    kl_rt_free( ( *kl_this_1 ).kl_p_ );
+#line 403 "<prelude>"
+    return;
+#line 403 "<prelude>"
 }
 
 int main( void )

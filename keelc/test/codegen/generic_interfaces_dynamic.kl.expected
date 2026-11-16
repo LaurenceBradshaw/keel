@@ -782,13 +782,13 @@ void kl_7prelude_3box__I4heldE__RQ7prelude3boxI4heldE_M4held__ctor( struct kl_7p
 #line 389 "<prelude>"
 }
 
-#line 401 "<prelude>"
+#line 406 "<prelude>"
 struct kl__sink__I3i64E__ref kl_7prelude_3get__I4sinkI3i64EE__SQ7prelude3boxI4sinkI3i64EE( struct kl_7prelude_box__I4sinkI3i64EE* kl_this_1 )
 {
     struct kl__sink__I3i64E__ref kl_t0;
-#line 403 "<prelude>"
+#line 408 "<prelude>"
     kl_t0 = ( *kl_this_1 ).kl_p_;
-#line 403 "<prelude>"
+#line 408 "<prelude>"
     return kl_t0;
 }
 
@@ -811,39 +811,63 @@ void kl_7prelude_3box__I5tallyE__RQ7prelude3boxI5tallyE_M5tally__ctor( struct kl
 #line 391 "<prelude>"
 void kl_7prelude_3box__I4sinkI3i64EE__dtor( struct kl_7prelude_box__I4sinkI3i64EE* kl_this_1 )
 {
-    struct kl__sink__I3i64E__ref kl_t2;
-#line 395 "<prelude>"
-    kl_t2 = ( *kl_this_1 ).kl_p_;
-#line 395 "<prelude>"
-    kl_t2.vtable->drop( kl_t2.self );
-    kl_rt_free( ( ( *kl_this_1 ).kl_p_ ).self );
-#line 398 "<prelude>"
+    bool kl_t2;
+    struct kl__sink__I3i64E__ref kl_t3;
+#line 393 "<prelude>"
+    kl_t2 = ( ( *kl_this_1 ).kl_p_ ).self == ( ( struct kl__sink__I3i64E__ref ) { NULL, NULL } ).self;
+#line 393 "<prelude>"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
     return;
-#line 398 "<prelude>"
+    bb2:
+#line 400 "<prelude>"
+    kl_t3 = ( *kl_this_1 ).kl_p_;
+#line 400 "<prelude>"
+    kl_t3.vtable->drop( kl_t3.self );
+    kl_rt_free( ( ( *kl_this_1 ).kl_p_ ).self );
+#line 403 "<prelude>"
+    return;
+#line 403 "<prelude>"
 }
 
 #line 391 "<prelude>"
 void kl_7prelude_3box__I4heldE__dtor( struct kl_7prelude_box__I4heldE* kl_this_1 )
 {
-    struct kl__held* kl_t2;
-#line 395 "<prelude>"
-    kl_t2 = ( *kl_this_1 ).kl_p_;
-#line 395 "<prelude>"
-    kl__4held__dtor( &( *kl_t2 ) );
-    kl_rt_free( ( *kl_this_1 ).kl_p_ );
-#line 398 "<prelude>"
+    bool kl_t2;
+    struct kl__held* kl_t3;
+#line 393 "<prelude>"
+    kl_t2 = ( *kl_this_1 ).kl_p_ == NULL;
+#line 393 "<prelude>"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
     return;
-#line 398 "<prelude>"
+    bb2:
+#line 400 "<prelude>"
+    kl_t3 = ( *kl_this_1 ).kl_p_;
+#line 400 "<prelude>"
+    kl__4held__dtor( &( *kl_t3 ) );
+    kl_rt_free( ( *kl_this_1 ).kl_p_ );
+#line 403 "<prelude>"
+    return;
+#line 403 "<prelude>"
 }
 
 #line 391 "<prelude>"
 void kl_7prelude_3box__I5tallyE__dtor( struct kl_7prelude_box__I5tallyE* kl_this_1 )
 {
-#line 396 "<prelude>"
-    kl_rt_free( ( *kl_this_1 ).kl_p_ );
-#line 398 "<prelude>"
+    bool kl_t2;
+#line 393 "<prelude>"
+    kl_t2 = ( *kl_this_1 ).kl_p_ == NULL;
+#line 393 "<prelude>"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
     return;
-#line 398 "<prelude>"
+    bb2:
+#line 401 "<prelude>"
+    kl_rt_free( ( *kl_this_1 ).kl_p_ );
+#line 403 "<prelude>"
+    return;
+#line 403 "<prelude>"
 }
 
 void kl__held__drop( void* kl_t1 )

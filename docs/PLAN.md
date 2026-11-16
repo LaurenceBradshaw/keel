@@ -1129,7 +1129,8 @@ its interface only as a borrow: `&circle` and a `ref` binding make a `Shape*` or
 `Shape*` and `ref Shape` are a fat pointer, `{ void* self; const vtable* vtable; }`, and each
 implementer seen as an interface gets one `static const` vtable of its drop function and thunks,
 which lowering synthesised (§3.1). **Owning one is `box<T>`**, the prelude's: one `T` on the heap, a `T*`
-read by `get()`. It is the one type taking an interface as its type argument, so `box<Shape>` holds a
+read by `get()`, swapped by `replace` and moved out by `box<T>::take( move b )`, which empties the box
+for `~box` to skip; a consuming receiver would make it a method and drop the empty state. It is the one type taking an interface as its type argument, so `box<Shape>` holds a
 `Shape*`, and a `box<Circle>` converts to it wherever one is wanted, as `Circle*` does to `Shape*`;
 `move` is still written; a bare `box<Shape>` parameter borrows a view of the same allocation,
 which the caller still owns and drops. In KIR the conversion moves (or, for a view, copies) the

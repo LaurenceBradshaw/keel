@@ -390,6 +390,11 @@ class box<T>
 
     ~box()
     {
+        if( p_ == nullptr ) // emptied by `take`
+        {
+            return;
+        }
+
         unsafe
         {
             destroy( p_ );
@@ -413,6 +418,19 @@ class box<T>
             T old = move slot[0];
             slot[0] = move value;
             return old;
+        }
+    }
+
+    /// Ends the box and hands back its value.
+    // Stop-gap until a method can consume its receiver: then a `take()` method, and no null in `~box`.
+    public static T take( move box<T> b )
+    {
+        unsafe
+        {
+            T value = move cast<T[*]>( b.p_ )[0];
+            free( b.p_ );
+            b.p_ = nullptr;
+            return value;
         }
     }
 

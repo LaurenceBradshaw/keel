@@ -588,42 +588,58 @@ void kl_7prelude_3box__IQ6shapes7TrackedE__RQ7prelude3boxIQ6shapes7TrackedE_MQ6s
 #line 389 "<prelude>"
 }
 
-#line 401 "<prelude>"
+#line 406 "<prelude>"
 struct kl__Measured__ref kl_7prelude_3get__I8MeasuredE__SQ7prelude3boxI8MeasuredE( struct kl_7prelude_box__I8MeasuredE* kl_this_1 )
 {
     struct kl__Measured__ref kl_t0;
-#line 403 "<prelude>"
+#line 408 "<prelude>"
     kl_t0 = ( *kl_this_1 ).kl_p_;
-#line 403 "<prelude>"
+#line 408 "<prelude>"
     return kl_t0;
 }
 
 #line 391 "<prelude>"
 void kl_7prelude_3box__I8MeasuredE__dtor( struct kl_7prelude_box__I8MeasuredE* kl_this_1 )
 {
-    struct kl__Measured__ref kl_t2;
-#line 395 "<prelude>"
-    kl_t2 = ( *kl_this_1 ).kl_p_;
-#line 395 "<prelude>"
-    kl_t2.vtable->drop( kl_t2.self );
-    kl_rt_free( ( ( *kl_this_1 ).kl_p_ ).self );
-#line 398 "<prelude>"
+    bool kl_t2;
+    struct kl__Measured__ref kl_t3;
+#line 393 "<prelude>"
+    kl_t2 = ( ( *kl_this_1 ).kl_p_ ).self == ( ( struct kl__Measured__ref ) { NULL, NULL } ).self;
+#line 393 "<prelude>"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
     return;
-#line 398 "<prelude>"
+    bb2:
+#line 400 "<prelude>"
+    kl_t3 = ( *kl_this_1 ).kl_p_;
+#line 400 "<prelude>"
+    kl_t3.vtable->drop( kl_t3.self );
+    kl_rt_free( ( ( *kl_this_1 ).kl_p_ ).self );
+#line 403 "<prelude>"
+    return;
+#line 403 "<prelude>"
 }
 
 #line 391 "<prelude>"
 void kl_7prelude_3box__IQ6shapes7TrackedE__dtor( struct kl_7prelude_box__IQ6shapes7TrackedE* kl_this_1 )
 {
-    struct kl_6shapes5kinds_Tracked* kl_t2;
-#line 395 "<prelude>"
-    kl_t2 = ( *kl_this_1 ).kl_p_;
-#line 395 "<prelude>"
-    kl_6shapes5kinds_7Tracked__dtor( &( *kl_t2 ) );
-    kl_rt_free( ( *kl_this_1 ).kl_p_ );
-#line 398 "<prelude>"
+    bool kl_t2;
+    struct kl_6shapes5kinds_Tracked* kl_t3;
+#line 393 "<prelude>"
+    kl_t2 = ( *kl_this_1 ).kl_p_ == NULL;
+#line 393 "<prelude>"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
     return;
-#line 398 "<prelude>"
+    bb2:
+#line 400 "<prelude>"
+    kl_t3 = ( *kl_this_1 ).kl_p_;
+#line 400 "<prelude>"
+    kl_6shapes5kinds_7Tracked__dtor( &( *kl_t3 ) );
+    kl_rt_free( ( *kl_this_1 ).kl_p_ );
+#line 403 "<prelude>"
+    return;
+#line 403 "<prelude>"
 }
 
 void kl_6shapes5kinds_Tracked__drop( void* kl_t1 )
