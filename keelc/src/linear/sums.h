@@ -55,19 +55,23 @@ struct Sum
 // y[k] = sum over j < n of x[j] W_M^(c j k).
 Sum exponent_kernel( u32 n, u32 m, u64 M, u64 c );
 
+// That sum's sides, M and c: the shape the index rules take.
+struct Kernel
+{
+    u32 n;
+    u32 m;
+    u64 M;
+    u64 c;
+
+    auto operator<=>( const Kernel& ) const = default;
+};
+
 struct Planned
 {
     Circuit          circuit { false };
     std::vector<u32> outputs; // the node of each k
     Cost             cost;
     std::string      how;
-};
-
-// A function promising DFT_n that a plan may call, and what its planned body costs.
-struct Promised
-{
-    u32  callee;
-    Cost cost;
 };
 
 struct Plan_options
@@ -78,8 +82,8 @@ struct Plan_options
     std::filesystem::path cache {}; // where solved leaves are kept, as solve_linear_maps keeps whole maps
     // Leaves solved with these options, by n, m, M, c and whether x is real.
     mutable std::map<std::array<u64, 5>, Circuit> solved {};
-    // The cheapest function promising DFT_n, made when first asked for; nothing when none is.
-    std::function<std::optional<Promised>( u64 n )> promised {};
+    // A part that would loop, the root aside, is a call of a function computing it alone.
+    bool calls = false;
 };
 
 // Element i of copy t of a buffer: offset + step i + batch t, plus each enclosing loop's index times its coefficient.
@@ -100,6 +104,8 @@ enum class Loop_kind : u8
     Scale,   // out[i] = in[i] times tables[table][i], for i < count
     Gather,  // out[i] = in[indices[table][i]], for i < count
     Add,     // out[i] = in[i] + also[i], for i < count
+    Copy,    // out[i] = in[i], for i < count
+    Call,    // calls[leaf]'s program from `count` inputs at `in` to `out`, both of step 1; conjugated when `conj`
 };
 
 struct Loop_step
@@ -113,10 +119,13 @@ struct Loop_step
     u64                    R     = 0;
     u64                    M     = 0;
     u64                    c     = 0;
+    bool                   conj  = false;
     Stride                 in {};
     Stride                 out {};
     Stride                 also {};
 };
+
+struct Loop_call;
 
 // A plan as loops over straight-line leaves. Buffer 0 is x and 1 is y; the rest are temporaries of buffers[b] elements.
 struct Loop_program
@@ -124,10 +133,18 @@ struct Loop_program
     std::vector<Planned>                        leaves;
     std::vector<std::vector<std::complex<f64>>> tables;
     std::vector<std::vector<u64>>               indices;
+    std::vector<Loop_call>                      calls;
     std::vector<u64>                            buffers { 0, 0 };
     std::vector<Loop_step>                      steps;
     u32                                         loops = 0;
     Cost                                        cost;
+};
+
+// A kernel a program calls, and its own program.
+struct Loop_call
+{
+    Kernel       kernel;
+    Loop_program program;
 };
 
 // The cheapest circuit the planner's rules find, each a law of the sum: an offset is added after, or to

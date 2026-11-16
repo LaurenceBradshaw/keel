@@ -78,6 +78,7 @@ private:
     void emit_composites();
     void emit_vtable_types();
     void emit_vtables();
+    void emit_tables();
     void emit_function_types();
     void emit_globals();
     void emit_prototypes();
@@ -214,6 +215,7 @@ Emitted Kir_emitter::run()
     emit_externs();
     emit_prototypes();
     emit_vtables();
+    emit_tables();
     emit_functions();
 
     return Emitted { std::move( out_ ), std::move( defined_ ) };
@@ -779,6 +781,27 @@ void Kir_emitter::emit_externs()
     }
 }
 
+// Each read-only table the functions read, once a file, as functions share them.
+void Kir_emitter::emit_tables()
+{
+    std::unordered_set<u32> tables;
+    for( const Function& function : functions_ )
+    {
+        for( const Statement& statement : function.statements )
+        {
+            const Rvalue& value = function.rvalue( statement );
+            if( value.kind == Rvalue_kind::Constant_array && tables.insert( value.a.constant.v ).second )
+            {
+                write_line( constant_array( value ) );
+            }
+        }
+    }
+    if( !tables.empty() )
+    {
+        write_line( "" );
+    }
+}
+
 // Thunks first, before any `#line`: they keep the C file's lines, which a debugger steps over.
 void Kir_emitter::emit_functions()
 {
@@ -1185,16 +1208,6 @@ void Kir_emitter::emit_function( const Function& function )
             local_name( i.v ),
             holds_nothing( function.locals[i].type ) ? " = { 0 }" : ""
         ) );
-    }
-
-    std::unordered_set<u32> tables;
-    for( const Statement& statement : function.statements )
-    {
-        const Rvalue& value = function.rvalue( statement );
-        if( value.kind == Rvalue_kind::Constant_array && tables.insert( value.a.constant.v ).second )
-        {
-            write_line( constant_array( value ) );
-        }
     }
 
     // gcc warns on a name nothing reads: an unread parameter, or a call's unread result.
@@ -1849,8 +1862,8 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
 
     case Rvalue_kind::Call:
         assert(
-            ( rvalue.op != Token_kind::Unknown || rvalue.globals != Globals_call::None || !program_[rvalue.callee].requirement
-            ) &&
+            ( rvalue.op != Token_kind::Unknown || rvalue.globals != Globals_call::None || rvalue.planned ||
+              !program_[rvalue.callee].requirement ) &&
             "lower_dispatch made each dynamic call indirect"
         );
         [[fallthrough]];

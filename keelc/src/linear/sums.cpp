@@ -22,15 +22,6 @@ namespace
 using i128 = __int128;
 using u128 = unsigned __int128;
 
-// y[k] = sum over j < n of x[j] W_M^(c j k), for k < m: the shape the index rules take.
-struct Kernel
-{
-    u32 n;
-    u32 m;
-    u64 M;
-    u64 c;
-};
-
 Sum kernel_sum( const Kernel& k, bool real )
 {
     Sum s  = exponent_kernel( k.n, k.m, k.M, k.c );
@@ -925,37 +916,6 @@ std::vector<u32> rader_build( Circuit& c, const Sum& s, const Use& use, const st
     return y;
 }
 
-// DFT_M taking x[j] for j < n, zero past it, and giving y[k] for k < m, by a function that promises it.
-std::vector<Use> promised_match( const Sum& s, const Plan_options& options )
-{
-    const std::optional<Kernel> k = kernel_of( s );
-    if( !options.promised || !k || k->c != 1 || k->M <= options.leaf_max || k->n > k->M || k->m > k->M )
-    {
-        return {};
-    }
-    const std::optional<Promised> p = options.promised( k->M );
-    if( !p )
-    {
-        return {};
-    }
-    Use use { {}, p->cost, "call " + sides( s ) + " W" + std::to_string( k->M ) };
-    use.chosen = { p->callee, k->M };
-    return { std::move( use ) };
-}
-
-std::vector<u32> promised_build( Circuit& c, const Sum& s, const Use& use, const std::vector<u32>& x, const Part_builder& )
-{
-    std::vector<u32> arguments( use.chosen[1], Circuit::k_zero );
-    std::copy( x.begin(), x.end(), arguments.begin() );
-    const u32        call = c.call( { static_cast<u32>( use.chosen[0] ), use.own, false, std::move( arguments ) } );
-    std::vector<u32> out;
-    for( u32 o = 0; o < s.m; ++o )
-    {
-        out.push_back( c.result( call, o ) );
-    }
-    return out;
-}
-
 // One part a term.
 std::vector<Use> terms_match( const Sum& s, const Plan_options& )
 {
@@ -1349,7 +1309,6 @@ hermitian_build( Circuit& c, const Sum& s, const Use& use, const std::vector<u32
     return y;
 }
 
-// First, so a call wins a tie.
 Sum without_offset( const Sum& s )
 {
     Sum part    = s;
@@ -1553,7 +1512,6 @@ std::vector<u32> paired_build( Circuit& c, const Sum& s, const Use& use, const s
 const Rule rules[] = {
     { "offset", "y[k] + b(k) adds b(k) to each output", offset_match, offset_build, true },
     { "column", "b(k) = a f(j, k) is the sum of x with a added to x[j]", column_match, column_build, true },
-    { "promised", "a function promising DFT_M computes it", promised_match, promised_build },
     { "direct", "y[k] = sum over j of x[j] times its coefficient", direct_match, direct_build },
     { "solved", "the dense solve computes its matrix", solved_match, solved_build },
     { "terms", "a sum of terms is the sum of each term's sum", terms_match, terms_build },
@@ -1671,7 +1629,7 @@ public:
     Loop_program program( const Sum& s )
     {
         Loop_program p;
-        emit( p, p.steps, s, { 0, 0, 1, s.n }, { 1, 0, 1, s.m }, false );
+        emit( p, p.steps, s, { 0, 0, 1, s.n }, { 1, 0, 1, s.m }, false, false );
         p.cost = cost( p, p.steps );
         assert( p.cost <= choose( s ).cost && "a loop program costs more than its rules ranked it" );
         return p;
@@ -1762,8 +1720,16 @@ private:
         return it->second;
     }
 
-    // Steps computing s, or its conjugate, from `in` to `out`.
-    void emit( Loop_program& p, std::vector<Loop_step>& into, const Sum& s0, const Stride& in, const Stride& out, bool conj )
+    // Steps computing s, or its conjugate, from `in` to `out`; a call where it would loop, when `callable`.
+    void emit(
+        Loop_program&           p,
+        std::vector<Loop_step>& into,
+        const Sum&              s0,
+        const Stride&           in,
+        const Stride&           out,
+        bool                    conj,
+        bool                    callable = true
+    )
     {
         const auto [s, flipped] = representative( normalised( s0 ) );
         conj                    = conj != flipped;
@@ -1777,6 +1743,10 @@ private:
         const Choice& choice = choose( s );
         if( looped( s, options_ ) )
         {
+            if( options_.calls && callable && kernel_of( s ) )
+            {
+                return emit_call( p, into, s, in, out, conj );
+            }
             if( choice.rule->build == split_build )
             {
                 return emit_split( p, into, s, choice.use, in, out, conj );
@@ -1799,6 +1769,48 @@ private:
             }
         }
         into.push_back( Loop_step { .kind = Loop_kind::Leaf, .count = s.n, .leaf = leaf( p, s, conj ), .in = in, .out = out } );
+    }
+
+    // A call on contiguous elements, strided ones copied through a temporary.
+    void emit_call( Loop_program& p, std::vector<Loop_step>& into, const Sum& s, Stride in, Stride out, bool conj )
+    {
+        const Kernel k  = *kernel_of( s );
+        const auto   at = std::ranges::find( p.calls, k, &Loop_call::kernel );
+        const u32    f  = static_cast<u32>( at - p.calls.begin() );
+        if( at == p.calls.end() )
+        {
+            p.calls.push_back( { k, called( s, k ) } );
+        }
+        if( in.step != 1 )
+        {
+            const Stride t { buffer( p, s.n ) };
+            into.push_back( Loop_step { .kind = Loop_kind::Copy, .count = s.n, .in = in, .out = t } );
+            in = t;
+        }
+        const Stride to = out.step == 1 ? out : Stride { buffer( p, s.m ) };
+        into.push_back( Loop_step { .kind = Loop_kind::Call, .count = s.n, .leaf = f, .conj = conj, .in = in, .out = to } );
+        if( out.step != 1 )
+        {
+            into.push_back( Loop_step { .kind = Loop_kind::Copy, .count = s.m, .in = to, .out = out } );
+        }
+    }
+
+    // The callee's own program, by this planner's choices, so it is the one the caller was ranked with.
+    const Loop_program& called( const Sum& s, const Kernel& k )
+    {
+        const auto [it, fresh] = called_.try_emplace( k );
+        if( fresh )
+        {
+            // Its own leaves and tables, so the caller's indices stay the caller's.
+            Loop_program& q      = it->second;
+            auto          roots  = std::exchange( roots_, {} );
+            auto          leaves = std::exchange( leaves_, {} );
+            emit( q, q.steps, s, { 0, 0, 1, s.n }, { 1, 0, 1, s.m }, false, false );
+            roots_  = std::move( roots );
+            leaves_ = std::move( leaves );
+            q.cost  = cost( q, q.steps );
+        }
+        return it->second;
     }
 
     // Inner sums into z[j1 R + k2], twiddles, outer sums from z, each run of equal parts one loop.
@@ -2024,9 +2036,13 @@ private:
                 total = total + s.count * Cost { 2, 4 };
                 break;
             case Loop_kind::Gather:
+            case Loop_kind::Copy:
                 break;
             case Loop_kind::Add:
                 total = total + s.count * Cost { 2, 0 };
+                break;
+            case Loop_kind::Call:
+                total = total + p.calls[s.leaf].program.cost;
                 break;
             }
         }
@@ -2099,6 +2115,7 @@ private:
     std::map<Sum, Planned>              built_;
     std::map<u64, u32>                  roots_;  // a program's root table of each M
     std::map<std::pair<Sum, bool>, u32> leaves_; // a program's leaf of each sum, conjugated or not
+    std::map<Kernel, Loop_program>      called_; // each called kernel's program
 };
 
 i128 gcd( i128 a, i128 b )
@@ -2339,8 +2356,6 @@ TEST_CASE( "every_planner_rule_computes_the_naive_sum", "[linear][sums]" )
     std::mt19937 rng( 11 );
     Plan_options options;
     options.leaf_max = 6;
-    // A call evaluates as the transform it promises.
-    options.promised = []( u64 ) { return std::optional<Promised>( Promised { 0, { 1, 1 } } ); };
     for( const Rule& rule : rules )
     {
         INFO( rule.name << ": " << rule.identity );
@@ -2450,6 +2465,35 @@ void run(
                     b[s.in.buffer].at( element( s.in, index, i ) ) + b[s.also.buffer].at( element( s.also, index, i ) );
             }
             break;
+        case Loop_kind::Copy:
+            for( u32 i = 0; i < s.count; ++i )
+            {
+                b[s.out.buffer].at( element( s.out, index, i ) ) = b[s.in.buffer].at( element( s.in, index, i ) );
+            }
+            break;
+        case Loop_kind::Call:
+        {
+            const auto& [k, q] = p.calls[s.leaf];
+            std::vector<std::vector<std::complex<f64>>> c;
+            for( const u64 size : q.buffers )
+            {
+                c.emplace_back( size );
+            }
+            c[0].resize( k.n );
+            c[1].resize( k.m );
+            for( u32 j = 0; j < k.n; ++j )
+            {
+                const std::complex<f64> x = b[s.in.buffer].at( element( s.in, index, j ) );
+                c[0][j]                   = s.conj ? std::conj( x ) : x;
+            }
+            std::vector<u64> inner( q.loops );
+            run( q, q.steps, c, inner );
+            for( u32 o = 0; o < k.m; ++o )
+            {
+                b[s.out.buffer].at( element( s.out, index, o ) ) = s.conj ? std::conj( c[1][o] ) : c[1][o];
+            }
+            break;
+        }
         }
     }
 }
@@ -2522,6 +2566,34 @@ TEST_CASE( "a_pfa_or_rader_plan_runs_as_loops_through_index_tables", "[linear][s
             CHECK( plan_sum( s, small )->how.find( n == 97 ? "rader " : "pfa " ) < 16 );
             CHECK( gathers( p->steps ) );
             CHECK( error( *p, s ) < 1e-12 );
+        }
+    }
+}
+
+bool calls( const std::vector<Loop_step>& steps )
+{
+    return std::ranges::any_of( steps, []( const Loop_step& s ) { return s.kind == Loop_kind::Call || calls( s.body ); } );
+}
+
+TEST_CASE( "a_part_that_would_loop_is_a_call_at_the_cost_it_has_inline", "[linear][sums]" )
+{
+    // Bluestein's padded parts, a split's strided ones, and rader's, at 8-point leaves.
+    Plan_options small;
+    small.leaf_max       = 8;
+    Plan_options calling = small;
+    calling.calls        = true;
+    for( const u32 n : { 97u, 256u, 1019u } )
+    {
+        for( const u32 c : { 1u, n - 1 } )
+        {
+            const Sum                         s       = exponent_kernel( n, n, n, c );
+            const std::optional<Loop_program> inline_ = plan_loops( s, small ), called = plan_loops( s, calling );
+            REQUIRE( inline_ );
+            REQUIRE( called );
+            INFO( n << " " << c );
+            CHECK( calls( called->steps ) );
+            CHECK( called->cost == inline_->cost );
+            CHECK( error( *called, s ) < 1e-12 );
         }
     }
 }

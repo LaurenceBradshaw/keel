@@ -32,6 +32,17 @@ Literal_id Literal_pool::add_string( std::string bytes )
     return Literal_id { narrow_cast<u32>( entries_.size() - 1 ) };
 }
 
+Literal_id Literal_pool::intern_string( std::string bytes )
+{
+    if( const auto it = interned_.find( bytes ); it != interned_.end() )
+    {
+        return it->second;
+    }
+    const Literal_id id = add_string( bytes );
+    interned_.emplace( std::move( bytes ), id );
+    return id;
+}
+
 u64 Literal_pool::integer( Literal_id id ) const
 {
     assert( id.is_valid() && id.v < entries_.size() && kind( id ) == Literal_kind::Integer && "invalid Literal_id" );

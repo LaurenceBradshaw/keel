@@ -219,6 +219,11 @@ std::string Spelling::function( const Function& function ) const
         return thunk( function.type_arguments[0], function.thunk_of, function.declaration );
     }
 
+    if( function.planned )
+    {
+        return planned( function.type_arguments );
+    }
+
     return this->function( function.declaration, function.type_arguments );
 }
 
@@ -226,7 +231,18 @@ std::string Spelling::callee( const Rvalue& value ) const
 {
     return value.op != Token_kind::Unknown       ? guard( value.op, value.type_arguments )
            : value.globals != Globals_call::None ? globals_function( value.callee, value.globals == Globals_call::Drop )
+           : value.planned                       ? planned( value.type_arguments )
                                                  : function( value.callee, value.type_arguments );
+}
+
+std::string Spelling::planned( std::span<const Type_id> sizes ) const
+{
+    std::string name = "keel_dft";
+    for( const Type_id t : sizes )
+    {
+        name += fmt::format( "_{}", types.table().get( t ).count );
+    }
+    return name;
 }
 
 std::string Spelling::globals_function( Node_id first, bool drops ) const

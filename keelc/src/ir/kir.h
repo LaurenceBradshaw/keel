@@ -211,6 +211,7 @@ struct Rvalue
     std::vector<Type_id> type_arguments {};
     Address_purpose      address_purpose = Address_purpose::Borrow;
     Globals_call         globals         = Globals_call::None;
+    bool                 planned         = false; // a Call of a planned kernel's function, which no declaration has
 };
 
 enum class Statement_kind : u8
@@ -421,8 +422,10 @@ struct Function
 
     bool diverges = false; // returns `never`, so no path may reach a Return
 
-    bool    real_arithmetic = false;         // written `@real_arithmetic`
-    Promise promise         = Promise::None; // written `@trig_sin`, `@trig_cos`, `@trig_tan` or `@dft`
+    bool real_arithmetic = false;      // written `@real_arithmetic`
+    Trig trig            = Trig::None; // written `@trig_sin`, `@trig_cos` or `@trig_tan`
+    // keelc's, declared by nothing: a planned kernel, its n, m, M and c the type arguments, each a Size.
+    bool planned = false;
 
     Run<Statement> statements_of( const Block& block )
     {
@@ -514,7 +517,8 @@ inline bool names( const Rvalue& value, const Function& function )
     }
 
     return value.globals == Globals_call::None && value.callee == function.declaration && value.op == function.compares &&
-           !function.thunk_of.is_valid() && value.type_arguments == function.type_arguments;
+           value.planned == function.planned && !function.thunk_of.is_valid() &&
+           value.type_arguments == function.type_arguments;
 }
 
 inline bool has_deref_projection( const Function& func, const Place& place )

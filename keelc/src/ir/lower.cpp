@@ -563,7 +563,7 @@ Function Lowering::run()
 
     Function function        = finished();
     function.real_arithmetic = ast_.is_real_arithmetic( declaration_ );
-    function.promise         = ast_.promise( declaration_ );
+    function.trig            = ast_.trig( declaration_ );
     return function;
 }
 
@@ -5674,24 +5674,17 @@ bool has_vtables( const Types& types, Type_id type )
     );
 }
 
-// Every closed owning enum, owning union and owning implementer's drop function, but those `done`
-// holds, which it adds to: a destructor by its type, a drop function by its type and 1 << 32.
-// Repeated until nothing new appears, since one destructor can intern another: `Option<Option<Buf>>`.
+// Every closed owning enum, owning union and owning implementer's drop function. Repeated until
+// nothing new appears, since one destructor can intern another: `Option<Option<Buf>>`.
 void append_synthesised_drops(
-    const Ast&               ast,
-    Types&                   types,
-    Literal_pool&            literals,
-    std::vector<Function>&   functions,
-    std::size_t              given,
-    std::unordered_set<u64>& done
+    const Ast& ast, Types& types, Literal_pool& literals, std::vector<Function>& functions, std::size_t given
 )
 {
-    // Whether `type`'s function of this kind is still to make, now marked made.
-    const auto fresh = [&]( Type_id type, bool drop ) { return done.insert( u64 { type.v } | u64 { drop } << 32 ).second; };
-
     // Asked afresh each time: the pushes below move `functions`.
     const auto loaded = [&]( Node_id declaration, std::span<const Type_id> arguments )
     { return provided( std::span( functions ).first( given ), declaration, arguments ); };
+
+    std::vector<Type_id> done;
 
     for( bool grew = true; grew; )
     {
@@ -5699,13 +5692,14 @@ void append_synthesised_drops(
 
         for( const Type_id type : types.table().composite_types() )
         {
-            if( !types.table().is_enum( type ) || types.table().mentions_parameter( type ) || done.contains( u64 { type.v } ) ||
+            if( !types.table().is_enum( type ) || types.table().mentions_parameter( type ) ||
+                std::find( done.begin(), done.end(), type ) != done.end() ||
                 !instance_owns( ast, types.table(), type, types.recorded() ) )
             {
                 continue;
             }
 
-            fresh( type, false );
+            done.push_back( type );
             if( loaded( types.table().get( type ).declaration, types.table().get( type ).arguments ) )
             {
                 continue;
@@ -5717,8 +5711,7 @@ void append_synthesised_drops(
 
     for( const Type_id type : types.table().union_types() )
     {
-        if( instance_owns( ast, types.table(), type, types.recorded() ) && fresh( type, false ) &&
-            !loaded( {}, std::span( &type, 1 ) ) )
+        if( instance_owns( ast, types.table(), type, types.recorded() ) && !loaded( {}, std::span( &type, 1 ) ) )
         {
             functions.push_back( union_destructor( ast, types, literals, type ) );
         }
@@ -5728,7 +5721,7 @@ void append_synthesised_drops(
     for( const Type_id type : types.table().array_types() )
     {
         if( !types.table().mentions_parameter( type ) && instance_owns( ast, types.table(), type, types.recorded() ) &&
-            fresh( type, false ) && !loaded( {}, std::span( &type, 1 ) ) )
+            !loaded( {}, std::span( &type, 1 ) ) )
         {
             functions.push_back( array_destructor( ast, types, literals, type ) );
         }
@@ -5737,7 +5730,7 @@ void append_synthesised_drops(
     for( const Type_id type : types.table().composite_types() )
     {
         if( ( types.table().is_struct( type ) || types.table().is_enum( type ) ) && !types.table().mentions_parameter( type ) &&
-            has_vtables( types, type ) && instance_owns( ast, types.table(), type, types.recorded() ) && fresh( type, true ) &&
+            has_vtables( types, type ) && instance_owns( ast, types.table(), type, types.recorded() ) &&
             !loaded( {}, std::span( &type, 1 ) ) )
         {
             functions.push_back( drop_function( ast, types, type, ast.span( types.table().get( type ).declaration ) ) );
@@ -5944,147 +5937,114 @@ Function lower_function(
     return again.run();
 }
 
-Lowerer::Lowerer(
+std::vector<Function> lower(
     const Ast&            ast,
     const Resolution&     resolution,
     Types&                types,
     Literal_pool&         literals,
     const Source_manager& sm,
     const Interner&       interner,
-    bool                  overflow_checks
+    bool                  overflow_checks,
+    std::vector<Function> loaded
 )
-    : ast_( ast ),
-      resolution_( resolution ),
-      types_( types ),
-      literals_( literals ),
-      sm_( sm ),
-      interner_( interner ),
-      overflow_checks_( overflow_checks )
-{
-}
-
-// The lambdas written in `declaration`, nested ones too, each under the bindings it was lowered at.
-std::vector<Function> Lowerer::lambdas( Node_id declaration, const Bindings& bindings ) const
-{
-    std::vector<Function> lowered;
-    std::vector<Node_id>  pending { ast_.body( declaration ) };
-
-    while( !pending.empty() )
-    {
-        const Node_id node = pending.back();
-        pending.pop_back();
-
-        if( !node.is_valid() )
-        {
-            continue;
-        }
-        if( ast_.kind( node ) == Node_kind::Lambda_expr )
-        {
-            Function lambda =
-                lower_function( node, ast_, resolution_, types_, literals_, sm_, interner_, overflow_checks_, bindings );
-            lambda.type_arguments = lambda_arguments( bindings );
-            lowered.push_back( std::move( lambda ) );
-        }
-        for( const Node_id child : ast_.children( node ) )
-        {
-            pending.push_back( child );
-        }
-    }
-    return lowered;
-}
-
-std::vector<Function> Lowerer::lower( std::vector<Function> loaded )
 {
     std::vector<Function> functions = std::move( loaded );
-    given_                          = functions.size();
+    const std::size_t     given     = functions.size();
 
-    for( Node_id id { 0 }; id.v < ast_.node_count(); ++id.v )
+    // The lambdas written in `declaration`, nested ones too, each under the bindings it was lowered at.
+    const auto lower_lambdas = [&]( Node_id declaration, const Bindings& bindings )
+    {
+        std::vector<Function> lowered;
+        std::vector<Node_id>  pending { ast.body( declaration ) };
+
+        while( !pending.empty() )
+        {
+            const Node_id node = pending.back();
+            pending.pop_back();
+
+            if( !node.is_valid() )
+            {
+                continue;
+            }
+            if( ast.kind( node ) == Node_kind::Lambda_expr )
+            {
+                Function lambda =
+                    lower_function( node, ast, resolution, types, literals, sm, interner, overflow_checks, bindings );
+                lambda.type_arguments = lambda_arguments( bindings );
+                lowered.push_back( std::move( lambda ) );
+            }
+            for( const Node_id child : ast.children( node ) )
+            {
+                pending.push_back( child );
+            }
+        }
+        return lowered;
+    };
+
+    const auto add = [&]( std::vector<Function> more ) { std::ranges::move( more, std::back_inserter( functions ) ); };
+
+    for( Node_id id { 0 }; id.v < ast.node_count(); ++id.v )
     {
         // A generic has no code of its own - it is the template the instantiations below are
         // emitted from, and emitting it directly would try to give `T` a C spelling.
         // A walk has none either: it is lowered where each loop over it is written (D74).
-        if( is_function_like( ast_.kind( id ) ) && ( ast_.body( id ).is_valid() || ast_.is_intrinsic( id ) ) &&
-            !ast_.is_generic( id ) && !ast_.is_walk( id ) && !resolution_.modules().is_loaded( ast_.span( id ).file ) )
+        if( is_function_like( ast.kind( id ) ) && ( ast.body( id ).is_valid() || ast.is_intrinsic( id ) ) &&
+            !ast.is_generic( id ) && !ast.is_walk( id ) && !resolution.modules().is_loaded( ast.span( id ).file ) )
         {
-            functions.push_back(
-                lower_function( id, ast_, resolution_, types_, literals_, sm_, interner_, overflow_checks_, {} )
-            );
-            std::ranges::move( lambdas( id, {} ), std::back_inserter( functions ) );
+            functions.push_back( lower_function( id, ast, resolution, types, literals, sm, interner, overflow_checks, {} ) );
+            add( lower_lambdas( id, {} ) );
         }
     }
 
     // Before the queue, so what an initialiser instantiates is lowered too.
-    for( const std::vector<Node_id>& globals : built_globals( ast_, types_, resolution_ ) )
+    for( const std::vector<Node_id>& globals : built_globals( ast, types, resolution ) )
     {
-        Lowering lowering( globals.front(), ast_, resolution_, types_, literals_, sm_, interner_, overflow_checks_ );
+        Lowering lowering( globals.front(), ast, resolution, types, literals, sm, interner, overflow_checks );
         functions.push_back( lowering.run_build( globals ) );
 
-        if( std::optional<Function> drop = globals_drop( ast_, types_, globals ) )
+        if( std::optional<Function> drop = globals_drop( ast, types, globals ) )
         {
             functions.push_back( std::move( *drop ) );
         }
     }
 
-    queue_.emplace( ast_, types_ );
+    Instance_queue instances( ast, types );
 
     for( const Function& function : functions )
     {
-        queue_->reached_by( function );
+        instances.reached_by( function );
     }
 
-    drain( functions );
-    return functions;
-}
-
-u32 Lowerer::instantiate( std::vector<Function>& functions, Instantiation instance )
-{
-    queue_->seed( instance );
-    drain( functions );
-
-    const auto found = std::ranges::find_if(
-        functions,
-        [&]( const Function& function )
-        {
-            return function.declaration == instance.declaration && function.compares == Token_kind::Unknown &&
-                   !function.thunk_of.is_valid() && function.type_arguments == instance.arguments;
-        }
-    );
-    assert( found != functions.end() && "an instantiation is lowered" );
-    return u32( found - functions.begin() );
-}
-
-// What the queue holds, and the drops, thunks and guards that leaves wanting.
-void Lowerer::drain( std::vector<Function>& functions )
-{
     // next() has queued what a provided instance reaches, so skipping it still finds those.
-    while( const std::optional<Instantiation> instance = queue_->next() )
+    while( const std::optional<Instantiation> instance = instances.next() )
     {
-        if( provided( std::span( functions ).first( given_ ), instance->declaration, instance->arguments ) ||
-            ast_.is_walk( instance->declaration ) )
+        if( provided( std::span( functions ).first( given ), instance->declaration, instance->arguments ) ||
+            ast.is_walk( instance->declaration ) )
         {
             continue;
         }
 
-        const Bindings bindings = bindings_for( ast_, types_, *instance );
-        Function       emitted  = lower_function(
-            instance->declaration, ast_, resolution_, types_, literals_, sm_, interner_, overflow_checks_, bindings
-        );
+        const Bindings bindings = bindings_for( ast, types, *instance );
+        Function       emitted =
+            lower_function( instance->declaration, ast, resolution, types, literals, sm, interner, overflow_checks, bindings );
 
         emitted.type_arguments = instance->arguments;
 
-        queue_->reached_by( emitted );
+        instances.reached_by( emitted );
         functions.push_back( std::move( emitted ) );
 
-        for( Function& lambda : lambdas( instance->declaration, bindings ) )
+        for( Function& lambda : lower_lambdas( instance->declaration, bindings ) )
         {
-            queue_->reached_by( lambda );
+            instances.reached_by( lambda );
             functions.push_back( std::move( lambda ) );
         }
     }
 
-    append_synthesised_drops( ast_, types_, literals_, functions, given_, dropped_ );
-    append_thunks( ast_, types_, functions );
-    append_guards( types_, literals_, functions );
+    append_synthesised_drops( ast, types, literals, functions, given );
+    append_thunks( ast, types, functions );
+    append_guards( types, literals, functions );
+
+    return functions;
 }
 
 } // namespace keel
@@ -10610,45 +10570,6 @@ TEST_CASE( "lower_makes_a_prelude_square_root_the_instruction", "[ir][lower][pre
         REQUIRE( body.find( "sqrt copy _1" ) != std::string::npos );
         REQUIRE( body.find( "sqrt_f" ) == std::string::npos );
     }
-}
-
-// A late instance is lowered with the generic instances it reaches, once.
-TEST_CASE( "lower_instantiates_what_a_later_pass_asks_for", "[ir][lower][instances]" )
-{
-    Lowered p( "i64 half<u64 N>() { return cast<i64>( N ) / 2; }\n"
-               "i64 twice<u64 N>() { return half<N>() * 4; }\n"
-               "i32 main() { return cast<i32>( twice<3>() ); }" );
-    REQUIRE( p.clean() );
-
-    const auto named = [&]( const std::vector<Function>& functions, std::string_view name )
-    {
-        return std::ranges::count_if(
-            functions,
-            [&]( const Function& f )
-            { return f.declaration.is_valid() && p.interner.text( p.ast.name( f.declaration ) ) == name; }
-        );
-    };
-    const auto twice = std::ranges::find_if(
-        p.all,
-        [&]( const Function& f )
-        { return f.declaration.is_valid() && p.interner.text( p.ast.name( f.declaration ) ) == "twice"; }
-    );
-    REQUIRE( twice != p.all.end() );
-
-    Lowerer               lowerer( p.ast, p.resolution, p.types, p.literals, p.sm, p.interner, false );
-    std::vector<Function> functions = lowerer.lower();
-    REQUIRE( named( functions, "half" ) == 1 );
-
-    const Instantiation at_8 { .declaration = twice->declaration, .arguments = { p.types.table().size( 8 ) } };
-    const u32           index = lowerer.instantiate( functions, at_8 );
-    REQUIRE( functions[index].declaration == twice->declaration );
-    REQUIRE( functions[index].type_arguments == at_8.arguments );
-    REQUIRE( named( functions, "twice" ) == 2 );
-    REQUIRE( named( functions, "half" ) == 2 );
-
-    const std::size_t size = functions.size();
-    REQUIRE( lowerer.instantiate( functions, at_8 ) == index );
-    REQUIRE( functions.size() == size );
 }
 
 } // namespace keel

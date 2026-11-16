@@ -70,8 +70,8 @@ private:
         std::optional<Span> located;
         std::optional<Span> intrinsic;
         std::optional<Span> real_arithmetic;
-        std::optional<Span> promise_span;
-        Promise             promise = Promise::None;
+        std::optional<Span> trig_span;
+        Trig                trig = Trig::None;
     };
 
     Directives parse_directives();
@@ -806,7 +806,7 @@ Parser::Directives Parser::parse_directives()
             recovery_.error_at(
                 at,
                 "expected a directive's name after `@`",
-                "the directives here are `@located`, `@real_arithmetic`, `@trig_sin`, `@trig_cos`, `@trig_tan` and `@dft`"
+                "the directives here are `@located`, `@real_arithmetic`, `@trig_sin`, `@trig_cos` and `@trig_tan`"
             );
             continue;
         }
@@ -841,35 +841,24 @@ Parser::Directives Parser::parse_directives()
 
             directives.real_arithmetic = span;
         }
-        else if( name == "trig_sin" || name == "trig_cos" || name == "trig_tan" || name == "dft" )
+        else if( name == "trig_sin" || name == "trig_cos" || name == "trig_tan" )
         {
-            const Promise promise = name == "trig_sin"   ? Promise::Sin
-                                    : name == "trig_cos" ? Promise::Cos
-                                    : name == "trig_tan" ? Promise::Tan
-                                                         : Promise::Dft;
+            const Trig trig = name == "trig_sin" ? Trig::Sin : name == "trig_cos" ? Trig::Cos : Trig::Tan;
 
-            if( directives.promise == promise )
+            if( directives.trig == trig )
             {
                 recovery_.error_at( span, fmt::format( "`@{}` is written twice", name ) );
             }
-            else if( is_trig( directives.promise ) && is_trig( promise ) )
+            else if( directives.trig != Trig::None )
             {
                 recovery_.error_at(
                     span, fmt::format( "`@{}` after another `@trig_` directive", name ), "a function is one of sin, cos and tan"
                 );
             }
-            else if( directives.promise != Promise::None )
-            {
-                recovery_.error_at(
-                    span,
-                    fmt::format( "`@{}` after `{}`", name, sm_.text( *directives.promise_span ) ),
-                    "a function makes one promise"
-                );
-            }
             else
             {
-                directives.promise_span = span;
-                directives.promise      = promise;
+                directives.trig_span = span;
+                directives.trig      = trig;
             }
         }
         else if( name == "caller" )
@@ -883,8 +872,8 @@ Parser::Directives Parser::parse_directives()
             recovery_.error_at(
                 span,
                 "`@functions_of(T)` is an expression, not a declaration's directive",
-                "the directives a declaration takes are `@located`, `@real_arithmetic`, `@trig_sin`, `@trig_cos`, "
-                "`@trig_tan` and `@dft`"
+                "the directives a declaration takes are `@located`, `@real_arithmetic`, `@trig_sin`, `@trig_cos` and "
+                "`@trig_tan`"
             );
         }
         else
@@ -892,8 +881,8 @@ Parser::Directives Parser::parse_directives()
             recovery_.error_at(
                 span,
                 fmt::format( "there is no directive `@{}`", name ),
-                "the directives a declaration takes are `@located`, `@real_arithmetic`, `@trig_sin`, `@trig_cos`, "
-                "`@trig_tan` and `@dft`"
+                "the directives a declaration takes are `@located`, `@real_arithmetic`, `@trig_sin`, `@trig_cos` and "
+                "`@trig_tan`"
             );
         }
     }
@@ -937,20 +926,15 @@ void Parser::apply_directives( Node_id decl, const Directives& directives )
         }
     }
 
-    if( directives.promise_span )
+    if( directives.trig_span )
     {
-        // A planned call has no receiver to pass.
-        if( directives.promise == Promise::Dft && kind != Node_kind::Function_decl )
+        if( !function )
         {
-            recovery_.error_at( *directives.promise_span, "`@dft` marks a function" );
-        }
-        else if( !function )
-        {
-            recovery_.error_at( *directives.promise_span, "a `@trig_` directive marks a function or a method" );
+            recovery_.error_at( *directives.trig_span, "a `@trig_` directive marks a function or a method" );
         }
         else
         {
-            ast_.set_promise( decl, directives.promise, *directives.promise_span );
+            ast_.set_trig( decl, directives.trig, *directives.trig_span );
         }
     }
 

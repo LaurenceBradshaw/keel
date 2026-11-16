@@ -65,6 +65,17 @@ struct Printer
         return fmt::format( "<{} {} {}>", type_name( operands[0] ), token_kind_spelling( op ), type_name( operands[1] ) );
     }
 
+    // A planned kernel's function, `<dft n m M c>`.
+    std::string planned( std::span<const Type_id> sizes ) const
+    {
+        std::string out = "<dft";
+        for( const Type_id t : sizes )
+        {
+            out += fmt::format( " {}", type_name( t ) );
+        }
+        return out + ">";
+    }
+
     std::string_view type_name( Type_id type ) const
     {
         return type.is_valid() ? types.name( type ) : "<none>";
@@ -212,7 +223,8 @@ struct Printer
                 : value.op != Token_kind::Unknown        ? guard( value.op, value.type_arguments )
                 : value.globals != Globals_call::None
                     ? fmt::format( "{} {}", value.globals == Globals_call::Drop ? "drop" : "build", name_of( value.callee ) )
-                    : std::string( name_of( value.callee ) ),
+                : value.planned ? planned( value.type_arguments )
+                                : std::string( name_of( value.callee ) ),
                 arguments
             );
         }
@@ -343,7 +355,7 @@ print( const Function& func, const Ast& ast, const Type_table& types, const Lite
     // Declared by nothing, and named for its type argument: a union's destructor, or an implementer's
     // drop function, which is not its `~` and so does not print as one.
     const bool synthesised =
-        !func.declaration.is_valid() && !func.type_arguments.empty() && func.compares == Token_kind::Unknown;
+        !func.declaration.is_valid() && !func.type_arguments.empty() && func.compares == Token_kind::Unknown && !func.planned;
     const bool united = synthesised && ( types.is_union( func.type_arguments[0] ) || types.is_array( func.type_arguments[0] ) );
 
     // D80: a module's, named for its first built global.
@@ -353,6 +365,7 @@ print( const Function& func, const Ast& ast, const Type_table& types, const Lite
             ? fmt::format( "fn {} {} {{\n", func.drops_globals ? "drop" : "build", printer.name_of( func.globals ) )
         : func.compares != Token_kind::Unknown
             ? fmt::format( "fn {} {{\n", printer.guard( func.compares, func.type_arguments ) )
+        : func.planned             ? fmt::format( "fn {} {{\n", printer.planned( func.type_arguments ) )
         : func.thunk_of.is_valid() ? fmt::format(
                                          "fn {} as {}.{} {{\n",
                                          types.name( func.type_arguments[0] ),

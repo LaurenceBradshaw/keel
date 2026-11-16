@@ -3,6 +3,7 @@
 
 #pragma once
 #include <string>
+#include <unordered_map>
 #include <variant>
 #include <vector>
 #include "common/types.h"
@@ -48,6 +49,8 @@ public:
     // `narrow` is the spelling read as an `f32` directly, not `value` rounded again.
     Literal_id add_float( f64 value, f32 narrow );
     Literal_id add_string( std::string bytes );
+    // The same id for the same bytes, so equal tables are one.
+    Literal_id intern_string( std::string bytes );
 
     // The node kind chooses: Int_literal reads integer(), Float_literal reads floating(). A read
     // through the wrong kind asserts.
@@ -68,6 +71,7 @@ private:
 
     // Each alternative's index is its Literal_kind plus one, which kind() relies on.
     std::vector<std::variant<std::monostate, u64, Float, std::string>> entries_;
+    std::unordered_map<std::string, Literal_id>                        interned_;
 };
 
 } // namespace keel

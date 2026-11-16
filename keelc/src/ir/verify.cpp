@@ -113,7 +113,7 @@ void check_rvalue( const Function& func, const Rvalue& value, const At& where, s
     case Rvalue_kind::Call:
     case Rvalue_kind::Indirect_call:
     {
-        if( value.kind == Rvalue_kind::Call && !value.callee.is_valid() && value.op == Token_kind::Unknown )
+        if( value.kind == Rvalue_kind::Call && !value.callee.is_valid() && value.op == Token_kind::Unknown && !value.planned )
         {
             errors.push_back( fmt::format( "{}: callee is not set", where ) );
         }

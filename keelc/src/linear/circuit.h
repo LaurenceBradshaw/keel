@@ -8,7 +8,6 @@
 #include <optional>
 #include <string>
 #include <string_view>
-#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -25,11 +24,10 @@ enum class Op_kind : u8
     Real,
     Conj,
     One,
-    Result,
 };
 
 // Input: `a` is the input. Add: `a <= b` are nodes. Scale: node `a` times constant `b`. Real: node `a`'s real part.
-// Conj: node `a`'s conjugate, free as a sign is. One: the constant 1. Result: output `b` of call `a`.
+// Conj: node `a`'s conjugate, free as a sign is. One: the constant 1.
 struct Op
 {
     Op_kind kind;
@@ -68,16 +66,6 @@ using Row = std::vector<Element>;
 // `unit` when the ring says it is free.
 Cost scale_cost( std::complex<f64> c, bool real, bool unit = false );
 
-// A call of a function promising y[k] = sum over j < n of x[j] W_n^(j k), n the arguments' count, with x
-// and y conjugated when `conjugate`, so the inverse. An argument of k_zero is zero; `cost` is the callee's.
-struct Call
-{
-    u32              callee;
-    Cost             cost;
-    bool             conjugate = false;
-    std::vector<u32> arguments;
-};
-
 // A hash-consed straight-line circuit over inputs, adds, scalings, real parts and conjugates. A constant node is 1
 // or 1 scaled, folded and free as a literal is. Constants are snapped complex floats, since sub-circuits from other
 // fields are pasted in; an integer ring's stay exact.
@@ -89,22 +77,13 @@ public:
     explicit Circuit( bool real );
     explicit Circuit( Field& integers );
 
-    u32 input( u32 j );
-    u32 add( u32 a, u32 b );
-    u32 scale( u32 a, std::complex<f64> c );
-    u32 scale( u32 a, Element c );
-    u32 real_part( u32 a );
-    u32 conj( u32 a );
-    u32 one();
-    // `call`, made once however often it is asked for; result( id, k ) is its output k.
-    u32 call( Call call );
-    u32 result( u32 call, u32 k );
-
-    const std::vector<Call>& calls() const
-    {
-        return calls_;
-    }
-
+    u32  input( u32 j );
+    u32  add( u32 a, u32 b );
+    u32  scale( u32 a, std::complex<f64> c );
+    u32  scale( u32 a, Element c );
+    u32  real_part( u32 a );
+    u32  conj( u32 a );
+    u32  one();
     bool real() const
     {
         return real_;
@@ -115,8 +94,8 @@ public:
     std::vector<u32> paste( const Circuit& sub, const std::vector<u32>& inputs, bool conjugate = false );
 
     // The transpose over the reals, built in `into`: seeds[o] stands for output node outs[o], and node j of the
-    // result is input j's, real when it is. A complex map's transpose is its conjugate transpose, a call's the
-    // conjugate call; constants drop out.
+    // result is input j's, real when it is. A complex map's transpose is its conjugate transpose;
+    // constants drop out.
     std::vector<u32> transposed( Circuit& into, const std::vector<u32>& outs, const std::vector<u32>& seeds, u32 inputs ) const;
 
     // This circuit with input `j` the constant 1.
@@ -175,7 +154,6 @@ private:
     };
 
     u32 put( Op op );
-    u32 call_from( const Circuit& sub, u32 c, const std::vector<u32>& nodes, bool conjugate );
     // Each live node's users, an output counting as one.
     std::vector<u32> uses( const std::vector<bool>& lv ) const;
     u32              scale_by( u32 a, Constant c );
@@ -191,13 +169,11 @@ private:
     bool   real_;
     Field* integers_ = nullptr;
 
-    std::vector<Op>                                        ops_;
-    std::vector<bool>                                      real_ops_;      // each op's value is real
-    std::vector<bool>                                      imaginary_ops_; // each op's real part is 0
-    std::unordered_map<u64, u32>                           memo_;
-    std::vector<Constant>                                  constants_;
-    std::map<std::pair<f64, f64>, u32>                     constant_ids_;
-    std::vector<Call>                                      calls_;
-    std::map<std::tuple<u32, bool, std::vector<u32>>, u32> call_ids_;
+    std::vector<Op>                    ops_;
+    std::vector<bool>                  real_ops_;      // each op's value is real
+    std::vector<bool>                  imaginary_ops_; // each op's real part is 0
+    std::unordered_map<u64, u32>       memo_;
+    std::vector<Constant>              constants_;
+    std::map<std::pair<f64, f64>, u32> constant_ids_;
 };
 } // namespace keel

@@ -28,7 +28,6 @@
 #include "opt/inline_calls.h"
 #include "opt/loop_self_calls.h"
 #include "opt/merge_blocks.h"
-#include "opt/promises.h"
 #include "opt/propagate_constants.h"
 #include "opt/propagate_values.h"
 #include "opt/reduce_inductions.h"
@@ -141,12 +140,12 @@ Front_end run_front_end(
 
     // Lowered once, for everything downstream: the move check, --dump-kir and the emitter all read
     // the same functions.
-    Lowerer lowerer( ast, front.resolution, front.types, literals, sm, interner, build.overflow_checks );
-    front.functions = lowerer.lower( std::move( loaded ) );
+    front.functions =
+        lower( ast, front.resolution, front.types, literals, sm, interner, build.overflow_checks, std::move( loaded ) );
     lap( "lower" );
 
     // A debug keelc checks what each pass leaves, so a malformed statement names the pass that made it.
-    // Made again whenever a late instance moves the functions it reads.
+    // Made again whenever a planned kernel's function moves the functions it reads.
     std::optional<Type_verifier> verifier;
     verifier.emplace( ast, front.types, interner, front.functions );
     const auto verified = [&]( [[maybe_unused]] const Function& function, [[maybe_unused]] std::string_view pass )
@@ -318,53 +317,31 @@ Front_end run_front_end(
     std::function<void( const std::vector<u32>& )> optimise_group;
     Group_order order( front.functions, dispatched, [&]( const std::vector<u32>& group ) { optimise_group( group ); } );
 
-    // An instance no call site named, which a pass asks for: lowered with what it reaches, checked,
-    // and optimised callees first, as the program's were. Its index.
-    const auto instantiate = [&]( Instantiation instance ) -> u32
-    {
-        const std::size_t before = front.functions.size();
-        const u32         index  = lowerer.instantiate( front.functions, std::move( instance ) );
-        if( front.functions.size() > before )
+    // A planned kernel's function, which the map pass made: checked, and optimised as the rest are.
+    Planned_kernels planned_kernels {
+        .made = {},
+        .add =
+            [&]( Function function )
         {
+            const u32 index = narrow_cast<u32>( front.functions.size() );
+            front.functions.push_back( std::move( function ) );
             verifier.emplace( ast, front.types, interner, front.functions );
-            for( Function& function : std::span( front.functions ).subspan( before ) )
-            {
-#ifndef NDEBUG
-                verifier->require_types( function, "lowering" );
-#endif
-                simplify( function, literals );
-                verified( function, "simplify" );
-            }
-            const std::vector<Global_effects> effects = global_effects_of( front.functions, ast, front.types );
-            report_dataflow_errors(
-                std::span( front.functions ).subspan( before ),
-                std::span( effects ).subspan( before ),
-                ast,
-                sm,
-                interner,
-                literals,
-                front.types,
-                diags
-            );
+            verified( front.functions[index], "solve_linear_maps" );
             saved.resize( front.functions.size() );
             finished.resize( front.functions.size(), false );
             purity.add();
-            order.add( static_cast<u32>( before ) );
-        }
-        order.want( index );
-        return index;
+            order.add( index );
+            order.want( index );
+        },
     };
-
-    Promises promises(
-        ast, front.types, front.resolution.modules(), front.functions, instantiate, [&]( u32 f ) { return order.want( f ); }
-    );
 
     optimise_group = [&]( const std::vector<u32>& group )
     {
         for( const u32 f : group )
         {
-            // A reused part links from its object; any other is optimised with the rest.
-            if( f < given && kept[f] )
+            // A reused part links from its object; any other is optimised with the rest. A planned kernel's
+            // body is the map pass's, so it starts there.
+            if( ( f < given && kept[f] ) || front.functions[f].planned )
             {
                 continue;
             }
@@ -418,13 +395,16 @@ Front_end run_front_end(
                 continue;
             }
 
-            // Fetched afresh, as a plan's late instance can move the functions.
+            // Fetched afresh, as a planned kernel's function can move the functions.
             const auto current = [&]() -> Function& { return front.functions[f]; };
 
-            elaborate_drops( current(), vocabulary );
-            verified( current(), "elaborate_drops" );
+            if( !current().planned )
+            {
+                elaborate_drops( current(), vocabulary );
+                verified( current(), "elaborate_drops" );
+            }
 
-            if( build.level >= 1 )
+            if( build.level >= 1 && !current().planned )
             {
                 settle_drops( current() );
                 verified( current(), "settle_drops" );
@@ -450,14 +430,17 @@ Front_end run_front_end(
                     fold_identities( current(), front.types.table(), literals );
                     verified( current(), "fold_identities" );
                 }
+            }
+            if( build.level >= 1 )
+            {
                 remove_unused_locals( current(), pin_named );
                 verified( current(), "remove_unused_locals" );
                 // The loop passes, and a round to tidy what they leave; §3.3 gives each its level.
                 if( build.loops )
                 {
-                    if( build.level >= 3 && current().real_arithmetic )
+                    if( build.level >= 3 && current().real_arithmetic && !current().planned )
                     {
-                        // A copy stays behind for what reads its signature while a plan adds instances.
+                        // A copy, as a planned kernel's function can move the functions.
                         Function          planning = current();
                         const Map_outcome outcome  = solve_linear_maps(
                             planning,
@@ -468,10 +451,9 @@ Front_end run_front_end(
                             build.cache,
                             { .fma = target_has_fma() },
                             constants,
-                            promises.for_plan( planning )
+                            &planned_kernels
                         );
                         current() = std::move( planning );
-                        promises.planned( f, outcome.cost );
                         if( clock != nullptr && !outcome.ending )
                         {
                             clock->note( fmt::format(
@@ -577,12 +559,6 @@ Front_end run_front_end(
     };
 
     order.want_all();
-
-    // Where the rules use it.
-    if( build.level >= 3 && build.loops )
-    {
-        promises.check( purity, literals, constants, interner, diags );
-    }
     lap( build.level >= 1 ? "optimise" : "drops" );
 
     // Last, so no pass inlines the Keel `main` into it.
@@ -603,6 +579,7 @@ Front_end run_front_end(
 
 #ifdef ENABLE_UNIT_TESTS
 #include <catch2/catch_test_macros.hpp>
+#include <set>
 
 #include "check/pipeline_test_support.h"
 #include "ir/print.h"
@@ -653,33 +630,6 @@ std::string dft_loop( std::string_view directives, std::string_view name, std::s
 
 constexpr std::string_view k_trig = "@trig_cos f64 cosine( f64 x ) { return x; }\n"
                                     "@trig_sin f64 sine( f64 x ) { return x; }\n";
-constexpr std::string_view k_main_128 =
-    "i32 main() { f64[128] a = [ 0.0, .. ]; f64[128] b = [ 0.0, .. ]; map<128>( a, a, ref b, ref b ); return 0; }\n";
-
-// The sizes of `fft` instances, and the calls of `callee` in `map`.
-std::pair<std::vector<u64>, u32> dft_calls( const Compiled& p, std::string_view callee )
-{
-    const auto named = [&]( Node_id d, std::string_view name )
-    { return d.is_valid() && p.interner.text( p.ast.name( d ) ) == name; };
-    std::vector<u64> sizes;
-    u32              calls = 0;
-    for( const Function& f : p.all )
-    {
-        if( named( f.declaration, "fft" ) )
-        {
-            sizes.push_back( p.types.table().get( f.type_arguments[0] ).count );
-        }
-        for( const Statement& statement : f.statements )
-        {
-            const Rvalue& value = f.rvalue( statement );
-            calls += named( f.declaration, "map" ) && statement.kind == Statement_kind::Assign &&
-                     value.kind == Rvalue_kind::Call && named( value.callee, callee );
-        }
-    }
-    std::ranges::sort( sizes );
-    return { sizes, calls };
-}
-
 } // namespace
 
 TEST_CASE( "front_end_O3_without_the_loop_phase_is_O2", "[front_end]" )
@@ -694,38 +644,49 @@ TEST_CASE( "front_end_O3_without_the_loop_phase_is_O2", "[front_end]" )
     REQUIRE( printed( o3 ) == printed( o2 ) );
 }
 
-// A map that is a whole DFT calls the `@dft` instance at its size, as cheap and smaller; the promise
-// is checked at 2, 4 and 8.
-TEST_CASE( "front_end_O3_calls_a_promised_dft_it_matches", "[front_end][linear]" )
+// A part that would loop is a call of keelc's function for it alone, one a kernel for both maps.
+TEST_CASE( "front_end_O3_calls_one_planned_function_for_a_part_two_maps_share", "[front_end][linear]" )
 {
     const Compiled p(
-        std::string( k_trig ) + dft_loop( "@dft @real_arithmetic", "fft" ) + dft_loop( "@real_arithmetic", "map" ) +
-            std::string( k_main_128 ),
+        std::string( k_trig ) + dft_loop( "@real_arithmetic", "map", "131" ) + dft_loop( "@real_arithmetic", "other", "131" ) +
+            "i32 main() { f64[131] a = [ 0.0, .. ]; f64[131] b = [ 0.0, .. ]; map( a, a, ref b, ref b ); "
+            "other( a, a, ref b, ref b ); return 0; }\n",
         Stage::Elaborated,
         Build { .level = 3 }
     );
     INFO( p.rendered() );
     REQUIRE( p.clean() );
-    const auto [sizes, calls] = dft_calls( p, "fft" );
-    CHECK( sizes == std::vector<u64> { 2, 4, 8, 128 } );
-    CHECK( calls == 1 );
-}
-
-// A fixed `@dft` at the map's size is taken over the generic, which is then made only to be checked.
-TEST_CASE( "front_end_O3_calls_a_fixed_dft_over_a_generic", "[front_end][linear]" )
-{
-    const Compiled p(
-        std::string( k_trig ) + dft_loop( "@dft @real_arithmetic", "fft" ) +
-            dft_loop( "@dft @real_arithmetic", "fixed", "128" ) + dft_loop( "@real_arithmetic", "map" ) +
-            std::string( k_main_128 ),
-        Stage::Elaborated,
-        Build { .level = 3 }
-    );
-    INFO( p.rendered() );
-    REQUIRE( p.clean() );
-    const auto [sizes, calls] = dft_calls( p, "fixed" );
-    CHECK( sizes == std::vector<u64> { 2, 4, 8 } );
-    CHECK( calls == 1 );
+    // What `name`'s calls, or the planned functions' when empty, name.
+    const auto called = [&]( std::string_view name )
+    {
+        std::set<std::vector<u64>> kernels;
+        for( const Function& f : p.all )
+        {
+            for( const Statement& statement : f.statements )
+            {
+                const Rvalue& value = f.rvalue( statement );
+                const bool    from  = name.empty()
+                                          ? f.planned
+                                          : f.declaration.is_valid() && p.interner.text( p.ast.name( f.declaration ) ) == name;
+                if( from && statement.kind == Statement_kind::Assign && value.kind == Rvalue_kind::Call && value.planned )
+                {
+                    std::vector<u64> sides;
+                    for( const Type_id t : value.type_arguments )
+                    {
+                        sides.push_back( p.types.table().get( t ).count );
+                    }
+                    kernels.insert( sides );
+                }
+            }
+        }
+        return kernels;
+    };
+    const u64 planned = std::ranges::count_if( p.all, []( const Function& f ) { return f.planned; } );
+    CHECK( !called( "map" ).empty() );
+    CHECK( called( "map" ) == called( "other" ) );
+    std::set<std::vector<u64>> all = called( "map" );
+    all.merge( called( "" ) );
+    CHECK( planned == all.size() );
 }
 
 } // namespace keel

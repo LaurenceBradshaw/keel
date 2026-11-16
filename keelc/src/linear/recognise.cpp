@@ -728,7 +728,7 @@ private:
     }
 
     // `trig` of an angle within rounding of pi k / M.
-    std::optional<Exact> exact_trig( Promise trig, f64 x )
+    std::optional<Exact> exact_trig( Trig trig, f64 x )
     {
         if( !std::isfinite( x ) )
         {
@@ -746,17 +746,16 @@ private:
             const u32 j = static_cast<u32>( ( ( k % n ) + n ) % n );
             switch( trig )
             {
-            case Promise::Sin:
+            case Trig::Sin:
                 return sine( j, n );
-            case Promise::Cos:
+            case Trig::Cos:
                 return cosine( j, n );
-            case Promise::Tan:
+            case Trig::Tan:
             {
                 const std::optional<Exact> c = inverse( cosine( j, n ) );
                 return c ? std::optional( simplest( product( sine( j, n ), *c ) ) ) : std::nullopt;
             }
-            case Promise::None:
-            case Promise::Dft:
+            case Trig::None:
                 break;
             }
             return std::nullopt;
@@ -1475,7 +1474,7 @@ private:
         return bits ? number( *bits ) : Value {};
     }
 
-    Value trig( Frame& fr, const Rvalue& r, Promise kind )
+    Value trig( Frame& fr, const Rvalue& r, Trig kind )
     {
         if( r.arguments.size() != 1 )
         {
@@ -1495,7 +1494,7 @@ private:
             return {};
         }
         const f64 a = as_real( x );
-        const f64 y = kind == Promise::Sin ? std::sin( a ) : kind == Promise::Cos ? std::cos( a ) : std::tan( a );
+        const f64 y = kind == Trig::Sin ? std::sin( a ) : kind == Trig::Cos ? std::cos( a ) : std::tan( a );
         return real( y, exact_trig( kind, a ) );
     }
 
@@ -1508,9 +1507,9 @@ private:
             end( Ending::Unsupported );
         }
         const Function& g = functions_[*c];
-        if( is_trig( g.promise ) )
+        if( g.trig != Trig::None )
         {
-            write( to, symbolic_ ? sym_trig( fr, r, g.promise ) : trig( fr, r, g.promise ) );
+            write( to, symbolic_ ? sym_trig( fr, r, g.trig ) : trig( fr, r, g.trig ) );
             return;
         }
         if( !purity_.pure( r ) )
@@ -2214,9 +2213,9 @@ private:
     }
 
     // A `@trig_*` call at an angle 2 pi (p/q i + p'/q'): powers of W.
-    Value sym_trig( Frame& fr, const Rvalue& r, Promise kind )
+    Value sym_trig( Frame& fr, const Rvalue& r, Trig kind )
     {
-        if( r.arguments.size() != 1 || ( kind != Promise::Sin && kind != Promise::Cos ) )
+        if( r.arguments.size() != 1 || ( kind != Trig::Sin && kind != Trig::Cos ) )
         {
             sym::fail();
         }
@@ -2247,11 +2246,11 @@ private:
         );
         const sym::Poly minus = sym::reduced( sym::sum( {}, e, -1 ), M );
         // cos = (W^e + W^-e) / 2, sin = -i (W^e - W^-e) / 2.
-        const i64 sign = kind == Promise::Cos ? 1 : -1;
+        const i64 sign = kind == Trig::Cos ? 1 : -1;
         sym::Wave w { M, {} };
         sym::add_term( w, e, Rational( 1, 2 ) );
         sym::add_term( w, minus, Rational( sign, 2 ) );
-        return make( Kind::Wave, { .w = kind == Promise::Cos ? w : sym::product( w, sym::scaled( sym::imaginary(), -1 ) ) } );
+        return make( Kind::Wave, { .w = kind == Trig::Cos ? w : sym::product( w, sym::scaled( sym::imaginary(), -1 ) ) } );
     }
 
     // The stream `at` is in and the element's index: a parameter's element, then only fields.

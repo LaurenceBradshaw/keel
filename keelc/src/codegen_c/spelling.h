@@ -48,6 +48,8 @@ struct Spelling
     std::string callee( const Rvalue& value ) const;
     // D41's guard for `op` between its two operand types: "kl_cmp_lt_i64_u64".
     std::string guard( Token_kind op, std::span<const Type_id> operands ) const;
+    // A planned kernel's function, "keel_dft_<n>_<m>_<M>_<c>".
+    std::string planned( std::span<const Type_id> sizes ) const;
     // As above, or a module's build or drop function: "kl_2kl2os_0build". No name starts with a digit.
     std::string function( const Function& function ) const;
     // A module's build or drop function, by its first built global.

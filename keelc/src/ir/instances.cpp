@@ -204,11 +204,6 @@ std::optional<Instantiation> Instance_queue::next()
     return instance;
 }
 
-void Instance_queue::seed( Instantiation instance )
-{
-    queue( pending_, types_, std::move( instance ) );
-}
-
 void Instance_queue::reached_by( const Function& function )
 {
     const auto is_block_method = [&]( Node_id callee )

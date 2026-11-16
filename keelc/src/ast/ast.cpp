@@ -71,9 +71,9 @@ void Ast::set_real_arithmetic( Node_id decl )
     real_arithmetic_.insert( decl.v );
 }
 
-void Ast::set_promise( Node_id decl, Promise promise, Span directive )
+void Ast::set_trig( Node_id decl, Trig trig, Span directive )
 {
-    promise_[decl.v] = { promise, directive };
+    trig_[decl.v] = { trig, directive };
 }
 
 void Ast::set_name_span( Node_id decl, Span span )
@@ -163,16 +163,16 @@ bool Ast::is_real_arithmetic( Node_id decl ) const
     return real_arithmetic_.contains( decl.v );
 }
 
-Promise Ast::promise( Node_id decl ) const
+Trig Ast::trig( Node_id decl ) const
 {
-    const auto found = promise_.find( decl.v );
-    return found == promise_.end() ? Promise::None : found->second.first;
+    const auto found = trig_.find( decl.v );
+    return found == trig_.end() ? Trig::None : found->second.first;
 }
 
-Span Ast::promise_span( Node_id decl ) const
+Span Ast::trig_span( Node_id decl ) const
 {
-    const auto found = promise_.find( decl.v );
-    return found == promise_.end() ? Span {} : found->second.second;
+    const auto found = trig_.find( decl.v );
+    return found == trig_.end() ? Span {} : found->second.second;
 }
 
 Span Ast::name_span( Node_id decl ) const

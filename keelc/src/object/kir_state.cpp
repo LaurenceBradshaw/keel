@@ -79,6 +79,7 @@ void put_rvalue( Byte_writer& out, Ref_writer& refs, const Rvalue& value )
     put_types( out, refs, value.type_arguments );
     out.put_u8( u8( value.address_purpose ) );
     out.put_u8( u8( value.globals ) );
+    out.put_u8( value.planned );
 }
 
 void put_terminator( Byte_writer& out, Ref_writer& refs, const Terminator& terminator )
@@ -163,6 +164,7 @@ Rvalue get_rvalue( Byte_reader& in, Ref_reader& refs )
     value.type_arguments  = get_types( in, refs );
     value.address_purpose = Address_purpose( in.get_u8() );
     value.globals         = Globals_call( in.get_u8() );
+    value.planned         = in.get_u8() != 0;
     return value;
 }
 
@@ -261,7 +263,8 @@ void write_function( Byte_writer& out, Ref_writer& refs, const Function& functio
     out.put_u8( function.returns_a_value );
     out.put_u8( function.diverges );
     out.put_u8( function.real_arithmetic );
-    out.put_u8( u8( function.promise ) );
+    out.put_u8( u8( function.trig ) );
+    out.put_u8( function.planned );
 }
 
 Function read_function( Byte_reader& in, Ref_reader& refs )
@@ -364,7 +367,8 @@ Function read_function( Byte_reader& in, Ref_reader& refs )
     function.returns_a_value = in.get_u8() != 0;
     function.diverges        = in.get_u8() != 0;
     function.real_arithmetic = in.get_u8() != 0;
-    function.promise         = Promise( in.get_u8() );
+    function.trig            = Trig( in.get_u8() );
+    function.planned         = in.get_u8() != 0;
     return function;
 }
 

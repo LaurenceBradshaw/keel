@@ -22,24 +22,18 @@ struct Value_place
     Place imaginary;
 };
 
-// What a circuit's call of `callee` names: the function, its four `f64[N]` pointer parameters' types,
-// `f64[N]`, `u64` and `void`.
-struct Callee
-{
-    Node_id                declaration;
-    std::vector<Type_id>   type_arguments;
-    std::array<Type_id, 4> parameters;
-    Type_id                array;
-    Type_id                index;
-    Type_id                none;
-};
-using Callees = std::function<Callee( u32 )>;
+// Makes the function computing a program's called kernel alone, by its program, once.
+using Called = std::function<void( const Kernel&, const Loop_program& )>;
+
+// That function's type arguments, its n, m, M and c as sizes, and its parameter p's type: `const f64[n]*` for
+// the real and imaginary x, `f64[m]*` for y's.
+std::vector<Type_id> kernel_arguments( Type_table& types, const Kernel& k );
+Type_id              kernel_parameter( Type_table& types, const Kernel& k, u32 p );
 
 // Statements writing each output the value of its node in `nodes` (Circuit::k_zero for zero), from
 // `inputs`, at `type`: f64 parts, or wrapping integers of the ring's width. Units fold into signs, so
 // x + (-y) is one subtract. Every input is read before any output is written, so the two may share
-// places. A call fills local arrays, calls through `callees`, and reads back what it wrote. A debug
-// build checks the statements against `rows` on random input, when given.
+// places. A debug build checks the statements against `rows` on random input, when given.
 std::vector<Statement> lower_circuit(
     Function&                       func,
     const Circuit&                  circuit,
@@ -50,12 +44,12 @@ std::vector<Statement> lower_circuit(
     Type_id                         type,
     Literal_pool&                   literals,
     Span                            span,
-    const std::vector<Row>&         rows    = {},
-    const Callees&                  callees = {}
+    const std::vector<Row>&         rows = {}
 );
 
 // `program` in place of `func`'s body, after `prologue`: loops over its leaves' statements, from x's arrays (buffer 0)
-// to y's (buffer 1), each part a whole f64 array. Temporaries and tables are local arrays, the tables filled first.
+// to y's (buffer 1), each part a whole f64 array. Temporaries are local arrays and tables read-only ones. A call
+// passes the addresses of its first elements, real and imaginary swapped when conjugated.
 void lower_program(
     Function&              func,
     const Loop_program&    program,
@@ -65,6 +59,6 @@ void lower_program(
     Type_table&            types,
     Literal_pool&          literals,
     Span                   span,
-    const Callees&         callees = {}
+    const Called&          called = {}
 );
 } // namespace keel

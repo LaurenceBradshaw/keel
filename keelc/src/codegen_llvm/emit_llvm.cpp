@@ -578,7 +578,7 @@ llvm::Function* Llvm_emitter::declare( const Function& function )
 
 llvm::Function* Llvm_emitter::callee( const Rvalue& value )
 {
-    const bool declared = value.op == Token_kind::Unknown && value.globals == Globals_call::None;
+    const bool declared = value.op == Token_kind::Unknown && value.globals == Globals_call::None && !value.planned;
     if( declared && program_[value.callee].requirement )
     {
         malformed( "a call of a requirement, which lower_dispatch makes indirect" );
