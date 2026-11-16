@@ -717,6 +717,30 @@ TEST_CASE( "report_names_a_broken_loan", "[check][report][m9]" )
     REQUIRE( assigned.rendered().find( "`v` is assigned while `x` still borrows from it" ) != std::string::npos );
 }
 
+// A whole array bound as a run, and an implementer bound as an interface, are loans as a `ref` is.
+TEST_CASE( "report_names_a_broken_loan_of_a_run_or_an_interface", "[check][report]" )
+{
+    const Compiled array(
+        "void take( move i64[4] a ) { }\n"
+        "i32 main() { i64[4] a = [ 0, .. ]; const ref i64[] r = a; take( move a ); return cast<i32>( r[0] ); }\n",
+        Stage::Reported
+    );
+
+    INFO( array.rendered() );
+    REQUIRE( array.rendered().find( "`a` is moved while `r` still borrows it" ) != std::string::npos );
+
+    const Compiled shown(
+        "interface shown { i64 get() const; };\n"
+        "class B implements shown { public B() { } ~B() { } i64 v = 1; public i64 get() const { return v; } };\n"
+        "void take( move B b ) { }\n"
+        "i32 main() { B b = B(); const ref shown s = b; take( move b ); return cast<i32>( s.get() ); }\n",
+        Stage::Reported
+    );
+
+    INFO( shown.rendered() );
+    REQUIRE( shown.rendered().find( "`b` is moved while `s` still borrows it" ) != std::string::npos );
+}
+
 TEST_CASE( "report_names_the_unassigned_out_parameter", "[check][report]" )
 {
     const Compiled p(

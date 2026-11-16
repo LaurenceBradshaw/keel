@@ -135,6 +135,8 @@ std::vector<Borrow> borrows_of(
             borrow.into    = inner.into;
             borrow.via     = inner.via;
             borrow.choices = inner.choices;
+            // A run or an interface pointer is a borrow, as a `ref` is: one made of a bound address is bound.
+            borrow.bound = ( value.kind == Rvalue_kind::Run_of || value.kind == Rvalue_kind::Make_interface ) && inner.bound;
         }
         else if( value.kind == Rvalue_kind::Call || value.kind == Rvalue_kind::Indirect_call )
         {
