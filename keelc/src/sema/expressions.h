@@ -133,6 +133,8 @@ public:
     void step_pointer( Node_id statement, Token_kind op, Type_id pointer, Node_id value );
     // `a op= b` on a user type: its `operator op=`, or `a = a op b`. False when the type is not one.
     bool check_compound_operator( Node_id statement, Node_id value, Type_id target_type );
+    // `a op= b` on a type parameter: `a op b` by its bound, with `b` held to `a`'s type.
+    void check_compound_on_parameter( Node_id statement, Node_id target, Node_id value, Type_id target_type );
 
     void refuse_run_value( Node_id at ); // a run is only ever borrowed
 

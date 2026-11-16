@@ -1,0 +1,25 @@
+// `a op= b` on a type parameter needs the bound `a op b` does, and `b` must already be `T`.
+void unbounded<T>( T a ) where T : copyable
+{
+    T s = a;
+    s += a;
+}
+
+void floating_bits<T>( T a ) where T : floating
+{
+    T s = a;
+    s %= a;
+    s &= a;
+}
+
+void mixed<T>( T a, i32 b ) where T : numeric
+{
+    T s = a;
+    s += b;
+    s += 1.5;
+}
+
+i32 main( const ref str[] _ )
+{
+    return 0;
+}

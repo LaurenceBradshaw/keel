@@ -1,0 +1,57 @@
+// `a op= b` on a bounded `T` is `a = a op b` by the bound, `b` held to `T`, as on a number.
+// Exits with the failing check.
+T total<T>( const ref T[3] xs ) where T : numeric
+{
+    T s = T();
+    for( u64 i : 0..3 )
+    {
+        s += xs[i];
+    }
+    s *= xs[0];
+    s -= 1;
+    return s;
+}
+
+T bits<T>( T a ) where T : integral
+{
+    T s = a;
+    s &= 6;
+    s |= 1;
+    s ^= 8;
+    s %= 7;
+    s <<= 1;
+    return s;
+}
+
+T halved<T>( T a ) where T : floating
+{
+    T s = a;
+    s /= 2.0;
+    s += 1;
+    return s;
+}
+
+i32 main( const ref str[] _ )
+{
+    if( total<i32>( [1, 2, 3] ) != 5 )
+    {
+        return 1;
+    }
+
+    if( total<f64>( [0.5, 1.0, 1.5] ) != 0.5 )
+    {
+        return 2;
+    }
+
+    if( bits<u8>( 13 ) != 12 )
+    {
+        return 3;
+    }
+
+    if( halved<f32>( 3.0 ) != 2.5 )
+    {
+        return 4;
+    }
+
+    return 0;
+}

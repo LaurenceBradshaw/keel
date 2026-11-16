@@ -1468,6 +1468,12 @@ std::optional<Conflict> Overloads::conflict( Node_id first, Node_id second, bool
     // between the two, and it reads the parameter types to choose.
     if( member && ( ast_.own_type_param_list( first ).is_valid() || ast_.own_type_param_list( second ).is_valid() ) )
     {
+        // An operator's own list was refused at its declaration.
+        if( Interner::is_operator_name( ast_.name( second ) ) )
+        {
+            return std::nullopt;
+        }
+
         return Conflict {
             fmt::format( "`{}` has type parameters of its own, so it cannot be overloaded", name ),
             reporter_.previous_declaration_note( ast_.span( first ) )

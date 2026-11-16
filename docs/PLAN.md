@@ -1047,6 +1047,10 @@ every type the bound admits — under `integral`, `0` to `127` — and past that
 `cast<T>` or `wrap<T>`. Checking against the instances actually used was rejected: adding a call
 elsewhere would break a function that compiled yesterday.
 
+**Compound assignment on a `T`** is `a = a op b` by the bound: `s += x` needs what `s + x` needs
+(`numeric`, or `integral` for `%`, the bitwise operators and the shifts), and `x` is checked against
+`T`, so a literal adopts it as above.
+
 **The conditional expression is `?:`, and `if` has no value.** An expectation reaches both arms;
 with none, the arms must match exactly, with no widening between them. It may be the root of a
 place that is read, `( c ? a : b ).t`.

@@ -1,0 +1,31 @@
+error: no operator `+` for `T` and `T`
+ --> sema/errors_compound_assignment_bounds.kl:5:5
+  |
+5 |     s += a;
+  |     ^^^^^^^ `+` needs `numeric`; write `where T : numeric` on `unbounded`
+
+error: no operator `%` for `T` and `T`
+  --> sema/errors_compound_assignment_bounds.kl:11:5
+   |
+11 |     s %= a;
+   |     ^^^^^^^ `%` needs `integral`; write `where T : integral` on `floating_bits`
+
+error: no operator `&` for `T` and `T`
+  --> sema/errors_compound_assignment_bounds.kl:12:5
+   |
+12 |     s &= a;
+   |     ^^^^^^^ `&` needs `integral`; write `where T : integral` on `floating_bits`
+
+error: expected `T`, but got `i32`
+  --> sema/errors_compound_assignment_bounds.kl:18:10
+   |
+18 |     s += b;
+   |          ^
+
+error: a fractional literal cannot be a `T`
+  --> sema/errors_compound_assignment_bounds.kl:19:10
+   |
+19 |     s += 1.5;
+   |          ^^^ `T` may be an integer; write `where T : floating`
+
+5 errors generated

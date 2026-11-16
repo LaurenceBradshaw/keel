@@ -1,0 +1,37 @@
+error: an operator cannot have type parameters of its own
+ --> sema/errors_generic_operator_uses.kl:7:26
+  |
+7 |     static v<T> operator*<U>( U s, v<T> r ) where U : numeric
+  |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ it is called without any, so nothing could say what they are
+
+error: an operator cannot have type parameters of its own
+  --> sema/errors_generic_operator_uses.kl:12:20
+   |
+12 |     void operator+=<U>( U s ) where U : numeric
+   |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ it is called without any, so nothing could say what they are
+
+error: an operator cannot have type parameters of its own
+  --> sema/errors_generic_operator_uses.kl:16:19
+   |
+16 |     v<T> operator-<U>() const
+   |                   ^^^ it is called without any, so nothing could say what they are
+
+error: an operator cannot have type parameters of its own
+  --> sema/errors_generic_operator_uses.kl:21:19
+   |
+21 |     v<T> operator/<U>( v<T> o ) const
+   |                   ^^^ it is called without any, so nothing could say what they are
+
+error: an operator cannot have type parameters of its own
+  --> sema/errors_generic_operator_uses.kl:31:19
+   |
+31 |     v<T> operator%<U>( U o ) const where U : numeric
+   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ it is called without any, so nothing could say what they are
+
+error: an interface's method cannot have type parameters
+  --> sema/errors_generic_operator_uses.kl:39:20
+   |
+39 |     void operator*=<U>( U s );
+   |                    ^^^ a call through the interface reaches one compiled method, which cannot be every instance
+
+6 errors generated

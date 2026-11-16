@@ -2339,7 +2339,15 @@ Type_id Expressions::infer_unary( Node_id id )
 // its instance's.
 Bindings Expressions::operator_bindings( Node_id id, Type_id object_type, Node_id method ) const
 {
-    return aggregates_.receiver_bindings( object_type, method, callees_.through_of( id ) );
+    Bindings bindings = aggregates_.receiver_bindings( object_type, method, callees_.through_of( id ) );
+
+    // An operator's own type parameters were refused at its declaration; nothing binds them.
+    for( const Node_id own : ast_.type_parameters( ast_.own_type_param_list( method ) ) )
+    {
+        bindings.insert_or_assign( types_.type_of( own ).v, table_.builtin( Type_kind::Error ) );
+    }
+
+    return bindings;
 }
 
 // `a op b` on an aggregate, an interface, a parameter whose bound requires `op`, or an enum whose own
@@ -2593,10 +2601,17 @@ Node_id Expressions::choose_operator(
 
     for( Node_id c = method; c.is_valid(); c = overloads_.next_overload( c ) )
     {
-        if( ast_.params( c ).size() == 2 && !ast_.is_static_method( c ) && ast_.is_visible_from( c, current_type() ) )
+        if( ast_.params( c ).size() == 2 && !ast_.is_static_method( c ) && ast_.is_visible_from( c, current_type() ) &&
+            !ast_.own_type_param_list( c ).is_valid() )
         {
             candidates.push_back( c );
         }
+    }
+
+    // A refused generic operator leads the chain: answer for the first of the others.
+    if( ast_.own_type_param_list( method ).is_valid() && !candidates.empty() )
+    {
+        method = candidates.front();
     }
 
     reflected = reflected && any_reflected( ast_.name( method ) );
@@ -2704,6 +2719,26 @@ Type_id Expressions::call_chosen_operator(
     }
 
     return types_.record( id, table_.substitute( types_.type_of( method ), bindings ) );
+}
+
+void Expressions::check_compound_on_parameter( Node_id id, Node_id target, Node_id value, Type_id target_type )
+{
+    const Type_id value_type = check( value, target_type );
+
+    if( table_.is_error( value_type ) )
+    {
+        return;
+    }
+
+    operators_.result_of_binary(
+        base_operator( ast_.op( id ) ),
+        target_type,
+        target_type,
+        home_function(),
+        ast_.span( id ),
+        ast_.span( target ),
+        ast_.span( value )
+    );
 }
 
 bool Expressions::check_compound_operator( Node_id id, Node_id value, Type_id target_type )

@@ -1,0 +1,51 @@
+// An operator with type parameters of its own is refused once, where it is declared. Using it
+// reports nothing more, and a sibling without its own parameters answers the operator.
+struct v<T> where T : numeric
+{
+    T x;
+
+    static v<T> operator*<U>( U s, v<T> r ) where U : numeric
+    {
+        return r;
+    }
+
+    void operator+=<U>( U s ) where U : numeric
+    {
+    }
+
+    v<T> operator-<U>() const
+    {
+        return this;
+    }
+
+    v<T> operator/<U>( v<T> o ) const
+    {
+        return o;
+    }
+
+    v<T> operator/( i32 o ) const
+    {
+        return this;
+    }
+
+    v<T> operator%<U>( U o ) const where U : numeric
+    {
+        return this;
+    }
+};
+
+interface scaled
+{
+    void operator*=<U>( U s );
+};
+
+i32 main( const ref str[] _ )
+{
+    v<i32> a = v<i32> { 1 };
+    v<i32> b = 2 * a;
+    a += 3;
+    v<i32> c = -a;
+    v<i32> d = a / 2;
+    v<i32> e = a % 2;
+    return b.x + c.x + d.x + e.x;
+}

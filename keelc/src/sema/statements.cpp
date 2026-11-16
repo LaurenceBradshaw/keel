@@ -751,6 +751,12 @@ void Statements::visit_assign( Node_id id )
         return;
     }
 
+    if( table_.is_parameter( target_type ) )
+    {
+        expressions_.check_compound_on_parameter( id, target, value, target_type );
+        return;
+    }
+
     // A compound assignment is `x = x op y`, so the value is *checked* against the target rather
     // than inferred. Inferring it would settle a literal on its default type first, and `u8 x;
     // x += 3;` would then combine u8 with i32 and have nowhere to put the result.

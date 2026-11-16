@@ -1433,6 +1433,12 @@ void Signatures::check_operators()
             // An operator call writes no type arguments, and its operands are its only arguments.
             if( ast_.own_type_param_list( member ).is_valid() )
             {
+                // An interface's method was refused for the same list already.
+                if( ast_.kind( decl ) == Node_kind::Interface_decl )
+                {
+                    continue;
+                }
+
                 reporter_.error_at(
                     ast_.span( ast_.own_type_param_list( member ) ),
                     "an operator cannot have type parameters of its own",
