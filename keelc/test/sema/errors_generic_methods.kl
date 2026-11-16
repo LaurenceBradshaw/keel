@@ -14,7 +14,7 @@ class Box<T> where T : copyable
 
     U make<U>() const where U : numeric { return cast<U>( 0 ); }
 
-    // Overloading one would mean binding `U` before the arguments chose between the two.
+    // Overloaded beside a plain one: accepted, the arguments choose.
     V convert<V>( V v ) const where V : copyable { return v; }
     i32 convert( i32 v ) const { return v; }
 

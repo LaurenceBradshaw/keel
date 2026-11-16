@@ -237,6 +237,8 @@ private:
     bool deduce_for_candidate(
         Node_id callable, u32 implicit_params, std::span<const Argument_shape> shapes, std::vector<Type_id>& resolved
     );
+    // A generic method's own parameters into `bindings`, as written or deduced; false if neither settles them.
+    bool bind_own_parameters( Node_id call, Node_id method, std::span<const Argument_shape> shapes, Bindings& bindings );
     // `T` from `C`'s one conformance to `C : fixed_memory<T>`, repeated until nothing is added.
     std::vector<Bound_gap> deduce_through_bounds( std::span<const Node_id> parameters, Bindings& bindings );
     // `f<i32, 4>`'s list: each parameter's binding in `known`, or a placeholder.

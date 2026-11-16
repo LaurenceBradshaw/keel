@@ -37,13 +37,28 @@ bool any_failed( const Type_table& table, std::span<const Argument_shape> shapes
         [&]( const Argument_shape& shape ) { return shape.type.is_valid() && table.is_error( shape.type ); }
     );
 }
+
+// Whether `type` names `parameter`: matching a type against itself binds each it names.
+bool mentions( const Type_table& table, Type_id type, Type_id parameter )
+{
+    Bindings named;
+    table.deduce( type, type, named );
+    return named.contains( parameter.v );
+}
+
 // Whether binding parameters could make `a` and `b` one type. Two kinds never meet, so `i32[R * C]`
-// and `i32[C][R]` stay apart; past arrays it is coarse, and a union may collapse to a member.
+// and `i32[C][R]` stay apart, nor `T` and a type naming `T`, as `vec<T, N>`; past arrays it is
+// coarse, and a union may collapse to a member.
 bool could_meet( const Type_table& table, Type_id a, Type_id b )
 {
-    if( a == b || table.is_parameter( a ) || table.is_parameter( b ) )
+    if( a == b )
     {
         return true;
+    }
+
+    if( table.is_parameter( a ) || table.is_parameter( b ) )
+    {
+        return table.is_parameter( a ) ? !mentions( table, b, a ) : !mentions( table, a, b );
     }
 
     const Type& left  = table.get( a );
@@ -71,14 +86,6 @@ bool could_meet( const Type_table& table, Type_id a, Type_id b )
     }
 
     return table.mentions_parameter( a ) || table.mentions_parameter( b );
-}
-
-// Whether `type` names `parameter`: matching a type against itself binds each it names.
-bool mentions( const Type_table& table, Type_id type, Type_id parameter )
-{
-    Bindings named;
-    table.deduce( type, type, named );
-    return named.contains( parameter.v );
 }
 } // namespace
 
@@ -148,6 +155,60 @@ bool Overloads::deduce_for_candidate(
         }
 
         resolved.push_back( found->second );
+    }
+
+    return true;
+}
+
+bool Overloads::bind_own_parameters( Node_id call, Node_id method, std::span<const Argument_shape> shapes, Bindings& bindings )
+{
+    const std::vector<Node_id> own     = ast_.type_parameters( ast_.own_type_param_list( method ) );
+    const Node_id              written = ast_.type_arg_list( call );
+
+    if( written.is_valid() )
+    {
+        if( ast_.type_args( call ).size() != own.size() )
+        {
+            return false;
+        }
+
+        const std::vector<Type_id> resolved = annotations_.resolve_written( own, written );
+        for( std::size_t i = 0; i < own.size() && i < resolved.size(); ++i )
+        {
+            bindings.insert_or_assign( types_.type_of( own[i] ).v, resolved[i] );
+        }
+        return true;
+    }
+
+    // The receiver's arguments applied, the method's own left open for the arguments to bind.
+    Bindings open = bindings;
+    for( const Node_id parameter : own )
+    {
+        open.insert_or_assign( types_.type_of( parameter ).v, types_.type_of( parameter ) );
+    }
+
+    const std::span<const Node_id> params = ast_.params( method ).subspan( receiver_params( method ) );
+    Bindings                       deduced;
+
+    for( std::size_t i = 0; i < params.size() && i < shapes.size(); ++i )
+    {
+        Bindings found;
+        if( deduce_shape( table_.substitute( types_.type_of( params[i] ), open ), shapes[i], found ) )
+        {
+            deduced.insert( found.begin(), found.end() );
+        }
+    }
+
+    deduce_through_bounds( own, deduced );
+
+    for( const Node_id parameter : own )
+    {
+        const auto found = deduced.find( types_.type_of( parameter ).v );
+        if( found == deduced.end() )
+        {
+            return false;
+        }
+        bindings.insert_or_assign( found->first, found->second );
     }
 
     return true;
@@ -1064,6 +1125,7 @@ Node_id Overloads::
     std::vector<Node_id>  candidates;
     std::vector<Type_id>  instances;
     std::vector<Bindings> bindings;
+    std::vector<bool>     settled; // a generic's own parameters are known, so it can be ranked
 
     for( const Node_id candidate : viable )
     {
@@ -1073,6 +1135,7 @@ Node_id Overloads::
             candidates.push_back( candidate );
             instances.push_back( instance );
             bindings.push_back( aggregates_.receiver_bindings( receiver, candidate, instance ) );
+            settled.push_back( bind_own_parameters( call, candidate, shapes, bindings.back() ) );
         }
     }
 
@@ -1086,6 +1149,11 @@ Node_id Overloads::
     for( std::size_t i = 0; i < candidates.size(); ++i )
     {
         const Node_id candidate = candidates[i];
+
+        if( !settled[i] )
+        {
+            continue;
+        }
 
         if( candidate_accepts( candidate, receiver_params( candidate ), shapes, bindings[i], Tier::Exact ) )
         {
@@ -1121,6 +1189,22 @@ Node_id Overloads::
     else if( matching.size() > 1 )
     {
         matching = pick( matching, exact_targets );
+    }
+
+    // As for a function, the one without type parameters of its own beats the generics.
+    if( matching.size() > 1 )
+    {
+        std::vector<std::size_t> plain;
+        std::ranges::copy_if(
+            matching,
+            std::back_inserter( plain ),
+            [&]( std::size_t i ) { return !ast_.own_type_param_list( candidates[i] ).is_valid(); }
+        );
+
+        if( plain.size() == 1 )
+        {
+            matching = plain;
+        }
     }
 
     if( matching.size() == 1 )
@@ -1534,20 +1618,11 @@ std::optional<Conflict> Overloads::conflict( Node_id first, Node_id second, bool
         return Conflict { "a program has one `main`", reporter_.previous_declaration_note( ast_.span( first ) ) };
     }
 
-    // Selection would have to bind a method's own type parameters before the arguments chose
-    // between the two, and it reads the parameter types to choose.
-    if( member && ( ast_.own_type_param_list( first ).is_valid() || ast_.own_type_param_list( second ).is_valid() ) )
+    // An operator's own list was refused at its declaration.
+    if( member && Interner::is_operator_name( ast_.name( second ) ) &&
+        ( ast_.own_type_param_list( first ).is_valid() || ast_.own_type_param_list( second ).is_valid() ) )
     {
-        // An operator's own list was refused at its declaration.
-        if( Interner::is_operator_name( ast_.name( second ) ) )
-        {
-            return std::nullopt;
-        }
-
-        return Conflict {
-            fmt::format( "`{}` has type parameters of its own, so it cannot be overloaded", name ),
-            reporter_.previous_declaration_note( ast_.span( first ) )
-        };
+        return std::nullopt;
     }
 
     const bool exact = parameters_collide( first, second, false );
@@ -3880,6 +3955,40 @@ TEST_CASE( "type_checker_refuses_overloads_nothing_can_tell_apart", "[sema][over
         const Typed p( "class S<T> where T : copyable { T v; S( T a ) { v = a; } "
                        "i32 f( T a ) { return 0; } i32 f( T a, i32 b ) { return b; } };\n"
                        "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "two generic members written alike" )
+    {
+        const Typed p( "class S<T> where T : copyable { T v; S( T a ) { v = a; } "
+                       "i32 f<U>( U a ) const { return 0; } i32 f<V>( V a ) const { return 1; } };\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`f` is already declared" ) != std::string::npos );
+    }
+
+    SECTION( "two generic members their own arguments could make identical" )
+    {
+        const Typed p( "class S<T> where T : copyable { T v; S( T a ) { v = a; } "
+                       "i32 f<U>( U a, i32 b ) const { return 0; } i32 f<U>( i32 a, U b ) const { return 1; } };\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "a type argument could make the two identical" ) != std::string::npos );
+    }
+
+    // A type cannot hold itself, so no `T` is `S<T>`, nor `S<T>[2]`.
+    SECTION( "nor a `T` and a type naming that `T`" )
+    {
+        const Typed p( "class S<T> where T : copyable { T v; S( T a ) { v = a; } "
+                       "i32 f( T a ) { return 0; } i32 f( const ref S<T> a ) { return 1; } "
+                       "i32 g( T a ) { return 0; } i32 g( S<T>[2] a ) { return 1; } };\n"
+                       "i32 main() { S<i32> s = S<i32>( 1 ); return s.f( s ) + s.f( 2 ); }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );

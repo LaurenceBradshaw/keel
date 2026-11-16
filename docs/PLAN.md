@@ -1026,7 +1026,12 @@ generic static call writes its type arguments.
 trailing `const`. The receiver supplies the aggregate's arguments and the call supplies the
 method's, written (`b.map<i64>( f )`) or deduced as a function's are, the expectation included
 (`i64 w = b.map( f );`). Each set is its own instance, keyed on the receiver's arguments then the
-method's. A method's parameters may not reuse the aggregate's names.
+method's. A method's parameters may not reuse the aggregate's names. **A generic method overloads
+as a function does**: among several of its name, each candidate's own arguments are the ones written,
+or else the ones its arguments deduce, with the receiver's already applied and the expectation
+unread; one they leave open is not a candidate. The rest rank by §6.7, and one without parameters of
+its own beats the generics. So `mat` has both `matmul<u64 K>( const ref mat<T, C, K> b )` and
+`matmul( const ref vec<T, C> v )`.
 
 **Conditional methods (M17).** A method's `where` on its aggregate's parameter is a **condition**:
 `T sum() const where T : numeric` in `pair<T>` exists on the instances that meet it, and inside it

@@ -1,0 +1,47 @@
+// A method with type parameters of its own among overloads of its name: the arguments deduce each
+// candidate's, then rank them as a function's are. Exits with the failing check.
+struct row<T, u64 N> where T : numeric
+{
+    T[N] e;
+};
+
+struct grid<T, u64 R, u64 C> where T : numeric
+{
+    T[R * C] e;
+
+    i32 times<u64 K>( const ref grid<T, C, K> _ ) const { return 1; }
+    i32 times( const ref row<T, C> _ ) const { return 2; }
+
+    // The plain one beats the generic where both fit.
+    i32 pick<V>( V _ ) const where V : copyable { return 3; }
+    i32 pick( i32 _ ) const { return 4; }
+
+    // A bare call from a sibling chooses the same way.
+    i32 by_row( const ref row<T, C> v ) const { return times( v ); }
+};
+
+// An open receiver: `K` is deduced from the open instance.
+i32 open<T, u64 R, u64 C>( const ref grid<T, R, C> g, const ref grid<T, C, R> h ) where T : numeric
+{
+    return g.times( h );
+}
+
+i32 main( const ref str[] _ )
+{
+    grid<i32, 2, 3> g = grid<i32, 2, 3> { [1, 2, 3, 4, 5, 6] };
+    grid<i32, 3, 4> h = grid<i32, 3, 4> { [0, ..] };
+    grid<i32, 3, 2> t = grid<i32, 3, 2> { [0, ..] };
+    row<i32, 3> v = row<i32, 3> { [1, 2, 3] };
+    f64 x = 1.5;
+
+    if( g.times( h ) != 1 ) { return 1; }
+    if( g.times( v ) != 2 ) { return 2; }
+    if( g.times<4>( h ) != 1 ) { return 3; }
+    if( g.pick( x ) != 3 ) { return 4; }
+    if( g.pick( 7 ) != 4 ) { return 5; }
+    if( g.pick<i32>( 7 ) != 3 ) { return 6; }
+    if( g.by_row( v ) != 2 ) { return 7; }
+    if( open( g, t ) != 1 ) { return 8; }
+
+    return 0;
+}
