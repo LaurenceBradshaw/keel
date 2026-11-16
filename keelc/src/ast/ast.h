@@ -160,8 +160,9 @@ public:
     Node_id                  callee( Node_id call ) const;
     Node_id                  arg_list( Node_id call ) const;
     std::span<const Node_id> arguments( Node_id call ) const;
-    Node_id                  object( Node_id id ) const; // Field_expr, Index_expr
-    Node_id                  index( Node_id index_expr ) const;
+    Node_id                  object( Node_id id ) const;        // Field_expr, Index_expr
+    Node_id                  index( Node_id index_expr ) const; // the first
+    std::span<const Node_id> indices( Node_id index_expr ) const;
     Node_id                  qualifier( Node_id path ) const;
     std::span<const Node_id> initialisers( Node_id id ) const;
     Node_id                  value( Node_id id ) const; // Return_stmt, Assign_stmt, Field_init, Ptr_init_expr

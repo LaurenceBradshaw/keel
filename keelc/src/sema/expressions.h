@@ -317,6 +317,7 @@ private:
     Type_id infer_destroy( Node_id id );
     Type_id infer_ptr_init( Node_id id );
 
+    Type_id infer_multi_index( Node_id id );
     Type_id infer_index( Node_id id );
     Type_id infer_array_index( Node_id id, Type_id array );
     Type_id infer_array_slice( Node_id id, Type_id array, Type_id lower, Type_id upper );

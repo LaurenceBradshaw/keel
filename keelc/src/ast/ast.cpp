@@ -652,6 +652,12 @@ Node_id Ast::index( Node_id index_expr ) const
     return child( index_expr, 1 );
 }
 
+std::span<const Node_id> Ast::indices( Node_id index_expr ) const
+{
+    assert( kind( index_expr ) == Node_kind::Index_expr );
+    return children( index_expr ).subspan( 1 );
+}
+
 Node_id Ast::qualifier( Node_id path ) const
 {
     assert( kind( path ) == Node_kind::Path_expr );

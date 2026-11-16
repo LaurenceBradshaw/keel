@@ -1,0 +1,39 @@
+// What `a[i, j]` refuses: more than one index on a built-in, a range among several, a count no
+// `operator[]` takes, and a second `operator[]` taking the same count, and one taking none.
+struct grid
+{
+    i32[6] cells;
+
+    ref i32 operator[]( u64 r, u64 c ) const { return cells[r * 3 + c]; }
+    ref i32 operator[]( u64 at ) const { return cells[at]; }
+    const ref i32 operator[]( u64 a, u64 b ) const { return cells[a]; }
+};
+
+struct line
+{
+    i32[3] cells;
+
+    ref i32 operator[]( u64 at ) const { return cells[at]; }
+};
+
+struct none
+{
+    i32 x;
+
+    ref i32 operator[]() const { return x; }
+};
+
+i32 main( const ref str[] _ )
+{
+    i32[3][2] a = [[1, 2, 3], [4, 5, 6]];
+    grid g = grid { [0, 1, 2, 3, 4, 5] };
+    line l = line { [0, 1, 2] };
+
+    i32 x = a[1, 2];
+    i32 y = g[0..1, 2];
+    i32 z = g[0, 1, 2];
+    i32 w = l[0, 1];
+    i32 v = g[true, 1];
+
+    return x + y + z + w + v;
+}

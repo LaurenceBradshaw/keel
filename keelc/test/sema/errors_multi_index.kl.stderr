@@ -1,0 +1,43 @@
+error: `grid` already has an `operator[]`
+ --> sema/errors_multi_index.kl:9:19
+  |
+9 |     const ref i32 operator[]( u64 a, u64 b ) const { return cells[a]; }
+  |                   ^^^^^^^^^^ previous declaration is at: sema/errors_multi_index.kl:7:5
+
+error: `operator[]` takes at least one parameter, the index
+  --> sema/errors_multi_index.kl:23:23
+   |
+23 |     ref i32 operator[]() const { return x; }
+   |                       ^^
+
+error: `i32[3][2]` takes one index
+  --> sema/errors_multi_index.kl:32:13
+   |
+32 |     i32 x = a[1, 2];
+   |             ^^^^^^^ write one `[]` per index
+
+error: a range cannot be one of several indices
+  --> sema/errors_multi_index.kl:33:15
+   |
+33 |     i32 y = g[0..1, 2];
+   |               ^^^^
+
+error: `grid` has no `operator[]` taking 3 indices
+  --> sema/errors_multi_index.kl:34:13
+   |
+34 |     i32 z = g[0, 1, 2];
+   |             ^^^^^^^^^^ declare `ref T operator[](u64 i, u64 j, u64 k) const` in it
+
+error: `line` has no `operator[]` taking 2 indices
+  --> sema/errors_multi_index.kl:35:13
+   |
+35 |     i32 w = l[0, 1];
+   |             ^^^^^^^ declare `ref T operator[](u64 i, u64 j) const` in it
+
+error: expected `u64`, but got `bool`
+  --> sema/errors_multi_index.kl:36:15
+   |
+36 |     i32 v = g[true, 1];
+   |               ^^^^
+
+7 errors generated

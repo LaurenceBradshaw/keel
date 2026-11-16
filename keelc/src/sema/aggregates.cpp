@@ -314,7 +314,8 @@ bool Aggregates::names_constructor( Node_id aggregate, Symbol_id name ) const
     return name == ast_.name( aggregate ) && find_member( aggregate, Node_kind::Constructor_decl ).is_valid();
 }
 
-// `-` is two operators, told apart by their operands; any other count was reported where it was written.
+// `-` is two operators and `[]` one per index count, told apart by their operands; any other count was
+// reported where it was written.
 Node_id Aggregates::find_operator( Node_id decl, Symbol_id name, std::size_t operands, bool& malformed ) const
 {
     malformed = false;
@@ -334,7 +335,9 @@ Node_id Aggregates::find_operator( Node_id decl, Symbol_id name, std::size_t ope
             return member;
         }
 
-        malformed = malformed || name != Interner::operator_name( Operator_name::Minus ) || count > 2;
+        malformed = malformed || ( name == Interner::operator_name( Operator_name::Index )
+                                       ? count < 2
+                                       : name != Interner::operator_name( Operator_name::Minus ) || count > 2 );
     }
 
     return Node_id {};

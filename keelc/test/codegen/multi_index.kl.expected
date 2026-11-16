@@ -1,0 +1,420 @@
+// codegen/multi_index.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl_7prelude_str;
+struct kl__A6_3i32;
+struct kl__grid__I3i32_V2__V3_E;
+
+struct kl__run__LQ7prelude3str__ref { struct kl_7prelude_str* data; uint64_t size; };
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
+};
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
+
+struct kl__A6_3i32
+{
+    int32_t e[6];
+};
+_Static_assert( sizeof( struct kl__A6_3i32 ) == 24 && _Alignof( struct kl__A6_3i32 ) == 4, "layout" );
+
+struct kl__grid__I3i32_V2__V3_E
+{
+    struct kl__A6_3i32 kl_cells;
+};
+_Static_assert( sizeof( struct kl__grid__I3i32_V2__V3_E ) == 24 && _Alignof( struct kl__grid__I3i32_V2__V3_E ) == 4 && offsetof( struct kl__grid__I3i32_V2__V3_E, kl_cells ) == 0, "layout" );
+
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
+void  kl_rt_free( void* );
+void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
+int32_t* kl__14operator_index__I3i32_V2__V3_E__S4gridI3i32_V2__V3_E_3u64_3u64( struct kl__grid__I3i32_V2__V3_E*, uint64_t, uint64_t );
+int32_t* kl__14operator_index__I3i32_V2__V3_E__S4gridI3i32_V2__V3_E_3u64( struct kl__grid__I3i32_V2__V3_E*, uint64_t );
+int32_t kl__6corner__I4gridI3i32_V2__V3_E_3i32E__4gridI3i32_V2__V3_E( struct kl__grid__I3i32_V2__V3_E* );
+
+#line 19 "codegen/multi_index.kl"
+int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t kl_t1_size )
+{
+    int32_t kl_t0;
+#line 19 "codegen/multi_index.kl"
+    struct kl__run__LQ7prelude3str__ref kl_t1 = { kl_t1_data, kl_t1_size };
+    struct kl__grid__I3i32_V2__V3_E kl_g_2;
+    struct kl__grid__I3i32_V2__V3_E kl_t3;
+    struct kl__A6_3i32 kl_t4;
+    uint64_t kl_t5;
+    uint64_t kl_t6;
+    uint64_t kl_t7;
+    uint64_t kl_t8;
+    uint64_t kl_t9;
+    uint64_t kl_t10;
+    bool kl_t11;
+    struct kl__grid__I3i32_V2__V3_E* kl_t12;
+    int32_t* kl_t13;
+    bool kl_t14;
+    struct kl__grid__I3i32_V2__V3_E* kl_t15;
+    int32_t* kl_t16;
+    bool kl_t17;
+    struct kl__grid__I3i32_V2__V3_E* kl_t18;
+    int32_t* kl_t19;
+    struct kl__grid__I3i32_V2__V3_E* kl_t20;
+    int32_t* kl_t21;
+    bool kl_t22;
+    uint64_t kl_r_23;
+    struct kl__grid__I3i32_V2__V3_E* kl_t24;
+    bool kl_t25;
+    uint64_t kl_t26;
+    struct kl__grid__I3i32_V2__V3_E* kl_t27;
+    int32_t* kl_t28;
+    uint64_t kl_t29;
+    bool kl_t30;
+    int32_t* kl_t31;
+    bool kl_t32;
+    struct kl__grid__I3i32_V2__V3_E* kl_t33;
+    int32_t* kl_t34;
+    bool kl_t35;
+    struct kl__grid__I3i32_V2__V3_E* kl_t36;
+    int32_t kl_t37;
+    bool kl_t38;
+    ( void ) kl_t1;
+    ( void ) kl_t5;
+    ( void ) kl_t6;
+    ( void ) kl_t7;
+    ( void ) kl_t8;
+    ( void ) kl_t9;
+    ( void ) kl_t10;
+#line 21 "codegen/multi_index.kl"
+    kl_t5 = 0;
+#line 21 "codegen/multi_index.kl"
+    kl_t4.e[kl_t5] = 0;
+#line 21 "codegen/multi_index.kl"
+    kl_t6 = 1;
+#line 21 "codegen/multi_index.kl"
+    kl_t4.e[kl_t6] = 1;
+#line 21 "codegen/multi_index.kl"
+    kl_t7 = 2;
+#line 21 "codegen/multi_index.kl"
+    kl_t4.e[kl_t7] = 2;
+#line 21 "codegen/multi_index.kl"
+    kl_t8 = 3;
+#line 21 "codegen/multi_index.kl"
+    kl_t4.e[kl_t8] = 3;
+#line 21 "codegen/multi_index.kl"
+    kl_t9 = 4;
+#line 21 "codegen/multi_index.kl"
+    kl_t4.e[kl_t9] = 4;
+#line 21 "codegen/multi_index.kl"
+    kl_t10 = 5;
+#line 21 "codegen/multi_index.kl"
+    kl_t4.e[kl_t10] = 5;
+#line 21 "codegen/multi_index.kl"
+    kl_t3.kl_cells = kl_t4;
+#line 21 "codegen/multi_index.kl"
+    kl_g_2 = kl_t3;
+#line 23 "codegen/multi_index.kl"
+    kl_t12 = &kl_g_2;
+#line 23 "codegen/multi_index.kl"
+    kl_t13 = kl__14operator_index__I3i32_V2__V3_E__S4gridI3i32_V2__V3_E_3u64_3u64( kl_t12, 1, 0 );
+#line 23 "codegen/multi_index.kl"
+    kl_t14 = ( *kl_t13 ) != 3;
+#line 23 "codegen/multi_index.kl"
+    kl_t11 = kl_t14;
+#line 23 "codegen/multi_index.kl"
+    if ( kl_t11 ) goto bb2; else goto bb1;
+    bb1:
+#line 23 "codegen/multi_index.kl"
+    kl_t15 = &kl_g_2;
+#line 23 "codegen/multi_index.kl"
+    kl_t16 = kl__14operator_index__I3i32_V2__V3_E__S4gridI3i32_V2__V3_E_3u64_3u64( kl_t15, 0, 2 );
+#line 23 "codegen/multi_index.kl"
+    kl_t17 = ( *kl_t16 ) != 2;
+#line 23 "codegen/multi_index.kl"
+    kl_t11 = kl_t17;
+#line 23 "codegen/multi_index.kl"
+    goto bb2;
+    bb2:
+#line 23 "codegen/multi_index.kl"
+    if ( kl_t11 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t0 = 1;
+#line 25 "codegen/multi_index.kl"
+    return kl_t0;
+    bb4:
+#line 28 "codegen/multi_index.kl"
+    kl_t18 = &kl_g_2;
+#line 28 "codegen/multi_index.kl"
+    kl_t19 = kl__14operator_index__I3i32_V2__V3_E__S4gridI3i32_V2__V3_E_3u64_3u64( kl_t18, 1, 1 );
+#line 28 "codegen/multi_index.kl"
+    ( *kl_t19 ) = 40;
+#line 30 "codegen/multi_index.kl"
+    kl_t20 = &kl_g_2;
+#line 30 "codegen/multi_index.kl"
+    kl_t21 = kl__14operator_index__I3i32_V2__V3_E__S4gridI3i32_V2__V3_E_3u64( kl_t20, 4 );
+#line 30 "codegen/multi_index.kl"
+    kl_t22 = ( *kl_t21 ) != 40;
+#line 30 "codegen/multi_index.kl"
+    if ( kl_t22 ) goto bb5; else goto bb6;
+    bb5:
+    kl_t0 = 2;
+#line 32 "codegen/multi_index.kl"
+    return kl_t0;
+    bb6:
+#line 35 "codegen/multi_index.kl"
+    kl_r_23 = 0;
+    kl_t24 = &kl_g_2;
+#line 36 "codegen/multi_index.kl"
+    kl_t25 = __builtin_add_overflow( kl_r_23, 1, &( uint64_t ) { 0 } );
+#line 36 "codegen/multi_index.kl"
+    if ( kl_t25 ) goto bb7; else goto bb8;
+    bb7:
+#line 36 "codegen/multi_index.kl"
+    kl_rt_panic( "codegen/multi_index.kl", 36, "arithmetic overflow: r + 1" );
+    bb8:
+#line 36 "codegen/multi_index.kl"
+    kl_t26 = kl_r_23 + 1;
+#line 36 "codegen/multi_index.kl"
+    kl_t27 = &kl_g_2;
+#line 36 "codegen/multi_index.kl"
+    kl_t28 = kl__14operator_index__I3i32_V2__V3_E__S4gridI3i32_V2__V3_E_3u64_3u64( kl_t27, 0, 1 );
+#line 36 "codegen/multi_index.kl"
+    kl_t29 = ( uint64_t ) ( *kl_t28 );
+#line 36 "codegen/multi_index.kl"
+    kl_t30 = ( *kl_t28 ) >= 0;
+#line 36 "codegen/multi_index.kl"
+    if ( kl_t30 ) goto bb10; else goto bb9;
+    bb9:
+#line 36 "codegen/multi_index.kl"
+    kl_rt_panic( "codegen/multi_index.kl", 36, "cast out of range: cast<u64>( g[0, 1] )" );
+    bb10:
+#line 36 "codegen/multi_index.kl"
+    kl_t31 = kl__14operator_index__I3i32_V2__V3_E__S4gridI3i32_V2__V3_E_3u64_3u64( kl_t24, kl_t26, kl_t29 );
+#line 36 "codegen/multi_index.kl"
+    kl_t32 = __builtin_add_overflow( ( *kl_t31 ), 2, &( int32_t ) { 0 } );
+#line 36 "codegen/multi_index.kl"
+    if ( kl_t32 ) goto bb11; else goto bb12;
+    bb11:
+#line 36 "codegen/multi_index.kl"
+    kl_rt_panic( "codegen/multi_index.kl", 36, "arithmetic overflow: g[r + 1, cast<u64>( g[0, 1] )] += 2;" );
+    bb12:
+#line 36 "codegen/multi_index.kl"
+    ( *kl_t31 ) = ( *kl_t31 ) + 2;
+#line 38 "codegen/multi_index.kl"
+    kl_t33 = &kl_g_2;
+#line 38 "codegen/multi_index.kl"
+    kl_t34 = kl__14operator_index__I3i32_V2__V3_E__S4gridI3i32_V2__V3_E_3u64_3u64( kl_t33, 1, 1 );
+#line 38 "codegen/multi_index.kl"
+    kl_t35 = ( *kl_t34 ) != 42;
+#line 38 "codegen/multi_index.kl"
+    if ( kl_t35 ) goto bb13; else goto bb14;
+    bb13:
+    kl_t0 = 3;
+#line 40 "codegen/multi_index.kl"
+    return kl_t0;
+    bb14:
+#line 43 "codegen/multi_index.kl"
+    kl_t36 = &kl_g_2;
+#line 43 "codegen/multi_index.kl"
+    kl_t37 = kl__6corner__I4gridI3i32_V2__V3_E_3i32E__4gridI3i32_V2__V3_E( kl_t36 );
+#line 43 "codegen/multi_index.kl"
+    kl_t38 = kl_t37 != 5;
+#line 43 "codegen/multi_index.kl"
+    if ( kl_t38 ) goto bb15; else goto bb16;
+    bb15:
+    kl_t0 = 4;
+#line 45 "codegen/multi_index.kl"
+    return kl_t0;
+    bb16:
+#line 48 "codegen/multi_index.kl"
+    kl_t0 = 0;
+#line 48 "codegen/multi_index.kl"
+    return kl_t0;
+}
+
+#line 12 "codegen/multi_index.kl"
+int32_t* kl__14operator_index__I3i32_V2__V3_E__S4gridI3i32_V2__V3_E_3u64_3u64( struct kl__grid__I3i32_V2__V3_E* kl_this_1, uint64_t kl_r_2, uint64_t kl_c_3 )
+{
+    int32_t* kl_t0;
+    bool kl_t4;
+    uint64_t kl_t5;
+    bool kl_t6;
+    uint64_t kl_t7;
+    uint64_t kl_t8;
+    bool kl_t9;
+#line 12 "codegen/multi_index.kl"
+    kl_t4 = __builtin_mul_overflow( kl_r_2, 3, &( uint64_t ) { 0 } );
+#line 12 "codegen/multi_index.kl"
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+#line 12 "codegen/multi_index.kl"
+    kl_rt_panic( "codegen/multi_index.kl", 12, "arithmetic overflow: r * C" );
+    bb2:
+#line 12 "codegen/multi_index.kl"
+    kl_t5 = kl_r_2 * 3;
+#line 12 "codegen/multi_index.kl"
+    kl_t6 = __builtin_add_overflow( kl_t5, kl_c_3, &( uint64_t ) { 0 } );
+#line 12 "codegen/multi_index.kl"
+    if ( kl_t6 ) goto bb3; else goto bb4;
+    bb3:
+#line 12 "codegen/multi_index.kl"
+    kl_rt_panic( "codegen/multi_index.kl", 12, "arithmetic overflow: r * C + c" );
+    bb4:
+#line 12 "codegen/multi_index.kl"
+    kl_t7 = kl_t5 + kl_c_3;
+#line 12 "codegen/multi_index.kl"
+    kl_t8 = kl_t7;
+#line 12 "codegen/multi_index.kl"
+    kl_t9 = kl_t8 < 6;
+#line 12 "codegen/multi_index.kl"
+    if ( kl_t9 ) goto bb5; else goto bb6;
+    bb5:
+#line 12 "codegen/multi_index.kl"
+    kl_t0 = &( *kl_this_1 ).kl_cells.e[kl_t8];
+#line 12 "codegen/multi_index.kl"
+    return kl_t0;
+    bb6:
+#line 12 "codegen/multi_index.kl"
+    kl_rt_panic( "codegen/multi_index.kl", 12, "out of bounds: cells[r * C + c]" );
+#line 12 "codegen/multi_index.kl"
+}
+
+#line 13 "codegen/multi_index.kl"
+int32_t* kl__14operator_index__I3i32_V2__V3_E__S4gridI3i32_V2__V3_E_3u64( struct kl__grid__I3i32_V2__V3_E* kl_this_1, uint64_t kl_at_2 )
+{
+    int32_t* kl_t0;
+    uint64_t kl_t3;
+    bool kl_t4;
+#line 13 "codegen/multi_index.kl"
+    kl_t3 = kl_at_2;
+#line 13 "codegen/multi_index.kl"
+    kl_t4 = kl_t3 < 6;
+#line 13 "codegen/multi_index.kl"
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+#line 13 "codegen/multi_index.kl"
+    kl_t0 = &( *kl_this_1 ).kl_cells.e[kl_t3];
+#line 13 "codegen/multi_index.kl"
+    return kl_t0;
+    bb2:
+#line 13 "codegen/multi_index.kl"
+    kl_rt_panic( "codegen/multi_index.kl", 13, "out of bounds: cells[at]" );
+#line 13 "codegen/multi_index.kl"
+}
+
+#line 17 "codegen/multi_index.kl"
+int32_t kl__6corner__I4gridI3i32_V2__V3_E_3i32E__4gridI3i32_V2__V3_E( struct kl__grid__I3i32_V2__V3_E* kl_g_1 )
+{
+    int32_t kl_t0;
+    struct kl__grid__I3i32_V2__V3_E* kl_t2;
+    int32_t* kl_t3;
+#line 17 "codegen/multi_index.kl"
+    kl_t2 = &( *kl_g_1 );
+#line 17 "codegen/multi_index.kl"
+    kl_t3 = kl__14operator_index__I3i32_V2__V3_E__S4gridI3i32_V2__V3_E_3u64_3u64( kl_t2, 1, 2 );
+#line 17 "codegen/multi_index.kl"
+    kl_t0 = ( *kl_t3 );
+#line 17 "codegen/multi_index.kl"
+    return kl_t0;
+#line 17 "codegen/multi_index.kl"
+}
+
+int main( int argc, char** argv )
+{
+    int32_t kl_t1 = ( int32_t ) argc;
+    uint8_t** kl_t2 = ( uint8_t** ) argv;
+    int32_t kl_t0;
+    uint64_t kl_t3;
+    uint64_t kl_t4;
+    uint8_t* kl_t5;
+    uint64_t kl_t6;
+    struct kl_7prelude_str* kl_t7;
+    bool kl_t8;
+    uint64_t kl_t9;
+    bool kl_t10;
+    uint64_t kl_t11;
+    uint8_t** kl_t12;
+    uint8_t* kl_t13;
+    uint8_t kl_t14;
+    bool kl_t15;
+    struct kl_7prelude_str* kl_t16;
+    struct kl__run__LQ7prelude3str__ref kl_t17;
+#line 19 "codegen/multi_index.kl"
+    kl_t8 = kl_t1 > 0;
+#line 19 "codegen/multi_index.kl"
+    if ( kl_t8 ) goto bb1; else goto bb2;
+    bb1:
+#line 19 "codegen/multi_index.kl"
+    kl_t9 = ( uint64_t ) kl_t1;
+#line 19 "codegen/multi_index.kl"
+    kl_t3 = kl_t9 - 1;
+#line 19 "codegen/multi_index.kl"
+    goto bb3;
+    bb2:
+#line 19 "codegen/multi_index.kl"
+    kl_t3 = 0;
+#line 19 "codegen/multi_index.kl"
+    goto bb3;
+    bb3:
+#line 19 "codegen/multi_index.kl"
+    kl_t7 = ( struct kl_7prelude_str* ) kl_rt_alloc_many( ( size_t ) kl_t3, 16, "codegen/multi_index.kl", 19, "out of memory: main" );
+#line 19 "codegen/multi_index.kl"
+    kl_t4 = 0;
+#line 19 "codegen/multi_index.kl"
+    goto bb4;
+    bb4:
+#line 19 "codegen/multi_index.kl"
+    kl_t10 = kl_t4 < kl_t3;
+#line 19 "codegen/multi_index.kl"
+    if ( kl_t10 ) goto bb5; else goto bb9;
+    bb5:
+#line 19 "codegen/multi_index.kl"
+    kl_t11 = kl_t4 + 1;
+#line 19 "codegen/multi_index.kl"
+    kl_t12 = kl_t2 + kl_t11;
+#line 19 "codegen/multi_index.kl"
+    kl_t5 = ( *kl_t12 );
+#line 19 "codegen/multi_index.kl"
+    kl_t6 = 0;
+#line 19 "codegen/multi_index.kl"
+    goto bb6;
+    bb6:
+#line 19 "codegen/multi_index.kl"
+    kl_t13 = kl_t5 + kl_t6;
+#line 19 "codegen/multi_index.kl"
+    kl_t14 = ( *kl_t13 );
+#line 19 "codegen/multi_index.kl"
+    kl_t15 = kl_t14 != 0;
+#line 19 "codegen/multi_index.kl"
+    if ( kl_t15 ) goto bb7; else goto bb8;
+    bb7:
+#line 19 "codegen/multi_index.kl"
+    kl_t6 = kl_t6 + 1;
+#line 19 "codegen/multi_index.kl"
+    goto bb6;
+    bb8:
+#line 19 "codegen/multi_index.kl"
+    kl_t16 = kl_t7 + kl_t4;
+#line 19 "codegen/multi_index.kl"
+    ( *kl_t16 ).kl_data = kl_t5;
+#line 19 "codegen/multi_index.kl"
+    ( *kl_t16 ).kl_size = kl_t6;
+#line 19 "codegen/multi_index.kl"
+    kl_t4 = kl_t4 + 1;
+#line 19 "codegen/multi_index.kl"
+    goto bb4;
+    bb9:
+#line 19 "codegen/multi_index.kl"
+    kl_t17 = ( struct kl__run__LQ7prelude3str__ref ) { ( struct kl_7prelude_str* ) kl_t7, kl_t3 };
+#line 19 "codegen/multi_index.kl"
+    kl_t0 = kl__4main__LQ7prelude3str( ( kl_t17 ).data, ( kl_t17 ).size );
+#line 19 "codegen/multi_index.kl"
+    kl_rt_free( kl_t7 );
+#line 19 "codegen/multi_index.kl"
+    return kl_t0;
+#line 19 "codegen/multi_index.kl"
+}
+

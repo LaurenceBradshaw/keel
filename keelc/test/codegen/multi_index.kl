@@ -1,0 +1,49 @@
+interface indexed2<T>
+{
+    ref T operator[]( u64 r, u64 c ) const;
+};
+
+// `m[r, c]`: an `operator[]` taking more than one index, beside one taking a single index.
+// Exits with the failing check.
+struct grid<T, u64 R, u64 C> implements indexed2<T> where T : copyable
+{
+    T[R * C] cells;
+
+    ref T operator[]( u64 r, u64 c ) const { return cells[r * C + c]; }
+    ref T operator[]( u64 at ) const { return cells[at]; }
+};
+
+// Through a bound, the implementer's two-index `[]`.
+T corner<G, T>( const ref G g ) where G : indexed2<T>, where T : copyable { return g[1, 2]; }
+
+i32 main( const ref str[] _ )
+{
+    grid<i32, 2, 3> g = grid<i32, 2, 3> { [0, 1, 2, 3, 4, 5] };
+
+    if( g[1, 0] != 3 || g[0, 2] != 2 )
+    {
+        return 1;
+    }
+
+    g[1, 1] = 40;
+
+    if( g[4] != 40 )
+    {
+        return 2;
+    }
+
+    u64 r = 0;
+    g[r + 1, cast<u64>( g[0, 1] )] += 2;
+
+    if( g[1, 1] != 42 )
+    {
+        return 3;
+    }
+
+    if( corner<grid<i32, 2, 3>, i32>( g ) != 5 )
+    {
+        return 4;
+    }
+
+    return 0;
+}

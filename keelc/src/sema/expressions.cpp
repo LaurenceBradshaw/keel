@@ -2863,16 +2863,82 @@ Type_id Expressions::refuse_reversed_operator( Node_id id, Type_id left, Type_id
     return types_.poison( id );
 }
 
+// `ref T operator[](u64 i, u64 j) const` for two indices.
+static std::string index_declaration( std::size_t count )
+{
+    if( count == 1 )
+    {
+        return "ref T operator[]( u64 index ) const";
+    }
+
+    std::string params;
+    for( std::size_t k = 0; k < count; ++k )
+    {
+        params += fmt::format( "{}u64 {}", k == 0 ? "" : ", ", static_cast<char>( 'i' + k % 18 ) );
+    }
+
+    return fmt::format( "ref T operator[]({}) const", params );
+}
+
+// `v[i, j]`: only an `operator[]` takes more than one index, and none takes a range among them.
+Type_id Expressions::infer_multi_index( Node_id id )
+{
+    const Type_id base = infer( ast_.object( id ) );
+
+    for( const Node_id index : ast_.indices( id ) )
+    {
+        if( ast_.kind( index ) == Node_kind::Range_expr )
+        {
+            infer( ast_.lower( index ) );
+            infer( ast_.upper( index ) );
+            reporter_.error_at( ast_.span( index ), "a range cannot be one of several indices" );
+            return types_.poison( id );
+        }
+    }
+
+    if( table_.is_struct( base ) || table_.is_parameter( base ) )
+    {
+        return infer_index_operator( id, base );
+    }
+
+    for( const Node_id index : ast_.indices( id ) )
+    {
+        infer( index );
+    }
+
+    if( !table_.is_error( base ) )
+    {
+        reporter_.error_at(
+            ast_.span( id ), fmt::format( "`{}` takes one index", table_.name( base ) ), "write one `[]` per index"
+        );
+    }
+
+    return types_.poison( id );
+}
+
 // `v[i]` on an aggregate: the element its `operator[]` refers to.
 Type_id Expressions::infer_index_operator( Node_id id, Type_id object_type )
 {
-    const Node_id index  = ast_.index( id );
-    const Node_id method = find_operator(
-        id, object_type, index, Interner::operator_name( Operator_name::Index ), "ref T operator[]( u64 index ) const", 1
+    const std::span<const Node_id> indices = ast_.indices( id );
+    const Node_id                  method  = find_operator(
+        id,
+        object_type,
+        indices.size() == 1 ? indices[0] : Node_id {},
+        Interner::operator_name( Operator_name::Index ),
+        index_declaration( indices.size() ),
+        indices.size()
     );
 
     if( !method.is_valid() )
     {
+        for( const Node_id index : indices )
+        {
+            if( !types_.type_of( index ).is_valid() )
+            {
+                infer( index );
+            }
+        }
+
         return types_.poison( id );
     }
 
@@ -2880,7 +2946,10 @@ Type_id Expressions::infer_index_operator( Node_id id, Type_id object_type )
     const std::span<const Node_id> params   = ast_.params( method );
     const Type_id                  returned = table_.substitute( types_.type_of( method ), bindings );
 
-    check( index, table_.substitute( types_.type_of( params[1] ), bindings ) );
+    for( std::size_t k = 0; k < indices.size(); ++k )
+    {
+        check( indices[k], table_.substitute( types_.type_of( params[k + 1] ), bindings ) );
+    }
 
     // A malformed return was reported where it was written.
     if( !places_.returns_a_binding( method ) )
@@ -2980,9 +3049,12 @@ Node_id Expressions::find_operator(
         const bool unmet =
             interface.is_valid() && types_.conformances().unmet_bound( table_, object_type, interface ).has_value();
 
+        const bool indices = name == Interner::operator_name( Operator_name::Index ) && operands > 1;
+
         reporter_.error_at(
             ast_.span( id ),
-            fmt::format( "`{}` has no `{}`", table_.name( object_type ), interner_.text( name ) ),
+            indices ? fmt::format( "`{}` has no `operator[]` taking {} indices", table_.name( object_type ), operands )
+                    : fmt::format( "`{}` has no `{}`", table_.name( object_type ), interner_.text( name ) ),
             unmet         ? bounds_.conforming_help( object_type, interface, ast_.span( id ) )
             : own_package ? fmt::format( "declare `{}` in it", declaration_text )
                           : std::string {}
@@ -3496,6 +3568,11 @@ Type_id Expressions::infer_ptr_init( Node_id id )
 
 Type_id Expressions::infer_index( Node_id id )
 {
+    if( ast_.indices( id ).size() > 1 )
+    {
+        return infer_multi_index( id );
+    }
+
     // A slice's bounds are typed one by one: the `Range_expr` between them has no type.
     const Node_id range    = ast_.index( id );
     const bool    is_range = ast_.kind( range ) == Node_kind::Range_expr;

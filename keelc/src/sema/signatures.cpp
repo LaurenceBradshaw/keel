@@ -1402,6 +1402,7 @@ void Signatures::check_operators()
         // One slot per name, one more for `operator-()`, which shares `operator-( x )`'s, and one for
         // a writing walk beside the reading one (D74).
         std::array<Node_id, static_cast<size_t>( Operator_name::Count ) + 2> first {};
+        std::vector<Node_id>                                                 indexes; // one `[]` per index count
 
         for( const Node_id member : ast_.members( decl ) )
         {
@@ -1418,6 +1419,18 @@ void Signatures::check_operators()
                                            : writing ? static_cast<size_t>( Operator_name::Count ) + 1
                                                      : static_cast<size_t>( op );
             Node_id&            seen     = first[slot];
+
+            if( op == Operator_name::Index )
+            {
+                const auto same = std::ranges::find_if(
+                    indexes, [&]( Node_id other ) { return ast_.params( other ).size() == ast_.params( member ).size(); }
+                );
+                seen = same == indexes.end() ? Node_id {} : *same;
+                if( !seen.is_valid() )
+                {
+                    indexes.push_back( member );
+                }
+            }
 
             // Several of these are told apart by operand type, which Overloads checks.
             if( seen.is_valid() && ( negation || !Interner::overloads_by_operand( op ) ) )
@@ -1824,17 +1837,21 @@ void Signatures::check_index_operator( Node_id decl )
 {
     const std::span<const Node_id> params = ast_.params( decl );
 
-    if( params.size() != 2 )
+    if( params.size() < 2 )
     {
-        reporter_.error_at( ast_.span( ast_.param_list( decl ) ), "`operator[]` takes one parameter, the index" );
+        reporter_.error_at( ast_.span( ast_.param_list( decl ) ), "`operator[]` takes at least one parameter, the index" );
     }
-    else if( ast_.call_marker( params[1] ) != Keyword::Count )
+
+    for( const Node_id param : params.subspan( std::min<std::size_t>( params.size(), 1 ) ) )
     {
-        reporter_.error_at(
-            ast_.span( params[1] ),
-            "`operator[]` takes its index by value or `const ref`",
-            "`v[i]` has nowhere to write a `ref`, `out` or `move`"
-        );
+        if( ast_.call_marker( param ) != Keyword::Count )
+        {
+            reporter_.error_at(
+                ast_.span( param ),
+                "`operator[]` takes its index by value or `const ref`",
+                "`v[i]` has nowhere to write a `ref`, `out` or `move`"
+            );
+        }
     }
 
     const Node_id annotation  = ast_.return_type( decl );

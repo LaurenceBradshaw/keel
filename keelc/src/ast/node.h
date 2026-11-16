@@ -127,7 +127,7 @@ enum class Node_kind : u16
     Field_decl,
     // aux: the field's name; children: the object.
     Field_expr,
-    // `p[i]` or `p[a..b]`; children: the object, then the index or a Range_expr.
+    // `p[i]`, `p[a..b]` or `p[i, j]`; children: the object, then each index or Range_expr.
     Index_expr,
     // aux: the type's name; children: the package Name_expr when written, then the Field_inits.
     Struct_literal,

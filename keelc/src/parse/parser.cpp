@@ -3958,29 +3958,28 @@ Node_id Parser::parse_postfix( Node_id left, Expression_use use )
         {
             cursor_.advance();
 
-            Node_id range = parse_expression( 0 );
-
-            Node_id upper_bound {};
-            if( cursor_.match( Token_kind::Dot_dot ) )
+            std::vector<Node_id> children { left };
+            do
             {
-                upper_bound = parse_expression( 0 );
-            }
+                Node_id range = parse_expression( 0 );
+
+                if( cursor_.match( Token_kind::Dot_dot ) )
+                {
+                    const Node_id upper_bound = parse_expression( 0 );
+                    range                     = ast_.add(
+                        Node_kind::Range_expr,
+                        Span::merge( ast_.span( range ), ast_.span( upper_bound ) ),
+                        0,
+                        { range, upper_bound }
+                    );
+                }
+
+                children.push_back( range );
+            } while( cursor_.match( Token_kind::Comma ) );
 
             recovery_.expect( Token_kind::R_bracket );
 
-            if( upper_bound.is_valid() )
-            {
-                range = ast_.add(
-                    Node_kind::Range_expr,
-                    Span::merge( ast_.span( range ), ast_.span( upper_bound ) ),
-                    0,
-                    { range, upper_bound }
-                );
-            }
-
-            left = ast_.add(
-                Node_kind::Index_expr, Span::merge( ast_.span( left ), cursor_.previous().span ), 0, { left, range }
-            );
+            left = ast_.add( Node_kind::Index_expr, Span::merge( ast_.span( left ), cursor_.previous().span ), 0, children );
 
             continue;
         }
@@ -13316,6 +13315,9 @@ TEST_CASE( "parser_parses_indexing", "[parse][many]" )
             { "a[ b ]", "Index_expr(a,b)" },
             { "a[ b + 1 ]", "Index_expr(a,Binary_expr(b,1))" },
             { "a[ 0 ][ 1 ]", "Index_expr(Index_expr(a,0),1)" },
+            { "a[ 0, 1 ]", "Index_expr(a,0,1)" },
+            { "a[ b + 1, c ][ 2 ]", "Index_expr(Index_expr(a,Binary_expr(b,1),c),2)" },
+            { "a[ 0..2, 1 ]", "Index_expr(a,Range_expr(0,2),1)" },
             { "a[ b[ 0 ] ]", "Index_expr(a,Index_expr(b,0))" },
             { "a[ 0 ].x", "Field_expr(Index_expr(a,0))" },
             { "a.x[ 0 ]", "Index_expr(Field_expr(a),0)" },
@@ -13402,10 +13404,10 @@ TEST_CASE( "parser_applies_d15_to_indexing", "[parse][many]" )
 TEST_CASE( "parser_rejects_a_malformed_index", "[parse][many]" )
 {
     for( const char* body : {
-             "i32 v = a[];",       // no index
-             "i32 v = a[ 0;",      // unterminated
-             "i32 v = a[ 0, 1 ];", // two indices
-             "i32 v = a[ 0 ]];",   // one close too many
+             "i32 v = a[];",     // no index
+             "i32 v = a[ 0;",    // unterminated
+             "i32 v = a[ 0, ];", // a trailing comma
+             "i32 v = a[ 0 ]];", // one close too many
          } )
     {
         const Parsed p( std::string( "i32 main() { " ) + body + " return 0; }" );
@@ -13639,7 +13641,6 @@ TEST_CASE( "parser_rejects_a_malformed_slice", "[parse][run]" )
              "u8 v = a[ 0.. ];",      // no upper bound
              "u8 v = a[ ..2 ];",      // no lower bound
              "u8 v = a[ 0..2..3 ];",  // a range of a range
-             "u8 v = a[ 0..2, 3 ];",  // a second index
              "u8 v = a[ 0..2;",       // unterminated
              "u8 v = a[ ( 0..2 ) ];", // a range in parentheses
          } )

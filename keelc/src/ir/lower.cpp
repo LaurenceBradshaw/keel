@@ -2488,15 +2488,15 @@ Lowering::lower_operator_call( Node_id id, Node_id method, const Bindings& bindi
 Operand
 Lowering::lower_operator_index( Node_id id, Node_id method, const Bindings& bindings, std::vector<Type_id> type_arguments )
 {
-    const Span    span  = ast_.span( id );
-    const Node_id index = ast_.index( id );
+    const Span                     span    = ast_.span( id );
+    const std::span<const Node_id> indices = ast_.indices( id );
 
     const Operand receiver = address_operand(
         lower_place( ast_.object( id ) ), binding_type_under( ast_.params( method )[0], bindings ), span, Address_purpose::Read
     );
 
     return lower_method_call_on(
-        id, method, receiver, { &index, 1 }, type_under( method, bindings ), bindings, std::move( type_arguments )
+        id, method, receiver, indices, type_under( method, bindings ), bindings, std::move( type_arguments )
     );
 }
 

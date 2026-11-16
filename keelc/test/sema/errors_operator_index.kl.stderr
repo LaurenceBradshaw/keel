@@ -40,12 +40,6 @@ error: `operator[]` returns `ref` or `const ref`
 57 |     i32* operator[]( u64 row, u64 column ) const
    |     ^^^^ write `ref i32`, so a borrow of the element is checked
 
-error: `operator[]` takes one parameter, the index
-  --> sema/errors_operator_index.kl:57:20
-   |
-57 |     i32* operator[]( u64 row, u64 column ) const
-   |                    ^^^^^^^^^^^^^^^^^^^^^^^
-
 error: `operator[]` returns `ref` or `const ref`
   --> sema/errors_operator_index.kl:67:5
    |
@@ -64,4 +58,4 @@ error: an operator cannot be `static`
 82 |     static i32* operator[]( u64 index )
    |                 ^^^^^^^^^^ it is called on its left operand
 
-11 errors generated
+10 errors generated
