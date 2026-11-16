@@ -1095,128 +1095,128 @@ int32_t kl_7codegen_4main__( void )
     return kl_t0;
 }
 
-#line 423 "<prelude>"
+#line 434 "<prelude>"
 void kl_7prelude_3box__IQ7codegen6FramedE__RQ7prelude3boxIQ7codegen6FramedE_MQ7codegen6Framed__ctor( struct kl_7prelude_box__IQ7codegen6FramedE* kl_this_1, struct kl_7codegen_Framed kl_value_2 )
 {
     struct kl_7codegen_Framed* kl_t3;
     struct kl_7codegen_Framed* kl_t4;
     bool kl_t5;
-#line 427 "<prelude>"
+#line 438 "<prelude>"
     kl_t5 = true;
-#line 427 "<prelude>"
-    kl_t3 = ( struct kl_7codegen_Framed* ) kl_rt_alloc( 24, "<prelude>", 427, "out of memory: alloc<T>()" );
-#line 427 "<prelude>"
+#line 438 "<prelude>"
+    kl_t3 = ( struct kl_7codegen_Framed* ) kl_rt_alloc( 24, "<prelude>", 438, "out of memory: alloc<T>()" );
+#line 438 "<prelude>"
     ( *kl_this_1 ).kl_p_ = kl_t3;
     kl_t4 = ( *kl_this_1 ).kl_p_;
-#line 428 "<prelude>"
+#line 439 "<prelude>"
     ( *kl_t4 ) = kl_value_2;
-#line 428 "<prelude>"
+#line 439 "<prelude>"
     kl_t5 = false;
-#line 430 "<prelude>"
+#line 441 "<prelude>"
     if ( kl_t5 ) kl_7codegen_6Buffer__dtor( &kl_value_2.kl_frame );
-#line 430 "<prelude>"
+#line 441 "<prelude>"
     kl_t5 = false;
-#line 430 "<prelude>"
+#line 441 "<prelude>"
     return;
-#line 430 "<prelude>"
+#line 441 "<prelude>"
 }
 
-#line 447 "<prelude>"
+#line 458 "<prelude>"
 struct kl_7codegen_Shape__ref kl_7prelude_3get__I5ShapeE__SQ7prelude3boxI5ShapeE( struct kl_7prelude_box__I5ShapeE* kl_this_1 )
 {
     struct kl_7codegen_Shape__ref kl_t0;
-#line 449 "<prelude>"
+#line 460 "<prelude>"
     kl_t0 = ( *kl_this_1 ).kl_p_;
-#line 449 "<prelude>"
+#line 460 "<prelude>"
     return kl_t0;
 }
 
-#line 423 "<prelude>"
+#line 434 "<prelude>"
 void kl_7prelude_3box__IQ7codegen6SquareE__RQ7prelude3boxIQ7codegen6SquareE_MQ7codegen6Square__ctor( struct kl_7prelude_box__IQ7codegen6SquareE* kl_this_1, struct kl_7codegen_Square kl_value_2 )
 {
     struct kl_7codegen_Square* kl_t3;
     struct kl_7codegen_Square* kl_t4;
-    kl_t3 = ( struct kl_7codegen_Square* ) kl_rt_alloc( 8, "<prelude>", 427, "out of memory: alloc<T>()" );
-#line 427 "<prelude>"
+    kl_t3 = ( struct kl_7codegen_Square* ) kl_rt_alloc( 8, "<prelude>", 438, "out of memory: alloc<T>()" );
+#line 438 "<prelude>"
     ( *kl_this_1 ).kl_p_ = kl_t3;
     kl_t4 = ( *kl_this_1 ).kl_p_;
-#line 428 "<prelude>"
+#line 439 "<prelude>"
     ( *kl_t4 ) = kl_value_2;
-#line 430 "<prelude>"
+#line 441 "<prelude>"
     return;
-#line 430 "<prelude>"
+#line 441 "<prelude>"
 }
 
-#line 447 "<prelude>"
+#line 458 "<prelude>"
 struct kl_7codegen_Square* kl_7prelude_3get__IQ7codegen6SquareE__SQ7prelude3boxIQ7codegen6SquareE( struct kl_7prelude_box__IQ7codegen6SquareE* kl_this_1 )
 {
     struct kl_7codegen_Square* kl_t0;
-#line 449 "<prelude>"
+#line 460 "<prelude>"
     kl_t0 = &( *( *kl_this_1 ).kl_p_ );
-#line 449 "<prelude>"
+#line 460 "<prelude>"
     return kl_t0;
 }
 
-#line 432 "<prelude>"
+#line 443 "<prelude>"
 void kl_7prelude_3box__I5ShapeE__dtor( struct kl_7prelude_box__I5ShapeE* kl_this_1 )
 {
     bool kl_t2;
     struct kl_7codegen_Shape__ref kl_t3;
-#line 434 "<prelude>"
+#line 445 "<prelude>"
     kl_t2 = ( ( *kl_this_1 ).kl_p_ ).self == ( ( struct kl_7codegen_Shape__ref ) { NULL, NULL } ).self;
-#line 434 "<prelude>"
+#line 445 "<prelude>"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
     return;
     bb2:
-#line 441 "<prelude>"
+#line 452 "<prelude>"
     kl_t3 = ( *kl_this_1 ).kl_p_;
-#line 441 "<prelude>"
+#line 452 "<prelude>"
     kl_t3.vtable->drop( kl_t3.self );
     kl_rt_free( ( ( *kl_this_1 ).kl_p_ ).self );
-#line 444 "<prelude>"
+#line 455 "<prelude>"
     return;
-#line 444 "<prelude>"
+#line 455 "<prelude>"
 }
 
-#line 432 "<prelude>"
+#line 443 "<prelude>"
 void kl_7prelude_3box__IQ7codegen6FramedE__dtor( struct kl_7prelude_box__IQ7codegen6FramedE* kl_this_1 )
 {
     bool kl_t2;
     struct kl_7codegen_Framed* kl_t3;
-#line 434 "<prelude>"
+#line 445 "<prelude>"
     kl_t2 = ( *kl_this_1 ).kl_p_ == NULL;
-#line 434 "<prelude>"
+#line 445 "<prelude>"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
     return;
     bb2:
-#line 441 "<prelude>"
+#line 452 "<prelude>"
     kl_t3 = ( *kl_this_1 ).kl_p_;
-#line 441 "<prelude>"
+#line 452 "<prelude>"
     kl_7codegen_6Buffer__dtor( &( *kl_t3 ).kl_frame );
     kl_rt_free( ( *kl_this_1 ).kl_p_ );
-#line 444 "<prelude>"
+#line 455 "<prelude>"
     return;
-#line 444 "<prelude>"
+#line 455 "<prelude>"
 }
 
-#line 432 "<prelude>"
+#line 443 "<prelude>"
 void kl_7prelude_3box__IQ7codegen6SquareE__dtor( struct kl_7prelude_box__IQ7codegen6SquareE* kl_this_1 )
 {
     bool kl_t2;
-#line 434 "<prelude>"
+#line 445 "<prelude>"
     kl_t2 = ( *kl_this_1 ).kl_p_ == NULL;
-#line 434 "<prelude>"
+#line 445 "<prelude>"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
     return;
     bb2:
-#line 442 "<prelude>"
+#line 453 "<prelude>"
     kl_rt_free( ( *kl_this_1 ).kl_p_ );
-#line 444 "<prelude>"
+#line 455 "<prelude>"
     return;
-#line 444 "<prelude>"
+#line 455 "<prelude>"
 }
 
 void kl_7codegen_Framed__drop( void* kl_t1 )

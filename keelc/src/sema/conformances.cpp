@@ -175,9 +175,9 @@ bool declares_as( const Type_table& table, Type_id declared, Type_id type, Type_
     return table.substitutes_to( declared, table.instance_bindings( type ), interface );
 }
 
-// A number gets all three. `bool`, a payload-free enum and a pointer get equality and a hash, but
-// no order. An interface pointer is two words, and gets nothing yet. An array is a
-// `fixed_memory` of its element.
+// A number gets all three, and `converts_to` the numbers it reaches without rounding. `bool`, a
+// payload-free enum and a pointer get equality and a hash, but no order. An interface pointer is two
+// words, and gets nothing yet. An array is a `fixed_memory` of its element.
 bool supplied( const Type_table& table, Type_id type, Type_id interface, bool payload )
 {
     if( !interface.is_valid() )
@@ -192,6 +192,13 @@ bool supplied( const Type_table& table, Type_id type, Type_id interface, bool pa
     }
 
     const bool number = table.is_integer( type ) || table.is_float( type );
+
+    // No rounding: an integer to any number, a float to a float.
+    if( table.is_interface( interface ) && table.get( interface ).declaration == table.prelude().converts_to )
+    {
+        const Type_id to = table.get( interface ).arguments.size() == 1 ? table.get( interface ).arguments[0] : Type_id {};
+        return number && to.is_valid() && ( table.is_float( to ) || ( table.is_integer( to ) && table.is_integer( type ) ) );
+    }
 
     if( interface == table.declared( table.prelude().comparable ) )
     {

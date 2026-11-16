@@ -559,7 +559,13 @@ Conversion_result Operators::convert( bool is_cast, Type_id value, Type_id targe
 
         // No witness with a parameter in play means the set was not enumerable at all, which is a
         // missing bound rather than a refused pair.
-        if( generic.is_valid() && !witness.is_valid() )
+        if( table_.is_parameter( value ) && is_cast && !witness.is_valid() )
+        {
+            help = fmt::format(
+                "write `where {} : converts_to<{}>` to promise the conversion", table_.name( value ), table_.name( target )
+            );
+        }
+        else if( generic.is_valid() && !witness.is_valid() )
         {
             help = fmt::format( "write `where {} : numeric` to promise it is a number", table_.name( generic ) );
         }

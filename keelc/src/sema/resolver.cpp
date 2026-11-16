@@ -1603,6 +1603,7 @@ Prelude_items Resolver::prelude_items() const
     items.hashable       = named( "hashable", an_interface );
     items.fixed_memory   = named( "fixed_memory", an_interface );
     items.dynamic_memory = named( "dynamic_memory", an_interface );
+    items.converts_to    = named( "converts_to", an_interface );
     items.sqrt_f64       = named( "sqrt_f64", a_function );
     items.sqrt_f32       = named( "sqrt_f32", a_function );
 

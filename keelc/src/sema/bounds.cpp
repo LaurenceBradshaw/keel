@@ -440,7 +440,8 @@ void Bounds::check_each_bound(
                     table_.name( interface ),
                     table_.name( argument )
                 ),
-                table_.is_prelude_interface( interface ) &&
+                table_.get( interface ).declaration == table_.prelude().converts_to ? converts_help( argument, interface )
+                : table_.is_prelude_interface( interface ) &&
                         Conformance_model::supplied_by_kind( ast_, table_, argument, interface )
                     ? dropped_help( argument, interface )
                 : table_.is_prelude_interface( interface ) &&
@@ -554,6 +555,21 @@ void Bounds::report_unmet(
         ),
         std::move( help )
     );
+}
+
+// Why `argument` does not reach `converts_to<U>`'s `U`.
+std::string Bounds::converts_help( Type_id argument, Type_id interface ) const
+{
+    const std::span<const Type_id> to = table_.get( interface ).arguments;
+
+    if( table_.is_float( argument ) && to.size() == 1 && table_.is_integer( to[0] ) )
+    {
+        return fmt::format(
+            "a float reaches an integer only by a rounding, such as `kl::truncated<{}>`", table_.name( to[0] )
+        );
+    }
+
+    return "`cast` converts without rounding only an integer to a number, or a float to a float";
 }
 
 Node_id Bounds::owner_of( Type_id parameter ) const
@@ -957,6 +973,18 @@ Conversion Bounds::conversion_between( Type_id from, Type_id to, Type_id& witnes
         return conversion_for( table_.get( from ).kind, table_.get( to ).kind );
     }
 
+    // `where T : converts_to<U>` promises the pair, whatever else either side's bounds admit.
+    if( table_.is_parameter( from ) )
+    {
+        for( const Type_id promised : types_.conformances().instances_of( table_, from, table_.prelude().converts_to ) )
+        {
+            if( table_.get( promised ).arguments.size() == 1 && table_.get( promised ).arguments[0] == to )
+            {
+                return Conversion::Cast_only;
+            }
+        }
+    }
+
     const std::vector<Type_id> froms = possible_types( from );
     const std::vector<Type_id> tos   = possible_types( to );
 
@@ -1277,7 +1305,7 @@ void Bounds::enter_conditions( Node_id function )
     }
 }
 
-void Bounds::check_conditions( Node_id method, Span at, Type_id receiver )
+void Bounds::check_conditions( Node_id method, Span at, Type_id receiver, std::span<const Type_id> own )
 {
     if( !ast_.conditions( method ).is_valid() || !receiver.is_valid() || !table_.is_struct( receiver ) )
     {
@@ -1286,7 +1314,14 @@ void Bounds::check_conditions( Node_id method, Span at, Type_id receiver )
 
     const std::span<const Type_id> arguments = table_.get( receiver ).arguments;
     const std::vector<Node_id>     outer = ast_.type_parameters( ast_.type_param_list( ast_.enclosing_aggregate( method ) ) );
-    const Bindings                 bindings = aggregates_.bindings_of( receiver );
+    Bindings                       bindings = aggregates_.bindings_of( receiver );
+
+    // A condition may name the method's own parameters, as `where T : converts_to<U>`.
+    const std::vector<Node_id> mine = ast_.type_parameters( ast_.own_type_param_list( method ) );
+    for( std::size_t i = 0; i < mine.size() && i < own.size(); ++i )
+    {
+        bindings.insert_or_assign( types_.type_of( mine[i] ).v, own[i] );
+    }
 
     for( const Node_id clause : ast_.where_clauses( ast_.conditions( method ) ) )
     {

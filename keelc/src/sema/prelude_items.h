@@ -14,6 +14,7 @@ struct Prelude_items
     Node_id sqrt_f64, sqrt_f32; // calls lower to Rvalue_kind::Sqrt
     Node_id equatable, comparable, hashable;
     Node_id fixed_memory, dynamic_memory;
+    Node_id converts_to; // only the compiler's conformances; `cast` reads its promise
 };
 
 } // namespace keel

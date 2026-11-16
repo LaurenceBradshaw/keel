@@ -1,0 +1,30 @@
+// `converts_to<U>`: only the compiler implements it, a float reaches no integer through it, and a
+// `cast` on a `T` needs its promise for that very `U`.
+U conv<T, U>( T x ) where T : converts_to<U> { return cast<U>( x ); }
+
+// Promised for `f64`, not for `U`.
+U other<T, U>( T x ) where T : converts_to<f64> { return cast<U>( x ); }
+
+struct meters implements converts_to<f64>
+{
+    f64 v;
+};
+
+implements converts_to<i32> for bool {};
+
+struct cell<T> where T : numeric
+{
+    T v;
+
+    U to<U>() const where T : converts_to<U> { return cast<U>( v ); }
+};
+
+i32 main( const ref str[] _ )
+{
+    f64 d = 2.5;
+    i32 a = conv<f64, i32>( d );
+    bool b = conv<i32, bool>( a );
+    cell<f64> c = cell<f64> { 1.0 };
+    i64 y = c.to<i64>();
+    return 0;
+}

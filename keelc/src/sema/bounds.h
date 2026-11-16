@@ -162,7 +162,7 @@ public:
     // promise; any others end.
     void enter_conditions( Node_id function );
     // A use of `method` on `receiver`, whose arguments must meet its conditions.
-    void check_conditions( Node_id method, Span at, Type_id receiver );
+    void check_conditions( Node_id method, Span at, Type_id receiver, std::span<const Type_id> own = {} );
     // Each interface's closed requirements, then each `where` clause's: two that no one method can
     // answer are refused. Once every signature is typed.
     void check_requirement_sets();
@@ -172,6 +172,7 @@ public:
     // How a forwarded parameter would keep a promise: a clause on the declaration that owns it.
     std::string forwarded_help( Type_id parameter, std::string_view promise ) const;
     std::string defaultable_help( Type_id argument, std::string general ) const;
+    std::string converts_help( Type_id argument, Type_id interface ) const;
     // What conforms `type` to `interface` and all it refines, written at `at`; empty where nothing there can.
     std::string conforming_help( Type_id type, Type_id interface, Span at ) const;
 

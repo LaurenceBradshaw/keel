@@ -1,0 +1,304 @@
+// codegen/converts_to.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl_7prelude_str;
+struct kl_7codegen_cell__I2u8E;
+
+struct kl__run__LQ7prelude3str__ref { struct kl_7prelude_str* data; uint64_t size; };
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
+};
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
+
+struct kl_7codegen_cell__I2u8E
+{
+    uint8_t kl_v;
+};
+_Static_assert( sizeof( struct kl_7codegen_cell__I2u8E ) == 1 && _Alignof( struct kl_7codegen_cell__I2u8E ) == 1 && offsetof( struct kl_7codegen_cell__I2u8E, kl_v ) == 0, "layout" );
+
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
+void  kl_rt_free( void* );
+void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+
+int32_t kl_7codegen_4main__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
+double kl_7codegen_4conv__I3i32_3f64E__3i32( int32_t* );
+int64_t kl_7codegen_4conv__I3i32_3i64E__3i32( int32_t* );
+double kl_7codegen_11conv_number__I3f32_3f64E__3f32( float );
+int32_t kl_7codegen_2to__I2u8_3i32E__SQ7codegen4cellI2u8E( struct kl_7codegen_cell__I2u8E* );
+float kl_7codegen_2to__I2u8_3f32E__SQ7codegen4cellI2u8E( struct kl_7codegen_cell__I2u8E* );
+
+#line 14 "codegen/converts_to.kl"
+int32_t kl_7codegen_4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t kl_t1_size )
+{
+    int32_t kl_t0;
+#line 14 "codegen/converts_to.kl"
+    struct kl__run__LQ7prelude3str__ref kl_t1 = { kl_t1_data, kl_t1_size };
+    int32_t kl_a_2;
+    float kl_f_3;
+    struct kl_7codegen_cell__I2u8E kl_c_4;
+    struct kl_7codegen_cell__I2u8E kl_t5;
+    int32_t* kl_t6;
+    double kl_t7;
+    bool kl_t8;
+    int32_t* kl_t9;
+    int64_t kl_t10;
+    bool kl_t11;
+    double kl_t12;
+    bool kl_t13;
+    struct kl_7codegen_cell__I2u8E* kl_t14;
+    int32_t kl_t15;
+    bool kl_t16;
+    struct kl_7codegen_cell__I2u8E* kl_t17;
+    float kl_t18;
+    bool kl_t19;
+    ( void ) kl_t1;
+#line 16 "codegen/converts_to.kl"
+    kl_a_2 = -300;
+    kl_f_3 = 1.5;
+    kl_t5.kl_v = 200;
+#line 18 "codegen/converts_to.kl"
+    kl_c_4 = kl_t5;
+#line 20 "codegen/converts_to.kl"
+    kl_t6 = &kl_a_2;
+#line 20 "codegen/converts_to.kl"
+    kl_t7 = kl_7codegen_4conv__I3i32_3f64E__3i32( kl_t6 );
+#line 20 "codegen/converts_to.kl"
+    kl_t8 = kl_t7 != -300.0;
+#line 20 "codegen/converts_to.kl"
+    if ( kl_t8 ) goto bb1; else goto bb2;
+    bb1:
+#line 20 "codegen/converts_to.kl"
+    kl_t0 = 1;
+#line 20 "codegen/converts_to.kl"
+    return kl_t0;
+    bb2:
+#line 21 "codegen/converts_to.kl"
+    kl_t9 = &kl_a_2;
+#line 21 "codegen/converts_to.kl"
+    kl_t10 = kl_7codegen_4conv__I3i32_3i64E__3i32( kl_t9 );
+#line 21 "codegen/converts_to.kl"
+    kl_t11 = kl_t10 != -300;
+#line 21 "codegen/converts_to.kl"
+    if ( kl_t11 ) goto bb3; else goto bb4;
+    bb3:
+#line 21 "codegen/converts_to.kl"
+    kl_t0 = 2;
+#line 21 "codegen/converts_to.kl"
+    return kl_t0;
+    bb4:
+#line 22 "codegen/converts_to.kl"
+    kl_t12 = kl_7codegen_11conv_number__I3f32_3f64E__3f32( kl_f_3 );
+#line 22 "codegen/converts_to.kl"
+    kl_t13 = kl_t12 != 1.5;
+#line 22 "codegen/converts_to.kl"
+    if ( kl_t13 ) goto bb5; else goto bb6;
+    bb5:
+#line 22 "codegen/converts_to.kl"
+    kl_t0 = 3;
+#line 22 "codegen/converts_to.kl"
+    return kl_t0;
+    bb6:
+#line 23 "codegen/converts_to.kl"
+    kl_t14 = &kl_c_4;
+#line 23 "codegen/converts_to.kl"
+    kl_t15 = kl_7codegen_2to__I2u8_3i32E__SQ7codegen4cellI2u8E( kl_t14 );
+#line 23 "codegen/converts_to.kl"
+    kl_t16 = kl_t15 != 200;
+#line 23 "codegen/converts_to.kl"
+    if ( kl_t16 ) goto bb7; else goto bb8;
+    bb7:
+#line 23 "codegen/converts_to.kl"
+    kl_t0 = 4;
+#line 23 "codegen/converts_to.kl"
+    return kl_t0;
+    bb8:
+#line 24 "codegen/converts_to.kl"
+    kl_t17 = &kl_c_4;
+#line 24 "codegen/converts_to.kl"
+    kl_t18 = kl_7codegen_2to__I2u8_3f32E__SQ7codegen4cellI2u8E( kl_t17 );
+#line 24 "codegen/converts_to.kl"
+    kl_t19 = kl_t18 != 200.0;
+#line 24 "codegen/converts_to.kl"
+    if ( kl_t19 ) goto bb9; else goto bb10;
+    bb9:
+#line 24 "codegen/converts_to.kl"
+    kl_t0 = 5;
+#line 24 "codegen/converts_to.kl"
+    return kl_t0;
+    bb10:
+    kl_t0 = 0;
+#line 26 "codegen/converts_to.kl"
+    return kl_t0;
+}
+
+#line 4 "codegen/converts_to.kl"
+double kl_7codegen_4conv__I3i32_3f64E__3i32( int32_t* kl_x_1 )
+{
+    double kl_t0;
+    double kl_t2;
+#line 4 "codegen/converts_to.kl"
+    kl_t2 = ( double ) ( *kl_x_1 );
+#line 4 "codegen/converts_to.kl"
+    kl_t0 = kl_t2;
+#line 4 "codegen/converts_to.kl"
+    return kl_t0;
+#line 4 "codegen/converts_to.kl"
+}
+
+#line 4 "codegen/converts_to.kl"
+int64_t kl_7codegen_4conv__I3i32_3i64E__3i32( int32_t* kl_x_1 )
+{
+    int64_t kl_t0;
+    int64_t kl_t2;
+#line 4 "codegen/converts_to.kl"
+    kl_t2 = ( int64_t ) ( *kl_x_1 );
+#line 4 "codegen/converts_to.kl"
+    kl_t0 = kl_t2;
+#line 4 "codegen/converts_to.kl"
+    return kl_t0;
+#line 4 "codegen/converts_to.kl"
+}
+
+#line 5 "codegen/converts_to.kl"
+double kl_7codegen_11conv_number__I3f32_3f64E__3f32( float kl_x_1 )
+{
+    double kl_t0;
+    double kl_t2;
+#line 5 "codegen/converts_to.kl"
+    kl_t2 = ( double ) kl_x_1;
+#line 5 "codegen/converts_to.kl"
+    kl_t0 = kl_t2;
+#line 5 "codegen/converts_to.kl"
+    return kl_t0;
+#line 5 "codegen/converts_to.kl"
+}
+
+#line 11 "codegen/converts_to.kl"
+int32_t kl_7codegen_2to__I2u8_3i32E__SQ7codegen4cellI2u8E( struct kl_7codegen_cell__I2u8E* kl_this_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t2;
+#line 11 "codegen/converts_to.kl"
+    kl_t2 = ( int32_t ) ( *kl_this_1 ).kl_v;
+#line 11 "codegen/converts_to.kl"
+    kl_t0 = kl_t2;
+#line 11 "codegen/converts_to.kl"
+    return kl_t0;
+#line 11 "codegen/converts_to.kl"
+}
+
+#line 11 "codegen/converts_to.kl"
+float kl_7codegen_2to__I2u8_3f32E__SQ7codegen4cellI2u8E( struct kl_7codegen_cell__I2u8E* kl_this_1 )
+{
+    float kl_t0;
+    float kl_t2;
+#line 11 "codegen/converts_to.kl"
+    kl_t2 = ( float ) ( *kl_this_1 ).kl_v;
+#line 11 "codegen/converts_to.kl"
+    kl_t0 = kl_t2;
+#line 11 "codegen/converts_to.kl"
+    return kl_t0;
+#line 11 "codegen/converts_to.kl"
+}
+
+int main( int argc, char** argv )
+{
+    int32_t kl_t1 = ( int32_t ) argc;
+    uint8_t** kl_t2 = ( uint8_t** ) argv;
+    int32_t kl_t0;
+    uint64_t kl_t3;
+    uint64_t kl_t4;
+    uint8_t* kl_t5;
+    uint64_t kl_t6;
+    struct kl_7prelude_str* kl_t7;
+    bool kl_t8;
+    uint64_t kl_t9;
+    bool kl_t10;
+    uint64_t kl_t11;
+    uint8_t** kl_t12;
+    uint8_t* kl_t13;
+    uint8_t kl_t14;
+    bool kl_t15;
+    struct kl_7prelude_str* kl_t16;
+    struct kl__run__LQ7prelude3str__ref kl_t17;
+#line 14 "codegen/converts_to.kl"
+    kl_t8 = kl_t1 > 0;
+#line 14 "codegen/converts_to.kl"
+    if ( kl_t8 ) goto bb1; else goto bb2;
+    bb1:
+#line 14 "codegen/converts_to.kl"
+    kl_t9 = ( uint64_t ) kl_t1;
+#line 14 "codegen/converts_to.kl"
+    kl_t3 = kl_t9 - 1;
+#line 14 "codegen/converts_to.kl"
+    goto bb3;
+    bb2:
+#line 14 "codegen/converts_to.kl"
+    kl_t3 = 0;
+#line 14 "codegen/converts_to.kl"
+    goto bb3;
+    bb3:
+#line 14 "codegen/converts_to.kl"
+    kl_t7 = ( struct kl_7prelude_str* ) kl_rt_alloc_many( ( size_t ) kl_t3, 16, "codegen/converts_to.kl", 14, "out of memory: main" );
+#line 14 "codegen/converts_to.kl"
+    kl_t4 = 0;
+#line 14 "codegen/converts_to.kl"
+    goto bb4;
+    bb4:
+#line 14 "codegen/converts_to.kl"
+    kl_t10 = kl_t4 < kl_t3;
+#line 14 "codegen/converts_to.kl"
+    if ( kl_t10 ) goto bb5; else goto bb9;
+    bb5:
+#line 14 "codegen/converts_to.kl"
+    kl_t11 = kl_t4 + 1;
+#line 14 "codegen/converts_to.kl"
+    kl_t12 = kl_t2 + kl_t11;
+#line 14 "codegen/converts_to.kl"
+    kl_t5 = ( *kl_t12 );
+#line 14 "codegen/converts_to.kl"
+    kl_t6 = 0;
+#line 14 "codegen/converts_to.kl"
+    goto bb6;
+    bb6:
+#line 14 "codegen/converts_to.kl"
+    kl_t13 = kl_t5 + kl_t6;
+#line 14 "codegen/converts_to.kl"
+    kl_t14 = ( *kl_t13 );
+#line 14 "codegen/converts_to.kl"
+    kl_t15 = kl_t14 != 0;
+#line 14 "codegen/converts_to.kl"
+    if ( kl_t15 ) goto bb7; else goto bb8;
+    bb7:
+#line 14 "codegen/converts_to.kl"
+    kl_t6 = kl_t6 + 1;
+#line 14 "codegen/converts_to.kl"
+    goto bb6;
+    bb8:
+#line 14 "codegen/converts_to.kl"
+    kl_t16 = kl_t7 + kl_t4;
+#line 14 "codegen/converts_to.kl"
+    ( *kl_t16 ).kl_data = kl_t5;
+#line 14 "codegen/converts_to.kl"
+    ( *kl_t16 ).kl_size = kl_t6;
+#line 14 "codegen/converts_to.kl"
+    kl_t4 = kl_t4 + 1;
+#line 14 "codegen/converts_to.kl"
+    goto bb4;
+    bb9:
+#line 14 "codegen/converts_to.kl"
+    kl_t17 = ( struct kl__run__LQ7prelude3str__ref ) { ( struct kl_7prelude_str* ) kl_t7, kl_t3 };
+#line 14 "codegen/converts_to.kl"
+    kl_t0 = kl_7codegen_4main__LQ7prelude3str( ( kl_t17 ).data, ( kl_t17 ).size );
+#line 14 "codegen/converts_to.kl"
+    kl_rt_free( kl_t7 );
+#line 14 "codegen/converts_to.kl"
+    return kl_t0;
+#line 14 "codegen/converts_to.kl"
+}
+

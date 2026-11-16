@@ -46,6 +46,8 @@ functions.</p>
 <li><a href="#hasher"><code>hasher</code></a> <span class="kind">class</span></li>
 <li><a href="#hashable"><code>hashable</code></a> <span class="kind">interface</span></li>
 <li><a href="#hashable-for-T[N]-where-T-:-hashable"><code>hashable for T[N] where T : hashable</code></a> <span class="kind">implements</span></li>
+<li class="divider">Conversion</li>
+<li><a href="#converts_to"><code>converts_to</code></a> <span class="kind">interface</span></li>
 <li class="divider">Memory</li>
 <li><a href="#fixed_memory"><code>fixed_memory</code></a> <span class="kind">interface</span></li>
 <li><a href="#dynamic_memory"><code>dynamic_memory</code></a> <span class="kind">interface</span></li>
@@ -510,6 +512,19 @@ panics on a NaN.</p>
 <h3>Methods</h3>
 <div class="group" id="hashable-for-T[N]-where-T-:-hashable.hash">
 <pre class="signature"><a class="anchor" href="#hashable-for-T[N]-where-T-:-hashable.hash" aria-label="Link to hash">#</a><code><span class="kw">public</span> <a class="prim" href="#void">void</a> <span class="fn">hash</span>( <span class="kw">ref</span> <a class="type" href="#hasher">hasher</a> h ) <span class="kw">const</span></code></pre>
+</div>
+</section>
+<h2 class="divider">Conversion</h2>
+<section class="entry">
+<h2><span class="kind">interface</span> <span class="type">converts_to</span></h2>
+<div class="group" id="converts_to">
+<pre class="signature"><a class="anchor" href="#converts_to" aria-label="Link to converts_to">#</a><code><span class="kw">interface</span> <span class="type">converts_to</span>&lt;U&gt;</code></pre>
+<div class="doc">
+<p><code>cast&lt;U&gt;</code> turns this type into a <code>U</code> without rounding: an integer into any integer or float, and
+a float into any float. A value the <code>U</code> cannot hold panics.</p>
+<p>Only the compiler implements it, so <code>where T : converts_to&lt;U&gt;</code> promises a number-to-number
+<code>cast</code> a generic body can write. A float to an integer needs a rounding, such as <code>kl::truncated</code>.</p>
+</div>
 </div>
 </section>
 <h2 class="divider">Memory</h2>

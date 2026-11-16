@@ -1,0 +1,37 @@
+error: `cast` cannot convert `T` to `U`
+ --> sema/errors_converts_to.kl:6:58
+  |
+6 | U other<T, U>( T x ) where T : converts_to<f64> { return cast<U>( x ); }
+  |                                                          ^^^^^^^^^^^^ write `where T : converts_to<U>` to promise the conversion
+
+error: only the compiler implements `converts_to`
+ --> sema/errors_converts_to.kl:8:26
+  |
+8 | struct meters implements converts_to<f64>
+  |                          ^^^^^^^^^^^^^^^^ it is the numbers `cast` converts without rounding; give the type a method that converts it
+
+error: only the compiler implements `converts_to`
+  --> sema/errors_converts_to.kl:13:12
+   |
+13 | implements converts_to<i32> for bool {};
+   |            ^^^^^^^^^^^^^^^^ it is the numbers `cast` converts without rounding; give the type a method that converts it
+
+error: `conv` needs a `T` that implements `converts_to<i32>`, but `f64` does not
+  --> sema/errors_converts_to.kl:25:18
+   |
+25 |     i32 a = conv<f64, i32>( d );
+   |                  ^^^ a float reaches an integer only by a rounding, such as `kl::truncated<i32>`
+
+error: `conv` needs a `T` that implements `converts_to<bool>`, but `i32` does not
+  --> sema/errors_converts_to.kl:26:19
+   |
+26 |     bool b = conv<i32, bool>( a );
+   |                   ^^^ `cast` converts without rounding only an integer to a number, or a float to a float
+
+error: `to` needs a `T` that implements `converts_to<i64>`, but `f64` does not
+  --> sema/errors_converts_to.kl:28:13
+   |
+28 |     i64 y = c.to<i64>();
+   |             ^^^^^^^^^^^ a float reaches an integer only by a rounding, such as `kl::truncated<i64>`
+
+6 errors generated

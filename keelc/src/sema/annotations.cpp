@@ -898,6 +898,17 @@ Type_id Annotations::resolve_interface( Node_id annotation )
         return named;
     }
 
+    if( table_.is_interface( named ) && table_.get( named ).declaration == table_.prelude().converts_to )
+    {
+        reporter_.error_at(
+            ast_.span( annotation ),
+            "only the compiler implements `converts_to`",
+            "it is the numbers `cast` converts without rounding; give the type a method that converts it"
+        );
+
+        return table_.builtin( Type_kind::Error );
+    }
+
     if( table_.is_interface( named ) )
     {
         return named;

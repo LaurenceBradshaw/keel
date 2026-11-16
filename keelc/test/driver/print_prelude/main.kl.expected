@@ -387,6 +387,17 @@ implements<T, u64 N> hashable for T[N] where T : hashable
     }
 };
 
+/// --- Conversion ---
+
+/// `cast<U>` turns this type into a `U` without rounding: an integer into any integer or float, and
+/// a float into any float. A value the `U` cannot hold panics.
+///
+/// Only the compiler implements it, so `where T : converts_to<U>` promises a number-to-number
+/// `cast` a generic body can write. A float to an integer needs a rounding, such as `kl::truncated`.
+interface converts_to<U>
+{
+};
+
 /// --- Memory ---
 
 /// A run of `T` laid out one after another, of a size the holder does not change.

@@ -1,0 +1,27 @@
+// `where T : converts_to<U>` promises `cast<U>` on a `T`: integer to any number, float to float, on
+// a bare `T`, beside `numeric`, and as a method's condition naming its own `U`. Exits with the
+// failing check.
+U conv<T, U>( T x ) where T : converts_to<U> { return cast<U>( x ); }
+U conv_number<T, U>( T x ) where T : numeric & converts_to<U> { return cast<U>( x ); }
+
+struct cell<T> where T : numeric
+{
+    T v;
+
+    U to<U>() const where T : converts_to<U> { return cast<U>( v ); }
+};
+
+i32 main( const ref str[] _ )
+{
+    i32 a = -300;
+    f32 f = 1.5;
+    cell<u8> c = cell<u8> { 200 };
+
+    if( conv<i32, f64>( a ) != -300.0 ) { return 1; }
+    if( conv<i32, i64>( a ) != -300 ) { return 2; }
+    if( conv_number<f32, f64>( f ) != 1.5 ) { return 3; }
+    if( c.to<i32>() != 200 ) { return 4; }
+    if( c.to<f32>() != 200.0 ) { return 5; }
+
+    return 0;
+}
