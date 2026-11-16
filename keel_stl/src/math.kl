@@ -28,7 +28,7 @@
 // ====================================================
 
 // Numbers beyond the operators.
-import kl::_core::trig_core;
+import kl::_core::trig;
 
 /// --- Bits ---
 

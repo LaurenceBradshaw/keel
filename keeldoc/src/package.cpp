@@ -44,7 +44,8 @@ std::string_view section_of( std::string_view declares )
     return "Methods";
 }
 
-// `file`'s module in the package at `dir`, or nothing when it is outside it.
+// `file`'s module in the package at `dir`, or nothing when it is outside it or in a nested package
+// named `_...`, the package's own internals.
 std::optional<std::string> module_of( const std::filesystem::path& dir, std::string_view file )
 {
     std::error_code             ec;
@@ -64,6 +65,10 @@ std::optional<std::string> module_of( const std::filesystem::path& dir, std::str
     std::string name;
     for( const std::filesystem::path& part : relative.parent_path() / relative.stem() )
     {
+        if( part != relative.stem() && part.generic_string().starts_with( '_' ) )
+        {
+            return std::nullopt;
+        }
         name += ( name.empty() ? "" : "::" ) + part.generic_string();
     }
 
@@ -150,7 +155,8 @@ Package build_package(
             continue;
         }
 
-        if( kind == "package" && record.get( "name" ).starts_with( name + "::" ) )
+        if( kind == "package" && record.get( "name" ).starts_with( name + "::" ) &&
+            record.get( "name" ).find( "::_" ) == std::string_view::npos )
         {
             package.nested_docs.emplace( record.get( "name" ).substr( name.size() + 2 ), record.get( "doc" ) );
             continue;
@@ -325,13 +331,16 @@ TEST_CASE( "package_groups_overloads_and_sections_and_drops_private_and_bare_ext
     REQUIRE( prelude.back().sections.empty() );
 }
 
-TEST_CASE( "package_lists_its_own_modules_before_its_nested_packages", "[package]" )
+TEST_CASE( "package_lists_its_own_modules_before_its_nested_packages_and_leaves_out_underscored", "[package]" )
 {
     // clang-format off
     const std::vector<Record> records = parse_all( {
         R"json({"kind":"package","name":"geo::a","doc":"Nested."})json",
         R"json({"kind":"declaration","declares":"function","name":"f","file":"geo/a/b.kl","access":"public","signature":"void f()"})json",
         R"json({"kind":"declaration","declares":"function","name":"g","file":"geo/measure.kl","access":"public","signature":"void g()"})json",
+        R"json({"kind":"package","name":"geo::_core","doc":"Internals."})json",
+        R"json({"kind":"declaration","declares":"function","name":"h","file":"geo/_core/k.kl","access":"public","signature":"void h()"})json",
+        R"json({"kind":"declaration","declares":"function","name":"i","file":"geo/_core/deep/k.kl","access":"public","signature":"void i()"})json",
     } );
     // clang-format on
 
@@ -343,6 +352,7 @@ TEST_CASE( "package_lists_its_own_modules_before_its_nested_packages", "[package
     REQUIRE( package.modules[1].name == "a::b" );
     REQUIRE( nested_package_of( package.modules[1] ) == "a" );
     REQUIRE( package.nested_docs.at( "a" ) == "Nested." );
+    REQUIRE( !package.nested_docs.contains( "_core" ) );
 }
 
 TEST_CASE( "package_lists_a_type_s_banners_after_its_kinds", "[package]" )
