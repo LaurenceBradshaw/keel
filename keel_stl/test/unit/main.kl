@@ -17,6 +17,7 @@ import set_tests;
 import string_tests;
 import test_tests;
 import time_tests;
+import trig_tests;
 
 i32 main( const ref str[] args )
 {

@@ -2,6 +2,7 @@
 
 import kl::console;
 import kl::math;
+import kl::trig;
 
 @real_arithmetic
 void solved<u64 N>( const ref f64[N] re, const ref f64[N] im, ref f64[N] yr, ref f64[N] yi )

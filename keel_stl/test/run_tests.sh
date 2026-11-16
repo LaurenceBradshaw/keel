@@ -89,7 +89,7 @@ run_one()
     mkdir -p "$build_dir"
 
     {
-        # libm: math_tests checks kl's trigonometry against C's.
+        # libm: math_tests and trig_tests check kl against C's maths.
         if ! "$keelc" --quiet --backend "$with" "${flags[@]}" --package kl=../src "$src" --runtime "$runtime" -l m -o "${build_dir}/program" \
             > "${build_dir}/build.log" 2>&1; then
             echo "    keelc did not build it:"

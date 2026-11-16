@@ -1,6 +1,7 @@
 // A DFT8 written out with its size, solved at -O3, gives what the same loop unmarked gives.
 
 import kl::math;
+import kl::trig;
 
 @real_arithmetic
 void solved( const ref f64[8] re, const ref f64[8] im, ref f64[8] yr, ref f64[8] yi )

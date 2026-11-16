@@ -1,6 +1,7 @@
 // A real DCT-II 8, solved at -O3, gives what the same loop unmarked gives.
 
 import kl::math;
+import kl::trig;
 
 @real_arithmetic
 void solved( const ref f64[8] x, ref f64[8] y )

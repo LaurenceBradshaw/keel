@@ -1,6 +1,7 @@
 // A DCT-II 8 quantised by a const table, solved at -O3 as one map, gives what the same loop unmarked gives.
 
 import kl::math;
+import kl::trig;
 
 const f64[8] q = [ 16.0, 11.0, 10.0, 16.0, 24.0, 40.0, 51.0, 61.0 ];
 
