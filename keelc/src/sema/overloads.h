@@ -27,6 +27,7 @@ enum class Argument_kind : u8
     Floating,
     Text,     // a string literal: `str`, or a type it adopts
     Instance, // a generic struct literal: some instance of `declaration`
+    Array,    // an array literal: its count and each element's shape
     Anything
 };
 
@@ -40,17 +41,18 @@ enum class Tier : u8
 
 // A kind other than `Typed` carries no type, deliberately: deduction reads nothing from a literal
 // (D26). Selection ranks one from its default type, and checks an integer's value where it folds.
-// An `Instance` carries its declaration instead, and ranks nothing.
+// An `Instance` carries its declaration instead, and ranks nothing. An `Array` ranks by its elements.
 struct Argument_shape
 {
-    Argument_kind kind        = Argument_kind::Anything;
-    Type_id       type        = {};
-    Node_id       declaration = {};
-    bool          valued      = false; // whether an integer literal folded to the value below
-    u64           magnitude   = 0;     // an integer's value, or an array literal's count
-    bool          negative    = false;
-    Keyword       marker      = Keyword::Count;
-    bool          recorded    = false; // whether infer() has already run over it
+    Argument_kind               kind        = Argument_kind::Anything;
+    Type_id                     type        = {};
+    Node_id                     declaration = {};
+    bool                        valued      = false; // whether an integer literal folded to the value below
+    u64                         magnitude   = 0;     // an integer's value, or an array literal's count
+    bool                        negative    = false;
+    Keyword                     marker      = Keyword::Count;
+    bool                        recorded    = false; // whether infer() has already run over it
+    std::vector<Argument_shape> elements {};         // Array: each element's shape
 };
 
 // One argument the caller still has to walk. Returned rather than walked here, which is the whole
@@ -215,8 +217,11 @@ private:
     bool candidate_accepts(
         Node_id callable, u32 implicit_params, std::span<const Argument_shape> shapes, const Bindings& bindings, Tier tier
     );
-    bool                 widens( Node_id param, Type_id from, Type_id to ) const;
-    u32                  distance( Type_id from, Type_id to ) const;
+    bool accepts( Node_id param, const Argument_shape& shape, Type_id expected, Tier tier );
+    bool widens( Node_id param, Type_id from, Type_id to ) const;
+    u32  distance( Type_id from, Type_id to ) const;
+    // How far `shape` travels to reach `to`, or nothing where it says nothing.
+    std::optional<u32>   reach( const Argument_shape& shape, Type_id to ) const;
     std::vector<Type_id> parameter_types( Node_id callable, u32 implicit_params, const Bindings& bindings );
     bool beats( std::span<const Type_id> first, std::span<const Type_id> second, std::span<const Argument_shape> shapes ) const;
     // Indices into `targets`.

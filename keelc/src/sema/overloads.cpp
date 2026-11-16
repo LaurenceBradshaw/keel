@@ -37,6 +37,42 @@ bool any_failed( const Type_table& table, std::span<const Argument_shape> shapes
         [&]( const Argument_shape& shape ) { return shape.type.is_valid() && table.is_error( shape.type ); }
     );
 }
+// Whether binding parameters could make `a` and `b` one type. Two kinds never meet, so `i32[R * C]`
+// and `i32[C][R]` stay apart; past arrays it is coarse, and a union may collapse to a member.
+bool could_meet( const Type_table& table, Type_id a, Type_id b )
+{
+    if( a == b || table.is_parameter( a ) || table.is_parameter( b ) )
+    {
+        return true;
+    }
+
+    const Type& left  = table.get( a );
+    const Type& right = table.get( b );
+
+    if( left.kind == Type_kind::Union || right.kind == Type_kind::Union )
+    {
+        return table.mentions_parameter( a ) || table.mentions_parameter( b );
+    }
+
+    if( left.kind != right.kind )
+    {
+        return false;
+    }
+
+    if( left.kind == Type_kind::Size )
+    {
+        return left.width != 0 || right.width != 0; // a computed extent may come to any count
+    }
+
+    if( left.kind == Type_kind::Array )
+    {
+        return left.raw == right.raw && could_meet( table, left.element, right.element ) &&
+               could_meet( table, left.arguments[0], right.arguments[0] );
+    }
+
+    return table.mentions_parameter( a ) || table.mentions_parameter( b );
+}
+
 // Whether `type` names `parameter`: matching a type against itself binds each it names.
 bool mentions( const Type_table& table, Type_id type, Type_id parameter )
 {
@@ -233,10 +269,11 @@ std::string Overloads::example_arguments( std::span<const Node_id> parameters, c
     return list;
 }
 
-// `E[N]` given an array literal of `count` elements binds `N` to `count`; the elements are checked later.
+// `E[N]` given an array literal of `count` elements binds `N` to `count`, and a nested literal's
+// first element binds the inner extent the same way; the elements are checked later.
 bool Overloads::deduce_shape( Type_id pattern, const Argument_shape& shape, Bindings& into )
 {
-    if( shape.kind != Argument_kind::Anything || shape.magnitude == 0 )
+    if( shape.kind != Argument_kind::Array || shape.magnitude == 0 )
     {
         return table_.deduce( pattern, shape.type, into );
     }
@@ -247,14 +284,20 @@ bool Overloads::deduce_shape( Type_id pattern, const Argument_shape& shape, Bind
     }
 
     const Type_id extent = table_.get( pattern ).arguments[0];
+    bool          bound  = false;
 
-    if( !table_.is_size_parameter( extent ) )
+    if( table_.is_size_parameter( extent ) )
     {
-        return false;
+        into.emplace( extent.v, table_.size( shape.magnitude ) );
+        bound = true;
     }
 
-    into.emplace( extent.v, table_.size( shape.magnitude ) );
-    return true;
+    if( shape.elements.front().kind == Argument_kind::Array )
+    {
+        bound = deduce_shape( table_.get( pattern ).element, shape.elements.front(), into ) || bound;
+    }
+
+    return bound;
 }
 
 // D79: whether `count` arguments fill `candidate`'s parameters, its defaults taking the rest.
@@ -517,49 +560,61 @@ bool Overloads::candidate_accepts(
             return false;
         }
 
-        switch( shapes[i].kind )
+        if( !accepts( params[i], shapes[i], expected, tier ) )
         {
-        case Argument_kind::Typed:
-            if( shapes[i].type != expected && !( tier != Tier::Exact && widens( params[i], shapes[i].type, expected ) ) &&
-                !( tier == Tier::Adopted && bounds_.adopts_joined( expected, shapes[i].type ) ) )
-            {
-                return false;
-            }
-            break;
-
-        case Argument_kind::Text:
-            if( shapes[i].type != expected && !( tier != Tier::Exact && widens( params[i], shapes[i].type, expected ) ) &&
-                !( tier == Tier::Adopted && bounds_.adopts_text( expected, shapes[i].type ) ) )
-            {
-                return false;
-            }
-            break;
-
-        case Argument_kind::Instance:
-            if( table_.get( expected ).declaration != shapes[i].declaration )
-            {
-                return false;
-            }
-            break;
-
-        case Argument_kind::Integer:
-            if( !table_.is_integer( expected ) ||
-                ( shapes[i].valued && !table_.fits( shapes[i].magnitude, shapes[i].negative, expected ) ) )
-            {
-                return false;
-            }
-            break;
-
-        case Argument_kind::Floating:
-            if( !table_.is_float( expected ) )
-            {
-                return false;
-            }
-            break;
-
-        case Argument_kind::Anything:
-            break;
+            return false;
         }
+    }
+
+    return true;
+}
+
+// One argument's shape against its parameter's type. An array literal goes only to an array, or to a
+// parameter still open.
+bool Overloads::accepts( Node_id param, const Argument_shape& shape, Type_id expected, Tier tier )
+{
+    switch( shape.kind )
+    {
+    case Argument_kind::Typed:
+        return shape.type == expected || ( tier != Tier::Exact && widens( param, shape.type, expected ) ) ||
+               ( tier == Tier::Adopted && bounds_.adopts_joined( expected, shape.type ) );
+
+    case Argument_kind::Text:
+        return shape.type == expected || ( tier != Tier::Exact && widens( param, shape.type, expected ) ) ||
+               ( tier == Tier::Adopted && bounds_.adopts_text( expected, shape.type ) );
+
+    case Argument_kind::Instance:
+        return table_.get( expected ).declaration == shape.declaration;
+
+    case Argument_kind::Integer:
+        return table_.is_integer( expected ) && !( shape.valued && !table_.fits( shape.magnitude, shape.negative, expected ) );
+
+    case Argument_kind::Floating:
+        return table_.is_float( expected );
+
+    case Argument_kind::Array:
+    {
+        const Type& array = table_.get( expected );
+
+        if( table_.is_parameter( expected ) )
+        {
+            return true;
+        }
+
+        if( array.kind != Type_kind::Array || array.raw || ( array.count != 0 && array.count != shape.magnitude ) )
+        {
+            return false;
+        }
+
+        return std::ranges::all_of(
+            shape.elements,
+            [&]( const Argument_shape& element )
+            { return table_.is_error( array.element ) || accepts( param, element, array.element, tier ); }
+        );
+    }
+
+    case Argument_kind::Anything:
+        break;
     }
 
     return true;
@@ -628,39 +683,21 @@ bool Overloads::beats( std::span<const Type_id> first, std::span<const Type_id> 
     u32  i      = 0;
     while( i < shapes.size() && i < first.size() )
     {
-        Type_id from {};
-        switch( shapes[i].kind )
-        {
-        case Argument_kind::Typed:
-        case Argument_kind::Text:
-            from = shapes[i].type;
-            break;
-        case Argument_kind::Integer:
-            from = table_.default_integer();
-            break;
-        case Argument_kind::Floating:
-            from = table_.default_float();
-            break;
-        case Argument_kind::Anything:
-        case Argument_kind::Instance:
-            break;
-        }
+        const std::optional<u32> near = reach( shapes[i], first[i] );
+        const std::optional<u32> far  = reach( shapes[i], second[i] );
 
-        if( !from.is_valid() )
+        if( !near || !far )
         {
             ++i;
             continue;
         }
 
-        u32 near = distance( from, first[i] );
-        u32 far  = distance( from, second[i] );
-
-        if( near > far )
+        if( *near > *far )
         {
             return false;
         }
 
-        if( near < far )
+        if( *near < *far )
         {
             closer = true;
         }
@@ -669,6 +706,42 @@ bool Overloads::beats( std::span<const Type_id> first, std::span<const Type_id> 
     }
 
     return closer;
+}
+
+// A literal from its default type, and an array literal by its elements, all of one family.
+std::optional<u32> Overloads::reach( const Argument_shape& shape, Type_id to ) const
+{
+    switch( shape.kind )
+    {
+    case Argument_kind::Typed:
+    case Argument_kind::Text:
+        return distance( shape.type, to );
+
+    case Argument_kind::Integer:
+        return distance( table_.default_integer(), to );
+
+    case Argument_kind::Floating:
+        return distance( table_.default_float(), to );
+
+    case Argument_kind::Array:
+        if( table_.get( to ).kind == Type_kind::Array )
+        {
+            for( const Argument_shape& element : shape.elements )
+            {
+                if( const std::optional<u32> far = reach( element, table_.get( to ).element ) )
+                {
+                    return far;
+                }
+            }
+        }
+        return std::nullopt;
+
+    case Argument_kind::Anything:
+    case Argument_kind::Instance:
+        break;
+    }
+
+    return std::nullopt;
 }
 
 // Every candidate nothing beats: one is the choice, several are the ambiguity.
@@ -833,12 +906,11 @@ Node_id Overloads::select_overload(
     std::vector<Type_id>&           resolved
 )
 {
-    if( ast_.type_arg_list( site.call ).is_valid() && resolved.empty() )
+    if( ast_.type_arg_list( site.call ).is_valid() && resolved.empty() && !viable.empty() )
     {
-        for( const Node_id written_argument : ast_.type_args( site.call ) )
-        {
-            resolved.push_back( annotations_.resolve( written_argument ) );
-        }
+        resolved = annotations_.resolve_written(
+            ast_.type_parameters( ast_.type_param_list( viable.front() ) ), ast_.type_arg_list( site.call )
+        );
     }
 
     std::vector<Node_id> matching_candidates = matching( site, viable, shapes, resolved );
@@ -1425,11 +1497,9 @@ bool Overloads::parameters_collide( Node_id first, Node_id second, bool member, 
             continue;
         }
 
-        // Deliberately coarse: `Box<T>` can never be `i32`, and this says it could. Refusing a
-        // legal pair is recoverable, accepting an ambiguous one is not.
         // A member call writes no type arguments, so a `T` parameter may become anything and a pair
         // that some instantiation would make identical has to be refused where it is written.
-        if( !member || !( table_.mentions_parameter( left ) || table_.mentions_parameter( right ) ) )
+        if( !member || !could_meet( table_, left, right ) )
         {
             return false;
         }
@@ -1930,12 +2000,11 @@ bool Overloads::applies(
     std::vector<Type_id>&           resolved
 )
 {
-    if( resolved.empty() )
+    if( resolved.empty() && ast_.type_arg_list( call ).is_valid() && !candidates.empty() )
     {
-        for( const Node_id written_argument : ast_.type_args( call ) )
-        {
-            resolved.push_back( annotations_.resolve( written_argument ) );
-        }
+        resolved = annotations_.resolve_written(
+            ast_.type_parameters( ast_.type_param_list( candidates.front() ) ), ast_.type_arg_list( call )
+        );
     }
 
     // With `ignore_markers`, a missing `ref` is a mistake to report against this set rather than a

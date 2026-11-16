@@ -1,0 +1,13 @@
+error: no `count` matches these arguments
+  --> sema/errors_literal_shape_overloads.kl:10:16
+   |
+10 |     i32 four = count( [1, 2, 3, 4] );
+   |                ^^^^^^^^^^^^^^^^^^^^^ the ones declared take `(i32[2])` and `(i32[3])`
+
+error: no `nesting` matches these arguments
+  --> sema/errors_literal_shape_overloads.kl:11:18
+   |
+11 |     i32 ragged = nesting( [[1, 2], [3]] );
+   |                  ^^^^^^^^^^^^^^^^^^^^^^^^ the ones declared take `(i32[2][2])` and `(i32[4])`
+
+2 errors generated

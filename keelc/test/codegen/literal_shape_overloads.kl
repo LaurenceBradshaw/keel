@@ -1,0 +1,36 @@
+// An array literal ranks by its shape: count, nesting and its elements' family.
+// Exits with the failing check.
+i32 count( i32[2] _ ) { return 2; }
+i32 count( i32[3] _ ) { return 3; }
+
+i32 family( f64[2] _ ) { return 1; }
+i32 family( i32[2] _ ) { return 2; }
+
+i32 nesting( i32[2][2] _ ) { return 1; }
+i32 nesting( i32[4] _ ) { return 2; }
+
+class grid<u64 R, u64 C>
+{
+    public i32 shape;
+
+    public grid( i32[R * C] _ ) { shape = 1; }
+    public grid( i32[C][R] _ ) { shape = 2; }
+};
+
+i32 main( const ref str[] _ )
+{
+    if( count( [1, 2] ) != 2 ) { return 1; }
+    if( count( [1, 2, 3] ) != 3 ) { return 2; }
+    if( family( [1.5, 2.0] ) != 1 ) { return 3; }
+    if( family( [1, 2] ) != 2 ) { return 4; }
+    if( family( [1, 2.5] ) != 1 ) { return 5; }
+    if( nesting( [[1, 2], [3, 4]] ) != 1 ) { return 6; }
+    if( nesting( [1, 2, 3, 4] ) != 2 ) { return 7; }
+
+    grid<2, 2> flat = grid<2, 2>( [1, 2, 3, 4] );
+    grid<2, 2> rows = grid<2, 2>( [[1, 2], [3, 4]] );
+    if( flat.shape != 1 ) { return 8; }
+    if( rows.shape != 2 ) { return 9; }
+
+    return 0;
+}

@@ -672,35 +672,7 @@ bool Annotations::resolve_type_arguments(
     // resolving per candidate would report an unknown type once per candidate.
     if( resolved.empty() )
     {
-        resolved.reserve( parameters.size() );
-
-        // Not outermost: a type argument binds nothing, so `const` on one applies to nothing.
-        for( std::size_t i = 0; i < given.size(); ++i )
-        {
-            const Node_id argument = given[i];
-            Type_id       type     = Type_id {};
-            if( table_.is_size_parameter( types_.type_of( parameters[i] ) ) )
-            {
-                type = resolve_size_argument( parameters[i], argument );
-            }
-            else if( ast_.kind( argument ) == Node_kind::Int_literal )
-            {
-                reporter_.error_at(
-                    ast_.span( argument ),
-                    fmt::format(
-                        "`{}` takes a type, but `{}` is a size",
-                        interner_.text( ast_.name( parameters[i] ) ),
-                        constant_folder_.fold_integer( argument ).value.magnitude
-                    )
-                );
-                type = table_.builtin( Type_kind::Error );
-            }
-            else
-            {
-                type = resolve( argument, false );
-            }
-            resolved.push_back( refuse_never( argument, type, "type argument" ) ? table_.builtin( Type_kind::Error ) : type );
-        }
+        resolved = resolve_written( parameters, type_args );
     }
 
     Bindings bindings;
@@ -720,6 +692,48 @@ bool Annotations::resolve_type_arguments(
     }
 
     return true;
+}
+
+// Each written argument as `parameters` says to read it: a size or a type. Past the list, a type.
+std::vector<Type_id> Annotations::resolve_written( std::span<const Node_id> parameters, Node_id type_args )
+{
+    const std::span<const Node_id> given = ast_.children( type_args );
+    std::vector<Type_id>           resolved;
+    resolved.reserve( given.size() );
+
+    // Not outermost: a type argument binds nothing, so `const` on one applies to nothing.
+    for( std::size_t i = 0; i < given.size(); ++i )
+    {
+        const Node_id argument = given[i];
+        Type_id       type     = Type_id {};
+        if( i >= parameters.size() )
+        {
+            type = resolve( argument, false );
+        }
+        else if( table_.is_size_parameter( types_.type_of( parameters[i] ) ) )
+        {
+            type = resolve_size_argument( parameters[i], argument );
+        }
+        else if( ast_.kind( argument ) == Node_kind::Int_literal )
+        {
+            reporter_.error_at(
+                ast_.span( argument ),
+                fmt::format(
+                    "`{}` takes a type, but `{}` is a size",
+                    interner_.text( ast_.name( parameters[i] ) ),
+                    constant_folder_.fold_integer( argument ).value.magnitude
+                )
+            );
+            type = table_.builtin( Type_kind::Error );
+        }
+        else
+        {
+            type = resolve( argument, false );
+        }
+        resolved.push_back( refuse_never( argument, type, "type argument" ) ? table_.builtin( Type_kind::Error ) : type );
+    }
+
+    return resolved;
 }
 
 // A size parameter's argument: a literal, a `const`, or a size parameter passed on.

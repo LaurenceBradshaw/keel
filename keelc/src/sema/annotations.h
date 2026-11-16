@@ -57,6 +57,9 @@ public:
         std::span<const Node_id> parameters, Node_id type_args, std::string_view name, std::vector<Type_id>& resolved
     );
 
+    // A call's written arguments, before a candidate is chosen: `parameters` are any one candidate's.
+    std::vector<Type_id> resolve_written( std::span<const Node_id> parameters, Node_id type_args );
+
     // The instance a path's qualifier names, `Box<i32>` in `Box<i32>::of`; an error once reported.
     Type_id qualifier_type( Node_id path, Node_id declaration );
 

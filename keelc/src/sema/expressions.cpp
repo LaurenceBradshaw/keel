@@ -357,6 +357,27 @@ static std::optional<std::pair<u64, bool>> fold_arms( const Ast& ast, const Cons
     return std::pair { literal.value.magnitude, literal.value.negative };
 }
 
+namespace
+{
+
+bool contains_floating( const Argument_shape& shape )
+{
+    return shape.kind == Argument_kind::Floating || std::ranges::any_of( shape.elements, contains_floating );
+}
+
+// `[1, 2.5]` is a float array, so its `1` ranks as a float does.
+void make_floating( Argument_shape& shape )
+{
+    if( shape.kind == Argument_kind::Integer )
+    {
+        shape = Argument_shape { .kind = Argument_kind::Floating };
+    }
+
+    std::ranges::for_each( shape.elements, make_floating );
+}
+
+} // namespace
+
 // D26: a literal has a value rather than a type, and context is what gives it one - so where the
 // context is the thing being chosen, a literal or arithmetic on literals of one family narrows the
 // set to that family, and an integer one to the types that hold its value. A struct literal names
@@ -373,6 +394,28 @@ Argument_shape Expressions::argument_shape( Node_id argument )
         shape.marker = ast_.keyword( argument );
         value        = ast_.operand( argument );
     }
+
+    if( std::optional<Argument_shape> literal = literal_shape( value ) )
+    {
+        literal->marker = shape.marker;
+        return *literal;
+    }
+
+    call_argument_ = value;
+    shape.type     = infer( argument );
+    call_argument_ = {};
+    shape.recorded = true;
+
+    // A broken argument is already reported, so it rules out no candidate.
+    shape.kind = table_.is_error( shape.type ) ? Argument_kind::Anything : Argument_kind::Typed;
+
+    return shape;
+}
+
+// What an untyped argument says about itself, or nothing when only typing it can say.
+std::optional<Argument_shape> Expressions::literal_shape( Node_id value )
+{
+    Argument_shape shape;
 
     // `true` has one type, so it is as informative as a variable - it just has not been recorded
     // yet, because Literals::check_literal is what records a literal.
@@ -409,10 +452,16 @@ Argument_shape Expressions::argument_shape( Node_id argument )
         return shape;
     }
 
-    // An array literal's count can still deduce a size parameter.
+    // Its count can still deduce a size parameter, and its elements rank it.
     if( ast_.kind( value ) == Node_kind::Array_literal )
     {
-        shape.magnitude = ast_.children( value ).size();
+        shape = array_shape( value );
+
+        if( contains_floating( shape ) )
+        {
+            make_floating( shape );
+        }
+
         return shape;
     }
 
@@ -450,13 +499,18 @@ Argument_shape Expressions::argument_shape( Node_id argument )
         }
     }
 
-    call_argument_ = value;
-    shape.type     = infer( argument );
-    call_argument_ = {};
-    shape.recorded = true;
+    return std::nullopt;
+}
 
-    // A broken argument is already reported, so it rules out no candidate.
-    shape.kind = table_.is_error( shape.type ) ? Argument_kind::Anything : Argument_kind::Typed;
+// Each element shaped as a lone literal is, and typed no sooner.
+Argument_shape Expressions::array_shape( Node_id literal )
+{
+    Argument_shape shape { .kind = Argument_kind::Array, .magnitude = ast_.children( literal ).size() };
+
+    for( const Node_id element : ast_.children( literal ) )
+    {
+        shape.elements.push_back( literal_shape( element ).value_or( Argument_shape {} ) );
+    }
 
     return shape;
 }

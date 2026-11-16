@@ -1,0 +1,13 @@
+// An array literal of a shape no overload takes is refused once, naming the overloads.
+i32 count( i32[2] _ ) { return 2; }
+i32 count( i32[3] _ ) { return 3; }
+
+i32 nesting( i32[2][2] _ ) { return 1; }
+i32 nesting( i32[4] _ ) { return 2; }
+
+i32 main( const ref str[] _ )
+{
+    i32 four = count( [1, 2, 3, 4] );
+    i32 ragged = nesting( [[1, 2], [3]] );
+    return four + ragged;
+}
