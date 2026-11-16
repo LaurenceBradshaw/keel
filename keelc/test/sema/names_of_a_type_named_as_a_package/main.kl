@@ -1,0 +1,13 @@
+// A package this file does not import gives way to a type of its name: `geo::` here is the enum.
+
+enum geo
+{
+    flat,
+    round,
+}
+
+i32 main()
+{
+    geo g = geo::round;
+    return g == geo::flat ? 1 : 0;
+}

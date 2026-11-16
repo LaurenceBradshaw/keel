@@ -1,0 +1,1 @@
+--check --diagnostics=json --names --package sema/names_of_a_type_named_as_a_package/geo
