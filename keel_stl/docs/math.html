@@ -17,6 +17,14 @@
 <li><a href="#from_bits"><code>from_bits</code></a> <span class="kind">function</span></li>
 <li class="divider">Roots</li>
 <li><a href="#sqrt"><code>sqrt</code></a> <span class="kind">function</span></li>
+<li class="divider">Classes</li>
+<li><a href="#is_nan"><code>is_nan</code></a> <span class="kind">function</span></li>
+<li><a href="#is_inf"><code>is_inf</code></a> <span class="kind">function</span></li>
+<li class="divider">Rounding</li>
+<li><a href="#truncated"><code>truncated</code></a> <span class="kind">function</span></li>
+<li><a href="#rounded"><code>rounded</code></a> <span class="kind">function</span></li>
+<li><a href="#floored"><code>floored</code></a> <span class="kind">function</span></li>
+<li><a href="#ceiled"><code>ceiled</code></a> <span class="kind">function</span></li>
 <li class="divider">Trigonometry</li>
 <li><a href="#pi"><code>pi</code></a> <span class="kind">global</span></li>
 <li><a href="#sin"><code>sin</code></a> <span class="kind">function</span></li>
@@ -64,6 +72,94 @@
 <pre class="signature"><a class="anchor" href="#sqrt" aria-label="Link to sqrt">#</a><code><a class="prim" href="prelude.html#f32">f32</a> <span class="fn">sqrt</span>( <a class="prim" href="prelude.html#f32">f32</a> x )</code></pre>
 <div class="doc">
 <p>The square root of <code>x</code>, correctly rounded: NaN below zero, and <code>-0.0</code> for <code>-0.0</code>.</p>
+</div>
+</div>
+</section>
+<h2 class="divider">Classes</h2>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">is_nan</span></h2>
+<div class="group" id="is_nan">
+<pre class="signature"><a class="anchor" href="#is_nan" aria-label="Link to is_nan">#</a><code><a class="prim" href="prelude.html#bool">bool</a> <span class="fn">is_nan</span>( <a class="prim" href="prelude.html#f64">f64</a> x )</code></pre>
+<div class="doc">
+<p>Whether <code>x</code> is a NaN, the one value not equal to itself.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#is_nan" aria-label="Link to is_nan">#</a><code><a class="prim" href="prelude.html#bool">bool</a> <span class="fn">is_nan</span>( <a class="prim" href="prelude.html#f32">f32</a> x )</code></pre>
+<div class="doc">
+<p>Whether <code>x</code> is a NaN, the one value not equal to itself.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">is_inf</span></h2>
+<div class="group" id="is_inf">
+<pre class="signature"><a class="anchor" href="#is_inf" aria-label="Link to is_inf">#</a><code><a class="prim" href="prelude.html#bool">bool</a> <span class="fn">is_inf</span>( <a class="prim" href="prelude.html#f64">f64</a> x )</code></pre>
+<div class="doc">
+<p>Whether <code>x</code> is positive or negative infinity.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#is_inf" aria-label="Link to is_inf">#</a><code><a class="prim" href="prelude.html#bool">bool</a> <span class="fn">is_inf</span>( <a class="prim" href="prelude.html#f32">f32</a> x )</code></pre>
+<div class="doc">
+<p>Whether <code>x</code> is positive or negative infinity.</p>
+</div>
+</div>
+</section>
+<h2 class="divider">Rounding</h2>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">truncated</span></h2>
+<div class="group" id="truncated">
+<pre class="signature"><a class="anchor" href="#truncated" aria-label="Link to truncated">#</a><code>U <span class="fn">truncated</span>&lt;U&gt;( <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">where</span> U : integral</code></pre>
+<div class="doc">
+<p><code>x</code> toward zero, as a <code>U</code>: <code>truncated&lt;i32&gt;( -2.7 )</code> is <code>-2</code>.</p>
+<p>Panics on an infinity, a NaN, or a whole value <code>U</code> does not hold.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#truncated" aria-label="Link to truncated">#</a><code>U <span class="fn">truncated</span>&lt;U&gt;( <a class="prim" href="prelude.html#f32">f32</a> x ) <span class="kw">where</span> U : integral</code></pre>
+<div class="doc">
+<p><code>x</code> toward zero, as a <code>U</code>: <code>truncated&lt;i32&gt;( -2.7 )</code> is <code>-2</code>.</p>
+<p>Panics on an infinity, a NaN, or a whole value <code>U</code> does not hold.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">rounded</span></h2>
+<div class="group" id="rounded">
+<pre class="signature"><a class="anchor" href="#rounded" aria-label="Link to rounded">#</a><code>U <span class="fn">rounded</span>&lt;U&gt;( <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">where</span> U : integral</code></pre>
+<div class="doc">
+<p><code>x</code> to the nearest whole value, a half away from zero, as a <code>U</code>: <code>rounded&lt;i32&gt;( -2.5 )</code> is <code>-3</code>.</p>
+<p>Panics on an infinity, a NaN, or a whole value <code>U</code> does not hold.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#rounded" aria-label="Link to rounded">#</a><code>U <span class="fn">rounded</span>&lt;U&gt;( <a class="prim" href="prelude.html#f32">f32</a> x ) <span class="kw">where</span> U : integral</code></pre>
+<div class="doc">
+<p><code>x</code> to the nearest whole value, a half away from zero, as a <code>U</code>: <code>rounded&lt;i32&gt;( -2.5 )</code> is <code>-3</code>.</p>
+<p>Panics on an infinity, a NaN, or a whole value <code>U</code> does not hold.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">floored</span></h2>
+<div class="group" id="floored">
+<pre class="signature"><a class="anchor" href="#floored" aria-label="Link to floored">#</a><code>U <span class="fn">floored</span>&lt;U&gt;( <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">where</span> U : integral</code></pre>
+<div class="doc">
+<p><code>x</code> down to a whole value, as a <code>U</code>: <code>floored&lt;i32&gt;( -2.5 )</code> is <code>-3</code>.</p>
+<p>Panics on an infinity, a NaN, or a whole value <code>U</code> does not hold.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#floored" aria-label="Link to floored">#</a><code>U <span class="fn">floored</span>&lt;U&gt;( <a class="prim" href="prelude.html#f32">f32</a> x ) <span class="kw">where</span> U : integral</code></pre>
+<div class="doc">
+<p><code>x</code> down to a whole value, as a <code>U</code>: <code>floored&lt;i32&gt;( -2.5 )</code> is <code>-3</code>.</p>
+<p>Panics on an infinity, a NaN, or a whole value <code>U</code> does not hold.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">ceiled</span></h2>
+<div class="group" id="ceiled">
+<pre class="signature"><a class="anchor" href="#ceiled" aria-label="Link to ceiled">#</a><code>U <span class="fn">ceiled</span>&lt;U&gt;( <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">where</span> U : integral</code></pre>
+<div class="doc">
+<p><code>x</code> up to a whole value, as a <code>U</code>: <code>ceiled&lt;i32&gt;( 2.1 )</code> is <code>3</code>.</p>
+<p>Panics on an infinity, a NaN, or a whole value <code>U</code> does not hold.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ceiled" aria-label="Link to ceiled">#</a><code>U <span class="fn">ceiled</span>&lt;U&gt;( <a class="prim" href="prelude.html#f32">f32</a> x ) <span class="kw">where</span> U : integral</code></pre>
+<div class="doc">
+<p><code>x</code> up to a whole value, as a <code>U</code>: <code>ceiled&lt;i32&gt;( 2.1 )</code> is <code>3</code>.</p>
+<p>Panics on an infinity, a NaN, or a whole value <code>U</code> does not hold.</p>
 </div>
 </div>
 </section>

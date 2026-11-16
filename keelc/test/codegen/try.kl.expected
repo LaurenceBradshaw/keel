@@ -2907,42 +2907,42 @@ void kl__4Lost__dtor( struct kl__Lost* kl_t1 )
 #line 51 "codegen/try.kl"
 }
 
-#line 143 "<prelude>"
+#line 184 "<prelude>"
 void kl_7prelude_6result__I3Buf_3BadE__dtor( struct kl_7prelude_result__I3Buf_3BadE* kl_t1 )
 {
     bool kl_t2;
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     kl_t2 = ( *kl_t1 ).tag == 0;
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     if ( kl_t2 ) goto bb2; else goto bb1;
     bb1:
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     return;
     bb2:
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     kl__3Buf__dtor( &( *kl_t1 ).kl_2ok_value );
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     goto bb1;
-#line 149 "<prelude>"
+#line 190 "<prelude>"
 }
 
-#line 143 "<prelude>"
+#line 184 "<prelude>"
 void kl_7prelude_6result__I3u64_4LostE__dtor( struct kl_7prelude_result__I3u64_4LostE* kl_t1 )
 {
     bool kl_t2;
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     kl_t2 = ( *kl_t1 ).tag == 1;
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     if ( kl_t2 ) goto bb2; else goto bb1;
     bb1:
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     return;
     bb2:
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     kl__4Lost__dtor( &( *kl_t1 ).kl_3err_error );
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     goto bb1;
-#line 149 "<prelude>"
+#line 190 "<prelude>"
 }
 
 int main( void )

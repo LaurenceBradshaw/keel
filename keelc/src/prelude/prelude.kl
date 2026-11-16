@@ -15,7 +15,7 @@ interface textual
 ///
 /// A string literal is a `str`, and only a literal makes one. Its `size` counts the bytes after
 /// escapes are decoded, a `\0` included.
-class str implements textual
+class str implements textual, equatable, comparable, hashable
 {
     /// The first byte.
     public const u8[*] const data;
@@ -35,6 +35,47 @@ class str implements textual
         {
             return data[0..size];
         }
+    }
+
+    /// Whether both hold the same bytes in the same order.
+    public bool operator==( const ref str other ) const
+    {
+        if( size != other.size )
+        {
+            return false;
+        }
+
+        for( u64 i : 0..size )
+        {
+            if( as_text()[i] != other.as_text()[i] )
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// Orders by the first byte that differs, and a text before any it is a prefix of.
+    public ordering operator<=>( const ref str other ) const
+    {
+        const u64 common = size < other.size ? size : other.size;
+
+        for( u64 i : 0..common )
+        {
+            if( as_text()[i] != other.as_text()[i] )
+            {
+                return as_text()[i] < other.as_text()[i] ? ordering::less : ordering::greater;
+            }
+        }
+
+        return size < other.size ? ordering::less : size > other.size ? ordering::greater : ordering::equal;
+    }
+
+    /// Feeds the bytes to `h`, so that equal texts hash the same.
+    public void hash( ref hasher h ) const
+    {
+        h.write_bytes( as_text() );
     }
 
     /// A new `joined_text` holding these bytes and then `other`'s. A literal before a type with a

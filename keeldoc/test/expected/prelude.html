@@ -216,7 +216,7 @@ and nothing else: a function's, an <code>extern</code>'s or a function pointer's
 <section class="entry">
 <h2><span class="kind">class</span> <span class="type">str</span></h2>
 <div class="group" id="str">
-<pre class="signature"><a class="anchor" href="#str" aria-label="Link to str">#</a><code><span class="kw">class</span> <span class="type">str</span> <span class="kw">implements</span> <a class="type" href="#textual">textual</a></code></pre>
+<pre class="signature"><a class="anchor" href="#str" aria-label="Link to str">#</a><code><span class="kw">class</span> <span class="type">str</span> <span class="kw">implements</span> <a class="type" href="#textual">textual</a>, <a class="type" href="#equatable">equatable</a>, <a class="type" href="#comparable">comparable</a>, <a class="type" href="#hashable">hashable</a></code></pre>
 <div class="doc">
 <p>Text: a run of bytes and their count.</p>
 <p>A string literal is a <code>str</code>, and only a literal makes one. Its <code>size</code> counts the bytes after
@@ -241,6 +241,24 @@ escapes are decoded, a <code>\0</code> included.</p>
 <pre class="signature"><a class="anchor" href="#str.as_text" aria-label="Link to as_text">#</a><code><span class="kw">public</span> <span class="kw">const</span> <span class="kw">ref</span> <a class="prim" href="#u8">u8</a>[] <span class="fn">as_text</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Returns the text as a read-only reference to the run of bytes.</p>
+</div>
+</div>
+<div class="group" id="str.operator==">
+<pre class="signature"><a class="anchor" href="#str.operator==" aria-label="Link to operator==">#</a><code><span class="kw">public</span> <a class="prim" href="#bool">bool</a> <span class="fn">operator==</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#str">str</a> other ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether both hold the same bytes in the same order.</p>
+</div>
+</div>
+<div class="group" id="str.operator&lt;=&gt;">
+<pre class="signature"><a class="anchor" href="#str.operator&lt;=&gt;" aria-label="Link to operator&lt;=&gt;">#</a><code><span class="kw">public</span> <a class="type" href="#ordering">ordering</a> <span class="fn">operator&lt;=&gt;</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#str">str</a> other ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Orders by the first byte that differs, and a text before any it is a prefix of.</p>
+</div>
+</div>
+<div class="group" id="str.hash">
+<pre class="signature"><a class="anchor" href="#str.hash" aria-label="Link to hash">#</a><code><span class="kw">public</span> <a class="prim" href="#void">void</a> <span class="fn">hash</span>( <span class="kw">ref</span> <a class="type" href="#hasher">hasher</a> h ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Feeds the bytes to <code>h</code>, so that equal texts hash the same.</p>
 </div>
 </div>
 <div class="group" id="str.operator+">

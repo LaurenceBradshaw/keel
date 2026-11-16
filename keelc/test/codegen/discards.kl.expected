@@ -631,23 +631,23 @@ int32_t kl__4main__( void )
     return kl_t0;
 }
 
-#line 143 "<prelude>"
+#line 184 "<prelude>"
 void kl_7prelude_6result__I7Counter_3BadE__dtor( struct kl_7prelude_result__I7Counter_3BadE* kl_t1 )
 {
     bool kl_t2;
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     kl_t2 = ( *kl_t1 ).tag == 0;
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     if ( kl_t2 ) goto bb2; else goto bb1;
     bb1:
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     return;
     bb2:
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     kl__7Counter__dtor( &( *kl_t1 ).kl_2ok_value );
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     goto bb1;
-#line 149 "<prelude>"
+#line 190 "<prelude>"
 }
 
 int main( void )

@@ -4010,23 +4010,23 @@ int32_t kl__4main__( void )
 #line 263 "codegen/dynamic_drops.kl"
 }
 
-#line 143 "<prelude>"
+#line 184 "<prelude>"
 void kl_7prelude_6result__I1P_3i32E__dtor( struct kl_7prelude_result__I1P_3i32E* kl_t1 )
 {
     bool kl_t2;
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     kl_t2 = ( *kl_t1 ).tag == 0;
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     if ( kl_t2 ) goto bb2; else goto bb1;
     bb1:
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     return;
     bb2:
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     kl__1P__dtor( &( *kl_t1 ).kl_2ok_value );
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     goto bb1;
-#line 149 "<prelude>"
+#line 190 "<prelude>"
 }
 
 #line 5 "<kl>/optional.kl"

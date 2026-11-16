@@ -5058,23 +5058,23 @@ void kl_2kl4list_4swap__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64_3u64( struct
 #line 425 "../../keel_stl/src/list.kl"
 }
 
-#line 143 "<prelude>"
+#line 184 "<prelude>"
 void kl_7prelude_6result__IQ2kl6string_8Io_errorE__dtor( struct kl_7prelude_result__IQ2kl6string_8Io_errorE* kl_t1 )
 {
     bool kl_t2;
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     kl_t2 = ( *kl_t1 ).tag == 0;
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     if ( kl_t2 ) goto bb2; else goto bb1;
     bb1:
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     return;
     bb2:
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     kl_2kl6string_6string__dtor( &( *kl_t1 ).kl_2ok_value );
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     goto bb1;
-#line 149 "<prelude>"
+#line 190 "<prelude>"
 }
 
 void kl_2kl4list_list__IQ2kl6stringE__drop( void* kl_t1 )

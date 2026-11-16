@@ -1,0 +1,28 @@
+// `str` is `equatable`, `comparable` and `hashable`: by its bytes, and a prefix first.
+// Exits with the failing check.
+u64 hashed<T>( const ref T value ) where T : hashable
+{
+    hasher h = hasher( 1, 2 );
+    value.hash( ref h );
+    return h.finish();
+}
+
+bool before<T>( const ref T a, const ref T b ) where T : comparable { return a < b; }
+
+i32 main( const ref str[] _ )
+{
+    str a = "apple";
+    str b = "apples";
+    if( !( a == "apple" ) ) { return 1; }
+    if( a == b ) { return 2; }
+    if( !( a != b ) ) { return 3; }
+    if( !( a < b ) ) { return 4; }
+    if( !( "b" > a ) ) { return 5; }
+    if( ( a <=> "apple" ) != ordering::equal ) { return 6; }
+    if( !( "" < a ) ) { return 7; }
+    if( !before( a, b ) ) { return 8; }
+    if( !( "\xff" > "a" ) ) { return 9; }
+    if( hashed( a ) != hashed( "apple" ) ) { return 10; }
+    if( hashed( a ) == hashed( b ) ) { return 11; }
+    return 0;
+}

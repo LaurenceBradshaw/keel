@@ -274,23 +274,23 @@ void kl__5Shape__dtor( struct kl__Shape* kl_t1 )
 #line 29 "opt/moves_scrutinee.kl"
 }
 
-#line 143 "<prelude>"
+#line 184 "<prelude>"
 void kl_7prelude_6result__I3Box_5FaultE__dtor( struct kl_7prelude_result__I3Box_5FaultE* kl_t1 )
 {
     bool kl_t2;
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     kl_t2 = ( *kl_t1 ).tag == 0;
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     if ( kl_t2 ) goto bb2; else goto bb1;
     bb1:
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     return;
     bb2:
 #line 18 "opt/moves_scrutinee.kl"
     kl__live__G = kl__live__G - 1;
     kl__destroyed__G = kl__destroyed__G + 1;
     goto bb1;
-#line 149 "<prelude>"
+#line 190 "<prelude>"
 }
 
 int main( void )

@@ -93,6 +93,98 @@ f32 sqrt( f32 x )
     return sqrt_f32( x );
 }
 
+/// --- Classes ---
+
+/// Whether `x` is a NaN, the one value not equal to itself.
+bool is_nan( f64 x )
+{
+    return x != x;
+}
+
+/// Whether `x` is a NaN, the one value not equal to itself.
+bool is_nan( f32 x )
+{
+    return x != x;
+}
+
+/// Whether `x` is positive or negative infinity.
+bool is_inf( f64 x )
+{
+    return ( bits_of( x ) & 0x7fff_ffff_ffff_ffff ) == 0x7ff0_0000_0000_0000;
+}
+
+/// Whether `x` is positive or negative infinity.
+bool is_inf( f32 x )
+{
+    return ( bits_of( x ) & 0x7fff_ffff ) == 0x7f80_0000;
+}
+
+/// --- Rounding ---
+
+/// `x` toward zero, as a `U`: `truncated<i32>( -2.7 )` is `-2`.
+///
+/// Panics on an infinity, a NaN, or a whole value `U` does not hold.
+U truncated<U>( f64 x ) where U : integral
+{
+    return integer_of<U>( chopped( x ) );
+}
+
+/// `x` toward zero, as a `U`: `truncated<i32>( -2.7 )` is `-2`.
+///
+/// Panics on an infinity, a NaN, or a whole value `U` does not hold.
+U truncated<U>( f32 x ) where U : integral
+{
+    return integer_of<U>( chopped( cast<f64>( x ) ) );
+}
+
+/// `x` to the nearest whole value, a half away from zero, as a `U`: `rounded<i32>( -2.5 )` is `-3`.
+///
+/// Panics on an infinity, a NaN, or a whole value `U` does not hold.
+U rounded<U>( f64 x ) where U : integral
+{
+    return integer_of<U>( nearest( x ) );
+}
+
+/// `x` to the nearest whole value, a half away from zero, as a `U`: `rounded<i32>( -2.5 )` is `-3`.
+///
+/// Panics on an infinity, a NaN, or a whole value `U` does not hold.
+U rounded<U>( f32 x ) where U : integral
+{
+    return integer_of<U>( nearest( cast<f64>( x ) ) );
+}
+
+/// `x` down to a whole value, as a `U`: `floored<i32>( -2.5 )` is `-3`.
+///
+/// Panics on an infinity, a NaN, or a whole value `U` does not hold.
+U floored<U>( f64 x ) where U : integral
+{
+    return integer_of<U>( below( x ) );
+}
+
+/// `x` down to a whole value, as a `U`: `floored<i32>( -2.5 )` is `-3`.
+///
+/// Panics on an infinity, a NaN, or a whole value `U` does not hold.
+U floored<U>( f32 x ) where U : integral
+{
+    return integer_of<U>( below( cast<f64>( x ) ) );
+}
+
+/// `x` up to a whole value, as a `U`: `ceiled<i32>( 2.1 )` is `3`.
+///
+/// Panics on an infinity, a NaN, or a whole value `U` does not hold.
+U ceiled<U>( f64 x ) where U : integral
+{
+    return integer_of<U>( -below( -x ) );
+}
+
+/// `x` up to a whole value, as a `U`: `ceiled<i32>( 2.1 )` is `3`.
+///
+/// Panics on an infinity, a NaN, or a whole value `U` does not hold.
+U ceiled<U>( f32 x ) where U : integral
+{
+    return integer_of<U>( -below( -cast<f64>( x ) ) );
+}
+
 /// --- Trigonometry ---
 
 /// The `f64` nearest to the ratio of a circle's circumference to its diameter.
@@ -457,7 +549,7 @@ private reduction reduced( f64 x )
     f64[4] tx = [ 0.0, .. ];
     for( u64 i = 0; i < 2; i++ )
     {
-        tx[i] = truncated( z );
+        tx[i] = whole_part( z );
         z = ( z - tx[i] ) * TWO24;
     }
     tx[2] = z;
@@ -562,14 +654,14 @@ private reduction reduced_large( f64[4] x, i32 e0, i32 nx )
         i32 i = 0;
         for( i32 jj = jz; jj > 0; jj-- )
         {
-            f64 high = truncated( TWON24 * z );
+            f64 high = whole_part( TWON24 * z );
             iq[at( i, 32 )] = whole( z - TWO24 * high );
             z = q[at( jj - 1, 32 )] + high;
             i++;
         }
         z = scaled( z, q0 );
-        z -= 8.0 * truncated( z * 0.125 );
-        n = whole( truncated( z ) );
+        z -= 8.0 * whole_part( z * 0.125 );
+        n = whole( whole_part( z ) );
         z -= cast<f64>( n );
         ih = 0;
         if( q0 > 0 )
@@ -669,7 +761,7 @@ private reduction reduced_large( f64[4] x, i32 e0, i32 nx )
         z = scaled( z, -q0 );
         if( z >= TWO24 )
         {
-            f64 high = truncated( TWON24 * z );
+            f64 high = whole_part( TWON24 * z );
             iq[at( jz, 32 )] = whole( z - TWO24 * high );
             jz += 1;
             q0 += 24;
@@ -677,7 +769,7 @@ private reduction reduced_large( f64[4] x, i32 e0, i32 nx )
         }
         else
         {
-            iq[at( jz, 32 )] = whole( truncated( z ) );
+            iq[at( jz, 32 )] = whole( whole_part( z ) );
         }
     }
 
@@ -741,8 +833,73 @@ private f64 scaled( f64 x, i32 n )
     return x * from_bits( wrap<u64>( n + 1023 ) << 52 );
 }
 
+// `x` with its fraction cleared, toward zero; an infinity or a NaN unchanged.
+private f64 chopped( f64 x )
+{
+    const i32 e = exponent_of( x ) - 1023;
+    if( e >= 52 )
+    {
+        return x;
+    }
+    if( e < 0 )
+    {
+        return from_bits( bits_of( x ) & 0x8000_0000_0000_0000 );
+    }
+    return from_bits( bits_of( x ) & ~( 0x000f_ffff_ffff_ffff >> e ) );
+}
+
+private f64 below( f64 x )
+{
+    const f64 t = chopped( x );
+    return x < t ? t - 1.0 : t;
+}
+
+private f64 nearest( f64 x )
+{
+    const f64 t = chopped( x );
+    const f64 fraction = x - t; // exact: `t` keeps `x`'s leading bits
+    if( fraction >= 0.5 )
+    {
+        return t + 1.0;
+    }
+    if( fraction <= -0.5 )
+    {
+        return t - 1.0;
+    }
+    return t;
+}
+
+// A whole `w` as a `U`, built from its bits, since `cast` takes no float to an integer.
+private U integer_of<U>( f64 w ) where U : integral
+{
+    if( w == 0.0 )
+    {
+        return cast<U>( 0 );
+    }
+
+    const u64 bits = bits_of( w );
+    const i32 e = exponent_of( w ) - 1075; // w = m * 2^e
+    if( e > 11 )
+    {
+        panic( "the value is infinite, a NaN, or too large for any integer" );
+    }
+
+    const u64 m = ( bits & 0x000f_ffff_ffff_ffff ) | 0x0010_0000_0000_0000;
+    const u64 magnitude = e >= 0 ? m << wrap<u64>( e ) : m >> wrap<u64>( -e );
+
+    if( w > 0.0 )
+    {
+        return cast<U>( magnitude );
+    }
+    if( magnitude > 0x8000_0000_0000_0000 )
+    {
+        panic( "the value is too large for any integer" );
+    }
+    return cast<U>( wrap<i64>( 0 - magnitude ) );
+}
+
 // The whole part of `x`, which is at least 0 and below 2^52.
-private f64 truncated( f64 x )
+private f64 whole_part( f64 x )
 {
     f64 t = ( x + TWO52 ) - TWO52;
     return t > x ? t - 1.0 : t;

@@ -148,6 +148,24 @@ end of input. A read error is also <code>false</code>; the careful path is <code
 <dt><a href="math.html#sqrt"><code>sqrt</code></a> <span class="kind">function</span></dt>
 <dd>The square root of <code>x</code>, correctly rounded: NaN below zero, and <code>-0.0</code> for <code>-0.0</code>.</dd>
 </dl>
+<h4 class="divider">Classes</h4>
+<dl class="summaries">
+<dt><a href="math.html#is_nan"><code>is_nan</code></a> <span class="kind">function</span></dt>
+<dd>Whether <code>x</code> is a NaN, the one value not equal to itself.</dd>
+<dt><a href="math.html#is_inf"><code>is_inf</code></a> <span class="kind">function</span></dt>
+<dd>Whether <code>x</code> is positive or negative infinity.</dd>
+</dl>
+<h4 class="divider">Rounding</h4>
+<dl class="summaries">
+<dt><a href="math.html#truncated"><code>truncated</code></a> <span class="kind">function</span></dt>
+<dd><code>x</code> toward zero, as a <code>U</code>: <code>truncated&lt;i32&gt;( -2.7 )</code> is <code>-2</code>.</dd>
+<dt><a href="math.html#rounded"><code>rounded</code></a> <span class="kind">function</span></dt>
+<dd><code>x</code> to the nearest whole value, a half away from zero, as a <code>U</code>: <code>rounded&lt;i32&gt;( -2.5 )</code> is <code>-3</code>.</dd>
+<dt><a href="math.html#floored"><code>floored</code></a> <span class="kind">function</span></dt>
+<dd><code>x</code> down to a whole value, as a <code>U</code>: <code>floored&lt;i32&gt;( -2.5 )</code> is <code>-3</code>.</dd>
+<dt><a href="math.html#ceiled"><code>ceiled</code></a> <span class="kind">function</span></dt>
+<dd><code>x</code> up to a whole value, as a <code>U</code>: <code>ceiled&lt;i32&gt;( 2.1 )</code> is <code>3</code>.</dd>
+</dl>
 <h4 class="divider">Trigonometry</h4>
 <dl class="summaries">
 <dt><a href="math.html#pi"><code>pi</code></a> <span class="kind">global</span></dt>

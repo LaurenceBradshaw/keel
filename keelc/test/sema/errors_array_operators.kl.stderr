@@ -2,7 +2,7 @@ error: no operator `==` for `Plain[2]` and `Plain[2]`
   --> sema/errors_array_operators.kl:10:12
    |
 10 |     return a == b;
-   |            ^^^^^^ the block at <prelude>:164:36 makes `T[N]` implement `equatable` only where `T : equatable`, which `Plain` is not
+   |            ^^^^^^ the block at <prelude>:205:36 makes `T[N]` implement `equatable` only where `T : equatable`, which `Plain` is not
 
 error: no operator `<=>` for `i32[2]` and `i32[2]`
   --> sema/errors_array_operators.kl:15:12

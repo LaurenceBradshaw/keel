@@ -8755,80 +8755,80 @@ void kl_2kl4list_10reallocate__IQ2kl4pathE__SQ2kl4listIQ2kl4pathE_3u64( struct k
 #line 471 "<kl>/list.kl"
 }
 
-#line 143 "<prelude>"
+#line 184 "<prelude>"
 void kl_7prelude_6result__IQ2kl4file_Q2kl10file_errorE__dtor( struct kl_7prelude_result__IQ2kl4file_Q2kl10file_errorE* kl_t1 )
 {
     bool kl_t2;
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     kl_t2 = ( *kl_t1 ).tag == 0;
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     if ( kl_t2 ) goto bb2; else goto bb1;
     bb1:
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     return;
     bb2:
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     kl_2kl2os_4file__dtor( &( *kl_t1 ).kl_2ok_value );
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     goto bb1;
-#line 149 "<prelude>"
+#line 190 "<prelude>"
 }
 
-#line 143 "<prelude>"
+#line 184 "<prelude>"
 void kl_7prelude_6result__IQ2kl6string_Q2kl10file_errorE__dtor( struct kl_7prelude_result__IQ2kl6string_Q2kl10file_errorE* kl_t1 )
 {
     bool kl_t2;
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     kl_t2 = ( *kl_t1 ).tag == 0;
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     if ( kl_t2 ) goto bb2; else goto bb1;
     bb1:
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     return;
     bb2:
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     kl_2kl6string_6string__dtor( &( *kl_t1 ).kl_2ok_value );
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     goto bb1;
-#line 149 "<prelude>"
+#line 190 "<prelude>"
 }
 
-#line 143 "<prelude>"
+#line 184 "<prelude>"
 void kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE* kl_t1 )
 {
     bool kl_t2;
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     kl_t2 = ( *kl_t1 ).tag == 0;
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     if ( kl_t2 ) goto bb2; else goto bb1;
     bb1:
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     return;
     bb2:
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     kl_2kl4list_4list__IQ2kl4pathE__dtor( &( *kl_t1 ).kl_2ok_value );
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     goto bb1;
-#line 149 "<prelude>"
+#line 190 "<prelude>"
 }
 
-#line 143 "<prelude>"
+#line 184 "<prelude>"
 void kl_7prelude_6result__IQ2kl4path_Q2kl8os_errorE__dtor( struct kl_7prelude_result__IQ2kl4path_Q2kl8os_errorE* kl_t1 )
 {
     bool kl_t2;
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     kl_t2 = ( *kl_t1 ).tag == 0;
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     if ( kl_t2 ) goto bb2; else goto bb1;
     bb1:
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     return;
     bb2:
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     kl_2kl6string_6string__dtor( &( *kl_t1 ).kl_2ok_value.kl_text_ );
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     goto bb1;
-#line 149 "<prelude>"
+#line 190 "<prelude>"
 }
 
 void kl_2kl2os_path__drop( void* kl_t1 )
@@ -12173,7 +12173,7 @@ void kl_2kl3map_3map__IA2_3i32_3i32E__dtor( struct kl_2kl3map_map__IA2_3i32_3i32
 #line 53 "<kl>/map.kl"
 }
 
-#line 166 "<prelude>"
+#line 207 "<prelude>"
 bool kl_7prelude_11operator_eq__I3i32_V3_E__SA3_3i32C9equatable_A3_3i32( struct kl__A3_3i32* kl_this_1, struct kl__A3_3i32* kl_other_2 )
 {
     bool kl_t0;
@@ -12185,59 +12185,59 @@ bool kl_7prelude_11operator_eq__I3i32_V3_E__SA3_3i32C9equatable_A3_3i32( struct 
     uint64_t kl_t8;
     bool kl_t9;
     bool kl_t10;
-#line 168 "<prelude>"
+#line 209 "<prelude>"
     kl_i_3 = 0;
-#line 168 "<prelude>"
+#line 209 "<prelude>"
     kl_t4 = 3;
-#line 168 "<prelude>"
+#line 209 "<prelude>"
     goto bb1;
     bb1:
-#line 168 "<prelude>"
+#line 209 "<prelude>"
     kl_t5 = kl_i_3 < kl_t4;
-#line 168 "<prelude>"
+#line 209 "<prelude>"
     if ( kl_t5 ) goto bb2; else goto bb3;
     bb2:
     kl_t6 = kl_i_3;
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     kl_t7 = kl_t6 < 3;
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     if ( kl_t7 ) goto bb4; else goto bb5;
     bb3:
-#line 176 "<prelude>"
+#line 217 "<prelude>"
     kl_t0 = true;
-#line 176 "<prelude>"
+#line 217 "<prelude>"
     return kl_t0;
     bb4:
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     kl_t8 = kl_i_3;
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     kl_t9 = kl_t8 < 3;
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     if ( kl_t9 ) goto bb6; else goto bb7;
     bb5:
-#line 170 "<prelude>"
-    kl_rt_panic( "<prelude>", 170, "out of bounds: this[i]" );
+#line 211 "<prelude>"
+    kl_rt_panic( "<prelude>", 211, "out of bounds: this[i]" );
     bb6:
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     kl_t10 = ( *kl_this_1 ).e[kl_t6] != ( *kl_other_2 ).e[kl_t8];
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     if ( kl_t10 ) goto bb8; else goto bb9;
     bb7:
-#line 170 "<prelude>"
-    kl_rt_panic( "<prelude>", 170, "out of bounds: other[i]" );
+#line 211 "<prelude>"
+    kl_rt_panic( "<prelude>", 211, "out of bounds: other[i]" );
     bb8:
     kl_t0 = false;
-#line 172 "<prelude>"
+#line 213 "<prelude>"
     return kl_t0;
     bb9:
-#line 168 "<prelude>"
+#line 209 "<prelude>"
     kl_i_3 = kl_i_3 + 1;
-#line 168 "<prelude>"
+#line 209 "<prelude>"
     goto bb1;
-#line 177 "<prelude>"
+#line 218 "<prelude>"
 }
 
-#line 166 "<prelude>"
+#line 207 "<prelude>"
 bool kl_7prelude_11operator_eq__IA2_3i32_V3_E__SA3_A2_3i32C9equatable_A3_A2_3i32( struct kl__A3_A2_3i32* kl_this_1, struct kl__A3_A2_3i32* kl_other_2 )
 {
     bool kl_t0;
@@ -12252,65 +12252,65 @@ bool kl_7prelude_11operator_eq__IA2_3i32_V3_E__SA3_A2_3i32C9equatable_A3_A2_3i32
     struct kl__A2_3i32* kl_t11;
     bool kl_t12;
     bool kl_t13;
-#line 168 "<prelude>"
+#line 209 "<prelude>"
     kl_i_3 = 0;
-#line 168 "<prelude>"
+#line 209 "<prelude>"
     kl_t4 = 3;
-#line 168 "<prelude>"
+#line 209 "<prelude>"
     goto bb1;
     bb1:
-#line 168 "<prelude>"
+#line 209 "<prelude>"
     kl_t5 = kl_i_3 < kl_t4;
-#line 168 "<prelude>"
+#line 209 "<prelude>"
     if ( kl_t5 ) goto bb2; else goto bb3;
     bb2:
     kl_t6 = kl_i_3;
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     kl_t7 = kl_t6 < 3;
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     if ( kl_t7 ) goto bb4; else goto bb5;
     bb3:
-#line 176 "<prelude>"
+#line 217 "<prelude>"
     kl_t0 = true;
-#line 176 "<prelude>"
+#line 217 "<prelude>"
     return kl_t0;
     bb4:
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     kl_t8 = &( *kl_this_1 ).e[kl_t6];
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     kl_t9 = kl_i_3;
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     kl_t10 = kl_t9 < 3;
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     if ( kl_t10 ) goto bb6; else goto bb7;
     bb5:
-#line 170 "<prelude>"
-    kl_rt_panic( "<prelude>", 170, "out of bounds: this[i]" );
+#line 211 "<prelude>"
+    kl_rt_panic( "<prelude>", 211, "out of bounds: this[i]" );
     bb6:
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     kl_t11 = &( *kl_other_2 ).e[kl_t9];
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     kl_t12 = kl_7prelude_11operator_eq__I3i32_V2_E__SA2_3i32C9equatable_A2_3i32( kl_t8, kl_t11 );
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     kl_t13 = !kl_t12;
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     if ( kl_t13 ) goto bb8; else goto bb9;
     bb7:
-#line 170 "<prelude>"
-    kl_rt_panic( "<prelude>", 170, "out of bounds: other[i]" );
+#line 211 "<prelude>"
+    kl_rt_panic( "<prelude>", 211, "out of bounds: other[i]" );
     bb8:
     kl_t0 = false;
-#line 172 "<prelude>"
+#line 213 "<prelude>"
     return kl_t0;
     bb9:
-#line 168 "<prelude>"
+#line 209 "<prelude>"
     kl_i_3 = kl_i_3 + 1;
-#line 168 "<prelude>"
+#line 209 "<prelude>"
     goto bb1;
-#line 177 "<prelude>"
+#line 218 "<prelude>"
 }
 
-#line 166 "<prelude>"
+#line 207 "<prelude>"
 bool kl_7prelude_11operator_eq__I5Point_V2_E__SA2_5PointC9equatable_A2_5Point( struct kl__A2_5Point* kl_this_1, struct kl__A2_5Point* kl_other_2 )
 {
     bool kl_t0;
@@ -12325,62 +12325,62 @@ bool kl_7prelude_11operator_eq__I5Point_V2_E__SA2_5PointC9equatable_A2_5Point( s
     struct kl__Point* kl_t11;
     bool kl_t12;
     bool kl_t13;
-#line 168 "<prelude>"
+#line 209 "<prelude>"
     kl_i_3 = 0;
-#line 168 "<prelude>"
+#line 209 "<prelude>"
     kl_t4 = 2;
-#line 168 "<prelude>"
+#line 209 "<prelude>"
     goto bb1;
     bb1:
-#line 168 "<prelude>"
+#line 209 "<prelude>"
     kl_t5 = kl_i_3 < kl_t4;
-#line 168 "<prelude>"
+#line 209 "<prelude>"
     if ( kl_t5 ) goto bb2; else goto bb3;
     bb2:
     kl_t6 = kl_i_3;
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     kl_t7 = kl_t6 < 2;
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     if ( kl_t7 ) goto bb4; else goto bb5;
     bb3:
-#line 176 "<prelude>"
+#line 217 "<prelude>"
     kl_t0 = true;
-#line 176 "<prelude>"
+#line 217 "<prelude>"
     return kl_t0;
     bb4:
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     kl_t8 = &( *kl_this_1 ).e[kl_t6];
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     kl_t9 = kl_i_3;
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     kl_t10 = kl_t9 < 2;
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     if ( kl_t10 ) goto bb6; else goto bb7;
     bb5:
-#line 170 "<prelude>"
-    kl_rt_panic( "<prelude>", 170, "out of bounds: this[i]" );
+#line 211 "<prelude>"
+    kl_rt_panic( "<prelude>", 211, "out of bounds: this[i]" );
     bb6:
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     kl_t11 = &( *kl_other_2 ).e[kl_t9];
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     kl_t12 = kl__11operator_eq__S5Point_5Point( kl_t8, kl_t11 );
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     kl_t13 = !kl_t12;
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     if ( kl_t13 ) goto bb8; else goto bb9;
     bb7:
-#line 170 "<prelude>"
-    kl_rt_panic( "<prelude>", 170, "out of bounds: other[i]" );
+#line 211 "<prelude>"
+    kl_rt_panic( "<prelude>", 211, "out of bounds: other[i]" );
     bb8:
     kl_t0 = false;
-#line 172 "<prelude>"
+#line 213 "<prelude>"
     return kl_t0;
     bb9:
-#line 168 "<prelude>"
+#line 209 "<prelude>"
     kl_i_3 = kl_i_3 + 1;
-#line 168 "<prelude>"
+#line 209 "<prelude>"
     goto bb1;
-#line 177 "<prelude>"
+#line 218 "<prelude>"
 }
 
 #line 270 "<kl>/map.kl"
@@ -12719,7 +12719,7 @@ void kl_2kl3map_8drop_all__IA2_3i32_3i32E__SQ2kl3mapIA2_3i32_3i32E( struct kl_2k
 #line 368 "<kl>/map.kl"
 }
 
-#line 166 "<prelude>"
+#line 207 "<prelude>"
 bool kl_7prelude_11operator_eq__I3i32_V2_E__SA2_3i32C9equatable_A2_3i32( struct kl__A2_3i32* kl_this_1, struct kl__A2_3i32* kl_other_2 )
 {
     bool kl_t0;
@@ -12731,59 +12731,59 @@ bool kl_7prelude_11operator_eq__I3i32_V2_E__SA2_3i32C9equatable_A2_3i32( struct 
     uint64_t kl_t8;
     bool kl_t9;
     bool kl_t10;
-#line 168 "<prelude>"
+#line 209 "<prelude>"
     kl_i_3 = 0;
-#line 168 "<prelude>"
+#line 209 "<prelude>"
     kl_t4 = 2;
-#line 168 "<prelude>"
+#line 209 "<prelude>"
     goto bb1;
     bb1:
-#line 168 "<prelude>"
+#line 209 "<prelude>"
     kl_t5 = kl_i_3 < kl_t4;
-#line 168 "<prelude>"
+#line 209 "<prelude>"
     if ( kl_t5 ) goto bb2; else goto bb3;
     bb2:
     kl_t6 = kl_i_3;
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     kl_t7 = kl_t6 < 2;
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     if ( kl_t7 ) goto bb4; else goto bb5;
     bb3:
-#line 176 "<prelude>"
+#line 217 "<prelude>"
     kl_t0 = true;
-#line 176 "<prelude>"
+#line 217 "<prelude>"
     return kl_t0;
     bb4:
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     kl_t8 = kl_i_3;
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     kl_t9 = kl_t8 < 2;
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     if ( kl_t9 ) goto bb6; else goto bb7;
     bb5:
-#line 170 "<prelude>"
-    kl_rt_panic( "<prelude>", 170, "out of bounds: this[i]" );
+#line 211 "<prelude>"
+    kl_rt_panic( "<prelude>", 211, "out of bounds: this[i]" );
     bb6:
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     kl_t10 = ( *kl_this_1 ).e[kl_t6] != ( *kl_other_2 ).e[kl_t8];
-#line 170 "<prelude>"
+#line 211 "<prelude>"
     if ( kl_t10 ) goto bb8; else goto bb9;
     bb7:
-#line 170 "<prelude>"
-    kl_rt_panic( "<prelude>", 170, "out of bounds: other[i]" );
+#line 211 "<prelude>"
+    kl_rt_panic( "<prelude>", 211, "out of bounds: other[i]" );
     bb8:
     kl_t0 = false;
-#line 172 "<prelude>"
+#line 213 "<prelude>"
     return kl_t0;
     bb9:
-#line 168 "<prelude>"
+#line 209 "<prelude>"
     kl_i_3 = kl_i_3 + 1;
-#line 168 "<prelude>"
+#line 209 "<prelude>"
     goto bb1;
-#line 177 "<prelude>"
+#line 218 "<prelude>"
 }
 
-#line 340 "<prelude>"
+#line 381 "<prelude>"
 void kl_7prelude_4hash__I3i32_V2_E__SA2_3i32C8hashable_RQ7prelude6hasher( struct kl__A2_3i32* kl_this_1, struct kl_7prelude_hasher* kl_h_2 )
 {
     uint64_t kl_i_3;
@@ -12793,80 +12793,80 @@ void kl_7prelude_4hash__I3i32_V2_E__SA2_3i32C8hashable_RQ7prelude6hasher( struct
     bool kl_t7;
     uint64_t kl_t8;
     struct kl_7prelude_hasher* kl_t9;
-#line 342 "<prelude>"
+#line 383 "<prelude>"
     kl_i_3 = 0;
-#line 342 "<prelude>"
+#line 383 "<prelude>"
     kl_t4 = 2;
-#line 342 "<prelude>"
+#line 383 "<prelude>"
     goto bb1;
     bb1:
-#line 342 "<prelude>"
+#line 383 "<prelude>"
     kl_t5 = kl_i_3 < kl_t4;
-#line 342 "<prelude>"
+#line 383 "<prelude>"
     if ( kl_t5 ) goto bb2; else goto bb3;
     bb2:
     kl_t6 = kl_i_3;
-#line 344 "<prelude>"
+#line 385 "<prelude>"
     kl_t7 = kl_t6 < 2;
-#line 344 "<prelude>"
+#line 385 "<prelude>"
     if ( kl_t7 ) goto bb4; else goto bb5;
     bb3:
     return;
     bb4:
-#line 344 "<prelude>"
+#line 385 "<prelude>"
     kl_t8 = ( uint64_t ) ( *kl_this_1 ).e[kl_t6];
-#line 344 "<prelude>"
+#line 385 "<prelude>"
     kl_t9 = &( *kl_h_2 );
-#line 344 "<prelude>"
+#line 385 "<prelude>"
     kl_7prelude_5write__SQ7prelude6hasher_3u64( kl_t9, kl_t8 );
-#line 342 "<prelude>"
+#line 383 "<prelude>"
     goto bb6;
     bb5:
-    kl_rt_panic( "<prelude>", 344, "out of bounds: this[i]" );
+    kl_rt_panic( "<prelude>", 385, "out of bounds: this[i]" );
     bb6:
-#line 342 "<prelude>"
+#line 383 "<prelude>"
     kl_i_3 = kl_i_3 + 1;
-#line 342 "<prelude>"
+#line 383 "<prelude>"
     goto bb1;
-#line 346 "<prelude>"
+#line 387 "<prelude>"
 }
 
-#line 143 "<prelude>"
+#line 184 "<prelude>"
 void kl_7prelude_6result__IQ2kl7process_Q2kl10file_errorE__dtor( struct kl_7prelude_result__IQ2kl7process_Q2kl10file_errorE* kl_t1 )
 {
     bool kl_t2;
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     kl_t2 = ( *kl_t1 ).tag == 0;
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     if ( kl_t2 ) goto bb2; else goto bb1;
     bb1:
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     return;
     bb2:
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     kl_2kl2os_7process__dtor( &( *kl_t1 ).kl_2ok_value );
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     goto bb1;
-#line 149 "<prelude>"
+#line 190 "<prelude>"
 }
 
-#line 143 "<prelude>"
+#line 184 "<prelude>"
 void kl_7prelude_6result__IQ2kl8captured_Q2kl10file_errorE__dtor( struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE* kl_t1 )
 {
     bool kl_t2;
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     kl_t2 = ( *kl_t1 ).tag == 0;
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     if ( kl_t2 ) goto bb2; else goto bb1;
     bb1:
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     return;
     bb2:
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     kl_2kl6string_6string__dtor( &( *kl_t1 ).kl_2ok_value.kl_output );
-#line 143 "<prelude>"
+#line 184 "<prelude>"
     goto bb1;
-#line 149 "<prelude>"
+#line 190 "<prelude>"
 }
 
 void kl_2kl4list_list__IQ2kl6stringE__drop( void* kl_t1 )

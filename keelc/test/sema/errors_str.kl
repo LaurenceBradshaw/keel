@@ -1,5 +1,5 @@
-// A string literal is the prelude's `str`: read-only, made only by a literal, and compared with
-// nothing yet. One refusal per function, so none of them stops another being checked.
+// A string literal is the prelude's `str`: read-only and made only by a literal. One refusal per
+// function, so none of them stops another being checked; `no_equality` is accepted since `str` has `==`.
 str global = "file scope";
 
 i32 not_a_number()

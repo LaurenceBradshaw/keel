@@ -3502,7 +3502,7 @@ TEST_CASE( "signatures_declare_a_generic_block", "[sema][interfaces][implements_
 
             INFO( block << "\n" << p.rendered() );
             REQUIRE( p.errors() == 0 );
-            REQUIRE( p.types().conformances().all().size() == 5 ); // with the prelude's four
+            REQUIRE( p.types().conformances().all().size() == 8 ); // with the prelude's seven
         }
     }
 
@@ -3641,7 +3641,7 @@ TEST_CASE( "signatures_place_a_block_beside_its_interface_or_its_type", "[sema][
             REQUIRE( p.errors() == 1 );
             REQUIRE( p.rendered().find( c.message ) != std::string::npos );
             REQUIRE( p.rendered().find( c.help ) != std::string::npos );
-            REQUIRE( p.types().conformances().all().size() == 5 ); // kl's own, for f64, and the prelude's four
+            REQUIRE( p.types().conformances().all().size() == 8 ); // kl's own, for f64, and the prelude's seven
         }
     }
 
@@ -3694,7 +3694,7 @@ TEST_CASE( "signatures_place_a_block_beside_its_interface_or_its_type", "[sema][
             REQUIRE( p.errors() == 1 );
             REQUIRE( p.rendered().find( c.message ) != std::string::npos );
             REQUIRE( p.rendered().find( c.help ) != std::string::npos );
-            REQUIRE( p.types().conformances().all().size() == 5 ); // kl's own, for f64, and the prelude's four
+            REQUIRE( p.types().conformances().all().size() == 8 ); // kl's own, for f64, and the prelude's seven
         }
     }
 
