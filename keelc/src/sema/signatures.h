@@ -115,6 +115,7 @@ private:
     void check_index_operator( Node_id decl );
     void check_walk_operator( Node_id decl );
     void check_binary_operator( Node_id decl );
+    void check_static_operator( Node_id owner, Node_id decl );
     void check_compound_operator( Node_id decl );
     void check_unary_operator( Node_id decl );
     void check_operand( Node_id decl );

@@ -1411,7 +1411,8 @@ void Signatures::check_operators()
                                                      : static_cast<size_t>( op );
             Node_id&            seen     = first[slot];
 
-            if( seen.is_valid() )
+            // Several of these are told apart by operand type, which Overloads checks.
+            if( seen.is_valid() && ( negation || !Interner::overloads_by_operand( op ) ) )
             {
                 reporter_.error_at(
                     ast_.name_span( member ),
@@ -1440,10 +1441,25 @@ void Signatures::check_operators()
                 continue;
             }
 
+            // `2.0 * m`: a binary operator found on its right operand's type.
+            if( ast_.is_static_method( member ) &&
+                ( is_aggregate( ast_.kind( decl ) ) || ast_.kind( decl ) == Node_kind::Interface_decl ) &&
+                Interner::overloads_by_operand( op ) && op < Operator_name::Plus_equal )
+            {
+                check_static_operator( decl, member );
+                continue;
+            }
+
             if( ast_.is_static_method( member ) )
             {
+                const bool binary = Interner::overloads_by_operand( op ) && op < Operator_name::Plus_equal;
                 reporter_.error_at(
-                    ast_.name_span( member ), "an operator cannot be `static`", "it is called on its left operand"
+                    ast_.name_span( member ),
+                    binary || !Interner::overloads_by_operand( op )
+                        ? std::string( "an operator cannot be `static`" )
+                        : fmt::format( "`{}` cannot be `static`", interner_.text( name ) ),
+                    binary || !Interner::overloads_by_operand( op ) ? "it is called on its left operand"
+                                                                    : "it changes its left operand in place"
                 );
                 continue;
             }
@@ -1607,6 +1623,72 @@ void Signatures::check_binary_operator( Node_id decl )
             ast_.name_span( decl ),
             fmt::format( "`{}` must be `const`", op_name ),
             fmt::format( "write `const` after its parameter list; `a {} b` reads both operands", sym )
+        );
+    }
+}
+
+// `static R operator*( L left, R right )`: two operands by value or `const ref`, the right one the
+// declaring type and the left one not, which would be a method.
+void Signatures::check_static_operator( Node_id owner, Node_id decl )
+{
+    const std::span<const Node_id> params  = ast_.params( decl );
+    const std::string_view         op_name = interner_.text( ast_.name( decl ) );
+    const std::string_view         sym     = operator_symbol( decl );
+    const Type_id                  self_type =
+        ast_.kind( owner ) == Node_kind::Interface_decl ? table_.self_of( owner ) : types_.type_of( owner );
+
+    if( params.size() != 2 )
+    {
+        reporter_.error_at(
+            ast_.span( ast_.param_list( decl ) ),
+            fmt::format( "a `static` `{}` takes two parameters, the left operand and the right", op_name )
+        );
+        return;
+    }
+
+    for( const Node_id param : params )
+    {
+        if( ast_.call_marker( param ) != Keyword::Count )
+        {
+            reporter_.error_at(
+                ast_.span( param ),
+                fmt::format( "`{}` takes its operands by value or `const ref`", op_name ),
+                fmt::format( "`a {} b` has nowhere to write a `ref`, `out` or `move`", sym )
+            );
+        }
+    }
+
+    const Type_id left  = types_.type_of( params[0] );
+    const Type_id right = types_.type_of( params[1] );
+
+    if( left == self_type )
+    {
+        reporter_.error_at(
+            ast_.name_span( decl ),
+            fmt::format( "a `{}` on the left of `{}` calls a method", table_.name( self_type ), sym ),
+            fmt::format(
+                "declare `{} {}({} other) const` instead",
+                table_.name( types_.type_of( decl ) ),
+                op_name,
+                reporter_.text( ast_.span( ast_.declared_type( params[1] ) ) )
+            )
+        );
+    }
+    else if( !table_.is_error( right ) && right != self_type )
+    {
+        reporter_.error_at(
+            ast_.span( params[1] ),
+            fmt::format( "a `static` `{0}` on `{1}` must take a `{1}` on the right", op_name, table_.name( self_type ) ),
+            "it is found through its right operand's type"
+        );
+    }
+
+    if( returns_void( decl ) )
+    {
+        reporter_.error_at(
+            ast_.span( ast_.return_type( decl ) ),
+            fmt::format( "`{}` must return a value", op_name ),
+            fmt::format( "`a {} b` is an expression", sym )
         );
     }
 }

@@ -1,0 +1,37 @@
+// M17: several overloads of one operator. Two with one operand type conflict, as two functions
+// would. Nothing taking the operands, or two taking them equally well, is refused, listing each with
+// the type it is found on. A `static` operator takes the left operand and then its own type, and a
+// compound assignment cannot be one.
+struct vec
+{
+    f64 x;
+
+    vec operator*( f64 by ) const { return vec { x * by }; }
+    vec operator*( const ref f64 by ) const { return vec { x * by }; }
+    vec operator-( f64 by ) const { return vec { x - by }; }
+    vec operator-( bool flag ) const { return vec { x }; }
+    vec operator/( const ref mat m ) const { return vec { x }; }
+};
+
+struct mat
+{
+    f64 a;
+
+    static vec operator/( vec v, const ref mat m ) { return v; }
+    static mat operator*( mat m, f64 by ) { return m; }
+    static mat operator+( f64 by, f64 other ) { return mat { by }; }
+    static void operator-( f64 by, mat m ) { }
+    static mat operator%( f64 by ) { return mat { by }; }
+    static mat operator%( ref f64 by, mat m ) { return m; }
+    static void operator*=( f64 by, mat m ) { }
+};
+
+i32 main()
+{
+    vec v = vec { 1.0 };
+    mat m = mat { 2.0 };
+    vec a = v - "x";
+    vec b = v / m;
+    vec c = v - 1.0;
+    return 0;
+}

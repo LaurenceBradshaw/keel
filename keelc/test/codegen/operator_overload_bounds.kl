@@ -1,0 +1,51 @@
+// M17: an interface may require several overloads of one operator, and a `static` one, which makes
+// it a bound only. Under a bound `a op b` selects among the requirements as among methods, and calls
+// the implementer's; on an interface receiver each overload is its own vtable slot. Exits with the
+// failing check.
+interface scalable
+{
+    self operator*( f64 by ) const;
+    self operator*( i64 by ) const;
+    static self operator*( f64 by, self v );
+};
+
+interface measure
+{
+    f64 operator*( f64 by ) const;
+    f64 operator*( i64 by ) const;
+};
+
+struct vec implements scalable
+{
+    f64 x;
+
+    vec operator*( f64 by ) const { return vec { x * by }; }
+    vec operator*( i64 _ ) const { return vec { 0.0 }; }
+    static vec operator*( f64 by, vec v ) { return vec { by + v.x }; }
+};
+
+struct meter implements measure
+{
+    f64 x;
+
+    f64 operator*( f64 by ) const { return x * by; }
+    f64 operator*( i64 _ ) const { return 0.0 - x; }
+};
+
+T twice<T>( T v ) where T : scalable { return v * 2.0; }
+T zeroed<T>( T v ) where T : scalable { return v * 2; }
+T shifted<T>( T v ) where T : scalable { return 3.0 * v; }
+
+f64 both( const ref measure m ) { return m * 2.0 + m * 1; }
+
+i32 main()
+{
+    vec v = vec { 1.0 };
+
+    if( twice( v ).x != 2.0 ) { return 1; }
+    if( zeroed( v ).x != 0.0 ) { return 2; }
+    if( shifted( v ).x != 4.0 ) { return 3; }
+    if( both( meter { 3.0 } ) != 3.0 ) { return 4; }
+
+    return 0;
+}

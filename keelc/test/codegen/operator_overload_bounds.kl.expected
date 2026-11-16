@@ -1,0 +1,342 @@
+// codegen/operator_overload_bounds.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__vec;
+struct kl__meter;
+
+struct kl__measure__vtable;
+struct kl__measure__ref { void* self; const struct kl__measure__vtable* vtable; };
+
+typedef double ( *kl__fn__FMP4voidM3f64E3f64 )( void*, double );
+typedef double ( *kl__fn__FMP4voidM3i64E3f64 )( void*, int64_t );
+
+struct kl__vec
+{
+    double kl_x;
+};
+_Static_assert( sizeof( struct kl__vec ) == 8 && _Alignof( struct kl__vec ) == 8 && offsetof( struct kl__vec, kl_x ) == 0, "layout" );
+
+struct kl__meter
+{
+    double kl_x;
+};
+_Static_assert( sizeof( struct kl__meter ) == 8 && _Alignof( struct kl__meter ) == 8 && offsetof( struct kl__meter, kl_x ) == 0, "layout" );
+
+struct kl__measure__vtable
+{
+    void ( *drop )( void* );
+    double ( *kl__12operator_mul__3f64 )( void*, double );
+    double ( *kl__12operator_mul__3i64 )( void*, int64_t );
+};
+
+struct kl__vec kl__12operator_mul__S3vec_3f64( struct kl__vec*, double );
+struct kl__vec kl__12operator_mul__S3vec_3i64( struct kl__vec*, int64_t );
+struct kl__vec kl__12operator_mul__S3vec_3f64_3vec( double, struct kl__vec );
+double kl__12operator_mul__S5meter_3f64( struct kl__meter*, double );
+double kl__12operator_mul__S5meter_3i64( struct kl__meter*, int64_t );
+double kl__4both__7measure( struct kl__measure__ref );
+int32_t kl__4main__( void );
+struct kl__vec kl__5twice__I3vecE__3vec( struct kl__vec* );
+struct kl__vec kl__6zeroed__I3vecE__3vec( struct kl__vec* );
+struct kl__vec kl__7shifted__I3vecE__3vec( struct kl__vec* );
+void kl__meter__drop( void* );
+double kl__meter__as_kl__measure__kl__12operator_mul__3f64( void*, double );
+double kl__meter__as_kl__measure__kl__12operator_mul__3i64( void*, int64_t );
+
+static const struct kl__measure__vtable kl__meter__as_kl__measure = { kl__meter__drop, kl__meter__as_kl__measure__kl__12operator_mul__3f64, kl__meter__as_kl__measure__kl__12operator_mul__3i64 };
+
+double kl__meter__as_kl__measure__kl__12operator_mul__3f64( void* kl_t1, double kl_t2 )
+{
+    double kl_t0;
+    struct kl__meter* kl_t3;
+    kl_t3 = ( struct kl__meter* ) kl_t1;
+    kl_t0 = kl__12operator_mul__S5meter_3f64( kl_t3, kl_t2 );
+    return kl_t0;
+}
+
+double kl__meter__as_kl__measure__kl__12operator_mul__3i64( void* kl_t1, int64_t kl_t2 )
+{
+    double kl_t0;
+    struct kl__meter* kl_t3;
+    kl_t3 = ( struct kl__meter* ) kl_t1;
+    kl_t0 = kl__12operator_mul__S5meter_3i64( kl_t3, kl_t2 );
+    return kl_t0;
+}
+
+#line 22 "codegen/operator_overload_bounds.kl"
+struct kl__vec kl__12operator_mul__S3vec_3f64( struct kl__vec* kl_this_1, double kl_by_2 )
+{
+    struct kl__vec kl_t0;
+    struct kl__vec kl_t3;
+    double kl_t4;
+#line 22 "codegen/operator_overload_bounds.kl"
+    kl_t4 = ( *kl_this_1 ).kl_x * kl_by_2;
+#line 22 "codegen/operator_overload_bounds.kl"
+    kl_t3.kl_x = kl_t4;
+#line 22 "codegen/operator_overload_bounds.kl"
+    kl_t0 = kl_t3;
+#line 22 "codegen/operator_overload_bounds.kl"
+    return kl_t0;
+#line 22 "codegen/operator_overload_bounds.kl"
+}
+
+#line 23 "codegen/operator_overload_bounds.kl"
+struct kl__vec kl__12operator_mul__S3vec_3i64( struct kl__vec* kl_this_1, int64_t kl_t2 )
+{
+    struct kl__vec kl_t0;
+    struct kl__vec kl_t3;
+    ( void ) kl_this_1;
+    ( void ) kl_t2;
+#line 23 "codegen/operator_overload_bounds.kl"
+    kl_t3.kl_x = 0.0;
+#line 23 "codegen/operator_overload_bounds.kl"
+    kl_t0 = kl_t3;
+#line 23 "codegen/operator_overload_bounds.kl"
+    return kl_t0;
+#line 23 "codegen/operator_overload_bounds.kl"
+}
+
+#line 24 "codegen/operator_overload_bounds.kl"
+struct kl__vec kl__12operator_mul__S3vec_3f64_3vec( double kl_by_1, struct kl__vec kl_v_2 )
+{
+    struct kl__vec kl_t0;
+    struct kl__vec kl_t3;
+    double kl_t4;
+#line 24 "codegen/operator_overload_bounds.kl"
+    kl_t4 = kl_by_1 + kl_v_2.kl_x;
+#line 24 "codegen/operator_overload_bounds.kl"
+    kl_t3.kl_x = kl_t4;
+#line 24 "codegen/operator_overload_bounds.kl"
+    kl_t0 = kl_t3;
+#line 24 "codegen/operator_overload_bounds.kl"
+    return kl_t0;
+#line 24 "codegen/operator_overload_bounds.kl"
+}
+
+#line 31 "codegen/operator_overload_bounds.kl"
+double kl__12operator_mul__S5meter_3f64( struct kl__meter* kl_this_1, double kl_by_2 )
+{
+    double kl_t0;
+    double kl_t3;
+#line 31 "codegen/operator_overload_bounds.kl"
+    kl_t3 = ( *kl_this_1 ).kl_x * kl_by_2;
+#line 31 "codegen/operator_overload_bounds.kl"
+    kl_t0 = kl_t3;
+#line 31 "codegen/operator_overload_bounds.kl"
+    return kl_t0;
+#line 31 "codegen/operator_overload_bounds.kl"
+}
+
+#line 32 "codegen/operator_overload_bounds.kl"
+double kl__12operator_mul__S5meter_3i64( struct kl__meter* kl_this_1, int64_t kl_t2 )
+{
+    double kl_t0;
+    double kl_t3;
+    ( void ) kl_t2;
+#line 32 "codegen/operator_overload_bounds.kl"
+    kl_t3 = 0.0 - ( *kl_this_1 ).kl_x;
+#line 32 "codegen/operator_overload_bounds.kl"
+    kl_t0 = kl_t3;
+#line 32 "codegen/operator_overload_bounds.kl"
+    return kl_t0;
+#line 32 "codegen/operator_overload_bounds.kl"
+}
+
+#line 39 "codegen/operator_overload_bounds.kl"
+double kl__4both__7measure( struct kl__measure__ref kl_m_1 )
+{
+    double kl_t0;
+    struct kl__measure__ref kl_t2;
+    double kl_t3;
+    struct kl__measure__ref kl_t4;
+    double kl_t5;
+    double kl_t6;
+    kl__fn__FMP4voidM3f64E3f64 kl_t7;
+    void* kl_t8;
+    kl__fn__FMP4voidM3i64E3f64 kl_t9;
+    void* kl_t10;
+#line 39 "codegen/operator_overload_bounds.kl"
+    kl_t2 = kl_m_1;
+#line 39 "codegen/operator_overload_bounds.kl"
+    kl_t7 = ( kl_t2 ).vtable->kl__12operator_mul__3f64;
+#line 39 "codegen/operator_overload_bounds.kl"
+    kl_t8 = ( kl_t2 ).self;
+#line 39 "codegen/operator_overload_bounds.kl"
+    kl_t3 = kl_t7( kl_t8, 2.0 );
+#line 39 "codegen/operator_overload_bounds.kl"
+    kl_t4 = kl_m_1;
+#line 39 "codegen/operator_overload_bounds.kl"
+    kl_t9 = ( kl_t4 ).vtable->kl__12operator_mul__3i64;
+#line 39 "codegen/operator_overload_bounds.kl"
+    kl_t10 = ( kl_t4 ).self;
+#line 39 "codegen/operator_overload_bounds.kl"
+    kl_t5 = kl_t9( kl_t10, 1 );
+#line 39 "codegen/operator_overload_bounds.kl"
+    kl_t6 = kl_t3 + kl_t5;
+#line 39 "codegen/operator_overload_bounds.kl"
+    kl_t0 = kl_t6;
+#line 39 "codegen/operator_overload_bounds.kl"
+    return kl_t0;
+#line 39 "codegen/operator_overload_bounds.kl"
+}
+
+#line 41 "codegen/operator_overload_bounds.kl"
+int32_t kl__4main__( void )
+{
+    int32_t kl_t0;
+    struct kl__vec kl_v_1;
+    struct kl__vec kl_t2;
+    struct kl__vec* kl_t3;
+    struct kl__vec kl_t4;
+    bool kl_t5;
+    struct kl__vec* kl_t6;
+    struct kl__vec kl_t7;
+    bool kl_t8;
+    struct kl__vec* kl_t9;
+    struct kl__vec kl_t10;
+    bool kl_t11;
+    struct kl__meter kl_t12;
+    struct kl__meter* kl_t13;
+    struct kl__measure__ref kl_t14;
+    double kl_t15;
+    bool kl_t16;
+#line 43 "codegen/operator_overload_bounds.kl"
+    kl_t2.kl_x = 1.0;
+#line 43 "codegen/operator_overload_bounds.kl"
+    kl_v_1 = kl_t2;
+#line 45 "codegen/operator_overload_bounds.kl"
+    kl_t3 = &kl_v_1;
+#line 45 "codegen/operator_overload_bounds.kl"
+    kl_t4 = kl__5twice__I3vecE__3vec( kl_t3 );
+#line 45 "codegen/operator_overload_bounds.kl"
+    kl_t5 = kl_t4.kl_x != 2.0;
+#line 45 "codegen/operator_overload_bounds.kl"
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+#line 45 "codegen/operator_overload_bounds.kl"
+    kl_t0 = 1;
+#line 45 "codegen/operator_overload_bounds.kl"
+    return kl_t0;
+    bb2:
+#line 46 "codegen/operator_overload_bounds.kl"
+    kl_t6 = &kl_v_1;
+#line 46 "codegen/operator_overload_bounds.kl"
+    kl_t7 = kl__6zeroed__I3vecE__3vec( kl_t6 );
+#line 46 "codegen/operator_overload_bounds.kl"
+    kl_t8 = kl_t7.kl_x != 0.0;
+#line 46 "codegen/operator_overload_bounds.kl"
+    if ( kl_t8 ) goto bb3; else goto bb4;
+    bb3:
+#line 46 "codegen/operator_overload_bounds.kl"
+    kl_t0 = 2;
+#line 46 "codegen/operator_overload_bounds.kl"
+    return kl_t0;
+    bb4:
+#line 47 "codegen/operator_overload_bounds.kl"
+    kl_t9 = &kl_v_1;
+#line 47 "codegen/operator_overload_bounds.kl"
+    kl_t10 = kl__7shifted__I3vecE__3vec( kl_t9 );
+#line 47 "codegen/operator_overload_bounds.kl"
+    kl_t11 = kl_t10.kl_x != 4.0;
+#line 47 "codegen/operator_overload_bounds.kl"
+    if ( kl_t11 ) goto bb5; else goto bb6;
+    bb5:
+#line 47 "codegen/operator_overload_bounds.kl"
+    kl_t0 = 3;
+#line 47 "codegen/operator_overload_bounds.kl"
+    return kl_t0;
+    bb6:
+#line 48 "codegen/operator_overload_bounds.kl"
+    kl_t12.kl_x = 3.0;
+#line 48 "codegen/operator_overload_bounds.kl"
+    kl_t13 = &kl_t12;
+#line 48 "codegen/operator_overload_bounds.kl"
+    kl_t14 = ( struct kl__measure__ref ) { ( void* ) kl_t13, &kl__meter__as_kl__measure };
+#line 48 "codegen/operator_overload_bounds.kl"
+    kl_t15 = kl__4both__7measure( kl_t14 );
+#line 48 "codegen/operator_overload_bounds.kl"
+    kl_t16 = kl_t15 != 3.0;
+#line 48 "codegen/operator_overload_bounds.kl"
+    if ( kl_t16 ) goto bb7; else goto bb8;
+    bb7:
+#line 48 "codegen/operator_overload_bounds.kl"
+    kl_t0 = 4;
+#line 48 "codegen/operator_overload_bounds.kl"
+    return kl_t0;
+    bb8:
+    kl_t0 = 0;
+#line 50 "codegen/operator_overload_bounds.kl"
+    return kl_t0;
+}
+
+#line 35 "codegen/operator_overload_bounds.kl"
+struct kl__vec kl__5twice__I3vecE__3vec( struct kl__vec* kl_v_1 )
+{
+    struct kl__vec kl_t0;
+    struct kl__vec* kl_t2;
+    struct kl__vec kl_t3;
+#line 35 "codegen/operator_overload_bounds.kl"
+    kl_t2 = &( *kl_v_1 );
+#line 35 "codegen/operator_overload_bounds.kl"
+    kl_t3 = kl__12operator_mul__S3vec_3f64( kl_t2, 2.0 );
+#line 35 "codegen/operator_overload_bounds.kl"
+    kl_t0 = kl_t3;
+#line 35 "codegen/operator_overload_bounds.kl"
+    return kl_t0;
+#line 35 "codegen/operator_overload_bounds.kl"
+}
+
+#line 36 "codegen/operator_overload_bounds.kl"
+struct kl__vec kl__6zeroed__I3vecE__3vec( struct kl__vec* kl_v_1 )
+{
+    struct kl__vec kl_t0;
+    struct kl__vec* kl_t2;
+    struct kl__vec kl_t3;
+#line 36 "codegen/operator_overload_bounds.kl"
+    kl_t2 = &( *kl_v_1 );
+#line 36 "codegen/operator_overload_bounds.kl"
+    kl_t3 = kl__12operator_mul__S3vec_3i64( kl_t2, 2 );
+#line 36 "codegen/operator_overload_bounds.kl"
+    kl_t0 = kl_t3;
+#line 36 "codegen/operator_overload_bounds.kl"
+    return kl_t0;
+#line 36 "codegen/operator_overload_bounds.kl"
+}
+
+#line 37 "codegen/operator_overload_bounds.kl"
+struct kl__vec kl__7shifted__I3vecE__3vec( struct kl__vec* kl_v_1 )
+{
+    struct kl__vec kl_t0;
+    struct kl__vec kl_t2;
+#line 37 "codegen/operator_overload_bounds.kl"
+    kl_t2 = kl__12operator_mul__S3vec_3f64_3vec( 3.0, ( *kl_v_1 ) );
+#line 37 "codegen/operator_overload_bounds.kl"
+    kl_t0 = kl_t2;
+#line 37 "codegen/operator_overload_bounds.kl"
+    return kl_t0;
+#line 37 "codegen/operator_overload_bounds.kl"
+}
+
+void kl__meter__drop( void* kl_t1 )
+{
+    struct kl__meter* kl_t2;
+    ( void ) kl_t2;
+#line 27 "codegen/operator_overload_bounds.kl"
+    kl_t2 = ( struct kl__meter* ) kl_t1;
+#line 27 "codegen/operator_overload_bounds.kl"
+    return;
+#line 27 "codegen/operator_overload_bounds.kl"
+}
+
+int main( void )
+{
+    int32_t kl_t0;
+#line 41 "codegen/operator_overload_bounds.kl"
+    kl_t0 = kl__4main__(  );
+#line 41 "codegen/operator_overload_bounds.kl"
+    return kl_t0;
+#line 41 "codegen/operator_overload_bounds.kl"
+}
+

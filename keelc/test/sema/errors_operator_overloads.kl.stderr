@@ -1,0 +1,55 @@
+error: `operator*` is already declared with these parameters
+  --> sema/errors_operator_overloads.kl:10:9
+   |
+10 |     vec operator*( const ref f64 by ) const { return vec { x * by }; }
+   |         ^^^^^^^^^ previous declaration is at: sema/errors_operator_overloads.kl:9:5
+
+error: a `mat` on the left of `*` calls a method
+  --> sema/errors_operator_overloads.kl:21:16
+   |
+21 |     static mat operator*( mat m, f64 by ) { return m; }
+   |                ^^^^^^^^^ declare `mat operator*(f64 other) const` instead
+
+error: a `static` `operator+` on `mat` must take a `mat` on the right
+  --> sema/errors_operator_overloads.kl:22:35
+   |
+22 |     static mat operator+( f64 by, f64 other ) { return mat { by }; }
+   |                                   ^^^^^^^^^ it is found through its right operand's type
+
+error: `operator-` must return a value
+  --> sema/errors_operator_overloads.kl:23:12
+   |
+23 |     static void operator-( f64 by, mat m ) { }
+   |            ^^^^ `a - b` is an expression
+
+error: a `static` `operator%` takes two parameters, the left operand and the right
+  --> sema/errors_operator_overloads.kl:24:25
+   |
+24 |     static mat operator%( f64 by ) { return mat { by }; }
+   |                         ^^^^^^^^^^
+
+error: `operator%` takes its operands by value or `const ref`
+  --> sema/errors_operator_overloads.kl:25:27
+   |
+25 |     static mat operator%( ref f64 by, mat m ) { return m; }
+   |                           ^^^^^^^^^^ `a % b` has nowhere to write a `ref`, `out` or `move`
+
+error: `operator*=` cannot be `static`
+  --> sema/errors_operator_overloads.kl:26:17
+   |
+26 |     static void operator*=( f64 by, mat m ) { }
+   |                 ^^^^^^^^^^ it changes its left operand in place
+
+error: no `-` takes these operands
+  --> sema/errors_operator_overloads.kl:33:13
+   |
+33 |     vec a = v - "x";
+   |             ^^^^^^^ the ones declared are `vec.operator-(f64)` and `vec.operator-(bool)`
+
+error: this `/` is ambiguous
+  --> sema/errors_operator_overloads.kl:34:13
+   |
+34 |     vec b = v / m;
+   |             ^^^^^ more than one matches: `vec.operator/(mat)` and `mat::operator/(vec, mat)`
+
+9 errors generated

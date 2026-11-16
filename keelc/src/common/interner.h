@@ -144,6 +144,13 @@ public:
     // The operator a compound assignment applies: `Plus_equal` is `Plus`.
     static Operator_name base_of( Operator_name compound );
 
+    // Whether a type may declare several of `op`, told apart by the right operand's type: the
+    // binary arithmetic and bitwise operators and their compound assignments.
+    static bool overloads_by_operand( Operator_name op )
+    {
+        return op >= Operator_name::Plus && op <= Operator_name::Caret_equal && op != Operator_name::Tilde;
+    }
+
 private:
     struct Sv_hash
     {

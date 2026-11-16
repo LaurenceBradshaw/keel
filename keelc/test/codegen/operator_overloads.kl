@@ -1,0 +1,104 @@
+// M17: one operator, several right operand types, chosen as a call's overloads are: exact first,
+// then the closest widening. A `static` operator is found on its right operand's type, so a number
+// can be on the left; it competes with the left operand's methods. `a op= b` takes the `op=` that
+// fits `b`, else `a = a op b`. A private overload is no candidate from outside. Exits with the
+// failing check.
+struct vec
+{
+    f64 x;
+    f64 y;
+
+    vec operator*( f64 by ) const { return vec { x * by, y * by }; }
+    f64 operator*( const ref vec other ) const { return x * other.x + y * other.y; }
+    vec operator*( i64 by ) const { return vec { x * cast<f64>( by ), 0.0 }; }
+    static vec operator*( f64 by, vec v ) { return vec { by * v.x, by * v.y }; }
+
+    void operator*=( f64 by )
+    {
+        x *= by;
+        y *= by;
+    }
+};
+
+struct scale
+{
+    f64 by;
+
+    // `v * s`: `vec` declares no `*` taking a `scale`.
+    static vec operator*( const ref vec v, scale s ) { return vec { v.x * s.by, v.y * s.by }; }
+};
+
+struct pair<T> where T : numeric
+{
+    T a;
+    T b;
+
+    static pair<T> operator+( T k, pair<T> p ) { return pair<T> { k + p.a, k + p.b }; }
+};
+
+struct tally
+{
+    i32 n;
+
+    static i32 operator*( str s, tally t ) { return cast<i32>( s.size ) + t.n; }
+};
+
+class counter
+{
+    counter( f64 v ) { v_ = v; }
+
+    public f64 operator-( f64 by ) const { return v_ - by; }
+    private f64 operator-( i64 _ ) const { return 1.0; }
+
+    public f64 inside() const { return this - 4; }
+
+    private f64 v_;
+};
+
+i32 main()
+{
+    vec v = vec { 1.0, 2.0 };
+
+    vec w = v * 2.0;
+    if( w.x != 2.0 || w.y != 4.0 ) { return 1; }
+
+    if( v * w != 10.0 ) { return 2; }
+
+    // A literal keeps to its family, and an `i32` widens to `i64` before `f64`.
+    vec t = v * 3;
+    if( t.x != 3.0 || t.y != 0.0 ) { return 3; }
+    i32 k = 5;
+    vec u = v * k;
+    if( u.x != 5.0 || u.y != 0.0 ) { return 4; }
+
+    vec r = 2.0 * v;
+    if( r.y != 4.0 ) { return 5; }
+    f64 f = 3.0;
+    vec s = f * v * 2.0;
+    if( s.y != 12.0 ) { return 6; }
+
+    vec q = v * scale { 10.0 };
+    if( q.y != 20.0 ) { return 7; }
+
+    pair<i32> p = 10 + pair<i32> { 1, 2 };
+    if( p.a != 11 || p.b != 12 ) { return 8; }
+
+    // `*=( f64 )` in place, an integer literal too, as a lone function takes one; an `i64` it
+    // cannot take, so that is `v = v * two`.
+    v *= 2.0;
+    if( v.y != 4.0 ) { return 9; }
+    v *= 2;
+    if( v.y != 8.0 ) { return 10; }
+    i64 two = 2;
+    v *= two;
+    if( v.x != 8.0 || v.y != 0.0 ) { return 11; }
+
+    // A string literal on the left reaches a static before it would adopt.
+    if( "abc" * tally { 0 } != 3 ) { return 12; }
+
+    // From outside, the private `-( i64 )` is skipped for the public `-( f64 )`.
+    counter c = counter( 10.0 );
+    if( c - 4 != 6.0 || c.inside() != 1.0 ) { return 13; }
+
+    return 0;
+}

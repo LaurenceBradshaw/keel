@@ -1,7 +1,8 @@
 // M9.6: what each new operator must be. A binary one is `const`, takes one operand by value or
 // `const ref`, and returns a value; a compound assignment is not `const`, takes one operand, and
 // returns `void`; unary `-` and `~` are `const` and take none, and `-` with one is subtraction.
-// Each is declared once, though `operator-()` and `operator-( x )` are two.
+// Each is declared once, though `operator-()` and `operator-( x )` are two, and a binary or
+// compound one may be declared once per operand type.
 struct binary_not_const
 {
     i32 x;

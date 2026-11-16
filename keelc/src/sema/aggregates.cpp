@@ -321,7 +321,8 @@ Node_id Aggregates::find_operator( Node_id decl, Symbol_id name, std::size_t ope
 
     for( const Node_id member : ast_.members( decl ) )
     {
-        if( ast_.kind( member ) != Node_kind::Method_decl || ast_.name( member ) != name )
+        // A static operator is found through its right operand.
+        if( ast_.kind( member ) != Node_kind::Method_decl || ast_.name( member ) != name || ast_.is_static_method( member ) )
         {
             continue;
         }

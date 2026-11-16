@@ -1092,6 +1092,95 @@ Node_id Overloads::
     return Node_id {};
 }
 
+// `a op b` among several operators: a method of the left operand's type, or a static of the right
+// operand's, each with its own bindings. `shapes` is the two operands; both count in ranking, and the
+// one a candidate is declared on matches exactly. `quiet` reports nothing.
+Node_id Overloads::select_operator(
+    Node_id                         use,
+    std::span<const Node_id>        candidates,
+    std::span<const Bindings>       bindings,
+    std::span<const Argument_shape> shapes,
+    bool                            quiet
+)
+{
+    std::array<std::vector<std::size_t>, 3>          found;
+    std::array<std::vector<std::vector<Type_id>>, 3> targets;
+
+    for( std::size_t i = 0; i < candidates.size(); ++i )
+    {
+        const Node_id candidate = candidates[i];
+        const u32     implicit  = receiver_params( candidate );
+        const auto    operands  = shapes.subspan( implicit );
+
+        for( const Tier tier : { Tier::Exact, Tier::Widened, Tier::Adopted } )
+        {
+            if( candidate_accepts( candidate, implicit, operands, bindings[i], tier ) )
+            {
+                std::vector<Type_id> types = parameter_types( candidate, implicit, bindings[i] );
+                if( implicit != 0 )
+                {
+                    types.insert( types.begin(), shapes[0].type );
+                }
+
+                found[static_cast<std::size_t>( tier )].push_back( i );
+                targets[static_cast<std::size_t>( tier )].push_back( std::move( types ) );
+                break;
+            }
+        }
+    }
+
+    std::vector<std::size_t> matching;
+    for( std::size_t tier = 0; tier < found.size() && matching.empty(); ++tier )
+    {
+        for( const std::size_t k : closest( targets[tier], shapes ) )
+        {
+            matching.push_back( found[tier][k] );
+        }
+    }
+
+    if( matching.size() == 1 )
+    {
+        return candidates[matching.front()];
+    }
+
+    if( quiet || any_failed( table_, shapes ) )
+    {
+        return Node_id {};
+    }
+
+    const std::string_view symbol =
+        interner_.text( ast_.name( candidates.front() ) ).substr( std::string_view( "operator" ).size() );
+
+    // Each named with the type it is found on, as a call would name it.
+    std::string listed;
+    for( std::size_t i = 0, n = 0; i < candidates.size(); ++i )
+    {
+        if( matching.empty() || std::ranges::find( matching, i ) != matching.end() )
+        {
+            const std::size_t count = matching.empty() ? candidates.size() : matching.size();
+            listed += n == 0 ? "" : n + 1 == count ? " and " : ", ";
+            listed += fmt::format(
+                "`{}{}{}{}`",
+                interner_.text( ast_.name( ast_.enclosing_aggregate( candidates[i] ) ) ),
+                ast_.is_static_method( candidates[i] ) ? "::" : ".",
+                interner_.text( ast_.name( candidates[i] ) ),
+                signature_of( candidates[i], bindings[i] )
+            );
+            ++n;
+        }
+    }
+
+    reporter_.error_at(
+        ast_.span( use ),
+        matching.empty() ? fmt::format( "no `{}` takes these operands", symbol )
+                         : fmt::format( "this `{}` is ambiguous", symbol ),
+        matching.empty() ? fmt::format( "the ones declared are {}", listed )
+                         : fmt::format( "more than one matches: {}", listed )
+    );
+
+    return Node_id {};
+}
+
 // The arguments against the chosen callable's parameters. `shapes` is empty on the ordinary path,
 // and on the overloaded one it says which arguments selection has already typed. What is left for
 // the walk comes back in argument order rather than being walked here - §4.3.
@@ -1609,6 +1698,16 @@ void Overloads::check_overload_sets()
     }
 }
 
+// A binary operator that may be one of several, told apart by operand type.
+bool Overloads::operand_overload( Node_id member ) const
+{
+    const Symbol_id name = ast_.name( member );
+
+    return interner_.is_operator_name( name ) && ast_.params( member ).size() == 2 &&
+           Interner::overloads_by_operand( static_cast<Operator_name>( name.v - Interner::operator_name( Operator_name {} ).v )
+           );
+}
+
 void Overloads::check_aggregate_overloads( Node_id decl )
 {
     std::vector<Node_id> constructors;
@@ -1621,15 +1720,26 @@ void Overloads::check_aggregate_overloads( Node_id decl )
             continue;
         }
 
-        // An operator is declared once, which Signatures::check_operators enforces.
-        if( ast_.kind( member ) != Node_kind::Method_decl || interner_.is_operator_name( ast_.name( member ) ) )
+        if( ast_.kind( member ) != Node_kind::Method_decl )
+        {
+            continue;
+        }
+
+        // Most operators are declared once, which Signatures::check_operators enforces; a binary
+        // one overloads by its operand, and unary `-` shares its name.
+        const bool by_operand = operand_overload( member );
+
+        if( interner_.is_operator_name( ast_.name( member ) ) && !by_operand )
         {
             continue;
         }
 
         for( Node_id other = resolution_.next_overload( member ); other.is_valid(); other = resolution_.next_overload( other ) )
         {
-            check_overloaded_pair( member, other, true );
+            if( !by_operand || operand_overload( other ) )
+            {
+                check_overloaded_pair( member, other, true );
+            }
         }
     }
 

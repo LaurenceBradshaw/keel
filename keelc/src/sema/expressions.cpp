@@ -1957,6 +1957,12 @@ Type_id Expressions::infer_binary( Node_id id )
             return infer_operator_call( id, left, right, name );
         }
 
+        // `2.0 * v` or `"a" * v`: the right operand's type's statics, before any adoption.
+        if( literal_on_the_left && !is_comparison( op ) && !reflected_operators( known, name ).empty() )
+        {
+            return infer_reflected_operator( id, left, known, name, false );
+        }
+
         // `"a " + p`, where the literal cannot become `p`'s type and call its `+`: `str`'s own, which
         // builds a `joined_text`.
         if( literal_on_the_left && ast_.kind( left ) == Node_kind::String_literal && table_.prelude().str.is_valid() &&
@@ -1984,10 +1990,10 @@ Type_id Expressions::infer_binary( Node_id id )
             return infer_operator_call( id, left, right, name, true );
         }
 
-        // `2.0 * v`: a number literal on the left never calls the right's operator.
+        // `2.0 * v` with no static to take it: refused.
         if( !is_comparison( op ) && bounds_.has_operator( known, name ) )
         {
-            return refuse_reversed_operator( id, infer( left ), known );
+            return infer_reflected_operator( id, left, known, name, false );
         }
 
         // D41: a literal the other operand cannot hold is not a type error, because the comparison
@@ -2026,7 +2032,7 @@ Type_id Expressions::infer_binary( Node_id id )
 
         if( !is_comparison( op ) && !table_.is_error( lhs_type ) && bounds_.has_operator( rhs_type, name ) )
         {
-            return refuse_reversed_operator( id, lhs_type, rhs_type );
+            return infer_reflected_operator( id, left, rhs_type, name, true );
         }
     }
 
@@ -2345,6 +2351,21 @@ Type_id Expressions::infer_operator_call( Node_id id, Node_id object, Node_id ar
     const bool             equality    = name == Interner::operator_name( Operator_name::Equal_equal );
     const bool             comparison  = equality || name == Interner::operator_name( Operator_name::Compare );
 
+    // `v * m` where only `m`'s type declares a `*` taking a `v`.
+    if( any_reflected( name ) && table_.is_struct( object_type ) && !declares_operator_method( object_type, name ) )
+    {
+        if( !argument_typed )
+        {
+            argument_typed = operand_shapes( object_type, argument, argument_typed )[1].recorded;
+        }
+
+        if( const Type_id right = types_.type_of( argument );
+            argument_typed && right.is_valid() && !reflected_operators( right, name ).empty() )
+        {
+            return infer_reflected_operator( id, object, right, name, true );
+        }
+    }
+
     const Node_id method = find_operator(
         id,
         object_type,
@@ -2366,24 +2387,306 @@ Type_id Expressions::infer_operator_call( Node_id id, Node_id object, Node_id ar
         return types_.poison( id );
     }
 
+    const Node_id chosen = choose_operator( id, object_type, method, argument, argument_typed );
+
+    if( !chosen.is_valid() )
+    {
+        return types_.poison( id );
+    }
+
+    if( ast_.is_static_method( chosen ) )
+    {
+        // A struct literal is shaped by the type it names, and typed only now.
+        return call_static_operator(
+            id, chosen, argument_typed ? types_.type_of( argument ) : infer( argument ), object, true
+        );
+    }
+
+    return call_chosen_operator( id, object_type, chosen, argument, argument_typed, comparison );
+}
+
+// Whether `type`'s own declaration, or a block for it, has a method `name` taking an operand.
+bool Expressions::declares_operator_method( Type_id type, Symbol_id name ) const
+{
+    bool          unused = false;
+    const Node_id decl   = table_.get( type ).declaration;
+
+    return ( decl.is_valid() && aggregates_.find_operator( decl, name, 1, unused ).is_valid() ) ||
+           types_.conformances().block_declaring( ast_, table_, type, name ).is_valid();
+}
+
+// Whether any type declares a `static` operator `name`, so a right operand's type is worth asking.
+bool Expressions::any_reflected( Symbol_id name )
+{
+    if( reflected_names_.empty() )
+    {
+        reflected_names_.assign( static_cast<std::size_t>( Operator_name::Count ) + 1, false );
+        reflected_names_.back() = true; // filled
+
+        for( const Node_id decl : ast_.declarations( ast_.root() ) )
+        {
+            if( !is_aggregate( ast_.kind( decl ) ) && ast_.kind( decl ) != Node_kind::Interface_decl )
+            {
+                continue;
+            }
+
+            for( const Node_id member : ast_.members( decl ) )
+            {
+                if( ast_.kind( member ) == Node_kind::Method_decl && ast_.is_static_method( member ) &&
+                    Interner::is_operator_name( ast_.name( member ) ) )
+                {
+                    reflected_names_[ast_.name( member ).v - Interner::operator_name( Operator_name {} ).v] = true;
+                }
+            }
+        }
+    }
+
+    return Interner::is_operator_name( name ) && reflected_names_[name.v - Interner::operator_name( Operator_name {} ).v];
+}
+
+// `right`'s static operators `name` this code may call: its own, or a parameter's bounds' requirements.
+std::vector<Node_id> Expressions::reflected_operators( Type_id right, Symbol_id name ) const
+{
+    std::vector<Node_id> found;
+    std::vector<Node_id> declarations;
+
+    if( table_.is_parameter( right ) )
+    {
+        for( const Type_id owner : bounds_.method_owners( right, name ) )
+        {
+            declarations.push_back( table_.get( owner ).declaration );
+        }
+    }
+    else if( table_.is_struct( right ) && is_aggregate( ast_.kind( table_.get( right ).declaration ) ) )
+    {
+        declarations.push_back( table_.get( right ).declaration );
+    }
+
+    for( const Node_id decl : declarations )
+    {
+        for( const Node_id member : ast_.members( decl ) )
+        {
+            if( ast_.kind( member ) == Node_kind::Method_decl && ast_.name( member ) == name &&
+                ast_.is_static_method( member ) && ast_.params( member ).size() == 2 &&
+                ast_.is_visible_from( member, current_type() ) )
+            {
+                found.push_back( member );
+            }
+        }
+    }
+
+    return found;
+}
+
+// A bound's static requirement is reached through the bound declaring it, which lowering reads.
+void Expressions::record_reflected_through( Node_id id, Type_id right, Node_id method )
+{
+    if( !ast_.is_requirement( method ) )
+    {
+        return;
+    }
+
+    for( const Type_id owner : bounds_.method_owners( right, ast_.name( method ) ) )
+    {
+        if( table_.get( owner ).declaration == ast_.enclosing_aggregate( method ) )
+        {
+            callees_.record_through( id, owner );
+            return;
+        }
+    }
+}
+
+// `2.0 * m`: the right operand's type's static operators, the left operand's type unable to answer.
+Type_id Expressions::infer_reflected_operator( Node_id id, Node_id left, Type_id right_type, Symbol_id name, bool left_typed )
+{
+    const std::vector<Node_id> candidates = reflected_operators( right_type, name );
+
+    if( candidates.empty() )
+    {
+        return refuse_reversed_operator( id, left_typed ? types_.type_of( left ) : infer( left ), right_type );
+    }
+
+    Node_id chosen = candidates.front();
+
+    if( candidates.size() > 1 )
+    {
+        const Argument_shape                left_shape = operand_shapes( right_type, left, left_typed )[1];
+        const std::array<Argument_shape, 2> shapes {
+            left_shape, Argument_shape { .kind = Argument_kind::Typed, .type = right_type, .recorded = true }
+        };
+
+        std::vector<Bindings> bindings;
+        for( const Node_id c : candidates )
+        {
+            record_reflected_through( id, right_type, c );
+            bindings.push_back( operator_bindings( id, right_type, c ) );
+        }
+
+        chosen = overloads_.select_operator( id, candidates, bindings, shapes );
+
+        if( !chosen.is_valid() )
+        {
+            if( !left_typed )
+            {
+                infer( left );
+            }
+            return types_.poison( id );
+        }
+    }
+
+    return call_static_operator( id, chosen, right_type, left, left_typed );
+}
+
+// A static operator chosen for `a op b`: the left operand held to its first parameter, the right
+// one being the declaring type.
+Type_id Expressions::call_static_operator( Node_id id, Node_id method, Type_id right_type, Node_id left, bool left_typed )
+{
+    record_reflected_through( id, right_type, method );
+
+    const Bindings bindings  = operator_bindings( id, right_type, method );
+    const Type_id  parameter = table_.substitute( types_.type_of( ast_.params( method )[0] ), bindings );
+
+    if( !check_operand( left, parameter, left_typed ) )
+    {
+        return types_.poison( id );
+    }
+
+    callees_.record( id, method );
+
+    // A bound's requirement is not instantiated; lowering finds the implementer's at each instance.
+    if( !table_.is_parameter( right_type ) )
+    {
+        overloads_.record_method_instantiation( home_function(), id, method, right_type );
+    }
+
+    return types_.record( id, table_.substitute( types_.type_of( method ), bindings ) );
+}
+
+// The operands' shapes, the left one typed already: the right is typed here unless it is a literal.
+std::array<Argument_shape, 2> Expressions::operand_shapes( Type_id left, Node_id argument, bool& argument_typed )
+{
+    std::array<Argument_shape, 2> shapes;
+    shapes[0] = { .kind = Argument_kind::Typed, .type = left, .recorded = true };
+
+    if( argument_typed )
+    {
+        const Type_id given = types_.type_of( argument );
+        shapes[1]           = {
+                      .kind = table_.is_error( given ) ? Argument_kind::Anything : Argument_kind::Typed, .type = given, .recorded = true
+        };
+    }
+    else
+    {
+        shapes[1]      = argument_shape( argument );
+        argument_typed = shapes[1].recorded;
+    }
+
+    return shapes;
+}
+
+// The overload of `method`'s operator the right operand selects; `method` alone when it has no other.
+Node_id Expressions::choose_operator(
+    Node_id id, Type_id object_type, Node_id method, Node_id argument, bool& argument_typed, bool quiet, bool reflected
+)
+{
+    std::vector<Node_id> candidates;
+
+    for( Node_id c = method; c.is_valid(); c = overloads_.next_overload( c ) )
+    {
+        if( ast_.params( c ).size() == 2 && !ast_.is_static_method( c ) && ast_.is_visible_from( c, current_type() ) )
+        {
+            candidates.push_back( c );
+        }
+    }
+
+    reflected = reflected && any_reflected( ast_.name( method ) );
+
+    if( candidates.size() < 2 && !quiet && !reflected )
+    {
+        return method;
+    }
+
+    if( candidates.empty() )
+    {
+        candidates.push_back( method );
+    }
+
+    const std::array<Argument_shape, 2> shapes = operand_shapes( object_type, argument, argument_typed );
+
+    std::vector<Bindings> bindings;
+    for( const Node_id c : candidates )
+    {
+        bindings.push_back( operator_bindings( id, object_type, c ) );
+    }
+
+    // The right operand's statics compete with the left's methods.
+    if( reflected && shapes[1].kind == Argument_kind::Typed )
+    {
+        for( const Node_id c : reflected_operators( shapes[1].type, ast_.name( method ) ) )
+        {
+            record_reflected_through( id, shapes[1].type, c );
+            candidates.push_back( c );
+            bindings.push_back( operator_bindings( id, shapes[1].type, c ) );
+        }
+    }
+
+    if( candidates.size() == 1 && !quiet )
+    {
+        return method;
+    }
+
+    const Node_id chosen = overloads_.select_operator( id, candidates, bindings, shapes, quiet );
+
+    // A lone candidate takes an integer literal into a float, as a lone function does.
+    if( !chosen.is_valid() && quiet && candidates.size() == 1 && shapes[1].kind == Argument_kind::Integer &&
+        table_.is_float( table_.substitute( types_.type_of( ast_.params( method )[1] ), bindings.front() ) ) )
+    {
+        return method;
+    }
+
+    if( !chosen.is_valid() && !argument_typed && !quiet )
+    {
+        infer( argument );
+    }
+
+    return chosen;
+}
+
+// The right operand held to the chosen operator's parameter: checked, or, typed already, compared.
+bool Expressions::check_operand( Node_id argument, Type_id parameter, bool argument_typed )
+{
+    if( !argument_typed )
+    {
+        check( argument, parameter );
+        return true;
+    }
+
+    const Type_id given = types_.type_of( argument );
+
+    if( table_.is_error( given ) || bounds_.reaches( given, parameter ) )
+    {
+        return true;
+    }
+
+    reporter_.error_at(
+        ast_.span( argument ),
+        fmt::format( "expected `{}`, but got `{}`", table_.name( parameter ), table_.name( given ) ),
+        text_hint( argument, parameter, given )
+    );
+    return false;
+}
+
+Type_id Expressions::call_chosen_operator(
+    Node_id id, Type_id object_type, Node_id method, Node_id argument, bool argument_typed, bool comparison
+)
+{
     const Bindings                 bindings = operator_bindings( id, object_type, method );
     const std::span<const Node_id> params   = ast_.params( method );
 
     const Type_id parameter = table_.substitute( types_.type_of( params[1] ), bindings );
 
-    if( !argument_typed )
+    if( !check_operand( argument, parameter, argument_typed ) )
     {
-        check( argument, parameter );
-    }
-    // Typed already, so it is held to the parameter rather than checked again.
-    else if( const Type_id given = types_.type_of( argument );
-             !table_.is_error( given ) && !bounds_.reaches( given, parameter ) )
-    {
-        reporter_.error_at(
-            ast_.span( argument ),
-            fmt::format( "expected `{}`, but got `{}`", table_.name( parameter ), table_.name( given ) ),
-            text_hint( argument, parameter, given )
-        );
         return types_.poison( id );
     }
 
@@ -2428,8 +2731,23 @@ bool Expressions::check_compound_operator( Node_id id, Node_id value, Type_id ta
         return true;
     }
 
-    const bool    in_place = bounds_.has_operator( target_type, compound );
-    const Node_id method   = find_operator( id, target_type, value, in_place ? compound : base, {}, 1 );
+    // An `op=` that takes the value, else `a = a op b`.
+    const bool has_base    = bounds_.has_operator( target_type, base );
+    bool       in_place    = bounds_.has_operator( target_type, compound );
+    bool       value_typed = false;
+    Node_id    method      = find_operator( id, target_type, value, in_place ? compound : base, {}, 1 );
+
+    if( method.is_valid() && in_place && has_base )
+    {
+        const Node_id fits = choose_operator( id, target_type, method, value, value_typed, true, false );
+        in_place           = fits.is_valid();
+        method             = in_place ? fits : find_operator( id, target_type, value, base, {}, 1 );
+    }
+
+    if( method.is_valid() )
+    {
+        method = choose_operator( id, target_type, method, value, value_typed, false, false );
+    }
 
     if( !method.is_valid() )
     {
@@ -2439,7 +2757,7 @@ bool Expressions::check_compound_operator( Node_id id, Node_id value, Type_id ta
     const Bindings bindings = operator_bindings( id, target_type, method );
     const Type_id  param    = table_.substitute( types_.type_of( ast_.params( method )[1] ), bindings );
 
-    check( value, param );
+    check_operand( value, param, value_typed );
     callees_.record( id, method );
     overloads_.record_method_instantiation( home_function(), id, method, target_type );
 
@@ -2604,8 +2922,8 @@ Node_id Expressions::find_operator(
         return Node_id {};
     }
 
-    bool          malformed = false;
-    const Node_id method    = aggregates_.find_operator( declaration, name, operands, malformed );
+    bool    malformed = false;
+    Node_id method    = aggregates_.find_operator( declaration, name, operands, malformed );
 
     if( !method.is_valid() && malformed )
     {
@@ -2638,12 +2956,22 @@ Node_id Expressions::find_operator(
         return Node_id {};
     }
 
-    if( !ast_.is_visible_from( method, current_type() ) )
+    // A private overload is skipped from outside, for a visible one of the same arity (D29).
+    Node_id visible = method;
+    while( visible.is_valid() && ( !ast_.is_visible_from( visible, current_type() ) || ast_.is_static_method( visible ) ||
+                                   ast_.params( visible ).size() != ast_.params( method ).size() ) )
+    {
+        visible = overloads_.next_overload( visible );
+    }
+
+    if( !visible.is_valid() )
     {
         type_argument();
         aggregates_.report_private( id, method );
         return Node_id {};
     }
+
+    method = visible;
 
     // Lowering reads which instance the operator went through.
     if( table_.is_parameter( object_type ) )

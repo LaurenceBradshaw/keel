@@ -159,6 +159,14 @@ public:
     Node_id
     select_method( Node_id call, Node_id first, Type_id receiver, std::span<const Node_id> viable, std::span<const Type_id> through, std::span<const Argument_shape> shapes, Type_id& interface );
 
+    Node_id select_operator(
+        Node_id                         use,
+        std::span<const Node_id>        candidates,
+        std::span<const Bindings>       bindings,
+        std::span<const Argument_shape> shapes,
+        bool                            quiet = false
+    );
+
     // Everything about the arguments that is the callable's business - arity, types, and D2's
     // markers - reported here; the walking the answers imply is handed back in order.
     std::vector<Argument_work> check_call_arguments(
@@ -248,6 +256,7 @@ private:
     void                    check_overloaded_pair( Node_id first, Node_id second, bool member );
     void                    check_top_level_pair( Node_id first, Node_id second );
 
+    bool operand_overload( Node_id member ) const;
     void check_aggregate_overloads( Node_id decl );
 
     void refuse( Node_id second, std::string message, std::string help );

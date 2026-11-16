@@ -218,17 +218,37 @@ private:
     Type_id  infer_unary( Node_id id );
     Bindings operator_bindings( Node_id id, Type_id object_type, Node_id method ) const;
     Type_id  infer_operator_call( Node_id id, Node_id object, Node_id argument, Symbol_id name, bool argument_typed = false );
-    Type_id  infer_unary_operator( Node_id id, Type_id operand_type, Symbol_id name );
-    Type_id  refuse_reversed_operator( Node_id id, Type_id left, Type_id right );
-    Type_id  infer_index_operator( Node_id id, Type_id object_type );
-    Node_id  find_operator(
-         Node_id          id,
-         Type_id          object_type,
-         Node_id          argument,
-         Symbol_id        name,
-         std::string_view declaration_text,
-         std::size_t      operands
-     );
+    std::array<Argument_shape, 2> operand_shapes( Type_id left, Node_id argument, bool& argument_typed );
+    Node_id                       choose_operator(
+                              Node_id id,
+                              Type_id object_type,
+                              Node_id method,
+                              Node_id argument,
+                              bool&   argument_typed,
+                              bool    quiet     = false,
+                              bool    reflected = true
+                          );
+    bool                 declares_operator_method( Type_id type, Symbol_id name ) const;
+    bool                 any_reflected( Symbol_id name );
+    std::vector<Node_id> reflected_operators( Type_id right, Symbol_id name ) const;
+    void                 record_reflected_through( Node_id id, Type_id right, Node_id method );
+    Type_id infer_reflected_operator( Node_id id, Node_id left, Type_id right_type, Symbol_id name, bool left_typed );
+    Type_id call_static_operator( Node_id id, Node_id method, Type_id right_type, Node_id left, bool left_typed );
+    bool    check_operand( Node_id argument, Type_id parameter, bool argument_typed );
+    Type_id call_chosen_operator(
+        Node_id id, Type_id object_type, Node_id method, Node_id argument, bool argument_typed, bool comparison
+    );
+    Type_id infer_unary_operator( Node_id id, Type_id operand_type, Symbol_id name );
+    Type_id refuse_reversed_operator( Node_id id, Type_id left, Type_id right );
+    Type_id infer_index_operator( Node_id id, Type_id object_type );
+    Node_id find_operator(
+        Node_id          id,
+        Type_id          object_type,
+        Node_id          argument,
+        Symbol_id        name,
+        std::string_view declaration_text,
+        std::size_t      operands
+    );
     // `p( obj )`, where `p` holds an offset: a copy of that field of `obj`.
     Type_id field_application( Node_id id, Type_id offset );
 
@@ -352,6 +372,7 @@ private:
 
     // The markers a call or `yield` passes: the only places `ref` and `out` mean something.
     std::unordered_set<u32> received_;
+    std::vector<bool>       reflected_names_; // by Operator_name, then whether it is filled
 
     u32  unsafe_depth_ = 0; // an unsafe operation is permitted while this is non-zero
     bool unsafe_used_  = false;

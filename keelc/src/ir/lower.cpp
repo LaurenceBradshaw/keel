@@ -2418,6 +2418,33 @@ Lowering::lower_operator_call( Node_id id, Node_id method, const Bindings& bindi
     const Node_id    rhs  = ast_.rhs( id );
     const Token_kind op   = ast_.op( id );
 
+    // `2.0 * m`: the right operand's type's static, called with both.
+    if( ast_.is_static_method( method ) )
+    {
+        const std::array<Node_id, 2> operands { ast_.lhs( id ), rhs };
+
+        // A bound's: the implementer's static at the instance `T` stands for.
+        if( ast_.is_requirement( method ) )
+        {
+            Requirement_target target =
+                requirement_target( method, type_of( rhs ), types_.table().substitute( types_.through_of( id ), bindings_ ) );
+
+            assert( target.method.is_valid() && "a static requirement is answered by a declared method" );
+
+            return emit_call(
+                id,
+                target.method,
+                lower_call_arguments( operands, ast_.params( target.method ), target.at.bound ),
+                target.at.bound,
+                std::move( target.at.type_arguments )
+            );
+        }
+
+        const std::vector<Operand> arguments = lower_call_arguments( operands, ast_.params( method ), bindings );
+
+        return emit_call( id, method, arguments, bindings, std::move( type_arguments ), type_under( method, bindings ) );
+    }
+
     const Operand result =
         call_operator( id, method, lower_place( ast_.lhs( id ) ), { &rhs, 1 }, bindings, std::move( type_arguments ) );
 
