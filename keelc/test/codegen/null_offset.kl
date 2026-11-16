@@ -1,0 +1,14 @@
+// An offset into a run whose start folds to `nullptr` in a release build: C needs the null cast to
+// the element's pointer, as `void*` arithmetic is not C.
+struct B { i32[*] data; u64 size; };
+
+i32 main()
+{
+    B b = B { nullptr, 0 };
+    i32[*] end = nullptr;
+    unsafe
+    {
+        end = b.data + b.size;
+    }
+    return end == nullptr ? 0 : 1;
+}

@@ -1,0 +1,68 @@
+// codegen/null_offset.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl_7codegen_B;
+
+struct kl_7codegen_B
+{
+    int32_t* kl_data;
+    uint64_t kl_size;
+};
+_Static_assert( sizeof( struct kl_7codegen_B ) == 16 && _Alignof( struct kl_7codegen_B ) == 8 && offsetof( struct kl_7codegen_B, kl_data ) == 0 && offsetof( struct kl_7codegen_B, kl_size ) == 8, "layout" );
+
+int32_t kl_7codegen_4main__( void );
+
+#line 5 "codegen/null_offset.kl"
+int32_t kl_7codegen_4main__( void )
+{
+    int32_t kl_t0;
+    struct kl_7codegen_B kl_b_1;
+    struct kl_7codegen_B kl_t2;
+    int32_t* kl_end_3;
+    int32_t* kl_t4;
+    int32_t kl_t5;
+    bool kl_t6;
+#line 7 "codegen/null_offset.kl"
+    kl_t2.kl_data = NULL;
+#line 7 "codegen/null_offset.kl"
+    kl_t2.kl_size = 0;
+#line 7 "codegen/null_offset.kl"
+    kl_b_1 = kl_t2;
+    kl_end_3 = NULL;
+#line 11 "codegen/null_offset.kl"
+    kl_t4 = kl_b_1.kl_data + kl_b_1.kl_size;
+#line 11 "codegen/null_offset.kl"
+    kl_end_3 = kl_t4;
+#line 13 "codegen/null_offset.kl"
+    kl_t6 = kl_end_3 == NULL;
+#line 13 "codegen/null_offset.kl"
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb1:
+#line 13 "codegen/null_offset.kl"
+    kl_t5 = 0;
+#line 13 "codegen/null_offset.kl"
+    goto bb3;
+    bb2:
+#line 13 "codegen/null_offset.kl"
+    kl_t5 = 1;
+#line 13 "codegen/null_offset.kl"
+    goto bb3;
+    bb3:
+#line 13 "codegen/null_offset.kl"
+    kl_t0 = kl_t5;
+#line 13 "codegen/null_offset.kl"
+    return kl_t0;
+}
+
+int main( void )
+{
+    int32_t kl_t0;
+#line 5 "codegen/null_offset.kl"
+    kl_t0 = kl_7codegen_4main__(  );
+#line 5 "codegen/null_offset.kl"
+    return kl_t0;
+#line 5 "codegen/null_offset.kl"
+}
+

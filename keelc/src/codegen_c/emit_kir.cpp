@@ -1758,6 +1758,19 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
             return fmt::format( "( ( void ) {}, {} )", operand( rvalue.b ), operand( rvalue.a ) );
         }
 
+        // A folded null is C's `NULL`, a `void*`, so an offset from it names the element's pointer.
+        if( ( rvalue.op == Token_kind::Plus || rvalue.op == Token_kind::Minus ) &&
+            types_.table().is_many_pointer( rvalue.a.type ) && rvalue.a.kind == Operand_kind::Constant )
+        {
+            return fmt::format(
+                "( {} ) {} {} {}",
+                spelling_.type( rvalue.a.type ),
+                operand( rvalue.a ),
+                token_kind_spelling( rvalue.op ),
+                operand( rvalue.b )
+            );
+        }
+
         return fmt::format( "{} {} {}", operand( rvalue.a ), token_kind_spelling( rvalue.op ), operand( rvalue.b ) );
     }
 
