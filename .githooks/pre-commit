@@ -177,6 +177,22 @@ check_goldens()
     return "$bad"
 }
 
+# keelc's unit tests in Catch2 shards, two per core: the few slow solver tests set the floor, not the sum.
+check_units()
+{
+    local n=$(( $( nproc ) * 2 )) logs=() pids=() bad=0 i
+    for (( i = 0; i < n; i++ )); do
+        logs+=( "$( mktemp )" )
+        "${debug_bin}/keel_tests${exe}" --shard-count "$n" --shard-index "$i" > "${logs[-1]}" 2>&1 &
+        pids+=( $! )
+    done
+    for i in "${!pids[@]}"; do
+        wait "${pids[$i]}" || { cat "${logs[$i]}"; bad=1; }
+    done
+    rm -f "${logs[@]}"
+    return "$bad"
+}
+
 # keeldoc's own pages for its test package, then the stl's pages: regenerated into a scratch
 # directory, so a doc comment changed without regenerating fails here rather than going stale.
 check_docs()
@@ -209,7 +225,7 @@ echo "pre-commit:"
 step "copyright headers"   check_headers                             || exit 1
 step "clang-format"        check_format                              || exit 1
 step "build (debug)"       cmake --build --preset "${prefix}debug"   || exit 1
-step "unit tests"          "${debug_bin}/keel_tests${exe}"           || exit 1
+step "unit tests"          check_units                               || exit 1
 step "keeldoc unit tests"  "${debug_bin}/keeldoc_tests${exe}"        || exit 1
 step "runtime tests"       "${debug_bin}/keel_rt_tests${exe}"        || exit 1
 step "build (checked)"     cmake --build --preset "${prefix}checked" --target keelc || exit 1
