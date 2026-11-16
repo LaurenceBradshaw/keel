@@ -11,29 +11,30 @@
 <header><nav><a href="index.html"><img src="logo.svg" alt="">The Keel standard library</a></nav></header>
 <main>
 <h1><span class="kind">module</span> <a class="package" href="index.html">kl</a>::ring</h1>
+<ul class="contents">
+<li><a href="#ring"><code>ring</code></a> <span class="kind">class</span></li>
+<li><a href="#equatable-for-ring&lt;T,-N&gt;-where-T-:-equatable"><code>equatable for ring&lt;T, N&gt; where T : equatable</code></a> <span class="kind">implements</span></li>
+<li><a href="#hashable-for-ring&lt;T,-N&gt;-where-T-:-hashable"><code>hashable for ring&lt;T, N&gt; where T : hashable</code></a> <span class="kind">implements</span></li>
+</ul>
 <section class="entry">
 <h2><span class="kind">class</span> <span class="type">ring</span></h2>
 <div class="group" id="ring">
-<pre class="signature"><a class="anchor" href="#ring" aria-label="Link to ring">#</a><code><span class="kw">class</span> <span class="type">ring</span>&lt;T&gt; <span class="kw">implements</span> <a class="type" href="prelude.html#fixed_memory">fixed_memory</a>&lt;T&gt;</code></pre>
+<pre class="signature"><a class="anchor" href="#ring" aria-label="Link to ring">#</a><code><span class="kw">class</span> <span class="type">ring</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt; <span class="kw">implements</span> <a class="type" href="iterable.html#iterable">iterable</a>&lt;T&gt;, <a class="type" href="prelude.html#fixed_memory">fixed_memory</a>&lt;T&gt;</code></pre>
 <div class="doc">
-<p>A fixed-capacity double-ended queue of <code>T</code> that owns its elements and the block holding them.</p>
+<p>A double-ended queue of at most <code>N</code> elements of <code>T</code>, held inline: it never allocates.</p>
 <p>Elements are added and removed at either end in constant time, and indexed from 0 at the
-front. A ring never grows on its own: pushing onto a full one panics, <code>try_push_back</code> hands the
-element back, and <code>push_back_evict</code> makes room by removing the element at the other end. Only
-<code>reserve</code> changes the capacity. Dropping the ring drops every element.</p>
+front. Pushing onto a full ring panics, <code>try_push_back</code> hands the element back, and
+<code>push_back_evict</code> makes room by removing the element at the other end. Dropping the ring drops
+every element, back to front.</p>
 </div>
 </div>
-<h3>Construction</h3>
-<div class="group" id="ring.with_capacity">
-<pre class="signature"><a class="anchor" href="#ring.with_capacity" aria-label="Link to with_capacity">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#ring">ring</a>&lt;T&gt; <span class="fn">with_capacity</span>( <a class="prim" href="prelude.html#u64">u64</a> capacity )</code></pre>
-<div class="doc">
-<p>An empty ring with room for exactly <code>capacity</code> elements.</p>
-<h4>Panics</h4>
-<p>If <code>capacity</code> is 0.</p>
-</div>
-</div>
+<h3>Constructors</h3>
 <div class="group" id="ring.~ring">
 <pre class="signature"><a class="anchor" href="#ring.~ring" aria-label="Link to ~ring">#</a><code><span class="type">~ring</span>()</code></pre>
+</div>
+<h3>Internals</h3>
+<div class="group" id="ring.ring">
+<pre class="signature"><a class="anchor" href="#ring.ring" aria-label="Link to ring">#</a><code><span class="kw">public</span> <span class="type">ring</span>()</code></pre>
 </div>
 <h3>Size and capacity</h3>
 <div class="group" id="ring.size">
@@ -45,7 +46,7 @@ element back, and <code>push_back_evict</code> makes room by removing the elemen
 <div class="group" id="ring.capacity">
 <pre class="signature"><a class="anchor" href="#ring.capacity" aria-label="Link to capacity">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">capacity</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
-<p>How many elements the ring holds when full.</p>
+<p>The most elements the ring can hold, <code>N</code>.</p>
 </div>
 </div>
 <div class="group" id="ring.is_empty">
@@ -57,14 +58,7 @@ element back, and <code>push_back_evict</code> makes room by removing the elemen
 <div class="group" id="ring.is_full">
 <pre class="signature"><a class="anchor" href="#ring.is_full" aria-label="Link to is_full">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">is_full</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
-<p>Whether the ring holds as many elements as its capacity, so a push would panic.</p>
-</div>
-</div>
-<div class="group" id="ring.reserve">
-<pre class="signature"><a class="anchor" href="#ring.reserve" aria-label="Link to reserve">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">reserve</span>( <a class="prim" href="prelude.html#u64">u64</a> n )</code></pre>
-<div class="doc">
-<p>Makes room for at least <code>n</code> elements in all, not <code>n</code> more, moving the elements into a new
-block in order. Does nothing if the capacity is already that large.</p>
+<p>Whether the ring holds <code>N</code> elements, so a push would panic.</p>
 </div>
 </div>
 <h3>Reading</h3>
@@ -90,6 +84,18 @@ block in order. Does nothing if the capacity is already that large.</p>
 <p>The back element.</p>
 <h4>Panics</h4>
 <p>If the ring is empty.</p>
+</div>
+</div>
+<div class="group" id="ring.operator:">
+<pre class="signature"><a class="anchor" href="#ring.operator:" aria-label="Link to operator:">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator:</span>( <span class="kw">const</span> <span class="kw">ref</span> T item ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each element from front to back, read-only: <code>for( const ref T x : xs )</code>. The body may not
+change the ring.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ring.operator:" aria-label="Link to operator:">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator:</span>( <span class="kw">ref</span> T item )</code></pre>
+<div class="doc">
+<p>Each element from front to back, writable in place: <code>for( ref T x : xs )</code>. The body may not
+change the ring itself.</p>
 </div>
 </div>
 <h3>Adding</h3>
@@ -167,10 +173,18 @@ block in order. Does nothing if the capacity is already that large.</p>
 <div class="group" id="ring.clear">
 <pre class="signature"><a class="anchor" href="#ring.clear" aria-label="Link to clear">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">clear</span>()</code></pre>
 <div class="doc">
-<p>Drops every element; the capacity is kept.</p>
+<p>Drops every element, back to front.</p>
 </div>
 </div>
-<h3>Reordering</h3>
+<h3>Rearranging</h3>
+<div class="group" id="ring.replace">
+<pre class="signature"><a class="anchor" href="#ring.replace" aria-label="Link to replace">#</a><code><span class="kw">public</span> T <span class="fn">replace</span>( <a class="prim" href="prelude.html#u64">u64</a> index, <span class="kw">move</span> T value )</code></pre>
+<div class="doc">
+<p>Puts <code>value</code> <code>index</code> places from the front and returns the element that was there.</p>
+<h4>Panics</h4>
+<p>If <code>index</code> is not less than <code>size()</code>.</p>
+</div>
+</div>
 <div class="group" id="ring.swap">
 <pre class="signature"><a class="anchor" href="#ring.swap" aria-label="Link to swap">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">swap</span>( <a class="prim" href="prelude.html#u64">u64</a> a, <a class="prim" href="prelude.html#u64">u64</a> b )</code></pre>
 <div class="doc">
@@ -178,6 +192,32 @@ block in order. Does nothing if the capacity is already that large.</p>
 <h4>Panics</h4>
 <p>If either is not less than <code>size()</code>.</p>
 </div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">implements</span> <span class="">equatable for ring&lt;T, N&gt; where T : equatable</span></h2>
+<div class="group" id="equatable-for-ring&lt;T,-N&gt;-where-T-:-equatable">
+<pre class="signature"><a class="anchor" href="#equatable-for-ring&lt;T,-N&gt;-where-T-:-equatable" aria-label="Link to equatable for ring&lt;T, N&gt; where T : equatable">#</a><code><span class="kw">implements</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt; <a class="type" href="prelude.html#equatable">equatable</a> <span class="kw">for</span> <a class="type" href="#ring">ring</a>&lt;T, N&gt; <span class="kw">where</span> T : <a class="type" href="prelude.html#equatable">equatable</a></code></pre>
+<div class="doc">
+<p>Two rings are equal when they hold equal elements in the same order from the front.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="equatable-for-ring&lt;T,-N&gt;-where-T-:-equatable.operator==">
+<pre class="signature"><a class="anchor" href="#equatable-for-ring&lt;T,-N&gt;-where-T-:-equatable.operator==" aria-label="Link to operator==">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">operator==</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ring">ring</a>&lt;T, N&gt; other ) <span class="kw">const</span></code></pre>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">implements</span> <span class="">hashable for ring&lt;T, N&gt; where T : hashable</span></h2>
+<div class="group" id="hashable-for-ring&lt;T,-N&gt;-where-T-:-hashable">
+<pre class="signature"><a class="anchor" href="#hashable-for-ring&lt;T,-N&gt;-where-T-:-hashable" aria-label="Link to hashable for ring&lt;T, N&gt; where T : hashable">#</a><code><span class="kw">implements</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt; <a class="type" href="prelude.html#hashable">hashable</a> <span class="kw">for</span> <a class="type" href="#ring">ring</a>&lt;T, N&gt; <span class="kw">where</span> T : <a class="type" href="prelude.html#hashable">hashable</a></code></pre>
+<div class="doc">
+<p>A ring hashes each element from the front, then its size.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="hashable-for-ring&lt;T,-N&gt;-where-T-:-hashable.hash">
+<pre class="signature"><a class="anchor" href="#hashable-for-ring&lt;T,-N&gt;-where-T-:-hashable.hash" aria-label="Link to hash">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">hash</span>( <span class="kw">ref</span> <a class="type" href="prelude.html#hasher">hasher</a> h ) <span class="kw">const</span></code></pre>
 </div>
 </section>
 </main>

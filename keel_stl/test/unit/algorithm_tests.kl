@@ -78,7 +78,7 @@ private void sort_orders_arrays_and_rings( ref kl::test::context c )
         c.check_eq( numbers[i], sorted[i] );
     }
 
-    kl::ring<u64> wrapped = kl::ring<u64>::with_capacity( 4 );
+    kl::ring<u64, 4> wrapped = kl::ring<u64, 4>();
     wrapped.push_back( 9 );
     wrapped.push_back( 7 );
     wrapped.push_front( 8 );

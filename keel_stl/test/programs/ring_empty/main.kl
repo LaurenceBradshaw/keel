@@ -3,7 +3,7 @@ import kl::ring;
 
 i32 main()
 {
-    kl::ring<i32> values = kl::ring<i32>::with_capacity( 2 );
+    kl::ring<i32, 2> values = kl::ring<i32, 2>();
     values.push_back( 10 );
 
     if( values.pop_back() != 10 )

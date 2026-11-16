@@ -1,50 +1,20 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+import iterable;
 import optional;
 
-/// A fixed-capacity double-ended queue of `T` that owns its elements and the block holding them.
+/// A double-ended queue of at most `N` elements of `T`, held inline: it never allocates.
 ///
 /// Elements are added and removed at either end in constant time, and indexed from 0 at the
-/// front. A ring never grows on its own: pushing onto a full one panics, `try_push_back` hands the
-/// element back, and `push_back_evict` makes room by removing the element at the other end. Only
-/// `reserve` changes the capacity. Dropping the ring drops every element.
-class ring<T> implements fixed_memory<T>
+/// front. Pushing onto a full ring panics, `try_push_back` hands the element back, and
+/// `push_back_evict` makes room by removing the element at the other end. Dropping the ring drops
+/// every element, back to front.
+class ring<T, u64 N> implements iterable<T>, fixed_memory<T>
 {
-    /// --- Construction ---
-
-    /// An empty ring with room for exactly `capacity` elements.
-    ///
-    /// ### Panics
-    ///
-    /// If `capacity` is 0.
-    public static ring<T> with_capacity( u64 capacity )
-    {
-        if( capacity == 0 )
-        {
-            panic( "a ring needs a capacity" );
-        }
-        return ring<T>( capacity );
-    }
-
-    private ring( u64 capacity )
-    {
-        unsafe
-        {
-            data_ = alloc<T>( capacity );
-        }
-        head_ = 0;
-        count_ = 0;
-        cap_ = capacity;
-    }
-
     ~ring()
     {
-        unsafe
-        {
-            destroy_live();
-            free( data_ );
-        }
+        clear();
     }
 
     /// --- Size and capacity ---
@@ -55,10 +25,10 @@ class ring<T> implements fixed_memory<T>
         return count_;
     }
 
-    /// How many elements the ring holds when full.
+    /// The most elements the ring can hold, `N`.
     public u64 capacity() const
     {
-        return cap_;
+        return N;
     }
 
     /// Whether the ring holds no elements.
@@ -67,36 +37,10 @@ class ring<T> implements fixed_memory<T>
         return count_ == 0;
     }
 
-    /// Whether the ring holds as many elements as its capacity, so a push would panic.
+    /// Whether the ring holds `N` elements, so a push would panic.
     public bool is_full() const
     {
-        return count_ == cap_;
-    }
-
-    /// Makes room for at least `n` elements in all, not `n` more, moving the elements into a new
-    /// block in order. Does nothing if the capacity is already that large.
-    public void reserve( u64 n )
-    {
-        if( n <= cap_ )
-        {
-            return;
-        }
-
-        T[*] new_data;
-        unsafe
-        {
-            new_data = alloc<T>( n );
-
-            for( u64 i = 0; i < count_; i++ )
-            {
-                new_data[i] = move data_[slot( i )];
-            }
-
-            free( data_ );
-        }
-        head_ = 0;
-        cap_ = n;
-        data_ = new_data;
+        return count_ == N;
     }
 
     /// --- Reading ---
@@ -112,9 +56,10 @@ class ring<T> implements fixed_memory<T>
         {
             panic( "index out of range" );
         }
+
         unsafe
         {
-            return data_[slot( index )];
+            return slots_[slot( index )];
         }
     }
 
@@ -129,10 +74,8 @@ class ring<T> implements fixed_memory<T>
         {
             panic( "the ring is empty" );
         }
-        unsafe
-        {
-            return data_[head_];
-        }
+
+        return this[0];
     }
 
     /// The back element.
@@ -146,9 +89,33 @@ class ring<T> implements fixed_memory<T>
         {
             panic( "the ring is empty" );
         }
-        unsafe
+
+        return this[count_ - 1];
+    }
+
+    /// Each element from front to back, read-only: `for( const ref T x : xs )`. The body may not
+    /// change the ring.
+    public void operator:( const ref T item ) const
+    {
+        for( u64 i : 0..count_ )
         {
-            return data_[slot( count_ - 1 )];
+            unsafe
+            {
+                yield( slots_[slot( i )] );
+            }
+        }
+    }
+
+    /// Each element from front to back, writable in place: `for( ref T x : xs )`. The body may not
+    /// change the ring itself.
+    public void operator:( ref T item )
+    {
+        for( u64 i : 0..count_ )
+        {
+            unsafe
+            {
+                yield( ref slots_[slot( i )] );
+            }
         }
     }
 
@@ -161,14 +128,14 @@ class ring<T> implements fixed_memory<T>
     /// If the ring is full; `try_push_back` hands the element back instead.
     public void push_back( move T value )
     {
-        if( count_ == cap_ )
+        if( count_ == N )
         {
             panic( "the ring is full" );
         }
 
         unsafe
         {
-            data_[slot( count_ )] = move value;
+            slots_[slot( count_ )] = move value;
         }
         count_ += 1;
     }
@@ -180,16 +147,15 @@ class ring<T> implements fixed_memory<T>
     /// If the ring is full; `try_push_front` hands the element back instead.
     public void push_front( move T value )
     {
-        if( count_ == cap_ )
+        if( count_ == N )
         {
             panic( "the ring is full" );
         }
 
-        retreat_head();
-
+        head_ = head_ == 0 ? N - 1 : head_ - 1;
         unsafe
         {
-            data_[head_] = move value;
+            slots_[head_] = move value;
         }
         count_ += 1;
     }
@@ -264,16 +230,13 @@ class ring<T> implements fixed_memory<T>
             panic( "the ring is empty" );
         }
 
-        T result;
+        u64 front = head_;
+        head_     = slot( 1 );
+        count_ -= 1;
         unsafe
         {
-            result = move data_[head_];
+            return move slots_[front];
         }
-        
-        advance_head();
-
-        count_ -= 1;
-        return result;
     }
 
     /// Removes the back element and returns it.
@@ -291,8 +254,7 @@ class ring<T> implements fixed_memory<T>
         count_ -= 1;
         unsafe
         {
-            T result = move data_[slot( count_ )];
-            return result;
+            return move slots_[slot( count_ )];
         }
     }
 
@@ -318,15 +280,42 @@ class ring<T> implements fixed_memory<T>
         return optional::some( pop_back() );
     }
 
-    /// Drops every element; the capacity is kept.
+    /// Drops every element, back to front.
     public void clear()
     {
-        destroy_live();
+        while( count_ > 0 )
+        {
+            count_ -= 1;
+            unsafe
+            {
+                _ = move slots_[slot( count_ )];
+            }
+        }
         head_ = 0;
-        count_ = 0;
     }
 
-    /// --- Reordering ---
+    /// --- Rearranging ---
+
+    /// Puts `value` `index` places from the front and returns the element that was there.
+    ///
+    /// ### Panics
+    ///
+    /// If `index` is not less than `size()`.
+    public T replace( u64 index, move T value )
+    {
+        if( index >= count_ )
+        {
+            panic( "index out of range" );
+        }
+
+        u64 at = slot( index );
+        unsafe
+        {
+            T result  = move slots_[at];
+            slots_[at] = move value;
+            return result;
+        }
+    }
 
     /// Exchanges the elements `a` and `b` places from the front.
     ///
@@ -345,63 +334,62 @@ class ring<T> implements fixed_memory<T>
             return;
         }
 
+        u64 x = slot( a );
+        u64 y = slot( b );
         unsafe
         {
-            T temp = move data_[slot( a )];
-            data_[slot( a )] = move data_[slot( b )];
-            data_[slot( b )] = move temp;
+            T temp    = move slots_[x];
+            slots_[x] = move slots_[y];
+            slots_[y] = move temp;
         }
     }
 
     /// --- Internals ---
 
-    // The slot holding the element `index` places from the front, for `index` up to `cap_`.
+    // The slot holding the element `index` places from the front, for `index` up to `N`.
     private u64 slot( u64 index ) const
     {
-        return head_ + index - ( head_ + index >= cap_ ? cap_ : cast<u64>( 0 ) );
+        return head_ + index - ( head_ + index >= N ? N : cast<u64>( 0 ) );
     }
 
-    // Destroys the live elements, which run from `head_` and may wrap to the start of the block.
-    private void destroy_live()
-    {
-        u64 run = count_ < cap_ - head_ ? count_ : cap_ - head_;
-        unsafe
-        {
-            destroy( data_ + head_, run );
+    // `count_` elements are live, from slot `head_` on, wrapping at `N`; the rest are raw.
+    private T[?N] slots_;
+    private u64   head_  = 0;
+    private u64   count_ = 0;
+};
 
-            if( count_ > run )
+/// Two rings are equal when they hold equal elements in the same order from the front.
+implements<T, u64 N> equatable for ring<T, N> where T : equatable
+{
+    bool operator==( const ref ring<T, N> other ) const
+    {
+        if( this.size() != other.size() )
+        {
+            return false;
+        }
+
+        for( u64 i : 0..this.size() )
+        {
+            if( this[i] != other[i] )
             {
-                destroy( data_, count_ - run );
+                return false;
             }
         }
-    }
 
-    // Moves the front one slot later, as a pop from the front does.
-    private void advance_head()
+        return true;
+    }
+};
+
+/// A ring hashes each element from the front, then its size.
+implements<T, u64 N> hashable for ring<T, N> where T : hashable
+{
+    void hash( ref hasher h ) const
     {
-        head_++;
-        if( head_ == cap_ )
+        for( u64 i : 0..this.size() )
         {
-            head_ = 0;
+            this[i].hash( ref h );
         }
-    }
 
-    // Moves the front one slot earlier, as a push at the front does.
-    private void retreat_head()
-    {
-        if( head_ == 0 )
-        {
-            head_ = cap_ - 1;
-        }
-        else
-        {
-            head_--;
-        }
+        h.write( this.size() );
     }
-
-    // `count_` elements are live, from slot `head_` on, wrapping at `cap_`; the rest are raw.
-    private T[*] data_;
-    private u64 head_;
-    private u64 count_;
-    private u64 cap_;
 };

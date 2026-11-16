@@ -323,7 +323,11 @@ empty or holds <code>=</code> never is.</dd>
 <h3><a href="ring.html">ring</a></h3>
 <dl class="summaries">
 <dt><a href="ring.html#ring"><code>ring</code></a> <span class="kind">class</span></dt>
-<dd>A fixed-capacity double-ended queue of <code>T</code> that owns its elements and the block holding them.</dd>
+<dd>A double-ended queue of at most <code>N</code> elements of <code>T</code>, held inline: it never allocates.</dd>
+<dt><a href="ring.html#equatable-for-ring&lt;T,-N&gt;-where-T-:-equatable"><code>equatable for ring&lt;T, N&gt; where T : equatable</code></a> <span class="kind">implements</span></dt>
+<dd>Two rings are equal when they hold equal elements in the same order from the front.</dd>
+<dt><a href="ring.html#hashable-for-ring&lt;T,-N&gt;-where-T-:-hashable"><code>hashable for ring&lt;T, N&gt; where T : hashable</code></a> <span class="kind">implements</span></dt>
+<dd>A ring hashes each element from the front, then its size.</dd>
 </dl>
 </section>
 <section class="module">
