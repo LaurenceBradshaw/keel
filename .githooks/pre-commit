@@ -183,7 +183,9 @@ check_units()
     local n=$(( $( nproc ) * 2 )) logs=() pids=() bad=0 i
     for (( i = 0; i < n; i++ )); do
         logs+=( "$( mktemp )" )
-        "${debug_bin}/keel_tests${exe}" --shard-count "$n" --shard-index "$i" > "${logs[-1]}" 2>&1 &
+        # One seed for every shard: each process otherwise shuffles alone, so shards overlap and miss
+        # tests. Shuffled, not decl, since decl gives each shard a block and the slow ones sit together.
+        "${debug_bin}/keel_tests${exe}" --order rand --rng-seed 3 --shard-count "$n" --shard-index "$i" > "${logs[-1]}" 2>&1 &
         pids+=( $! )
     done
     for i in "${!pids[@]}"; do
