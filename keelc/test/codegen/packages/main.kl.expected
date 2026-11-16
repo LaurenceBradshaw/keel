@@ -5,10 +5,10 @@
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl_4geom_9perimeter__3i32( int32_t );
+int32_t kl_8packages4geom_9perimeter__3i32( int32_t );
 
 #line 2 "codegen/packages/geom.kl"
-int32_t kl_4geom_9perimeter__3i32( int32_t kl_side_1 )
+int32_t kl_8packages4geom_9perimeter__3i32( int32_t kl_side_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -146,16 +146,16 @@ int32_t kl_5plane4geom_4pick__3i32( int32_t kl_t1 )
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Point;
+struct kl_8packages_Point;
 struct kl_5plane4geom_Point;
 
 typedef int32_t ( *kl__fn__F3i32E3i32 )( int32_t );
 
-struct kl__Point
+struct kl_8packages_Point
 {
     int32_t kl_x;
 };
-_Static_assert( sizeof( struct kl__Point ) == 4 && _Alignof( struct kl__Point ) == 4 && offsetof( struct kl__Point, kl_x ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_8packages_Point ) == 4 && _Alignof( struct kl_8packages_Point ) == 4 && offsetof( struct kl_8packages_Point, kl_x ) == 0, "layout" );
 
 struct kl_5plane4geom_Point
 {
@@ -165,17 +165,17 @@ _Static_assert( sizeof( struct kl_5plane4geom_Point ) == 4 && _Alignof( struct k
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__4area__3i32( int32_t );
-int32_t kl__4pick__3i64( int64_t );
-int32_t kl__4main__( void );
+int32_t kl_8packages_4area__3i32( int32_t );
+int32_t kl_8packages_4pick__3i64( int64_t );
+int32_t kl_8packages_4main__( void );
 struct kl_5plane4geom_Point kl_5plane4geom_6origin__( void );
 int32_t kl_5plane4geom_4area__3i32( int32_t );
 int32_t kl_5plane4geom_4cube__3i32( int32_t );
 int32_t kl_5plane4geom_4pick__3i32( int32_t );
-int32_t kl_4geom_9perimeter__3i32( int32_t );
+int32_t kl_8packages4geom_9perimeter__3i32( int32_t );
 
 #line 6 "codegen/packages/main.kl"
-int32_t kl__4area__3i32( int32_t kl_side_1 )
+int32_t kl_8packages_4area__3i32( int32_t kl_side_1 )
 {
     int32_t kl_t0;
 #line 8 "codegen/packages/main.kl"
@@ -185,7 +185,7 @@ int32_t kl__4area__3i32( int32_t kl_side_1 )
 }
 
 #line 12 "codegen/packages/main.kl"
-int32_t kl__4pick__3i64( int64_t kl_t1 )
+int32_t kl_8packages_4pick__3i64( int64_t kl_t1 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
@@ -196,7 +196,7 @@ int32_t kl__4pick__3i64( int64_t kl_t1 )
 }
 
 #line 22 "codegen/packages/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_8packages_4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_x_1;
@@ -212,8 +212,8 @@ int32_t kl__4main__( void )
     bool kl_t11;
     struct kl_5plane4geom_Point kl_p_12;
     struct kl_5plane4geom_Point kl_t13;
-    struct kl__Point kl_q_14;
-    struct kl__Point kl_t15;
+    struct kl_8packages_Point kl_q_14;
+    struct kl_8packages_Point kl_t15;
     bool kl_t16;
     int32_t kl_t17;
     bool kl_t18;
@@ -227,7 +227,7 @@ int32_t kl__4main__( void )
 #line 24 "codegen/packages/main.kl"
     kl_x_1 = 3;
 #line 26 "codegen/packages/main.kl"
-    kl_t2 = kl__4area__3i32( kl_x_1 );
+    kl_t2 = kl_8packages_4area__3i32( kl_x_1 );
 #line 26 "codegen/packages/main.kl"
     kl_t3 = kl_t2 != 3;
 #line 26 "codegen/packages/main.kl"
@@ -303,7 +303,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb12:
 #line 41 "codegen/packages/main.kl"
-    kl_t19 = kl_4geom_9perimeter__3i32( 2 );
+    kl_t19 = kl_8packages4geom_9perimeter__3i32( 2 );
 #line 41 "codegen/packages/main.kl"
     kl_t20 = kl_t19 != 8;
 #line 41 "codegen/packages/main.kl"
@@ -316,7 +316,7 @@ int32_t kl__4main__( void )
     bb14:
     kl_t21 = ( int64_t ) kl_x_1;
 #line 43 "codegen/packages/main.kl"
-    kl_t22 = kl__4pick__3i64( kl_t21 );
+    kl_t22 = kl_8packages_4pick__3i64( kl_t21 );
 #line 43 "codegen/packages/main.kl"
     kl_t23 = kl_t22 != 1;
 #line 43 "codegen/packages/main.kl"
@@ -348,7 +348,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 22 "codegen/packages/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_8packages_4main__(  );
 #line 22 "codegen/packages/main.kl"
     return kl_t0;
 #line 22 "codegen/packages/main.kl"

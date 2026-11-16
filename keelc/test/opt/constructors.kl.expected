@@ -3,70 +3,70 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Box;
-struct kl__Held;
-struct kl__Logged;
+struct kl_3opt_Box;
+struct kl_3opt_Held;
+struct kl_3opt_Logged;
 
-struct kl__Box
+struct kl_3opt_Box
 {
     int32_t kl_value;
 };
-_Static_assert( sizeof( struct kl__Box ) == 4 && _Alignof( struct kl__Box ) == 4 && offsetof( struct kl__Box, kl_value ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_3opt_Box ) == 4 && _Alignof( struct kl_3opt_Box ) == 4 && offsetof( struct kl_3opt_Box, kl_value ) == 0, "layout" );
 
-struct kl__Held
+struct kl_3opt_Held
 {
-    struct kl__Box kl_box;
+    struct kl_3opt_Box kl_box;
     int32_t kl_n;
 };
-_Static_assert( sizeof( struct kl__Held ) == 8 && _Alignof( struct kl__Held ) == 4 && offsetof( struct kl__Held, kl_box ) == 0 && offsetof( struct kl__Held, kl_n ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_3opt_Held ) == 8 && _Alignof( struct kl_3opt_Held ) == 4 && offsetof( struct kl_3opt_Held, kl_box ) == 0 && offsetof( struct kl_3opt_Held, kl_n ) == 4, "layout" );
 
-struct kl__Logged
+struct kl_3opt_Logged
 {
     int32_t kl_value;
 };
-_Static_assert( sizeof( struct kl__Logged ) == 4 && _Alignof( struct kl__Logged ) == 4 && offsetof( struct kl__Logged, kl_value ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_3opt_Logged ) == 4 && _Alignof( struct kl_3opt_Logged ) == 4 && offsetof( struct kl_3opt_Logged, kl_value ) == 0, "layout" );
 
-int32_t kl__live__G;
+int32_t kl_3opt_live__G;
 
-void kl__3Box__R3Box_3i32__ctor( struct kl__Box*, int32_t );
-void kl__3Box__dtor( struct kl__Box* );
-void kl__4Held__R4Held_3i32__ctor( struct kl__Held*, int32_t );
-void kl__6Logged__R6Logged_3i32__ctor( struct kl__Logged*, int32_t );
-void kl__4fill__S6Logged( struct kl__Logged* );
-int32_t kl__5mixed__3i32_3i32( int32_t, int32_t );
-void kl__7consume__M3Box( struct kl__Box );
-int32_t kl__5local__( void );
-int32_t kl__8in_place__( void );
-int32_t kl__8branched__4bool( bool );
-int32_t kl__6handed__( void );
-int32_t kl__9sometimes__4bool( bool );
-int32_t kl__4main__( void );
+void kl_3opt_3Box__RQ3opt3Box_3i32__ctor( struct kl_3opt_Box*, int32_t );
+void kl_3opt_3Box__dtor( struct kl_3opt_Box* );
+void kl_3opt_4Held__RQ3opt4Held_3i32__ctor( struct kl_3opt_Held*, int32_t );
+void kl_3opt_6Logged__RQ3opt6Logged_3i32__ctor( struct kl_3opt_Logged*, int32_t );
+void kl_3opt_4fill__SQ3opt6Logged( struct kl_3opt_Logged* );
+int32_t kl_3opt_5mixed__3i32_3i32( int32_t, int32_t );
+void kl_3opt_7consume__MQ3opt3Box( struct kl_3opt_Box );
+int32_t kl_3opt_5local__( void );
+int32_t kl_3opt_8in_place__( void );
+int32_t kl_3opt_8branched__4bool( bool );
+int32_t kl_3opt_6handed__( void );
+int32_t kl_3opt_9sometimes__4bool( bool );
+int32_t kl_3opt_4main__( void );
 
 #line 11 "opt/constructors.kl"
-void kl__3Box__R3Box_3i32__ctor( struct kl__Box* kl_this_1, int32_t kl_v_2 )
+void kl_3opt_3Box__RQ3opt3Box_3i32__ctor( struct kl_3opt_Box* kl_this_1, int32_t kl_v_2 )
 {
     ( *kl_this_1 ).kl_value = kl_v_2;
-    kl__live__G = kl__live__G + 1;
+    kl_3opt_live__G = kl_3opt_live__G + 1;
     return;
 #line 15 "opt/constructors.kl"
 }
 
 #line 17 "opt/constructors.kl"
-void kl__3Box__dtor( struct kl__Box* kl_this_1 )
+void kl_3opt_3Box__dtor( struct kl_3opt_Box* kl_this_1 )
 {
     ( void ) kl_this_1;
 #line 19 "opt/constructors.kl"
-    kl__live__G = kl__live__G - 1;
+    kl_3opt_live__G = kl_3opt_live__G - 1;
     return;
 #line 20 "opt/constructors.kl"
 }
 
 #line 28 "opt/constructors.kl"
-void kl__4Held__R4Held_3i32__ctor( struct kl__Held* kl_this_1, int32_t kl_v_2 )
+void kl_3opt_4Held__RQ3opt4Held_3i32__ctor( struct kl_3opt_Held* kl_this_1, int32_t kl_v_2 )
 {
     int32_t kl_t3;
 #line 14 "opt/constructors.kl"
-    kl__live__G = kl__live__G + 1;
+    kl_3opt_live__G = kl_3opt_live__G + 1;
 #line 30 "opt/constructors.kl"
     ( *kl_this_1 ).kl_box.kl_value = kl_v_2;
     kl_t3 = kl_v_2 + 1;
@@ -77,16 +77,16 @@ void kl__4Held__R4Held_3i32__ctor( struct kl__Held* kl_this_1, int32_t kl_v_2 )
 }
 
 #line 41 "opt/constructors.kl"
-void kl__6Logged__R6Logged_3i32__ctor( struct kl__Logged* kl_this_1, int32_t kl_v_2 )
+void kl_3opt_6Logged__RQ3opt6Logged_3i32__ctor( struct kl_3opt_Logged* kl_this_1, int32_t kl_v_2 )
 {
     ( *kl_this_1 ).kl_value = kl_v_2;
-    kl__4fill__S6Logged( kl_this_1 );
+    kl_3opt_4fill__SQ3opt6Logged( kl_this_1 );
     return;
 #line 45 "opt/constructors.kl"
 }
 
 #line 47 "opt/constructors.kl"
-void kl__4fill__S6Logged( struct kl__Logged* kl_this_1 )
+void kl_3opt_4fill__SQ3opt6Logged( struct kl_3opt_Logged* kl_this_1 )
 {
     int32_t kl_t2;
     int32_t kl_t3;
@@ -94,13 +94,13 @@ void kl__4fill__S6Logged( struct kl__Logged* kl_this_1 )
     int32_t kl_t5;
     int32_t kl_t6;
 #line 49 "opt/constructors.kl"
-    kl_t2 = kl__5mixed__3i32_3i32( ( *kl_this_1 ).kl_value, 1 );
+    kl_t2 = kl_3opt_5mixed__3i32_3i32( ( *kl_this_1 ).kl_value, 1 );
 #line 49 "opt/constructors.kl"
-    kl_t3 = kl__5mixed__3i32_3i32( ( *kl_this_1 ).kl_value, 2 );
+    kl_t3 = kl_3opt_5mixed__3i32_3i32( ( *kl_this_1 ).kl_value, 2 );
 #line 49 "opt/constructors.kl"
     kl_t4 = kl_t2 + kl_t3;
 #line 49 "opt/constructors.kl"
-    kl_t5 = kl__5mixed__3i32_3i32( ( *kl_this_1 ).kl_value, 3 );
+    kl_t5 = kl_3opt_5mixed__3i32_3i32( ( *kl_this_1 ).kl_value, 3 );
 #line 49 "opt/constructors.kl"
     kl_t6 = kl_t4 + kl_t5;
 #line 49 "opt/constructors.kl"
@@ -110,7 +110,7 @@ void kl__4fill__S6Logged( struct kl__Logged* kl_this_1 )
 }
 
 #line 55 "opt/constructors.kl"
-int32_t kl__5mixed__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
+int32_t kl_3opt_5mixed__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 {
     int32_t kl_t0;
     int32_t kl_c_3;
@@ -159,18 +159,18 @@ int32_t kl__5mixed__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 }
 
 #line 66 "opt/constructors.kl"
-void kl__7consume__M3Box( struct kl__Box kl_t1 )
+void kl_3opt_7consume__MQ3opt3Box( struct kl_3opt_Box kl_t1 )
 {
     ( void ) kl_t1;
 #line 19 "opt/constructors.kl"
-    kl__live__G = kl__live__G - 1;
+    kl_3opt_live__G = kl_3opt_live__G - 1;
 #line 68 "opt/constructors.kl"
     return;
 #line 68 "opt/constructors.kl"
 }
 
 #line 71 "opt/constructors.kl"
-int32_t kl__5local__( void )
+int32_t kl_3opt_5local__( void )
 {
     int32_t kl_t0;
     bool kl_t1;
@@ -178,7 +178,7 @@ int32_t kl__5local__( void )
     int32_t kl_t3;
     int32_t kl_t4;
 #line 14 "opt/constructors.kl"
-    kl_t3 = kl__live__G + 1;
+    kl_t3 = kl_3opt_live__G + 1;
 #line 75 "opt/constructors.kl"
     kl_t1 = kl_t3 != 1;
 #line 75 "opt/constructors.kl"
@@ -202,7 +202,7 @@ int32_t kl__5local__( void )
     return kl_t0;
     bb5:
 #line 19 "opt/constructors.kl"
-    kl_t4 = kl__live__G;
+    kl_t4 = kl_3opt_live__G;
 #line 81 "opt/constructors.kl"
     kl_t2 = kl_t4 == 0;
 #line 81 "opt/constructors.kl"
@@ -210,7 +210,7 @@ int32_t kl__5local__( void )
 }
 
 #line 85 "opt/constructors.kl"
-int32_t kl__8in_place__( void )
+int32_t kl_3opt_8in_place__( void )
 {
     int32_t kl_t0;
     bool kl_t1;
@@ -218,7 +218,7 @@ int32_t kl__8in_place__( void )
     int32_t kl_t3;
     int32_t kl_t4;
 #line 14 "opt/constructors.kl"
-    kl_t3 = kl__live__G + 1;
+    kl_t3 = kl_3opt_live__G + 1;
 #line 89 "opt/constructors.kl"
     kl_t1 = kl_t3 != 1;
 #line 89 "opt/constructors.kl"
@@ -242,7 +242,7 @@ int32_t kl__8in_place__( void )
     return kl_t0;
     bb5:
 #line 19 "opt/constructors.kl"
-    kl_t4 = kl__live__G;
+    kl_t4 = kl_3opt_live__G;
 #line 95 "opt/constructors.kl"
     kl_t2 = kl_t4 == 0;
 #line 95 "opt/constructors.kl"
@@ -250,11 +250,11 @@ int32_t kl__8in_place__( void )
 }
 
 #line 99 "opt/constructors.kl"
-int32_t kl__8branched__4bool( bool kl_c_1 )
+int32_t kl_3opt_8branched__4bool( bool kl_c_1 )
 {
     int32_t kl_t0;
-    struct kl__Box kl_b_2;
-    struct kl__Box* kl_t3;
+    struct kl_3opt_Box kl_b_2;
+    struct kl_3opt_Box* kl_t3;
     int32_t kl_t4;
     int32_t kl_t6;
     bool kl_t7;
@@ -276,7 +276,7 @@ int32_t kl__8branched__4bool( bool kl_c_1 )
     goto bb3;
     bb3:
 #line 102 "opt/constructors.kl"
-    kl__3Box__R3Box_3i32__ctor( kl_t3, kl_t4 );
+    kl_3opt_3Box__RQ3opt3Box_3i32__ctor( kl_t3, kl_t4 );
     if ( kl_c_1 ) goto bb4; else goto bb5;
     bb4:
 #line 103 "opt/constructors.kl"
@@ -296,7 +296,7 @@ int32_t kl__8branched__4bool( bool kl_c_1 )
     bb7:
     kl_t0 = 3;
 #line 19 "opt/constructors.kl"
-    kl__live__G = kl__live__G - 1;
+    kl_3opt_live__G = kl_3opt_live__G - 1;
 #line 105 "opt/constructors.kl"
     return kl_t0;
     bb8:
@@ -314,9 +314,9 @@ int32_t kl__8branched__4bool( bool kl_c_1 )
     return kl_t0;
     bb11:
 #line 19 "opt/constructors.kl"
-    kl_t9 = kl__live__G - 1;
+    kl_t9 = kl_3opt_live__G - 1;
 #line 19 "opt/constructors.kl"
-    kl__live__G = kl_t9;
+    kl_3opt_live__G = kl_t9;
 #line 109 "opt/constructors.kl"
     kl_t8 = kl_t9 == 0;
 #line 109 "opt/constructors.kl"
@@ -324,11 +324,11 @@ int32_t kl__8branched__4bool( bool kl_c_1 )
 }
 
 #line 112 "opt/constructors.kl"
-int32_t kl__6handed__( void )
+int32_t kl_3opt_6handed__( void )
 {
     int32_t kl_t0;
-    struct kl__Logged kl_l_1;
-    struct kl__Logged* kl_t2;
+    struct kl_3opt_Logged kl_l_1;
+    struct kl_3opt_Logged* kl_t2;
     int32_t kl_t4;
     int32_t kl_t5;
     int32_t kl_t6;
@@ -338,14 +338,14 @@ int32_t kl__6handed__( void )
 #line 114 "opt/constructors.kl"
     kl_t2 = &kl_l_1;
 #line 114 "opt/constructors.kl"
-    kl__6Logged__R6Logged_3i32__ctor( kl_t2, 2 );
-    kl_t4 = kl__5mixed__3i32_3i32( 2, 1 );
+    kl_3opt_6Logged__RQ3opt6Logged_3i32__ctor( kl_t2, 2 );
+    kl_t4 = kl_3opt_5mixed__3i32_3i32( 2, 1 );
 #line 115 "opt/constructors.kl"
-    kl_t5 = kl__5mixed__3i32_3i32( 2, 2 );
+    kl_t5 = kl_3opt_5mixed__3i32_3i32( 2, 2 );
 #line 115 "opt/constructors.kl"
     kl_t6 = kl_t4 + kl_t5;
 #line 115 "opt/constructors.kl"
-    kl_t7 = kl__5mixed__3i32_3i32( 2, 3 );
+    kl_t7 = kl_3opt_5mixed__3i32_3i32( 2, 3 );
 #line 115 "opt/constructors.kl"
     kl_t8 = kl_t6 + kl_t7;
 #line 115 "opt/constructors.kl"
@@ -368,32 +368,32 @@ int32_t kl__6handed__( void )
 }
 
 #line 119 "opt/constructors.kl"
-int32_t kl__9sometimes__4bool( bool kl_c_1 )
+int32_t kl_3opt_9sometimes__4bool( bool kl_c_1 )
 {
     int32_t kl_t0;
-    struct kl__Box kl_b_2;
+    struct kl_3opt_Box kl_b_2;
     bool kl_t3;
     bool kl_t4;
     int32_t kl_t5;
 #line 13 "opt/constructors.kl"
     kl_b_2.kl_value = 9;
-    kl_t5 = kl__live__G + 1;
+    kl_t5 = kl_3opt_live__G + 1;
 #line 14 "opt/constructors.kl"
-    kl__live__G = kl_t5;
+    kl_3opt_live__G = kl_t5;
 #line 122 "opt/constructors.kl"
     kl_t4 = true;
     if ( kl_c_1 ) goto bb1; else goto bb2;
     bb1:
     kl_t4 = false;
 #line 19 "opt/constructors.kl"
-    kl__live__G = kl_t5 - 1;
+    kl_3opt_live__G = kl_t5 - 1;
 #line 68 "opt/constructors.kl"
     goto bb2;
     bb2:
 #line 127 "opt/constructors.kl"
-    if ( kl_t4 ) kl__3Box__dtor( &kl_b_2 );
+    if ( kl_t4 ) kl_3opt_3Box__dtor( &kl_b_2 );
 #line 129 "opt/constructors.kl"
-    kl_t3 = kl__live__G == 0;
+    kl_t3 = kl_3opt_live__G == 0;
 #line 129 "opt/constructors.kl"
     if ( kl_t3 ) goto bb3; else goto bb4;
     bb3:
@@ -412,7 +412,7 @@ int32_t kl__9sometimes__4bool( bool kl_c_1 )
 }
 
 #line 132 "opt/constructors.kl"
-int32_t kl__4main__( void )
+int32_t kl_3opt_4main__( void )
 {
     int32_t kl_t0;
     bool kl_t1;
@@ -424,14 +424,14 @@ int32_t kl__4main__( void )
     int32_t kl_t7;
     int32_t kl_t8;
 #line 14 "opt/constructors.kl"
-    kl_t7 = kl__live__G + 1;
+    kl_t7 = kl_3opt_live__G + 1;
 #line 75 "opt/constructors.kl"
     kl_t5 = kl_t7 != 1;
 #line 75 "opt/constructors.kl"
     if ( kl_t5 ) goto bb9; else goto bb11;
     bb1:
 #line 145 "opt/constructors.kl"
-    kl_t0 = kl__8branched__4bool( false );
+    kl_t0 = kl_3opt_8branched__4bool( false );
 #line 143 "opt/constructors.kl"
     goto bb2;
     bb2:
@@ -440,7 +440,7 @@ int32_t kl__4main__( void )
 #line 147 "opt/constructors.kl"
     if ( kl_t2 ) goto bb3; else goto bb4;
     bb3:
-    kl_t0 = kl__6handed__(  );
+    kl_t0 = kl_3opt_6handed__(  );
 #line 147 "opt/constructors.kl"
     goto bb4;
     bb4:
@@ -449,7 +449,7 @@ int32_t kl__4main__( void )
 #line 151 "opt/constructors.kl"
     if ( kl_t3 ) goto bb5; else goto bb6;
     bb5:
-    kl_t0 = kl__9sometimes__4bool( true );
+    kl_t0 = kl_3opt_9sometimes__4bool( true );
 #line 151 "opt/constructors.kl"
     goto bb6;
     bb6:
@@ -458,7 +458,7 @@ int32_t kl__4main__( void )
 #line 155 "opt/constructors.kl"
     if ( kl_t4 ) goto bb7; else goto bb8;
     bb7:
-    kl_t0 = kl__9sometimes__4bool( false );
+    kl_t0 = kl_3opt_9sometimes__4bool( false );
 #line 155 "opt/constructors.kl"
     goto bb8;
     bb8:
@@ -476,16 +476,16 @@ int32_t kl__4main__( void )
     goto bb2;
     bb11:
 #line 19 "opt/constructors.kl"
-    kl_t8 = kl__live__G;
+    kl_t8 = kl_3opt_live__G;
 #line 81 "opt/constructors.kl"
     kl_t6 = kl_t8 == 0;
 #line 81 "opt/constructors.kl"
     if ( kl_t6 ) goto bb12; else goto bb10;
     bb12:
 #line 19 "opt/constructors.kl"
-    kl__live__G = 0;
+    kl_3opt_live__G = 0;
 #line 141 "opt/constructors.kl"
-    kl_t0 = kl__8branched__4bool( true );
+    kl_t0 = kl_3opt_8branched__4bool( true );
 #line 143 "opt/constructors.kl"
     kl_t1 = kl_t0 == 0;
 #line 143 "opt/constructors.kl"
@@ -497,7 +497,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 132 "opt/constructors.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_3opt_4main__(  );
 #line 132 "opt/constructors.kl"
     return kl_t0;
 #line 132 "opt/constructors.kl"

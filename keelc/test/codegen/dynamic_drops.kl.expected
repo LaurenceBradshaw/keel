@@ -305,48 +305,48 @@ void kl_1t7console_6eprint__4bool_7textual( bool kl_value_1, struct kl_7prelude_
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__P;
-struct kl__Two;
-struct kl__Three;
-struct kl__Outer;
+struct kl_7codegen_P;
+struct kl_7codegen_Two;
+struct kl_7codegen_Three;
+struct kl_7codegen_Outer;
 struct kl_7prelude_str;
-struct kl_7prelude_result__I1P_3i32E;
+struct kl_7prelude_result__IQ7codegen1P_3i32E;
 struct kl_7prelude_result__I4void_3i32E;
-struct kl_2kl8optional_optional__I1PE;
-struct kl__A4_1P;
+struct kl_2kl8optional_optional__IQ7codegen1PE;
+struct kl__A4_Q7codegen1P;
 
 struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
 
 struct kl_7prelude_textual__vtable;
 struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
 
-struct kl__P
+struct kl_7codegen_P
 {
     uint64_t* kl_d;
 };
-_Static_assert( sizeof( struct kl__P ) == 8 && _Alignof( struct kl__P ) == 8 && offsetof( struct kl__P, kl_d ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_P ) == 8 && _Alignof( struct kl_7codegen_P ) == 8 && offsetof( struct kl_7codegen_P, kl_d ) == 0, "layout" );
 
-struct kl__Two
+struct kl_7codegen_Two
 {
-    struct kl__P kl_a;
-    struct kl__P kl_b;
+    struct kl_7codegen_P kl_a;
+    struct kl_7codegen_P kl_b;
 };
-_Static_assert( sizeof( struct kl__Two ) == 16 && _Alignof( struct kl__Two ) == 8 && offsetof( struct kl__Two, kl_a ) == 0 && offsetof( struct kl__Two, kl_b ) == 8, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Two ) == 16 && _Alignof( struct kl_7codegen_Two ) == 8 && offsetof( struct kl_7codegen_Two, kl_a ) == 0 && offsetof( struct kl_7codegen_Two, kl_b ) == 8, "layout" );
 
-struct kl__Three
+struct kl_7codegen_Three
 {
-    struct kl__P kl_a;
-    struct kl__P kl_b;
-    struct kl__P kl_c;
+    struct kl_7codegen_P kl_a;
+    struct kl_7codegen_P kl_b;
+    struct kl_7codegen_P kl_c;
 };
-_Static_assert( sizeof( struct kl__Three ) == 24 && _Alignof( struct kl__Three ) == 8 && offsetof( struct kl__Three, kl_a ) == 0 && offsetof( struct kl__Three, kl_b ) == 8 && offsetof( struct kl__Three, kl_c ) == 16, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Three ) == 24 && _Alignof( struct kl_7codegen_Three ) == 8 && offsetof( struct kl_7codegen_Three, kl_a ) == 0 && offsetof( struct kl_7codegen_Three, kl_b ) == 8 && offsetof( struct kl_7codegen_Three, kl_c ) == 16, "layout" );
 
-struct kl__Outer
+struct kl_7codegen_Outer
 {
-    struct kl__Two kl_a;
-    struct kl__P kl_b;
+    struct kl_7codegen_Two kl_a;
+    struct kl_7codegen_P kl_b;
 };
-_Static_assert( sizeof( struct kl__Outer ) == 24 && _Alignof( struct kl__Outer ) == 8 && offsetof( struct kl__Outer, kl_a ) == 0 && offsetof( struct kl__Outer, kl_b ) == 16, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Outer ) == 24 && _Alignof( struct kl_7codegen_Outer ) == 8 && offsetof( struct kl_7codegen_Outer, kl_a ) == 0 && offsetof( struct kl_7codegen_Outer, kl_b ) == 16, "layout" );
 
 struct kl_7prelude_str
 {
@@ -355,14 +355,14 @@ struct kl_7prelude_str
 };
 _Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
-struct kl_7prelude_result__I1P_3i32E
+struct kl_7prelude_result__IQ7codegen1P_3i32E
 {
     int32_t tag;
     union
     {
         struct
         {
-            struct kl__P kl_2ok_value;
+            struct kl_7codegen_P kl_2ok_value;
         };
         struct
         {
@@ -370,7 +370,7 @@ struct kl_7prelude_result__I1P_3i32E
         };
     };
 };
-_Static_assert( sizeof( struct kl_7prelude_result__I1P_3i32E ) == 16 && _Alignof( struct kl_7prelude_result__I1P_3i32E ) == 8 && offsetof( struct kl_7prelude_result__I1P_3i32E, kl_2ok_value ) == 8 && offsetof( struct kl_7prelude_result__I1P_3i32E, kl_3err_error ) == 8, "layout" );
+_Static_assert( sizeof( struct kl_7prelude_result__IQ7codegen1P_3i32E ) == 16 && _Alignof( struct kl_7prelude_result__IQ7codegen1P_3i32E ) == 8 && offsetof( struct kl_7prelude_result__IQ7codegen1P_3i32E, kl_2ok_value ) == 8 && offsetof( struct kl_7prelude_result__IQ7codegen1P_3i32E, kl_3err_error ) == 8, "layout" );
 
 struct kl_7prelude_result__I4void_3i32E
 {
@@ -385,24 +385,24 @@ struct kl_7prelude_result__I4void_3i32E
 };
 _Static_assert( sizeof( struct kl_7prelude_result__I4void_3i32E ) == 8 && _Alignof( struct kl_7prelude_result__I4void_3i32E ) == 4 && offsetof( struct kl_7prelude_result__I4void_3i32E, kl_3err_error ) == 4, "layout" );
 
-struct kl_2kl8optional_optional__I1PE
+struct kl_2kl8optional_optional__IQ7codegen1PE
 {
     int32_t tag;
     union
     {
         struct
         {
-            struct kl__P kl_4some_value;
+            struct kl_7codegen_P kl_4some_value;
         };
     };
 };
-_Static_assert( sizeof( struct kl_2kl8optional_optional__I1PE ) == 16 && _Alignof( struct kl_2kl8optional_optional__I1PE ) == 8 && offsetof( struct kl_2kl8optional_optional__I1PE, kl_4some_value ) == 8, "layout" );
+_Static_assert( sizeof( struct kl_2kl8optional_optional__IQ7codegen1PE ) == 16 && _Alignof( struct kl_2kl8optional_optional__IQ7codegen1PE ) == 8 && offsetof( struct kl_2kl8optional_optional__IQ7codegen1PE, kl_4some_value ) == 8, "layout" );
 
-struct kl__A4_1P
+struct kl__A4_Q7codegen1P
 {
-    struct kl__P e[4];
+    struct kl_7codegen_P e[4];
 };
-_Static_assert( sizeof( struct kl__A4_1P ) == 32 && _Alignof( struct kl__A4_1P ) == 8, "layout" );
+_Static_assert( sizeof( struct kl__A4_Q7codegen1P ) == 32 && _Alignof( struct kl__A4_Q7codegen1P ) == 8, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -410,34 +410,34 @@ struct kl_7prelude_textual__vtable
     struct kl__run__L2u8__ref ( *kl__7as_text__ )( void* );
 };
 
-int64_t kl__live__G = 0;
-int64_t kl__ops__G = 0;
-int64_t kl__failing__G = 0;
+int64_t kl_7codegen_live__G = 0;
+int64_t kl_7codegen_ops__G = 0;
+int64_t kl_7codegen_failing__G = 0;
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__1P__R1P__ctor( struct kl__P* );
-void kl__1P__dtor( struct kl__P* );
-struct kl_7prelude_result__I1P_3i32E kl__3get__( void );
-void kl__4sink__M1P( struct kl__P );
-struct kl_7prelude_result__I4void_3i32E kl__12dynamic_init__4bool( bool );
-struct kl_7prelude_result__I4void_3i32E kl__12dynamic_drop__4bool( bool );
-struct kl_7prelude_result__I4void_3i32E kl__19struct_dynamic_drop__4bool_4bool_4bool( bool, bool, bool );
-struct kl_7prelude_result__I4void_3i32E kl__16field_assignment__4bool( bool );
-struct kl_7prelude_result__I4void_3i32E kl__11assignment2__4bool_4bool( bool, bool );
-struct kl_7prelude_result__I4void_3i32E kl__11assignment1__4bool( bool );
-struct kl_7prelude_result__I4void_3i32E kl__12array_simple__( void );
-struct kl_7prelude_result__I4void_3i32E kl__22mixed_drop_and_nondrop__( void );
-struct kl_7prelude_result__I4void_3i32E kl__9init_move__4bool( bool );
-struct kl_7prelude_result__I1P_3i32E kl__12after_return__( void );
-struct kl_7prelude_result__I4void_3i32E kl__18after_init_by_loop__( void );
-struct kl_7prelude_result__I4void_3i32E kl__4body__3u64( uint64_t );
-int32_t kl__4main__( void );
-void kl_7prelude_6result__I1P_3i32E__dtor( struct kl_7prelude_result__I1P_3i32E* );
-void kl_2kl8optional_8optional__I1PE__dtor( struct kl_2kl8optional_optional__I1PE* );
-void kl__A4_1P__dtor( struct kl__A4_1P* );
+void kl_7codegen_1P__RQ7codegen1P__ctor( struct kl_7codegen_P* );
+void kl_7codegen_1P__dtor( struct kl_7codegen_P* );
+struct kl_7prelude_result__IQ7codegen1P_3i32E kl_7codegen_3get__( void );
+void kl_7codegen_4sink__MQ7codegen1P( struct kl_7codegen_P );
+struct kl_7prelude_result__I4void_3i32E kl_7codegen_12dynamic_init__4bool( bool );
+struct kl_7prelude_result__I4void_3i32E kl_7codegen_12dynamic_drop__4bool( bool );
+struct kl_7prelude_result__I4void_3i32E kl_7codegen_19struct_dynamic_drop__4bool_4bool_4bool( bool, bool, bool );
+struct kl_7prelude_result__I4void_3i32E kl_7codegen_16field_assignment__4bool( bool );
+struct kl_7prelude_result__I4void_3i32E kl_7codegen_11assignment2__4bool_4bool( bool, bool );
+struct kl_7prelude_result__I4void_3i32E kl_7codegen_11assignment1__4bool( bool );
+struct kl_7prelude_result__I4void_3i32E kl_7codegen_12array_simple__( void );
+struct kl_7prelude_result__I4void_3i32E kl_7codegen_22mixed_drop_and_nondrop__( void );
+struct kl_7prelude_result__I4void_3i32E kl_7codegen_9init_move__4bool( bool );
+struct kl_7prelude_result__IQ7codegen1P_3i32E kl_7codegen_12after_return__( void );
+struct kl_7prelude_result__I4void_3i32E kl_7codegen_18after_init_by_loop__( void );
+struct kl_7prelude_result__I4void_3i32E kl_7codegen_4body__3u64( uint64_t );
+int32_t kl_7codegen_4main__( void );
+void kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( struct kl_7prelude_result__IQ7codegen1P_3i32E* );
+void kl_2kl8optional_8optional__IQ7codegen1PE__dtor( struct kl_2kl8optional_optional__IQ7codegen1PE* );
+void kl__A4_Q7codegen1P__dtor( struct kl__A4_Q7codegen1P* );
 void kl_1t7console_5print__7textual_7textual( struct kl_7prelude_textual__ref, struct kl_7prelude_textual__ref );
 void kl_1t7console_5print__3i64_7textual( int64_t, struct kl_7prelude_textual__ref );
 void kl_1t7console_5print__3u64_7textual( uint64_t, struct kl_7prelude_textual__ref );
@@ -448,7 +448,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 14 "codegen/dynamic_drops.kl"
-void kl__1P__R1P__ctor( struct kl__P* kl_this_1 )
+void kl_7codegen_1P__RQ7codegen1P__ctor( struct kl_7codegen_P* kl_this_1 )
 {
     uint64_t* kl_t2;
     bool kl_t3;
@@ -460,7 +460,7 @@ void kl__1P__R1P__ctor( struct kl__P* kl_this_1 )
 #line 14 "codegen/dynamic_drops.kl"
     ( *( *kl_this_1 ).kl_d ) = 0;
 #line 14 "codegen/dynamic_drops.kl"
-    kl_t3 = __builtin_add_overflow( kl__live__G, 1, &( int64_t ) { 0 } );
+    kl_t3 = __builtin_add_overflow( kl_7codegen_live__G, 1, &( int64_t ) { 0 } );
 #line 14 "codegen/dynamic_drops.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -468,21 +468,21 @@ void kl__1P__R1P__ctor( struct kl__P* kl_this_1 )
     kl_rt_panic( "codegen/dynamic_drops.kl", 14, "arithmetic overflow: live + 1" );
     bb2:
 #line 14 "codegen/dynamic_drops.kl"
-    kl_t4 = kl__live__G + 1;
+    kl_t4 = kl_7codegen_live__G + 1;
 #line 14 "codegen/dynamic_drops.kl"
-    kl__live__G = kl_t4;
+    kl_7codegen_live__G = kl_t4;
 #line 14 "codegen/dynamic_drops.kl"
     return;
 #line 14 "codegen/dynamic_drops.kl"
 }
 
 #line 15 "codegen/dynamic_drops.kl"
-void kl__1P__dtor( struct kl__P* kl_this_1 )
+void kl_7codegen_1P__dtor( struct kl_7codegen_P* kl_this_1 )
 {
     bool kl_t2;
     int64_t kl_t3;
 #line 15 "codegen/dynamic_drops.kl"
-    kl_t2 = __builtin_sub_overflow( kl__live__G, 1, &( int64_t ) { 0 } );
+    kl_t2 = __builtin_sub_overflow( kl_7codegen_live__G, 1, &( int64_t ) { 0 } );
 #line 15 "codegen/dynamic_drops.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -490,9 +490,9 @@ void kl__1P__dtor( struct kl__P* kl_this_1 )
     kl_rt_panic( "codegen/dynamic_drops.kl", 15, "arithmetic overflow: live - 1" );
     bb2:
 #line 15 "codegen/dynamic_drops.kl"
-    kl_t3 = kl__live__G - 1;
+    kl_t3 = kl_7codegen_live__G - 1;
 #line 15 "codegen/dynamic_drops.kl"
-    kl__live__G = kl_t3;
+    kl_7codegen_live__G = kl_t3;
 #line 15 "codegen/dynamic_drops.kl"
     kl_rt_free( ( *kl_this_1 ).kl_d );
 #line 15 "codegen/dynamic_drops.kl"
@@ -501,16 +501,16 @@ void kl__1P__dtor( struct kl__P* kl_this_1 )
 }
 
 #line 18 "codegen/dynamic_drops.kl"
-struct kl_7prelude_result__I1P_3i32E kl__3get__( void )
+struct kl_7prelude_result__IQ7codegen1P_3i32E kl_7codegen_3get__( void )
 {
-    struct kl_7prelude_result__I1P_3i32E kl_t0;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t0;
     bool kl_t1;
     int64_t kl_t2;
     bool kl_t3;
-    struct kl_7prelude_result__I1P_3i32E kl_t4;
-    struct kl_7prelude_result__I1P_3i32E kl_t5;
-    struct kl__P kl_t6;
-    struct kl__P* kl_t7;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t4;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t5;
+    struct kl_7codegen_P kl_t6;
+    struct kl_7codegen_P* kl_t7;
     bool kl_t9;
     bool kl_t10;
     bool kl_t11;
@@ -521,7 +521,7 @@ struct kl_7prelude_result__I1P_3i32E kl__3get__( void )
 #line 20 "codegen/dynamic_drops.kl"
     kl_t11 = false;
 #line 20 "codegen/dynamic_drops.kl"
-    kl_t1 = __builtin_add_overflow( kl__ops__G, 1, &( int64_t ) { 0 } );
+    kl_t1 = __builtin_add_overflow( kl_7codegen_ops__G, 1, &( int64_t ) { 0 } );
 #line 20 "codegen/dynamic_drops.kl"
     if ( kl_t1 ) goto bb1; else goto bb2;
     bb1:
@@ -529,10 +529,10 @@ struct kl_7prelude_result__I1P_3i32E kl__3get__( void )
     kl_rt_panic( "codegen/dynamic_drops.kl", 20, "arithmetic overflow: ops + 1" );
     bb2:
 #line 20 "codegen/dynamic_drops.kl"
-    kl_t2 = kl__ops__G + 1;
+    kl_t2 = kl_7codegen_ops__G + 1;
 #line 20 "codegen/dynamic_drops.kl"
-    kl__ops__G = kl_t2;
-    kl_t3 = kl__ops__G == kl__failing__G;
+    kl_7codegen_ops__G = kl_t2;
+    kl_t3 = kl_7codegen_ops__G == kl_7codegen_failing__G;
 #line 21 "codegen/dynamic_drops.kl"
     if ( kl_t3 ) goto bb3; else goto bb4;
     bb3:
@@ -548,7 +548,7 @@ struct kl_7prelude_result__I1P_3i32E kl__3get__( void )
 #line 23 "codegen/dynamic_drops.kl"
     kl_t9 = false;
 #line 23 "codegen/dynamic_drops.kl"
-    if ( kl_t9 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t4 );
+    if ( kl_t9 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t4 );
 #line 23 "codegen/dynamic_drops.kl"
     kl_t9 = false;
 #line 23 "codegen/dynamic_drops.kl"
@@ -560,7 +560,7 @@ struct kl_7prelude_result__I1P_3i32E kl__3get__( void )
 #line 25 "codegen/dynamic_drops.kl"
     kl_t11 = true;
 #line 25 "codegen/dynamic_drops.kl"
-    kl__1P__R1P__ctor( kl_t7 );
+    kl_7codegen_1P__RQ7codegen1P__ctor( kl_t7 );
 #line 25 "codegen/dynamic_drops.kl"
     kl_t5.tag = 0;
 #line 25 "codegen/dynamic_drops.kl"
@@ -576,9 +576,9 @@ struct kl_7prelude_result__I1P_3i32E kl__3get__( void )
 #line 25 "codegen/dynamic_drops.kl"
     kl_t10 = false;
 #line 25 "codegen/dynamic_drops.kl"
-    if ( kl_t10 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t5 );
+    if ( kl_t10 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t5 );
 #line 25 "codegen/dynamic_drops.kl"
-    if ( kl_t11 ) kl__1P__dtor( &kl_t6 );
+    if ( kl_t11 ) kl_7codegen_1P__dtor( &kl_t6 );
 #line 25 "codegen/dynamic_drops.kl"
     kl_t11 = false;
 #line 25 "codegen/dynamic_drops.kl"
@@ -588,24 +588,24 @@ struct kl_7prelude_result__I1P_3i32E kl__3get__( void )
 }
 
 #line 28 "codegen/dynamic_drops.kl"
-void kl__4sink__M1P( struct kl__P kl_t1 )
+void kl_7codegen_4sink__MQ7codegen1P( struct kl_7codegen_P kl_t1 )
 {
 #line 28 "codegen/dynamic_drops.kl"
-    kl__1P__dtor( &kl_t1 );
+    kl_7codegen_1P__dtor( &kl_t1 );
 #line 28 "codegen/dynamic_drops.kl"
     return;
 #line 28 "codegen/dynamic_drops.kl"
 }
 
 #line 49 "codegen/dynamic_drops.kl"
-struct kl_7prelude_result__I4void_3i32E kl__12dynamic_init__4bool( bool kl_c_1 )
+struct kl_7prelude_result__I4void_3i32E kl_7codegen_12dynamic_init__4bool( bool kl_c_1 )
 {
     struct kl_7prelude_result__I4void_3i32E kl_t0;
-    struct kl__P kl_x_2;
-    struct kl_7prelude_result__I1P_3i32E kl_t3;
-    struct kl_7prelude_result__I1P_3i32E kl_t4;
+    struct kl_7codegen_P kl_x_2;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t3;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t4;
     bool kl_t5;
-    struct kl__P kl_t6;
+    struct kl_7codegen_P kl_t6;
     struct kl_7prelude_result__I4void_3i32E kl_t7;
     bool kl_t8;
     bool kl_t9;
@@ -620,7 +620,7 @@ struct kl_7prelude_result__I4void_3i32E kl__12dynamic_init__4bool( bool kl_c_1 )
     kl_t8 = false;
     if ( kl_c_1 ) goto bb1; else goto bb4;
     bb1:
-    kl_t3 = kl__3get__(  );
+    kl_t3 = kl_7codegen_3get__(  );
 #line 54 "codegen/dynamic_drops.kl"
     kl_t9 = true;
 #line 54 "codegen/dynamic_drops.kl"
@@ -637,7 +637,7 @@ struct kl_7prelude_result__I4void_3i32E kl__12dynamic_init__4bool( bool kl_c_1 )
 #line 54 "codegen/dynamic_drops.kl"
     kl_t10 = true;
 #line 54 "codegen/dynamic_drops.kl"
-    if ( kl_t8 ) kl__1P__dtor( &kl_x_2 );
+    if ( kl_t8 ) kl_7codegen_1P__dtor( &kl_x_2 );
 #line 54 "codegen/dynamic_drops.kl"
     kl_x_2 = kl_t6;
 #line 54 "codegen/dynamic_drops.kl"
@@ -645,9 +645,9 @@ struct kl_7prelude_result__I4void_3i32E kl__12dynamic_init__4bool( bool kl_c_1 )
 #line 54 "codegen/dynamic_drops.kl"
     kl_t8 = true;
 #line 54 "codegen/dynamic_drops.kl"
-    if ( kl_t10 ) kl__1P__dtor( &kl_t6 );
+    if ( kl_t10 ) kl_7codegen_1P__dtor( &kl_t6 );
 #line 54 "codegen/dynamic_drops.kl"
-    if ( kl_t9 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t3 );
+    if ( kl_t9 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t3 );
 #line 54 "codegen/dynamic_drops.kl"
     kl_t9 = false;
 #line 54 "codegen/dynamic_drops.kl"
@@ -659,9 +659,9 @@ struct kl_7prelude_result__I4void_3i32E kl__12dynamic_init__4bool( bool kl_c_1 )
 #line 54 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t4.kl_3err_error;
 #line 54 "codegen/dynamic_drops.kl"
-    if ( kl_t9 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t3 );
+    if ( kl_t9 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t3 );
 #line 54 "codegen/dynamic_drops.kl"
-    if ( kl_t8 ) kl__1P__dtor( &kl_x_2 );
+    if ( kl_t8 ) kl_7codegen_1P__dtor( &kl_x_2 );
 #line 54 "codegen/dynamic_drops.kl"
     kl_t8 = false;
 #line 54 "codegen/dynamic_drops.kl"
@@ -671,7 +671,7 @@ struct kl_7prelude_result__I4void_3i32E kl__12dynamic_init__4bool( bool kl_c_1 )
 #line 56 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t7;
 #line 56 "codegen/dynamic_drops.kl"
-    if ( kl_t8 ) kl__1P__dtor( &kl_x_2 );
+    if ( kl_t8 ) kl_7codegen_1P__dtor( &kl_x_2 );
 #line 56 "codegen/dynamic_drops.kl"
     kl_t8 = false;
 #line 56 "codegen/dynamic_drops.kl"
@@ -679,16 +679,16 @@ struct kl_7prelude_result__I4void_3i32E kl__12dynamic_init__4bool( bool kl_c_1 )
 }
 
 #line 59 "codegen/dynamic_drops.kl"
-struct kl_7prelude_result__I4void_3i32E kl__12dynamic_drop__4bool( bool kl_c_1 )
+struct kl_7prelude_result__I4void_3i32E kl_7codegen_12dynamic_drop__4bool( bool kl_c_1 )
 {
     struct kl_7prelude_result__I4void_3i32E kl_t0;
-    struct kl__P kl_x_2;
-    struct kl_7prelude_result__I1P_3i32E kl_t3;
-    struct kl_7prelude_result__I1P_3i32E kl_t4;
+    struct kl_7codegen_P kl_x_2;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t3;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t4;
     bool kl_t5;
-    struct kl__P kl_t6;
-    struct kl_2kl8optional_optional__I1PE kl_o_7;
-    struct kl_2kl8optional_optional__I1PE kl_t8;
+    struct kl_7codegen_P kl_t6;
+    struct kl_2kl8optional_optional__IQ7codegen1PE kl_o_7;
+    struct kl_2kl8optional_optional__IQ7codegen1PE kl_t8;
     struct kl_7prelude_result__I4void_3i32E kl_t9;
     bool kl_t10;
     bool kl_t11;
@@ -705,7 +705,7 @@ struct kl_7prelude_result__I4void_3i32E kl__12dynamic_drop__4bool( bool kl_c_1 )
 #line 61 "codegen/dynamic_drops.kl"
     kl_t10 = false;
 #line 61 "codegen/dynamic_drops.kl"
-    kl_t3 = kl__3get__(  );
+    kl_t3 = kl_7codegen_3get__(  );
 #line 61 "codegen/dynamic_drops.kl"
     kl_t11 = true;
 #line 61 "codegen/dynamic_drops.kl"
@@ -728,9 +728,9 @@ struct kl_7prelude_result__I4void_3i32E kl__12dynamic_drop__4bool( bool kl_c_1 )
 #line 61 "codegen/dynamic_drops.kl"
     kl_t10 = true;
 #line 61 "codegen/dynamic_drops.kl"
-    if ( kl_t12 ) kl__1P__dtor( &kl_t6 );
+    if ( kl_t12 ) kl_7codegen_1P__dtor( &kl_t6 );
 #line 61 "codegen/dynamic_drops.kl"
-    if ( kl_t11 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t3 );
+    if ( kl_t11 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t3 );
 #line 61 "codegen/dynamic_drops.kl"
     kl_t11 = false;
 #line 61 "codegen/dynamic_drops.kl"
@@ -742,7 +742,7 @@ struct kl_7prelude_result__I4void_3i32E kl__12dynamic_drop__4bool( bool kl_c_1 )
 #line 61 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t4.kl_3err_error;
 #line 61 "codegen/dynamic_drops.kl"
-    if ( kl_t11 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t3 );
+    if ( kl_t11 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t3 );
 #line 61 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb3:
@@ -761,10 +761,10 @@ struct kl_7prelude_result__I4void_3i32E kl__12dynamic_drop__4bool( bool kl_c_1 )
 #line 64 "codegen/dynamic_drops.kl"
     kl_t13 = false;
 #line 64 "codegen/dynamic_drops.kl"
-    if ( kl_t13 ) kl_2kl8optional_8optional__I1PE__dtor( &kl_t8 );
+    if ( kl_t13 ) kl_2kl8optional_8optional__IQ7codegen1PE__dtor( &kl_t8 );
 #line 64 "codegen/dynamic_drops.kl"
     kl_t13 = false;
-    kl_2kl8optional_8optional__I1PE__dtor( &kl_o_7 );
+    kl_2kl8optional_8optional__IQ7codegen1PE__dtor( &kl_o_7 );
 #line 62 "codegen/dynamic_drops.kl"
     goto bb4;
     bb4:
@@ -773,7 +773,7 @@ struct kl_7prelude_result__I4void_3i32E kl__12dynamic_drop__4bool( bool kl_c_1 )
 #line 66 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t9;
 #line 66 "codegen/dynamic_drops.kl"
-    if ( kl_t10 ) kl__1P__dtor( &kl_x_2 );
+    if ( kl_t10 ) kl_7codegen_1P__dtor( &kl_x_2 );
 #line 66 "codegen/dynamic_drops.kl"
     kl_t10 = false;
 #line 66 "codegen/dynamic_drops.kl"
@@ -781,41 +781,41 @@ struct kl_7prelude_result__I4void_3i32E kl__12dynamic_drop__4bool( bool kl_c_1 )
 }
 
 #line 69 "codegen/dynamic_drops.kl"
-struct kl_7prelude_result__I4void_3i32E kl__19struct_dynamic_drop__4bool_4bool_4bool( bool kl_c0_1, bool kl_c1_2, bool kl_c_3 )
+struct kl_7prelude_result__I4void_3i32E kl_7codegen_19struct_dynamic_drop__4bool_4bool_4bool( bool kl_c0_1, bool kl_c1_2, bool kl_c_3 )
 {
     struct kl_7prelude_result__I4void_3i32E kl_t0;
     uint64_t kl_i_4;
     uint64_t kl_t5;
     bool kl_t6;
-    struct kl__Three kl_x_7;
-    struct kl__Two kl_y_8;
+    struct kl_7codegen_Three kl_x_7;
+    struct kl_7codegen_Two kl_y_8;
     bool kl_t9;
     bool kl_t10;
     bool kl_t11;
     bool kl_t12;
     bool kl_t13;
-    struct kl__Three kl_t14;
-    struct kl_7prelude_result__I1P_3i32E kl_t15;
-    struct kl_7prelude_result__I1P_3i32E kl_t16;
+    struct kl_7codegen_Three kl_t14;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t15;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t16;
     bool kl_t17;
-    struct kl__P kl_t18;
-    struct kl_7prelude_result__I1P_3i32E kl_t19;
-    struct kl_7prelude_result__I1P_3i32E kl_t20;
+    struct kl_7codegen_P kl_t18;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t19;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t20;
     bool kl_t21;
-    struct kl__P kl_t22;
-    struct kl_7prelude_result__I1P_3i32E kl_t23;
-    struct kl_7prelude_result__I1P_3i32E kl_t24;
+    struct kl_7codegen_P kl_t22;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t23;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t24;
     bool kl_t25;
-    struct kl__P kl_t26;
-    struct kl__Two kl_t27;
-    struct kl_7prelude_result__I1P_3i32E kl_t28;
-    struct kl_7prelude_result__I1P_3i32E kl_t29;
+    struct kl_7codegen_P kl_t26;
+    struct kl_7codegen_Two kl_t27;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t28;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t29;
     bool kl_t30;
-    struct kl__P kl_t31;
-    struct kl_7prelude_result__I1P_3i32E kl_t32;
-    struct kl_7prelude_result__I1P_3i32E kl_t33;
+    struct kl_7codegen_P kl_t31;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t32;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t33;
     bool kl_t34;
-    struct kl__P kl_t35;
+    struct kl_7codegen_P kl_t35;
     struct kl_7prelude_result__I4void_3i32E kl_t38;
     bool kl_t39;
     bool kl_t40;
@@ -946,7 +946,7 @@ struct kl_7prelude_result__I4void_3i32E kl__19struct_dynamic_drop__4bool_4bool_4
 #line 77 "codegen/dynamic_drops.kl"
     kl_t46 = false;
 #line 77 "codegen/dynamic_drops.kl"
-    kl_t15 = kl__3get__(  );
+    kl_t15 = kl_7codegen_3get__(  );
 #line 77 "codegen/dynamic_drops.kl"
     kl_t47 = true;
 #line 77 "codegen/dynamic_drops.kl"
@@ -963,7 +963,7 @@ struct kl_7prelude_result__I4void_3i32E kl__19struct_dynamic_drop__4bool_4bool_4
 #line 77 "codegen/dynamic_drops.kl"
     kl_t48 = true;
 #line 77 "codegen/dynamic_drops.kl"
-    kl_t19 = kl__3get__(  );
+    kl_t19 = kl_7codegen_3get__(  );
 #line 77 "codegen/dynamic_drops.kl"
     kl_t49 = true;
 #line 77 "codegen/dynamic_drops.kl"
@@ -980,21 +980,21 @@ struct kl_7prelude_result__I4void_3i32E kl__19struct_dynamic_drop__4bool_4bool_4
 #line 77 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t16.kl_3err_error;
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t47 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t15 );
+    if ( kl_t47 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t15 );
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t43 ) kl__1P__dtor( &kl_y_8.kl_b );
+    if ( kl_t43 ) kl_7codegen_1P__dtor( &kl_y_8.kl_b );
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t42 ) kl__1P__dtor( &kl_y_8.kl_a );
+    if ( kl_t42 ) kl_7codegen_1P__dtor( &kl_y_8.kl_a );
 #line 77 "codegen/dynamic_drops.kl"
     kl_t42 = false;
 #line 77 "codegen/dynamic_drops.kl"
     kl_t43 = false;
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t41 ) kl__1P__dtor( &kl_x_7.kl_c );
+    if ( kl_t41 ) kl_7codegen_1P__dtor( &kl_x_7.kl_c );
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t40 ) kl__1P__dtor( &kl_x_7.kl_b );
+    if ( kl_t40 ) kl_7codegen_1P__dtor( &kl_x_7.kl_b );
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t39 ) kl__1P__dtor( &kl_x_7.kl_a );
+    if ( kl_t39 ) kl_7codegen_1P__dtor( &kl_x_7.kl_a );
 #line 77 "codegen/dynamic_drops.kl"
     kl_t39 = false;
 #line 77 "codegen/dynamic_drops.kl"
@@ -1009,7 +1009,7 @@ struct kl_7prelude_result__I4void_3i32E kl__19struct_dynamic_drop__4bool_4bool_4
 #line 77 "codegen/dynamic_drops.kl"
     kl_t50 = true;
 #line 77 "codegen/dynamic_drops.kl"
-    kl_t23 = kl__3get__(  );
+    kl_t23 = kl_7codegen_3get__(  );
 #line 77 "codegen/dynamic_drops.kl"
     kl_t51 = true;
 #line 77 "codegen/dynamic_drops.kl"
@@ -1026,25 +1026,25 @@ struct kl_7prelude_result__I4void_3i32E kl__19struct_dynamic_drop__4bool_4bool_4
 #line 77 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t20.kl_3err_error;
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t49 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t19 );
+    if ( kl_t49 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t19 );
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t48 ) kl__1P__dtor( &kl_t18 );
+    if ( kl_t48 ) kl_7codegen_1P__dtor( &kl_t18 );
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t47 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t15 );
+    if ( kl_t47 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t15 );
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t43 ) kl__1P__dtor( &kl_y_8.kl_b );
+    if ( kl_t43 ) kl_7codegen_1P__dtor( &kl_y_8.kl_b );
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t42 ) kl__1P__dtor( &kl_y_8.kl_a );
+    if ( kl_t42 ) kl_7codegen_1P__dtor( &kl_y_8.kl_a );
 #line 77 "codegen/dynamic_drops.kl"
     kl_t42 = false;
 #line 77 "codegen/dynamic_drops.kl"
     kl_t43 = false;
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t41 ) kl__1P__dtor( &kl_x_7.kl_c );
+    if ( kl_t41 ) kl_7codegen_1P__dtor( &kl_x_7.kl_c );
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t40 ) kl__1P__dtor( &kl_x_7.kl_b );
+    if ( kl_t40 ) kl_7codegen_1P__dtor( &kl_x_7.kl_b );
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t39 ) kl__1P__dtor( &kl_x_7.kl_a );
+    if ( kl_t39 ) kl_7codegen_1P__dtor( &kl_x_7.kl_a );
 #line 77 "codegen/dynamic_drops.kl"
     kl_t39 = false;
 #line 77 "codegen/dynamic_drops.kl"
@@ -1077,11 +1077,11 @@ struct kl_7prelude_result__I4void_3i32E kl__19struct_dynamic_drop__4bool_4bool_4
 #line 77 "codegen/dynamic_drops.kl"
     kl_t46 = true;
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t41 ) kl__1P__dtor( &kl_x_7.kl_c );
+    if ( kl_t41 ) kl_7codegen_1P__dtor( &kl_x_7.kl_c );
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t40 ) kl__1P__dtor( &kl_x_7.kl_b );
+    if ( kl_t40 ) kl_7codegen_1P__dtor( &kl_x_7.kl_b );
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t39 ) kl__1P__dtor( &kl_x_7.kl_a );
+    if ( kl_t39 ) kl_7codegen_1P__dtor( &kl_x_7.kl_a );
 #line 77 "codegen/dynamic_drops.kl"
     kl_x_7 = kl_t14;
 #line 77 "codegen/dynamic_drops.kl"
@@ -1097,23 +1097,23 @@ struct kl_7prelude_result__I4void_3i32E kl__19struct_dynamic_drop__4bool_4bool_4
 #line 77 "codegen/dynamic_drops.kl"
     kl_t41 = true;
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t46 ) kl__1P__dtor( &kl_t14.kl_c );
+    if ( kl_t46 ) kl_7codegen_1P__dtor( &kl_t14.kl_c );
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t45 ) kl__1P__dtor( &kl_t14.kl_b );
+    if ( kl_t45 ) kl_7codegen_1P__dtor( &kl_t14.kl_b );
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t44 ) kl__1P__dtor( &kl_t14.kl_a );
+    if ( kl_t44 ) kl_7codegen_1P__dtor( &kl_t14.kl_a );
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t52 ) kl__1P__dtor( &kl_t26 );
+    if ( kl_t52 ) kl_7codegen_1P__dtor( &kl_t26 );
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t51 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t23 );
+    if ( kl_t51 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t23 );
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t50 ) kl__1P__dtor( &kl_t22 );
+    if ( kl_t50 ) kl_7codegen_1P__dtor( &kl_t22 );
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t49 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t19 );
+    if ( kl_t49 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t19 );
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t48 ) kl__1P__dtor( &kl_t18 );
+    if ( kl_t48 ) kl_7codegen_1P__dtor( &kl_t18 );
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t47 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t15 );
+    if ( kl_t47 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t15 );
 #line 77 "codegen/dynamic_drops.kl"
     kl_t47 = false;
 #line 77 "codegen/dynamic_drops.kl"
@@ -1136,7 +1136,7 @@ struct kl_7prelude_result__I4void_3i32E kl__19struct_dynamic_drop__4bool_4bool_4
 #line 78 "codegen/dynamic_drops.kl"
     kl_t54 = false;
 #line 78 "codegen/dynamic_drops.kl"
-    kl_t28 = kl__3get__(  );
+    kl_t28 = kl_7codegen_3get__(  );
 #line 78 "codegen/dynamic_drops.kl"
     kl_t55 = true;
 #line 78 "codegen/dynamic_drops.kl"
@@ -1153,29 +1153,29 @@ struct kl_7prelude_result__I4void_3i32E kl__19struct_dynamic_drop__4bool_4bool_4
 #line 77 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t24.kl_3err_error;
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t51 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t23 );
+    if ( kl_t51 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t23 );
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t50 ) kl__1P__dtor( &kl_t22 );
+    if ( kl_t50 ) kl_7codegen_1P__dtor( &kl_t22 );
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t49 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t19 );
+    if ( kl_t49 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t19 );
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t48 ) kl__1P__dtor( &kl_t18 );
+    if ( kl_t48 ) kl_7codegen_1P__dtor( &kl_t18 );
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t47 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t15 );
+    if ( kl_t47 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t15 );
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t43 ) kl__1P__dtor( &kl_y_8.kl_b );
+    if ( kl_t43 ) kl_7codegen_1P__dtor( &kl_y_8.kl_b );
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t42 ) kl__1P__dtor( &kl_y_8.kl_a );
+    if ( kl_t42 ) kl_7codegen_1P__dtor( &kl_y_8.kl_a );
 #line 77 "codegen/dynamic_drops.kl"
     kl_t42 = false;
 #line 77 "codegen/dynamic_drops.kl"
     kl_t43 = false;
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t41 ) kl__1P__dtor( &kl_x_7.kl_c );
+    if ( kl_t41 ) kl_7codegen_1P__dtor( &kl_x_7.kl_c );
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t40 ) kl__1P__dtor( &kl_x_7.kl_b );
+    if ( kl_t40 ) kl_7codegen_1P__dtor( &kl_x_7.kl_b );
 #line 77 "codegen/dynamic_drops.kl"
-    if ( kl_t39 ) kl__1P__dtor( &kl_x_7.kl_a );
+    if ( kl_t39 ) kl_7codegen_1P__dtor( &kl_x_7.kl_a );
 #line 77 "codegen/dynamic_drops.kl"
     kl_t39 = false;
 #line 77 "codegen/dynamic_drops.kl"
@@ -1190,7 +1190,7 @@ struct kl_7prelude_result__I4void_3i32E kl__19struct_dynamic_drop__4bool_4bool_4
 #line 78 "codegen/dynamic_drops.kl"
     kl_t56 = true;
 #line 78 "codegen/dynamic_drops.kl"
-    kl_t32 = kl__3get__(  );
+    kl_t32 = kl_7codegen_3get__(  );
 #line 78 "codegen/dynamic_drops.kl"
     kl_t57 = true;
 #line 78 "codegen/dynamic_drops.kl"
@@ -1207,21 +1207,21 @@ struct kl_7prelude_result__I4void_3i32E kl__19struct_dynamic_drop__4bool_4bool_4
 #line 78 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t29.kl_3err_error;
 #line 78 "codegen/dynamic_drops.kl"
-    if ( kl_t55 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t28 );
+    if ( kl_t55 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t28 );
 #line 78 "codegen/dynamic_drops.kl"
-    if ( kl_t43 ) kl__1P__dtor( &kl_y_8.kl_b );
+    if ( kl_t43 ) kl_7codegen_1P__dtor( &kl_y_8.kl_b );
 #line 78 "codegen/dynamic_drops.kl"
-    if ( kl_t42 ) kl__1P__dtor( &kl_y_8.kl_a );
+    if ( kl_t42 ) kl_7codegen_1P__dtor( &kl_y_8.kl_a );
 #line 78 "codegen/dynamic_drops.kl"
     kl_t42 = false;
 #line 78 "codegen/dynamic_drops.kl"
     kl_t43 = false;
 #line 78 "codegen/dynamic_drops.kl"
-    if ( kl_t41 ) kl__1P__dtor( &kl_x_7.kl_c );
+    if ( kl_t41 ) kl_7codegen_1P__dtor( &kl_x_7.kl_c );
 #line 78 "codegen/dynamic_drops.kl"
-    if ( kl_t40 ) kl__1P__dtor( &kl_x_7.kl_b );
+    if ( kl_t40 ) kl_7codegen_1P__dtor( &kl_x_7.kl_b );
 #line 78 "codegen/dynamic_drops.kl"
-    if ( kl_t39 ) kl__1P__dtor( &kl_x_7.kl_a );
+    if ( kl_t39 ) kl_7codegen_1P__dtor( &kl_x_7.kl_a );
 #line 78 "codegen/dynamic_drops.kl"
     kl_t39 = false;
 #line 78 "codegen/dynamic_drops.kl"
@@ -1248,9 +1248,9 @@ struct kl_7prelude_result__I4void_3i32E kl__19struct_dynamic_drop__4bool_4bool_4
 #line 78 "codegen/dynamic_drops.kl"
     kl_t54 = true;
 #line 78 "codegen/dynamic_drops.kl"
-    if ( kl_t43 ) kl__1P__dtor( &kl_y_8.kl_b );
+    if ( kl_t43 ) kl_7codegen_1P__dtor( &kl_y_8.kl_b );
 #line 78 "codegen/dynamic_drops.kl"
-    if ( kl_t42 ) kl__1P__dtor( &kl_y_8.kl_a );
+    if ( kl_t42 ) kl_7codegen_1P__dtor( &kl_y_8.kl_a );
 #line 78 "codegen/dynamic_drops.kl"
     kl_y_8 = kl_t27;
 #line 78 "codegen/dynamic_drops.kl"
@@ -1262,17 +1262,17 @@ struct kl_7prelude_result__I4void_3i32E kl__19struct_dynamic_drop__4bool_4bool_4
 #line 78 "codegen/dynamic_drops.kl"
     kl_t43 = true;
 #line 78 "codegen/dynamic_drops.kl"
-    if ( kl_t54 ) kl__1P__dtor( &kl_t27.kl_b );
+    if ( kl_t54 ) kl_7codegen_1P__dtor( &kl_t27.kl_b );
 #line 78 "codegen/dynamic_drops.kl"
-    if ( kl_t53 ) kl__1P__dtor( &kl_t27.kl_a );
+    if ( kl_t53 ) kl_7codegen_1P__dtor( &kl_t27.kl_a );
 #line 78 "codegen/dynamic_drops.kl"
-    if ( kl_t58 ) kl__1P__dtor( &kl_t35 );
+    if ( kl_t58 ) kl_7codegen_1P__dtor( &kl_t35 );
 #line 78 "codegen/dynamic_drops.kl"
-    if ( kl_t57 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t32 );
+    if ( kl_t57 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t32 );
 #line 78 "codegen/dynamic_drops.kl"
-    if ( kl_t56 ) kl__1P__dtor( &kl_t31 );
+    if ( kl_t56 ) kl_7codegen_1P__dtor( &kl_t31 );
 #line 78 "codegen/dynamic_drops.kl"
-    if ( kl_t55 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t28 );
+    if ( kl_t55 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t28 );
 #line 78 "codegen/dynamic_drops.kl"
     kl_t55 = false;
 #line 78 "codegen/dynamic_drops.kl"
@@ -1292,25 +1292,25 @@ struct kl_7prelude_result__I4void_3i32E kl__19struct_dynamic_drop__4bool_4bool_4
 #line 78 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t33.kl_3err_error;
 #line 78 "codegen/dynamic_drops.kl"
-    if ( kl_t57 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t32 );
+    if ( kl_t57 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t32 );
 #line 78 "codegen/dynamic_drops.kl"
-    if ( kl_t56 ) kl__1P__dtor( &kl_t31 );
+    if ( kl_t56 ) kl_7codegen_1P__dtor( &kl_t31 );
 #line 78 "codegen/dynamic_drops.kl"
-    if ( kl_t55 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t28 );
+    if ( kl_t55 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t28 );
 #line 78 "codegen/dynamic_drops.kl"
-    if ( kl_t43 ) kl__1P__dtor( &kl_y_8.kl_b );
+    if ( kl_t43 ) kl_7codegen_1P__dtor( &kl_y_8.kl_b );
 #line 78 "codegen/dynamic_drops.kl"
-    if ( kl_t42 ) kl__1P__dtor( &kl_y_8.kl_a );
+    if ( kl_t42 ) kl_7codegen_1P__dtor( &kl_y_8.kl_a );
 #line 78 "codegen/dynamic_drops.kl"
     kl_t42 = false;
 #line 78 "codegen/dynamic_drops.kl"
     kl_t43 = false;
 #line 78 "codegen/dynamic_drops.kl"
-    if ( kl_t41 ) kl__1P__dtor( &kl_x_7.kl_c );
+    if ( kl_t41 ) kl_7codegen_1P__dtor( &kl_x_7.kl_c );
 #line 78 "codegen/dynamic_drops.kl"
-    if ( kl_t40 ) kl__1P__dtor( &kl_x_7.kl_b );
+    if ( kl_t40 ) kl_7codegen_1P__dtor( &kl_x_7.kl_b );
 #line 78 "codegen/dynamic_drops.kl"
-    if ( kl_t39 ) kl__1P__dtor( &kl_x_7.kl_a );
+    if ( kl_t39 ) kl_7codegen_1P__dtor( &kl_x_7.kl_a );
 #line 78 "codegen/dynamic_drops.kl"
     kl_t39 = false;
 #line 78 "codegen/dynamic_drops.kl"
@@ -1321,29 +1321,29 @@ struct kl_7prelude_result__I4void_3i32E kl__19struct_dynamic_drop__4bool_4bool_4
     return kl_t0;
     bb21:
 #line 81 "codegen/dynamic_drops.kl"
-    kl__4sink__M1P( kl_x_7.kl_b );
+    kl_7codegen_4sink__MQ7codegen1P( kl_x_7.kl_b );
 #line 81 "codegen/dynamic_drops.kl"
     kl_t40 = false;
-    kl__4sink__M1P( kl_y_8.kl_a );
+    kl_7codegen_4sink__MQ7codegen1P( kl_y_8.kl_a );
 #line 82 "codegen/dynamic_drops.kl"
     kl_t42 = false;
 #line 79 "codegen/dynamic_drops.kl"
     goto bb22;
     bb22:
 #line 85 "codegen/dynamic_drops.kl"
-    if ( kl_t43 ) kl__1P__dtor( &kl_y_8.kl_b );
+    if ( kl_t43 ) kl_7codegen_1P__dtor( &kl_y_8.kl_b );
 #line 85 "codegen/dynamic_drops.kl"
-    if ( kl_t42 ) kl__1P__dtor( &kl_y_8.kl_a );
+    if ( kl_t42 ) kl_7codegen_1P__dtor( &kl_y_8.kl_a );
 #line 85 "codegen/dynamic_drops.kl"
     kl_t42 = false;
 #line 85 "codegen/dynamic_drops.kl"
     kl_t43 = false;
 #line 85 "codegen/dynamic_drops.kl"
-    if ( kl_t41 ) kl__1P__dtor( &kl_x_7.kl_c );
+    if ( kl_t41 ) kl_7codegen_1P__dtor( &kl_x_7.kl_c );
 #line 85 "codegen/dynamic_drops.kl"
-    if ( kl_t40 ) kl__1P__dtor( &kl_x_7.kl_b );
+    if ( kl_t40 ) kl_7codegen_1P__dtor( &kl_x_7.kl_b );
 #line 85 "codegen/dynamic_drops.kl"
-    if ( kl_t39 ) kl__1P__dtor( &kl_x_7.kl_a );
+    if ( kl_t39 ) kl_7codegen_1P__dtor( &kl_x_7.kl_a );
 #line 85 "codegen/dynamic_drops.kl"
     kl_t39 = false;
 #line 85 "codegen/dynamic_drops.kl"
@@ -1361,33 +1361,33 @@ struct kl_7prelude_result__I4void_3i32E kl__19struct_dynamic_drop__4bool_4bool_4
 }
 
 #line 89 "codegen/dynamic_drops.kl"
-struct kl_7prelude_result__I4void_3i32E kl__16field_assignment__4bool( bool kl_c0_1 )
+struct kl_7prelude_result__I4void_3i32E kl_7codegen_16field_assignment__4bool( bool kl_c0_1 )
 {
     struct kl_7prelude_result__I4void_3i32E kl_t0;
-    struct kl__Outer kl_x_2;
-    struct kl__Outer kl_t3;
-    struct kl__Two kl_t4;
-    struct kl_7prelude_result__I1P_3i32E kl_t5;
-    struct kl_7prelude_result__I1P_3i32E kl_t6;
+    struct kl_7codegen_Outer kl_x_2;
+    struct kl_7codegen_Outer kl_t3;
+    struct kl_7codegen_Two kl_t4;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t5;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t6;
     bool kl_t7;
-    struct kl__P kl_t8;
-    struct kl_7prelude_result__I1P_3i32E kl_t9;
-    struct kl_7prelude_result__I1P_3i32E kl_t10;
+    struct kl_7codegen_P kl_t8;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t9;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t10;
     bool kl_t11;
-    struct kl__P kl_t12;
-    struct kl_7prelude_result__I1P_3i32E kl_t13;
-    struct kl_7prelude_result__I1P_3i32E kl_t14;
+    struct kl_7codegen_P kl_t12;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t13;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t14;
     bool kl_t15;
-    struct kl__P kl_t16;
-    struct kl_7prelude_result__I1P_3i32E kl_t17;
-    struct kl_7prelude_result__I1P_3i32E kl_t18;
+    struct kl_7codegen_P kl_t16;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t17;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t18;
     bool kl_t19;
-    struct kl__P kl_t20;
-    struct kl_7prelude_result__I1P_3i32E kl_t21;
-    struct kl_7prelude_result__I1P_3i32E kl_t22;
+    struct kl_7codegen_P kl_t20;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t21;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t22;
     bool kl_t23;
-    struct kl__P kl_t24;
-    struct kl__P kl_f_25;
+    struct kl_7codegen_P kl_t24;
+    struct kl_7codegen_P kl_f_25;
     struct kl_7prelude_result__I4void_3i32E kl_t26;
     bool kl_t27;
     bool kl_t28;
@@ -1458,7 +1458,7 @@ struct kl_7prelude_result__I4void_3i32E kl__16field_assignment__4bool( bool kl_c
 #line 91 "codegen/dynamic_drops.kl"
     kl_t33 = false;
 #line 91 "codegen/dynamic_drops.kl"
-    kl_t5 = kl__3get__(  );
+    kl_t5 = kl_7codegen_3get__(  );
 #line 91 "codegen/dynamic_drops.kl"
     kl_t34 = true;
 #line 91 "codegen/dynamic_drops.kl"
@@ -1475,7 +1475,7 @@ struct kl_7prelude_result__I4void_3i32E kl__16field_assignment__4bool( bool kl_c
 #line 91 "codegen/dynamic_drops.kl"
     kl_t35 = true;
 #line 91 "codegen/dynamic_drops.kl"
-    kl_t9 = kl__3get__(  );
+    kl_t9 = kl_7codegen_3get__(  );
 #line 91 "codegen/dynamic_drops.kl"
     kl_t36 = true;
 #line 91 "codegen/dynamic_drops.kl"
@@ -1492,7 +1492,7 @@ struct kl_7prelude_result__I4void_3i32E kl__16field_assignment__4bool( bool kl_c
 #line 91 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t6.kl_3err_error;
 #line 91 "codegen/dynamic_drops.kl"
-    if ( kl_t34 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t5 );
+    if ( kl_t34 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t5 );
 #line 91 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb3:
@@ -1513,7 +1513,7 @@ struct kl_7prelude_result__I4void_3i32E kl__16field_assignment__4bool( bool kl_c
 #line 91 "codegen/dynamic_drops.kl"
     kl_t33 = true;
 #line 91 "codegen/dynamic_drops.kl"
-    kl_t13 = kl__3get__(  );
+    kl_t13 = kl_7codegen_3get__(  );
 #line 91 "codegen/dynamic_drops.kl"
     kl_t38 = true;
 #line 91 "codegen/dynamic_drops.kl"
@@ -1530,11 +1530,11 @@ struct kl_7prelude_result__I4void_3i32E kl__16field_assignment__4bool( bool kl_c
 #line 91 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t10.kl_3err_error;
 #line 91 "codegen/dynamic_drops.kl"
-    if ( kl_t36 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t9 );
+    if ( kl_t36 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t9 );
 #line 91 "codegen/dynamic_drops.kl"
-    if ( kl_t35 ) kl__1P__dtor( &kl_t8 );
+    if ( kl_t35 ) kl_7codegen_1P__dtor( &kl_t8 );
 #line 91 "codegen/dynamic_drops.kl"
-    if ( kl_t34 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t5 );
+    if ( kl_t34 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t5 );
 #line 91 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb5:
@@ -1571,27 +1571,27 @@ struct kl_7prelude_result__I4void_3i32E kl__16field_assignment__4bool( bool kl_c
 #line 91 "codegen/dynamic_drops.kl"
     kl_t28 = true;
 #line 91 "codegen/dynamic_drops.kl"
-    if ( kl_t31 ) kl__1P__dtor( &kl_t3.kl_b );
+    if ( kl_t31 ) kl_7codegen_1P__dtor( &kl_t3.kl_b );
 #line 91 "codegen/dynamic_drops.kl"
-    if ( kl_t30 ) kl__1P__dtor( &kl_t3.kl_a.kl_b );
+    if ( kl_t30 ) kl_7codegen_1P__dtor( &kl_t3.kl_a.kl_b );
 #line 91 "codegen/dynamic_drops.kl"
-    if ( kl_t29 ) kl__1P__dtor( &kl_t3.kl_a.kl_a );
+    if ( kl_t29 ) kl_7codegen_1P__dtor( &kl_t3.kl_a.kl_a );
 #line 91 "codegen/dynamic_drops.kl"
-    if ( kl_t39 ) kl__1P__dtor( &kl_t16 );
+    if ( kl_t39 ) kl_7codegen_1P__dtor( &kl_t16 );
 #line 91 "codegen/dynamic_drops.kl"
-    if ( kl_t38 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t13 );
+    if ( kl_t38 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t13 );
 #line 91 "codegen/dynamic_drops.kl"
-    if ( kl_t33 ) kl__1P__dtor( &kl_t4.kl_b );
+    if ( kl_t33 ) kl_7codegen_1P__dtor( &kl_t4.kl_b );
 #line 91 "codegen/dynamic_drops.kl"
-    if ( kl_t32 ) kl__1P__dtor( &kl_t4.kl_a );
+    if ( kl_t32 ) kl_7codegen_1P__dtor( &kl_t4.kl_a );
 #line 91 "codegen/dynamic_drops.kl"
-    if ( kl_t37 ) kl__1P__dtor( &kl_t12 );
+    if ( kl_t37 ) kl_7codegen_1P__dtor( &kl_t12 );
 #line 91 "codegen/dynamic_drops.kl"
-    if ( kl_t36 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t9 );
+    if ( kl_t36 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t9 );
 #line 91 "codegen/dynamic_drops.kl"
-    if ( kl_t35 ) kl__1P__dtor( &kl_t8 );
+    if ( kl_t35 ) kl_7codegen_1P__dtor( &kl_t8 );
 #line 91 "codegen/dynamic_drops.kl"
-    if ( kl_t34 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t5 );
+    if ( kl_t34 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t5 );
 #line 91 "codegen/dynamic_drops.kl"
     kl_t34 = false;
 #line 91 "codegen/dynamic_drops.kl"
@@ -1614,7 +1614,7 @@ struct kl_7prelude_result__I4void_3i32E kl__16field_assignment__4bool( bool kl_c
     kl_t30 = false;
 #line 91 "codegen/dynamic_drops.kl"
     kl_t31 = false;
-    kl_t17 = kl__3get__(  );
+    kl_t17 = kl_7codegen_3get__(  );
 #line 92 "codegen/dynamic_drops.kl"
     kl_t40 = true;
 #line 92 "codegen/dynamic_drops.kl"
@@ -1631,19 +1631,19 @@ struct kl_7prelude_result__I4void_3i32E kl__16field_assignment__4bool( bool kl_c
 #line 91 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t14.kl_3err_error;
 #line 91 "codegen/dynamic_drops.kl"
-    if ( kl_t38 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t13 );
+    if ( kl_t38 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t13 );
 #line 91 "codegen/dynamic_drops.kl"
-    if ( kl_t33 ) kl__1P__dtor( &kl_t4.kl_b );
+    if ( kl_t33 ) kl_7codegen_1P__dtor( &kl_t4.kl_b );
 #line 91 "codegen/dynamic_drops.kl"
-    if ( kl_t32 ) kl__1P__dtor( &kl_t4.kl_a );
+    if ( kl_t32 ) kl_7codegen_1P__dtor( &kl_t4.kl_a );
 #line 91 "codegen/dynamic_drops.kl"
-    if ( kl_t37 ) kl__1P__dtor( &kl_t12 );
+    if ( kl_t37 ) kl_7codegen_1P__dtor( &kl_t12 );
 #line 91 "codegen/dynamic_drops.kl"
-    if ( kl_t36 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t9 );
+    if ( kl_t36 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t9 );
 #line 91 "codegen/dynamic_drops.kl"
-    if ( kl_t35 ) kl__1P__dtor( &kl_t8 );
+    if ( kl_t35 ) kl_7codegen_1P__dtor( &kl_t8 );
 #line 91 "codegen/dynamic_drops.kl"
-    if ( kl_t34 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t5 );
+    if ( kl_t34 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t5 );
 #line 91 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb7:
@@ -1652,7 +1652,7 @@ struct kl_7prelude_result__I4void_3i32E kl__16field_assignment__4bool( bool kl_c
 #line 92 "codegen/dynamic_drops.kl"
     kl_t41 = true;
 #line 92 "codegen/dynamic_drops.kl"
-    if ( kl_t28 ) kl__1P__dtor( &kl_x_2.kl_b );
+    if ( kl_t28 ) kl_7codegen_1P__dtor( &kl_x_2.kl_b );
 #line 92 "codegen/dynamic_drops.kl"
     kl_x_2.kl_b = kl_t20;
 #line 92 "codegen/dynamic_drops.kl"
@@ -1660,14 +1660,14 @@ struct kl_7prelude_result__I4void_3i32E kl__16field_assignment__4bool( bool kl_c
 #line 92 "codegen/dynamic_drops.kl"
     kl_t28 = true;
 #line 92 "codegen/dynamic_drops.kl"
-    if ( kl_t41 ) kl__1P__dtor( &kl_t20 );
+    if ( kl_t41 ) kl_7codegen_1P__dtor( &kl_t20 );
 #line 92 "codegen/dynamic_drops.kl"
-    if ( kl_t40 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t17 );
+    if ( kl_t40 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t17 );
 #line 92 "codegen/dynamic_drops.kl"
     kl_t40 = false;
 #line 92 "codegen/dynamic_drops.kl"
     kl_t41 = false;
-    kl_t21 = kl__3get__(  );
+    kl_t21 = kl_7codegen_3get__(  );
 #line 93 "codegen/dynamic_drops.kl"
     kl_t42 = true;
 #line 93 "codegen/dynamic_drops.kl"
@@ -1684,13 +1684,13 @@ struct kl_7prelude_result__I4void_3i32E kl__16field_assignment__4bool( bool kl_c
 #line 92 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t18.kl_3err_error;
 #line 92 "codegen/dynamic_drops.kl"
-    if ( kl_t40 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t17 );
+    if ( kl_t40 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t17 );
 #line 92 "codegen/dynamic_drops.kl"
-    if ( kl_t28 ) kl__1P__dtor( &kl_x_2.kl_b );
+    if ( kl_t28 ) kl_7codegen_1P__dtor( &kl_x_2.kl_b );
 #line 92 "codegen/dynamic_drops.kl"
-    kl__1P__dtor( &kl_x_2.kl_a.kl_b );
+    kl_7codegen_1P__dtor( &kl_x_2.kl_a.kl_b );
 #line 92 "codegen/dynamic_drops.kl"
-    if ( kl_t27 ) kl__1P__dtor( &kl_x_2.kl_a.kl_a );
+    if ( kl_t27 ) kl_7codegen_1P__dtor( &kl_x_2.kl_a.kl_a );
 #line 92 "codegen/dynamic_drops.kl"
     kl_t27 = false;
 #line 92 "codegen/dynamic_drops.kl"
@@ -1703,7 +1703,7 @@ struct kl_7prelude_result__I4void_3i32E kl__16field_assignment__4bool( bool kl_c
 #line 93 "codegen/dynamic_drops.kl"
     kl_t43 = true;
 #line 93 "codegen/dynamic_drops.kl"
-    if ( kl_t28 ) kl__1P__dtor( &kl_x_2.kl_b );
+    if ( kl_t28 ) kl_7codegen_1P__dtor( &kl_x_2.kl_b );
 #line 93 "codegen/dynamic_drops.kl"
     kl_x_2.kl_b = kl_t24;
 #line 93 "codegen/dynamic_drops.kl"
@@ -1711,9 +1711,9 @@ struct kl_7prelude_result__I4void_3i32E kl__16field_assignment__4bool( bool kl_c
 #line 93 "codegen/dynamic_drops.kl"
     kl_t28 = true;
 #line 93 "codegen/dynamic_drops.kl"
-    if ( kl_t43 ) kl__1P__dtor( &kl_t24 );
+    if ( kl_t43 ) kl_7codegen_1P__dtor( &kl_t24 );
 #line 93 "codegen/dynamic_drops.kl"
-    if ( kl_t42 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t21 );
+    if ( kl_t42 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t21 );
 #line 93 "codegen/dynamic_drops.kl"
     kl_t42 = false;
 #line 93 "codegen/dynamic_drops.kl"
@@ -1732,13 +1732,13 @@ struct kl_7prelude_result__I4void_3i32E kl__16field_assignment__4bool( bool kl_c
 #line 93 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t22.kl_3err_error;
 #line 93 "codegen/dynamic_drops.kl"
-    if ( kl_t42 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t21 );
+    if ( kl_t42 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t21 );
 #line 93 "codegen/dynamic_drops.kl"
-    if ( kl_t28 ) kl__1P__dtor( &kl_x_2.kl_b );
+    if ( kl_t28 ) kl_7codegen_1P__dtor( &kl_x_2.kl_b );
 #line 93 "codegen/dynamic_drops.kl"
-    kl__1P__dtor( &kl_x_2.kl_a.kl_b );
+    kl_7codegen_1P__dtor( &kl_x_2.kl_a.kl_b );
 #line 93 "codegen/dynamic_drops.kl"
-    if ( kl_t27 ) kl__1P__dtor( &kl_x_2.kl_a.kl_a );
+    if ( kl_t27 ) kl_7codegen_1P__dtor( &kl_x_2.kl_a.kl_a );
 #line 93 "codegen/dynamic_drops.kl"
     kl_t27 = false;
 #line 93 "codegen/dynamic_drops.kl"
@@ -1747,7 +1747,7 @@ struct kl_7prelude_result__I4void_3i32E kl__16field_assignment__4bool( bool kl_c
     return kl_t0;
     bb11:
 #line 97 "codegen/dynamic_drops.kl"
-    if ( kl_t27 ) kl__1P__dtor( &kl_x_2.kl_a.kl_a );
+    if ( kl_t27 ) kl_7codegen_1P__dtor( &kl_x_2.kl_a.kl_a );
 #line 97 "codegen/dynamic_drops.kl"
     kl_x_2.kl_a.kl_a = kl_f_25;
 #line 97 "codegen/dynamic_drops.kl"
@@ -1762,15 +1762,15 @@ struct kl_7prelude_result__I4void_3i32E kl__16field_assignment__4bool( bool kl_c
 #line 99 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t26;
 #line 99 "codegen/dynamic_drops.kl"
-    if ( kl_t44 ) kl__1P__dtor( &kl_f_25 );
+    if ( kl_t44 ) kl_7codegen_1P__dtor( &kl_f_25 );
 #line 99 "codegen/dynamic_drops.kl"
     kl_t44 = false;
 #line 99 "codegen/dynamic_drops.kl"
-    if ( kl_t28 ) kl__1P__dtor( &kl_x_2.kl_b );
+    if ( kl_t28 ) kl_7codegen_1P__dtor( &kl_x_2.kl_b );
 #line 99 "codegen/dynamic_drops.kl"
-    kl__1P__dtor( &kl_x_2.kl_a.kl_b );
+    kl_7codegen_1P__dtor( &kl_x_2.kl_a.kl_b );
 #line 99 "codegen/dynamic_drops.kl"
-    if ( kl_t27 ) kl__1P__dtor( &kl_x_2.kl_a.kl_a );
+    if ( kl_t27 ) kl_7codegen_1P__dtor( &kl_x_2.kl_a.kl_a );
 #line 99 "codegen/dynamic_drops.kl"
     kl_t27 = false;
 #line 99 "codegen/dynamic_drops.kl"
@@ -1780,23 +1780,23 @@ struct kl_7prelude_result__I4void_3i32E kl__16field_assignment__4bool( bool kl_c
 }
 
 #line 102 "codegen/dynamic_drops.kl"
-struct kl_7prelude_result__I4void_3i32E kl__11assignment2__4bool_4bool( bool kl_c0_1, bool kl_c1_2 )
+struct kl_7prelude_result__I4void_3i32E kl_7codegen_11assignment2__4bool_4bool( bool kl_c0_1, bool kl_c1_2 )
 {
     struct kl_7prelude_result__I4void_3i32E kl_t0;
-    struct kl__P kl_v_3;
-    struct kl_7prelude_result__I1P_3i32E kl_t4;
-    struct kl_7prelude_result__I1P_3i32E kl_t5;
+    struct kl_7codegen_P kl_v_3;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t4;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t5;
     bool kl_t6;
-    struct kl__P kl_t7;
-    struct kl__P kl_w_8;
-    struct kl_7prelude_result__I1P_3i32E kl_t9;
-    struct kl_7prelude_result__I1P_3i32E kl_t10;
+    struct kl_7codegen_P kl_t7;
+    struct kl_7codegen_P kl_w_8;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t9;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t10;
     bool kl_t11;
-    struct kl__P kl_t12;
-    struct kl_7prelude_result__I1P_3i32E kl_t14;
-    struct kl_7prelude_result__I1P_3i32E kl_t15;
+    struct kl_7codegen_P kl_t12;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t14;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t15;
     bool kl_t16;
-    struct kl__P kl_t17;
+    struct kl_7codegen_P kl_t17;
     struct kl_7prelude_result__I4void_3i32E kl_t18;
     bool kl_t19;
     bool kl_t20;
@@ -1825,7 +1825,7 @@ struct kl_7prelude_result__I4void_3i32E kl__11assignment2__4bool_4bool( bool kl_
 #line 104 "codegen/dynamic_drops.kl"
     kl_t19 = false;
 #line 104 "codegen/dynamic_drops.kl"
-    kl_t4 = kl__3get__(  );
+    kl_t4 = kl_7codegen_3get__(  );
 #line 104 "codegen/dynamic_drops.kl"
     kl_t20 = true;
 #line 104 "codegen/dynamic_drops.kl"
@@ -1848,16 +1848,16 @@ struct kl_7prelude_result__I4void_3i32E kl__11assignment2__4bool_4bool( bool kl_
 #line 104 "codegen/dynamic_drops.kl"
     kl_t19 = true;
 #line 104 "codegen/dynamic_drops.kl"
-    if ( kl_t21 ) kl__1P__dtor( &kl_t7 );
+    if ( kl_t21 ) kl_7codegen_1P__dtor( &kl_t7 );
 #line 104 "codegen/dynamic_drops.kl"
-    if ( kl_t20 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t4 );
+    if ( kl_t20 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t4 );
 #line 104 "codegen/dynamic_drops.kl"
     kl_t20 = false;
 #line 104 "codegen/dynamic_drops.kl"
     kl_t21 = false;
     kl_t22 = false;
 #line 105 "codegen/dynamic_drops.kl"
-    kl_t9 = kl__3get__(  );
+    kl_t9 = kl_7codegen_3get__(  );
 #line 105 "codegen/dynamic_drops.kl"
     kl_t23 = true;
 #line 105 "codegen/dynamic_drops.kl"
@@ -1874,7 +1874,7 @@ struct kl_7prelude_result__I4void_3i32E kl__11assignment2__4bool_4bool( bool kl_
 #line 104 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t5.kl_3err_error;
 #line 104 "codegen/dynamic_drops.kl"
-    if ( kl_t20 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t4 );
+    if ( kl_t20 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t4 );
 #line 104 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb3:
@@ -1889,9 +1889,9 @@ struct kl_7prelude_result__I4void_3i32E kl__11assignment2__4bool_4bool( bool kl_
 #line 105 "codegen/dynamic_drops.kl"
     kl_t22 = true;
 #line 105 "codegen/dynamic_drops.kl"
-    if ( kl_t24 ) kl__1P__dtor( &kl_t12 );
+    if ( kl_t24 ) kl_7codegen_1P__dtor( &kl_t12 );
 #line 105 "codegen/dynamic_drops.kl"
-    if ( kl_t23 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t9 );
+    if ( kl_t23 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t9 );
 #line 105 "codegen/dynamic_drops.kl"
     kl_t23 = false;
 #line 105 "codegen/dynamic_drops.kl"
@@ -1903,23 +1903,23 @@ struct kl_7prelude_result__I4void_3i32E kl__11assignment2__4bool_4bool( bool kl_
 #line 105 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t10.kl_3err_error;
 #line 105 "codegen/dynamic_drops.kl"
-    if ( kl_t23 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t9 );
+    if ( kl_t23 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t9 );
 #line 105 "codegen/dynamic_drops.kl"
-    if ( kl_t19 ) kl__1P__dtor( &kl_v_3 );
+    if ( kl_t19 ) kl_7codegen_1P__dtor( &kl_v_3 );
 #line 105 "codegen/dynamic_drops.kl"
     kl_t19 = false;
 #line 105 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb5:
 #line 108 "codegen/dynamic_drops.kl"
-    kl__4sink__M1P( kl_v_3 );
+    kl_7codegen_4sink__MQ7codegen1P( kl_v_3 );
 #line 108 "codegen/dynamic_drops.kl"
     kl_t19 = false;
 #line 106 "codegen/dynamic_drops.kl"
     goto bb6;
     bb6:
 #line 110 "codegen/dynamic_drops.kl"
-    if ( kl_t19 ) kl__1P__dtor( &kl_v_3 );
+    if ( kl_t19 ) kl_7codegen_1P__dtor( &kl_v_3 );
 #line 110 "codegen/dynamic_drops.kl"
     kl_v_3 = kl_w_8;
 #line 110 "codegen/dynamic_drops.kl"
@@ -1928,7 +1928,7 @@ struct kl_7prelude_result__I4void_3i32E kl__11assignment2__4bool_4bool( bool kl_
     kl_t19 = true;
     if ( kl_c1_2 ) goto bb7; else goto bb10;
     bb7:
-    kl_t14 = kl__3get__(  );
+    kl_t14 = kl_7codegen_3get__(  );
 #line 113 "codegen/dynamic_drops.kl"
     kl_t25 = true;
 #line 113 "codegen/dynamic_drops.kl"
@@ -1945,7 +1945,7 @@ struct kl_7prelude_result__I4void_3i32E kl__11assignment2__4bool_4bool( bool kl_
 #line 113 "codegen/dynamic_drops.kl"
     kl_t26 = true;
 #line 113 "codegen/dynamic_drops.kl"
-    if ( kl_t22 ) kl__1P__dtor( &kl_w_8 );
+    if ( kl_t22 ) kl_7codegen_1P__dtor( &kl_w_8 );
 #line 113 "codegen/dynamic_drops.kl"
     kl_w_8 = kl_t17;
 #line 113 "codegen/dynamic_drops.kl"
@@ -1953,9 +1953,9 @@ struct kl_7prelude_result__I4void_3i32E kl__11assignment2__4bool_4bool( bool kl_
 #line 113 "codegen/dynamic_drops.kl"
     kl_t22 = true;
 #line 113 "codegen/dynamic_drops.kl"
-    if ( kl_t26 ) kl__1P__dtor( &kl_t17 );
+    if ( kl_t26 ) kl_7codegen_1P__dtor( &kl_t17 );
 #line 113 "codegen/dynamic_drops.kl"
-    if ( kl_t25 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t14 );
+    if ( kl_t25 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t14 );
 #line 113 "codegen/dynamic_drops.kl"
     kl_t25 = false;
 #line 113 "codegen/dynamic_drops.kl"
@@ -1967,13 +1967,13 @@ struct kl_7prelude_result__I4void_3i32E kl__11assignment2__4bool_4bool( bool kl_
 #line 113 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t15.kl_3err_error;
 #line 113 "codegen/dynamic_drops.kl"
-    if ( kl_t25 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t14 );
+    if ( kl_t25 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t14 );
 #line 113 "codegen/dynamic_drops.kl"
-    if ( kl_t22 ) kl__1P__dtor( &kl_w_8 );
+    if ( kl_t22 ) kl_7codegen_1P__dtor( &kl_w_8 );
 #line 113 "codegen/dynamic_drops.kl"
     kl_t22 = false;
 #line 113 "codegen/dynamic_drops.kl"
-    if ( kl_t19 ) kl__1P__dtor( &kl_v_3 );
+    if ( kl_t19 ) kl_7codegen_1P__dtor( &kl_v_3 );
 #line 113 "codegen/dynamic_drops.kl"
     kl_t19 = false;
 #line 113 "codegen/dynamic_drops.kl"
@@ -1983,11 +1983,11 @@ struct kl_7prelude_result__I4void_3i32E kl__11assignment2__4bool_4bool( bool kl_
 #line 115 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t18;
 #line 115 "codegen/dynamic_drops.kl"
-    if ( kl_t22 ) kl__1P__dtor( &kl_w_8 );
+    if ( kl_t22 ) kl_7codegen_1P__dtor( &kl_w_8 );
 #line 115 "codegen/dynamic_drops.kl"
     kl_t22 = false;
 #line 115 "codegen/dynamic_drops.kl"
-    if ( kl_t19 ) kl__1P__dtor( &kl_v_3 );
+    if ( kl_t19 ) kl_7codegen_1P__dtor( &kl_v_3 );
 #line 115 "codegen/dynamic_drops.kl"
     kl_t19 = false;
 #line 115 "codegen/dynamic_drops.kl"
@@ -1995,19 +1995,19 @@ struct kl_7prelude_result__I4void_3i32E kl__11assignment2__4bool_4bool( bool kl_
 }
 
 #line 118 "codegen/dynamic_drops.kl"
-struct kl_7prelude_result__I4void_3i32E kl__11assignment1__4bool( bool kl_c0_1 )
+struct kl_7prelude_result__I4void_3i32E kl_7codegen_11assignment1__4bool( bool kl_c0_1 )
 {
     struct kl_7prelude_result__I4void_3i32E kl_t0;
-    struct kl__P kl_v_2;
-    struct kl_7prelude_result__I1P_3i32E kl_t3;
-    struct kl_7prelude_result__I1P_3i32E kl_t4;
+    struct kl_7codegen_P kl_v_2;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t3;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t4;
     bool kl_t5;
-    struct kl__P kl_t6;
-    struct kl__P kl_w_7;
-    struct kl_7prelude_result__I1P_3i32E kl_t8;
-    struct kl_7prelude_result__I1P_3i32E kl_t9;
+    struct kl_7codegen_P kl_t6;
+    struct kl_7codegen_P kl_w_7;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t8;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t9;
     bool kl_t10;
-    struct kl__P kl_t11;
+    struct kl_7codegen_P kl_t11;
     struct kl_7prelude_result__I4void_3i32E kl_t13;
     bool kl_t14;
     bool kl_t15;
@@ -2030,7 +2030,7 @@ struct kl_7prelude_result__I4void_3i32E kl__11assignment1__4bool( bool kl_c0_1 )
 #line 120 "codegen/dynamic_drops.kl"
     kl_t14 = false;
 #line 120 "codegen/dynamic_drops.kl"
-    kl_t3 = kl__3get__(  );
+    kl_t3 = kl_7codegen_3get__(  );
 #line 120 "codegen/dynamic_drops.kl"
     kl_t15 = true;
 #line 120 "codegen/dynamic_drops.kl"
@@ -2053,16 +2053,16 @@ struct kl_7prelude_result__I4void_3i32E kl__11assignment1__4bool( bool kl_c0_1 )
 #line 120 "codegen/dynamic_drops.kl"
     kl_t14 = true;
 #line 120 "codegen/dynamic_drops.kl"
-    if ( kl_t16 ) kl__1P__dtor( &kl_t6 );
+    if ( kl_t16 ) kl_7codegen_1P__dtor( &kl_t6 );
 #line 120 "codegen/dynamic_drops.kl"
-    if ( kl_t15 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t3 );
+    if ( kl_t15 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t3 );
 #line 120 "codegen/dynamic_drops.kl"
     kl_t15 = false;
 #line 120 "codegen/dynamic_drops.kl"
     kl_t16 = false;
     kl_t17 = false;
 #line 121 "codegen/dynamic_drops.kl"
-    kl_t8 = kl__3get__(  );
+    kl_t8 = kl_7codegen_3get__(  );
 #line 121 "codegen/dynamic_drops.kl"
     kl_t18 = true;
 #line 121 "codegen/dynamic_drops.kl"
@@ -2079,7 +2079,7 @@ struct kl_7prelude_result__I4void_3i32E kl__11assignment1__4bool( bool kl_c0_1 )
 #line 120 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t4.kl_3err_error;
 #line 120 "codegen/dynamic_drops.kl"
-    if ( kl_t15 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t3 );
+    if ( kl_t15 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t3 );
 #line 120 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb3:
@@ -2094,9 +2094,9 @@ struct kl_7prelude_result__I4void_3i32E kl__11assignment1__4bool( bool kl_c0_1 )
 #line 121 "codegen/dynamic_drops.kl"
     kl_t17 = true;
 #line 121 "codegen/dynamic_drops.kl"
-    if ( kl_t19 ) kl__1P__dtor( &kl_t11 );
+    if ( kl_t19 ) kl_7codegen_1P__dtor( &kl_t11 );
 #line 121 "codegen/dynamic_drops.kl"
-    if ( kl_t18 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t8 );
+    if ( kl_t18 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t8 );
 #line 121 "codegen/dynamic_drops.kl"
     kl_t18 = false;
 #line 121 "codegen/dynamic_drops.kl"
@@ -2108,23 +2108,23 @@ struct kl_7prelude_result__I4void_3i32E kl__11assignment1__4bool( bool kl_c0_1 )
 #line 121 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t9.kl_3err_error;
 #line 121 "codegen/dynamic_drops.kl"
-    if ( kl_t18 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t8 );
+    if ( kl_t18 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t8 );
 #line 121 "codegen/dynamic_drops.kl"
-    if ( kl_t14 ) kl__1P__dtor( &kl_v_2 );
+    if ( kl_t14 ) kl_7codegen_1P__dtor( &kl_v_2 );
 #line 121 "codegen/dynamic_drops.kl"
     kl_t14 = false;
 #line 121 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb5:
 #line 124 "codegen/dynamic_drops.kl"
-    kl__4sink__M1P( kl_v_2 );
+    kl_7codegen_4sink__MQ7codegen1P( kl_v_2 );
 #line 124 "codegen/dynamic_drops.kl"
     kl_t14 = false;
 #line 122 "codegen/dynamic_drops.kl"
     goto bb6;
     bb6:
 #line 126 "codegen/dynamic_drops.kl"
-    if ( kl_t14 ) kl__1P__dtor( &kl_v_2 );
+    if ( kl_t14 ) kl_7codegen_1P__dtor( &kl_v_2 );
 #line 126 "codegen/dynamic_drops.kl"
     kl_v_2 = kl_w_7;
 #line 126 "codegen/dynamic_drops.kl"
@@ -2135,11 +2135,11 @@ struct kl_7prelude_result__I4void_3i32E kl__11assignment1__4bool( bool kl_c0_1 )
 #line 127 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t13;
 #line 127 "codegen/dynamic_drops.kl"
-    if ( kl_t17 ) kl__1P__dtor( &kl_w_7 );
+    if ( kl_t17 ) kl_7codegen_1P__dtor( &kl_w_7 );
 #line 127 "codegen/dynamic_drops.kl"
     kl_t17 = false;
 #line 127 "codegen/dynamic_drops.kl"
-    if ( kl_t14 ) kl__1P__dtor( &kl_v_2 );
+    if ( kl_t14 ) kl_7codegen_1P__dtor( &kl_v_2 );
 #line 127 "codegen/dynamic_drops.kl"
     kl_t14 = false;
 #line 127 "codegen/dynamic_drops.kl"
@@ -2147,27 +2147,27 @@ struct kl_7prelude_result__I4void_3i32E kl__11assignment1__4bool( bool kl_c0_1 )
 }
 
 #line 130 "codegen/dynamic_drops.kl"
-struct kl_7prelude_result__I4void_3i32E kl__12array_simple__( void )
+struct kl_7prelude_result__I4void_3i32E kl_7codegen_12array_simple__( void )
 {
     struct kl_7prelude_result__I4void_3i32E kl_t0;
-    struct kl__A4_1P kl_x_1;
-    struct kl__A4_1P kl_t2;
-    struct kl_7prelude_result__I1P_3i32E kl_t3;
-    struct kl_7prelude_result__I1P_3i32E kl_t4;
+    struct kl__A4_Q7codegen1P kl_x_1;
+    struct kl__A4_Q7codegen1P kl_t2;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t3;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t4;
     bool kl_t5;
-    struct kl__P kl_t6;
-    struct kl_7prelude_result__I1P_3i32E kl_t7;
-    struct kl_7prelude_result__I1P_3i32E kl_t8;
+    struct kl_7codegen_P kl_t6;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t7;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t8;
     bool kl_t9;
-    struct kl__P kl_t10;
-    struct kl_7prelude_result__I1P_3i32E kl_t11;
-    struct kl_7prelude_result__I1P_3i32E kl_t12;
+    struct kl_7codegen_P kl_t10;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t11;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t12;
     bool kl_t13;
-    struct kl__P kl_t14;
-    struct kl_7prelude_result__I1P_3i32E kl_t15;
-    struct kl_7prelude_result__I1P_3i32E kl_t16;
+    struct kl_7codegen_P kl_t14;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t15;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t16;
     bool kl_t17;
-    struct kl__P kl_t18;
+    struct kl_7codegen_P kl_t18;
     uint64_t kl_t19;
     uint64_t kl_t20;
     uint64_t kl_t21;
@@ -2207,7 +2207,7 @@ struct kl_7prelude_result__I4void_3i32E kl__12array_simple__( void )
 #line 132 "codegen/dynamic_drops.kl"
     kl_t24 = false;
 #line 132 "codegen/dynamic_drops.kl"
-    kl_t3 = kl__3get__(  );
+    kl_t3 = kl_7codegen_3get__(  );
 #line 132 "codegen/dynamic_drops.kl"
     kl_t25 = true;
 #line 132 "codegen/dynamic_drops.kl"
@@ -2224,7 +2224,7 @@ struct kl_7prelude_result__I4void_3i32E kl__12array_simple__( void )
 #line 132 "codegen/dynamic_drops.kl"
     kl_t26 = true;
 #line 132 "codegen/dynamic_drops.kl"
-    kl_t7 = kl__3get__(  );
+    kl_t7 = kl_7codegen_3get__(  );
 #line 132 "codegen/dynamic_drops.kl"
     kl_t27 = true;
 #line 132 "codegen/dynamic_drops.kl"
@@ -2241,7 +2241,7 @@ struct kl_7prelude_result__I4void_3i32E kl__12array_simple__( void )
 #line 132 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t4.kl_3err_error;
 #line 132 "codegen/dynamic_drops.kl"
-    if ( kl_t25 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t3 );
+    if ( kl_t25 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t3 );
 #line 132 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb3:
@@ -2250,7 +2250,7 @@ struct kl_7prelude_result__I4void_3i32E kl__12array_simple__( void )
 #line 132 "codegen/dynamic_drops.kl"
     kl_t28 = true;
 #line 132 "codegen/dynamic_drops.kl"
-    kl_t11 = kl__3get__(  );
+    kl_t11 = kl_7codegen_3get__(  );
 #line 132 "codegen/dynamic_drops.kl"
     kl_t29 = true;
 #line 132 "codegen/dynamic_drops.kl"
@@ -2267,11 +2267,11 @@ struct kl_7prelude_result__I4void_3i32E kl__12array_simple__( void )
 #line 132 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t8.kl_3err_error;
 #line 132 "codegen/dynamic_drops.kl"
-    if ( kl_t27 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t7 );
+    if ( kl_t27 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t7 );
 #line 132 "codegen/dynamic_drops.kl"
-    if ( kl_t26 ) kl__1P__dtor( &kl_t6 );
+    if ( kl_t26 ) kl_7codegen_1P__dtor( &kl_t6 );
 #line 132 "codegen/dynamic_drops.kl"
-    if ( kl_t25 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t3 );
+    if ( kl_t25 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t3 );
 #line 132 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb5:
@@ -2280,7 +2280,7 @@ struct kl_7prelude_result__I4void_3i32E kl__12array_simple__( void )
 #line 132 "codegen/dynamic_drops.kl"
     kl_t30 = true;
 #line 132 "codegen/dynamic_drops.kl"
-    kl_t15 = kl__3get__(  );
+    kl_t15 = kl_7codegen_3get__(  );
 #line 132 "codegen/dynamic_drops.kl"
     kl_t31 = true;
 #line 132 "codegen/dynamic_drops.kl"
@@ -2297,15 +2297,15 @@ struct kl_7prelude_result__I4void_3i32E kl__12array_simple__( void )
 #line 132 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t12.kl_3err_error;
 #line 132 "codegen/dynamic_drops.kl"
-    if ( kl_t29 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t11 );
+    if ( kl_t29 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t11 );
 #line 132 "codegen/dynamic_drops.kl"
-    if ( kl_t28 ) kl__1P__dtor( &kl_t10 );
+    if ( kl_t28 ) kl_7codegen_1P__dtor( &kl_t10 );
 #line 132 "codegen/dynamic_drops.kl"
-    if ( kl_t27 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t7 );
+    if ( kl_t27 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t7 );
 #line 132 "codegen/dynamic_drops.kl"
-    if ( kl_t26 ) kl__1P__dtor( &kl_t6 );
+    if ( kl_t26 ) kl_7codegen_1P__dtor( &kl_t6 );
 #line 132 "codegen/dynamic_drops.kl"
-    if ( kl_t25 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t3 );
+    if ( kl_t25 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t3 );
 #line 132 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb7:
@@ -2350,23 +2350,23 @@ struct kl_7prelude_result__I4void_3i32E kl__12array_simple__( void )
 #line 132 "codegen/dynamic_drops.kl"
     kl_t24 = false;
 #line 132 "codegen/dynamic_drops.kl"
-    if ( kl_t24 ) kl__A4_1P__dtor( &kl_t2 );
+    if ( kl_t24 ) kl__A4_Q7codegen1P__dtor( &kl_t2 );
 #line 132 "codegen/dynamic_drops.kl"
-    if ( kl_t32 ) kl__1P__dtor( &kl_t18 );
+    if ( kl_t32 ) kl_7codegen_1P__dtor( &kl_t18 );
 #line 132 "codegen/dynamic_drops.kl"
-    if ( kl_t31 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t15 );
+    if ( kl_t31 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t15 );
 #line 132 "codegen/dynamic_drops.kl"
-    if ( kl_t30 ) kl__1P__dtor( &kl_t14 );
+    if ( kl_t30 ) kl_7codegen_1P__dtor( &kl_t14 );
 #line 132 "codegen/dynamic_drops.kl"
-    if ( kl_t29 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t11 );
+    if ( kl_t29 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t11 );
 #line 132 "codegen/dynamic_drops.kl"
-    if ( kl_t28 ) kl__1P__dtor( &kl_t10 );
+    if ( kl_t28 ) kl_7codegen_1P__dtor( &kl_t10 );
 #line 132 "codegen/dynamic_drops.kl"
-    if ( kl_t27 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t7 );
+    if ( kl_t27 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t7 );
 #line 132 "codegen/dynamic_drops.kl"
-    if ( kl_t26 ) kl__1P__dtor( &kl_t6 );
+    if ( kl_t26 ) kl_7codegen_1P__dtor( &kl_t6 );
 #line 132 "codegen/dynamic_drops.kl"
-    if ( kl_t25 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t3 );
+    if ( kl_t25 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t3 );
 #line 132 "codegen/dynamic_drops.kl"
     kl_t25 = false;
 #line 132 "codegen/dynamic_drops.kl"
@@ -2389,7 +2389,7 @@ struct kl_7prelude_result__I4void_3i32E kl__12array_simple__( void )
 #line 133 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t23;
 #line 133 "codegen/dynamic_drops.kl"
-    kl__A4_1P__dtor( &kl_x_1 );
+    kl__A4_Q7codegen1P__dtor( &kl_x_1 );
 #line 133 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb8:
@@ -2398,39 +2398,39 @@ struct kl_7prelude_result__I4void_3i32E kl__12array_simple__( void )
 #line 132 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t16.kl_3err_error;
 #line 132 "codegen/dynamic_drops.kl"
-    if ( kl_t31 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t15 );
+    if ( kl_t31 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t15 );
 #line 132 "codegen/dynamic_drops.kl"
-    if ( kl_t30 ) kl__1P__dtor( &kl_t14 );
+    if ( kl_t30 ) kl_7codegen_1P__dtor( &kl_t14 );
 #line 132 "codegen/dynamic_drops.kl"
-    if ( kl_t29 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t11 );
+    if ( kl_t29 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t11 );
 #line 132 "codegen/dynamic_drops.kl"
-    if ( kl_t28 ) kl__1P__dtor( &kl_t10 );
+    if ( kl_t28 ) kl_7codegen_1P__dtor( &kl_t10 );
 #line 132 "codegen/dynamic_drops.kl"
-    if ( kl_t27 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t7 );
+    if ( kl_t27 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t7 );
 #line 132 "codegen/dynamic_drops.kl"
-    if ( kl_t26 ) kl__1P__dtor( &kl_t6 );
+    if ( kl_t26 ) kl_7codegen_1P__dtor( &kl_t6 );
 #line 132 "codegen/dynamic_drops.kl"
-    if ( kl_t25 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t3 );
+    if ( kl_t25 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t3 );
 #line 132 "codegen/dynamic_drops.kl"
     return kl_t0;
 #line 134 "codegen/dynamic_drops.kl"
 }
 
 #line 136 "codegen/dynamic_drops.kl"
-struct kl_7prelude_result__I4void_3i32E kl__22mixed_drop_and_nondrop__( void )
+struct kl_7prelude_result__I4void_3i32E kl_7codegen_22mixed_drop_and_nondrop__( void )
 {
     struct kl_7prelude_result__I4void_3i32E kl_t0;
-    struct kl__P kl_x_1;
+    struct kl_7codegen_P kl_x_1;
     int32_t kl_y_2;
-    struct kl__P kl_z_3;
-    struct kl_7prelude_result__I1P_3i32E kl_t4;
-    struct kl_7prelude_result__I1P_3i32E kl_t5;
+    struct kl_7codegen_P kl_z_3;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t4;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t5;
     bool kl_t6;
-    struct kl__P kl_t7;
-    struct kl_7prelude_result__I1P_3i32E kl_t8;
-    struct kl_7prelude_result__I1P_3i32E kl_t9;
+    struct kl_7codegen_P kl_t7;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t8;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t9;
     bool kl_t10;
-    struct kl__P kl_t11;
+    struct kl_7codegen_P kl_t11;
     struct kl_7prelude_result__I4void_3i32E kl_t12;
     bool kl_t13;
     bool kl_t14;
@@ -2455,7 +2455,7 @@ struct kl_7prelude_result__I4void_3i32E kl__22mixed_drop_and_nondrop__( void )
     kl_t13 = false;
 #line 140 "codegen/dynamic_drops.kl"
     kl_t14 = false;
-    kl_t4 = kl__3get__(  );
+    kl_t4 = kl_7codegen_3get__(  );
 #line 141 "codegen/dynamic_drops.kl"
     kl_t15 = true;
 #line 141 "codegen/dynamic_drops.kl"
@@ -2472,7 +2472,7 @@ struct kl_7prelude_result__I4void_3i32E kl__22mixed_drop_and_nondrop__( void )
 #line 141 "codegen/dynamic_drops.kl"
     kl_t16 = true;
 #line 141 "codegen/dynamic_drops.kl"
-    if ( kl_t13 ) kl__1P__dtor( &kl_x_1 );
+    if ( kl_t13 ) kl_7codegen_1P__dtor( &kl_x_1 );
 #line 141 "codegen/dynamic_drops.kl"
     kl_x_1 = kl_t7;
 #line 141 "codegen/dynamic_drops.kl"
@@ -2480,15 +2480,15 @@ struct kl_7prelude_result__I4void_3i32E kl__22mixed_drop_and_nondrop__( void )
 #line 141 "codegen/dynamic_drops.kl"
     kl_t13 = true;
 #line 141 "codegen/dynamic_drops.kl"
-    if ( kl_t16 ) kl__1P__dtor( &kl_t7 );
+    if ( kl_t16 ) kl_7codegen_1P__dtor( &kl_t7 );
 #line 141 "codegen/dynamic_drops.kl"
-    if ( kl_t15 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t4 );
+    if ( kl_t15 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t4 );
 #line 141 "codegen/dynamic_drops.kl"
     kl_t15 = false;
 #line 141 "codegen/dynamic_drops.kl"
     kl_t16 = false;
     kl_y_2 = 5;
-    kl_t8 = kl__3get__(  );
+    kl_t8 = kl_7codegen_3get__(  );
 #line 143 "codegen/dynamic_drops.kl"
     kl_t17 = true;
 #line 143 "codegen/dynamic_drops.kl"
@@ -2505,13 +2505,13 @@ struct kl_7prelude_result__I4void_3i32E kl__22mixed_drop_and_nondrop__( void )
 #line 141 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t5.kl_3err_error;
 #line 141 "codegen/dynamic_drops.kl"
-    if ( kl_t15 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t4 );
+    if ( kl_t15 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t4 );
 #line 141 "codegen/dynamic_drops.kl"
-    if ( kl_t14 ) kl__1P__dtor( &kl_z_3 );
+    if ( kl_t14 ) kl_7codegen_1P__dtor( &kl_z_3 );
 #line 141 "codegen/dynamic_drops.kl"
     kl_t14 = false;
 #line 141 "codegen/dynamic_drops.kl"
-    if ( kl_t13 ) kl__1P__dtor( &kl_x_1 );
+    if ( kl_t13 ) kl_7codegen_1P__dtor( &kl_x_1 );
 #line 141 "codegen/dynamic_drops.kl"
     kl_t13 = false;
 #line 141 "codegen/dynamic_drops.kl"
@@ -2521,7 +2521,7 @@ struct kl_7prelude_result__I4void_3i32E kl__22mixed_drop_and_nondrop__( void )
 #line 143 "codegen/dynamic_drops.kl"
     kl_t18 = true;
 #line 143 "codegen/dynamic_drops.kl"
-    if ( kl_t14 ) kl__1P__dtor( &kl_z_3 );
+    if ( kl_t14 ) kl_7codegen_1P__dtor( &kl_z_3 );
 #line 143 "codegen/dynamic_drops.kl"
     kl_z_3 = kl_t11;
 #line 143 "codegen/dynamic_drops.kl"
@@ -2529,9 +2529,9 @@ struct kl_7prelude_result__I4void_3i32E kl__22mixed_drop_and_nondrop__( void )
 #line 143 "codegen/dynamic_drops.kl"
     kl_t14 = true;
 #line 143 "codegen/dynamic_drops.kl"
-    if ( kl_t18 ) kl__1P__dtor( &kl_t11 );
+    if ( kl_t18 ) kl_7codegen_1P__dtor( &kl_t11 );
 #line 143 "codegen/dynamic_drops.kl"
-    if ( kl_t17 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t8 );
+    if ( kl_t17 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t8 );
 #line 143 "codegen/dynamic_drops.kl"
     kl_t17 = false;
 #line 143 "codegen/dynamic_drops.kl"
@@ -2540,11 +2540,11 @@ struct kl_7prelude_result__I4void_3i32E kl__22mixed_drop_and_nondrop__( void )
 #line 144 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t12;
 #line 144 "codegen/dynamic_drops.kl"
-    if ( kl_t14 ) kl__1P__dtor( &kl_z_3 );
+    if ( kl_t14 ) kl_7codegen_1P__dtor( &kl_z_3 );
 #line 144 "codegen/dynamic_drops.kl"
     kl_t14 = false;
 #line 144 "codegen/dynamic_drops.kl"
-    if ( kl_t13 ) kl__1P__dtor( &kl_x_1 );
+    if ( kl_t13 ) kl_7codegen_1P__dtor( &kl_x_1 );
 #line 144 "codegen/dynamic_drops.kl"
     kl_t13 = false;
 #line 144 "codegen/dynamic_drops.kl"
@@ -2555,13 +2555,13 @@ struct kl_7prelude_result__I4void_3i32E kl__22mixed_drop_and_nondrop__( void )
 #line 143 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t9.kl_3err_error;
 #line 143 "codegen/dynamic_drops.kl"
-    if ( kl_t17 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t8 );
+    if ( kl_t17 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t8 );
 #line 143 "codegen/dynamic_drops.kl"
-    if ( kl_t14 ) kl__1P__dtor( &kl_z_3 );
+    if ( kl_t14 ) kl_7codegen_1P__dtor( &kl_z_3 );
 #line 143 "codegen/dynamic_drops.kl"
     kl_t14 = false;
 #line 143 "codegen/dynamic_drops.kl"
-    if ( kl_t13 ) kl__1P__dtor( &kl_x_1 );
+    if ( kl_t13 ) kl_7codegen_1P__dtor( &kl_x_1 );
 #line 143 "codegen/dynamic_drops.kl"
     kl_t13 = false;
 #line 143 "codegen/dynamic_drops.kl"
@@ -2570,23 +2570,23 @@ struct kl_7prelude_result__I4void_3i32E kl__22mixed_drop_and_nondrop__( void )
 }
 
 #line 147 "codegen/dynamic_drops.kl"
-struct kl_7prelude_result__I4void_3i32E kl__9init_move__4bool( bool kl_c_1 )
+struct kl_7prelude_result__I4void_3i32E kl_7codegen_9init_move__4bool( bool kl_c_1 )
 {
     struct kl_7prelude_result__I4void_3i32E kl_t0;
-    struct kl_2kl8optional_optional__I1PE kl_foo_2;
-    struct kl_2kl8optional_optional__I1PE kl_t3;
-    struct kl_2kl8optional_optional__I1PE kl_t4;
-    struct kl_7prelude_result__I1P_3i32E kl_t5;
-    struct kl_7prelude_result__I1P_3i32E kl_t6;
+    struct kl_2kl8optional_optional__IQ7codegen1PE kl_foo_2;
+    struct kl_2kl8optional_optional__IQ7codegen1PE kl_t3;
+    struct kl_2kl8optional_optional__IQ7codegen1PE kl_t4;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t5;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t6;
     bool kl_t7;
-    struct kl__P kl_t8;
-    struct kl_2kl8optional_optional__I1PE kl_t9;
-    struct kl_2kl8optional_optional__I1PE kl_x_10;
-    struct kl_2kl8optional_optional__I1PE kl_t11;
+    struct kl_7codegen_P kl_t8;
+    struct kl_2kl8optional_optional__IQ7codegen1PE kl_t9;
+    struct kl_2kl8optional_optional__IQ7codegen1PE kl_x_10;
+    struct kl_2kl8optional_optional__IQ7codegen1PE kl_t11;
     bool kl_t12;
-    struct kl_2kl8optional_optional__I1PE kl_t13;
-    struct kl__P kl_b_14;
-    struct kl_2kl8optional_optional__I1PE kl_t15;
+    struct kl_2kl8optional_optional__IQ7codegen1PE kl_t13;
+    struct kl_7codegen_P kl_b_14;
+    struct kl_2kl8optional_optional__IQ7codegen1PE kl_t15;
     struct kl_7prelude_result__I4void_3i32E kl_t16;
     bool kl_t17;
     bool kl_t18;
@@ -2624,7 +2624,7 @@ struct kl_7prelude_result__I4void_3i32E kl__9init_move__4bool( bool kl_c_1 )
     if ( kl_c_1 ) goto bb1; else goto bb2;
     bb1:
 #line 149 "codegen/dynamic_drops.kl"
-    kl_t5 = kl__3get__(  );
+    kl_t5 = kl_7codegen_3get__(  );
 #line 149 "codegen/dynamic_drops.kl"
     kl_t20 = true;
 #line 149 "codegen/dynamic_drops.kl"
@@ -2656,15 +2656,15 @@ struct kl_7prelude_result__I4void_3i32E kl__9init_move__4bool( bool kl_c_1 )
 #line 149 "codegen/dynamic_drops.kl"
     kl_t17 = true;
 #line 149 "codegen/dynamic_drops.kl"
-    if ( kl_t18 ) kl_2kl8optional_8optional__I1PE__dtor( &kl_t3 );
+    if ( kl_t18 ) kl_2kl8optional_8optional__IQ7codegen1PE__dtor( &kl_t3 );
 #line 149 "codegen/dynamic_drops.kl"
-    if ( kl_t22 ) kl_2kl8optional_8optional__I1PE__dtor( &kl_t9 );
+    if ( kl_t22 ) kl_2kl8optional_8optional__IQ7codegen1PE__dtor( &kl_t9 );
 #line 149 "codegen/dynamic_drops.kl"
-    if ( kl_t19 ) kl_2kl8optional_8optional__I1PE__dtor( &kl_t4 );
+    if ( kl_t19 ) kl_2kl8optional_8optional__IQ7codegen1PE__dtor( &kl_t4 );
 #line 149 "codegen/dynamic_drops.kl"
-    if ( kl_t21 ) kl__1P__dtor( &kl_t8 );
+    if ( kl_t21 ) kl_7codegen_1P__dtor( &kl_t8 );
 #line 149 "codegen/dynamic_drops.kl"
-    if ( kl_t20 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t5 );
+    if ( kl_t20 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t5 );
 #line 149 "codegen/dynamic_drops.kl"
     kl_t20 = false;
 #line 149 "codegen/dynamic_drops.kl"
@@ -2716,7 +2716,7 @@ struct kl_7prelude_result__I4void_3i32E kl__9init_move__4bool( bool kl_c_1 )
 #line 149 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t6.kl_3err_error;
 #line 149 "codegen/dynamic_drops.kl"
-    if ( kl_t20 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t5 );
+    if ( kl_t20 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t5 );
 #line 149 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb6:
@@ -2740,7 +2740,7 @@ struct kl_7prelude_result__I4void_3i32E kl__9init_move__4bool( bool kl_c_1 )
 #line 154 "codegen/dynamic_drops.kl"
     kl_t26 = true;
 #line 154 "codegen/dynamic_drops.kl"
-    if ( kl_t23 ) kl_2kl8optional_8optional__I1PE__dtor( &kl_x_10 );
+    if ( kl_t23 ) kl_2kl8optional_8optional__IQ7codegen1PE__dtor( &kl_x_10 );
 #line 154 "codegen/dynamic_drops.kl"
     kl_x_10 = kl_t15;
 #line 154 "codegen/dynamic_drops.kl"
@@ -2748,17 +2748,17 @@ struct kl_7prelude_result__I4void_3i32E kl__9init_move__4bool( bool kl_c_1 )
 #line 154 "codegen/dynamic_drops.kl"
     kl_t23 = true;
 #line 154 "codegen/dynamic_drops.kl"
-    if ( kl_t26 ) kl_2kl8optional_8optional__I1PE__dtor( &kl_t15 );
+    if ( kl_t26 ) kl_2kl8optional_8optional__IQ7codegen1PE__dtor( &kl_t15 );
 #line 154 "codegen/dynamic_drops.kl"
     kl_t26 = false;
-    if ( kl_t25 ) kl__1P__dtor( &kl_b_14 );
+    if ( kl_t25 ) kl_7codegen_1P__dtor( &kl_b_14 );
 #line 155 "codegen/dynamic_drops.kl"
     kl_t25 = false;
 #line 155 "codegen/dynamic_drops.kl"
     goto bb7;
     bb7:
 #line 151 "codegen/dynamic_drops.kl"
-    if ( kl_t24 ) kl_2kl8optional_8optional__I1PE__dtor( &kl_t11 );
+    if ( kl_t24 ) kl_2kl8optional_8optional__IQ7codegen1PE__dtor( &kl_t11 );
 #line 151 "codegen/dynamic_drops.kl"
     kl_t24 = false;
 #line 159 "codegen/dynamic_drops.kl"
@@ -2766,11 +2766,11 @@ struct kl_7prelude_result__I4void_3i32E kl__9init_move__4bool( bool kl_c_1 )
 #line 159 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t16;
 #line 159 "codegen/dynamic_drops.kl"
-    if ( kl_t23 ) kl_2kl8optional_8optional__I1PE__dtor( &kl_x_10 );
+    if ( kl_t23 ) kl_2kl8optional_8optional__IQ7codegen1PE__dtor( &kl_x_10 );
 #line 159 "codegen/dynamic_drops.kl"
     kl_t23 = false;
 #line 159 "codegen/dynamic_drops.kl"
-    if ( kl_t17 ) kl_2kl8optional_8optional__I1PE__dtor( &kl_foo_2 );
+    if ( kl_t17 ) kl_2kl8optional_8optional__IQ7codegen1PE__dtor( &kl_foo_2 );
 #line 159 "codegen/dynamic_drops.kl"
     kl_t17 = false;
 #line 159 "codegen/dynamic_drops.kl"
@@ -2778,28 +2778,28 @@ struct kl_7prelude_result__I4void_3i32E kl__9init_move__4bool( bool kl_c_1 )
 }
 
 #line 162 "codegen/dynamic_drops.kl"
-struct kl_7prelude_result__I1P_3i32E kl__12after_return__( void )
+struct kl_7prelude_result__IQ7codegen1P_3i32E kl_7codegen_12after_return__( void )
 {
-    struct kl_7prelude_result__I1P_3i32E kl_t0;
-    struct kl_7prelude_result__I1P_3i32E kl_t1;
-    struct kl_7prelude_result__I1P_3i32E kl_t2;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t0;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t1;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t2;
     bool kl_t3;
-    struct kl__P kl_t4;
-    struct kl__P kl_p_5;
-    struct kl_7prelude_result__I1P_3i32E kl_t6;
-    struct kl_7prelude_result__I1P_3i32E kl_t7;
+    struct kl_7codegen_P kl_t4;
+    struct kl_7codegen_P kl_p_5;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t6;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t7;
     bool kl_t8;
-    struct kl__P kl_t9;
-    struct kl_7prelude_result__I1P_3i32E kl_t10;
-    struct kl_7prelude_result__I1P_3i32E kl_t11;
+    struct kl_7codegen_P kl_t9;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t10;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t11;
     bool kl_t12;
-    struct kl__P kl_t13;
-    struct kl__P kl_q_14;
-    struct kl_7prelude_result__I1P_3i32E kl_t15;
-    struct kl_7prelude_result__I1P_3i32E kl_t16;
+    struct kl_7codegen_P kl_t13;
+    struct kl_7codegen_P kl_q_14;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t15;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t16;
     bool kl_t17;
-    struct kl__P kl_t18;
-    struct kl_7prelude_result__I1P_3i32E kl_t19;
+    struct kl_7codegen_P kl_t18;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t19;
     bool kl_t20;
     bool kl_t21;
     bool kl_t22;
@@ -2822,7 +2822,7 @@ struct kl_7prelude_result__I1P_3i32E kl__12after_return__( void )
 #line 164 "codegen/dynamic_drops.kl"
     kl_t26 = false;
 #line 164 "codegen/dynamic_drops.kl"
-    kl_t1 = kl__3get__(  );
+    kl_t1 = kl_7codegen_3get__(  );
 #line 164 "codegen/dynamic_drops.kl"
     kl_t20 = true;
 #line 164 "codegen/dynamic_drops.kl"
@@ -2837,12 +2837,12 @@ struct kl_7prelude_result__I1P_3i32E kl__12after_return__( void )
 #line 164 "codegen/dynamic_drops.kl"
     kl_t4 = kl_t2.kl_2ok_value;
 #line 164 "codegen/dynamic_drops.kl"
-    kl__1P__dtor( &kl_t4 );
+    kl_7codegen_1P__dtor( &kl_t4 );
 #line 164 "codegen/dynamic_drops.kl"
-    if ( kl_t20 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t1 );
+    if ( kl_t20 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t1 );
 #line 164 "codegen/dynamic_drops.kl"
     kl_t20 = false;
-    kl_t6 = kl__3get__(  );
+    kl_t6 = kl_7codegen_3get__(  );
 #line 165 "codegen/dynamic_drops.kl"
     kl_t21 = true;
 #line 165 "codegen/dynamic_drops.kl"
@@ -2859,7 +2859,7 @@ struct kl_7prelude_result__I1P_3i32E kl__12after_return__( void )
 #line 164 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t2.kl_3err_error;
 #line 164 "codegen/dynamic_drops.kl"
-    if ( kl_t20 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t1 );
+    if ( kl_t20 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t1 );
 #line 164 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb3:
@@ -2872,15 +2872,15 @@ struct kl_7prelude_result__I1P_3i32E kl__12after_return__( void )
 #line 165 "codegen/dynamic_drops.kl"
     kl_t22 = false;
 #line 165 "codegen/dynamic_drops.kl"
-    if ( kl_t22 ) kl__1P__dtor( &kl_t9 );
+    if ( kl_t22 ) kl_7codegen_1P__dtor( &kl_t9 );
 #line 165 "codegen/dynamic_drops.kl"
-    if ( kl_t21 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t6 );
+    if ( kl_t21 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t6 );
 #line 165 "codegen/dynamic_drops.kl"
     kl_t21 = false;
 #line 165 "codegen/dynamic_drops.kl"
     kl_t22 = false;
 #line 167 "codegen/dynamic_drops.kl"
-    kl_t10 = kl__3get__(  );
+    kl_t10 = kl_7codegen_3get__(  );
 #line 167 "codegen/dynamic_drops.kl"
     kl_t23 = true;
 #line 167 "codegen/dynamic_drops.kl"
@@ -2897,18 +2897,18 @@ struct kl_7prelude_result__I1P_3i32E kl__12after_return__( void )
 #line 165 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t7.kl_3err_error;
 #line 165 "codegen/dynamic_drops.kl"
-    if ( kl_t21 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t6 );
+    if ( kl_t21 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t6 );
 #line 165 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb5:
     kl_t13 = kl_t11.kl_2ok_value;
 #line 167 "codegen/dynamic_drops.kl"
-    kl__1P__dtor( &kl_t13 );
+    kl_7codegen_1P__dtor( &kl_t13 );
 #line 167 "codegen/dynamic_drops.kl"
-    if ( kl_t23 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t10 );
+    if ( kl_t23 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t10 );
 #line 167 "codegen/dynamic_drops.kl"
     kl_t23 = false;
-    kl_t15 = kl__3get__(  );
+    kl_t15 = kl_7codegen_3get__(  );
 #line 168 "codegen/dynamic_drops.kl"
     kl_t24 = true;
 #line 168 "codegen/dynamic_drops.kl"
@@ -2925,9 +2925,9 @@ struct kl_7prelude_result__I1P_3i32E kl__12after_return__( void )
 #line 167 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t11.kl_3err_error;
 #line 167 "codegen/dynamic_drops.kl"
-    if ( kl_t23 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t10 );
+    if ( kl_t23 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t10 );
 #line 167 "codegen/dynamic_drops.kl"
-    kl__1P__dtor( &kl_p_5 );
+    kl_7codegen_1P__dtor( &kl_p_5 );
 #line 167 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb7:
@@ -2940,14 +2940,14 @@ struct kl_7prelude_result__I1P_3i32E kl__12after_return__( void )
 #line 168 "codegen/dynamic_drops.kl"
     kl_t25 = false;
 #line 168 "codegen/dynamic_drops.kl"
-    if ( kl_t25 ) kl__1P__dtor( &kl_t18 );
+    if ( kl_t25 ) kl_7codegen_1P__dtor( &kl_t18 );
 #line 168 "codegen/dynamic_drops.kl"
-    if ( kl_t24 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t15 );
+    if ( kl_t24 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t15 );
 #line 168 "codegen/dynamic_drops.kl"
     kl_t24 = false;
 #line 168 "codegen/dynamic_drops.kl"
     kl_t25 = false;
-    kl_t19 = kl__3get__(  );
+    kl_t19 = kl_7codegen_3get__(  );
 #line 169 "codegen/dynamic_drops.kl"
     kl_t26 = true;
 #line 169 "codegen/dynamic_drops.kl"
@@ -2955,13 +2955,13 @@ struct kl_7prelude_result__I1P_3i32E kl__12after_return__( void )
 #line 169 "codegen/dynamic_drops.kl"
     kl_t26 = false;
 #line 169 "codegen/dynamic_drops.kl"
-    if ( kl_t26 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t19 );
+    if ( kl_t26 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t19 );
 #line 169 "codegen/dynamic_drops.kl"
     kl_t26 = false;
 #line 169 "codegen/dynamic_drops.kl"
-    kl__1P__dtor( &kl_q_14 );
+    kl_7codegen_1P__dtor( &kl_q_14 );
 #line 169 "codegen/dynamic_drops.kl"
-    kl__1P__dtor( &kl_p_5 );
+    kl_7codegen_1P__dtor( &kl_p_5 );
 #line 169 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb8:
@@ -2970,41 +2970,41 @@ struct kl_7prelude_result__I1P_3i32E kl__12after_return__( void )
 #line 168 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t16.kl_3err_error;
 #line 168 "codegen/dynamic_drops.kl"
-    if ( kl_t24 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t15 );
+    if ( kl_t24 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t15 );
 #line 168 "codegen/dynamic_drops.kl"
-    kl__1P__dtor( &kl_p_5 );
+    kl_7codegen_1P__dtor( &kl_p_5 );
 #line 168 "codegen/dynamic_drops.kl"
     return kl_t0;
 #line 171 "codegen/dynamic_drops.kl"
 }
 
 #line 173 "codegen/dynamic_drops.kl"
-struct kl_7prelude_result__I4void_3i32E kl__18after_init_by_loop__( void )
+struct kl_7prelude_result__I4void_3i32E kl_7codegen_18after_init_by_loop__( void )
 {
     struct kl_7prelude_result__I4void_3i32E kl_t0;
-    struct kl_7prelude_result__I1P_3i32E kl_t1;
-    struct kl_7prelude_result__I1P_3i32E kl_t2;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t1;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t2;
     bool kl_t3;
-    struct kl__P kl_t4;
-    struct kl__P kl_p_5;
-    struct kl_7prelude_result__I1P_3i32E kl_t6;
-    struct kl_7prelude_result__I1P_3i32E kl_t7;
+    struct kl_7codegen_P kl_t4;
+    struct kl_7codegen_P kl_p_5;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t6;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t7;
     bool kl_t8;
-    struct kl__P kl_t9;
-    struct kl__P kl_q_10;
-    struct kl_7prelude_result__I1P_3i32E kl_t11;
-    struct kl_7prelude_result__I1P_3i32E kl_t12;
+    struct kl_7codegen_P kl_t9;
+    struct kl_7codegen_P kl_q_10;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t11;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t12;
     bool kl_t13;
-    struct kl__P kl_t14;
-    struct kl__P kl_r_15;
-    struct kl_7prelude_result__I1P_3i32E kl_t16;
-    struct kl_7prelude_result__I1P_3i32E kl_t17;
+    struct kl_7codegen_P kl_t14;
+    struct kl_7codegen_P kl_r_15;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t16;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t17;
     bool kl_t18;
-    struct kl__P kl_t19;
-    struct kl_7prelude_result__I1P_3i32E kl_t20;
-    struct kl_7prelude_result__I1P_3i32E kl_t21;
+    struct kl_7codegen_P kl_t19;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t20;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t21;
     bool kl_t22;
-    struct kl__P kl_t23;
+    struct kl_7codegen_P kl_t23;
     struct kl_7prelude_result__I4void_3i32E kl_t24;
     bool kl_t25;
     bool kl_t26;
@@ -3034,7 +3034,7 @@ struct kl_7prelude_result__I4void_3i32E kl__18after_init_by_loop__( void )
 #line 175 "codegen/dynamic_drops.kl"
     kl_t33 = false;
 #line 175 "codegen/dynamic_drops.kl"
-    kl_t1 = kl__3get__(  );
+    kl_t1 = kl_7codegen_3get__(  );
 #line 175 "codegen/dynamic_drops.kl"
     kl_t25 = true;
 #line 175 "codegen/dynamic_drops.kl"
@@ -3049,12 +3049,12 @@ struct kl_7prelude_result__I4void_3i32E kl__18after_init_by_loop__( void )
 #line 175 "codegen/dynamic_drops.kl"
     kl_t4 = kl_t2.kl_2ok_value;
 #line 175 "codegen/dynamic_drops.kl"
-    kl__1P__dtor( &kl_t4 );
+    kl_7codegen_1P__dtor( &kl_t4 );
 #line 175 "codegen/dynamic_drops.kl"
-    if ( kl_t25 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t1 );
+    if ( kl_t25 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t1 );
 #line 175 "codegen/dynamic_drops.kl"
     kl_t25 = false;
-    kl_t6 = kl__3get__(  );
+    kl_t6 = kl_7codegen_3get__(  );
 #line 176 "codegen/dynamic_drops.kl"
     kl_t26 = true;
 #line 176 "codegen/dynamic_drops.kl"
@@ -3071,7 +3071,7 @@ struct kl_7prelude_result__I4void_3i32E kl__18after_init_by_loop__( void )
 #line 175 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t2.kl_3err_error;
 #line 175 "codegen/dynamic_drops.kl"
-    if ( kl_t25 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t1 );
+    if ( kl_t25 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t1 );
 #line 175 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb3:
@@ -3084,9 +3084,9 @@ struct kl_7prelude_result__I4void_3i32E kl__18after_init_by_loop__( void )
 #line 176 "codegen/dynamic_drops.kl"
     kl_t27 = false;
 #line 176 "codegen/dynamic_drops.kl"
-    if ( kl_t27 ) kl__1P__dtor( &kl_t9 );
+    if ( kl_t27 ) kl_7codegen_1P__dtor( &kl_t9 );
 #line 176 "codegen/dynamic_drops.kl"
-    if ( kl_t26 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t6 );
+    if ( kl_t26 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t6 );
 #line 176 "codegen/dynamic_drops.kl"
     kl_t26 = false;
 #line 176 "codegen/dynamic_drops.kl"
@@ -3099,12 +3099,12 @@ struct kl_7prelude_result__I4void_3i32E kl__18after_init_by_loop__( void )
 #line 176 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t7.kl_3err_error;
 #line 176 "codegen/dynamic_drops.kl"
-    if ( kl_t26 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t6 );
+    if ( kl_t26 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t6 );
 #line 176 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb5:
 #line 180 "codegen/dynamic_drops.kl"
-    kl_t11 = kl__3get__(  );
+    kl_t11 = kl_7codegen_3get__(  );
 #line 180 "codegen/dynamic_drops.kl"
     kl_t29 = true;
 #line 180 "codegen/dynamic_drops.kl"
@@ -3121,23 +3121,23 @@ struct kl_7prelude_result__I4void_3i32E kl__18after_init_by_loop__( void )
 #line 185 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t24;
 #line 185 "codegen/dynamic_drops.kl"
-    if ( kl_t28 ) kl__1P__dtor( &kl_q_10 );
+    if ( kl_t28 ) kl_7codegen_1P__dtor( &kl_q_10 );
 #line 185 "codegen/dynamic_drops.kl"
     kl_t28 = false;
 #line 185 "codegen/dynamic_drops.kl"
-    kl__1P__dtor( &kl_p_5 );
+    kl_7codegen_1P__dtor( &kl_p_5 );
 #line 185 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb7:
 #line 180 "codegen/dynamic_drops.kl"
     kl_t14 = kl_t12.kl_2ok_value;
 #line 180 "codegen/dynamic_drops.kl"
-    kl__1P__dtor( &kl_t14 );
+    kl_7codegen_1P__dtor( &kl_t14 );
 #line 180 "codegen/dynamic_drops.kl"
-    if ( kl_t29 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t11 );
+    if ( kl_t29 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t11 );
 #line 180 "codegen/dynamic_drops.kl"
     kl_t29 = false;
-    kl_t16 = kl__3get__(  );
+    kl_t16 = kl_7codegen_3get__(  );
 #line 181 "codegen/dynamic_drops.kl"
     kl_t30 = true;
 #line 181 "codegen/dynamic_drops.kl"
@@ -3154,13 +3154,13 @@ struct kl_7prelude_result__I4void_3i32E kl__18after_init_by_loop__( void )
 #line 180 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t12.kl_3err_error;
 #line 180 "codegen/dynamic_drops.kl"
-    if ( kl_t29 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t11 );
+    if ( kl_t29 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t11 );
 #line 180 "codegen/dynamic_drops.kl"
-    if ( kl_t28 ) kl__1P__dtor( &kl_q_10 );
+    if ( kl_t28 ) kl_7codegen_1P__dtor( &kl_q_10 );
 #line 180 "codegen/dynamic_drops.kl"
     kl_t28 = false;
 #line 180 "codegen/dynamic_drops.kl"
-    kl__1P__dtor( &kl_p_5 );
+    kl_7codegen_1P__dtor( &kl_p_5 );
 #line 180 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb9:
@@ -3173,14 +3173,14 @@ struct kl_7prelude_result__I4void_3i32E kl__18after_init_by_loop__( void )
 #line 181 "codegen/dynamic_drops.kl"
     kl_t31 = false;
 #line 181 "codegen/dynamic_drops.kl"
-    if ( kl_t31 ) kl__1P__dtor( &kl_t19 );
+    if ( kl_t31 ) kl_7codegen_1P__dtor( &kl_t19 );
 #line 181 "codegen/dynamic_drops.kl"
-    if ( kl_t30 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t16 );
+    if ( kl_t30 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t16 );
 #line 181 "codegen/dynamic_drops.kl"
     kl_t30 = false;
 #line 181 "codegen/dynamic_drops.kl"
     kl_t31 = false;
-    kl_t20 = kl__3get__(  );
+    kl_t20 = kl_7codegen_3get__(  );
 #line 182 "codegen/dynamic_drops.kl"
     kl_t32 = true;
 #line 182 "codegen/dynamic_drops.kl"
@@ -3197,13 +3197,13 @@ struct kl_7prelude_result__I4void_3i32E kl__18after_init_by_loop__( void )
 #line 181 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t17.kl_3err_error;
 #line 181 "codegen/dynamic_drops.kl"
-    if ( kl_t30 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t16 );
+    if ( kl_t30 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t16 );
 #line 181 "codegen/dynamic_drops.kl"
-    if ( kl_t28 ) kl__1P__dtor( &kl_q_10 );
+    if ( kl_t28 ) kl_7codegen_1P__dtor( &kl_q_10 );
 #line 181 "codegen/dynamic_drops.kl"
     kl_t28 = false;
 #line 181 "codegen/dynamic_drops.kl"
-    kl__1P__dtor( &kl_p_5 );
+    kl_7codegen_1P__dtor( &kl_p_5 );
 #line 181 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb11:
@@ -3212,7 +3212,7 @@ struct kl_7prelude_result__I4void_3i32E kl__18after_init_by_loop__( void )
 #line 182 "codegen/dynamic_drops.kl"
     kl_t33 = true;
 #line 182 "codegen/dynamic_drops.kl"
-    if ( kl_t28 ) kl__1P__dtor( &kl_q_10 );
+    if ( kl_t28 ) kl_7codegen_1P__dtor( &kl_q_10 );
 #line 182 "codegen/dynamic_drops.kl"
     kl_q_10 = kl_t23;
 #line 182 "codegen/dynamic_drops.kl"
@@ -3220,14 +3220,14 @@ struct kl_7prelude_result__I4void_3i32E kl__18after_init_by_loop__( void )
 #line 182 "codegen/dynamic_drops.kl"
     kl_t28 = true;
 #line 182 "codegen/dynamic_drops.kl"
-    if ( kl_t33 ) kl__1P__dtor( &kl_t23 );
+    if ( kl_t33 ) kl_7codegen_1P__dtor( &kl_t23 );
 #line 182 "codegen/dynamic_drops.kl"
-    if ( kl_t32 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t20 );
+    if ( kl_t32 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t20 );
 #line 182 "codegen/dynamic_drops.kl"
     kl_t32 = false;
 #line 182 "codegen/dynamic_drops.kl"
     kl_t33 = false;
-    kl__1P__dtor( &kl_r_15 );
+    kl_7codegen_1P__dtor( &kl_r_15 );
 #line 183 "codegen/dynamic_drops.kl"
     goto bb6;
     bb12:
@@ -3236,22 +3236,22 @@ struct kl_7prelude_result__I4void_3i32E kl__18after_init_by_loop__( void )
 #line 182 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t21.kl_3err_error;
 #line 182 "codegen/dynamic_drops.kl"
-    if ( kl_t32 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t20 );
+    if ( kl_t32 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t20 );
 #line 182 "codegen/dynamic_drops.kl"
-    kl__1P__dtor( &kl_r_15 );
+    kl_7codegen_1P__dtor( &kl_r_15 );
 #line 182 "codegen/dynamic_drops.kl"
-    if ( kl_t28 ) kl__1P__dtor( &kl_q_10 );
+    if ( kl_t28 ) kl_7codegen_1P__dtor( &kl_q_10 );
 #line 182 "codegen/dynamic_drops.kl"
     kl_t28 = false;
 #line 182 "codegen/dynamic_drops.kl"
-    kl__1P__dtor( &kl_p_5 );
+    kl_7codegen_1P__dtor( &kl_p_5 );
 #line 182 "codegen/dynamic_drops.kl"
     return kl_t0;
 #line 186 "codegen/dynamic_drops.kl"
 }
 
 #line 188 "codegen/dynamic_drops.kl"
-struct kl_7prelude_result__I4void_3i32E kl__4body__3u64( uint64_t kl_k_1 )
+struct kl_7prelude_result__I4void_3i32E kl_7codegen_4body__3u64( uint64_t kl_k_1 )
 {
     struct kl_7prelude_result__I4void_3i32E kl_t0;
     bool kl_t2;
@@ -3279,10 +3279,10 @@ struct kl_7prelude_result__I4void_3i32E kl__4body__3u64( uint64_t kl_k_1 )
     struct kl_7prelude_result__I4void_3i32E kl_t24;
     struct kl_7prelude_result__I4void_3i32E kl_t25;
     struct kl_7prelude_result__I4void_3i32E kl_t26;
-    struct kl_7prelude_result__I1P_3i32E kl_t27;
-    struct kl_7prelude_result__I1P_3i32E kl_t28;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t27;
+    struct kl_7prelude_result__IQ7codegen1P_3i32E kl_t28;
     bool kl_t29;
-    struct kl__P kl_t30;
+    struct kl_7codegen_P kl_t30;
     struct kl_7prelude_result__I4void_3i32E kl_t31;
     struct kl_7prelude_result__I4void_3i32E kl_t32;
     struct kl_7prelude_result__I4void_3i32E kl_t33;
@@ -3295,174 +3295,174 @@ struct kl_7prelude_result__I4void_3i32E kl__4body__3u64( uint64_t kl_k_1 )
     if ( kl_t2 ) goto bb1; else goto bb28;
     bb1:
 #line 192 "codegen/dynamic_drops.kl"
-    kl_t3 = kl__12dynamic_init__4bool( false );
+    kl_t3 = kl_7codegen_12dynamic_init__4bool( false );
 #line 192 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t3;
 #line 192 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb2:
 #line 193 "codegen/dynamic_drops.kl"
-    kl_t4 = kl__12dynamic_init__4bool( true );
+    kl_t4 = kl_7codegen_12dynamic_init__4bool( true );
 #line 193 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t4;
 #line 193 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb3:
 #line 194 "codegen/dynamic_drops.kl"
-    kl_t5 = kl__12dynamic_drop__4bool( false );
+    kl_t5 = kl_7codegen_12dynamic_drop__4bool( false );
 #line 194 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t5;
 #line 194 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb4:
 #line 195 "codegen/dynamic_drops.kl"
-    kl_t6 = kl__12dynamic_drop__4bool( true );
+    kl_t6 = kl_7codegen_12dynamic_drop__4bool( true );
 #line 195 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t6;
 #line 195 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb5:
 #line 196 "codegen/dynamic_drops.kl"
-    kl_t7 = kl__11assignment2__4bool_4bool( false, false );
+    kl_t7 = kl_7codegen_11assignment2__4bool_4bool( false, false );
 #line 196 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t7;
 #line 196 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb6:
 #line 197 "codegen/dynamic_drops.kl"
-    kl_t8 = kl__11assignment2__4bool_4bool( false, true );
+    kl_t8 = kl_7codegen_11assignment2__4bool_4bool( false, true );
 #line 197 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t8;
 #line 197 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb7:
 #line 198 "codegen/dynamic_drops.kl"
-    kl_t9 = kl__11assignment2__4bool_4bool( true, false );
+    kl_t9 = kl_7codegen_11assignment2__4bool_4bool( true, false );
 #line 198 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t9;
 #line 198 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb8:
 #line 199 "codegen/dynamic_drops.kl"
-    kl_t10 = kl__11assignment2__4bool_4bool( true, true );
+    kl_t10 = kl_7codegen_11assignment2__4bool_4bool( true, true );
 #line 199 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t10;
 #line 199 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb9:
 #line 200 "codegen/dynamic_drops.kl"
-    kl_t11 = kl__11assignment1__4bool( false );
+    kl_t11 = kl_7codegen_11assignment1__4bool( false );
 #line 200 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t11;
 #line 200 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb10:
 #line 201 "codegen/dynamic_drops.kl"
-    kl_t12 = kl__11assignment1__4bool( true );
+    kl_t12 = kl_7codegen_11assignment1__4bool( true );
 #line 201 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t12;
 #line 201 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb11:
 #line 202 "codegen/dynamic_drops.kl"
-    kl_t13 = kl__12array_simple__(  );
+    kl_t13 = kl_7codegen_12array_simple__(  );
 #line 202 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t13;
 #line 202 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb12:
 #line 203 "codegen/dynamic_drops.kl"
-    kl_t14 = kl__19struct_dynamic_drop__4bool_4bool_4bool( false, false, false );
+    kl_t14 = kl_7codegen_19struct_dynamic_drop__4bool_4bool_4bool( false, false, false );
 #line 203 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t14;
 #line 203 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb13:
 #line 204 "codegen/dynamic_drops.kl"
-    kl_t15 = kl__19struct_dynamic_drop__4bool_4bool_4bool( false, false, true );
+    kl_t15 = kl_7codegen_19struct_dynamic_drop__4bool_4bool_4bool( false, false, true );
 #line 204 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t15;
 #line 204 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb14:
 #line 205 "codegen/dynamic_drops.kl"
-    kl_t16 = kl__19struct_dynamic_drop__4bool_4bool_4bool( false, true, false );
+    kl_t16 = kl_7codegen_19struct_dynamic_drop__4bool_4bool_4bool( false, true, false );
 #line 205 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t16;
 #line 205 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb15:
 #line 206 "codegen/dynamic_drops.kl"
-    kl_t17 = kl__19struct_dynamic_drop__4bool_4bool_4bool( false, true, true );
+    kl_t17 = kl_7codegen_19struct_dynamic_drop__4bool_4bool_4bool( false, true, true );
 #line 206 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t17;
 #line 206 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb16:
 #line 207 "codegen/dynamic_drops.kl"
-    kl_t18 = kl__19struct_dynamic_drop__4bool_4bool_4bool( true, false, false );
+    kl_t18 = kl_7codegen_19struct_dynamic_drop__4bool_4bool_4bool( true, false, false );
 #line 207 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t18;
 #line 207 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb17:
 #line 208 "codegen/dynamic_drops.kl"
-    kl_t19 = kl__19struct_dynamic_drop__4bool_4bool_4bool( true, false, true );
+    kl_t19 = kl_7codegen_19struct_dynamic_drop__4bool_4bool_4bool( true, false, true );
 #line 208 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t19;
 #line 208 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb18:
 #line 209 "codegen/dynamic_drops.kl"
-    kl_t20 = kl__19struct_dynamic_drop__4bool_4bool_4bool( true, true, false );
+    kl_t20 = kl_7codegen_19struct_dynamic_drop__4bool_4bool_4bool( true, true, false );
 #line 209 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t20;
 #line 209 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb19:
 #line 210 "codegen/dynamic_drops.kl"
-    kl_t21 = kl__19struct_dynamic_drop__4bool_4bool_4bool( true, true, true );
+    kl_t21 = kl_7codegen_19struct_dynamic_drop__4bool_4bool_4bool( true, true, true );
 #line 210 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t21;
 #line 210 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb20:
 #line 211 "codegen/dynamic_drops.kl"
-    kl_t22 = kl__16field_assignment__4bool( false );
+    kl_t22 = kl_7codegen_16field_assignment__4bool( false );
 #line 211 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t22;
 #line 211 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb21:
 #line 212 "codegen/dynamic_drops.kl"
-    kl_t23 = kl__16field_assignment__4bool( true );
+    kl_t23 = kl_7codegen_16field_assignment__4bool( true );
 #line 212 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t23;
 #line 212 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb22:
 #line 213 "codegen/dynamic_drops.kl"
-    kl_t24 = kl__22mixed_drop_and_nondrop__(  );
+    kl_t24 = kl_7codegen_22mixed_drop_and_nondrop__(  );
 #line 213 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t24;
 #line 213 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb23:
 #line 214 "codegen/dynamic_drops.kl"
-    kl_t25 = kl__9init_move__4bool( false );
+    kl_t25 = kl_7codegen_9init_move__4bool( false );
 #line 214 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t25;
 #line 214 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb24:
 #line 215 "codegen/dynamic_drops.kl"
-    kl_t26 = kl__9init_move__4bool( true );
+    kl_t26 = kl_7codegen_9init_move__4bool( true );
 #line 215 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t26;
 #line 215 "codegen/dynamic_drops.kl"
     return kl_t0;
     bb25:
-    kl_t27 = kl__12after_return__(  );
+    kl_t27 = kl_7codegen_12after_return__(  );
 #line 217 "codegen/dynamic_drops.kl"
     kl_t34 = true;
 #line 217 "codegen/dynamic_drops.kl"
@@ -3474,7 +3474,7 @@ struct kl_7prelude_result__I4void_3i32E kl__4body__3u64( uint64_t kl_k_1 )
 #line 217 "codegen/dynamic_drops.kl"
     if ( kl_t29 ) goto bb53; else goto bb54;
     bb26:
-    kl_t32 = kl__18after_init_by_loop__(  );
+    kl_t32 = kl_7codegen_18after_init_by_loop__(  );
 #line 219 "codegen/dynamic_drops.kl"
     kl_t0 = kl_t32;
 #line 219 "codegen/dynamic_drops.kl"
@@ -3615,9 +3615,9 @@ struct kl_7prelude_result__I4void_3i32E kl__4body__3u64( uint64_t kl_k_1 )
 #line 217 "codegen/dynamic_drops.kl"
     kl_t30 = kl_t28.kl_2ok_value;
 #line 217 "codegen/dynamic_drops.kl"
-    kl__1P__dtor( &kl_t30 );
+    kl_7codegen_1P__dtor( &kl_t30 );
 #line 217 "codegen/dynamic_drops.kl"
-    if ( kl_t34 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t27 );
+    if ( kl_t34 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t27 );
 #line 217 "codegen/dynamic_drops.kl"
     kl_t34 = false;
     kl_t31.tag = 0;
@@ -3631,14 +3631,14 @@ struct kl_7prelude_result__I4void_3i32E kl__4body__3u64( uint64_t kl_k_1 )
 #line 217 "codegen/dynamic_drops.kl"
     kl_t0.kl_3err_error = kl_t28.kl_3err_error;
 #line 217 "codegen/dynamic_drops.kl"
-    if ( kl_t34 ) kl_7prelude_6result__I1P_3i32E__dtor( &kl_t27 );
+    if ( kl_t34 ) kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( &kl_t27 );
 #line 217 "codegen/dynamic_drops.kl"
     return kl_t0;
 #line 222 "codegen/dynamic_drops.kl"
 }
 
 #line 224 "codegen/dynamic_drops.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_bad_1;
@@ -3745,11 +3745,11 @@ int32_t kl__4main__( void )
 #line 228 "codegen/dynamic_drops.kl"
     if ( kl_t5 ) goto bb2; else goto bb3;
     bb2:
-    kl__ops__G = 0;
-    kl__failing__G = -1;
-    kl__4body__3u64( kl_k_3 );
-    kl_total_7 = kl__ops__G;
-    kl_t8 = kl__live__G != 0;
+    kl_7codegen_ops__G = 0;
+    kl_7codegen_failing__G = -1;
+    kl_7codegen_4body__3u64( kl_k_3 );
+    kl_total_7 = kl_7codegen_ops__G;
+    kl_t8 = kl_7codegen_live__G != 0;
 #line 234 "codegen/dynamic_drops.kl"
     if ( kl_t8 ) goto bb4; else goto bb7;
     bb3:
@@ -3839,8 +3839,8 @@ int32_t kl__4main__( void )
 #line 239 "codegen/dynamic_drops.kl"
     if ( kl_t35 ) goto bb11; else goto bb12;
     bb11:
-    kl__ops__G = 0;
-    kl__failing__G = kl_f_31;
+    kl_7codegen_ops__G = 0;
+    kl_7codegen_failing__G = kl_f_31;
     kl_t36 = __builtin_add_overflow( kl_runs_2, 1, &( int64_t ) { 0 } );
 #line 243 "codegen/dynamic_drops.kl"
     if ( kl_t36 ) goto bb13; else goto bb14;
@@ -3855,7 +3855,7 @@ int32_t kl__4main__( void )
     kl_t37 = kl_runs_2 + 1;
 #line 243 "codegen/dynamic_drops.kl"
     kl_runs_2 = kl_t37;
-    kl_t38 = kl__4body__3u64( kl_k_3 );
+    kl_t38 = kl_7codegen_4body__3u64( kl_k_3 );
 #line 246 "codegen/dynamic_drops.kl"
     kl_t39 = kl_t38.tag == 0;
 #line 246 "codegen/dynamic_drops.kl"
@@ -3912,7 +3912,7 @@ int32_t kl__4main__( void )
     goto bb19;
     bb19:
 #line 253 "codegen/dynamic_drops.kl"
-    kl_t63 = kl__live__G != 0;
+    kl_t63 = kl_7codegen_live__G != 0;
 #line 253 "codegen/dynamic_drops.kl"
     if ( kl_t63 ) goto bb20; else goto bb23;
     bb20:
@@ -3994,7 +3994,7 @@ int32_t kl__4main__( void )
     kl_t105 = kl_bad_1 + 1;
 #line 256 "codegen/dynamic_drops.kl"
     kl_bad_1 = kl_t105;
-    kl__live__G = 0;
+    kl_7codegen_live__G = 0;
 #line 253 "codegen/dynamic_drops.kl"
     goto bb23;
     bb23:
@@ -4011,7 +4011,7 @@ int32_t kl__4main__( void )
 }
 
 #line 184 "<prelude>"
-void kl_7prelude_6result__I1P_3i32E__dtor( struct kl_7prelude_result__I1P_3i32E* kl_t1 )
+void kl_7prelude_6result__IQ7codegen1P_3i32E__dtor( struct kl_7prelude_result__IQ7codegen1P_3i32E* kl_t1 )
 {
     bool kl_t2;
 #line 184 "<prelude>"
@@ -4023,14 +4023,14 @@ void kl_7prelude_6result__I1P_3i32E__dtor( struct kl_7prelude_result__I1P_3i32E*
     return;
     bb2:
 #line 184 "<prelude>"
-    kl__1P__dtor( &( *kl_t1 ).kl_2ok_value );
+    kl_7codegen_1P__dtor( &( *kl_t1 ).kl_2ok_value );
 #line 184 "<prelude>"
     goto bb1;
 #line 190 "<prelude>"
 }
 
 #line 5 "<kl>/optional.kl"
-void kl_2kl8optional_8optional__I1PE__dtor( struct kl_2kl8optional_optional__I1PE* kl_t1 )
+void kl_2kl8optional_8optional__IQ7codegen1PE__dtor( struct kl_2kl8optional_optional__IQ7codegen1PE* kl_t1 )
 {
     bool kl_t2;
 #line 5 "<kl>/optional.kl"
@@ -4042,13 +4042,13 @@ void kl_2kl8optional_8optional__I1PE__dtor( struct kl_2kl8optional_optional__I1P
     return;
     bb2:
 #line 5 "<kl>/optional.kl"
-    kl__1P__dtor( &( *kl_t1 ).kl_4some_value );
+    kl_7codegen_1P__dtor( &( *kl_t1 ).kl_4some_value );
 #line 5 "<kl>/optional.kl"
     goto bb1;
 #line 11 "<kl>/optional.kl"
 }
 
-void kl__A4_1P__dtor( struct kl__A4_1P* kl_t1 )
+void kl__A4_Q7codegen1P__dtor( struct kl__A4_Q7codegen1P* kl_t1 )
 {
     uint64_t kl_t2;
     bool kl_t3;
@@ -4065,7 +4065,7 @@ void kl__A4_1P__dtor( struct kl__A4_1P* kl_t1 )
 #line 11 "codegen/dynamic_drops.kl"
     kl_t2 = kl_t2 - 1;
 #line 11 "codegen/dynamic_drops.kl"
-    kl__1P__dtor( &( *kl_t1 ).e[kl_t2] );
+    kl_7codegen_1P__dtor( &( *kl_t1 ).e[kl_t2] );
 #line 11 "codegen/dynamic_drops.kl"
     goto bb1;
     bb3:
@@ -4078,7 +4078,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 224 "codegen/dynamic_drops.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 224 "codegen/dynamic_drops.kl"
     return kl_t0;
 #line 224 "codegen/dynamic_drops.kl"

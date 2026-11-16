@@ -1,5 +1,4 @@
-// A subfolder of the program's folder may not share a name with a `--package` elsewhere.
-import util::x;
+// A program may not take a `--package`'s name: this one declares `util`, as the package in lib/ does.
 
 i32 main()
 {

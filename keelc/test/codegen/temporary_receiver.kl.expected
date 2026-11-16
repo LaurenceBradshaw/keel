@@ -299,7 +299,7 @@ void kl_1t7console_6eprint__4bool_7textual( bool kl_value_1, struct kl_7prelude_
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__counter;
+struct kl_7codegen_counter;
 struct kl_7prelude_str;
 struct kl_7prelude_result__I3i32_3i32E;
 struct kl_7prelude_result__I4void_3i32E;
@@ -309,11 +309,11 @@ struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
 struct kl_7prelude_textual__vtable;
 struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
 
-struct kl__counter
+struct kl_7codegen_counter
 {
     int32_t kl_n_;
 };
-_Static_assert( sizeof( struct kl__counter ) == 4 && _Alignof( struct kl__counter ) == 4 && offsetof( struct kl__counter, kl_n_ ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_counter ) == 4 && _Alignof( struct kl_7codegen_counter ) == 4 && offsetof( struct kl_7codegen_counter, kl_n_ ) == 0, "layout" );
 
 struct kl_7prelude_str
 {
@@ -360,12 +360,12 @@ struct kl_7prelude_textual__vtable
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__7counter__R7counter_3i32__ctor( struct kl__counter*, int32_t );
-void kl__7counter__dtor( struct kl__counter* );
-int32_t kl__4bump__S7counter( struct kl__counter* );
-struct kl_7prelude_result__I3i32_3i32E kl__7checked__S7counter( struct kl__counter* );
-struct kl_7prelude_result__I4void_3i32E kl__3run__( void );
-int32_t kl__4main__( void );
+void kl_7codegen_7counter__RQ7codegen7counter_3i32__ctor( struct kl_7codegen_counter*, int32_t );
+void kl_7codegen_7counter__dtor( struct kl_7codegen_counter* );
+int32_t kl_7codegen_4bump__SQ7codegen7counter( struct kl_7codegen_counter* );
+struct kl_7prelude_result__I3i32_3i32E kl_7codegen_7checked__SQ7codegen7counter( struct kl_7codegen_counter* );
+struct kl_7prelude_result__I4void_3i32E kl_7codegen_3run__( void );
+int32_t kl_7codegen_4main__( void );
 void kl_1t7console_5print__7textual_7textual( struct kl_7prelude_textual__ref, struct kl_7prelude_textual__ref );
 void kl_1t7console_5print__3i64_7textual( int64_t, struct kl_7prelude_textual__ref );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
@@ -375,7 +375,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 8 "codegen/temporary_receiver.kl"
-void kl__7counter__R7counter_3i32__ctor( struct kl__counter* kl_this_1, int32_t kl_n_2 )
+void kl_7codegen_7counter__RQ7codegen7counter_3i32__ctor( struct kl_7codegen_counter* kl_this_1, int32_t kl_n_2 )
 {
     ( *kl_this_1 ).kl_n_ = kl_n_2;
     return;
@@ -383,7 +383,7 @@ void kl__7counter__R7counter_3i32__ctor( struct kl__counter* kl_this_1, int32_t 
 }
 
 #line 13 "codegen/temporary_receiver.kl"
-void kl__7counter__dtor( struct kl__counter* kl_this_1 )
+void kl_7codegen_7counter__dtor( struct kl_7codegen_counter* kl_this_1 )
 {
     struct kl_7prelude_str kl_t2;
     struct kl_7prelude_str* kl_t3;
@@ -423,7 +423,7 @@ void kl__7counter__dtor( struct kl__counter* kl_this_1 )
 }
 
 #line 18 "codegen/temporary_receiver.kl"
-int32_t kl__4bump__S7counter( struct kl__counter* kl_this_1 )
+int32_t kl_7codegen_4bump__SQ7codegen7counter( struct kl_7codegen_counter* kl_this_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -443,7 +443,7 @@ int32_t kl__4bump__S7counter( struct kl__counter* kl_this_1 )
 }
 
 #line 24 "codegen/temporary_receiver.kl"
-struct kl_7prelude_result__I3i32_3i32E kl__7checked__S7counter( struct kl__counter* kl_this_1 )
+struct kl_7prelude_result__I3i32_3i32E kl_7codegen_7checked__SQ7codegen7counter( struct kl_7codegen_counter* kl_this_1 )
 {
     struct kl_7prelude_result__I3i32_3i32E kl_t0;
     bool kl_t2;
@@ -468,13 +468,13 @@ struct kl_7prelude_result__I3i32_3i32E kl__7checked__S7counter( struct kl__count
 }
 
 #line 33 "codegen/temporary_receiver.kl"
-struct kl_7prelude_result__I4void_3i32E kl__3run__( void )
+struct kl_7prelude_result__I4void_3i32E kl_7codegen_3run__( void )
 {
     struct kl_7prelude_result__I4void_3i32E kl_t0;
     int32_t kl_a_1;
-    struct kl__counter kl_t2;
-    struct kl__counter* kl_t3;
-    struct kl__counter* kl_t5;
+    struct kl_7codegen_counter kl_t2;
+    struct kl_7codegen_counter* kl_t3;
+    struct kl_7codegen_counter* kl_t5;
     int32_t kl_t6;
     int64_t kl_t7;
     struct kl_7prelude_str kl_t8;
@@ -483,9 +483,9 @@ struct kl_7prelude_result__I4void_3i32E kl__3run__( void )
     struct kl_7prelude_str* kl_t12;
     struct kl_7prelude_textual__ref kl_t13;
     int32_t kl_b_15;
-    struct kl__counter kl_t16;
-    struct kl__counter* kl_t17;
-    struct kl__counter* kl_t19;
+    struct kl_7codegen_counter kl_t16;
+    struct kl_7codegen_counter* kl_t17;
+    struct kl_7codegen_counter* kl_t19;
     struct kl_7prelude_result__I3i32_3i32E kl_t20;
     struct kl_7prelude_result__I3i32_3i32E kl_t21;
     bool kl_t22;
@@ -496,12 +496,12 @@ struct kl_7prelude_result__I4void_3i32E kl__3run__( void )
     uint8_t* kl_t27;
     struct kl_7prelude_str* kl_t29;
     struct kl_7prelude_textual__ref kl_t30;
-    struct kl__counter kl_t32;
-    struct kl__counter* kl_t33;
-    struct kl__counter* kl_t35;
-    struct kl__counter kl_t37;
-    struct kl__counter* kl_t38;
-    struct kl__counter* kl_t40;
+    struct kl_7codegen_counter kl_t32;
+    struct kl_7codegen_counter* kl_t33;
+    struct kl_7codegen_counter* kl_t35;
+    struct kl_7codegen_counter kl_t37;
+    struct kl_7codegen_counter* kl_t38;
+    struct kl_7codegen_counter* kl_t40;
     struct kl_7prelude_result__I3i32_3i32E kl_t41;
     bool kl_t42;
     int32_t kl_v_43;
@@ -512,9 +512,9 @@ struct kl_7prelude_result__I4void_3i32E kl__3run__( void )
     struct kl_7prelude_str* kl_t49;
     struct kl_7prelude_textual__ref kl_t50;
     int32_t kl_e_52;
-    struct kl__counter kl_t53;
-    struct kl__counter* kl_t54;
-    struct kl__counter* kl_t56;
+    struct kl_7codegen_counter kl_t53;
+    struct kl_7codegen_counter* kl_t54;
+    struct kl_7codegen_counter* kl_t56;
     int32_t kl_t57;
     int64_t kl_t58;
     struct kl_7prelude_str kl_t59;
@@ -527,15 +527,15 @@ struct kl_7prelude_result__I4void_3i32E kl__3run__( void )
 #line 36 "codegen/temporary_receiver.kl"
     kl_t3 = &kl_t2;
 #line 36 "codegen/temporary_receiver.kl"
-    kl__7counter__R7counter_3i32__ctor( kl_t3, 1 );
+    kl_7codegen_7counter__RQ7codegen7counter_3i32__ctor( kl_t3, 1 );
 #line 36 "codegen/temporary_receiver.kl"
     kl_t5 = &kl_t2;
 #line 36 "codegen/temporary_receiver.kl"
-    kl_t6 = kl__4bump__S7counter( kl_t5 );
+    kl_t6 = kl_7codegen_4bump__SQ7codegen7counter( kl_t5 );
 #line 36 "codegen/temporary_receiver.kl"
     kl_a_1 = kl_t6;
 #line 36 "codegen/temporary_receiver.kl"
-    kl__7counter__dtor( &kl_t2 );
+    kl_7codegen_7counter__dtor( &kl_t2 );
     kl_t7 = ( int64_t ) kl_a_1;
 #line 31 "../test_lib/console.kl"
     kl_t9 = &kl_t8;
@@ -552,11 +552,11 @@ struct kl_7prelude_result__I4void_3i32E kl__3run__( void )
 #line 40 "codegen/temporary_receiver.kl"
     kl_t17 = &kl_t16;
 #line 40 "codegen/temporary_receiver.kl"
-    kl__7counter__R7counter_3i32__ctor( kl_t17, 2 );
+    kl_7codegen_7counter__RQ7codegen7counter_3i32__ctor( kl_t17, 2 );
 #line 40 "codegen/temporary_receiver.kl"
     kl_t19 = &kl_t16;
 #line 40 "codegen/temporary_receiver.kl"
-    kl_t20 = kl__7checked__S7counter( kl_t19 );
+    kl_t20 = kl_7codegen_7checked__SQ7codegen7counter( kl_t19 );
 #line 40 "codegen/temporary_receiver.kl"
     kl_t21 = kl_t20;
 #line 40 "codegen/temporary_receiver.kl"
@@ -569,7 +569,7 @@ struct kl_7prelude_result__I4void_3i32E kl__3run__( void )
 #line 40 "codegen/temporary_receiver.kl"
     kl_b_15 = kl_t23;
 #line 40 "codegen/temporary_receiver.kl"
-    kl__7counter__dtor( &kl_t16 );
+    kl_7codegen_7counter__dtor( &kl_t16 );
     kl_t24 = ( int64_t ) kl_b_15;
 #line 31 "../test_lib/console.kl"
     kl_t26 = &kl_t25;
@@ -586,23 +586,23 @@ struct kl_7prelude_result__I4void_3i32E kl__3run__( void )
 #line 44 "codegen/temporary_receiver.kl"
     kl_t33 = &kl_t32;
 #line 44 "codegen/temporary_receiver.kl"
-    kl__7counter__R7counter_3i32__ctor( kl_t33, 3 );
+    kl_7codegen_7counter__RQ7codegen7counter_3i32__ctor( kl_t33, 3 );
 #line 44 "codegen/temporary_receiver.kl"
     kl_t35 = &kl_t32;
 #line 44 "codegen/temporary_receiver.kl"
-    kl__7checked__S7counter( kl_t35 );
+    kl_7codegen_7checked__SQ7codegen7counter( kl_t35 );
 #line 44 "codegen/temporary_receiver.kl"
-    kl__7counter__dtor( &kl_t32 );
+    kl_7codegen_7counter__dtor( &kl_t32 );
 #line 47 "codegen/temporary_receiver.kl"
     kl_t38 = &kl_t37;
 #line 47 "codegen/temporary_receiver.kl"
-    kl__7counter__R7counter_3i32__ctor( kl_t38, 4 );
+    kl_7codegen_7counter__RQ7codegen7counter_3i32__ctor( kl_t38, 4 );
 #line 47 "codegen/temporary_receiver.kl"
     kl_t40 = &kl_t37;
 #line 47 "codegen/temporary_receiver.kl"
-    kl_t41 = kl__7checked__S7counter( kl_t40 );
+    kl_t41 = kl_7codegen_7checked__SQ7codegen7counter( kl_t40 );
 #line 47 "codegen/temporary_receiver.kl"
-    kl__7counter__dtor( &kl_t37 );
+    kl_7codegen_7counter__dtor( &kl_t37 );
 #line 49 "codegen/temporary_receiver.kl"
     kl_t42 = kl_t41.tag == 0;
 #line 49 "codegen/temporary_receiver.kl"
@@ -613,7 +613,7 @@ struct kl_7prelude_result__I4void_3i32E kl__3run__( void )
 #line 40 "codegen/temporary_receiver.kl"
     kl_t0.kl_3err_error = kl_t21.kl_3err_error;
 #line 40 "codegen/temporary_receiver.kl"
-    kl__7counter__dtor( &kl_t16 );
+    kl_7codegen_7counter__dtor( &kl_t16 );
 #line 40 "codegen/temporary_receiver.kl"
     return kl_t0;
     bb3:
@@ -641,11 +641,11 @@ struct kl_7prelude_result__I4void_3i32E kl__3run__( void )
 #line 57 "codegen/temporary_receiver.kl"
     kl_t54 = &kl_t53;
 #line 57 "codegen/temporary_receiver.kl"
-    kl__7counter__R7counter_3i32__ctor( kl_t54, 5 );
+    kl_7codegen_7counter__RQ7codegen7counter_3i32__ctor( kl_t54, 5 );
 #line 57 "codegen/temporary_receiver.kl"
     kl_t56 = &kl_t53;
 #line 57 "codegen/temporary_receiver.kl"
-    kl_t57 = kl__4bump__S7counter( kl_t56 );
+    kl_t57 = kl_7codegen_4bump__SQ7codegen7counter( kl_t56 );
 #line 57 "codegen/temporary_receiver.kl"
     kl_t58 = ( int64_t ) kl_t57;
 #line 31 "../test_lib/console.kl"
@@ -661,7 +661,7 @@ struct kl_7prelude_result__I4void_3i32E kl__3run__( void )
 #line 57 "codegen/temporary_receiver.kl"
     kl_1t7console_5print__3i64_7textual( kl_t58, kl_t64 );
 #line 57 "codegen/temporary_receiver.kl"
-    kl__7counter__dtor( &kl_t53 );
+    kl_7codegen_7counter__dtor( &kl_t53 );
 #line 59 "codegen/temporary_receiver.kl"
     kl_t66.tag = 0;
 #line 59 "codegen/temporary_receiver.kl"
@@ -671,11 +671,11 @@ struct kl_7prelude_result__I4void_3i32E kl__3run__( void )
 }
 
 #line 62 "codegen/temporary_receiver.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
 #line 64 "codegen/temporary_receiver.kl"
-    kl__3run__(  );
+    kl_7codegen_3run__(  );
     kl_t0 = 0;
 #line 65 "codegen/temporary_receiver.kl"
     return kl_t0;
@@ -685,7 +685,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 62 "codegen/temporary_receiver.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 62 "codegen/temporary_receiver.kl"
     return kl_t0;
 #line 62 "codegen/temporary_receiver.kl"

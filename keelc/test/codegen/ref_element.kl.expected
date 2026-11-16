@@ -3,26 +3,26 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__buffer;
+struct kl_7codegen_buffer;
 
-struct kl__buffer
+struct kl_7codegen_buffer
 {
     int32_t* kl_data;
 };
-_Static_assert( sizeof( struct kl__buffer ) == 8 && _Alignof( struct kl__buffer ) == 8 && offsetof( struct kl__buffer, kl_data ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_buffer ) == 8 && _Alignof( struct kl_7codegen_buffer ) == 8 && offsetof( struct kl_7codegen_buffer, kl_data ) == 0, "layout" );
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__6buffer__R6buffer__ctor( struct kl__buffer* );
-void kl__6buffer__dtor( struct kl__buffer* );
-int32_t* kl__14operator_index__S6buffer_3u64( struct kl__buffer*, uint64_t );
-int32_t kl__4main__( void );
+void kl_7codegen_6buffer__RQ7codegen6buffer__ctor( struct kl_7codegen_buffer* );
+void kl_7codegen_6buffer__dtor( struct kl_7codegen_buffer* );
+int32_t* kl_7codegen_14operator_index__SQ7codegen6buffer_3u64( struct kl_7codegen_buffer*, uint64_t );
+int32_t kl_7codegen_4main__( void );
 
 #line 5 "codegen/ref_element.kl"
-void kl__6buffer__R6buffer__ctor( struct kl__buffer* kl_this_1 )
+void kl_7codegen_6buffer__RQ7codegen6buffer__ctor( struct kl_7codegen_buffer* kl_this_1 )
 {
     int32_t* kl_t2;
 #line 5 "codegen/ref_element.kl"
@@ -35,7 +35,7 @@ void kl__6buffer__R6buffer__ctor( struct kl__buffer* kl_this_1 )
 }
 
 #line 6 "codegen/ref_element.kl"
-void kl__6buffer__dtor( struct kl__buffer* kl_this_1 )
+void kl_7codegen_6buffer__dtor( struct kl_7codegen_buffer* kl_this_1 )
 {
 #line 6 "codegen/ref_element.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data );
@@ -45,7 +45,7 @@ void kl__6buffer__dtor( struct kl__buffer* kl_this_1 )
 }
 
 #line 7 "codegen/ref_element.kl"
-int32_t* kl__14operator_index__S6buffer_3u64( struct kl__buffer* kl_this_1, uint64_t kl_index_2 )
+int32_t* kl_7codegen_14operator_index__SQ7codegen6buffer_3u64( struct kl_7codegen_buffer* kl_this_1, uint64_t kl_index_2 )
 {
     int32_t* kl_t0;
     int32_t* kl_t3;
@@ -59,33 +59,33 @@ int32_t* kl__14operator_index__S6buffer_3u64( struct kl__buffer* kl_this_1, uint
 }
 
 #line 11 "codegen/ref_element.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__buffer kl_values_1;
-    struct kl__buffer* kl_t2;
-    struct kl__buffer* kl_t4;
+    struct kl_7codegen_buffer kl_values_1;
+    struct kl_7codegen_buffer* kl_t2;
+    struct kl_7codegen_buffer* kl_t4;
     int32_t* kl_t5;
     int32_t* kl_bound_6;
-    struct kl__buffer* kl_t7;
+    struct kl_7codegen_buffer* kl_t7;
     int32_t* kl_t8;
     bool kl_t9;
     int32_t kl_t10;
     int32_t* kl_seen_11;
-    struct kl__buffer* kl_t12;
+    struct kl_7codegen_buffer* kl_t12;
     int32_t* kl_t13;
 #line 13 "codegen/ref_element.kl"
     kl_t2 = &kl_values_1;
 #line 13 "codegen/ref_element.kl"
-    kl__6buffer__R6buffer__ctor( kl_t2 );
+    kl_7codegen_6buffer__RQ7codegen6buffer__ctor( kl_t2 );
     kl_t4 = &kl_values_1;
 #line 14 "codegen/ref_element.kl"
-    kl_t5 = kl__14operator_index__S6buffer_3u64( kl_t4, 1 );
+    kl_t5 = kl_7codegen_14operator_index__SQ7codegen6buffer_3u64( kl_t4, 1 );
 #line 14 "codegen/ref_element.kl"
     ( *kl_t5 ) = 5;
     kl_t7 = &kl_values_1;
 #line 15 "codegen/ref_element.kl"
-    kl_t8 = kl__14operator_index__S6buffer_3u64( kl_t7, 1 );
+    kl_t8 = kl_7codegen_14operator_index__SQ7codegen6buffer_3u64( kl_t7, 1 );
 #line 15 "codegen/ref_element.kl"
     kl_bound_6 = &( *kl_t8 );
     kl_t9 = __builtin_add_overflow( ( *kl_bound_6 ), 2, &( int32_t ) { 0 } );
@@ -101,12 +101,12 @@ int32_t kl__4main__( void )
     ( *kl_bound_6 ) = kl_t10;
     kl_t12 = &kl_values_1;
 #line 17 "codegen/ref_element.kl"
-    kl_t13 = kl__14operator_index__S6buffer_3u64( kl_t12, 1 );
+    kl_t13 = kl_7codegen_14operator_index__SQ7codegen6buffer_3u64( kl_t12, 1 );
 #line 17 "codegen/ref_element.kl"
     kl_seen_11 = &( *kl_t13 );
     kl_t0 = ( *kl_seen_11 );
 #line 18 "codegen/ref_element.kl"
-    kl__6buffer__dtor( &kl_values_1 );
+    kl_7codegen_6buffer__dtor( &kl_values_1 );
 #line 18 "codegen/ref_element.kl"
     return kl_t0;
 }
@@ -115,7 +115,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 11 "codegen/ref_element.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 11 "codegen/ref_element.kl"
     return kl_t0;
 #line 11 "codegen/ref_element.kl"

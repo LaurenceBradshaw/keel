@@ -3,16 +3,16 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__cell;
+struct kl_7codegen_cell;
 struct kl_7prelude_str;
 
 struct kl__run__LQ7prelude3str__ref { struct kl_7prelude_str* data; uint64_t size; };
 
-struct kl__cell
+struct kl_7codegen_cell
 {
     int32_t kl_v;
 };
-_Static_assert( sizeof( struct kl__cell ) == 4 && _Alignof( struct kl__cell ) == 4 && offsetof( struct kl__cell, kl_v ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_cell ) == 4 && _Alignof( struct kl_7codegen_cell ) == 4 && offsetof( struct kl_7codegen_cell, kl_v ) == 0, "layout" );
 
 struct kl_7prelude_str
 {
@@ -25,13 +25,13 @@ void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 
-int32_t kl__3get__S4cell( struct kl__cell* );
-int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
-int32_t kl__6before__I4cell_3i32E__4cell( struct kl__cell* );
-int32_t kl__5after__I4cell_3i32E__4cell( struct kl__cell* );
+int32_t kl_7codegen_3get__SQ7codegen4cell( struct kl_7codegen_cell* );
+int32_t kl_7codegen_4main__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
+int32_t kl_7codegen_6before__IQ7codegen4cell_3i32E__Q7codegen4cell( struct kl_7codegen_cell* );
+int32_t kl_7codegen_5after__IQ7codegen4cell_3i32E__Q7codegen4cell( struct kl_7codegen_cell* );
 
 #line 12 "codegen/bound_argument_order.kl"
-int32_t kl__3get__S4cell( struct kl__cell* kl_this_1 )
+int32_t kl_7codegen_3get__SQ7codegen4cell( struct kl_7codegen_cell* kl_this_1 )
 {
     int32_t kl_t0;
 #line 12 "codegen/bound_argument_order.kl"
@@ -42,17 +42,17 @@ int32_t kl__3get__S4cell( struct kl__cell* kl_this_1 )
 }
 
 #line 18 "codegen/bound_argument_order.kl"
-int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t kl_t1_size )
+int32_t kl_7codegen_4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t kl_t1_size )
 {
     int32_t kl_t0;
 #line 18 "codegen/bound_argument_order.kl"
     struct kl__run__LQ7prelude3str__ref kl_t1 = { kl_t1_data, kl_t1_size };
-    struct kl__cell kl_c_2;
-    struct kl__cell kl_t3;
-    struct kl__cell* kl_t4;
+    struct kl_7codegen_cell kl_c_2;
+    struct kl_7codegen_cell kl_t3;
+    struct kl_7codegen_cell* kl_t4;
     int32_t kl_t5;
     bool kl_t6;
-    struct kl__cell* kl_t7;
+    struct kl_7codegen_cell* kl_t7;
     int32_t kl_t8;
     bool kl_t9;
     ( void ) kl_t1;
@@ -63,7 +63,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 #line 22 "codegen/bound_argument_order.kl"
     kl_t4 = &kl_c_2;
 #line 22 "codegen/bound_argument_order.kl"
-    kl_t5 = kl__6before__I4cell_3i32E__4cell( kl_t4 );
+    kl_t5 = kl_7codegen_6before__IQ7codegen4cell_3i32E__Q7codegen4cell( kl_t4 );
 #line 22 "codegen/bound_argument_order.kl"
     kl_t6 = kl_t5 != 7;
 #line 22 "codegen/bound_argument_order.kl"
@@ -76,7 +76,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 #line 27 "codegen/bound_argument_order.kl"
     kl_t7 = &kl_c_2;
 #line 27 "codegen/bound_argument_order.kl"
-    kl_t8 = kl__5after__I4cell_3i32E__4cell( kl_t7 );
+    kl_t8 = kl_7codegen_5after__IQ7codegen4cell_3i32E__Q7codegen4cell( kl_t7 );
 #line 27 "codegen/bound_argument_order.kl"
     kl_t9 = kl_t8 != 7;
 #line 27 "codegen/bound_argument_order.kl"
@@ -93,15 +93,15 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 }
 
 #line 15 "codegen/bound_argument_order.kl"
-int32_t kl__6before__I4cell_3i32E__4cell( struct kl__cell* kl_g_1 )
+int32_t kl_7codegen_6before__IQ7codegen4cell_3i32E__Q7codegen4cell( struct kl_7codegen_cell* kl_g_1 )
 {
     int32_t kl_t0;
-    struct kl__cell* kl_t2;
+    struct kl_7codegen_cell* kl_t2;
     int32_t kl_t3;
 #line 15 "codegen/bound_argument_order.kl"
     kl_t2 = &( *kl_g_1 );
 #line 15 "codegen/bound_argument_order.kl"
-    kl_t3 = kl__3get__S4cell( kl_t2 );
+    kl_t3 = kl_7codegen_3get__SQ7codegen4cell( kl_t2 );
 #line 15 "codegen/bound_argument_order.kl"
     kl_t0 = kl_t3;
 #line 15 "codegen/bound_argument_order.kl"
@@ -110,15 +110,15 @@ int32_t kl__6before__I4cell_3i32E__4cell( struct kl__cell* kl_g_1 )
 }
 
 #line 16 "codegen/bound_argument_order.kl"
-int32_t kl__5after__I4cell_3i32E__4cell( struct kl__cell* kl_g_1 )
+int32_t kl_7codegen_5after__IQ7codegen4cell_3i32E__Q7codegen4cell( struct kl_7codegen_cell* kl_g_1 )
 {
     int32_t kl_t0;
-    struct kl__cell* kl_t2;
+    struct kl_7codegen_cell* kl_t2;
     int32_t kl_t3;
 #line 16 "codegen/bound_argument_order.kl"
     kl_t2 = &( *kl_g_1 );
 #line 16 "codegen/bound_argument_order.kl"
-    kl_t3 = kl__3get__S4cell( kl_t2 );
+    kl_t3 = kl_7codegen_3get__SQ7codegen4cell( kl_t2 );
 #line 16 "codegen/bound_argument_order.kl"
     kl_t0 = kl_t3;
 #line 16 "codegen/bound_argument_order.kl"
@@ -214,7 +214,7 @@ int main( int argc, char** argv )
 #line 18 "codegen/bound_argument_order.kl"
     kl_t17 = ( struct kl__run__LQ7prelude3str__ref ) { ( struct kl_7prelude_str* ) kl_t7, kl_t3 };
 #line 18 "codegen/bound_argument_order.kl"
-    kl_t0 = kl__4main__LQ7prelude3str( ( kl_t17 ).data, ( kl_t17 ).size );
+    kl_t0 = kl_7codegen_4main__LQ7prelude3str( ( kl_t17 ).data, ( kl_t17 ).size );
 #line 18 "codegen/bound_argument_order.kl"
     kl_rt_free( kl_t7 );
 #line 18 "codegen/bound_argument_order.kl"

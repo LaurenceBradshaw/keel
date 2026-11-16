@@ -10663,7 +10663,7 @@ uint64_t kl_2kl12hash_control_4next__SQ2kl10hash_probe( struct kl_2kl12hash_cont
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Point;
+struct kl_7codegen_Point;
 struct kl_2kl12hash_control_hash_control;
 struct kl_2kl12hash_control_hash_probe;
 struct kl_2kl6string_string;
@@ -10683,19 +10683,19 @@ struct kl_2kl8optional_optional__I3i32E;
 struct kl__A3_3i32;
 struct kl__A2_3i32;
 struct kl__A3_A2_3i32;
-struct kl__A2_5Point;
+struct kl__A2_Q7codegen5Point;
 
 struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
 
 struct kl_7prelude_textual__vtable;
 struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
 
-struct kl__Point
+struct kl_7codegen_Point
 {
     int32_t kl_x;
     int32_t kl_y;
 };
-_Static_assert( sizeof( struct kl__Point ) == 8 && _Alignof( struct kl__Point ) == 4 && offsetof( struct kl__Point, kl_x ) == 0 && offsetof( struct kl__Point, kl_y ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Point ) == 8 && _Alignof( struct kl_7codegen_Point ) == 4 && offsetof( struct kl_7codegen_Point, kl_x ) == 0 && offsetof( struct kl_7codegen_Point, kl_y ) == 4, "layout" );
 
 struct kl_2kl12hash_control_hash_control
 {
@@ -10885,11 +10885,11 @@ struct kl__A3_A2_3i32
 };
 _Static_assert( sizeof( struct kl__A3_A2_3i32 ) == 24 && _Alignof( struct kl__A3_A2_3i32 ) == 4, "layout" );
 
-struct kl__A2_5Point
+struct kl__A2_Q7codegen5Point
 {
-    struct kl__Point e[2];
+    struct kl_7codegen_Point e[2];
 };
-_Static_assert( sizeof( struct kl__A2_5Point ) == 16 && _Alignof( struct kl__A2_5Point ) == 4, "layout" );
+_Static_assert( sizeof( struct kl__A2_Q7codegen5Point ) == 16 && _Alignof( struct kl__A2_Q7codegen5Point ) == 4, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -10903,9 +10903,9 @@ void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-bool kl__11operator_eq__S5Point_5Point( struct kl__Point*, struct kl__Point* );
-void kl__4hash__S5Point_RQ7prelude6hasher( struct kl__Point*, struct kl_7prelude_hasher* );
-int32_t kl__4main__( void );
+bool kl_7codegen_11operator_eq__SQ7codegen5Point_Q7codegen5Point( struct kl_7codegen_Point*, struct kl_7codegen_Point* );
+void kl_7codegen_4hash__SQ7codegen5Point_RQ7prelude6hasher( struct kl_7codegen_Point*, struct kl_7prelude_hasher* );
+int32_t kl_7codegen_4main__( void );
 void kl_2kl3map_3map__IA2_3i32_3i32E__RQ2kl3mapIA2_3i32_3i32E__ctor( struct kl_2kl3map_map__IA2_3i32_3i32E* );
 struct kl_2kl8optional_optional__I3i32E kl_2kl3map_6insert__IA2_3i32_3i32E__SQ2kl3mapIA2_3i32_3i32E_MA2_3i32_M3i32( struct kl_2kl3map_map__IA2_3i32_3i32E*, struct kl__A2_3i32, int32_t );
 uint64_t kl_2kl3map_4size__IA2_3i32_3i32E__SQ2kl3mapIA2_3i32_3i32E( struct kl_2kl3map_map__IA2_3i32_3i32E* );
@@ -10919,7 +10919,7 @@ void kl_2kl4list_4swap__IQ2kl4pathE__SQ2kl4listIQ2kl4pathE_3u64_3u64( struct kl_
 void kl_2kl3map_3map__IA2_3i32_3i32E__dtor( struct kl_2kl3map_map__IA2_3i32_3i32E* );
 bool kl_7prelude_11operator_eq__I3i32_V3_E__SA3_3i32C9equatable_A3_3i32( struct kl__A3_3i32*, struct kl__A3_3i32* );
 bool kl_7prelude_11operator_eq__IA2_3i32_V3_E__SA3_A2_3i32C9equatable_A3_A2_3i32( struct kl__A3_A2_3i32*, struct kl__A3_A2_3i32* );
-bool kl_7prelude_11operator_eq__I5Point_V2_E__SA2_5PointC9equatable_A2_5Point( struct kl__A2_5Point*, struct kl__A2_5Point* );
+bool kl_7prelude_11operator_eq__IQ7codegen5Point_V2_E__SA2_Q7codegen5PointC9equatable_A2_Q7codegen5Point( struct kl__A2_Q7codegen5Point*, struct kl__A2_Q7codegen5Point* );
 uint64_t kl_2kl3map_7hash_of__IA2_3i32_3i32E__SQ2kl3mapIA2_3i32_3i32E_A2_3i32( struct kl_2kl3map_map__IA2_3i32_3i32E*, struct kl__A2_3i32* );
 uint64_t kl_2kl3map_14slot_of_hashed__IA2_3i32_3i32E__SQ2kl3mapIA2_3i32_3i32E_A2_3i32_3u64( struct kl_2kl3map_map__IA2_3i32_3i32E*, struct kl__A2_3i32*, uint64_t );
 void kl_2kl3map_6resize__IA2_3i32_3i32E__SQ2kl3mapIA2_3i32_3i32E_3u64( struct kl_2kl3map_map__IA2_3i32_3i32E*, uint64_t );
@@ -10962,7 +10962,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 10 "codegen/array_equality.kl"
-bool kl__11operator_eq__S5Point_5Point( struct kl__Point* kl_this_1, struct kl__Point* kl_other_2 )
+bool kl_7codegen_11operator_eq__SQ7codegen5Point_Q7codegen5Point( struct kl_7codegen_Point* kl_this_1, struct kl_7codegen_Point* kl_other_2 )
 {
     bool kl_t0;
     bool kl_t3;
@@ -10989,7 +10989,7 @@ bool kl__11operator_eq__S5Point_5Point( struct kl__Point* kl_this_1, struct kl__
 }
 
 #line 15 "codegen/array_equality.kl"
-void kl__4hash__S5Point_RQ7prelude6hasher( struct kl__Point* kl_this_1, struct kl_7prelude_hasher* kl_h_2 )
+void kl_7codegen_4hash__SQ7codegen5Point_RQ7prelude6hasher( struct kl_7codegen_Point* kl_this_1, struct kl_7prelude_hasher* kl_h_2 )
 {
     struct kl_7prelude_hasher* kl_t3;
     uint64_t kl_t4;
@@ -11029,7 +11029,7 @@ void kl__4hash__S5Point_RQ7prelude6hasher( struct kl__Point* kl_this_1, struct k
 }
 
 #line 22 "codegen/array_equality.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     struct kl__A3_3i32 kl_a_1;
@@ -11125,28 +11125,28 @@ int32_t kl__4main__( void )
     uint8_t* kl_t101;
     struct kl_7prelude_str* kl_t103;
     struct kl_7prelude_textual__ref kl_t104;
-    struct kl__A2_5Point kl_p_106;
-    struct kl__A2_5Point kl_t107;
-    struct kl__Point kl_t108;
-    struct kl__Point kl_t109;
+    struct kl__A2_Q7codegen5Point kl_p_106;
+    struct kl__A2_Q7codegen5Point kl_t107;
+    struct kl_7codegen_Point kl_t108;
+    struct kl_7codegen_Point kl_t109;
     uint64_t kl_t110;
     uint64_t kl_t111;
-    struct kl__A2_5Point kl_q_112;
-    struct kl__A2_5Point kl_t113;
-    struct kl__Point kl_t114;
-    struct kl__Point kl_t115;
+    struct kl__A2_Q7codegen5Point kl_q_112;
+    struct kl__A2_Q7codegen5Point kl_t113;
+    struct kl_7codegen_Point kl_t114;
+    struct kl_7codegen_Point kl_t115;
     uint64_t kl_t116;
     uint64_t kl_t117;
-    struct kl__A2_5Point* kl_t118;
-    struct kl__A2_5Point* kl_t119;
+    struct kl__A2_Q7codegen5Point* kl_t118;
+    struct kl__A2_Q7codegen5Point* kl_t119;
     bool kl_t120;
     struct kl_7prelude_str kl_t121;
     struct kl_7prelude_str* kl_t122;
     uint8_t* kl_t123;
     struct kl_7prelude_str* kl_t125;
     struct kl_7prelude_textual__ref kl_t126;
-    struct kl__A2_5Point* kl_t128;
-    struct kl__A2_5Point* kl_t129;
+    struct kl__A2_Q7codegen5Point* kl_t128;
+    struct kl__A2_Q7codegen5Point* kl_t129;
     bool kl_t130;
     struct kl_7prelude_str kl_t131;
     struct kl_7prelude_str* kl_t132;
@@ -11497,7 +11497,7 @@ int32_t kl__4main__( void )
 #line 39 "codegen/array_equality.kl"
     kl_t119 = &kl_p_106;
 #line 39 "codegen/array_equality.kl"
-    kl_t120 = kl_7prelude_11operator_eq__I5Point_V2_E__SA2_5PointC9equatable_A2_5Point( kl_t118, kl_t119 );
+    kl_t120 = kl_7prelude_11operator_eq__IQ7codegen5Point_V2_E__SA2_Q7codegen5PointC9equatable_A2_Q7codegen5Point( kl_t118, kl_t119 );
 #line 68 "<kl>/console.kl"
     kl_t122 = &kl_t121;
 #line 68 "<kl>/console.kl"
@@ -11514,7 +11514,7 @@ int32_t kl__4main__( void )
 #line 40 "codegen/array_equality.kl"
     kl_t129 = &kl_q_112;
 #line 40 "codegen/array_equality.kl"
-    kl_t130 = kl_7prelude_11operator_eq__I5Point_V2_E__SA2_5PointC9equatable_A2_5Point( kl_t128, kl_t129 );
+    kl_t130 = kl_7prelude_11operator_eq__IQ7codegen5Point_V2_E__SA2_Q7codegen5PointC9equatable_A2_Q7codegen5Point( kl_t128, kl_t129 );
 #line 68 "<kl>/console.kl"
     kl_t132 = &kl_t131;
 #line 68 "<kl>/console.kl"
@@ -12311,7 +12311,7 @@ bool kl_7prelude_11operator_eq__IA2_3i32_V3_E__SA3_A2_3i32C9equatable_A3_A2_3i32
 }
 
 #line 207 "<prelude>"
-bool kl_7prelude_11operator_eq__I5Point_V2_E__SA2_5PointC9equatable_A2_5Point( struct kl__A2_5Point* kl_this_1, struct kl__A2_5Point* kl_other_2 )
+bool kl_7prelude_11operator_eq__IQ7codegen5Point_V2_E__SA2_Q7codegen5PointC9equatable_A2_Q7codegen5Point( struct kl__A2_Q7codegen5Point* kl_this_1, struct kl__A2_Q7codegen5Point* kl_other_2 )
 {
     bool kl_t0;
     uint64_t kl_i_3;
@@ -12319,10 +12319,10 @@ bool kl_7prelude_11operator_eq__I5Point_V2_E__SA2_5PointC9equatable_A2_5Point( s
     bool kl_t5;
     uint64_t kl_t6;
     bool kl_t7;
-    struct kl__Point* kl_t8;
+    struct kl_7codegen_Point* kl_t8;
     uint64_t kl_t9;
     bool kl_t10;
-    struct kl__Point* kl_t11;
+    struct kl_7codegen_Point* kl_t11;
     bool kl_t12;
     bool kl_t13;
 #line 209 "<prelude>"
@@ -12363,7 +12363,7 @@ bool kl_7prelude_11operator_eq__I5Point_V2_E__SA2_5PointC9equatable_A2_5Point( s
 #line 211 "<prelude>"
     kl_t11 = &( *kl_other_2 ).e[kl_t9];
 #line 211 "<prelude>"
-    kl_t12 = kl__11operator_eq__S5Point_5Point( kl_t8, kl_t11 );
+    kl_t12 = kl_7codegen_11operator_eq__SQ7codegen5Point_Q7codegen5Point( kl_t8, kl_t11 );
 #line 211 "<prelude>"
     kl_t13 = !kl_t12;
 #line 211 "<prelude>"
@@ -12899,7 +12899,7 @@ int main( void )
 #line 22 "codegen/array_equality.kl"
     kl_2kl2os_0build(  );
 #line 22 "codegen/array_equality.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 22 "codegen/array_equality.kl"
     kl_2kl2os_0drop(  );
 #line 22 "codegen/array_equality.kl"

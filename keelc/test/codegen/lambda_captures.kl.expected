@@ -3,95 +3,95 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Owned;
-struct kl__Counter;
-struct kl__Z15lambda_captures_460_;
-struct kl__Z15lambda_captures_527_;
-struct kl__Z15lambda_captures_627_;
-struct kl__Z15lambda_captures_735_;
-struct kl__Z15lambda_captures_947_;
-struct kl__Z15lambda_captures_975_;
+struct kl_7codegen_Owned;
+struct kl_7codegen_Counter;
+struct kl__Z7codegen15lambda_captures_460_;
+struct kl__Z7codegen15lambda_captures_527_;
+struct kl__Z7codegen15lambda_captures_627_;
+struct kl__Z7codegen15lambda_captures_735_;
+struct kl__Z7codegen15lambda_captures_947_;
+struct kl__Z7codegen15lambda_captures_975_;
 
 typedef void ( *kl__fn__FE4void )( void );
 typedef int32_t ( *kl__fn__FE3i32 )( void );
 
-struct kl__Owned
+struct kl_7codegen_Owned
 {
     int32_t* kl_p;
 };
-_Static_assert( sizeof( struct kl__Owned ) == 8 && _Alignof( struct kl__Owned ) == 8 && offsetof( struct kl__Owned, kl_p ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Owned ) == 8 && _Alignof( struct kl_7codegen_Owned ) == 8 && offsetof( struct kl_7codegen_Owned, kl_p ) == 0, "layout" );
 
-struct kl__Counter
+struct kl_7codegen_Counter
 {
     int32_t kl_n;
 };
-_Static_assert( sizeof( struct kl__Counter ) == 4 && _Alignof( struct kl__Counter ) == 4 && offsetof( struct kl__Counter, kl_n ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Counter ) == 4 && _Alignof( struct kl_7codegen_Counter ) == 4 && offsetof( struct kl_7codegen_Counter, kl_n ) == 0, "layout" );
 
-struct kl__Z15lambda_captures_460_
+struct kl__Z7codegen15lambda_captures_460_
 {
-    struct kl__Counter* kl_this;
+    struct kl_7codegen_Counter* kl_this;
 };
-_Static_assert( sizeof( struct kl__Z15lambda_captures_460_ ) == 8 && _Alignof( struct kl__Z15lambda_captures_460_ ) == 8 && offsetof( struct kl__Z15lambda_captures_460_, kl_this ) == 0, "layout" );
+_Static_assert( sizeof( struct kl__Z7codegen15lambda_captures_460_ ) == 8 && _Alignof( struct kl__Z7codegen15lambda_captures_460_ ) == 8 && offsetof( struct kl__Z7codegen15lambda_captures_460_, kl_this ) == 0, "layout" );
 
-struct kl__Z15lambda_captures_527_
+struct kl__Z7codegen15lambda_captures_527_
 {
-    struct kl__Counter* kl_this;
+    struct kl_7codegen_Counter* kl_this;
 };
-_Static_assert( sizeof( struct kl__Z15lambda_captures_527_ ) == 8 && _Alignof( struct kl__Z15lambda_captures_527_ ) == 8 && offsetof( struct kl__Z15lambda_captures_527_, kl_this ) == 0, "layout" );
+_Static_assert( sizeof( struct kl__Z7codegen15lambda_captures_527_ ) == 8 && _Alignof( struct kl__Z7codegen15lambda_captures_527_ ) == 8 && offsetof( struct kl__Z7codegen15lambda_captures_527_, kl_this ) == 0, "layout" );
 
-struct kl__Z15lambda_captures_627_
+struct kl__Z7codegen15lambda_captures_627_
 {
     int32_t kl_a;
     int32_t* kl_b;
 };
-_Static_assert( sizeof( struct kl__Z15lambda_captures_627_ ) == 16 && _Alignof( struct kl__Z15lambda_captures_627_ ) == 8 && offsetof( struct kl__Z15lambda_captures_627_, kl_a ) == 0 && offsetof( struct kl__Z15lambda_captures_627_, kl_b ) == 8, "layout" );
+_Static_assert( sizeof( struct kl__Z7codegen15lambda_captures_627_ ) == 16 && _Alignof( struct kl__Z7codegen15lambda_captures_627_ ) == 8 && offsetof( struct kl__Z7codegen15lambda_captures_627_, kl_a ) == 0 && offsetof( struct kl__Z7codegen15lambda_captures_627_, kl_b ) == 8, "layout" );
 
-struct kl__Z15lambda_captures_735_
+struct kl__Z7codegen15lambda_captures_735_
 {
-    struct kl__Owned* kl_o;
+    struct kl_7codegen_Owned* kl_o;
 };
-_Static_assert( sizeof( struct kl__Z15lambda_captures_735_ ) == 8 && _Alignof( struct kl__Z15lambda_captures_735_ ) == 8 && offsetof( struct kl__Z15lambda_captures_735_, kl_o ) == 0, "layout" );
+_Static_assert( sizeof( struct kl__Z7codegen15lambda_captures_735_ ) == 8 && _Alignof( struct kl__Z7codegen15lambda_captures_735_ ) == 8 && offsetof( struct kl__Z7codegen15lambda_captures_735_, kl_o ) == 0, "layout" );
 
-struct kl__Z15lambda_captures_947_
-{
-    int32_t kl_a;
-    int32_t* kl_total;
-};
-_Static_assert( sizeof( struct kl__Z15lambda_captures_947_ ) == 16 && _Alignof( struct kl__Z15lambda_captures_947_ ) == 8 && offsetof( struct kl__Z15lambda_captures_947_, kl_a ) == 0 && offsetof( struct kl__Z15lambda_captures_947_, kl_total ) == 8, "layout" );
-
-struct kl__Z15lambda_captures_975_
+struct kl__Z7codegen15lambda_captures_947_
 {
     int32_t kl_a;
     int32_t* kl_total;
 };
-_Static_assert( sizeof( struct kl__Z15lambda_captures_975_ ) == 16 && _Alignof( struct kl__Z15lambda_captures_975_ ) == 8 && offsetof( struct kl__Z15lambda_captures_975_, kl_a ) == 0 && offsetof( struct kl__Z15lambda_captures_975_, kl_total ) == 8, "layout" );
+_Static_assert( sizeof( struct kl__Z7codegen15lambda_captures_947_ ) == 16 && _Alignof( struct kl__Z7codegen15lambda_captures_947_ ) == 8 && offsetof( struct kl__Z7codegen15lambda_captures_947_, kl_a ) == 0 && offsetof( struct kl__Z7codegen15lambda_captures_947_, kl_total ) == 8, "layout" );
+
+struct kl__Z7codegen15lambda_captures_975_
+{
+    int32_t kl_a;
+    int32_t* kl_total;
+};
+_Static_assert( sizeof( struct kl__Z7codegen15lambda_captures_975_ ) == 16 && _Alignof( struct kl__Z7codegen15lambda_captures_975_ ) == 8 && offsetof( struct kl__Z7codegen15lambda_captures_975_, kl_a ) == 0 && offsetof( struct kl__Z7codegen15lambda_captures_975_, kl_total ) == 8, "layout" );
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__5Owned__R5Owned_3i32__ctor( struct kl__Owned*, int32_t );
-void kl__5Owned__dtor( struct kl__Owned* );
-int32_t kl__5value__S5Owned( struct kl__Owned* );
-void kl__3add__S7Counter_3i32( struct kl__Counter*, int32_t );
-int32_t kl__7doubled__S7Counter( struct kl__Counter* );
-int32_t kl__100lambda460__( struct kl__Z15lambda_captures_460_* );
-void kl__5twice__S7Counter( struct kl__Counter* );
-void kl__100lambda527__( struct kl__Z15lambda_captures_527_* );
-int32_t kl__4main__( void );
-void kl__100lambda947__( struct kl__Z15lambda_captures_947_* );
-void kl__100lambda975__( struct kl__Z15lambda_captures_975_* );
-int32_t kl__100lambda735__( struct kl__Z15lambda_captures_735_* );
-void kl__100lambda627__( struct kl__Z15lambda_captures_627_* );
-int32_t kl__3get__IZ15lambda_captures_460_E__Z15lambda_captures_460_( struct kl__Z15lambda_captures_460_* );
-void kl__3run__IZ15lambda_captures_527_E__Z15lambda_captures_527_( struct kl__Z15lambda_captures_527_* );
-void kl__3run__IZ15lambda_captures_627_E__Z15lambda_captures_627_( struct kl__Z15lambda_captures_627_* );
-int32_t kl__3get__IZ15lambda_captures_735_E__Z15lambda_captures_735_( struct kl__Z15lambda_captures_735_* );
-void kl__3run__IZ15lambda_captures_947_E__Z15lambda_captures_947_( struct kl__Z15lambda_captures_947_* );
-void kl__3run__IZ15lambda_captures_975_E__Z15lambda_captures_975_( struct kl__Z15lambda_captures_975_* );
+void kl_7codegen_5Owned__RQ7codegen5Owned_3i32__ctor( struct kl_7codegen_Owned*, int32_t );
+void kl_7codegen_5Owned__dtor( struct kl_7codegen_Owned* );
+int32_t kl_7codegen_5value__SQ7codegen5Owned( struct kl_7codegen_Owned* );
+void kl_7codegen_3add__SQ7codegen7Counter_3i32( struct kl_7codegen_Counter*, int32_t );
+int32_t kl_7codegen_7doubled__SQ7codegen7Counter( struct kl_7codegen_Counter* );
+int32_t kl_7codegen_100lambda460__( struct kl__Z7codegen15lambda_captures_460_* );
+void kl_7codegen_5twice__SQ7codegen7Counter( struct kl_7codegen_Counter* );
+void kl_7codegen_100lambda527__( struct kl__Z7codegen15lambda_captures_527_* );
+int32_t kl_7codegen_4main__( void );
+void kl_7codegen_100lambda947__( struct kl__Z7codegen15lambda_captures_947_* );
+void kl_7codegen_100lambda975__( struct kl__Z7codegen15lambda_captures_975_* );
+int32_t kl_7codegen_100lambda735__( struct kl__Z7codegen15lambda_captures_735_* );
+void kl_7codegen_100lambda627__( struct kl__Z7codegen15lambda_captures_627_* );
+int32_t kl_7codegen_3get__IZ7codegen15lambda_captures_460_E__Z7codegen15lambda_captures_460_( struct kl__Z7codegen15lambda_captures_460_* );
+void kl_7codegen_3run__IZ7codegen15lambda_captures_527_E__Z7codegen15lambda_captures_527_( struct kl__Z7codegen15lambda_captures_527_* );
+void kl_7codegen_3run__IZ7codegen15lambda_captures_627_E__Z7codegen15lambda_captures_627_( struct kl__Z7codegen15lambda_captures_627_* );
+int32_t kl_7codegen_3get__IZ7codegen15lambda_captures_735_E__Z7codegen15lambda_captures_735_( struct kl__Z7codegen15lambda_captures_735_* );
+void kl_7codegen_3run__IZ7codegen15lambda_captures_947_E__Z7codegen15lambda_captures_947_( struct kl__Z7codegen15lambda_captures_947_* );
+void kl_7codegen_3run__IZ7codegen15lambda_captures_975_E__Z7codegen15lambda_captures_975_( struct kl__Z7codegen15lambda_captures_975_* );
 
 #line 8 "codegen/lambda_captures.kl"
-void kl__5Owned__R5Owned_3i32__ctor( struct kl__Owned* kl_this_1, int32_t kl_v_2 )
+void kl_7codegen_5Owned__RQ7codegen5Owned_3i32__ctor( struct kl_7codegen_Owned* kl_this_1, int32_t kl_v_2 )
 {
     int32_t* kl_t3;
 #line 8 "codegen/lambda_captures.kl"
@@ -106,7 +106,7 @@ void kl__5Owned__R5Owned_3i32__ctor( struct kl__Owned* kl_this_1, int32_t kl_v_2
 }
 
 #line 9 "codegen/lambda_captures.kl"
-void kl__5Owned__dtor( struct kl__Owned* kl_this_1 )
+void kl_7codegen_5Owned__dtor( struct kl_7codegen_Owned* kl_this_1 )
 {
 #line 9 "codegen/lambda_captures.kl"
     kl_rt_free( ( *kl_this_1 ).kl_p );
@@ -116,7 +116,7 @@ void kl__5Owned__dtor( struct kl__Owned* kl_this_1 )
 }
 
 #line 10 "codegen/lambda_captures.kl"
-int32_t kl__5value__S5Owned( struct kl__Owned* kl_this_1 )
+int32_t kl_7codegen_5value__SQ7codegen5Owned( struct kl_7codegen_Owned* kl_this_1 )
 {
     int32_t kl_t0;
 #line 10 "codegen/lambda_captures.kl"
@@ -127,7 +127,7 @@ int32_t kl__5value__S5Owned( struct kl__Owned* kl_this_1 )
 }
 
 #line 17 "codegen/lambda_captures.kl"
-void kl__3add__S7Counter_3i32( struct kl__Counter* kl_this_1, int32_t kl_k_2 )
+void kl_7codegen_3add__SQ7codegen7Counter_3i32( struct kl_7codegen_Counter* kl_this_1, int32_t kl_k_2 )
 {
     bool kl_t3;
 #line 17 "codegen/lambda_captures.kl"
@@ -146,12 +146,12 @@ void kl__3add__S7Counter_3i32( struct kl__Counter* kl_this_1, int32_t kl_k_2 )
 }
 
 #line 18 "codegen/lambda_captures.kl"
-int32_t kl__7doubled__S7Counter( struct kl__Counter* kl_this_1 )
+int32_t kl_7codegen_7doubled__SQ7codegen7Counter( struct kl_7codegen_Counter* kl_this_1 )
 {
     int32_t kl_t0;
-    struct kl__Z15lambda_captures_460_ kl_t2;
-    struct kl__Counter* kl_t3;
-    struct kl__Z15lambda_captures_460_* kl_t4;
+    struct kl__Z7codegen15lambda_captures_460_ kl_t2;
+    struct kl_7codegen_Counter* kl_t3;
+    struct kl__Z7codegen15lambda_captures_460_* kl_t4;
     int32_t kl_t5;
 #line 18 "codegen/lambda_captures.kl"
     kl_t3 = &( *kl_this_1 );
@@ -160,7 +160,7 @@ int32_t kl__7doubled__S7Counter( struct kl__Counter* kl_this_1 )
 #line 18 "codegen/lambda_captures.kl"
     kl_t4 = &kl_t2;
 #line 18 "codegen/lambda_captures.kl"
-    kl_t5 = kl__3get__IZ15lambda_captures_460_E__Z15lambda_captures_460_( kl_t4 );
+    kl_t5 = kl_7codegen_3get__IZ7codegen15lambda_captures_460_E__Z7codegen15lambda_captures_460_( kl_t4 );
 #line 18 "codegen/lambda_captures.kl"
     kl_t0 = kl_t5;
 #line 18 "codegen/lambda_captures.kl"
@@ -169,10 +169,10 @@ int32_t kl__7doubled__S7Counter( struct kl__Counter* kl_this_1 )
 }
 
 #line 18 "codegen/lambda_captures.kl"
-int32_t kl__100lambda460__( struct kl__Z15lambda_captures_460_* kl_t1 )
+int32_t kl_7codegen_100lambda460__( struct kl__Z7codegen15lambda_captures_460_* kl_t1 )
 {
     int32_t kl_t0;
-    struct kl__Counter* kl_t2;
+    struct kl_7codegen_Counter* kl_t2;
     bool kl_t3;
     int32_t kl_t4;
 #line 18 "codegen/lambda_captures.kl"
@@ -195,11 +195,11 @@ int32_t kl__100lambda460__( struct kl__Z15lambda_captures_460_* kl_t1 )
 }
 
 #line 19 "codegen/lambda_captures.kl"
-void kl__5twice__S7Counter( struct kl__Counter* kl_this_1 )
+void kl_7codegen_5twice__SQ7codegen7Counter( struct kl_7codegen_Counter* kl_this_1 )
 {
-    struct kl__Z15lambda_captures_527_ kl_t2;
-    struct kl__Counter* kl_t3;
-    struct kl__Z15lambda_captures_527_* kl_t4;
+    struct kl__Z7codegen15lambda_captures_527_ kl_t2;
+    struct kl_7codegen_Counter* kl_t3;
+    struct kl__Z7codegen15lambda_captures_527_* kl_t4;
 #line 19 "codegen/lambda_captures.kl"
     kl_t3 = &( *kl_this_1 );
 #line 19 "codegen/lambda_captures.kl"
@@ -207,24 +207,24 @@ void kl__5twice__S7Counter( struct kl__Counter* kl_this_1 )
 #line 19 "codegen/lambda_captures.kl"
     kl_t4 = &kl_t2;
 #line 19 "codegen/lambda_captures.kl"
-    kl__3run__IZ15lambda_captures_527_E__Z15lambda_captures_527_( kl_t4 );
+    kl_7codegen_3run__IZ7codegen15lambda_captures_527_E__Z7codegen15lambda_captures_527_( kl_t4 );
 #line 19 "codegen/lambda_captures.kl"
     return;
 #line 19 "codegen/lambda_captures.kl"
 }
 
 #line 19 "codegen/lambda_captures.kl"
-void kl__100lambda527__( struct kl__Z15lambda_captures_527_* kl_t1 )
+void kl_7codegen_100lambda527__( struct kl__Z7codegen15lambda_captures_527_* kl_t1 )
 {
-    struct kl__Counter* kl_t2;
-    struct kl__Counter* kl_t3;
+    struct kl_7codegen_Counter* kl_t2;
+    struct kl_7codegen_Counter* kl_t3;
     bool kl_t5;
 #line 19 "codegen/lambda_captures.kl"
     kl_t2 = ( *kl_t1 ).kl_this;
 #line 19 "codegen/lambda_captures.kl"
     kl_t3 = &( *kl_t2 );
 #line 19 "codegen/lambda_captures.kl"
-    kl__3add__S7Counter_3i32( kl_t3, 1 );
+    kl_7codegen_3add__SQ7codegen7Counter_3i32( kl_t3, 1 );
 #line 19 "codegen/lambda_captures.kl"
     kl_t5 = __builtin_add_overflow( ( *kl_t2 ).kl_n, 1, &( int32_t ) { 0 } );
 #line 19 "codegen/lambda_captures.kl"
@@ -241,33 +241,33 @@ void kl__100lambda527__( struct kl__Z15lambda_captures_527_* kl_t1 )
 }
 
 #line 22 "codegen/lambda_captures.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_a_1;
     int32_t kl_b_2;
-    struct kl__Z15lambda_captures_627_ kl_t3;
+    struct kl__Z7codegen15lambda_captures_627_ kl_t3;
     int32_t* kl_t4;
-    struct kl__Z15lambda_captures_627_* kl_t5;
+    struct kl__Z7codegen15lambda_captures_627_* kl_t5;
     bool kl_t7;
-    struct kl__Owned kl_o_8;
-    struct kl__Owned* kl_t9;
-    struct kl__Z15lambda_captures_735_ kl_t11;
-    struct kl__Owned* kl_t12;
-    struct kl__Z15lambda_captures_735_* kl_t13;
+    struct kl_7codegen_Owned kl_o_8;
+    struct kl_7codegen_Owned* kl_t9;
+    struct kl__Z7codegen15lambda_captures_735_ kl_t11;
+    struct kl_7codegen_Owned* kl_t12;
+    struct kl__Z7codegen15lambda_captures_735_* kl_t13;
     int32_t kl_t14;
     bool kl_t15;
-    struct kl__Counter kl_c_16;
-    struct kl__Counter kl_t17;
-    struct kl__Counter* kl_t18;
+    struct kl_7codegen_Counter kl_c_16;
+    struct kl_7codegen_Counter kl_t17;
+    struct kl_7codegen_Counter* kl_t18;
     int32_t kl_t19;
     bool kl_t20;
-    struct kl__Counter* kl_t21;
+    struct kl_7codegen_Counter* kl_t21;
     bool kl_t23;
     int32_t kl_total_24;
-    struct kl__Z15lambda_captures_947_ kl_t25;
+    struct kl__Z7codegen15lambda_captures_947_ kl_t25;
     int32_t* kl_t26;
-    struct kl__Z15lambda_captures_947_* kl_t27;
+    struct kl__Z7codegen15lambda_captures_947_* kl_t27;
     bool kl_t29;
 #line 24 "codegen/lambda_captures.kl"
     kl_a_1 = 2;
@@ -280,7 +280,7 @@ int32_t kl__4main__( void )
 #line 26 "codegen/lambda_captures.kl"
     kl_t5 = &kl_t3;
 #line 26 "codegen/lambda_captures.kl"
-    kl__3run__IZ15lambda_captures_627_E__Z15lambda_captures_627_( kl_t5 );
+    kl_7codegen_3run__IZ7codegen15lambda_captures_627_E__Z7codegen15lambda_captures_627_( kl_t5 );
     kl_t7 = kl_b_2 != 20;
 #line 27 "codegen/lambda_captures.kl"
     if ( kl_t7 ) goto bb1; else goto bb2;
@@ -292,14 +292,14 @@ int32_t kl__4main__( void )
     bb2:
     kl_t9 = &kl_o_8;
 #line 29 "codegen/lambda_captures.kl"
-    kl__5Owned__R5Owned_3i32__ctor( kl_t9, 7 );
+    kl_7codegen_5Owned__RQ7codegen5Owned_3i32__ctor( kl_t9, 7 );
     kl_t12 = &kl_o_8;
 #line 30 "codegen/lambda_captures.kl"
     kl_t11.kl_o = kl_t12;
 #line 30 "codegen/lambda_captures.kl"
     kl_t13 = &kl_t11;
 #line 30 "codegen/lambda_captures.kl"
-    kl_t14 = kl__3get__IZ15lambda_captures_735_E__Z15lambda_captures_735_( kl_t13 );
+    kl_t14 = kl_7codegen_3get__IZ7codegen15lambda_captures_735_E__Z7codegen15lambda_captures_735_( kl_t13 );
 #line 30 "codegen/lambda_captures.kl"
     kl_t15 = kl_t14 != 7;
 #line 30 "codegen/lambda_captures.kl"
@@ -308,7 +308,7 @@ int32_t kl__4main__( void )
 #line 30 "codegen/lambda_captures.kl"
     kl_t0 = 2;
 #line 30 "codegen/lambda_captures.kl"
-    kl__5Owned__dtor( &kl_o_8 );
+    kl_7codegen_5Owned__dtor( &kl_o_8 );
 #line 30 "codegen/lambda_captures.kl"
     return kl_t0;
     bb4:
@@ -317,7 +317,7 @@ int32_t kl__4main__( void )
     kl_c_16 = kl_t17;
     kl_t18 = &kl_c_16;
 #line 33 "codegen/lambda_captures.kl"
-    kl_t19 = kl__7doubled__S7Counter( kl_t18 );
+    kl_t19 = kl_7codegen_7doubled__SQ7codegen7Counter( kl_t18 );
 #line 33 "codegen/lambda_captures.kl"
     kl_t20 = kl_t19 != 6;
 #line 33 "codegen/lambda_captures.kl"
@@ -326,14 +326,14 @@ int32_t kl__4main__( void )
 #line 33 "codegen/lambda_captures.kl"
     kl_t0 = 3;
 #line 33 "codegen/lambda_captures.kl"
-    kl__5Owned__dtor( &kl_o_8 );
+    kl_7codegen_5Owned__dtor( &kl_o_8 );
 #line 33 "codegen/lambda_captures.kl"
     return kl_t0;
     bb6:
 #line 34 "codegen/lambda_captures.kl"
     kl_t21 = &kl_c_16;
 #line 34 "codegen/lambda_captures.kl"
-    kl__5twice__S7Counter( kl_t21 );
+    kl_7codegen_5twice__SQ7codegen7Counter( kl_t21 );
     kl_t23 = kl_c_16.kl_n != 5;
 #line 35 "codegen/lambda_captures.kl"
     if ( kl_t23 ) goto bb7; else goto bb8;
@@ -341,7 +341,7 @@ int32_t kl__4main__( void )
 #line 35 "codegen/lambda_captures.kl"
     kl_t0 = 4;
 #line 35 "codegen/lambda_captures.kl"
-    kl__5Owned__dtor( &kl_o_8 );
+    kl_7codegen_5Owned__dtor( &kl_o_8 );
 #line 35 "codegen/lambda_captures.kl"
     return kl_t0;
     bb8:
@@ -354,7 +354,7 @@ int32_t kl__4main__( void )
 #line 38 "codegen/lambda_captures.kl"
     kl_t27 = &kl_t25;
 #line 38 "codegen/lambda_captures.kl"
-    kl__3run__IZ15lambda_captures_947_E__Z15lambda_captures_947_( kl_t27 );
+    kl_7codegen_3run__IZ7codegen15lambda_captures_947_E__Z7codegen15lambda_captures_947_( kl_t27 );
     kl_t29 = kl_total_24 != 3;
 #line 39 "codegen/lambda_captures.kl"
     if ( kl_t29 ) goto bb9; else goto bb10;
@@ -362,25 +362,25 @@ int32_t kl__4main__( void )
 #line 39 "codegen/lambda_captures.kl"
     kl_t0 = 5;
 #line 39 "codegen/lambda_captures.kl"
-    kl__5Owned__dtor( &kl_o_8 );
+    kl_7codegen_5Owned__dtor( &kl_o_8 );
 #line 39 "codegen/lambda_captures.kl"
     return kl_t0;
     bb10:
     kl_t0 = 0;
 #line 41 "codegen/lambda_captures.kl"
-    kl__5Owned__dtor( &kl_o_8 );
+    kl_7codegen_5Owned__dtor( &kl_o_8 );
 #line 41 "codegen/lambda_captures.kl"
     return kl_t0;
 }
 
 #line 38 "codegen/lambda_captures.kl"
-void kl__100lambda947__( struct kl__Z15lambda_captures_947_* kl_t1 )
+void kl_7codegen_100lambda947__( struct kl__Z7codegen15lambda_captures_947_* kl_t1 )
 {
     int32_t kl_t2;
     int32_t* kl_t3;
-    struct kl__Z15lambda_captures_975_ kl_t4;
+    struct kl__Z7codegen15lambda_captures_975_ kl_t4;
     int32_t* kl_t5;
-    struct kl__Z15lambda_captures_975_* kl_t6;
+    struct kl__Z7codegen15lambda_captures_975_* kl_t6;
     bool kl_t8;
 #line 38 "codegen/lambda_captures.kl"
     kl_t2 = ( *kl_t1 ).kl_a;
@@ -395,7 +395,7 @@ void kl__100lambda947__( struct kl__Z15lambda_captures_947_* kl_t1 )
 #line 38 "codegen/lambda_captures.kl"
     kl_t6 = &kl_t4;
 #line 38 "codegen/lambda_captures.kl"
-    kl__3run__IZ15lambda_captures_975_E__Z15lambda_captures_975_( kl_t6 );
+    kl_7codegen_3run__IZ7codegen15lambda_captures_975_E__Z7codegen15lambda_captures_975_( kl_t6 );
 #line 38 "codegen/lambda_captures.kl"
     kl_t8 = __builtin_add_overflow( ( *kl_t3 ), 1, &( int32_t ) { 0 } );
 #line 38 "codegen/lambda_captures.kl"
@@ -412,7 +412,7 @@ void kl__100lambda947__( struct kl__Z15lambda_captures_947_* kl_t1 )
 }
 
 #line 38 "codegen/lambda_captures.kl"
-void kl__100lambda975__( struct kl__Z15lambda_captures_975_* kl_t1 )
+void kl_7codegen_100lambda975__( struct kl__Z7codegen15lambda_captures_975_* kl_t1 )
 {
     int32_t kl_t2;
     int32_t* kl_t3;
@@ -437,18 +437,18 @@ void kl__100lambda975__( struct kl__Z15lambda_captures_975_* kl_t1 )
 }
 
 #line 30 "codegen/lambda_captures.kl"
-int32_t kl__100lambda735__( struct kl__Z15lambda_captures_735_* kl_t1 )
+int32_t kl_7codegen_100lambda735__( struct kl__Z7codegen15lambda_captures_735_* kl_t1 )
 {
     int32_t kl_t0;
-    struct kl__Owned* kl_t2;
-    struct kl__Owned* kl_t3;
+    struct kl_7codegen_Owned* kl_t2;
+    struct kl_7codegen_Owned* kl_t3;
     int32_t kl_t4;
 #line 30 "codegen/lambda_captures.kl"
     kl_t2 = ( *kl_t1 ).kl_o;
 #line 30 "codegen/lambda_captures.kl"
     kl_t3 = &( *kl_t2 );
 #line 30 "codegen/lambda_captures.kl"
-    kl_t4 = kl__5value__S5Owned( kl_t3 );
+    kl_t4 = kl_7codegen_5value__SQ7codegen5Owned( kl_t3 );
 #line 30 "codegen/lambda_captures.kl"
     kl_t0 = kl_t4;
 #line 30 "codegen/lambda_captures.kl"
@@ -457,7 +457,7 @@ int32_t kl__100lambda735__( struct kl__Z15lambda_captures_735_* kl_t1 )
 }
 
 #line 26 "codegen/lambda_captures.kl"
-void kl__100lambda627__( struct kl__Z15lambda_captures_627_* kl_t1 )
+void kl_7codegen_100lambda627__( struct kl__Z7codegen15lambda_captures_627_* kl_t1 )
 {
     int32_t kl_t2;
     int32_t* kl_t3;
@@ -485,15 +485,15 @@ void kl__100lambda627__( struct kl__Z15lambda_captures_627_* kl_t1 )
 }
 
 #line 3 "codegen/lambda_captures.kl"
-int32_t kl__3get__IZ15lambda_captures_460_E__Z15lambda_captures_460_( struct kl__Z15lambda_captures_460_* kl_f_1 )
+int32_t kl_7codegen_3get__IZ7codegen15lambda_captures_460_E__Z7codegen15lambda_captures_460_( struct kl__Z7codegen15lambda_captures_460_* kl_f_1 )
 {
     int32_t kl_t0;
-    struct kl__Z15lambda_captures_460_* kl_t2;
+    struct kl__Z7codegen15lambda_captures_460_* kl_t2;
     int32_t kl_t3;
 #line 3 "codegen/lambda_captures.kl"
     kl_t2 = &( *kl_f_1 );
 #line 3 "codegen/lambda_captures.kl"
-    kl_t3 = kl__100lambda460__( kl_t2 );
+    kl_t3 = kl_7codegen_100lambda460__( kl_t2 );
 #line 3 "codegen/lambda_captures.kl"
     kl_t0 = kl_t3;
 #line 3 "codegen/lambda_captures.kl"
@@ -502,41 +502,41 @@ int32_t kl__3get__IZ15lambda_captures_460_E__Z15lambda_captures_460_( struct kl_
 }
 
 #line 2 "codegen/lambda_captures.kl"
-void kl__3run__IZ15lambda_captures_527_E__Z15lambda_captures_527_( struct kl__Z15lambda_captures_527_* kl_f_1 )
+void kl_7codegen_3run__IZ7codegen15lambda_captures_527_E__Z7codegen15lambda_captures_527_( struct kl__Z7codegen15lambda_captures_527_* kl_f_1 )
 {
-    struct kl__Z15lambda_captures_527_* kl_t2;
+    struct kl__Z7codegen15lambda_captures_527_* kl_t2;
 #line 2 "codegen/lambda_captures.kl"
     kl_t2 = &( *kl_f_1 );
 #line 2 "codegen/lambda_captures.kl"
-    kl__100lambda527__( kl_t2 );
+    kl_7codegen_100lambda527__( kl_t2 );
 #line 2 "codegen/lambda_captures.kl"
     return;
 #line 2 "codegen/lambda_captures.kl"
 }
 
 #line 2 "codegen/lambda_captures.kl"
-void kl__3run__IZ15lambda_captures_627_E__Z15lambda_captures_627_( struct kl__Z15lambda_captures_627_* kl_f_1 )
+void kl_7codegen_3run__IZ7codegen15lambda_captures_627_E__Z7codegen15lambda_captures_627_( struct kl__Z7codegen15lambda_captures_627_* kl_f_1 )
 {
-    struct kl__Z15lambda_captures_627_* kl_t2;
+    struct kl__Z7codegen15lambda_captures_627_* kl_t2;
 #line 2 "codegen/lambda_captures.kl"
     kl_t2 = &( *kl_f_1 );
 #line 2 "codegen/lambda_captures.kl"
-    kl__100lambda627__( kl_t2 );
+    kl_7codegen_100lambda627__( kl_t2 );
 #line 2 "codegen/lambda_captures.kl"
     return;
 #line 2 "codegen/lambda_captures.kl"
 }
 
 #line 3 "codegen/lambda_captures.kl"
-int32_t kl__3get__IZ15lambda_captures_735_E__Z15lambda_captures_735_( struct kl__Z15lambda_captures_735_* kl_f_1 )
+int32_t kl_7codegen_3get__IZ7codegen15lambda_captures_735_E__Z7codegen15lambda_captures_735_( struct kl__Z7codegen15lambda_captures_735_* kl_f_1 )
 {
     int32_t kl_t0;
-    struct kl__Z15lambda_captures_735_* kl_t2;
+    struct kl__Z7codegen15lambda_captures_735_* kl_t2;
     int32_t kl_t3;
 #line 3 "codegen/lambda_captures.kl"
     kl_t2 = &( *kl_f_1 );
 #line 3 "codegen/lambda_captures.kl"
-    kl_t3 = kl__100lambda735__( kl_t2 );
+    kl_t3 = kl_7codegen_100lambda735__( kl_t2 );
 #line 3 "codegen/lambda_captures.kl"
     kl_t0 = kl_t3;
 #line 3 "codegen/lambda_captures.kl"
@@ -545,26 +545,26 @@ int32_t kl__3get__IZ15lambda_captures_735_E__Z15lambda_captures_735_( struct kl_
 }
 
 #line 2 "codegen/lambda_captures.kl"
-void kl__3run__IZ15lambda_captures_947_E__Z15lambda_captures_947_( struct kl__Z15lambda_captures_947_* kl_f_1 )
+void kl_7codegen_3run__IZ7codegen15lambda_captures_947_E__Z7codegen15lambda_captures_947_( struct kl__Z7codegen15lambda_captures_947_* kl_f_1 )
 {
-    struct kl__Z15lambda_captures_947_* kl_t2;
+    struct kl__Z7codegen15lambda_captures_947_* kl_t2;
 #line 2 "codegen/lambda_captures.kl"
     kl_t2 = &( *kl_f_1 );
 #line 2 "codegen/lambda_captures.kl"
-    kl__100lambda947__( kl_t2 );
+    kl_7codegen_100lambda947__( kl_t2 );
 #line 2 "codegen/lambda_captures.kl"
     return;
 #line 2 "codegen/lambda_captures.kl"
 }
 
 #line 2 "codegen/lambda_captures.kl"
-void kl__3run__IZ15lambda_captures_975_E__Z15lambda_captures_975_( struct kl__Z15lambda_captures_975_* kl_f_1 )
+void kl_7codegen_3run__IZ7codegen15lambda_captures_975_E__Z7codegen15lambda_captures_975_( struct kl__Z7codegen15lambda_captures_975_* kl_f_1 )
 {
-    struct kl__Z15lambda_captures_975_* kl_t2;
+    struct kl__Z7codegen15lambda_captures_975_* kl_t2;
 #line 2 "codegen/lambda_captures.kl"
     kl_t2 = &( *kl_f_1 );
 #line 2 "codegen/lambda_captures.kl"
-    kl__100lambda975__( kl_t2 );
+    kl_7codegen_100lambda975__( kl_t2 );
 #line 2 "codegen/lambda_captures.kl"
     return;
 #line 2 "codegen/lambda_captures.kl"
@@ -574,7 +574,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 22 "codegen/lambda_captures.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 22 "codegen/lambda_captures.kl"
     return kl_t0;
 #line 22 "codegen/lambda_captures.kl"

@@ -11,13 +11,13 @@ struct kl__A8_3f64
 };
 _Static_assert( sizeof( struct kl__A8_3f64 ) == 64 && _Alignof( struct kl__A8_3f64 ) == 8, "layout" );
 
-double kl__6cosine__3f64( double );
-double kl__4sine__3f64( double );
-void kl__3dft__A8_3f64_A8_3f64_RA8_3f64_RA8_3f64( struct kl__A8_3f64*, struct kl__A8_3f64*, struct kl__A8_3f64*, struct kl__A8_3f64* );
-int32_t kl__4main__( void );
+double kl_4opt3_6cosine__3f64( double );
+double kl_4opt3_4sine__3f64( double );
+void kl_4opt3_3dft__A8_3f64_A8_3f64_RA8_3f64_RA8_3f64( struct kl__A8_3f64*, struct kl__A8_3f64*, struct kl__A8_3f64*, struct kl__A8_3f64* );
+int32_t kl_4opt3_4main__( void );
 
 #line 5 "opt3/dft8.kl"
-double kl__6cosine__3f64( double kl_x_1 )
+double kl_4opt3_6cosine__3f64( double kl_x_1 )
 {
     double kl_t0;
 #line 7 "opt3/dft8.kl"
@@ -27,7 +27,7 @@ double kl__6cosine__3f64( double kl_x_1 )
 }
 
 #line 11 "opt3/dft8.kl"
-double kl__4sine__3f64( double kl_x_1 )
+double kl_4opt3_4sine__3f64( double kl_x_1 )
 {
     double kl_t0;
 #line 13 "opt3/dft8.kl"
@@ -37,7 +37,7 @@ double kl__4sine__3f64( double kl_x_1 )
 }
 
 #line 17 "opt3/dft8.kl"
-void kl__3dft__A8_3f64_A8_3f64_RA8_3f64_RA8_3f64( struct kl__A8_3f64* kl_re_1, struct kl__A8_3f64* kl_im_2, struct kl__A8_3f64* kl_yr_3, struct kl__A8_3f64* kl_yi_4 )
+void kl_4opt3_3dft__A8_3f64_A8_3f64_RA8_3f64_RA8_3f64( struct kl__A8_3f64* kl_re_1, struct kl__A8_3f64* kl_im_2, struct kl__A8_3f64* kl_yr_3, struct kl__A8_3f64* kl_yi_4 )
 {
     uint64_t kl_t5;
     uint64_t kl_t6;
@@ -325,7 +325,7 @@ void kl__3dft__A8_3f64_A8_3f64_RA8_3f64_RA8_3f64( struct kl__A8_3f64* kl_re_1, s
 }
 
 #line 36 "opt3/dft8.kl"
-int32_t kl__4main__( void )
+int32_t kl_4opt3_4main__( void )
 {
     int32_t kl_t0;
 #line 38 "opt3/dft8.kl"
@@ -338,7 +338,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 36 "opt3/dft8.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_4opt3_4main__(  );
 #line 36 "opt3/dft8.kl"
     return kl_t0;
 #line 36 "opt3/dft8.kl"

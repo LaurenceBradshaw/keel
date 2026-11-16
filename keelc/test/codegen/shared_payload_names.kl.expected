@@ -3,9 +3,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Reading;
+struct kl_7codegen_Reading;
 
-struct kl__Reading
+struct kl_7codegen_Reading
 {
     int32_t tag;
     union
@@ -26,15 +26,15 @@ struct kl__Reading
         };
     };
 };
-_Static_assert( sizeof( struct kl__Reading ) == 24 && _Alignof( struct kl__Reading ) == 8 && offsetof( struct kl__Reading, kl_5Short_x ) == 8 && offsetof( struct kl__Reading, kl_4Long_x ) == 8 && offsetof( struct kl__Reading, kl_4Long_y ) == 16 && offsetof( struct kl__Reading, kl_4Pair_y ) == 8 && offsetof( struct kl__Reading, kl_4Pair_x ) == 12, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Reading ) == 24 && _Alignof( struct kl_7codegen_Reading ) == 8 && offsetof( struct kl_7codegen_Reading, kl_5Short_x ) == 8 && offsetof( struct kl_7codegen_Reading, kl_4Long_x ) == 8 && offsetof( struct kl_7codegen_Reading, kl_4Long_y ) == 16 && offsetof( struct kl_7codegen_Reading, kl_4Pair_y ) == 8 && offsetof( struct kl_7codegen_Reading, kl_4Pair_x ) == 12, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__4read__7Reading( struct kl__Reading* );
-int32_t kl__4main__( void );
+int32_t kl_7codegen_4read__Q7codegen7Reading( struct kl_7codegen_Reading* );
+int32_t kl_7codegen_4main__( void );
 
 #line 10 "codegen/shared_payload_names.kl"
-int32_t kl__4read__7Reading( struct kl__Reading* kl_r_1 )
+int32_t kl_7codegen_4read__Q7codegen7Reading( struct kl_7codegen_Reading* kl_r_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -120,19 +120,19 @@ int32_t kl__4read__7Reading( struct kl__Reading* kl_r_1 )
 }
 
 #line 20 "codegen/shared_payload_names.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__Reading kl_t1;
-    struct kl__Reading* kl_t2;
+    struct kl_7codegen_Reading kl_t1;
+    struct kl_7codegen_Reading* kl_t2;
     int32_t kl_t3;
     bool kl_t4;
-    struct kl__Reading kl_t5;
-    struct kl__Reading* kl_t6;
+    struct kl_7codegen_Reading kl_t5;
+    struct kl_7codegen_Reading* kl_t6;
     int32_t kl_t7;
     bool kl_t8;
-    struct kl__Reading kl_t9;
-    struct kl__Reading* kl_t10;
+    struct kl_7codegen_Reading kl_t9;
+    struct kl_7codegen_Reading* kl_t10;
     int32_t kl_t11;
     bool kl_t12;
 #line 22 "codegen/shared_payload_names.kl"
@@ -142,7 +142,7 @@ int32_t kl__4main__( void )
 #line 22 "codegen/shared_payload_names.kl"
     kl_t2 = &kl_t1;
 #line 22 "codegen/shared_payload_names.kl"
-    kl_t3 = kl__4read__7Reading( kl_t2 );
+    kl_t3 = kl_7codegen_4read__Q7codegen7Reading( kl_t2 );
 #line 22 "codegen/shared_payload_names.kl"
     kl_t4 = kl_t3 != 4;
 #line 22 "codegen/shared_payload_names.kl"
@@ -160,7 +160,7 @@ int32_t kl__4main__( void )
 #line 26 "codegen/shared_payload_names.kl"
     kl_t6 = &kl_t5;
 #line 26 "codegen/shared_payload_names.kl"
-    kl_t7 = kl__4read__7Reading( kl_t6 );
+    kl_t7 = kl_7codegen_4read__Q7codegen7Reading( kl_t6 );
 #line 26 "codegen/shared_payload_names.kl"
     kl_t8 = kl_t7 != 14;
 #line 26 "codegen/shared_payload_names.kl"
@@ -178,7 +178,7 @@ int32_t kl__4main__( void )
 #line 30 "codegen/shared_payload_names.kl"
     kl_t10 = &kl_t9;
 #line 30 "codegen/shared_payload_names.kl"
-    kl_t11 = kl__4read__7Reading( kl_t10 );
+    kl_t11 = kl_7codegen_4read__Q7codegen7Reading( kl_t10 );
 #line 30 "codegen/shared_payload_names.kl"
     kl_t12 = kl_t11 != 6;
 #line 30 "codegen/shared_payload_names.kl"
@@ -198,7 +198,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 20 "codegen/shared_payload_names.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 20 "codegen/shared_payload_names.kl"
     return kl_t0;
 #line 20 "codegen/shared_payload_names.kl"

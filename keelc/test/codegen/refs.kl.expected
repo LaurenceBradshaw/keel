@@ -3,24 +3,24 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Point;
+struct kl_7codegen_Point;
 
-struct kl__Point
+struct kl_7codegen_Point
 {
     int32_t kl_x;
 };
-_Static_assert( sizeof( struct kl__Point ) == 4 && _Alignof( struct kl__Point ) == 4 && offsetof( struct kl__Point, kl_x ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Point ) == 4 && _Alignof( struct kl_7codegen_Point ) == 4 && offsetof( struct kl_7codegen_Point, kl_x ) == 0, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__4bump__R3i32( int32_t* );
-void kl__5twice__R3i32( int32_t* );
-void kl__5slide__R5Point( struct kl__Point* );
-void kl__7through__P3i32( int32_t* );
-int32_t kl__4main__( void );
+void kl_7codegen_4bump__R3i32( int32_t* );
+void kl_7codegen_5twice__R3i32( int32_t* );
+void kl_7codegen_5slide__RQ7codegen5Point( struct kl_7codegen_Point* );
+void kl_7codegen_7through__P3i32( int32_t* );
+int32_t kl_7codegen_4main__( void );
 
 #line 9 "codegen/refs.kl"
-void kl__4bump__R3i32( int32_t* kl_n_1 )
+void kl_7codegen_4bump__R3i32( int32_t* kl_n_1 )
 {
     bool kl_t2;
     int32_t kl_t3;
@@ -41,56 +41,56 @@ void kl__4bump__R3i32( int32_t* kl_n_1 )
 }
 
 #line 15 "codegen/refs.kl"
-void kl__5twice__R3i32( int32_t* kl_n_1 )
+void kl_7codegen_5twice__R3i32( int32_t* kl_n_1 )
 {
     int32_t* kl_t2;
     int32_t* kl_t4;
 #line 17 "codegen/refs.kl"
     kl_t2 = &( *kl_n_1 );
 #line 17 "codegen/refs.kl"
-    kl__4bump__R3i32( kl_t2 );
+    kl_7codegen_4bump__R3i32( kl_t2 );
     kl_t4 = &( *kl_n_1 );
 #line 18 "codegen/refs.kl"
-    kl__4bump__R3i32( kl_t4 );
+    kl_7codegen_4bump__R3i32( kl_t4 );
     return;
 #line 19 "codegen/refs.kl"
 }
 
 #line 21 "codegen/refs.kl"
-void kl__5slide__R5Point( struct kl__Point* kl_p_1 )
+void kl_7codegen_5slide__RQ7codegen5Point( struct kl_7codegen_Point* kl_p_1 )
 {
     int32_t* kl_t2;
 #line 23 "codegen/refs.kl"
     kl_t2 = &( *kl_p_1 ).kl_x;
 #line 23 "codegen/refs.kl"
-    kl__4bump__R3i32( kl_t2 );
+    kl_7codegen_4bump__R3i32( kl_t2 );
     return;
 #line 24 "codegen/refs.kl"
 }
 
 #line 27 "codegen/refs.kl"
-void kl__7through__P3i32( int32_t* kl_q_1 )
+void kl_7codegen_7through__P3i32( int32_t* kl_q_1 )
 {
     int32_t* kl_t2;
 #line 29 "codegen/refs.kl"
     kl_t2 = &( *kl_q_1 );
 #line 29 "codegen/refs.kl"
-    kl__4bump__R3i32( kl_t2 );
+    kl_7codegen_4bump__R3i32( kl_t2 );
     return;
 #line 30 "codegen/refs.kl"
 }
 
 #line 32 "codegen/refs.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_x_1;
     int32_t* kl_t2;
     int32_t* kl_t4;
     int32_t* kl_t6;
-    struct kl__Point kl_p_8;
-    struct kl__Point kl_t9;
-    struct kl__Point* kl_t10;
+    struct kl_7codegen_Point kl_p_8;
+    struct kl_7codegen_Point kl_t9;
+    struct kl_7codegen_Point* kl_t10;
     bool kl_t12;
     int32_t kl_t13;
 #line 34 "codegen/refs.kl"
@@ -98,13 +98,13 @@ int32_t kl__4main__( void )
 #line 36 "codegen/refs.kl"
     kl_t2 = &kl_x_1;
 #line 36 "codegen/refs.kl"
-    kl__4bump__R3i32( kl_t2 );
+    kl_7codegen_4bump__R3i32( kl_t2 );
     kl_t4 = &kl_x_1;
 #line 37 "codegen/refs.kl"
-    kl__5twice__R3i32( kl_t4 );
+    kl_7codegen_5twice__R3i32( kl_t4 );
     kl_t6 = &kl_x_1;
 #line 38 "codegen/refs.kl"
-    kl__7through__P3i32( kl_t6 );
+    kl_7codegen_7through__P3i32( kl_t6 );
 #line 40 "codegen/refs.kl"
     kl_t9.kl_x = 10;
 #line 40 "codegen/refs.kl"
@@ -112,7 +112,7 @@ int32_t kl__4main__( void )
 #line 42 "codegen/refs.kl"
     kl_t10 = &kl_p_8;
 #line 42 "codegen/refs.kl"
-    kl__5slide__R5Point( kl_t10 );
+    kl_7codegen_5slide__RQ7codegen5Point( kl_t10 );
 #line 44 "codegen/refs.kl"
     kl_t12 = __builtin_add_overflow( kl_x_1, kl_p_8.kl_x, &( int32_t ) { 0 } );
 #line 44 "codegen/refs.kl"
@@ -133,7 +133,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 32 "codegen/refs.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 32 "codegen/refs.kl"
     return kl_t0;
 #line 32 "codegen/refs.kl"

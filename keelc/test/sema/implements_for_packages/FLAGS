@@ -1,1 +1,1 @@
---check --package shapes=sema/implements_for_packages/shapes
+--check --package sema/implements_for_packages/shapes

@@ -3,27 +3,27 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__B;
+struct kl_7codegen_B;
 
-struct kl__B
+struct kl_7codegen_B
 {
     uint64_t kl_n;
 };
-_Static_assert( sizeof( struct kl__B ) == 8 && _Alignof( struct kl__B ) == 8 && offsetof( struct kl__B, kl_n ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_B ) == 8 && _Alignof( struct kl_7codegen_B ) == 8 && offsetof( struct kl_7codegen_B, kl_n ) == 0, "layout" );
 
-uint64_t kl__freed__G = 0;
+uint64_t kl_7codegen_freed__G = 0;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__1B__R1B_3u64__ctor( struct kl__B*, uint64_t );
-void kl__1B__dtor( struct kl__B* );
-uint64_t kl__4peek__1B( struct kl__B* );
-uint64_t kl__7forward__1B( struct kl__B* );
-void kl__3own__M1B( struct kl__B );
-int32_t kl__4main__( void );
+void kl_7codegen_1B__RQ7codegen1B_3u64__ctor( struct kl_7codegen_B*, uint64_t );
+void kl_7codegen_1B__dtor( struct kl_7codegen_B* );
+uint64_t kl_7codegen_4peek__Q7codegen1B( struct kl_7codegen_B* );
+uint64_t kl_7codegen_7forward__Q7codegen1B( struct kl_7codegen_B* );
+void kl_7codegen_3own__MQ7codegen1B( struct kl_7codegen_B );
+int32_t kl_7codegen_4main__( void );
 
 #line 12 "codegen/borrows.kl"
-void kl__1B__R1B_3u64__ctor( struct kl__B* kl_this_1, uint64_t kl_x_2 )
+void kl_7codegen_1B__RQ7codegen1B_3u64__ctor( struct kl_7codegen_B* kl_this_1, uint64_t kl_x_2 )
 {
     ( *kl_this_1 ).kl_n = kl_x_2;
     return;
@@ -31,13 +31,13 @@ void kl__1B__R1B_3u64__ctor( struct kl__B* kl_this_1, uint64_t kl_x_2 )
 }
 
 #line 17 "codegen/borrows.kl"
-void kl__1B__dtor( struct kl__B* kl_this_1 )
+void kl_7codegen_1B__dtor( struct kl_7codegen_B* kl_this_1 )
 {
     bool kl_t2;
     uint64_t kl_t3;
     ( void ) kl_this_1;
 #line 19 "codegen/borrows.kl"
-    kl_t2 = __builtin_add_overflow( kl__freed__G, 1, &( uint64_t ) { 0 } );
+    kl_t2 = __builtin_add_overflow( kl_7codegen_freed__G, 1, &( uint64_t ) { 0 } );
 #line 19 "codegen/borrows.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -45,15 +45,15 @@ void kl__1B__dtor( struct kl__B* kl_this_1 )
     kl_rt_panic( "codegen/borrows.kl", 19, "arithmetic overflow: freed + 1" );
     bb2:
 #line 19 "codegen/borrows.kl"
-    kl_t3 = kl__freed__G + 1;
+    kl_t3 = kl_7codegen_freed__G + 1;
 #line 19 "codegen/borrows.kl"
-    kl__freed__G = kl_t3;
+    kl_7codegen_freed__G = kl_t3;
     return;
 #line 20 "codegen/borrows.kl"
 }
 
 #line 23 "codegen/borrows.kl"
-uint64_t kl__4peek__1B( struct kl__B* kl_b_1 )
+uint64_t kl_7codegen_4peek__Q7codegen1B( struct kl_7codegen_B* kl_b_1 )
 {
     uint64_t kl_t0;
 #line 25 "codegen/borrows.kl"
@@ -63,15 +63,15 @@ uint64_t kl__4peek__1B( struct kl__B* kl_b_1 )
 }
 
 #line 29 "codegen/borrows.kl"
-uint64_t kl__7forward__1B( struct kl__B* kl_b_1 )
+uint64_t kl_7codegen_7forward__Q7codegen1B( struct kl_7codegen_B* kl_b_1 )
 {
     uint64_t kl_t0;
-    struct kl__B* kl_t2;
+    struct kl_7codegen_B* kl_t2;
     uint64_t kl_t3;
 #line 31 "codegen/borrows.kl"
     kl_t2 = &( *kl_b_1 );
 #line 31 "codegen/borrows.kl"
-    kl_t3 = kl__4peek__1B( kl_t2 );
+    kl_t3 = kl_7codegen_4peek__Q7codegen1B( kl_t2 );
 #line 31 "codegen/borrows.kl"
     kl_t0 = kl_t3;
 #line 31 "codegen/borrows.kl"
@@ -79,37 +79,37 @@ uint64_t kl__7forward__1B( struct kl__B* kl_b_1 )
 }
 
 #line 35 "codegen/borrows.kl"
-void kl__3own__M1B( struct kl__B kl_t1 )
+void kl_7codegen_3own__MQ7codegen1B( struct kl_7codegen_B kl_t1 )
 {
-    kl__1B__dtor( &kl_t1 );
+    kl_7codegen_1B__dtor( &kl_t1 );
 #line 37 "codegen/borrows.kl"
     return;
 #line 37 "codegen/borrows.kl"
 }
 
 #line 39 "codegen/borrows.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     uint64_t kl_total_1;
-    struct kl__B kl_a_2;
-    struct kl__B* kl_t3;
-    struct kl__B* kl_t5;
+    struct kl_7codegen_B kl_a_2;
+    struct kl_7codegen_B* kl_t3;
+    struct kl_7codegen_B* kl_t5;
     uint64_t kl_t6;
     bool kl_t7;
     uint64_t kl_t8;
-    struct kl__B* kl_t9;
+    struct kl_7codegen_B* kl_t9;
     uint64_t kl_t10;
     bool kl_t11;
     uint64_t kl_t12;
-    struct kl__B kl_t13;
-    struct kl__B* kl_t14;
-    struct kl__B* kl_t16;
+    struct kl_7codegen_B kl_t13;
+    struct kl_7codegen_B* kl_t14;
+    struct kl_7codegen_B* kl_t16;
     uint64_t kl_t17;
     bool kl_t18;
     uint64_t kl_t19;
-    struct kl__B kl_c_20;
-    struct kl__B* kl_t21;
+    struct kl_7codegen_B kl_c_20;
+    struct kl_7codegen_B* kl_t21;
     uint64_t kl_t24;
     uint64_t kl_t25;
     int32_t kl_t26;
@@ -121,11 +121,11 @@ int32_t kl__4main__( void )
 #line 44 "codegen/borrows.kl"
     kl_t3 = &kl_a_2;
 #line 44 "codegen/borrows.kl"
-    kl__1B__R1B_3u64__ctor( kl_t3, 1 );
+    kl_7codegen_1B__RQ7codegen1B_3u64__ctor( kl_t3, 1 );
 #line 46 "codegen/borrows.kl"
     kl_t5 = &kl_a_2;
 #line 46 "codegen/borrows.kl"
-    kl_t6 = kl__4peek__1B( kl_t5 );
+    kl_t6 = kl_7codegen_4peek__Q7codegen1B( kl_t5 );
 #line 46 "codegen/borrows.kl"
     kl_t7 = __builtin_add_overflow( kl_total_1, kl_t6, &( uint64_t ) { 0 } );
 #line 46 "codegen/borrows.kl"
@@ -140,7 +140,7 @@ int32_t kl__4main__( void )
     kl_total_1 = kl_t8;
     kl_t9 = &kl_a_2;
 #line 47 "codegen/borrows.kl"
-    kl_t10 = kl__7forward__1B( kl_t9 );
+    kl_t10 = kl_7codegen_7forward__Q7codegen1B( kl_t9 );
 #line 47 "codegen/borrows.kl"
     kl_t11 = __builtin_add_overflow( kl_total_1, kl_t10, &( uint64_t ) { 0 } );
 #line 47 "codegen/borrows.kl"
@@ -153,15 +153,15 @@ int32_t kl__4main__( void )
     kl_t12 = kl_total_1 + kl_t10;
 #line 47 "codegen/borrows.kl"
     kl_total_1 = kl_t12;
-    kl__1B__dtor( &kl_a_2 );
+    kl_7codegen_1B__dtor( &kl_a_2 );
 #line 50 "codegen/borrows.kl"
     kl_t14 = &kl_t13;
 #line 50 "codegen/borrows.kl"
-    kl__1B__R1B_3u64__ctor( kl_t14, 2 );
+    kl_7codegen_1B__RQ7codegen1B_3u64__ctor( kl_t14, 2 );
 #line 50 "codegen/borrows.kl"
     kl_t16 = &kl_t13;
 #line 50 "codegen/borrows.kl"
-    kl_t17 = kl__4peek__1B( kl_t16 );
+    kl_t17 = kl_7codegen_4peek__Q7codegen1B( kl_t16 );
 #line 50 "codegen/borrows.kl"
     kl_t18 = __builtin_add_overflow( kl_total_1, kl_t17, &( uint64_t ) { 0 } );
 #line 50 "codegen/borrows.kl"
@@ -175,7 +175,7 @@ int32_t kl__4main__( void )
 #line 50 "codegen/borrows.kl"
     kl_total_1 = kl_t19;
 #line 50 "codegen/borrows.kl"
-    kl__1B__dtor( &kl_t13 );
+    kl_7codegen_1B__dtor( &kl_t13 );
 #line 52 "codegen/borrows.kl"
     kl_t27 = false;
 #line 52 "codegen/borrows.kl"
@@ -183,21 +183,21 @@ int32_t kl__4main__( void )
 #line 52 "codegen/borrows.kl"
     kl_t27 = true;
 #line 52 "codegen/borrows.kl"
-    kl__1B__R1B_3u64__ctor( kl_t21, 3 );
+    kl_7codegen_1B__RQ7codegen1B_3u64__ctor( kl_t21, 3 );
 #line 54 "codegen/borrows.kl"
-    kl__3own__M1B( kl_c_20 );
+    kl_7codegen_3own__MQ7codegen1B( kl_c_20 );
 #line 54 "codegen/borrows.kl"
     kl_t27 = false;
 #line 57 "codegen/borrows.kl"
     kl_t24 = kl_total_1 * 10;
 #line 57 "codegen/borrows.kl"
-    kl_t25 = kl_t24 + kl__freed__G;
+    kl_t25 = kl_t24 + kl_7codegen_freed__G;
 #line 57 "codegen/borrows.kl"
     kl_t26 = ( int32_t ) kl_t25;
 #line 57 "codegen/borrows.kl"
     kl_t0 = kl_t26;
 #line 57 "codegen/borrows.kl"
-    if ( kl_t27 ) kl__1B__dtor( &kl_c_20 );
+    if ( kl_t27 ) kl_7codegen_1B__dtor( &kl_c_20 );
 #line 57 "codegen/borrows.kl"
     kl_t27 = false;
 #line 57 "codegen/borrows.kl"
@@ -208,7 +208,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 39 "codegen/borrows.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 39 "codegen/borrows.kl"
     return kl_t0;
 #line 39 "codegen/borrows.kl"

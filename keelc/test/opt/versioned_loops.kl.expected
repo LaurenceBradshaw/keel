@@ -3,25 +3,25 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Buf;
+struct kl_3opt_Buf;
 
-struct kl__Buf
+struct kl_3opt_Buf
 {
     int64_t* kl_data;
     uint64_t kl_count;
     int64_t kl_last;
 };
-_Static_assert( sizeof( struct kl__Buf ) == 24 && _Alignof( struct kl__Buf ) == 8 && offsetof( struct kl__Buf, kl_data ) == 0 && offsetof( struct kl__Buf, kl_count ) == 8 && offsetof( struct kl__Buf, kl_last ) == 16, "layout" );
+_Static_assert( sizeof( struct kl_3opt_Buf ) == 24 && _Alignof( struct kl_3opt_Buf ) == 8 && offsetof( struct kl_3opt_Buf, kl_data ) == 0 && offsetof( struct kl_3opt_Buf, kl_count ) == 8 && offsetof( struct kl_3opt_Buf, kl_last ) == 16, "layout" );
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 
-void kl__5moved__R3Buf_3Buf( struct kl__Buf*, struct kl__Buf* );
-int32_t kl__4main__( void );
+void kl_3opt_5moved__RQ3opt3Buf_Q3opt3Buf( struct kl_3opt_Buf*, struct kl_3opt_Buf* );
+int32_t kl_3opt_4main__( void );
 
 #line 13 "opt/versioned_loops.kl"
-void kl__5moved__R3Buf_3Buf( struct kl__Buf* kl_ys_1, struct kl__Buf* kl_xs_2 )
+void kl_3opt_5moved__RQ3opt3Buf_Q3opt3Buf( struct kl_3opt_Buf* kl_ys_1, struct kl_3opt_Buf* kl_xs_2 )
 {
     uint64_t kl_i_3;
     bool kl_t4;
@@ -56,7 +56,7 @@ void kl__5moved__R3Buf_3Buf( struct kl__Buf* kl_ys_1, struct kl__Buf* kl_xs_2 )
 }
 
 #line 24 "opt/versioned_loops.kl"
-int32_t kl__4main__( void )
+int32_t kl_3opt_4main__( void )
 {
     int32_t kl_t0;
     int64_t* kl_t1;
@@ -72,7 +72,7 @@ int32_t kl__4main__( void )
     int64_t* kl_t13;
     int64_t* kl_t14;
     int64_t* kl_t15;
-    struct kl__Buf* kl_xs_16;
+    struct kl_3opt_Buf* kl_xs_16;
     int64_t kl_aliased_17;
     int64_t* kl_t18;
     int64_t kl_t19;
@@ -119,7 +119,7 @@ int32_t kl__4main__( void )
     bb2:
 #line 55 "opt/versioned_loops.kl"
     kl_m_12 = ( int64_t* ) kl_rt_alloc_many( ( size_t ) 6, 8, "opt/versioned_loops.kl", 55, "out of memory: alloc<i64>( 6 )" );
-    kl_xs_16 = ( struct kl__Buf* ) kl_m_12;
+    kl_xs_16 = ( struct kl_3opt_Buf* ) kl_m_12;
     kl_t13 = kl_m_12 + 3;
 #line 57 "opt/versioned_loops.kl"
     ( *kl_t13 ) = 30;
@@ -225,7 +225,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 24 "opt/versioned_loops.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_3opt_4main__(  );
 #line 24 "opt/versioned_loops.kl"
     return kl_t0;
 #line 24 "opt/versioned_loops.kl"

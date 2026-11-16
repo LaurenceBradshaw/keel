@@ -299,20 +299,20 @@ void kl_1t7console_6eprint__4bool_7textual( bool kl_value_1, struct kl_7prelude_
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__cube;
+struct kl_7codegen_cube;
 struct kl_7prelude_str;
-struct kl__box__I3i32E;
+struct kl_7codegen_box__I3i32E;
 
 struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
 
 struct kl_7prelude_textual__vtable;
 struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
 
-struct kl__cube
+struct kl_7codegen_cube
 {
     int32_t kl_side;
 };
-_Static_assert( sizeof( struct kl__cube ) == 4 && _Alignof( struct kl__cube ) == 4 && offsetof( struct kl__cube, kl_side ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_cube ) == 4 && _Alignof( struct kl_7codegen_cube ) == 4 && offsetof( struct kl_7codegen_cube, kl_side ) == 0, "layout" );
 
 struct kl_7prelude_str
 {
@@ -321,11 +321,11 @@ struct kl_7prelude_str
 };
 _Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
-struct kl__box__I3i32E
+struct kl_7codegen_box__I3i32E
 {
     int32_t kl_value;
 };
-_Static_assert( sizeof( struct kl__box__I3i32E ) == 4 && _Alignof( struct kl__box__I3i32E ) == 4 && offsetof( struct kl__box__I3i32E, kl_value ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_box__I3i32E ) == 4 && _Alignof( struct kl_7codegen_box__I3i32E ) == 4 && offsetof( struct kl_7codegen_box__I3i32E, kl_value ) == 0, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -335,10 +335,10 @@ struct kl_7prelude_textual__vtable
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__6volume__3i32( int32_t );
-int32_t kl__6volume__4cube( struct kl__cube );
-int32_t kl__6volume__3boxI3i32E( struct kl__box__I3i32E );
-int32_t kl__4main__( void );
+int32_t kl_7codegen_6volume__3i32( int32_t );
+int32_t kl_7codegen_6volume__Q7codegen4cube( struct kl_7codegen_cube );
+int32_t kl_7codegen_6volume__Q7codegen3boxI3i32E( struct kl_7codegen_box__I3i32E );
+int32_t kl_7codegen_4main__( void );
 void kl_1t7console_5print__3i64_7textual( int64_t, struct kl_7prelude_textual__ref );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 void kl_7prelude_str__drop( void* );
@@ -347,7 +347,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 15 "codegen/overload_struct_literal.kl"
-int32_t kl__6volume__3i32( int32_t kl_n_1 )
+int32_t kl_7codegen_6volume__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
 #line 17 "codegen/overload_struct_literal.kl"
@@ -357,7 +357,7 @@ int32_t kl__6volume__3i32( int32_t kl_n_1 )
 }
 
 #line 20 "codegen/overload_struct_literal.kl"
-int32_t kl__6volume__4cube( struct kl__cube kl_c_1 )
+int32_t kl_7codegen_6volume__Q7codegen4cube( struct kl_7codegen_cube kl_c_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -391,7 +391,7 @@ int32_t kl__6volume__4cube( struct kl__cube kl_c_1 )
 }
 
 #line 25 "codegen/overload_struct_literal.kl"
-int32_t kl__6volume__3boxI3i32E( struct kl__box__I3i32E kl_b_1 )
+int32_t kl_7codegen_6volume__Q7codegen3boxI3i32E( struct kl_7codegen_box__I3i32E kl_b_1 )
 {
     int32_t kl_t0;
 #line 27 "codegen/overload_struct_literal.kl"
@@ -401,10 +401,10 @@ int32_t kl__6volume__3boxI3i32E( struct kl__box__I3i32E kl_b_1 )
 }
 
 #line 30 "codegen/overload_struct_literal.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__cube kl_t1;
+    struct kl_7codegen_cube kl_t1;
     int32_t kl_t2;
     int64_t kl_t3;
     struct kl_7prelude_str kl_t4;
@@ -412,7 +412,7 @@ int32_t kl__4main__( void )
     uint8_t* kl_t6;
     struct kl_7prelude_str* kl_t8;
     struct kl_7prelude_textual__ref kl_t9;
-    struct kl__box__I3i32E kl_t11;
+    struct kl_7codegen_box__I3i32E kl_t11;
     int32_t kl_t12;
     int64_t kl_t13;
     struct kl_7prelude_str kl_t14;
@@ -423,7 +423,7 @@ int32_t kl__4main__( void )
 #line 32 "codegen/overload_struct_literal.kl"
     kl_t1.kl_side = 3;
 #line 32 "codegen/overload_struct_literal.kl"
-    kl_t2 = kl__6volume__4cube( kl_t1 );
+    kl_t2 = kl_7codegen_6volume__Q7codegen4cube( kl_t1 );
 #line 32 "codegen/overload_struct_literal.kl"
     kl_t3 = ( int64_t ) kl_t2;
 #line 31 "../test_lib/console.kl"
@@ -439,7 +439,7 @@ int32_t kl__4main__( void )
     kl_1t7console_5print__3i64_7textual( kl_t3, kl_t9 );
     kl_t11.kl_value = 5;
 #line 33 "codegen/overload_struct_literal.kl"
-    kl_t12 = kl__6volume__3boxI3i32E( kl_t11 );
+    kl_t12 = kl_7codegen_6volume__Q7codegen3boxI3i32E( kl_t11 );
 #line 33 "codegen/overload_struct_literal.kl"
     kl_t13 = ( int64_t ) kl_t12;
 #line 31 "../test_lib/console.kl"
@@ -463,7 +463,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 30 "codegen/overload_struct_literal.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 30 "codegen/overload_struct_literal.kl"
     return kl_t0;
 #line 30 "codegen/overload_struct_literal.kl"

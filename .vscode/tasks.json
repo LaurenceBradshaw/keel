@@ -10,7 +10,7 @@
             "args": [
                 "--debug",
                 "--package",
-                "kl=keel_stl/src",
+                "keel_stl/src",
                 "examples/debugging.kl",
                 "-o",
                 "build/examples/debugging"
@@ -28,7 +28,7 @@
             "args": [
                 "--debug",
                 "--package",
-                "kl=keel_stl/src",
+                "keel_stl/src",
                 "examples/debugging.kl",
                 "-o",
                 "build/examples/debugging.exe"

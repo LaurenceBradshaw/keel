@@ -20,6 +20,10 @@ std::vector<std::string> package_modules( const std::string& name, const std::fi
 std::vector<Record>
 run_keelc( const std::filesystem::path& keelc, const std::string& name, const std::filesystem::path& dir, std::string& error );
 
+// The name keelc gives the package in `dir`, from `--print-config`. Empty, with `error` set, when
+// keelc could not name it.
+std::string package_name( const std::filesystem::path& keelc, const std::filesystem::path& dir, std::string& error );
+
 // The prelude's source, as `keelc --print-prelude` prints it. Empty, with `error` set, when keelc
 // could not print it.
 std::string print_prelude( const std::filesystem::path& keelc, std::string& error );

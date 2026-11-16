@@ -11,11 +11,11 @@ struct kl__A2_3f64
 };
 _Static_assert( sizeof( struct kl__A2_3f64 ) == 16 && _Alignof( struct kl__A2_3f64 ) == 8, "layout" );
 
-void kl__6affine__A2_3f64_RA2_3f64( struct kl__A2_3f64*, struct kl__A2_3f64* );
-int32_t kl__4main__( void );
+void kl_4opt3_6affine__A2_3f64_RA2_3f64( struct kl__A2_3f64*, struct kl__A2_3f64* );
+int32_t kl_4opt3_4main__( void );
 
 #line 5 "opt3/affine.kl"
-void kl__6affine__A2_3f64_RA2_3f64( struct kl__A2_3f64* kl_x_1, struct kl__A2_3f64* kl_y_2 )
+void kl_4opt3_6affine__A2_3f64_RA2_3f64( struct kl__A2_3f64* kl_x_1, struct kl__A2_3f64* kl_y_2 )
 {
     uint64_t kl_t3;
     uint64_t kl_t4;
@@ -53,7 +53,7 @@ void kl__6affine__A2_3f64_RA2_3f64( struct kl__A2_3f64* kl_x_1, struct kl__A2_3f
 }
 
 #line 11 "opt3/affine.kl"
-int32_t kl__4main__( void )
+int32_t kl_4opt3_4main__( void )
 {
     int32_t kl_t0;
 #line 16 "opt3/affine.kl"
@@ -66,7 +66,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 11 "opt3/affine.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_4opt3_4main__(  );
 #line 11 "opt3/affine.kl"
     return kl_t0;
 #line 11 "opt3/affine.kl"

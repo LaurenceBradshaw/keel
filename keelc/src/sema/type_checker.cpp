@@ -276,7 +276,9 @@ void name_declarations(
 
         if( ( is_aggregate( kind ) || kind == Node_kind::Enum_decl ) && package.is_valid() )
         {
-            table.set_package( decl, interner.text( package ), package != modules.prelude_package() );
+            table.set_package(
+                decl, interner.text( package ), package != modules.prelude_package() && package != modules.program_package()
+            );
         }
 
         if( is_aggregate( kind ) || kind == Node_kind::Enum_decl || kind == Node_kind::Interface_decl )

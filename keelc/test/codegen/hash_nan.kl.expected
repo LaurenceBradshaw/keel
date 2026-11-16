@@ -332,9 +332,9 @@ struct kl_7prelude_textual__vtable
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-double kl__8quotient__3f64_3f64( double, double );
-int32_t kl__4main__( void );
-uint64_t kl__6digest__I3f64E__3f64( double* );
+double kl_7codegen_8quotient__3f64_3f64( double, double );
+int32_t kl_7codegen_4main__( void );
+uint64_t kl_7codegen_6digest__I3f64E__3f64( double* );
 void kl_1t7console_5print__7textual_7textual( struct kl_7prelude_textual__ref, struct kl_7prelude_textual__ref );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 void kl_7prelude_6hasher__RQ7prelude6hasher_3u64_3u64__ctor( struct kl_7prelude_hasher*, uint64_t, uint64_t );
@@ -346,7 +346,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 5 "codegen/hash_nan.kl"
-double kl__8quotient__3f64_3f64( double kl_a_1, double kl_b_2 )
+double kl_7codegen_8quotient__3f64_3f64( double kl_a_1, double kl_b_2 )
 {
     double kl_t0;
     double kl_t3;
@@ -359,7 +359,7 @@ double kl__8quotient__3f64_3f64( double kl_a_1, double kl_b_2 )
 }
 
 #line 17 "codegen/hash_nan.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     double kl_nan_1;
@@ -378,7 +378,7 @@ int32_t kl__4main__( void )
     uint64_t kl_t17;
     bool kl_t18;
 #line 19 "codegen/hash_nan.kl"
-    kl_t2 = kl__8quotient__3f64_3f64( 0.0, 0.0 );
+    kl_t2 = kl_7codegen_8quotient__3f64_3f64( 0.0, 0.0 );
 #line 19 "codegen/hash_nan.kl"
     kl_nan_1 = kl_t2;
 #line 21 "codegen/hash_nan.kl"
@@ -406,7 +406,7 @@ int32_t kl__4main__( void )
 #line 23 "codegen/hash_nan.kl"
     kl_t16 = &kl_nan_1;
 #line 23 "codegen/hash_nan.kl"
-    kl_t17 = kl__6digest__I3f64E__3f64( kl_t16 );
+    kl_t17 = kl_7codegen_6digest__I3f64E__3f64( kl_t16 );
 #line 23 "codegen/hash_nan.kl"
     kl_t18 = kl_t17 == 0;
 #line 23 "codegen/hash_nan.kl"
@@ -423,7 +423,7 @@ int32_t kl__4main__( void )
 }
 
 #line 10 "codegen/hash_nan.kl"
-uint64_t kl__6digest__I3f64E__3f64( double* kl_v_1 )
+uint64_t kl_7codegen_6digest__I3f64E__3f64( double* kl_v_1 )
 {
     uint64_t kl_t0;
     struct kl_7prelude_hasher kl_h_2;
@@ -467,7 +467,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 17 "codegen/hash_nan.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 17 "codegen/hash_nan.kl"
     return kl_t0;
 #line 17 "codegen/hash_nan.kl"

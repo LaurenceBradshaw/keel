@@ -1,14 +1,14 @@
-error: the module `pk::tools` and the package `pk::tools` share a name
+error: the module `app::pk::tools` and the package `app::pk::tools` share a name
  --> sema/errors_module_package_clash/main.kl:5:1
   |
-5 | import pk::tools::inner;
-  | ^^^^^^^^^^^^^^^^^^^^^^^^ rename one of them
+5 | import app::pk::tools::inner;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ rename one of them
 
-error: there is no package `zz::yy`
+error: there is no package `app::zz::yy`
  --> sema/errors_module_package_clash/main.kl:6:1
   |
-6 | import zz::yy::m;
-  | ^^^^^^^^^^^^^^^^^ a nested package is a subfolder of its parent that holds `.kl` files
+6 | import app::zz::yy::m;
+  | ^^^^^^^^^^^^^^^^^^^^^^ a nested package is a subfolder of its parent that holds `.kl` files
 
 error: `helper` is a module; its names are written without it
  --> sema/errors_module_package_clash/main.kl:8:24

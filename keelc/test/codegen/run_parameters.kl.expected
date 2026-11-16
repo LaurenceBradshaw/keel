@@ -299,25 +299,25 @@ void kl_1t7console_6eprint__4bool_7textual( bool kl_value_1, struct kl_7prelude_
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Scaled;
+struct kl_7codegen_Scaled;
 struct kl_7prelude_str;
 
 struct kl__run__L3i32__ref { int32_t* data; uint64_t size; };
 struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
 
-struct kl__Measure__vtable;
-struct kl__Measure__ref { void* self; const struct kl__Measure__vtable* vtable; };
+struct kl_7codegen_Measure__vtable;
+struct kl_7codegen_Measure__ref { void* self; const struct kl_7codegen_Measure__vtable* vtable; };
 struct kl_7prelude_textual__vtable;
 struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
 
 typedef int32_t ( *kl__fn__FKL3i32E3i32 )( int32_t*, uint64_t );
 typedef int32_t ( *kl__fn__FMP4voidMPL3i32E3i32 )( void*, int32_t*, uint64_t );
 
-struct kl__Scaled
+struct kl_7codegen_Scaled
 {
     int32_t kl_by_;
 };
-_Static_assert( sizeof( struct kl__Scaled ) == 4 && _Alignof( struct kl__Scaled ) == 4 && offsetof( struct kl__Scaled, kl_by_ ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Scaled ) == 4 && _Alignof( struct kl_7codegen_Scaled ) == 4 && offsetof( struct kl_7codegen_Scaled, kl_by_ ) == 0, "layout" );
 
 struct kl_7prelude_str
 {
@@ -326,7 +326,7 @@ struct kl_7prelude_str
 };
 _Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
-struct kl__Measure__vtable
+struct kl_7codegen_Measure__vtable
 {
     void ( *drop )( void* );
     int32_t ( *kl__5total__L3i32 )( void*, int32_t*, uint64_t );
@@ -343,14 +343,14 @@ void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__6Scaled__R6Scaled_3i32__ctor( struct kl__Scaled*, int32_t );
-int32_t kl__5total__S6Scaled_L3i32( struct kl__Scaled*, int32_t*, uint64_t );
-int32_t kl__3sum__L3i32( int32_t*, uint64_t );
-int32_t kl__8tail_sum__L3i32( int32_t*, uint64_t );
-int32_t kl__7through__7Measure_L3i32( struct kl__Measure__ref, int32_t*, uint64_t );
-int32_t kl__4main__( void );
-void kl__Scaled__drop( void* );
-int32_t kl__Scaled__as_kl__Measure__kl__5total__L3i32( void*, int32_t*, uint64_t );
+void kl_7codegen_6Scaled__RQ7codegen6Scaled_3i32__ctor( struct kl_7codegen_Scaled*, int32_t );
+int32_t kl_7codegen_5total__SQ7codegen6Scaled_L3i32( struct kl_7codegen_Scaled*, int32_t*, uint64_t );
+int32_t kl_7codegen_3sum__L3i32( int32_t*, uint64_t );
+int32_t kl_7codegen_8tail_sum__L3i32( int32_t*, uint64_t );
+int32_t kl_7codegen_7through__7Measure_L3i32( struct kl_7codegen_Measure__ref, int32_t*, uint64_t );
+int32_t kl_7codegen_4main__( void );
+void kl_7codegen_Scaled__drop( void* );
+int32_t kl_7codegen_Scaled__as_kl_7codegen_Measure__kl__5total__L3i32( void*, int32_t*, uint64_t );
 void kl_1t7console_5print__3i64_7textual( int64_t, struct kl_7prelude_textual__ref );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 void kl_7prelude_str__drop( void* );
@@ -358,20 +358,20 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
-static const struct kl__Measure__vtable kl__Scaled__as_kl__Measure = { kl__Scaled__drop, kl__Scaled__as_kl__Measure__kl__5total__L3i32 };
+static const struct kl_7codegen_Measure__vtable kl_7codegen_Scaled__as_kl_7codegen_Measure = { kl_7codegen_Scaled__drop, kl_7codegen_Scaled__as_kl_7codegen_Measure__kl__5total__L3i32 };
 
-int32_t kl__Scaled__as_kl__Measure__kl__5total__L3i32( void* kl_t1, int32_t* kl_t2_data, uint64_t kl_t2_size )
+int32_t kl_7codegen_Scaled__as_kl_7codegen_Measure__kl__5total__L3i32( void* kl_t1, int32_t* kl_t2_data, uint64_t kl_t2_size )
 {
     int32_t kl_t0;
     struct kl__run__L3i32__ref kl_t2 = { kl_t2_data, kl_t2_size };
-    struct kl__Scaled* kl_t3;
-    kl_t3 = ( struct kl__Scaled* ) kl_t1;
-    kl_t0 = kl__5total__S6Scaled_L3i32( kl_t3, ( kl_t2 ).data, ( kl_t2 ).size );
+    struct kl_7codegen_Scaled* kl_t3;
+    kl_t3 = ( struct kl_7codegen_Scaled* ) kl_t1;
+    kl_t0 = kl_7codegen_5total__SQ7codegen6Scaled_L3i32( kl_t3, ( kl_t2 ).data, ( kl_t2 ).size );
     return kl_t0;
 }
 
 #line 12 "codegen/run_parameters.kl"
-void kl__6Scaled__R6Scaled_3i32__ctor( struct kl__Scaled* kl_this_1, int32_t kl_by_2 )
+void kl_7codegen_6Scaled__RQ7codegen6Scaled_3i32__ctor( struct kl_7codegen_Scaled* kl_this_1, int32_t kl_by_2 )
 {
     ( *kl_this_1 ).kl_by_ = kl_by_2;
     return;
@@ -379,7 +379,7 @@ void kl__6Scaled__R6Scaled_3i32__ctor( struct kl__Scaled* kl_this_1, int32_t kl_
 }
 
 #line 17 "codegen/run_parameters.kl"
-int32_t kl__5total__S6Scaled_L3i32( struct kl__Scaled* kl_this_1, int32_t* kl_values_2_data, uint64_t kl_values_2_size )
+int32_t kl_7codegen_5total__SQ7codegen6Scaled_L3i32( struct kl_7codegen_Scaled* kl_this_1, int32_t* kl_values_2_data, uint64_t kl_values_2_size )
 {
     int32_t kl_t0;
 #line 17 "codegen/run_parameters.kl"
@@ -391,7 +391,7 @@ int32_t kl__5total__S6Scaled_L3i32( struct kl__Scaled* kl_this_1, int32_t* kl_va
 #line 19 "codegen/run_parameters.kl"
     kl_t3 = kl_values_2;
 #line 19 "codegen/run_parameters.kl"
-    kl_t4 = kl__3sum__L3i32( ( kl_t3 ).data, ( kl_t3 ).size );
+    kl_t4 = kl_7codegen_3sum__L3i32( ( kl_t3 ).data, ( kl_t3 ).size );
 #line 19 "codegen/run_parameters.kl"
     kl_t5 = __builtin_mul_overflow( kl_t4, ( *kl_this_1 ).kl_by_, &( int32_t ) { 0 } );
 #line 19 "codegen/run_parameters.kl"
@@ -409,7 +409,7 @@ int32_t kl__5total__S6Scaled_L3i32( struct kl__Scaled* kl_this_1, int32_t* kl_va
 }
 
 #line 25 "codegen/run_parameters.kl"
-int32_t kl__3sum__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
+int32_t kl_7codegen_3sum__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
 {
     int32_t kl_t0;
 #line 25 "codegen/run_parameters.kl"
@@ -488,7 +488,7 @@ int32_t kl__3sum__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
 }
 
 #line 38 "codegen/run_parameters.kl"
-int32_t kl__8tail_sum__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
+int32_t kl_7codegen_8tail_sum__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
 {
     int32_t kl_t0;
 #line 38 "codegen/run_parameters.kl"
@@ -511,7 +511,7 @@ int32_t kl__8tail_sum__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_si
 #line 40 "codegen/run_parameters.kl"
     kl_t2 = kl_values_1;
 #line 40 "codegen/run_parameters.kl"
-    kl_t3 = kl__3sum__L3i32( ( kl_t2 ).data, ( kl_t2 ).size );
+    kl_t3 = kl_7codegen_3sum__L3i32( ( kl_t2 ).data, ( kl_t2 ).size );
 #line 40 "codegen/run_parameters.kl"
     kl_t4 = ( kl_values_1 ).size;
 #line 40 "codegen/run_parameters.kl"
@@ -542,7 +542,7 @@ int32_t kl__8tail_sum__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_si
 #line 40 "codegen/run_parameters.kl"
     kl_t13 = kl_t12;
 #line 40 "codegen/run_parameters.kl"
-    kl_t14 = kl__3sum__L3i32( ( kl_t13 ).data, ( kl_t13 ).size );
+    kl_t14 = kl_7codegen_3sum__L3i32( ( kl_t13 ).data, ( kl_t13 ).size );
 #line 40 "codegen/run_parameters.kl"
     kl_t15 = __builtin_sub_overflow( kl_t3, kl_t14, &( int32_t ) { 0 } );
 #line 40 "codegen/run_parameters.kl"
@@ -560,12 +560,12 @@ int32_t kl__8tail_sum__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_si
 }
 
 #line 43 "codegen/run_parameters.kl"
-int32_t kl__7through__7Measure_L3i32( struct kl__Measure__ref kl_m_1, int32_t* kl_values_2_data, uint64_t kl_values_2_size )
+int32_t kl_7codegen_7through__7Measure_L3i32( struct kl_7codegen_Measure__ref kl_m_1, int32_t* kl_values_2_data, uint64_t kl_values_2_size )
 {
     int32_t kl_t0;
 #line 43 "codegen/run_parameters.kl"
     struct kl__run__L3i32__ref kl_values_2 = { kl_values_2_data, kl_values_2_size };
-    struct kl__Measure__ref kl_t3;
+    struct kl_7codegen_Measure__ref kl_t3;
     struct kl__run__L3i32__ref kl_t4;
     int32_t kl_t5;
     kl__fn__FMP4voidMPL3i32E3i32 kl_t6;
@@ -587,7 +587,7 @@ int32_t kl__7through__7Measure_L3i32( struct kl__Measure__ref kl_m_1, int32_t* k
 }
 
 #line 48 "codegen/run_parameters.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     int32_t* kl_data_1;
@@ -644,9 +644,9 @@ int32_t kl__4main__( void )
     uint8_t* kl_t56;
     struct kl_7prelude_str* kl_t58;
     struct kl_7prelude_textual__ref kl_t59;
-    struct kl__Scaled kl_s_61;
-    struct kl__Scaled* kl_t62;
-    struct kl__Scaled* kl_t64;
+    struct kl_7codegen_Scaled kl_s_61;
+    struct kl_7codegen_Scaled* kl_t62;
+    struct kl_7codegen_Scaled* kl_t64;
     struct kl__run__L3i32__ref kl_t65;
     int32_t kl_t66;
     int64_t kl_t67;
@@ -655,8 +655,8 @@ int32_t kl__4main__( void )
     uint8_t* kl_t70;
     struct kl_7prelude_str* kl_t72;
     struct kl_7prelude_textual__ref kl_t73;
-    struct kl__Scaled* kl_t75;
-    struct kl__Measure__ref kl_t76;
+    struct kl_7codegen_Scaled* kl_t75;
+    struct kl_7codegen_Measure__ref kl_t76;
     struct kl__run__L3i32__ref kl_t77;
     int32_t kl_t78;
     int64_t kl_t79;
@@ -751,7 +751,7 @@ int32_t kl__4main__( void )
 #line 69 "codegen/run_parameters.kl"
     kl_t20 = kl_all_13;
 #line 69 "codegen/run_parameters.kl"
-    kl_t21 = kl__3sum__L3i32( ( kl_t20 ).data, ( kl_t20 ).size );
+    kl_t21 = kl_7codegen_3sum__L3i32( ( kl_t20 ).data, ( kl_t20 ).size );
 #line 69 "codegen/run_parameters.kl"
     kl_t22 = ( int64_t ) kl_t21;
 #line 31 "../test_lib/console.kl"
@@ -768,7 +768,7 @@ int32_t kl__4main__( void )
     kl_1t7console_5print__3i64_7textual( kl_t22, kl_t28 );
     kl_t30 = kl_all_13;
 #line 70 "codegen/run_parameters.kl"
-    kl_t31 = kl__8tail_sum__L3i32( ( kl_t30 ).data, ( kl_t30 ).size );
+    kl_t31 = kl_7codegen_8tail_sum__L3i32( ( kl_t30 ).data, ( kl_t30 ).size );
 #line 70 "codegen/run_parameters.kl"
     kl_t32 = ( int64_t ) kl_t31;
 #line 31 "../test_lib/console.kl"
@@ -784,7 +784,7 @@ int32_t kl__4main__( void )
 #line 70 "codegen/run_parameters.kl"
     kl_1t7console_5print__3i64_7textual( kl_t32, kl_t38 );
 #line 72 "codegen/run_parameters.kl"
-    kl_t41 = kl__3sum__L3i32;
+    kl_t41 = kl_7codegen_3sum__L3i32;
 #line 72 "codegen/run_parameters.kl"
     kl_f_40 = kl_t41;
     kl_t42 = ( kl_all_13 ).size;
@@ -834,12 +834,12 @@ int32_t kl__4main__( void )
 #line 75 "codegen/run_parameters.kl"
     kl_t62 = &kl_s_61;
 #line 75 "codegen/run_parameters.kl"
-    kl__6Scaled__R6Scaled_3i32__ctor( kl_t62, 10 );
+    kl_7codegen_6Scaled__RQ7codegen6Scaled_3i32__ctor( kl_t62, 10 );
     kl_t64 = &kl_s_61;
 #line 76 "codegen/run_parameters.kl"
     kl_t65 = kl_all_13;
 #line 76 "codegen/run_parameters.kl"
-    kl_t66 = kl__5total__S6Scaled_L3i32( kl_t64, ( kl_t65 ).data, ( kl_t65 ).size );
+    kl_t66 = kl_7codegen_5total__SQ7codegen6Scaled_L3i32( kl_t64, ( kl_t65 ).data, ( kl_t65 ).size );
 #line 76 "codegen/run_parameters.kl"
     kl_t67 = ( int64_t ) kl_t66;
 #line 31 "../test_lib/console.kl"
@@ -856,11 +856,11 @@ int32_t kl__4main__( void )
     kl_1t7console_5print__3i64_7textual( kl_t67, kl_t73 );
     kl_t75 = &kl_s_61;
 #line 77 "codegen/run_parameters.kl"
-    kl_t76 = ( struct kl__Measure__ref ) { ( void* ) kl_t75, &kl__Scaled__as_kl__Measure };
+    kl_t76 = ( struct kl_7codegen_Measure__ref ) { ( void* ) kl_t75, &kl_7codegen_Scaled__as_kl_7codegen_Measure };
 #line 77 "codegen/run_parameters.kl"
     kl_t77 = kl_all_13;
 #line 77 "codegen/run_parameters.kl"
-    kl_t78 = kl__7through__7Measure_L3i32( kl_t76, ( kl_t77 ).data, ( kl_t77 ).size );
+    kl_t78 = kl_7codegen_7through__7Measure_L3i32( kl_t76, ( kl_t77 ).data, ( kl_t77 ).size );
 #line 77 "codegen/run_parameters.kl"
     kl_t79 = ( int64_t ) kl_t78;
 #line 31 "../test_lib/console.kl"
@@ -883,12 +883,12 @@ int32_t kl__4main__( void )
     return kl_t0;
 }
 
-void kl__Scaled__drop( void* kl_t1 )
+void kl_7codegen_Scaled__drop( void* kl_t1 )
 {
-    struct kl__Scaled* kl_t2;
+    struct kl_7codegen_Scaled* kl_t2;
     ( void ) kl_t2;
 #line 10 "codegen/run_parameters.kl"
-    kl_t2 = ( struct kl__Scaled* ) kl_t1;
+    kl_t2 = ( struct kl_7codegen_Scaled* ) kl_t1;
 #line 10 "codegen/run_parameters.kl"
     return;
 #line 10 "codegen/run_parameters.kl"
@@ -898,7 +898,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 48 "codegen/run_parameters.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 48 "codegen/run_parameters.kl"
     return kl_t0;
 #line 48 "codegen/run_parameters.kl"

@@ -9273,10 +9273,10 @@ bool kl_2kl7console_5input__RQ2kl6string( struct kl_2kl6string_string* kl_line_1
 #include <stddef.h>
 
 struct kl_7prelude_str;
-struct kl__Point;
-struct kl__Origin;
+struct kl_7codegen_Point;
+struct kl_7codegen_Origin;
 struct kl_2kl6string_string;
-struct kl__Named;
+struct kl_7codegen_Named;
 struct kl_2kl2os_path;
 struct kl_2kl2os_process;
 struct kl_2kl2os_captured;
@@ -9286,7 +9286,7 @@ struct kl_2kl4list_list__IQ2kl6stringE;
 struct kl_7prelude_result__IQ2kl7process_Q2kl10file_errorE;
 struct kl_2kl4list_list__IQ2kl4pathE;
 struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE;
-struct kl__Box__I3f64E;
+struct kl_7codegen_Box__I3f64E;
 
 struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
 
@@ -9300,20 +9300,20 @@ struct kl_7prelude_str
 };
 _Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
-struct kl__Point
+struct kl_7codegen_Point
 {
     int32_t kl_x;
     int32_t kl_y;
     struct kl_7prelude_str kl_name;
 };
-_Static_assert( sizeof( struct kl__Point ) == 24 && _Alignof( struct kl__Point ) == 8 && offsetof( struct kl__Point, kl_x ) == 0 && offsetof( struct kl__Point, kl_y ) == 4 && offsetof( struct kl__Point, kl_name ) == 8, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Point ) == 24 && _Alignof( struct kl_7codegen_Point ) == 8 && offsetof( struct kl_7codegen_Point, kl_x ) == 0 && offsetof( struct kl_7codegen_Point, kl_y ) == 4 && offsetof( struct kl_7codegen_Point, kl_name ) == 8, "layout" );
 
-struct kl__Origin
+struct kl_7codegen_Origin
 {
     int32_t kl_x;
     int32_t kl_y;
 };
-_Static_assert( sizeof( struct kl__Origin ) == 8 && _Alignof( struct kl__Origin ) == 4 && offsetof( struct kl__Origin, kl_x ) == 0 && offsetof( struct kl__Origin, kl_y ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Origin ) == 8 && _Alignof( struct kl_7codegen_Origin ) == 4 && offsetof( struct kl_7codegen_Origin, kl_x ) == 0 && offsetof( struct kl_7codegen_Origin, kl_y ) == 4, "layout" );
 
 struct kl_2kl6string_string
 {
@@ -9323,12 +9323,12 @@ struct kl_2kl6string_string
 };
 _Static_assert( sizeof( struct kl_2kl6string_string ) == 24 && _Alignof( struct kl_2kl6string_string ) == 8 && offsetof( struct kl_2kl6string_string, kl_data_ ) == 0 && offsetof( struct kl_2kl6string_string, kl_size_ ) == 8 && offsetof( struct kl_2kl6string_string, kl_cap_ ) == 16, "layout" );
 
-struct kl__Named
+struct kl_7codegen_Named
 {
     struct kl_2kl6string_string kl_label;
     int32_t kl_n;
 };
-_Static_assert( sizeof( struct kl__Named ) == 32 && _Alignof( struct kl__Named ) == 8 && offsetof( struct kl__Named, kl_label ) == 0 && offsetof( struct kl__Named, kl_n ) == 24, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Named ) == 32 && _Alignof( struct kl_7codegen_Named ) == 8 && offsetof( struct kl_7codegen_Named, kl_label ) == 0 && offsetof( struct kl_7codegen_Named, kl_n ) == 24, "layout" );
 
 struct kl_2kl2os_path
 {
@@ -9428,13 +9428,13 @@ struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE
 };
 _Static_assert( sizeof( struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE ) == 40 && _Alignof( struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE ) == 8 && offsetof( struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE, kl_2ok_value ) == 8 && offsetof( struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE, kl_3err_error ) == 8, "layout" );
 
-struct kl__Box__I3f64E
+struct kl_7codegen_Box__I3f64E
 {
     double kl_v;
     double* kl_at;
     int32_t kl_kind;
 };
-_Static_assert( sizeof( struct kl__Box__I3f64E ) == 24 && _Alignof( struct kl__Box__I3f64E ) == 8 && offsetof( struct kl__Box__I3f64E, kl_v ) == 0 && offsetof( struct kl__Box__I3f64E, kl_at ) == 8 && offsetof( struct kl__Box__I3f64E, kl_kind ) == 16, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Box__I3f64E ) == 24 && _Alignof( struct kl_7codegen_Box__I3f64E ) == 8 && offsetof( struct kl_7codegen_Box__I3f64E, kl_v ) == 0 && offsetof( struct kl_7codegen_Box__I3f64E, kl_at ) == 8 && offsetof( struct kl_7codegen_Box__I3f64E, kl_kind ) == 16, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -9445,8 +9445,8 @@ struct kl_7prelude_textual__vtable
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-int32_t kl__4tick__3i32( int32_t );
-int32_t kl__4main__( void );
+int32_t kl_7codegen_4tick__3i32( int32_t );
+int32_t kl_7codegen_4main__( void );
 void kl_2kl4list_8truncate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
 uint64_t kl_2kl4list_4size__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
 struct kl_2kl6string_string* kl_2kl4list_14operator_index__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
@@ -9477,7 +9477,7 @@ static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_
 static const struct kl_7prelude_textual__vtable kl_2kl6string_string__as_kl_7prelude_textual = { kl_2kl6string_string__drop, kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 5 "codegen/field_defaults.kl"
-int32_t kl__4tick__3i32( int32_t kl_n_1 )
+int32_t kl_7codegen_4tick__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
     int64_t kl_t2;
@@ -9506,25 +9506,25 @@ int32_t kl__4tick__3i32( int32_t kl_n_1 )
 }
 
 #line 37 "codegen/field_defaults.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__Point kl_a_1;
-    struct kl__Point kl_t2;
+    struct kl_7codegen_Point kl_a_1;
+    struct kl_7codegen_Point kl_t2;
     int32_t kl_t3;
     int32_t kl_t4;
     struct kl_7prelude_str kl_t5;
     struct kl_7prelude_str* kl_t6;
     uint8_t* kl_t7;
-    struct kl__Point kl_b_9;
-    struct kl__Point kl_t10;
+    struct kl_7codegen_Point kl_b_9;
+    struct kl_7codegen_Point kl_t10;
     struct kl_7prelude_str kl_t11;
     struct kl_7prelude_str* kl_t12;
     uint8_t* kl_t13;
-    struct kl__Origin kl_o_15;
-    struct kl__Origin kl_t16;
-    struct kl__Named kl_c_17;
-    struct kl__Named kl_t18;
+    struct kl_7codegen_Origin kl_o_15;
+    struct kl_7codegen_Origin kl_t16;
+    struct kl_7codegen_Named kl_c_17;
+    struct kl_7codegen_Named kl_t18;
     struct kl_2kl6string_string kl_t19;
     struct kl_2kl6string_string* kl_t20;
     struct kl_7prelude_str kl_t21;
@@ -9532,8 +9532,8 @@ int32_t kl__4main__( void )
     uint8_t* kl_t23;
     struct kl_7prelude_str* kl_t25;
     struct kl_7prelude_textual__ref kl_t26;
-    struct kl__Box__I3f64E kl_box_28;
-    struct kl__Box__I3f64E kl_t29;
+    struct kl_7codegen_Box__I3f64E kl_box_28;
+    struct kl_7codegen_Box__I3f64E kl_t29;
     struct kl_7prelude_str* kl_t30;
     struct kl_7prelude_textual__ref kl_t31;
     struct kl_7prelude_str kl_t32;
@@ -9570,9 +9570,9 @@ int32_t kl__4main__( void )
 #line 39 "codegen/field_defaults.kl"
     kl_t64 = false;
 #line 39 "codegen/field_defaults.kl"
-    kl_t3 = kl__4tick__3i32( 2 );
+    kl_t3 = kl_7codegen_4tick__3i32( 2 );
 #line 13 "codegen/field_defaults.kl"
-    kl_t4 = kl__4tick__3i32( 1 );
+    kl_t4 = kl_7codegen_4tick__3i32( 1 );
 #line 15 "codegen/field_defaults.kl"
     kl_t6 = &kl_t5;
 #line 15 "codegen/field_defaults.kl"
@@ -10163,7 +10163,7 @@ int main( void )
 #line 37 "codegen/field_defaults.kl"
     kl_2kl2os_0build(  );
 #line 37 "codegen/field_defaults.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 37 "codegen/field_defaults.kl"
     kl_2kl2os_0drop(  );
 #line 37 "codegen/field_defaults.kl"

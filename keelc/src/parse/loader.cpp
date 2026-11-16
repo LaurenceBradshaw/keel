@@ -16,10 +16,56 @@ namespace keel
 namespace
 {
 
-// A package's `//!` documentation, from `packageinfo.kl` in its folder: empty when there is none.
-// Lexed and never parsed, so nothing written in it is declared or imported.
-std::string read_package_info(
-    const std::filesystem::path& folder, Source_manager& sm, Interner& interner, Literal_pool& literals, Diagnostics& diags
+// What `packageinfo.kl` declares beside its `//!` comments: `@package( name );`, or nothing.
+struct Package_header
+{
+    std::optional<Span> name;  // the declared name
+    std::optional<Span> wrong; // the first token that is not part of it
+};
+
+Package_header scan_package_header( std::span<const Token> tokens, const Source_manager& sm )
+{
+    const auto is = [&]( std::size_t i, Token_kind kind ) { return i < tokens.size() && tokens[i].is( kind ); };
+
+    Package_header header;
+    std::size_t    next = 0;
+    if( is( 0, Token_kind::At ) && is( 1, Token_kind::Identifier ) && sm.text( tokens[1].span ) == "package" )
+    {
+        if( is( 2, Token_kind::L_paren ) && is( 3, Token_kind::Identifier ) && is( 4, Token_kind::R_paren ) &&
+            is( 5, Token_kind::Semicolon ) )
+        {
+            header.name = tokens[3].span;
+            next        = 6;
+        }
+        else
+        {
+            header.wrong = Span::merge( tokens[0].span, tokens[1].span );
+            return header;
+        }
+    }
+    if( !is( next, Token_kind::End_of_file ) )
+    {
+        header.wrong = tokens[next].span;
+    }
+    return header;
+}
+
+struct Package_info
+{
+    std::string                doc;
+    std::optional<std::string> name; // as `@package` declares it
+};
+
+// A package's `//!` documentation and declared name, from `packageinfo.kl` in its folder. Lexed and
+// never parsed, so nothing written in it is declared or imported. `nested` is the name of a nested
+// package, whose name is where it is.
+Package_info read_package_info(
+    const std::filesystem::path& folder,
+    Source_manager&              sm,
+    Interner&                    interner,
+    Literal_pool&                literals,
+    Diagnostics&                 diags,
+    std::string_view             nested = {}
 )
 {
     const std::optional<File_id> file = sm.load_file( folder / "packageinfo.kl" );
@@ -30,18 +76,42 @@ std::string read_package_info(
     }
 
     const std::vector<Token> tokens = lex( *file, sm, interner, literals, diags );
+    const Package_header     header = scan_package_header( tokens, sm );
 
-    if( !tokens.front().is( Token_kind::End_of_file ) )
+    if( header.wrong )
     {
+        const bool directive = tokens.front().is( Token_kind::At );
         diags.error(
-            tokens.front().span,
-            "`packageinfo.kl` holds only comments",
-            "it is the package's `//!` documentation; move this into a module"
+            *header.wrong,
+            directive ? "`@package` takes the package's name, `@package( name );`"
+                      : "`packageinfo.kl` holds only comments and `@package( name );`",
+            directive ? "a package's name is an identifier" : "it is the package's documentation; move this into a module"
         );
         return {};
     }
 
-    return doc_comment( sm.file( *file ).text, "//!" );
+    Package_info info { doc_comment( sm.file( *file ).text, "//!" ), std::nullopt };
+    if( header.name )
+    {
+        const std::string name( sm.text( *header.name ) );
+        if( !nested.empty() )
+        {
+            diags.error(
+                *header.name,
+                "a nested package's name is its folder's",
+                fmt::format( "remove `@package`; this package is `{}`", nested )
+            );
+        }
+        else if( const std::optional<std::string> error = package_name_error( name, interner ) )
+        {
+            diags.error( *header.name, fmt::format( "the package cannot be named `{}`", name ), *error );
+        }
+        else
+        {
+            info.name = name;
+        }
+    }
+    return info;
 }
 
 bool holds_keel( const std::filesystem::path& folder )
@@ -101,10 +171,12 @@ void add_nested_packages(
     }
 }
 
-// The program's subfolder `sub/deeper` is the package `sub::deeper` when each level holds a `.kl`, added
-// when `import` first names it, so a folder nothing imports is never looked at. False when refused.
+// The program's subfolder `sub/deeper` is the package `app::sub::deeper` when each level holds a `.kl`,
+// `skip` being the length of `app::`, or `sub::deeper` when the program has no name. Added when
+// `import` first names it, so a folder nothing imports is never looked at. False when refused.
 bool add_program_package(
     Symbol_id                                       package,
+    std::size_t                                     skip,
     const std::filesystem::path&                    program_folder,
     Span                                            at,
     std::span<const Package>                        given,
@@ -116,7 +188,7 @@ bool add_program_package(
 {
     const std::string     text   = std::string( interner.text( package ) );
     std::filesystem::path folder = program_folder;
-    for( std::size_t begin = 0; begin <= text.size(); )
+    for( std::size_t begin = skip; begin <= text.size(); )
     {
         const std::size_t end   = std::min( text.find( "::", begin ), text.size() );
         const std::string piece = text.substr( begin, end - begin );
@@ -137,7 +209,7 @@ bool add_program_package(
         }
 
         // A `--package`'s own scan found what is below it; the build tool gives `src/sub` so.
-        if( const auto it = std::ranges::find( given, name, &Package::name ); begin == 0 && it != given.end() )
+        if( const auto it = std::ranges::find( given, name, &Package::name ); skip == 0 && begin == 0 && it != given.end() )
         {
             std::error_code same;
             if( std::filesystem::equivalent( it->root, folder, same ) )
@@ -186,7 +258,7 @@ Program load_program(
     std::unordered_map<u32, std::string>& package_docs = prog.package_docs;
     modules.set_prelude( prelude_file, interner.intern( "prelude" ) );
 
-    package_docs[Symbol_id {}.v] = read_package_info( program_folder, sm, interner, literals, diags );
+    const Package_info program_info = read_package_info( program_folder, sm, interner, literals, diags );
 
     std::unordered_map<u32, std::filesystem::path> package_roots;
     for( const Package& package : packages )
@@ -204,11 +276,40 @@ Program load_program(
         if( as_module && std::filesystem::equivalent( program_folder, root, same ) )
         {
             modules.place( input, Symbol_id { package_id } );
-            package_docs[package_id] = read_package_info( root, sm, interner, literals, diags );
+            package_docs[package_id] = read_package_info( root, sm, interner, literals, diags ).doc;
         }
     }
 
-    const bool              is_program_package = !modules.package_of( input ).is_valid();
+    // The program's own package: the name its folder's packageinfo.kl declares, else the folder's.
+    // None when that cannot name a package, as for `my-tool/`.
+    Symbol_id program_package;
+    if( !modules.package_of( input ).is_valid() )
+    {
+        const std::string name = program_info.name.value_or( folder_package_name( program_folder ) );
+        const Symbol_id   id   = package_name_error( name, interner ) ? Symbol_id {} : interner.intern( name );
+        if( id.is_valid() && modules.is_package( id ) )
+        {
+            diags.error(
+                Span { input, 0, 0 },
+                fmt::format(
+                    "the program and the package in `{}` are both named `{}`", package_roots[id.v].generic_string(), name
+                ),
+                "give the program another name in its folder's `packageinfo.kl`, `@package( name );`"
+            );
+        }
+        else if( id.is_valid() )
+        {
+            modules.add_package( id );
+            modules.place( input, id );
+            modules.set_program_package( id );
+            package_roots[id.v] = program_folder;
+            program_package     = id;
+        }
+    }
+    package_docs[program_package.v] = program_info.doc;
+
+    const bool        is_program_package = !modules.package_of( input ).is_valid();
+    const std::string below_program = program_package.is_valid() ? std::string( interner.text( program_package ) ) + "::" : "";
     std::unordered_set<u32> program_packages;
 
     if( !as_module )
@@ -259,6 +360,9 @@ Program load_program(
                                                             : modules.package_of( current );
                 const std::string_view module_name    = interner.text( ast.name( decl ) );
                 const std::string      qualified_name = qualified( interner, package_id, module_name );
+                // As diagnostics write it: the program's own package is left off.
+                const bool        in_program = package_id.is_valid() && package_id == program_package;
+                const std::string shown_name = in_program ? std::string( module_name ) : qualified_name;
 
                 // Reported, then loaded as written, so the names it brings still resolve.
                 if( ast.package( decl ).is_valid() && package_id == modules.package_of( current ) )
@@ -275,7 +379,7 @@ Program load_program(
                     const Line_col at = sm.line_col( first->second.file, first->second.start );
                     diags.error(
                         ast.span( decl ),
-                        fmt::format( "`{}` is already imported", qualified_name ),
+                        fmt::format( "`{}` is already imported", shown_name ),
                         fmt::format(
                             "previous import is at: {}:{}:{}; remove this one", sm.file( current ).path, at.line, at.col
                         )
@@ -293,7 +397,7 @@ Program load_program(
                 {
                     diags.error(
                         ast.span( decl ),
-                        fmt::format( "`{}` is imported, but no object for it was given", qualified_name ),
+                        fmt::format( "`{}` is imported, but no object for it was given", shown_name ),
                         "build it with `-c` first, and give the `.klo`"
                     );
                     continue;
@@ -302,9 +406,20 @@ Program load_program(
                 std::filesystem::path module_folder = program_folder;
                 if( package_id.is_valid() )
                 {
-                    if( is_program_package && program_packages.insert( package_id.v ).second &&
+                    const bool under_program =
+                        !below_program.empty() && interner.text( package_id ).starts_with( below_program );
+                    if( ( is_program_package || under_program ) && !package_roots.contains( package_id.v ) &&
+                        program_packages.insert( package_id.v ).second &&
                         !add_program_package(
-                            package_id, program_folder, ast.span( decl ), packages, modules, package_roots, interner, diags
+                            package_id,
+                            under_program ? below_program.size() : 0,
+                            program_folder,
+                            ast.span( decl ),
+                            packages,
+                            modules,
+                            package_roots,
+                            interner,
+                            diags
                         ) )
                     {
                         continue;
@@ -315,7 +430,17 @@ Program load_program(
                         // Only a package something imports is documented, so an unused kl costs nothing.
                         if( !package_docs.contains( package_id.v ) )
                         {
-                            package_docs[package_id.v] = read_package_info( module_folder, sm, interner, literals, diags );
+                            const std::string_view text = interner.text( package_id );
+                            package_docs[package_id.v] =
+                                read_package_info(
+                                    module_folder,
+                                    sm,
+                                    interner,
+                                    literals,
+                                    diags,
+                                    text.find( "::" ) != std::string_view::npos ? text : std::string_view {}
+                                )
+                                    .doc;
                         }
                     }
                     else
@@ -327,11 +452,8 @@ Program load_program(
                                 fmt::format( "there is no package `{}`", interner.text( package_id ) ),
                                 interner.text( package_id ).find( "::" ) != std::string_view::npos
                                     ? std::string( "a nested package is a subfolder of its parent that holds `.kl` files" )
-                                    : fmt::format(
-                                          "a package is a subfolder holding `.kl` files, or is named with "
-                                          "`--package {}=<dir>`",
-                                          interner.text( package_id )
-                                      )
+                                    : std::string( "a package is a subfolder holding `.kl` files, or a folder given with "
+                                                   "`--package <dir>`" )
                             );
                         }
                         modules.add_missing_package( package_id );
@@ -358,8 +480,8 @@ Program load_program(
                 {
                     diags.error(
                         ast.span( decl ),
-                        fmt::format( "there is no module `{}`", qualified_name ),
-                        package_id.is_valid()
+                        fmt::format( "there is no module `{}`", shown_name ),
+                        package_id.is_valid() && !in_program
                             ? fmt::format( "it would be `{}.kl` in the package `{}`", module_name, interner.text( package_id ) )
                             : fmt::format(
                                   "`import {};` looks for `{}.kl` beside the file being compiled", module_name, module_name
@@ -457,7 +579,7 @@ Program load_program(
     std::vector<std::pair<File_id, File_id>> closing_imports = modules.closing_imports( input );
     for( const auto& [from, to] : closing_imports )
     {
-        const auto name = [&]( File_id file ) { return module_name( modules, sm, interner, file ); };
+        const auto name = [&]( File_id file ) { return shown_module_name( modules, sm, interner, file ); };
 
         if( from == to )
         {
@@ -488,6 +610,38 @@ Program load_program(
     ast.set_root( root );
 
     return prog;
+}
+
+std::optional<std::string> declared_package_name( const std::filesystem::path& folder )
+{
+    Source_manager sm;
+    Interner       interner;
+    Literal_pool   literals;
+    Diagnostics    diags;
+
+    const std::optional<File_id> file = sm.load_file( folder / "packageinfo.kl" );
+    if( !file.has_value() )
+    {
+        return std::nullopt;
+    }
+    const Package_header header = scan_package_header( lex( *file, sm, interner, literals, diags ), sm );
+    return header.name && !header.wrong ? std::optional( std::string( sm.text( *header.name ) ) ) : std::nullopt;
+}
+
+std::string folder_package_name( const std::filesystem::path& folder )
+{
+    std::error_code       ignored;
+    std::filesystem::path path = std::filesystem::weakly_canonical( std::filesystem::absolute( folder, ignored ), ignored );
+    if( path.filename().empty() )
+    {
+        path = path.parent_path();
+    }
+    // A project's `src/` and `test/` are the project, so each is named for the folder holding it.
+    if( ( path.filename() == "src" || path.filename() == "test" ) && path.has_parent_path() )
+    {
+        path = path.parent_path();
+    }
+    return path.filename().generic_string();
 }
 
 std::optional<std::string> package_name_error( std::string_view name, const Interner& interner )
@@ -579,10 +733,17 @@ public:
         return program_.modules.sees( files_.at( std::string( from ) ), files_.at( std::string( to ) ) );
     }
 
-    // The package `file` was loaded from; empty for the program's own.
+    // The package `file` was loaded from; empty when it has none.
     std::string_view package_of( std::string_view file ) const
     {
         const Symbol_id package = program_.modules.package_of( files_.at( std::string( file ) ) );
+        return package.is_valid() ? interner_.text( package ) : std::string_view {};
+    }
+
+    // The name the program's folder gives it: the temporary folder's, unless declared.
+    std::string_view program_package() const
+    {
+        const Symbol_id package = program_.modules.program_package();
         return package.is_valid() ? interner_.text( package ) : std::string_view {};
     }
 
@@ -795,7 +956,7 @@ TEST_CASE( "loader_loads_modules_from_a_package", "[parse][loader][packages]" )
         REQUIRE( p.functions() == std::vector<std::string_view> { "area", "main" } );
         REQUIRE( p.sees( "main.kl", "kl/geom.kl" ) );
         REQUIRE( p.package_of( "kl/geom.kl" ) == "kl" );
-        REQUIRE( p.package_of( "main.kl" ).empty() );
+        REQUIRE( p.package_of( "main.kl" ) == p.program_package() );
     }
 
     SECTION( "a bare import inside a package looks in the package" )
@@ -840,7 +1001,7 @@ TEST_CASE( "loader_loads_modules_from_a_package", "[parse][loader][packages]" )
         INFO( p.rendered() );
         REQUIRE( p.errors() == 0 );
         REQUIRE( p.functions() == std::vector<std::string_view> { "area", "main", "own_area" } );
-        REQUIRE( p.package_of( "geom.kl" ).empty() );
+        REQUIRE( p.package_of( "geom.kl" ) == p.program_package() );
     }
 
     // Named on the command line, so known before anything is imported from it.
@@ -1110,7 +1271,22 @@ TEST_CASE( "loader_reads_a_package's_packageinfo", "[parse][loader][packages][do
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 0 );
-        REQUIRE( p.package_doc( "" ) == "The program." );
+        REQUIRE( p.package_doc( p.program_package() ) == "The program." );
+    }
+
+    SECTION( "the program's packageinfo.kl may name it" )
+    {
+        Loaded p( {
+            { "main.kl", "import tool::sub::leaf;\ni32 main() { return tool::sub::one(); }\n" },
+            { "packageinfo.kl", "//! The program.\n@package( tool );\n" },
+            { "sub/leaf.kl", "i32 one() { return 1; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.program_package() == "tool" );
+        REQUIRE( p.package_of( "sub/leaf.kl" ) == "tool::sub" );
+        REQUIRE( p.package_doc( "tool" ) == "The program." );
     }
 
     SECTION( "a package without one has none" )

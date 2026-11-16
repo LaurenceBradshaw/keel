@@ -319,23 +319,23 @@ struct kl_7prelude_textual__vtable
     struct kl__run__L2u8__ref ( *kl__7as_text__ )( void* );
 };
 
-int64_t kl__shifted__G = -4;
-int64_t kl__shifted_negated__G = 4;
-int64_t kl__shifted_cast__G = -3;
-int64_t kl__shifted_all__G = -1;
-int64_t kl__shifted_exact__G = -1;
-bool kl__not_false__G = true;
-bool kl__not_compare__G = true;
-bool kl__less_floats__G = true;
-bool kl__equal_floats__G = true;
-bool kl__below_zero__G = false;
-double kl__cast_shift__G = 8.0;
-double kl__cast_negative__G = -3.0;
-double kl__remainder__G = 1.0;
-int64_t kl__quarter__GS6Holder = -4;
-bool kl__flag__G = true;
+int64_t kl_7codegen_shifted__G = -4;
+int64_t kl_7codegen_shifted_negated__G = 4;
+int64_t kl_7codegen_shifted_cast__G = -3;
+int64_t kl_7codegen_shifted_all__G = -1;
+int64_t kl_7codegen_shifted_exact__G = -1;
+bool kl_7codegen_not_false__G = true;
+bool kl_7codegen_not_compare__G = true;
+bool kl_7codegen_less_floats__G = true;
+bool kl_7codegen_equal_floats__G = true;
+bool kl_7codegen_below_zero__G = false;
+double kl_7codegen_cast_shift__G = 8.0;
+double kl_7codegen_cast_negative__G = -3.0;
+double kl_7codegen_remainder__G = 1.0;
+int64_t kl_7codegen_quarter__GSQ7codegen6Holder = -4;
+bool kl_7codegen_flag__G = true;
 
-int32_t kl__4main__( void );
+int32_t kl_7codegen_4main__( void );
 void kl_1t7console_5print__3i64_7textual( int64_t, struct kl_7prelude_textual__ref );
 void kl_1t7console_5print__3f64_7textual( double, struct kl_7prelude_textual__ref );
 void kl_1t7console_5print__4bool_7textual( bool, struct kl_7prelude_textual__ref );
@@ -346,7 +346,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 29 "codegen/global_initialisers_folded.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     struct kl_7prelude_str kl_t1;
@@ -435,7 +435,7 @@ int32_t kl__4main__( void )
 #line 31 "../test_lib/console.kl"
     kl_t6 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t5, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 31 "codegen/global_initialisers_folded.kl"
-    kl_1t7console_5print__3i64_7textual( kl__shifted__G, kl_t6 );
+    kl_1t7console_5print__3i64_7textual( kl_7codegen_shifted__G, kl_t6 );
 #line 31 "../test_lib/console.kl"
     kl_t9 = &kl_t8;
 #line 31 "../test_lib/console.kl"
@@ -446,7 +446,7 @@ int32_t kl__4main__( void )
     kl_t12 = &kl_t8;
 #line 31 "../test_lib/console.kl"
     kl_t13 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t12, &kl_7prelude_str__as_kl_7prelude_textual };
-    kl_1t7console_5print__3i64_7textual( kl__shifted_negated__G, kl_t13 );
+    kl_1t7console_5print__3i64_7textual( kl_7codegen_shifted_negated__G, kl_t13 );
 #line 31 "../test_lib/console.kl"
     kl_t16 = &kl_t15;
 #line 31 "../test_lib/console.kl"
@@ -458,7 +458,7 @@ int32_t kl__4main__( void )
 #line 31 "../test_lib/console.kl"
     kl_t20 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t19, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 33 "codegen/global_initialisers_folded.kl"
-    kl_1t7console_5print__3i64_7textual( kl__shifted_cast__G, kl_t20 );
+    kl_1t7console_5print__3i64_7textual( kl_7codegen_shifted_cast__G, kl_t20 );
 #line 31 "../test_lib/console.kl"
     kl_t23 = &kl_t22;
 #line 31 "../test_lib/console.kl"
@@ -470,7 +470,7 @@ int32_t kl__4main__( void )
 #line 31 "../test_lib/console.kl"
     kl_t27 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t26, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 34 "codegen/global_initialisers_folded.kl"
-    kl_1t7console_5print__3i64_7textual( kl__shifted_all__G, kl_t27 );
+    kl_1t7console_5print__3i64_7textual( kl_7codegen_shifted_all__G, kl_t27 );
 #line 31 "../test_lib/console.kl"
     kl_t30 = &kl_t29;
 #line 31 "../test_lib/console.kl"
@@ -482,7 +482,7 @@ int32_t kl__4main__( void )
 #line 31 "../test_lib/console.kl"
     kl_t34 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t33, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 35 "codegen/global_initialisers_folded.kl"
-    kl_1t7console_5print__3i64_7textual( kl__shifted_exact__G, kl_t34 );
+    kl_1t7console_5print__3i64_7textual( kl_7codegen_shifted_exact__G, kl_t34 );
 #line 63 "../test_lib/console.kl"
     kl_t37 = &kl_t36;
 #line 63 "../test_lib/console.kl"
@@ -494,7 +494,7 @@ int32_t kl__4main__( void )
 #line 63 "../test_lib/console.kl"
     kl_t41 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t40, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 36 "codegen/global_initialisers_folded.kl"
-    kl_1t7console_5print__4bool_7textual( kl__not_false__G, kl_t41 );
+    kl_1t7console_5print__4bool_7textual( kl_7codegen_not_false__G, kl_t41 );
 #line 63 "../test_lib/console.kl"
     kl_t44 = &kl_t43;
 #line 63 "../test_lib/console.kl"
@@ -506,7 +506,7 @@ int32_t kl__4main__( void )
 #line 63 "../test_lib/console.kl"
     kl_t48 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t47, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 37 "codegen/global_initialisers_folded.kl"
-    kl_1t7console_5print__4bool_7textual( kl__not_compare__G, kl_t48 );
+    kl_1t7console_5print__4bool_7textual( kl_7codegen_not_compare__G, kl_t48 );
 #line 63 "../test_lib/console.kl"
     kl_t51 = &kl_t50;
 #line 63 "../test_lib/console.kl"
@@ -518,7 +518,7 @@ int32_t kl__4main__( void )
 #line 63 "../test_lib/console.kl"
     kl_t55 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t54, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 38 "codegen/global_initialisers_folded.kl"
-    kl_1t7console_5print__4bool_7textual( kl__less_floats__G, kl_t55 );
+    kl_1t7console_5print__4bool_7textual( kl_7codegen_less_floats__G, kl_t55 );
 #line 63 "../test_lib/console.kl"
     kl_t58 = &kl_t57;
 #line 63 "../test_lib/console.kl"
@@ -530,7 +530,7 @@ int32_t kl__4main__( void )
 #line 63 "../test_lib/console.kl"
     kl_t62 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t61, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 39 "codegen/global_initialisers_folded.kl"
-    kl_1t7console_5print__4bool_7textual( kl__equal_floats__G, kl_t62 );
+    kl_1t7console_5print__4bool_7textual( kl_7codegen_equal_floats__G, kl_t62 );
 #line 63 "../test_lib/console.kl"
     kl_t65 = &kl_t64;
 #line 63 "../test_lib/console.kl"
@@ -542,7 +542,7 @@ int32_t kl__4main__( void )
 #line 63 "../test_lib/console.kl"
     kl_t69 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t68, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 40 "codegen/global_initialisers_folded.kl"
-    kl_1t7console_5print__4bool_7textual( kl__below_zero__G, kl_t69 );
+    kl_1t7console_5print__4bool_7textual( kl_7codegen_below_zero__G, kl_t69 );
 #line 53 "../test_lib/console.kl"
     kl_t72 = &kl_t71;
 #line 53 "../test_lib/console.kl"
@@ -554,7 +554,7 @@ int32_t kl__4main__( void )
 #line 53 "../test_lib/console.kl"
     kl_t76 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t75, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 41 "codegen/global_initialisers_folded.kl"
-    kl_1t7console_5print__3f64_7textual( kl__cast_shift__G, kl_t76 );
+    kl_1t7console_5print__3f64_7textual( kl_7codegen_cast_shift__G, kl_t76 );
 #line 53 "../test_lib/console.kl"
     kl_t79 = &kl_t78;
 #line 53 "../test_lib/console.kl"
@@ -566,7 +566,7 @@ int32_t kl__4main__( void )
 #line 53 "../test_lib/console.kl"
     kl_t83 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t82, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 42 "codegen/global_initialisers_folded.kl"
-    kl_1t7console_5print__3f64_7textual( kl__cast_negative__G, kl_t83 );
+    kl_1t7console_5print__3f64_7textual( kl_7codegen_cast_negative__G, kl_t83 );
 #line 53 "../test_lib/console.kl"
     kl_t86 = &kl_t85;
 #line 53 "../test_lib/console.kl"
@@ -578,7 +578,7 @@ int32_t kl__4main__( void )
 #line 53 "../test_lib/console.kl"
     kl_t90 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t89, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 43 "codegen/global_initialisers_folded.kl"
-    kl_1t7console_5print__3f64_7textual( kl__remainder__G, kl_t90 );
+    kl_1t7console_5print__3f64_7textual( kl_7codegen_remainder__G, kl_t90 );
 #line 31 "../test_lib/console.kl"
     kl_t93 = &kl_t92;
 #line 31 "../test_lib/console.kl"
@@ -612,7 +612,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 29 "codegen/global_initialisers_folded.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 29 "codegen/global_initialisers_folded.kl"
     return kl_t0;
 #line 29 "codegen/global_initialisers_folded.kl"

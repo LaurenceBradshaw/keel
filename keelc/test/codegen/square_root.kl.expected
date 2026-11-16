@@ -6,12 +6,12 @@
 typedef double ( *kl__fn__F3f64E3f64 )( double );
 typedef float ( *kl__fn__F3f32E3f32 )( float );
 
-int32_t kl__4main__( void );
+int32_t kl_7codegen_4main__( void );
 double kl_7prelude_8sqrt_f64__3f64( double );
 float kl_7prelude_8sqrt_f32__3f32( float );
 
 #line 2 "codegen/square_root.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     kl__fn__F3f64E3f64 kl_wide_1;
@@ -123,7 +123,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 2 "codegen/square_root.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 2 "codegen/square_root.kl"
     return kl_t0;
 #line 2 "codegen/square_root.kl"

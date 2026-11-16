@@ -319,11 +319,11 @@ struct kl_7prelude_textual__vtable
     struct kl__run__L2u8__ref ( *kl__7as_text__ )( void* );
 };
 
-float kl__global__G = 9007200328482816.0;
-float kl__negative__G = -9007200328482816.0;
+float kl_7codegen_global__G = 9007200328482816.0;
+float kl_7codegen_negative__G = -9007200328482816.0;
 
-float kl__3lit__( void );
-int32_t kl__4main__( void );
+float kl_7codegen_3lit__( void );
+int32_t kl_7codegen_4main__( void );
 void kl_1t7console_5print__3f64_7textual( double, struct kl_7prelude_textual__ref );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 void kl_7prelude_str__drop( void* );
@@ -332,7 +332,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 8 "codegen/float_literal_f32_rounding.kl"
-float kl__3lit__( void )
+float kl_7codegen_3lit__( void )
 {
     float kl_t0;
 #line 8 "codegen/float_literal_f32_rounding.kl"
@@ -343,7 +343,7 @@ float kl__3lit__( void )
 }
 
 #line 10 "codegen/float_literal_f32_rounding.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     float kl_x_1;
@@ -400,7 +400,7 @@ int32_t kl__4main__( void )
     kl_t8 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t7, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 13 "codegen/float_literal_f32_rounding.kl"
     kl_1t7console_5print__3f64_7textual( kl_t2, kl_t8 );
-    kl_t10 = kl__3lit__(  );
+    kl_t10 = kl_7codegen_3lit__(  );
 #line 14 "codegen/float_literal_f32_rounding.kl"
     kl_t11 = ( double ) kl_t10;
 #line 53 "../test_lib/console.kl"
@@ -430,7 +430,7 @@ int32_t kl__4main__( void )
     kl_t26 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t25, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 15 "codegen/float_literal_f32_rounding.kl"
     kl_1t7console_5print__3f64_7textual( kl_t20, kl_t26 );
-    kl_t28 = ( double ) kl__global__G;
+    kl_t28 = ( double ) kl_7codegen_global__G;
 #line 53 "../test_lib/console.kl"
     kl_t30 = &kl_t29;
 #line 53 "../test_lib/console.kl"
@@ -443,7 +443,7 @@ int32_t kl__4main__( void )
     kl_t34 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t33, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 16 "codegen/float_literal_f32_rounding.kl"
     kl_1t7console_5print__3f64_7textual( kl_t28, kl_t34 );
-    kl_t36 = ( double ) kl__negative__G;
+    kl_t36 = ( double ) kl_7codegen_negative__G;
 #line 53 "../test_lib/console.kl"
     kl_t38 = &kl_t37;
 #line 53 "../test_lib/console.kl"
@@ -478,7 +478,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 10 "codegen/float_literal_f32_rounding.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 10 "codegen/float_literal_f32_rounding.kl"
     return kl_t0;
 #line 10 "codegen/float_literal_f32_rounding.kl"

@@ -3,6 +3,7 @@
 
 import kl::string;
 import kl::os;
+import kl::optional;
 import kl::pair;
 import kl::list;
 
@@ -28,15 +29,16 @@ class Project
         const bool tests = kl::is_file( root / "test/main.kl" );
 
         kl::list<kl::pair<kl::string, kl::path>> found = kl::list<kl::pair<kl::string, kl::path>>();
-        try add_packages( root, true, ref found );
-        try add_packages( root / "src", false, ref found );
-        return result::ok( Project( root.file_name(), move root, tests, move found ) );
+        // `src/` and `test/` are the program's package, named as keelc names them.
+        kl::string program = package_name( root / "src", root.file_name() );
+        try add_packages( root, program, ref found );
+        return result::ok( Project( move program, move root, tests, move found ) );
     }
 
-    // Each folder in `folder` that holds a `.kl` is a package: the root's, and `src/`'s, which keelc
-    // names from the top too.
+    // Each folder in the root that holds a `.kl` is a package; `src/`'s subfolders are nested in the
+    // program's, which keelc finds itself.
     private static result<void, kl::string> add_packages(
-        const ref kl::path folder, bool is_root, ref kl::list<kl::pair<kl::string, kl::path>> found
+        const ref kl::path folder, const ref kl::string project, ref kl::list<kl::pair<kl::string, kl::path>> found
     )
     {
         switch( move kl::list_directory( folder ) )
@@ -47,28 +49,31 @@ class Project
                     kl::path entry = entries.pop();
                     const bool reserved = entry.file_name() == "src" || entry.file_name() == "test" || 
                                           entry.file_name() == "build";
-                    if( !kl::is_directory( entry ) || ( is_root && reserved ) || 
+                    if( !kl::is_directory( entry ) || reserved || 
                         entry.file_name().starts_with( "." ) || !holds_keel( entry ) )
                     {
                         continue;
                     }
 
-                    if( entry.file_name() == "kl" )
+                    kl::string named = package_name( entry, entry.file_name() );
+                    if( named == "kl" )
                     {
-                        return result::err( "a folder named kl cannot be a package: kl is the standard library" );
+                        return result::err( "a package named kl cannot be in a project: kl is the standard library" );
+                    }
+                    if( named == project )
+                    {
+                        return result::err( "the package in " + entry.file_name() + " has the project's name, " + named );
                     }
 
                     for( u64 j : 0..found.size() )
                     {
-                        if( found.as_run()[j].first == entry.file_name() )
+                        if( found.as_run()[j].first == named )
                         {
-                            return result::err( 
-                                "a folder named " + entry.file_name() + " is in both src/ and the project root" 
-                            );
+                            return result::err( "two of the project's packages are named " + named );
                         }
                     }
 
-                    found.push( kl::pair<kl::string, kl::path>( entry.file_name(), move entry ) );
+                    found.push( kl::pair<kl::string, kl::path>( move named, move entry ) );
                 }
                 return result::ok();
             case result::err( error ):
@@ -96,6 +101,35 @@ class Project
     public const ref kl::list<kl::pair<kl::string, kl::path>> packages() const
     {
         return packages_;
+    }
+
+    // What `@package( name );` in the folder's packageinfo.kl declares, else `otherwise`. keelc
+    // reports a malformed declaration.
+    private static kl::string package_name( const ref kl::path folder, move kl::string otherwise )
+    {
+        switch( move kl::read_file( folder / "packageinfo.kl" ) )
+        {
+            case result::ok( text ):
+                switch( text.find( "@package(" ) )
+                {
+                    case kl::optional::some( at ):
+                        const kl::string rest = text.substring( at + 9, text.size() - at - 9 );
+                        switch( rest.find( ")" ) )
+                        {
+                            case kl::optional::some( end ):
+                                return rest.substring( 0, end ).trim();
+                            case kl::optional::none:
+                                break;
+                        }
+                        break;
+                    case kl::optional::none:
+                        break;
+                }
+                break;
+            case result::err( error ):
+                break;
+        }
+        return otherwise;
     }
 
     private static bool holds_keel( const ref kl::path folder )

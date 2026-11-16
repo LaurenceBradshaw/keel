@@ -3,37 +3,37 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Mixed;
-struct kl__Three;
-struct kl__Tiny;
+struct kl_7codegen_Mixed;
+struct kl_7codegen_Three;
+struct kl_7codegen_Tiny;
 struct kl__A4_3f32;
-struct kl__Four;
-struct kl__Big;
-struct kl__Two;
+struct kl_7codegen_Four;
+struct kl_7codegen_Big;
+struct kl_7codegen_Two;
 
-typedef struct kl__Mixed ( *kl__fn__F5MixedE5Mixed )( struct kl__Mixed );
+typedef struct kl_7codegen_Mixed ( *kl__fn__FQ7codegen5MixedEQ7codegen5Mixed )( struct kl_7codegen_Mixed );
 
-struct kl__Mixed
+struct kl_7codegen_Mixed
 {
     int64_t kl_a;
     double kl_b;
 };
-_Static_assert( sizeof( struct kl__Mixed ) == 16 && _Alignof( struct kl__Mixed ) == 8 && offsetof( struct kl__Mixed, kl_a ) == 0 && offsetof( struct kl__Mixed, kl_b ) == 8, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Mixed ) == 16 && _Alignof( struct kl_7codegen_Mixed ) == 8 && offsetof( struct kl_7codegen_Mixed, kl_a ) == 0 && offsetof( struct kl_7codegen_Mixed, kl_b ) == 8, "layout" );
 
-struct kl__Three
+struct kl_7codegen_Three
 {
     float kl_x;
     float kl_y;
     float kl_z;
 };
-_Static_assert( sizeof( struct kl__Three ) == 12 && _Alignof( struct kl__Three ) == 4 && offsetof( struct kl__Three, kl_x ) == 0 && offsetof( struct kl__Three, kl_y ) == 4 && offsetof( struct kl__Three, kl_z ) == 8, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Three ) == 12 && _Alignof( struct kl_7codegen_Three ) == 4 && offsetof( struct kl_7codegen_Three, kl_x ) == 0 && offsetof( struct kl_7codegen_Three, kl_y ) == 4 && offsetof( struct kl_7codegen_Three, kl_z ) == 8, "layout" );
 
-struct kl__Tiny
+struct kl_7codegen_Tiny
 {
     uint8_t kl_a;
     int16_t kl_b;
 };
-_Static_assert( sizeof( struct kl__Tiny ) == 4 && _Alignof( struct kl__Tiny ) == 2 && offsetof( struct kl__Tiny, kl_a ) == 0 && offsetof( struct kl__Tiny, kl_b ) == 2, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Tiny ) == 4 && _Alignof( struct kl_7codegen_Tiny ) == 2 && offsetof( struct kl_7codegen_Tiny, kl_a ) == 0 && offsetof( struct kl_7codegen_Tiny, kl_b ) == 2, "layout" );
 
 struct kl__A4_3f32
 {
@@ -41,45 +41,45 @@ struct kl__A4_3f32
 };
 _Static_assert( sizeof( struct kl__A4_3f32 ) == 16 && _Alignof( struct kl__A4_3f32 ) == 4, "layout" );
 
-struct kl__Four
+struct kl_7codegen_Four
 {
     struct kl__A4_3f32 kl_v;
 };
-_Static_assert( sizeof( struct kl__Four ) == 16 && _Alignof( struct kl__Four ) == 4 && offsetof( struct kl__Four, kl_v ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Four ) == 16 && _Alignof( struct kl_7codegen_Four ) == 4 && offsetof( struct kl_7codegen_Four, kl_v ) == 0, "layout" );
 
-struct kl__Big
+struct kl_7codegen_Big
 {
     int64_t kl_a;
     int64_t kl_b;
     int64_t kl_c;
 };
-_Static_assert( sizeof( struct kl__Big ) == 24 && _Alignof( struct kl__Big ) == 8 && offsetof( struct kl__Big, kl_a ) == 0 && offsetof( struct kl__Big, kl_b ) == 8 && offsetof( struct kl__Big, kl_c ) == 16, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Big ) == 24 && _Alignof( struct kl_7codegen_Big ) == 8 && offsetof( struct kl_7codegen_Big, kl_a ) == 0 && offsetof( struct kl_7codegen_Big, kl_b ) == 8 && offsetof( struct kl_7codegen_Big, kl_c ) == 16, "layout" );
 
-struct kl__Two
+struct kl_7codegen_Two
 {
     int64_t kl_a;
     int64_t kl_b;
 };
-_Static_assert( sizeof( struct kl__Two ) == 16 && _Alignof( struct kl__Two ) == 8 && offsetof( struct kl__Two, kl_a ) == 0 && offsetof( struct kl__Two, kl_b ) == 8, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Two ) == 16 && _Alignof( struct kl_7codegen_Two ) == 8 && offsetof( struct kl_7codegen_Two, kl_a ) == 0 && offsetof( struct kl_7codegen_Two, kl_b ) == 8, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-struct kl__Mixed mixed( struct kl__Mixed, double );
-struct kl__Three three( struct kl__Three );
-struct kl__Tiny tiny( struct kl__Tiny );
-struct kl__Four four( struct kl__Four );
-struct kl__Big big( struct kl__Big, int64_t );
-int64_t crowded( int64_t, int64_t, int64_t, int64_t, int64_t, struct kl__Two, int64_t );
-struct kl__Mixed apply( kl__fn__F5MixedE5Mixed, struct kl__Mixed );
+struct kl_7codegen_Mixed mixed( struct kl_7codegen_Mixed, double );
+struct kl_7codegen_Three three( struct kl_7codegen_Three );
+struct kl_7codegen_Tiny tiny( struct kl_7codegen_Tiny );
+struct kl_7codegen_Four four( struct kl_7codegen_Four );
+struct kl_7codegen_Big big( struct kl_7codegen_Big, int64_t );
+int64_t crowded( int64_t, int64_t, int64_t, int64_t, int64_t, struct kl_7codegen_Two, int64_t );
+struct kl_7codegen_Mixed apply( kl__fn__FQ7codegen5MixedEQ7codegen5Mixed, struct kl_7codegen_Mixed );
 
-struct kl__Mixed kl__5twice__5Mixed( struct kl__Mixed );
-int32_t kl__4main__( void );
+struct kl_7codegen_Mixed kl_7codegen_5twice__Q7codegen5Mixed( struct kl_7codegen_Mixed );
+int32_t kl_7codegen_4main__( void );
 
 #line 19 "codegen/extern_abi.kl"
-struct kl__Mixed kl__5twice__5Mixed( struct kl__Mixed kl_m_1 )
+struct kl_7codegen_Mixed kl_7codegen_5twice__Q7codegen5Mixed( struct kl_7codegen_Mixed kl_m_1 )
 {
-    struct kl__Mixed kl_t0;
-    struct kl__Mixed kl_t2;
+    struct kl_7codegen_Mixed kl_t0;
+    struct kl_7codegen_Mixed kl_t2;
     bool kl_t3;
     int64_t kl_t4;
     double kl_t5;
@@ -106,22 +106,22 @@ struct kl__Mixed kl__5twice__5Mixed( struct kl__Mixed kl_m_1 )
 }
 
 #line 24 "codegen/extern_abi.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_wrong_1;
-    struct kl__Mixed kl_m_2;
-    struct kl__Mixed kl_t3;
-    struct kl__Mixed kl_t4;
+    struct kl_7codegen_Mixed kl_m_2;
+    struct kl_7codegen_Mixed kl_t3;
+    struct kl_7codegen_Mixed kl_t4;
     int32_t kl_t5;
     bool kl_t6;
     bool kl_t7;
     bool kl_t8;
     bool kl_t9;
     int32_t kl_t10;
-    struct kl__Three kl_t_11;
-    struct kl__Three kl_t12;
-    struct kl__Three kl_t13;
+    struct kl_7codegen_Three kl_t_11;
+    struct kl_7codegen_Three kl_t12;
+    struct kl_7codegen_Three kl_t13;
     int32_t kl_t14;
     bool kl_t15;
     bool kl_t16;
@@ -130,23 +130,23 @@ int32_t kl__4main__( void )
     bool kl_t19;
     bool kl_t20;
     int32_t kl_t21;
-    struct kl__Tiny kl_s_22;
-    struct kl__Tiny kl_t23;
-    struct kl__Tiny kl_t24;
+    struct kl_7codegen_Tiny kl_s_22;
+    struct kl_7codegen_Tiny kl_t23;
+    struct kl_7codegen_Tiny kl_t24;
     int32_t kl_t25;
     bool kl_t26;
     bool kl_t27;
     bool kl_t28;
     bool kl_t29;
     int32_t kl_t30;
-    struct kl__Four kl_f_31;
-    struct kl__Four kl_t32;
+    struct kl_7codegen_Four kl_f_31;
+    struct kl_7codegen_Four kl_t32;
     struct kl__A4_3f32 kl_t33;
     uint64_t kl_t34;
     uint64_t kl_t35;
     uint64_t kl_t36;
     uint64_t kl_t37;
-    struct kl__Four kl_t38;
+    struct kl_7codegen_Four kl_t38;
     int32_t kl_t39;
     bool kl_t40;
     uint64_t kl_t41;
@@ -155,9 +155,9 @@ int32_t kl__4main__( void )
     bool kl_t44;
     bool kl_t45;
     int32_t kl_t46;
-    struct kl__Big kl_b_47;
-    struct kl__Big kl_t48;
-    struct kl__Big kl_t49;
+    struct kl_7codegen_Big kl_b_47;
+    struct kl_7codegen_Big kl_t48;
+    struct kl_7codegen_Big kl_t49;
     int32_t kl_t50;
     bool kl_t51;
     bool kl_t52;
@@ -165,15 +165,15 @@ int32_t kl__4main__( void )
     bool kl_t54;
     int32_t kl_t55;
     int32_t kl_t56;
-    struct kl__Two kl_t57;
+    struct kl_7codegen_Two kl_t57;
     int64_t kl_t58;
     bool kl_t59;
     bool kl_t60;
     int32_t kl_t61;
-    struct kl__Mixed kl_a_62;
-    kl__fn__F5MixedE5Mixed kl_t63;
-    struct kl__Mixed kl_t64;
-    struct kl__Mixed kl_t65;
+    struct kl_7codegen_Mixed kl_a_62;
+    kl__fn__FQ7codegen5MixedEQ7codegen5Mixed kl_t63;
+    struct kl_7codegen_Mixed kl_t64;
+    struct kl_7codegen_Mixed kl_t65;
     int32_t kl_t66;
     bool kl_t67;
     bool kl_t68;
@@ -480,7 +480,7 @@ int32_t kl__4main__( void )
     kl_t61 = kl_wrong_1 + kl_t56;
 #line 39 "codegen/extern_abi.kl"
     kl_wrong_1 = kl_t61;
-    kl_t63 = kl__5twice__5Mixed;
+    kl_t63 = kl_7codegen_5twice__Q7codegen5Mixed;
 #line 40 "codegen/extern_abi.kl"
     kl_t64.kl_a = 5;
 #line 40 "codegen/extern_abi.kl"
@@ -537,7 +537,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 24 "codegen/extern_abi.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 24 "codegen/extern_abi.kl"
     return kl_t0;
 #line 24 "codegen/extern_abi.kl"

@@ -321,13 +321,13 @@ struct kl_7prelude_textual__vtable
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__5width__2i8( int8_t );
-int32_t kl__5width__3i16( int16_t );
-int32_t kl__5width__3i64( int64_t );
-int32_t kl__5width__3u64( uint64_t );
-int32_t kl__7nearest__3i32( int32_t );
-int32_t kl__7nearest__2i8( int8_t );
-int32_t kl__4main__( void );
+int32_t kl_7codegen_5width__2i8( int8_t );
+int32_t kl_7codegen_5width__3i16( int16_t );
+int32_t kl_7codegen_5width__3i64( int64_t );
+int32_t kl_7codegen_5width__3u64( uint64_t );
+int32_t kl_7codegen_7nearest__3i32( int32_t );
+int32_t kl_7codegen_7nearest__2i8( int8_t );
+int32_t kl_7codegen_4main__( void );
 void kl_1t7console_5print__3i64_7textual( int64_t, struct kl_7prelude_textual__ref );
 void kl_1t7console_5print__3u64_7textual( uint64_t, struct kl_7prelude_textual__ref );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
@@ -337,7 +337,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 6 "codegen/overload_literals.kl"
-int32_t kl__5width__2i8( int8_t kl_t1 )
+int32_t kl_7codegen_5width__2i8( int8_t kl_t1 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
@@ -348,7 +348,7 @@ int32_t kl__5width__2i8( int8_t kl_t1 )
 }
 
 #line 11 "codegen/overload_literals.kl"
-int32_t kl__5width__3i16( int16_t kl_t1 )
+int32_t kl_7codegen_5width__3i16( int16_t kl_t1 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
@@ -359,7 +359,7 @@ int32_t kl__5width__3i16( int16_t kl_t1 )
 }
 
 #line 16 "codegen/overload_literals.kl"
-int32_t kl__5width__3i64( int64_t kl_t1 )
+int32_t kl_7codegen_5width__3i64( int64_t kl_t1 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
@@ -370,7 +370,7 @@ int32_t kl__5width__3i64( int64_t kl_t1 )
 }
 
 #line 21 "codegen/overload_literals.kl"
-int32_t kl__5width__3u64( uint64_t kl_t1 )
+int32_t kl_7codegen_5width__3u64( uint64_t kl_t1 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
@@ -381,7 +381,7 @@ int32_t kl__5width__3u64( uint64_t kl_t1 )
 }
 
 #line 26 "codegen/overload_literals.kl"
-int32_t kl__7nearest__3i32( int32_t kl_t1 )
+int32_t kl_7codegen_7nearest__3i32( int32_t kl_t1 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
@@ -392,7 +392,7 @@ int32_t kl__7nearest__3i32( int32_t kl_t1 )
 }
 
 #line 31 "codegen/overload_literals.kl"
-int32_t kl__7nearest__2i8( int8_t kl_t1 )
+int32_t kl_7codegen_7nearest__2i8( int8_t kl_t1 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
@@ -403,7 +403,7 @@ int32_t kl__7nearest__2i8( int8_t kl_t1 )
 }
 
 #line 36 "codegen/overload_literals.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     struct kl_7prelude_str kl_t1;
@@ -493,7 +493,7 @@ int32_t kl__4main__( void )
     goto bb1;
     bb1:
 #line 43 "codegen/overload_literals.kl"
-    kl_t30 = kl__5width__2i8( 1 );
+    kl_t30 = kl_7codegen_5width__2i8( 1 );
 #line 43 "codegen/overload_literals.kl"
     kl_t31 = kl_t30 == 8;
 #line 43 "codegen/overload_literals.kl"
@@ -503,7 +503,7 @@ int32_t kl__4main__( void )
     kl_rt_panic( "codegen/overload_literals.kl", 43, "assertion failed: width( 1 ) == 8" );
     bb3:
 #line 44 "codegen/overload_literals.kl"
-    kl_t32 = kl__5width__3i16( 300 );
+    kl_t32 = kl_7codegen_5width__3i16( 300 );
 #line 44 "codegen/overload_literals.kl"
     kl_t33 = kl_t32 == 16;
 #line 44 "codegen/overload_literals.kl"
@@ -513,7 +513,7 @@ int32_t kl__4main__( void )
     kl_rt_panic( "codegen/overload_literals.kl", 44, "assertion failed: width( 300 ) == 16" );
     bb5:
 #line 45 "codegen/overload_literals.kl"
-    kl_t34 = kl__5width__3i64( -40000 );
+    kl_t34 = kl_7codegen_5width__3i64( -40000 );
 #line 45 "codegen/overload_literals.kl"
     kl_t35 = kl_t34 == 64;
 #line 45 "codegen/overload_literals.kl"
@@ -523,7 +523,7 @@ int32_t kl__4main__( void )
     kl_rt_panic( "codegen/overload_literals.kl", 45, "assertion failed: width( -40000 ) == 64" );
     bb7:
 #line 46 "codegen/overload_literals.kl"
-    kl_t36 = kl__5width__3u64( 9223372036854775808ull );
+    kl_t36 = kl_7codegen_5width__3u64( 9223372036854775808ull );
 #line 46 "codegen/overload_literals.kl"
     kl_t37 = kl_t36 == 65;
 #line 46 "codegen/overload_literals.kl"
@@ -535,7 +535,7 @@ int32_t kl__4main__( void )
 #line 47 "codegen/overload_literals.kl"
     kl_t38 = 100 + 100;
 #line 47 "codegen/overload_literals.kl"
-    kl_t39 = kl__5width__3i16( kl_t38 );
+    kl_t39 = kl_7codegen_5width__3i16( kl_t38 );
 #line 47 "codegen/overload_literals.kl"
     kl_t40 = kl_t39 == 16;
 #line 47 "codegen/overload_literals.kl"
@@ -545,7 +545,7 @@ int32_t kl__4main__( void )
     kl_rt_panic( "codegen/overload_literals.kl", 47, "assertion failed: width( 100 + 100 ) == 16" );
     bb11:
 #line 48 "codegen/overload_literals.kl"
-    kl_t41 = kl__7nearest__3i32( 1 );
+    kl_t41 = kl_7codegen_7nearest__3i32( 1 );
 #line 48 "codegen/overload_literals.kl"
     kl_t42 = kl_t41 == 32;
 #line 48 "codegen/overload_literals.kl"
@@ -564,7 +564,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 36 "codegen/overload_literals.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 36 "codegen/overload_literals.kl"
     return kl_t0;
 #line 36 "codegen/overload_literals.kl"

@@ -22,13 +22,13 @@ struct kl_7prelude_result__I3i32_3i32E
 };
 _Static_assert( sizeof( struct kl_7prelude_result__I3i32_3i32E ) == 8 && _Alignof( struct kl_7prelude_result__I3i32_3i32E ) == 4 && offsetof( struct kl_7prelude_result__I3i32_3i32E, kl_2ok_value ) == 4 && offsetof( struct kl_7prelude_result__I3i32_3i32E, kl_3err_error ) == 4, "layout" );
 
-struct kl_7prelude_result__I3i32_3i32E kl__4make__3i32( int32_t );
-struct kl_7prelude_result__I3i32_3i32E kl__3sum__3i32( int32_t );
-int32_t kl__5count__( void );
-int32_t kl__4main__( void );
+struct kl_7prelude_result__I3i32_3i32E kl_3opt_4make__3i32( int32_t );
+struct kl_7prelude_result__I3i32_3i32E kl_3opt_3sum__3i32( int32_t );
+int32_t kl_3opt_5count__( void );
+int32_t kl_3opt_4main__( void );
 
 #line 4 "opt/copied_joins.kl"
-struct kl_7prelude_result__I3i32_3i32E kl__4make__3i32( int32_t kl_x_1 )
+struct kl_7prelude_result__I3i32_3i32E kl_3opt_4make__3i32( int32_t kl_x_1 )
 {
     struct kl_7prelude_result__I3i32_3i32E kl_t0;
     bool kl_t2;
@@ -51,7 +51,7 @@ struct kl_7prelude_result__I3i32_3i32E kl__4make__3i32( int32_t kl_x_1 )
 }
 
 #line 13 "opt/copied_joins.kl"
-struct kl_7prelude_result__I3i32_3i32E kl__3sum__3i32( int32_t kl_s_1 )
+struct kl_7prelude_result__I3i32_3i32E kl_3opt_3sum__3i32( int32_t kl_s_1 )
 {
     struct kl_7prelude_result__I3i32_3i32E kl_t0;
     int32_t kl_x_2;
@@ -99,7 +99,7 @@ struct kl_7prelude_result__I3i32_3i32E kl__3sum__3i32( int32_t kl_s_1 )
 }
 
 #line 19 "opt/copied_joins.kl"
-int32_t kl__5count__( void )
+int32_t kl_3opt_5count__( void )
 {
     int32_t kl_t0;
     int32_t kl_i_1;
@@ -123,7 +123,7 @@ int32_t kl__5count__( void )
 }
 
 #line 29 "opt/copied_joins.kl"
-int32_t kl__4main__( void )
+int32_t kl_3opt_4main__( void )
 {
     int32_t kl_t0;
     struct kl_7prelude_result__I3i32_3i32E kl_t1;
@@ -137,7 +137,7 @@ int32_t kl__4main__( void )
     int32_t kl_i_9;
     bool kl_t10;
 #line 31 "opt/copied_joins.kl"
-    kl_t1 = kl__3sum__3i32( 0 );
+    kl_t1 = kl_3opt_3sum__3i32( 0 );
 #line 33 "opt/copied_joins.kl"
     kl_t2 = kl_t1.tag == 0;
 #line 33 "opt/copied_joins.kl"
@@ -159,7 +159,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb4:
 #line 39 "opt/copied_joins.kl"
-    kl_t4 = kl__3sum__3i32( 2 );
+    kl_t4 = kl_3opt_3sum__3i32( 2 );
 #line 41 "opt/copied_joins.kl"
     kl_t5 = kl_t4.tag == 0;
 #line 41 "opt/copied_joins.kl"
@@ -214,7 +214,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 29 "opt/copied_joins.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_3opt_4main__(  );
 #line 29 "opt/copied_joins.kl"
     return kl_t0;
 #line 29 "opt/copied_joins.kl"

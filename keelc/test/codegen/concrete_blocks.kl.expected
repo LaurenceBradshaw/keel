@@ -3,28 +3,28 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Wrap__I3i32E;
-struct kl__Pair__I2u8_2u8E;
+struct kl_7codegen_Wrap__I3i32E;
+struct kl_7codegen_Pair__I2u8_2u8E;
 
-struct kl__Named__vtable;
-struct kl__Named__ref { void* self; const struct kl__Named__vtable* vtable; };
+struct kl_7codegen_Named__vtable;
+struct kl_7codegen_Named__ref { void* self; const struct kl_7codegen_Named__vtable* vtable; };
 
 typedef int32_t ( *kl__fn__FMP4voidE3i32 )( void* );
 
-struct kl__Wrap__I3i32E
+struct kl_7codegen_Wrap__I3i32E
 {
     int32_t kl_v;
 };
-_Static_assert( sizeof( struct kl__Wrap__I3i32E ) == 4 && _Alignof( struct kl__Wrap__I3i32E ) == 4 && offsetof( struct kl__Wrap__I3i32E, kl_v ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Wrap__I3i32E ) == 4 && _Alignof( struct kl_7codegen_Wrap__I3i32E ) == 4 && offsetof( struct kl_7codegen_Wrap__I3i32E, kl_v ) == 0, "layout" );
 
-struct kl__Pair__I2u8_2u8E
+struct kl_7codegen_Pair__I2u8_2u8E
 {
     uint8_t kl_a;
     uint8_t kl_b;
 };
-_Static_assert( sizeof( struct kl__Pair__I2u8_2u8E ) == 2 && _Alignof( struct kl__Pair__I2u8_2u8E ) == 1 && offsetof( struct kl__Pair__I2u8_2u8E, kl_a ) == 0 && offsetof( struct kl__Pair__I2u8_2u8E, kl_b ) == 1, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Pair__I2u8_2u8E ) == 2 && _Alignof( struct kl_7codegen_Pair__I2u8_2u8E ) == 1 && offsetof( struct kl_7codegen_Pair__I2u8_2u8E, kl_a ) == 0 && offsetof( struct kl_7codegen_Pair__I2u8_2u8E, kl_b ) == 1, "layout" );
 
-struct kl__Named__vtable
+struct kl_7codegen_Named__vtable
 {
     void ( *drop )( void* );
     int32_t ( *kl__4code__ )( void* );
@@ -32,43 +32,43 @@ struct kl__Named__vtable
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__4code__S4WrapI3i32EC5Named( struct kl__Wrap__I3i32E* );
-bool kl__11operator_eq__S4WrapI3i32EC9equatable_4WrapI3i32E( struct kl__Wrap__I3i32E*, struct kl__Wrap__I3i32E* );
-int32_t kl__7through__PK5Named( struct kl__Named__ref );
-int32_t kl__4main__( void );
-int32_t kl__4read__I4WrapI3i32EE__4WrapI3i32E( struct kl__Wrap__I3i32E* );
-bool kl__11operator_eq__I3i32E__S4WrapI3i32EC9equatable_4WrapI3i32E( struct kl__Wrap__I3i32E*, struct kl__Wrap__I3i32E* );
-int32_t kl__4read__I4PairI2u8_2u8EE__4PairI2u8_2u8E( struct kl__Pair__I2u8_2u8E* );
-int32_t kl__4code__I2u8E__S4PairI2u8_2u8EC5Named( struct kl__Pair__I2u8_2u8E* );
-void kl__Wrap__I3i32E__drop( void* );
-int32_t kl__Wrap__I3i32E__as_kl__Named__kl__4code__( void* );
-void kl__Pair__I2u8_2u8E__drop( void* );
-int32_t kl__Pair__I2u8_2u8E__as_kl__Named__kl__4code__( void* );
+int32_t kl_7codegen_4code__SQ7codegen4WrapI3i32EC5Named( struct kl_7codegen_Wrap__I3i32E* );
+bool kl_7codegen_11operator_eq__SQ7codegen4WrapI3i32EC9equatable_Q7codegen4WrapI3i32E( struct kl_7codegen_Wrap__I3i32E*, struct kl_7codegen_Wrap__I3i32E* );
+int32_t kl_7codegen_7through__PK5Named( struct kl_7codegen_Named__ref );
+int32_t kl_7codegen_4main__( void );
+int32_t kl_7codegen_4read__IQ7codegen4WrapI3i32EE__Q7codegen4WrapI3i32E( struct kl_7codegen_Wrap__I3i32E* );
+bool kl_7codegen_11operator_eq__I3i32E__SQ7codegen4WrapI3i32EC9equatable_Q7codegen4WrapI3i32E( struct kl_7codegen_Wrap__I3i32E*, struct kl_7codegen_Wrap__I3i32E* );
+int32_t kl_7codegen_4read__IQ7codegen4PairI2u8_2u8EE__Q7codegen4PairI2u8_2u8E( struct kl_7codegen_Pair__I2u8_2u8E* );
+int32_t kl_7codegen_4code__I2u8E__SQ7codegen4PairI2u8_2u8EC5Named( struct kl_7codegen_Pair__I2u8_2u8E* );
+void kl_7codegen_Wrap__I3i32E__drop( void* );
+int32_t kl_7codegen_Wrap__I3i32E__as_kl_7codegen_Named__kl__4code__( void* );
+void kl_7codegen_Pair__I2u8_2u8E__drop( void* );
+int32_t kl_7codegen_Pair__I2u8_2u8E__as_kl_7codegen_Named__kl__4code__( void* );
 
-static const struct kl__Named__vtable kl__Wrap__I3i32E__as_kl__Named = { kl__Wrap__I3i32E__drop, kl__Wrap__I3i32E__as_kl__Named__kl__4code__ };
+static const struct kl_7codegen_Named__vtable kl_7codegen_Wrap__I3i32E__as_kl_7codegen_Named = { kl_7codegen_Wrap__I3i32E__drop, kl_7codegen_Wrap__I3i32E__as_kl_7codegen_Named__kl__4code__ };
 
-static const struct kl__Named__vtable kl__Pair__I2u8_2u8E__as_kl__Named = { kl__Pair__I2u8_2u8E__drop, kl__Pair__I2u8_2u8E__as_kl__Named__kl__4code__ };
+static const struct kl_7codegen_Named__vtable kl_7codegen_Pair__I2u8_2u8E__as_kl_7codegen_Named = { kl_7codegen_Pair__I2u8_2u8E__drop, kl_7codegen_Pair__I2u8_2u8E__as_kl_7codegen_Named__kl__4code__ };
 
-int32_t kl__Wrap__I3i32E__as_kl__Named__kl__4code__( void* kl_t1 )
+int32_t kl_7codegen_Wrap__I3i32E__as_kl_7codegen_Named__kl__4code__( void* kl_t1 )
 {
     int32_t kl_t0;
-    struct kl__Wrap__I3i32E* kl_t2;
-    kl_t2 = ( struct kl__Wrap__I3i32E* ) kl_t1;
-    kl_t0 = kl__4code__S4WrapI3i32EC5Named( kl_t2 );
+    struct kl_7codegen_Wrap__I3i32E* kl_t2;
+    kl_t2 = ( struct kl_7codegen_Wrap__I3i32E* ) kl_t1;
+    kl_t0 = kl_7codegen_4code__SQ7codegen4WrapI3i32EC5Named( kl_t2 );
     return kl_t0;
 }
 
-int32_t kl__Pair__I2u8_2u8E__as_kl__Named__kl__4code__( void* kl_t1 )
+int32_t kl_7codegen_Pair__I2u8_2u8E__as_kl_7codegen_Named__kl__4code__( void* kl_t1 )
 {
     int32_t kl_t0;
-    struct kl__Pair__I2u8_2u8E* kl_t2;
-    kl_t2 = ( struct kl__Pair__I2u8_2u8E* ) kl_t1;
-    kl_t0 = kl__4code__I2u8E__S4PairI2u8_2u8EC5Named( kl_t2 );
+    struct kl_7codegen_Pair__I2u8_2u8E* kl_t2;
+    kl_t2 = ( struct kl_7codegen_Pair__I2u8_2u8E* ) kl_t1;
+    kl_t0 = kl_7codegen_4code__I2u8E__SQ7codegen4PairI2u8_2u8EC5Named( kl_t2 );
     return kl_t0;
 }
 
 #line 21 "codegen/concrete_blocks.kl"
-int32_t kl__4code__S4WrapI3i32EC5Named( struct kl__Wrap__I3i32E* kl_this_1 )
+int32_t kl_7codegen_4code__SQ7codegen4WrapI3i32EC5Named( struct kl_7codegen_Wrap__I3i32E* kl_this_1 )
 {
     int32_t kl_t0;
     int32_t kl_k_2;
@@ -92,7 +92,7 @@ int32_t kl__4code__S4WrapI3i32EC5Named( struct kl__Wrap__I3i32E* kl_this_1 )
 }
 
 #line 30 "codegen/concrete_blocks.kl"
-bool kl__11operator_eq__S4WrapI3i32EC9equatable_4WrapI3i32E( struct kl__Wrap__I3i32E* kl_this_1, struct kl__Wrap__I3i32E* kl_other_2 )
+bool kl_7codegen_11operator_eq__SQ7codegen4WrapI3i32EC9equatable_Q7codegen4WrapI3i32E( struct kl_7codegen_Wrap__I3i32E* kl_this_1, struct kl_7codegen_Wrap__I3i32E* kl_other_2 )
 {
     bool kl_t0;
     bool kl_t3;
@@ -106,7 +106,7 @@ bool kl__11operator_eq__S4WrapI3i32EC9equatable_4WrapI3i32E( struct kl__Wrap__I3
 }
 
 #line 47 "codegen/concrete_blocks.kl"
-int32_t kl__7through__PK5Named( struct kl__Named__ref kl_n_1 )
+int32_t kl_7codegen_7through__PK5Named( struct kl_7codegen_Named__ref kl_n_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
@@ -125,34 +125,34 @@ int32_t kl__7through__PK5Named( struct kl__Named__ref kl_n_1 )
 }
 
 #line 52 "codegen/concrete_blocks.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__Wrap__I3i32E kl_w_1;
-    struct kl__Wrap__I3i32E kl_t2;
-    struct kl__Pair__I2u8_2u8E kl_p_3;
-    struct kl__Pair__I2u8_2u8E kl_t4;
-    struct kl__Wrap__I3i32E* kl_t5;
+    struct kl_7codegen_Wrap__I3i32E kl_w_1;
+    struct kl_7codegen_Wrap__I3i32E kl_t2;
+    struct kl_7codegen_Pair__I2u8_2u8E kl_p_3;
+    struct kl_7codegen_Pair__I2u8_2u8E kl_t4;
+    struct kl_7codegen_Wrap__I3i32E* kl_t5;
     int32_t kl_t6;
     bool kl_t7;
-    struct kl__Wrap__I3i32E* kl_t8;
-    struct kl__Named__ref kl_t9;
+    struct kl_7codegen_Wrap__I3i32E* kl_t8;
+    struct kl_7codegen_Named__ref kl_t9;
     int32_t kl_t10;
     bool kl_t11;
     bool kl_t12;
-    struct kl__Wrap__I3i32E* kl_t13;
-    struct kl__Wrap__I3i32E* kl_t14;
+    struct kl_7codegen_Wrap__I3i32E* kl_t13;
+    struct kl_7codegen_Wrap__I3i32E* kl_t14;
     bool kl_t15;
     bool kl_t16;
-    struct kl__Wrap__I3i32E* kl_t17;
-    struct kl__Wrap__I3i32E* kl_t18;
+    struct kl_7codegen_Wrap__I3i32E* kl_t17;
+    struct kl_7codegen_Wrap__I3i32E* kl_t18;
     bool kl_t19;
     bool kl_t20;
-    struct kl__Pair__I2u8_2u8E* kl_t21;
+    struct kl_7codegen_Pair__I2u8_2u8E* kl_t21;
     int32_t kl_t22;
     bool kl_t23;
-    struct kl__Pair__I2u8_2u8E* kl_t24;
-    struct kl__Named__ref kl_t25;
+    struct kl_7codegen_Pair__I2u8_2u8E* kl_t24;
+    struct kl_7codegen_Named__ref kl_t25;
     int32_t kl_t26;
     bool kl_t27;
 #line 54 "codegen/concrete_blocks.kl"
@@ -167,7 +167,7 @@ int32_t kl__4main__( void )
 #line 57 "codegen/concrete_blocks.kl"
     kl_t5 = &kl_w_1;
 #line 57 "codegen/concrete_blocks.kl"
-    kl_t6 = kl__4read__I4WrapI3i32EE__4WrapI3i32E( kl_t5 );
+    kl_t6 = kl_7codegen_4read__IQ7codegen4WrapI3i32EE__Q7codegen4WrapI3i32E( kl_t5 );
 #line 57 "codegen/concrete_blocks.kl"
     kl_t7 = kl_t6 != 7;
 #line 57 "codegen/concrete_blocks.kl"
@@ -181,9 +181,9 @@ int32_t kl__4main__( void )
 #line 58 "codegen/concrete_blocks.kl"
     kl_t8 = &kl_w_1;
 #line 58 "codegen/concrete_blocks.kl"
-    kl_t9 = ( struct kl__Named__ref ) { ( void* ) kl_t8, &kl__Wrap__I3i32E__as_kl__Named };
+    kl_t9 = ( struct kl_7codegen_Named__ref ) { ( void* ) kl_t8, &kl_7codegen_Wrap__I3i32E__as_kl_7codegen_Named };
 #line 58 "codegen/concrete_blocks.kl"
-    kl_t10 = kl__7through__PK5Named( kl_t9 );
+    kl_t10 = kl_7codegen_7through__PK5Named( kl_t9 );
 #line 58 "codegen/concrete_blocks.kl"
     kl_t11 = kl_t10 != 7;
 #line 58 "codegen/concrete_blocks.kl"
@@ -199,7 +199,7 @@ int32_t kl__4main__( void )
 #line 59 "codegen/concrete_blocks.kl"
     kl_t14 = &kl_w_1;
 #line 59 "codegen/concrete_blocks.kl"
-    kl_t15 = kl__11operator_eq__I3i32E__S4WrapI3i32EC9equatable_4WrapI3i32E( kl_t13, kl_t14 );
+    kl_t15 = kl_7codegen_11operator_eq__I3i32E__SQ7codegen4WrapI3i32EC9equatable_Q7codegen4WrapI3i32E( kl_t13, kl_t14 );
 #line 59 "codegen/concrete_blocks.kl"
     kl_t16 = !kl_t15;
 #line 59 "codegen/concrete_blocks.kl"
@@ -212,7 +212,7 @@ int32_t kl__4main__( void )
 #line 59 "codegen/concrete_blocks.kl"
     kl_t18 = &kl_w_1;
 #line 59 "codegen/concrete_blocks.kl"
-    kl_t19 = kl__11operator_eq__I3i32E__S4WrapI3i32EC9equatable_4WrapI3i32E( kl_t17, kl_t18 );
+    kl_t19 = kl_7codegen_11operator_eq__I3i32E__SQ7codegen4WrapI3i32EC9equatable_Q7codegen4WrapI3i32E( kl_t17, kl_t18 );
 #line 59 "codegen/concrete_blocks.kl"
     kl_t20 = !kl_t19;
 #line 59 "codegen/concrete_blocks.kl"
@@ -231,7 +231,7 @@ int32_t kl__4main__( void )
 #line 60 "codegen/concrete_blocks.kl"
     kl_t21 = &kl_p_3;
 #line 60 "codegen/concrete_blocks.kl"
-    kl_t22 = kl__4read__I4PairI2u8_2u8EE__4PairI2u8_2u8E( kl_t21 );
+    kl_t22 = kl_7codegen_4read__IQ7codegen4PairI2u8_2u8EE__Q7codegen4PairI2u8_2u8E( kl_t21 );
 #line 60 "codegen/concrete_blocks.kl"
     kl_t23 = kl_t22 != 9;
 #line 60 "codegen/concrete_blocks.kl"
@@ -245,9 +245,9 @@ int32_t kl__4main__( void )
 #line 61 "codegen/concrete_blocks.kl"
     kl_t24 = &kl_p_3;
 #line 61 "codegen/concrete_blocks.kl"
-    kl_t25 = ( struct kl__Named__ref ) { ( void* ) kl_t24, &kl__Pair__I2u8_2u8E__as_kl__Named };
+    kl_t25 = ( struct kl_7codegen_Named__ref ) { ( void* ) kl_t24, &kl_7codegen_Pair__I2u8_2u8E__as_kl_7codegen_Named };
 #line 61 "codegen/concrete_blocks.kl"
-    kl_t26 = kl__7through__PK5Named( kl_t25 );
+    kl_t26 = kl_7codegen_7through__PK5Named( kl_t25 );
 #line 61 "codegen/concrete_blocks.kl"
     kl_t27 = kl_t26 != 9;
 #line 61 "codegen/concrete_blocks.kl"
@@ -265,15 +265,15 @@ int32_t kl__4main__( void )
 }
 
 #line 42 "codegen/concrete_blocks.kl"
-int32_t kl__4read__I4WrapI3i32EE__4WrapI3i32E( struct kl__Wrap__I3i32E* kl_x_1 )
+int32_t kl_7codegen_4read__IQ7codegen4WrapI3i32EE__Q7codegen4WrapI3i32E( struct kl_7codegen_Wrap__I3i32E* kl_x_1 )
 {
     int32_t kl_t0;
-    struct kl__Wrap__I3i32E* kl_t2;
+    struct kl_7codegen_Wrap__I3i32E* kl_t2;
     int32_t kl_t3;
 #line 44 "codegen/concrete_blocks.kl"
     kl_t2 = &( *kl_x_1 );
 #line 44 "codegen/concrete_blocks.kl"
-    kl_t3 = kl__4code__S4WrapI3i32EC5Named( kl_t2 );
+    kl_t3 = kl_7codegen_4code__SQ7codegen4WrapI3i32EC5Named( kl_t2 );
 #line 44 "codegen/concrete_blocks.kl"
     kl_t0 = kl_t3;
 #line 44 "codegen/concrete_blocks.kl"
@@ -281,7 +281,7 @@ int32_t kl__4read__I4WrapI3i32EE__4WrapI3i32E( struct kl__Wrap__I3i32E* kl_x_1 )
 }
 
 #line 30 "codegen/concrete_blocks.kl"
-bool kl__11operator_eq__I3i32E__S4WrapI3i32EC9equatable_4WrapI3i32E( struct kl__Wrap__I3i32E* kl_this_1, struct kl__Wrap__I3i32E* kl_other_2 )
+bool kl_7codegen_11operator_eq__I3i32E__SQ7codegen4WrapI3i32EC9equatable_Q7codegen4WrapI3i32E( struct kl_7codegen_Wrap__I3i32E* kl_this_1, struct kl_7codegen_Wrap__I3i32E* kl_other_2 )
 {
     bool kl_t0;
     bool kl_t3;
@@ -295,15 +295,15 @@ bool kl__11operator_eq__I3i32E__S4WrapI3i32EC9equatable_4WrapI3i32E( struct kl__
 }
 
 #line 42 "codegen/concrete_blocks.kl"
-int32_t kl__4read__I4PairI2u8_2u8EE__4PairI2u8_2u8E( struct kl__Pair__I2u8_2u8E* kl_x_1 )
+int32_t kl_7codegen_4read__IQ7codegen4PairI2u8_2u8EE__Q7codegen4PairI2u8_2u8E( struct kl_7codegen_Pair__I2u8_2u8E* kl_x_1 )
 {
     int32_t kl_t0;
-    struct kl__Pair__I2u8_2u8E* kl_t2;
+    struct kl_7codegen_Pair__I2u8_2u8E* kl_t2;
     int32_t kl_t3;
 #line 44 "codegen/concrete_blocks.kl"
     kl_t2 = &( *kl_x_1 );
 #line 44 "codegen/concrete_blocks.kl"
-    kl_t3 = kl__4code__I2u8E__S4PairI2u8_2u8EC5Named( kl_t2 );
+    kl_t3 = kl_7codegen_4code__I2u8E__SQ7codegen4PairI2u8_2u8EC5Named( kl_t2 );
 #line 44 "codegen/concrete_blocks.kl"
     kl_t0 = kl_t3;
 #line 44 "codegen/concrete_blocks.kl"
@@ -311,7 +311,7 @@ int32_t kl__4read__I4PairI2u8_2u8EE__4PairI2u8_2u8E( struct kl__Pair__I2u8_2u8E*
 }
 
 #line 35 "codegen/concrete_blocks.kl"
-int32_t kl__4code__I2u8E__S4PairI2u8_2u8EC5Named( struct kl__Pair__I2u8_2u8E* kl_this_1 )
+int32_t kl_7codegen_4code__I2u8E__SQ7codegen4PairI2u8_2u8EC5Named( struct kl_7codegen_Pair__I2u8_2u8E* kl_this_1 )
 {
     int32_t kl_t0;
     uint8_t kl_second_2;
@@ -339,23 +339,23 @@ int32_t kl__4code__I2u8E__S4PairI2u8_2u8EC5Named( struct kl__Pair__I2u8_2u8E* kl
     return kl_t0;
 }
 
-void kl__Wrap__I3i32E__drop( void* kl_t1 )
+void kl_7codegen_Wrap__I3i32E__drop( void* kl_t1 )
 {
-    struct kl__Wrap__I3i32E* kl_t2;
+    struct kl_7codegen_Wrap__I3i32E* kl_t2;
     ( void ) kl_t2;
 #line 8 "codegen/concrete_blocks.kl"
-    kl_t2 = ( struct kl__Wrap__I3i32E* ) kl_t1;
+    kl_t2 = ( struct kl_7codegen_Wrap__I3i32E* ) kl_t1;
 #line 8 "codegen/concrete_blocks.kl"
     return;
 #line 8 "codegen/concrete_blocks.kl"
 }
 
-void kl__Pair__I2u8_2u8E__drop( void* kl_t1 )
+void kl_7codegen_Pair__I2u8_2u8E__drop( void* kl_t1 )
 {
-    struct kl__Pair__I2u8_2u8E* kl_t2;
+    struct kl_7codegen_Pair__I2u8_2u8E* kl_t2;
     ( void ) kl_t2;
 #line 13 "codegen/concrete_blocks.kl"
-    kl_t2 = ( struct kl__Pair__I2u8_2u8E* ) kl_t1;
+    kl_t2 = ( struct kl_7codegen_Pair__I2u8_2u8E* ) kl_t1;
 #line 13 "codegen/concrete_blocks.kl"
     return;
 #line 13 "codegen/concrete_blocks.kl"
@@ -365,7 +365,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 52 "codegen/concrete_blocks.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 52 "codegen/concrete_blocks.kl"
     return kl_t0;
 #line 52 "codegen/concrete_blocks.kl"

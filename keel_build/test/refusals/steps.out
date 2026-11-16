@@ -1,4 +1,4 @@
-keelb: a folder named kl cannot be a package: kl is the standard library
+keelb: a package named kl cannot be in a project: kl is the standard library
 exit 2
 keelb: `calc` is in both src/ and test/
 exit 1

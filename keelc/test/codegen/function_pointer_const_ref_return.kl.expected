@@ -3,26 +3,26 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Point;
+struct kl_7codegen_Point;
 
 typedef int32_t* ( *kl__fn__FK3i32K3i32EK3i32 )( int32_t*, int32_t* );
-typedef int32_t* ( *kl__fn__FK5PointEK3i32 )( struct kl__Point* );
+typedef int32_t* ( *kl__fn__FKQ7codegen5PointEK3i32 )( struct kl_7codegen_Point* );
 
-struct kl__Point
+struct kl_7codegen_Point
 {
     int32_t kl_x;
     int32_t kl_y;
 };
-_Static_assert( sizeof( struct kl__Point ) == 8 && _Alignof( struct kl__Point ) == 4 && offsetof( struct kl__Point, kl_x ) == 0 && offsetof( struct kl__Point, kl_y ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Point ) == 8 && _Alignof( struct kl_7codegen_Point ) == 4 && offsetof( struct kl_7codegen_Point, kl_x ) == 0 && offsetof( struct kl_7codegen_Point, kl_y ) == 4, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t* kl__5picks__3i32_3i32( int32_t*, int32_t* );
-int32_t* kl__4gets__5Point( struct kl__Point* );
-int32_t kl__4main__( void );
+int32_t* kl_7codegen_5picks__3i32_3i32( int32_t*, int32_t* );
+int32_t* kl_7codegen_4gets__Q7codegen5Point( struct kl_7codegen_Point* );
+int32_t kl_7codegen_4main__( void );
 
 #line 11 "codegen/function_pointer_const_ref_return.kl"
-int32_t* kl__5picks__3i32_3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
+int32_t* kl_7codegen_5picks__3i32_3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
 {
     int32_t* kl_t0;
     bool kl_t3;
@@ -42,7 +42,7 @@ int32_t* kl__5picks__3i32_3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
 }
 
 #line 21 "codegen/function_pointer_const_ref_return.kl"
-int32_t* kl__4gets__5Point( struct kl__Point* kl_p_1 )
+int32_t* kl_7codegen_4gets__Q7codegen5Point( struct kl_7codegen_Point* kl_p_1 )
 {
     int32_t* kl_t0;
 #line 23 "codegen/function_pointer_const_ref_return.kl"
@@ -52,33 +52,33 @@ int32_t* kl__4gets__5Point( struct kl__Point* kl_p_1 )
 }
 
 #line 26 "codegen/function_pointer_const_ref_return.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     kl__fn__FK3i32K3i32EK3i32 kl_pick_1;
     kl__fn__FK3i32K3i32EK3i32 kl_t2;
-    kl__fn__FK5PointEK3i32 kl_get_3;
-    kl__fn__FK5PointEK3i32 kl_t4;
+    kl__fn__FKQ7codegen5PointEK3i32 kl_get_3;
+    kl__fn__FKQ7codegen5PointEK3i32 kl_t4;
     int32_t kl_x_5;
     int32_t kl_y_6;
     int32_t* kl_bound_7;
     int32_t* kl_t8;
     int32_t* kl_t9;
     int32_t* kl_t10;
-    struct kl__Point kl_v_11;
-    struct kl__Point kl_t12;
+    struct kl_7codegen_Point kl_v_11;
+    struct kl_7codegen_Point kl_t12;
     int32_t kl_copied_13;
-    struct kl__Point* kl_t14;
+    struct kl_7codegen_Point* kl_t14;
     int32_t* kl_t15;
     bool kl_t16;
     int32_t kl_t17;
     bool kl_t18;
     int32_t kl_t19;
 #line 28 "codegen/function_pointer_const_ref_return.kl"
-    kl_t2 = kl__5picks__3i32_3i32;
+    kl_t2 = kl_7codegen_5picks__3i32_3i32;
 #line 28 "codegen/function_pointer_const_ref_return.kl"
     kl_pick_1 = kl_t2;
-    kl_t4 = kl__4gets__5Point;
+    kl_t4 = kl_7codegen_4gets__Q7codegen5Point;
 #line 29 "codegen/function_pointer_const_ref_return.kl"
     kl_get_3 = kl_t4;
 #line 31 "codegen/function_pointer_const_ref_return.kl"
@@ -137,7 +137,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 26 "codegen/function_pointer_const_ref_return.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 26 "codegen/function_pointer_const_ref_return.kl"
     return kl_t0;
 #line 26 "codegen/function_pointer_const_ref_return.kl"

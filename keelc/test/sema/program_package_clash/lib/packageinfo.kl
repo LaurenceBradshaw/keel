@@ -1,0 +1,2 @@
+//! A package named `util` from a folder that is not `util`.
+@package( util );

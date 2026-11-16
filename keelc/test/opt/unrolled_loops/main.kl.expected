@@ -25,13 +25,13 @@ struct kl__A200_3i64
 };
 _Static_assert( sizeof( struct kl__A200_3i64 ) == 1600 && _Alignof( struct kl__A200_3i64 ) == 8, "layout" );
 
-int64_t kl__6before__A4_3i64_3i64( struct kl__A4_3i64*, int64_t );
-int64_t kl__4grid__A6_3i64( struct kl__A6_3i64* );
-int64_t kl__8long_sum__A200_3i64( struct kl__A200_3i64* );
-int32_t kl__4main__( void );
+int64_t kl_14unrolled_loops_6before__A4_3i64_3i64( struct kl__A4_3i64*, int64_t );
+int64_t kl_14unrolled_loops_4grid__A6_3i64( struct kl__A6_3i64* );
+int64_t kl_14unrolled_loops_8long_sum__A200_3i64( struct kl__A200_3i64* );
+int32_t kl_14unrolled_loops_4main__( void );
 
 #line 16 "opt/unrolled_loops/main.kl"
-int64_t kl__6before__A4_3i64_3i64( struct kl__A4_3i64* kl_a_1, int64_t kl_stop_2 )
+int64_t kl_14unrolled_loops_6before__A4_3i64_3i64( struct kl__A4_3i64* kl_a_1, int64_t kl_stop_2 )
 {
     int64_t kl_t0;
     uint64_t kl_t3;
@@ -94,7 +94,7 @@ int64_t kl__6before__A4_3i64_3i64( struct kl__A4_3i64* kl_a_1, int64_t kl_stop_2
 }
 
 #line 31 "opt/unrolled_loops/main.kl"
-int64_t kl__4grid__A6_3i64( struct kl__A6_3i64* kl_a_1 )
+int64_t kl_14unrolled_loops_4grid__A6_3i64( struct kl__A6_3i64* kl_a_1 )
 {
     int64_t kl_t0;
     uint64_t kl_t2;
@@ -131,7 +131,7 @@ int64_t kl__4grid__A6_3i64( struct kl__A6_3i64* kl_a_1 )
 }
 
 #line 45 "opt/unrolled_loops/main.kl"
-int64_t kl__8long_sum__A200_3i64( struct kl__A200_3i64* kl_a_1 )
+int64_t kl_14unrolled_loops_8long_sum__A200_3i64( struct kl__A200_3i64* kl_a_1 )
 {
     int64_t kl_t0;
     uint64_t kl_i_2;
@@ -177,7 +177,7 @@ int64_t kl__8long_sum__A200_3i64( struct kl__A200_3i64* kl_a_1 )
 }
 
 #line 55 "opt/unrolled_loops/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_14unrolled_loops_4main__( void )
 {
     int32_t kl_t0;
     struct kl__A4_3i64 kl_a_1;
@@ -272,7 +272,7 @@ int32_t kl__4main__( void )
     bb2:
     kl_t9 = &kl_a_1;
 #line 62 "opt/unrolled_loops/main.kl"
-    kl_t10 = kl__6before__A4_3i64_3i64( kl_t9, 3 );
+    kl_t10 = kl_14unrolled_loops_6before__A4_3i64_3i64( kl_t9, 3 );
 #line 62 "opt/unrolled_loops/main.kl"
     kl_t8 = kl_t10 != 3;
 #line 62 "opt/unrolled_loops/main.kl"
@@ -281,7 +281,7 @@ int32_t kl__4main__( void )
 #line 62 "opt/unrolled_loops/main.kl"
     kl_t11 = &kl_a_1;
 #line 62 "opt/unrolled_loops/main.kl"
-    kl_t12 = kl__6before__A4_3i64_3i64( kl_t11, 9 );
+    kl_t12 = kl_14unrolled_loops_6before__A4_3i64_3i64( kl_t11, 9 );
 #line 62 "opt/unrolled_loops/main.kl"
     kl_t8 = kl_t12 != 10;
 #line 62 "opt/unrolled_loops/main.kl"
@@ -317,7 +317,7 @@ int32_t kl__4main__( void )
     kl_g_13.e[kl_t19] = 6;
     kl_t20 = &kl_g_13;
 #line 68 "opt/unrolled_loops/main.kl"
-    kl_t21 = kl__4grid__A6_3i64( kl_t20 );
+    kl_t21 = kl_14unrolled_loops_4grid__A6_3i64( kl_t20 );
 #line 68 "opt/unrolled_loops/main.kl"
     kl_t22 = kl_t21 != 25;
 #line 68 "opt/unrolled_loops/main.kl"
@@ -356,7 +356,7 @@ int32_t kl__4main__( void )
 #line 74 "opt/unrolled_loops/main.kl"
     kl_t26 = &kl_b_23;
 #line 74 "opt/unrolled_loops/main.kl"
-    kl_t27 = kl__8long_sum__A200_3i64( kl_t26 );
+    kl_t27 = kl_14unrolled_loops_8long_sum__A200_3i64( kl_t26 );
 #line 74 "opt/unrolled_loops/main.kl"
     kl_t28 = kl_t27 != 200;
 #line 74 "opt/unrolled_loops/main.kl"
@@ -375,7 +375,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 55 "opt/unrolled_loops/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_14unrolled_loops_4main__(  );
 #line 55 "opt/unrolled_loops/main.kl"
     return kl_t0;
 #line 55 "opt/unrolled_loops/main.kl"

@@ -3,10 +3,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-int32_t kl_3sub4leaf_3one__( void );
+int32_t kl_3app3sub4leaf_3one__( void );
 
 #line 1 "codegen/program_packages/sub/leaf.kl"
-int32_t kl_3sub4leaf_3one__( void )
+int32_t kl_3app3sub4leaf_3one__( void )
 {
     int32_t kl_t0;
 #line 1 "codegen/program_packages/sub/leaf.kl"
@@ -21,10 +21,10 @@ int32_t kl_3sub4leaf_3one__( void )
 #include <stdbool.h>
 #include <stddef.h>
 
-int32_t kl_3sub6deeper6bottom_3two__( void );
+int32_t kl_3app3sub6deeper6bottom_3two__( void );
 
 #line 1 "codegen/program_packages/sub/deeper/bottom.kl"
-int32_t kl_3sub6deeper6bottom_3two__( void )
+int32_t kl_3app3sub6deeper6bottom_3two__( void )
 {
     int32_t kl_t0;
 #line 1 "codegen/program_packages/sub/deeper/bottom.kl"
@@ -39,12 +39,12 @@ int32_t kl_3sub6deeper6bottom_3two__( void )
 #include <stdbool.h>
 #include <stddef.h>
 
-int32_t kl__4main__( void );
-int32_t kl_3sub6deeper6bottom_3two__( void );
-int32_t kl_3sub4leaf_3one__( void );
+int32_t kl_3app_4main__( void );
+int32_t kl_3app3sub6deeper6bottom_3two__( void );
+int32_t kl_3app3sub4leaf_3one__( void );
 
 #line 5 "codegen/program_packages/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_3app_4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_t1;
@@ -52,7 +52,7 @@ int32_t kl__4main__( void )
     int32_t kl_t3;
     bool kl_t4;
 #line 7 "codegen/program_packages/main.kl"
-    kl_t1 = kl_3sub4leaf_3one__(  );
+    kl_t1 = kl_3app3sub4leaf_3one__(  );
 #line 7 "codegen/program_packages/main.kl"
     kl_t2 = kl_t1 != 1;
 #line 7 "codegen/program_packages/main.kl"
@@ -64,7 +64,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb2:
 #line 8 "codegen/program_packages/main.kl"
-    kl_t3 = kl_3sub6deeper6bottom_3two__(  );
+    kl_t3 = kl_3app3sub6deeper6bottom_3two__(  );
 #line 8 "codegen/program_packages/main.kl"
     kl_t4 = kl_t3 != 2;
 #line 8 "codegen/program_packages/main.kl"
@@ -85,7 +85,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 5 "codegen/program_packages/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_3app_4main__(  );
 #line 5 "codegen/program_packages/main.kl"
     return kl_t0;
 #line 5 "codegen/program_packages/main.kl"

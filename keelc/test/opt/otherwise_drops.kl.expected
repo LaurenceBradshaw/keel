@@ -3,23 +3,23 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Res;
-struct kl__Held;
+struct kl_3opt_Res;
+struct kl_3opt_Held;
 
-struct kl__Res
+struct kl_3opt_Res
 {
     int32_t kl_v;
 };
-_Static_assert( sizeof( struct kl__Res ) == 4 && _Alignof( struct kl__Res ) == 4 && offsetof( struct kl__Res, kl_v ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_3opt_Res ) == 4 && _Alignof( struct kl_3opt_Res ) == 4 && offsetof( struct kl_3opt_Res, kl_v ) == 0, "layout" );
 
-struct kl__Held
+struct kl_3opt_Held
 {
     int32_t tag;
     union
     {
         struct
         {
-            struct kl__Res kl_4full_r;
+            struct kl_3opt_Res kl_4full_r;
         };
         struct
         {
@@ -27,18 +27,18 @@ struct kl__Held
         };
     };
 };
-_Static_assert( sizeof( struct kl__Held ) == 8 && _Alignof( struct kl__Held ) == 4 && offsetof( struct kl__Held, kl_4full_r ) == 4 && offsetof( struct kl__Held, kl_5other_k ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_3opt_Held ) == 8 && _Alignof( struct kl_3opt_Held ) == 4 && offsetof( struct kl_3opt_Held, kl_4full_r ) == 4 && offsetof( struct kl_3opt_Held, kl_5other_k ) == 4, "layout" );
 
-int32_t kl__dropped__G = 0;
+int32_t kl_3opt_dropped__G = 0;
 
-void kl__3Res__R3Res_3i32__ctor( struct kl__Res*, int32_t );
-void kl__3Res__dtor( struct kl__Res* );
-int32_t kl__4pick__M4Held( struct kl__Held );
-int32_t kl__4main__( void );
-void kl__4Held__dtor( struct kl__Held* );
+void kl_3opt_3Res__RQ3opt3Res_3i32__ctor( struct kl_3opt_Res*, int32_t );
+void kl_3opt_3Res__dtor( struct kl_3opt_Res* );
+int32_t kl_3opt_4pick__MQ3opt4Held( struct kl_3opt_Held );
+int32_t kl_3opt_4main__( void );
+void kl_3opt_4Held__dtor( struct kl_3opt_Held* );
 
 #line 10 "opt/otherwise_drops.kl"
-void kl__3Res__R3Res_3i32__ctor( struct kl__Res* kl_this_1, int32_t kl_x_2 )
+void kl_3opt_3Res__RQ3opt3Res_3i32__ctor( struct kl_3opt_Res* kl_this_1, int32_t kl_x_2 )
 {
 #line 10 "opt/otherwise_drops.kl"
     ( *kl_this_1 ).kl_v = kl_x_2;
@@ -48,21 +48,21 @@ void kl__3Res__R3Res_3i32__ctor( struct kl__Res* kl_this_1, int32_t kl_x_2 )
 }
 
 #line 11 "opt/otherwise_drops.kl"
-void kl__3Res__dtor( struct kl__Res* kl_this_1 )
+void kl_3opt_3Res__dtor( struct kl_3opt_Res* kl_this_1 )
 {
     int32_t kl_t2;
     ( void ) kl_this_1;
 #line 11 "opt/otherwise_drops.kl"
-    kl_t2 = kl__dropped__G + 1;
+    kl_t2 = kl_3opt_dropped__G + 1;
 #line 11 "opt/otherwise_drops.kl"
-    kl__dropped__G = kl_t2;
+    kl_3opt_dropped__G = kl_t2;
 #line 11 "opt/otherwise_drops.kl"
     return;
 #line 11 "opt/otherwise_drops.kl"
 }
 
 #line 16 "opt/otherwise_drops.kl"
-int32_t kl__4pick__M4Held( struct kl__Held kl_h_1 )
+int32_t kl_3opt_4pick__MQ3opt4Held( struct kl_3opt_Held kl_h_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -75,9 +75,9 @@ int32_t kl__4pick__M4Held( struct kl__Held kl_h_1 )
 #line 21 "opt/otherwise_drops.kl"
     kl_t0 = kl_h_1.kl_4full_r.kl_v;
 #line 11 "opt/otherwise_drops.kl"
-    kl_t3 = kl__dropped__G + 1;
+    kl_t3 = kl_3opt_dropped__G + 1;
 #line 11 "opt/otherwise_drops.kl"
-    kl__dropped__G = kl_t3;
+    kl_3opt_dropped__G = kl_t3;
 #line 21 "opt/otherwise_drops.kl"
     return kl_t0;
     bb2:
@@ -88,10 +88,10 @@ int32_t kl__4pick__M4Held( struct kl__Held kl_h_1 )
 }
 
 #line 27 "opt/otherwise_drops.kl"
-int32_t kl__4main__( void )
+int32_t kl_3opt_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__Held kl_h_1;
+    struct kl_3opt_Held kl_h_1;
     bool kl_t2;
     bool kl_t3;
     int32_t kl_t4;
@@ -100,9 +100,9 @@ int32_t kl__4main__( void )
 #line 29 "opt/otherwise_drops.kl"
     kl_h_1.kl_4full_r.kl_v = 7;
 #line 11 "opt/otherwise_drops.kl"
-    kl_t4 = kl__dropped__G + 1;
+    kl_t4 = kl_3opt_dropped__G + 1;
 #line 11 "opt/otherwise_drops.kl"
-    kl__dropped__G = kl_t4;
+    kl_3opt_dropped__G = kl_t4;
 #line 29 "opt/otherwise_drops.kl"
     kl_t2 = kl_h_1.kl_4full_r.kl_v != 7;
 #line 29 "opt/otherwise_drops.kl"
@@ -130,7 +130,7 @@ int32_t kl__4main__( void )
 }
 
 #line 14 "opt/otherwise_drops.kl"
-void kl__4Held__dtor( struct kl__Held* kl_t1 )
+void kl_3opt_4Held__dtor( struct kl_3opt_Held* kl_t1 )
 {
     bool kl_t2;
     int32_t kl_t3;
@@ -143,9 +143,9 @@ void kl__4Held__dtor( struct kl__Held* kl_t1 )
     return;
     bb2:
 #line 11 "opt/otherwise_drops.kl"
-    kl_t3 = kl__dropped__G + 1;
+    kl_t3 = kl_3opt_dropped__G + 1;
 #line 11 "opt/otherwise_drops.kl"
-    kl__dropped__G = kl_t3;
+    kl_3opt_dropped__G = kl_t3;
 #line 11 "opt/otherwise_drops.kl"
     goto bb1;
 #line 14 "opt/otherwise_drops.kl"
@@ -155,7 +155,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 27 "opt/otherwise_drops.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_3opt_4main__(  );
 #line 27 "opt/otherwise_drops.kl"
     return kl_t0;
 #line 27 "opt/otherwise_drops.kl"

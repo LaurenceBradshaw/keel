@@ -25,10 +25,10 @@ struct kl_7prelude_hasher
 };
 _Static_assert( sizeof( struct kl_7prelude_hasher ) == 40 && _Alignof( struct kl_7prelude_hasher ) == 8 && offsetof( struct kl_7prelude_hasher, kl_v0_ ) == 0 && offsetof( struct kl_7prelude_hasher, kl_v1_ ) == 8 && offsetof( struct kl_7prelude_hasher, kl_v2_ ) == 16 && offsetof( struct kl_7prelude_hasher, kl_v3_ ) == 24 && offsetof( struct kl_7prelude_hasher, kl_bytes_ ) == 32, "layout" );
 
-uint64_t kl__7key_low__( void );
-uint64_t kl__8key_high__( void );
-uint64_t kl__4text__Q7prelude3str_Q7prelude3str( struct kl_7prelude_str, struct kl_7prelude_str );
-int32_t kl__4main__( void );
+uint64_t kl_7codegen_7key_low__( void );
+uint64_t kl_7codegen_8key_high__( void );
+uint64_t kl_7codegen_4text__Q7prelude3str_Q7prelude3str( struct kl_7prelude_str, struct kl_7prelude_str );
+int32_t kl_7codegen_4main__( void );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 struct kl__run__L2u8__ref kl_7prelude_7as_text__SQ7prelude3str( struct kl_7prelude_str* );
 void kl_7prelude_6hasher__RQ7prelude6hasher_3u64_3u64__ctor( struct kl_7prelude_hasher*, uint64_t, uint64_t );
@@ -37,7 +37,7 @@ void kl_7prelude_11write_bytes__SQ7prelude6hasher_L2u8( struct kl_7prelude_hashe
 uint64_t kl_7prelude_6finish__SQ7prelude6hasher( struct kl_7prelude_hasher* );
 
 #line 6 "codegen/hasher.kl"
-uint64_t kl__7key_low__( void )
+uint64_t kl_7codegen_7key_low__( void )
 {
     uint64_t kl_t0;
 #line 8 "codegen/hasher.kl"
@@ -47,7 +47,7 @@ uint64_t kl__7key_low__( void )
 }
 
 #line 11 "codegen/hasher.kl"
-uint64_t kl__8key_high__( void )
+uint64_t kl_7codegen_8key_high__( void )
 {
     uint64_t kl_t0;
 #line 13 "codegen/hasher.kl"
@@ -57,7 +57,7 @@ uint64_t kl__8key_high__( void )
 }
 
 #line 16 "codegen/hasher.kl"
-uint64_t kl__4text__Q7prelude3str_Q7prelude3str( struct kl_7prelude_str kl_a_1, struct kl_7prelude_str kl_b_2 )
+uint64_t kl_7codegen_4text__Q7prelude3str_Q7prelude3str( struct kl_7prelude_str kl_a_1, struct kl_7prelude_str kl_b_2 )
 {
     uint64_t kl_t0;
     struct kl_7prelude_hasher kl_h_3;
@@ -77,9 +77,9 @@ uint64_t kl__4text__Q7prelude3str_Q7prelude3str( struct kl_7prelude_str kl_a_1, 
 #line 18 "codegen/hasher.kl"
     kl_t4 = &kl_h_3;
 #line 18 "codegen/hasher.kl"
-    kl_t5 = kl__7key_low__(  );
+    kl_t5 = kl_7codegen_7key_low__(  );
 #line 18 "codegen/hasher.kl"
-    kl_t6 = kl__8key_high__(  );
+    kl_t6 = kl_7codegen_8key_high__(  );
 #line 18 "codegen/hasher.kl"
     kl_7prelude_6hasher__RQ7prelude6hasher_3u64_3u64__ctor( kl_t4, kl_t5, kl_t6 );
 #line 20 "codegen/hasher.kl"
@@ -112,7 +112,7 @@ uint64_t kl__4text__Q7prelude3str_Q7prelude3str( struct kl_7prelude_str kl_a_1, 
 }
 
 #line 26 "codegen/hasher.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     struct kl_7prelude_hasher kl_empty_1;
@@ -200,9 +200,9 @@ int32_t kl__4main__( void )
 #line 28 "codegen/hasher.kl"
     kl_t2 = &kl_empty_1;
 #line 28 "codegen/hasher.kl"
-    kl_t3 = kl__7key_low__(  );
+    kl_t3 = kl_7codegen_7key_low__(  );
 #line 28 "codegen/hasher.kl"
-    kl_t4 = kl__8key_high__(  );
+    kl_t4 = kl_7codegen_8key_high__(  );
 #line 28 "codegen/hasher.kl"
     kl_7prelude_6hasher__RQ7prelude6hasher_3u64_3u64__ctor( kl_t2, kl_t3, kl_t4 );
 #line 30 "codegen/hasher.kl"
@@ -221,9 +221,9 @@ int32_t kl__4main__( void )
 #line 35 "codegen/hasher.kl"
     kl_t10 = &kl_word_9;
 #line 35 "codegen/hasher.kl"
-    kl_t11 = kl__7key_low__(  );
+    kl_t11 = kl_7codegen_7key_low__(  );
 #line 35 "codegen/hasher.kl"
-    kl_t12 = kl__8key_high__(  );
+    kl_t12 = kl_7codegen_8key_high__(  );
 #line 35 "codegen/hasher.kl"
     kl_7prelude_6hasher__RQ7prelude6hasher_3u64_3u64__ctor( kl_t10, kl_t11, kl_t12 );
 #line 37 "codegen/hasher.kl"
@@ -266,9 +266,9 @@ int32_t kl__4main__( void )
 #line 44 "codegen/hasher.kl"
     kl_t26 = &kl_two_25;
 #line 44 "codegen/hasher.kl"
-    kl_t27 = kl__7key_low__(  );
+    kl_t27 = kl_7codegen_7key_low__(  );
 #line 44 "codegen/hasher.kl"
-    kl_t28 = kl__8key_high__(  );
+    kl_t28 = kl_7codegen_8key_high__(  );
 #line 44 "codegen/hasher.kl"
     kl_7prelude_6hasher__RQ7prelude6hasher_3u64_3u64__ctor( kl_t26, kl_t27, kl_t28 );
 #line 46 "codegen/hasher.kl"
@@ -294,9 +294,9 @@ int32_t kl__4main__( void )
 #line 54 "codegen/hasher.kl"
     kl_t38 = &kl_letters_37;
 #line 54 "codegen/hasher.kl"
-    kl_t39 = kl__7key_low__(  );
+    kl_t39 = kl_7codegen_7key_low__(  );
 #line 54 "codegen/hasher.kl"
-    kl_t40 = kl__8key_high__(  );
+    kl_t40 = kl_7codegen_8key_high__(  );
 #line 54 "codegen/hasher.kl"
     kl_7prelude_6hasher__RQ7prelude6hasher_3u64_3u64__ctor( kl_t38, kl_t39, kl_t40 );
     kl_t44 = &kl_t43;
@@ -332,9 +332,9 @@ int32_t kl__4main__( void )
 #line 64 "codegen/hasher.kl"
     kl_t56 = &kl_nothing_55;
 #line 64 "codegen/hasher.kl"
-    kl_t57 = kl__7key_low__(  );
+    kl_t57 = kl_7codegen_7key_low__(  );
 #line 64 "codegen/hasher.kl"
-    kl_t58 = kl__8key_high__(  );
+    kl_t58 = kl_7codegen_8key_high__(  );
 #line 64 "codegen/hasher.kl"
     kl_7prelude_6hasher__RQ7prelude6hasher_3u64_3u64__ctor( kl_t56, kl_t57, kl_t58 );
     kl_t62 = &kl_t61;
@@ -380,7 +380,7 @@ int32_t kl__4main__( void )
 #line 74 "codegen/hasher.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t78, kl_t79, 1 );
 #line 74 "codegen/hasher.kl"
-    kl_t81 = kl__4text__Q7prelude3str_Q7prelude3str( kl_t73, kl_t77 );
+    kl_t81 = kl_7codegen_4text__Q7prelude3str_Q7prelude3str( kl_t73, kl_t77 );
 #line 74 "codegen/hasher.kl"
     kl_t83 = &kl_t82;
 #line 74 "codegen/hasher.kl"
@@ -394,7 +394,7 @@ int32_t kl__4main__( void )
 #line 74 "codegen/hasher.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t87, kl_t88, 2 );
 #line 74 "codegen/hasher.kl"
-    kl_t90 = kl__4text__Q7prelude3str_Q7prelude3str( kl_t82, kl_t86 );
+    kl_t90 = kl_7codegen_4text__Q7prelude3str_Q7prelude3str( kl_t82, kl_t86 );
 #line 74 "codegen/hasher.kl"
     kl_t91 = kl_t81 == kl_t90;
 #line 74 "codegen/hasher.kl"
@@ -438,7 +438,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 26 "codegen/hasher.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 26 "codegen/hasher.kl"
     return kl_t0;
 #line 26 "codegen/hasher.kl"

@@ -5543,7 +5543,7 @@ void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-int32_t kl__4main__( void );
+int32_t kl_8map_walk_4main__( void );
 void kl_2kl3map_3map__IQ2kl6string_3i32E__RQ2kl3mapIQ2kl6string_3i32E__ctor( struct kl_2kl3map_map__IQ2kl6string_3i32E* );
 struct kl_2kl8optional_optional__I3i32E kl_2kl3map_6insert__IQ2kl6string_3i32E__SQ2kl3mapIQ2kl6string_3i32E_MQ2kl6string_M3i32( struct kl_2kl3map_map__IQ2kl6string_3i32E*, struct kl_2kl6string_string, int32_t );
 void kl_2kl3map_3map__I3i32_Q2kl6stringE__RQ2kl3mapI3i32_Q2kl6stringE__ctor( struct kl_2kl3map_map__I3i32_Q2kl6stringE* );
@@ -5589,7 +5589,7 @@ void kl_2kl4list_4list__IQ2kl6stringE__dtor( struct kl_2kl4list_list__IQ2kl6stri
 void kl_2kl8optional_8optional__IQ2kl6stringE__dtor( struct kl_2kl8optional_optional__IQ2kl6stringE* );
 
 #line 6 "map_walk/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_8map_walk_4main__( void )
 {
     int32_t kl_t0;
     struct kl_2kl3map_map__IQ2kl6string_3i32E kl_counts_1;
@@ -7367,7 +7367,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 6 "map_walk/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_8map_walk_4main__(  );
 #line 6 "map_walk/main.kl"
     return kl_t0;
 #line 6 "map_walk/main.kl"

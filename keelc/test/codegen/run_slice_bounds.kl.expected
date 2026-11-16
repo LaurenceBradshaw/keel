@@ -324,8 +324,8 @@ void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-uint64_t kl__6length__L2u8_3u64_3u64( uint8_t*, uint64_t, uint64_t, uint64_t );
-int32_t kl__4main__( void );
+uint64_t kl_7codegen_6length__L2u8_3u64_3u64( uint8_t*, uint64_t, uint64_t, uint64_t );
+int32_t kl_7codegen_4main__( void );
 void kl_1t7console_5print__7textual_7textual( struct kl_7prelude_textual__ref, struct kl_7prelude_textual__ref );
 void kl_1t7console_5print__3u64_7textual( uint64_t, struct kl_7prelude_textual__ref );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
@@ -335,7 +335,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 5 "codegen/run_slice_bounds.kl"
-uint64_t kl__6length__L2u8_3u64_3u64( uint8_t* kl_text_1_data, uint64_t kl_text_1_size, uint64_t kl_a_2, uint64_t kl_b_3 )
+uint64_t kl_7codegen_6length__L2u8_3u64_3u64( uint8_t* kl_text_1_data, uint64_t kl_text_1_size, uint64_t kl_a_2, uint64_t kl_b_3 )
 {
     uint64_t kl_t0;
 #line 5 "codegen/run_slice_bounds.kl"
@@ -380,7 +380,7 @@ uint64_t kl__6length__L2u8_3u64_3u64( uint8_t* kl_text_1_data, uint64_t kl_text_
 }
 
 #line 10 "codegen/run_slice_bounds.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     uint8_t* kl_data_1;
@@ -448,7 +448,7 @@ int32_t kl__4main__( void )
 #line 21 "codegen/run_slice_bounds.kl"
     kl_t9 = kl_t8;
 #line 21 "codegen/run_slice_bounds.kl"
-    kl_t10 = kl__6length__L2u8_3u64_3u64( ( kl_t9 ).data, ( kl_t9 ).size, 1, 3 );
+    kl_t10 = kl_7codegen_6length__L2u8_3u64_3u64( ( kl_t9 ).data, ( kl_t9 ).size, 1, 3 );
 #line 41 "../test_lib/console.kl"
     kl_t12 = &kl_t11;
 #line 41 "../test_lib/console.kl"
@@ -481,7 +481,7 @@ int32_t kl__4main__( void )
 #line 22 "codegen/run_slice_bounds.kl"
     kl_t24 = kl_t23;
 #line 22 "codegen/run_slice_bounds.kl"
-    kl_t25 = kl__6length__L2u8_3u64_3u64( ( kl_t24 ).data, ( kl_t24 ).size, 3, 2 );
+    kl_t25 = kl_7codegen_6length__L2u8_3u64_3u64( ( kl_t24 ).data, ( kl_t24 ).size, 3, 2 );
 #line 41 "../test_lib/console.kl"
     kl_t27 = &kl_t26;
 #line 41 "../test_lib/console.kl"
@@ -524,7 +524,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 10 "codegen/run_slice_bounds.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 10 "codegen/run_slice_bounds.kl"
     return kl_t0;
 #line 10 "codegen/run_slice_bounds.kl"

@@ -1,7 +1,7 @@
-import sub::leaf;
-import sub::deeper::bottom;
+import program_package::sub::leaf;
+import program_package::sub::deeper::bottom;
 
 i32 main()
 {
-    return sub::one() + sub::deeper::two();
+    return program_package::sub::one() + program_package::sub::deeper::two();
 }

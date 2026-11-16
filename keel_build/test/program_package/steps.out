@@ -1,7 +1,7 @@
-compiling sub::leaf
-compiling sub::deeper::bottom
+compiling program_package::sub::leaf
+compiling program_package::sub::deeper::bottom
 linking
 exit 0
 exit 3
-keelb: a folder named util is in both src/ and the project root
+keelb: the package in clash has the project's name, clash
 exit 2

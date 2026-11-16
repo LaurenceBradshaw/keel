@@ -3,15 +3,15 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-int32_t kl__count__G;
+int32_t kl_6pinned_count__G;
 
-int32_t kl__11overwritten__3i32( int32_t );
-int32_t kl__8borrowed__3i32( int32_t );
-int32_t kl__7counted__3i32( int32_t );
-int32_t kl__4main__( void );
+int32_t kl_6pinned_11overwritten__3i32( int32_t );
+int32_t kl_6pinned_8borrowed__3i32( int32_t );
+int32_t kl_6pinned_7counted__3i32( int32_t );
+int32_t kl_6pinned_4main__( void );
 
 #line 7 "opt/pinned/main.kl"
-int32_t kl__11overwritten__3i32( int32_t kl_a_1 )
+int32_t kl_6pinned_11overwritten__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     int32_t kl_x_2;
@@ -32,7 +32,7 @@ int32_t kl__11overwritten__3i32( int32_t kl_a_1 )
 }
 
 #line 16 "opt/pinned/main.kl"
-int32_t kl__8borrowed__3i32( int32_t kl_a_1 )
+int32_t kl_6pinned_8borrowed__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     int32_t kl_x_2;
@@ -50,19 +50,19 @@ int32_t kl__8borrowed__3i32( int32_t kl_a_1 )
 }
 
 #line 24 "opt/pinned/main.kl"
-int32_t kl__7counted__3i32( int32_t kl_a_1 )
+int32_t kl_6pinned_7counted__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
 #line 26 "opt/pinned/main.kl"
-    kl__count__G = 1;
-    kl__count__G = kl_a_1;
+    kl_6pinned_count__G = 1;
+    kl_6pinned_count__G = kl_a_1;
     kl_t0 = kl_a_1;
 #line 28 "opt/pinned/main.kl"
     return kl_t0;
 }
 
 #line 31 "opt/pinned/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_6pinned_4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_t1;
@@ -72,7 +72,7 @@ int32_t kl__4main__( void )
     int32_t kl_t5;
     bool kl_t6;
 #line 33 "opt/pinned/main.kl"
-    kl_t1 = kl__11overwritten__3i32( 4 );
+    kl_t1 = kl_6pinned_11overwritten__3i32( 4 );
 #line 33 "opt/pinned/main.kl"
     kl_t2 = kl_t1 != 8;
 #line 33 "opt/pinned/main.kl"
@@ -83,7 +83,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb2:
 #line 38 "opt/pinned/main.kl"
-    kl_t3 = kl__8borrowed__3i32( 5 );
+    kl_t3 = kl_6pinned_8borrowed__3i32( 5 );
 #line 38 "opt/pinned/main.kl"
     kl_t4 = kl_t3 != 5;
 #line 38 "opt/pinned/main.kl"
@@ -94,7 +94,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb4:
 #line 43 "opt/pinned/main.kl"
-    kl_t5 = kl__7counted__3i32( 6 );
+    kl_t5 = kl_6pinned_7counted__3i32( 6 );
 #line 43 "opt/pinned/main.kl"
     kl_t6 = kl_t5 != 6;
 #line 43 "opt/pinned/main.kl"
@@ -114,7 +114,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 31 "opt/pinned/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_6pinned_4main__(  );
 #line 31 "opt/pinned/main.kl"
     return kl_t0;
 #line 31 "opt/pinned/main.kl"

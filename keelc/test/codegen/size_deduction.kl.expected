@@ -301,7 +301,7 @@ void kl_1t7console_6eprint__4bool_7textual( bool kl_value_1, struct kl_7prelude_
 
 struct kl_7prelude_str;
 struct kl__A3_3u64;
-struct kl__Bits__IV3_E;
+struct kl_7codegen_Bits__IV3_E;
 struct kl__A3_3i32;
 struct kl__A4_3i32;
 
@@ -324,11 +324,11 @@ struct kl__A3_3u64
 };
 _Static_assert( sizeof( struct kl__A3_3u64 ) == 24 && _Alignof( struct kl__A3_3u64 ) == 8, "layout" );
 
-struct kl__Bits__IV3_E
+struct kl_7codegen_Bits__IV3_E
 {
     struct kl__A3_3u64 kl_words;
 };
-_Static_assert( sizeof( struct kl__Bits__IV3_E ) == 24 && _Alignof( struct kl__Bits__IV3_E ) == 8 && offsetof( struct kl__Bits__IV3_E, kl_words ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Bits__IV3_E ) == 24 && _Alignof( struct kl_7codegen_Bits__IV3_E ) == 8 && offsetof( struct kl_7codegen_Bits__IV3_E, kl_words ) == 0, "layout" );
 
 struct kl__A3_3i32
 {
@@ -350,13 +350,13 @@ struct kl_7prelude_textual__vtable
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-uint64_t kl__5which__L3i32( int32_t*, uint64_t );
-struct kl__run__L3i32__ref kl__4view__A3_3i32( struct kl__A3_3i32* );
-int32_t kl__4main__( void );
-uint64_t kl__3sum__IV3_E__A3_3i32( struct kl__A3_3i32* );
-uint64_t kl__3sum__IV4_E__A4_3i32( struct kl__A4_3i32* );
-uint64_t kl__5which__IV3_E__A3_3i32( struct kl__A3_3i32* );
-uint64_t kl__9first_set__IV3_E__4BitsIV3_E( struct kl__Bits__IV3_E* );
+uint64_t kl_7codegen_5which__L3i32( int32_t*, uint64_t );
+struct kl__run__L3i32__ref kl_7codegen_4view__A3_3i32( struct kl__A3_3i32* );
+int32_t kl_7codegen_4main__( void );
+uint64_t kl_7codegen_3sum__IV3_E__A3_3i32( struct kl__A3_3i32* );
+uint64_t kl_7codegen_3sum__IV4_E__A4_3i32( struct kl__A4_3i32* );
+uint64_t kl_7codegen_5which__IV3_E__A3_3i32( struct kl__A3_3i32* );
+uint64_t kl_7codegen_9first_set__IV3_E__Q7codegen4BitsIV3_E( struct kl_7codegen_Bits__IV3_E* );
 void kl_1t7console_5print__3u64_7textual( uint64_t, struct kl_7prelude_textual__ref );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 void kl_7prelude_str__drop( void* );
@@ -365,7 +365,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 20 "codegen/size_deduction.kl"
-uint64_t kl__5which__L3i32( int32_t* kl_t1_data, uint64_t kl_t1_size )
+uint64_t kl_7codegen_5which__L3i32( int32_t* kl_t1_data, uint64_t kl_t1_size )
 {
     uint64_t kl_t0;
 #line 20 "codegen/size_deduction.kl"
@@ -377,7 +377,7 @@ uint64_t kl__5which__L3i32( int32_t* kl_t1_data, uint64_t kl_t1_size )
 }
 
 #line 42 "codegen/size_deduction.kl"
-struct kl__run__L3i32__ref kl__4view__A3_3i32( struct kl__A3_3i32* kl_a_1 )
+struct kl__run__L3i32__ref kl_7codegen_4view__A3_3i32( struct kl__A3_3i32* kl_a_1 )
 {
     struct kl__run__L3i32__ref kl_t0;
     uint64_t kl_t2;
@@ -394,7 +394,7 @@ struct kl__run__L3i32__ref kl__4view__A3_3i32( struct kl__A3_3i32* kl_a_1 )
 }
 
 #line 47 "codegen/size_deduction.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     struct kl__A3_3i32 kl_arr_1;
@@ -437,13 +437,13 @@ int32_t kl__4main__( void )
     uint8_t* kl_t44;
     struct kl_7prelude_str* kl_t46;
     struct kl_7prelude_textual__ref kl_t47;
-    struct kl__Bits__IV3_E kl_b_49;
-    struct kl__Bits__IV3_E kl_t50;
+    struct kl_7codegen_Bits__IV3_E kl_b_49;
+    struct kl_7codegen_Bits__IV3_E kl_t50;
     struct kl__A3_3u64 kl_t51;
     uint64_t kl_t52;
     uint64_t kl_t53;
     uint64_t kl_t54;
-    struct kl__Bits__IV3_E* kl_t55;
+    struct kl_7codegen_Bits__IV3_E* kl_t55;
     uint64_t kl_t56;
     struct kl_7prelude_str kl_t57;
     struct kl_7prelude_str* kl_t58;
@@ -477,7 +477,7 @@ int32_t kl__4main__( void )
 #line 51 "codegen/size_deduction.kl"
     kl_t6 = &kl_arr_1;
 #line 51 "codegen/size_deduction.kl"
-    kl_t7 = kl__3sum__IV3_E__A3_3i32( kl_t6 );
+    kl_t7 = kl_7codegen_3sum__IV3_E__A3_3i32( kl_t6 );
 #line 41 "../test_lib/console.kl"
     kl_t9 = &kl_t8;
 #line 41 "../test_lib/console.kl"
@@ -508,7 +508,7 @@ int32_t kl__4main__( void )
 #line 52 "codegen/size_deduction.kl"
     kl_t20 = &kl_t15;
 #line 52 "codegen/size_deduction.kl"
-    kl_t21 = kl__3sum__IV4_E__A4_3i32( kl_t20 );
+    kl_t21 = kl_7codegen_3sum__IV4_E__A4_3i32( kl_t20 );
 #line 41 "../test_lib/console.kl"
     kl_t23 = &kl_t22;
 #line 41 "../test_lib/console.kl"
@@ -523,7 +523,7 @@ int32_t kl__4main__( void )
     kl_1t7console_5print__3u64_7textual( kl_t21, kl_t27 );
     kl_t29 = &kl_arr_1;
 #line 53 "codegen/size_deduction.kl"
-    kl_t30 = kl__5which__IV3_E__A3_3i32( kl_t29 );
+    kl_t30 = kl_7codegen_5which__IV3_E__A3_3i32( kl_t29 );
 #line 41 "../test_lib/console.kl"
     kl_t32 = &kl_t31;
 #line 41 "../test_lib/console.kl"
@@ -538,11 +538,11 @@ int32_t kl__4main__( void )
     kl_1t7console_5print__3u64_7textual( kl_t30, kl_t36 );
     kl_t38 = &kl_arr_1;
 #line 54 "codegen/size_deduction.kl"
-    kl_t39 = kl__4view__A3_3i32( kl_t38 );
+    kl_t39 = kl_7codegen_4view__A3_3i32( kl_t38 );
 #line 54 "codegen/size_deduction.kl"
     kl_t40 = kl_t39;
 #line 54 "codegen/size_deduction.kl"
-    kl_t41 = kl__5which__L3i32( ( kl_t40 ).data, ( kl_t40 ).size );
+    kl_t41 = kl_7codegen_5which__L3i32( ( kl_t40 ).data, ( kl_t40 ).size );
 #line 41 "../test_lib/console.kl"
     kl_t43 = &kl_t42;
 #line 41 "../test_lib/console.kl"
@@ -573,7 +573,7 @@ int32_t kl__4main__( void )
     kl_b_49 = kl_t50;
     kl_t55 = &kl_b_49;
 #line 57 "codegen/size_deduction.kl"
-    kl_t56 = kl__9first_set__IV3_E__4BitsIV3_E( kl_t55 );
+    kl_t56 = kl_7codegen_9first_set__IV3_E__Q7codegen4BitsIV3_E( kl_t55 );
 #line 41 "../test_lib/console.kl"
     kl_t58 = &kl_t57;
 #line 41 "../test_lib/console.kl"
@@ -592,7 +592,7 @@ int32_t kl__4main__( void )
 }
 
 #line 5 "codegen/size_deduction.kl"
-uint64_t kl__3sum__IV3_E__A3_3i32( struct kl__A3_3i32* kl_a_1 )
+uint64_t kl_7codegen_3sum__IV3_E__A3_3i32( struct kl__A3_3i32* kl_a_1 )
 {
     uint64_t kl_t0;
     uint64_t kl_s_2;
@@ -673,7 +673,7 @@ uint64_t kl__3sum__IV3_E__A3_3i32( struct kl__A3_3i32* kl_a_1 )
 }
 
 #line 5 "codegen/size_deduction.kl"
-uint64_t kl__3sum__IV4_E__A4_3i32( struct kl__A4_3i32* kl_a_1 )
+uint64_t kl_7codegen_3sum__IV4_E__A4_3i32( struct kl__A4_3i32* kl_a_1 )
 {
     uint64_t kl_t0;
     uint64_t kl_s_2;
@@ -754,7 +754,7 @@ uint64_t kl__3sum__IV4_E__A4_3i32( struct kl__A4_3i32* kl_a_1 )
 }
 
 #line 15 "codegen/size_deduction.kl"
-uint64_t kl__5which__IV3_E__A3_3i32( struct kl__A3_3i32* kl_t1 )
+uint64_t kl_7codegen_5which__IV3_E__A3_3i32( struct kl__A3_3i32* kl_t1 )
 {
     uint64_t kl_t0;
     ( void ) kl_t1;
@@ -765,7 +765,7 @@ uint64_t kl__5which__IV3_E__A3_3i32( struct kl__A3_3i32* kl_t1 )
 }
 
 #line 30 "codegen/size_deduction.kl"
-uint64_t kl__9first_set__IV3_E__4BitsIV3_E( struct kl__Bits__IV3_E* kl_b_1 )
+uint64_t kl_7codegen_9first_set__IV3_E__Q7codegen4BitsIV3_E( struct kl_7codegen_Bits__IV3_E* kl_b_1 )
 {
     uint64_t kl_t0;
     uint64_t kl_i_2;
@@ -829,7 +829,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 47 "codegen/size_deduction.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 47 "codegen/size_deduction.kl"
     return kl_t0;
 #line 47 "codegen/size_deduction.kl"

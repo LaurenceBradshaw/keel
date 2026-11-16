@@ -1,1 +1,1 @@
---debug -O0 --emit-c --package kl=../../keel_stl/src --package t=../test_lib
+--debug -O0 --emit-c --package ../../keel_stl/src --package ../test_lib

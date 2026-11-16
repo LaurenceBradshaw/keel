@@ -45,8 +45,8 @@ void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-void kl__7nothing__( void );
-int32_t kl__4main__( void );
+void kl_9void_list_7nothing__( void );
+int32_t kl_9void_list_4main__( void );
 void kl_2kl4list_4list__I4voidE__RQ2kl4listI4voidE__ctor( struct kl_2kl4list_list__I4voidE* );
 void kl_2kl4list_4push__I4voidE__SQ2kl4listI4voidE_M4void( struct kl_2kl4list_list__I4voidE* );
 void kl_2kl4list_3pop__I4voidE__SQ2kl4listI4voidE( struct kl_2kl4list_list__I4voidE* );
@@ -64,14 +64,14 @@ void kl_2kl4list_list__I4voidE__drop( void* );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 
 #line 5 "void_list/main.kl"
-void kl__7nothing__( void )
+void kl_9void_list_7nothing__( void )
 {
     return;
 #line 7 "void_list/main.kl"
 }
 
 #line 9 "void_list/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_9void_list_4main__( void )
 {
     int32_t kl_t0;
     struct kl_2kl4list_list__I4voidE kl_xs_1;
@@ -105,7 +105,7 @@ int32_t kl__4main__( void )
     bb2:
     kl_t6 = &kl_xs_1;
 #line 14 "void_list/main.kl"
-    kl__7nothing__(  );
+    kl_9void_list_7nothing__(  );
 #line 14 "void_list/main.kl"
     kl_2kl4list_4push__I4voidE__SQ2kl4listI4voidE_M4void( kl_t6 );
 #line 12 "void_list/main.kl"
@@ -117,7 +117,7 @@ int32_t kl__4main__( void )
     kl_2kl4list_3pop__I4voidE__SQ2kl4listI4voidE( kl_t10 );
     kl_t12 = &kl_xs_1;
 #line 17 "void_list/main.kl"
-    kl__7nothing__(  );
+    kl_9void_list_7nothing__(  );
 #line 17 "void_list/main.kl"
     kl_2kl4list_6insert__I4voidE__SQ2kl4listI4voidE_3u64_M4void( kl_t12, 1 );
     kl_t15 = &kl_xs_1;
@@ -734,7 +734,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 9 "void_list/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_9void_list_4main__(  );
 #line 9 "void_list/main.kl"
     return kl_t0;
 #line 9 "void_list/main.kl"

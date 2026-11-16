@@ -1,1 +1,1 @@
---check --package prelude=.
+--check --package driver/prelude_package/prelude

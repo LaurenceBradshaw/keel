@@ -3,24 +3,24 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Point;
+struct kl_7codegen_Point;
 struct kl_7prelude_str;
 struct kl__A4_3i32;
 struct kl__A2_3f64;
 struct kl__A3_Q7prelude3str;
-struct kl__A2_5Point;
+struct kl__A2_Q7codegen5Point;
 
 struct kl__run__L3i32__ref { int32_t* data; uint64_t size; };
 struct kl__run__L3f64__ref { double* data; uint64_t size; };
 struct kl__run__LQ7prelude3str__ref { struct kl_7prelude_str* data; uint64_t size; };
-struct kl__run__L5Point__ref { struct kl__Point* data; uint64_t size; };
+struct kl__run__LQ7codegen5Point__ref { struct kl_7codegen_Point* data; uint64_t size; };
 
-struct kl__Point
+struct kl_7codegen_Point
 {
     int32_t kl_x;
     int32_t kl_y;
 };
-_Static_assert( sizeof( struct kl__Point ) == 8 && _Alignof( struct kl__Point ) == 4 && offsetof( struct kl__Point, kl_x ) == 0 && offsetof( struct kl__Point, kl_y ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Point ) == 8 && _Alignof( struct kl_7codegen_Point ) == 4 && offsetof( struct kl_7codegen_Point, kl_x ) == 0 && offsetof( struct kl_7codegen_Point, kl_y ) == 4, "layout" );
 
 struct kl_7prelude_str
 {
@@ -47,23 +47,23 @@ struct kl__A3_Q7prelude3str
 };
 _Static_assert( sizeof( struct kl__A3_Q7prelude3str ) == 48 && _Alignof( struct kl__A3_Q7prelude3str ) == 8, "layout" );
 
-struct kl__A2_5Point
+struct kl__A2_Q7codegen5Point
 {
-    struct kl__Point e[2];
+    struct kl_7codegen_Point e[2];
 };
-_Static_assert( sizeof( struct kl__A2_5Point ) == 16 && _Alignof( struct kl__A2_5Point ) == 4, "layout" );
+_Static_assert( sizeof( struct kl__A2_Q7codegen5Point ) == 16 && _Alignof( struct kl__A2_Q7codegen5Point ) == 4, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__4main__( void );
-int32_t kl__5total__I3i32E__L3i32( int32_t*, uint64_t );
-double kl__5total__I3f64E__L3f64( double*, uint64_t );
-uint64_t kl__5count__IQ7prelude3strE__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
-uint64_t kl__5count__I5PointE__L5Point( struct kl__Point*, uint64_t );
+int32_t kl_7codegen_4main__( void );
+int32_t kl_7codegen_5total__I3i32E__L3i32( int32_t*, uint64_t );
+double kl_7codegen_5total__I3f64E__L3f64( double*, uint64_t );
+uint64_t kl_7codegen_5count__IQ7prelude3strE__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
+uint64_t kl_7codegen_5count__IQ7codegen5PointE__LQ7codegen5Point( struct kl_7codegen_Point*, uint64_t );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 
 #line 24 "codegen/generic_run_from_array.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     struct kl__A4_3i32 kl_numbers_1;
@@ -100,10 +100,10 @@ int32_t kl__4main__( void )
     uint64_t kl_t35;
     uint64_t kl_t36;
     uint64_t kl_t37;
-    struct kl__A2_5Point kl_points_38;
-    struct kl__A2_5Point kl_t39;
-    struct kl__Point kl_t40;
-    struct kl__Point kl_t41;
+    struct kl__A2_Q7codegen5Point kl_points_38;
+    struct kl__A2_Q7codegen5Point kl_t39;
+    struct kl_7codegen_Point kl_t40;
+    struct kl_7codegen_Point kl_t41;
     uint64_t kl_t42;
     uint64_t kl_t43;
     bool kl_t44;
@@ -113,8 +113,8 @@ int32_t kl__4main__( void )
     uint64_t kl_t48;
     bool kl_t49;
     uint64_t kl_t50;
-    struct kl__Point* kl_t51;
-    struct kl__run__L5Point__ref kl_t52;
+    struct kl_7codegen_Point* kl_t51;
+    struct kl__run__LQ7codegen5Point__ref kl_t52;
     uint64_t kl_t53;
     bool kl_t54;
     ( void ) kl_t3;
@@ -156,7 +156,7 @@ int32_t kl__4main__( void )
 #line 27 "codegen/generic_run_from_array.kl"
     kl_t9 = ( struct kl__run__L3i32__ref ) { ( int32_t* ) kl_t8, 4 };
 #line 27 "codegen/generic_run_from_array.kl"
-    kl_t10 = kl__5total__I3i32E__L3i32( ( kl_t9 ).data, ( kl_t9 ).size );
+    kl_t10 = kl_7codegen_5total__I3i32E__L3i32( ( kl_t9 ).data, ( kl_t9 ).size );
 #line 27 "codegen/generic_run_from_array.kl"
     kl_t11 = kl_t10 != 10;
 #line 27 "codegen/generic_run_from_array.kl"
@@ -182,7 +182,7 @@ int32_t kl__4main__( void )
 #line 33 "codegen/generic_run_from_array.kl"
     kl_t18 = ( struct kl__run__L3f64__ref ) { ( double* ) kl_t17, 2 };
 #line 33 "codegen/generic_run_from_array.kl"
-    kl_t19 = kl__5total__I3f64E__L3f64( ( kl_t18 ).data, ( kl_t18 ).size );
+    kl_t19 = kl_7codegen_5total__I3f64E__L3f64( ( kl_t18 ).data, ( kl_t18 ).size );
 #line 33 "codegen/generic_run_from_array.kl"
     kl_t20 = kl_t19 != 0.75;
 #line 33 "codegen/generic_run_from_array.kl"
@@ -247,7 +247,7 @@ int32_t kl__4main__( void )
 #line 40 "codegen/generic_run_from_array.kl"
     kl_t47 = ( struct kl__run__LQ7prelude3str__ref ) { ( struct kl_7prelude_str* ) kl_t46, 3 };
 #line 40 "codegen/generic_run_from_array.kl"
-    kl_t48 = kl__5count__IQ7prelude3strE__LQ7prelude3str( ( kl_t47 ).data, ( kl_t47 ).size );
+    kl_t48 = kl_7codegen_5count__IQ7prelude3strE__LQ7prelude3str( ( kl_t47 ).data, ( kl_t47 ).size );
 #line 40 "codegen/generic_run_from_array.kl"
     kl_t49 = kl_t48 != 3;
 #line 40 "codegen/generic_run_from_array.kl"
@@ -260,9 +260,9 @@ int32_t kl__4main__( void )
 #line 40 "codegen/generic_run_from_array.kl"
     kl_t51 = &kl_points_38.e[kl_t50];
 #line 40 "codegen/generic_run_from_array.kl"
-    kl_t52 = ( struct kl__run__L5Point__ref ) { ( struct kl__Point* ) kl_t51, 2 };
+    kl_t52 = ( struct kl__run__LQ7codegen5Point__ref ) { ( struct kl_7codegen_Point* ) kl_t51, 2 };
 #line 40 "codegen/generic_run_from_array.kl"
-    kl_t53 = kl__5count__I5PointE__L5Point( ( kl_t52 ).data, ( kl_t52 ).size );
+    kl_t53 = kl_7codegen_5count__IQ7codegen5PointE__LQ7codegen5Point( ( kl_t52 ).data, ( kl_t52 ).size );
 #line 40 "codegen/generic_run_from_array.kl"
     kl_t54 = kl_t53 != 2;
 #line 40 "codegen/generic_run_from_array.kl"
@@ -284,7 +284,7 @@ int32_t kl__4main__( void )
 }
 
 #line 9 "codegen/generic_run_from_array.kl"
-int32_t kl__5total__I3i32E__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
+int32_t kl_7codegen_5total__I3i32E__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
 {
     int32_t kl_t0;
 #line 9 "codegen/generic_run_from_array.kl"
@@ -355,7 +355,7 @@ int32_t kl__5total__I3i32E__L3i32( int32_t* kl_values_1_data, uint64_t kl_values
 }
 
 #line 9 "codegen/generic_run_from_array.kl"
-double kl__5total__I3f64E__L3f64( double* kl_values_1_data, uint64_t kl_values_1_size )
+double kl_7codegen_5total__I3f64E__L3f64( double* kl_values_1_data, uint64_t kl_values_1_size )
 {
     double kl_t0;
 #line 9 "codegen/generic_run_from_array.kl"
@@ -417,7 +417,7 @@ double kl__5total__I3f64E__L3f64( double* kl_values_1_data, uint64_t kl_values_1
 }
 
 #line 19 "codegen/generic_run_from_array.kl"
-uint64_t kl__5count__IQ7prelude3strE__LQ7prelude3str( struct kl_7prelude_str* kl_values_1_data, uint64_t kl_values_1_size )
+uint64_t kl_7codegen_5count__IQ7prelude3strE__LQ7prelude3str( struct kl_7prelude_str* kl_values_1_data, uint64_t kl_values_1_size )
 {
     uint64_t kl_t0;
 #line 19 "codegen/generic_run_from_array.kl"
@@ -431,11 +431,11 @@ uint64_t kl__5count__IQ7prelude3strE__LQ7prelude3str( struct kl_7prelude_str* kl
 }
 
 #line 19 "codegen/generic_run_from_array.kl"
-uint64_t kl__5count__I5PointE__L5Point( struct kl__Point* kl_values_1_data, uint64_t kl_values_1_size )
+uint64_t kl_7codegen_5count__IQ7codegen5PointE__LQ7codegen5Point( struct kl_7codegen_Point* kl_values_1_data, uint64_t kl_values_1_size )
 {
     uint64_t kl_t0;
 #line 19 "codegen/generic_run_from_array.kl"
-    struct kl__run__L5Point__ref kl_values_1 = { kl_values_1_data, kl_values_1_size };
+    struct kl__run__LQ7codegen5Point__ref kl_values_1 = { kl_values_1_data, kl_values_1_size };
     uint64_t kl_t2;
     kl_t2 = ( kl_values_1 ).size;
 #line 21 "codegen/generic_run_from_array.kl"
@@ -448,7 +448,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 24 "codegen/generic_run_from_array.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 24 "codegen/generic_run_from_array.kl"
     return kl_t0;
 #line 24 "codegen/generic_run_from_array.kl"

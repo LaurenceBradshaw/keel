@@ -86,7 +86,7 @@ The *Keel* output channel has a line for each check: what it found and how long 
 keelc could not run.
 
 `sample/` is for checking the highlighting by eye: two modules and a package, using every kind of
-Keel syntax. From this folder, it passes `keelc --check --package extra=sample/extra sample/main.kl`.
+Keel syntax. From this folder, it passes `keelc --check --package sample/extra sample/main.kl`.
 
 ## Names
 

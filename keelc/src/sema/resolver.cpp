@@ -183,13 +183,15 @@ Resolution Resolver::run()
                                              ? interner_.find( qualified( interner_, package, interner_.text( name ) ) )
                                              : Symbol_id {};
 
-                if( modules_.is_package( name ) || ( nested.is_valid() && modules_.is_package( nested ) ) )
+                // Only a package the type's own files can write: a program named `optional` leaves
+                // kl's `optional` alone.
+                const bool clashes =
+                    modules_.is_package( name ) && ( name == package || modules_.package_imports( package, name ) );
+                if( clashes || ( nested.is_valid() && modules_.is_package( nested ) ) )
                 {
                     reporter_.error_at(
                         ast_.name_span( decl ),
-                        fmt::format(
-                            "`{}` is the name of a package", interner_.text( modules_.is_package( name ) ? name : nested )
-                        ),
+                        fmt::format( "`{}` is the name of a package", interner_.text( clashes ? name : nested ) ),
                         "a type may not take one"
                     );
                 }
@@ -1321,7 +1323,14 @@ bool Resolver::refuse_module( Node_id named, Node_id use )
         ast_.span( named ),
         fmt::format( "`{}` is a module; its names are written without it", spelt ),
         unresolved_[use.v] ? std::string {}
-                           : fmt::format( "write `{}`", qualified( interner_, package, interner_.text( name ) ) )
+                           : fmt::format(
+                                 "write `{}`",
+                                 qualified(
+                                     interner_,
+                                     package == modules_.package_of( ast_.span( use ).file ) ? Symbol_id {} : package,
+                                     interner_.text( name )
+                                 )
+                             )
     );
 
     return true;
@@ -1336,7 +1345,27 @@ Symbol_id Resolver::package_named( Node_id qualifier ) const
     }
 
     const Symbol_id package = interner_.find( package_text( ast_, interner_, qualifier ) );
-    return package.is_valid() && modules_.is_package( package ) ? package : Symbol_id {};
+    if( !package.is_valid() || !modules_.is_package( package ) )
+    {
+        return Symbol_id {};
+    }
+
+    // A package the file is not in and imports nothing from gives way to a type of its own package's
+    // or the prelude's of that name, as kl's `optional` to a program named `optional`.
+    const File_id file = ast_.span( qualifier ).file;
+    if( ast_.kind( qualifier ) == Node_kind::Name_expr && package != modules_.package_of( file ) &&
+        !modules_.imports_from( file, package ) )
+    {
+        for( const Symbol_id owner : { modules_.package_of( file ), modules_.prelude_package() } )
+        {
+            const auto scope = packages_.find( owner );
+            if( scope != packages_.end() && scope->second.names.contains( package ) )
+            {
+                return Symbol_id {};
+            }
+        }
+    }
+    return package;
 }
 
 // The enum, struct or class a literal's qualifier names, as `Shape` in `Shape::Circle { 1.0 }`; invalid otherwise.
@@ -1458,8 +1487,10 @@ std::string Resolver::variant_hint( Symbol_id name, Node_id use ) const
             const auto variants = ast_.variants( decl );
             if( std::ranges::any_of( variants, [&]( Node_id v ) { return ast_.name( v ) == name; } ) )
             {
+                // The file's own package is written bare.
+                const Symbol_id written = package == modules_.package_of( file ) ? Symbol_id {} : Symbol_id { package };
                 spelt.push_back( fmt::format(
-                    "`{}::{}`", qualified( interner_, package, interner_.text( ast_.name( decl ) ) ), interner_.text( name )
+                    "`{}::{}`", qualified( interner_, written, interner_.text( ast_.name( decl ) ) ), interner_.text( name )
                 ) );
             }
         }
@@ -1692,18 +1723,23 @@ bool Resolver::refuse_builtin_name( Symbol_id name, Node_id decl )
 
 std::string Resolver::module_name( File_id file ) const
 {
-    return keel::module_name( modules_, sm_, interner_, file );
+    return keel::shown_module_name( modules_, sm_, interner_, file );
 }
 
 void Resolver::refuse_unimported( Node_id use, Node_id decl )
 {
     std::string_view  name   = interner_.text( ast_.name( decl ) );
-    const std::string module = module_name( ast_.span( decl ).file );
+    const File_id     file   = ast_.span( decl ).file;
+    const std::string module = module_name( file );
+    // A module of the file's own package is imported bare.
+    const std::string spelt = modules_.package_of( file ) == modules_.package_of( ast_.span( use ).file )
+                                  ? std::filesystem::path( sm_.file( file ).path ).stem().generic_string()
+                                  : module;
 
     reporter_.error_at(
         ast_.span( use ),
         fmt::format( "`{}` is in `{}`, which this file does not import", name, module ),
-        fmt::format( "write `import {};` at the top of the file", module )
+        fmt::format( "write `import {};` at the top of the file", spelt )
     );
 }
 
@@ -3578,7 +3614,7 @@ TEST_CASE( "resolver_looks_in_the_prelude_after_the_file's_own_package", "[sema]
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "`main` is not declared" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`main` is in the package `" ) != std::string::npos );
     }
 }
 
@@ -3767,8 +3803,8 @@ TEST_CASE( "resolver_names_another_package_through_its_name", "[sema][resolve][p
         REQUIRE( p.rendered().find( "no module of `kl` that this file imports declares `area`" ) != std::string::npos );
     }
 
-    // The program's package has no name to qualify with, so nothing in `kl` is offered one.
-    SECTION( "a package cannot name the program" )
+    // The program's package is named for its folder, so a package's file is offered its spelling.
+    SECTION( "a package names the program through its package" )
     {
         const Resolved_program p( {
             { "main.kl", "import kl::geom;\ni32 helper() { return 1; }\ni32 main() { return kl::area(); }\n" },
@@ -3777,7 +3813,7 @@ TEST_CASE( "resolver_names_another_package_through_its_name", "[sema][resolve][p
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "`helper` is not declared" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`helper` is in the package `" ) != std::string::npos );
     }
 
     // `kl` is named on the command line, so it is a package before anything is imported from it.
@@ -3913,16 +3949,29 @@ TEST_CASE( "resolver_names_a_package's_types_and_globals", "[sema][resolve][pack
     }
 
     // Otherwise `kl::x` could name a member of the type as well as a declaration of the package.
-    SECTION( "a type may not take a package's name" )
+    SECTION( "a type may not take the name of a package its files import" )
     {
         const Resolved_program p( {
-            { "main.kl", "struct kl { i32 x; };\nenum kl_free { A };\ni32 main() { return 0; }\n" },
+            { "main.kl", "import kl::geom;\nstruct kl { i32 x; };\nenum kl_free { A };\ni32 main() { return kl::area(); }\n" },
+            { "kl/geom.kl", "i32 area() { return 1; }\n" },
         } );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "`kl` is the name of a package" ) != std::string::npos );
-        REQUIRE( p.rendered().find( "main.kl:1:8" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "main.kl:2:8" ) != std::string::npos );
+    }
+
+    // Nothing here can write `kl::` for the package, so the type keeps the name.
+    SECTION( "a type may take the name of a package nothing beside it imports" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "struct kl { i32 x; };\ni32 main() { return 0; }\n" },
+            { "kl/geom.kl", "i32 area() { return 1; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
     }
 
     // Neither can stand before `::`, so neither can be mistaken for the package.
@@ -4082,7 +4131,8 @@ TEST_CASE( "resolver_reports_an_unknown_interface", "[sema][resolve][interfaces]
 TEST_CASE( "resolver_refuses_an_interface_named_after_a_package", "[sema][resolve][interfaces][packages]" )
 {
     const Resolved_program p( {
-        { "main.kl", "interface kl { void f(); };\ni32 main() { return 0; }\n" },
+        { "main.kl", "import kl::geom;\ninterface kl { void f(); };\ni32 main() { return kl::area(); }\n" },
+        { "kl/geom.kl", "i32 area() { return 1; }\n" },
     } );
 
     INFO( p.rendered() );

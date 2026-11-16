@@ -3,48 +3,48 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Square;
+struct kl_3opt_Square;
 
-struct kl__shape__vtable;
-struct kl__shape__ref { void* self; const struct kl__shape__vtable* vtable; };
+struct kl_3opt_shape__vtable;
+struct kl_3opt_shape__ref { void* self; const struct kl_3opt_shape__vtable* vtable; };
 
 typedef int32_t ( *kl__fn__FMP4voidE3i32 )( void* );
 
-struct kl__Square
+struct kl_3opt_Square
 {
     int32_t kl_side_;
 };
-_Static_assert( sizeof( struct kl__Square ) == 4 && _Alignof( struct kl__Square ) == 4 && offsetof( struct kl__Square, kl_side_ ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_3opt_Square ) == 4 && _Alignof( struct kl_3opt_Square ) == 4 && offsetof( struct kl_3opt_Square, kl_side_ ) == 0, "layout" );
 
-struct kl__shape__vtable
+struct kl_3opt_shape__vtable
 {
     void ( *drop )( void* );
     int32_t ( *kl__4area__ )( void* );
 };
 
-void kl__6Square__R6Square_3i32__ctor( struct kl__Square*, int32_t );
-int32_t kl__4area__S6Square( struct kl__Square* );
-int32_t kl__5twice__S6Square( struct kl__Square* );
-int32_t kl__4side__6Square( struct kl__Square* );
-int32_t kl__7forward__6Square( struct kl__Square* );
-struct kl__Square* kl__4keep__6Square( struct kl__Square* );
-int32_t kl__7measure__5shape( struct kl__shape__ref );
-int32_t kl__5widen__6Square( struct kl__Square* );
-int32_t kl__4main__( void );
-void kl__Square__drop( void* );
-int32_t kl__Square__as_kl__shape__kl__4area__( void* );
+void kl_3opt_6Square__RQ3opt6Square_3i32__ctor( struct kl_3opt_Square*, int32_t );
+int32_t kl_3opt_4area__SQ3opt6Square( struct kl_3opt_Square* );
+int32_t kl_3opt_5twice__SQ3opt6Square( struct kl_3opt_Square* );
+int32_t kl_3opt_4side__Q3opt6Square( struct kl_3opt_Square* );
+int32_t kl_3opt_7forward__Q3opt6Square( struct kl_3opt_Square* );
+struct kl_3opt_Square* kl_3opt_4keep__Q3opt6Square( struct kl_3opt_Square* );
+int32_t kl_3opt_7measure__5shape( struct kl_3opt_shape__ref );
+int32_t kl_3opt_5widen__Q3opt6Square( struct kl_3opt_Square* );
+int32_t kl_3opt_4main__( void );
+void kl_3opt_Square__drop( void* );
+int32_t kl_3opt_Square__as_kl_3opt_shape__kl__4area__( void* );
 
-int32_t kl__Square__as_kl__shape__kl__4area__( void* kl_t1 )
+int32_t kl_3opt_Square__as_kl_3opt_shape__kl__4area__( void* kl_t1 )
 {
     int32_t kl_t0;
-    struct kl__Square* kl_this_2;
-    kl_this_2 = ( struct kl__Square* ) kl_t1;
+    struct kl_3opt_Square* kl_this_2;
+    kl_this_2 = ( struct kl_3opt_Square* ) kl_t1;
     kl_t0 = ( *kl_this_2 ).kl_side_ * ( *kl_this_2 ).kl_side_;
     return kl_t0;
 }
 
 #line 13 "opt/borrows.kl"
-void kl__6Square__R6Square_3i32__ctor( struct kl__Square* kl_this_1, int32_t kl_side_2 )
+void kl_3opt_6Square__RQ3opt6Square_3i32__ctor( struct kl_3opt_Square* kl_this_1, int32_t kl_side_2 )
 {
     ( *kl_this_1 ).kl_side_ = kl_side_2;
     return;
@@ -52,7 +52,7 @@ void kl__6Square__R6Square_3i32__ctor( struct kl__Square* kl_this_1, int32_t kl_
 }
 
 #line 18 "opt/borrows.kl"
-int32_t kl__4area__S6Square( struct kl__Square* kl_this_1 )
+int32_t kl_3opt_4area__SQ3opt6Square( struct kl_3opt_Square* kl_this_1 )
 {
     int32_t kl_t0;
 #line 20 "opt/borrows.kl"
@@ -62,7 +62,7 @@ int32_t kl__4area__S6Square( struct kl__Square* kl_this_1 )
 }
 
 #line 24 "opt/borrows.kl"
-int32_t kl__5twice__S6Square( struct kl__Square* kl_this_1 )
+int32_t kl_3opt_5twice__SQ3opt6Square( struct kl_3opt_Square* kl_this_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
@@ -75,7 +75,7 @@ int32_t kl__5twice__S6Square( struct kl__Square* kl_this_1 )
 }
 
 #line 32 "opt/borrows.kl"
-int32_t kl__4side__6Square( struct kl__Square* kl_s_1 )
+int32_t kl_3opt_4side__Q3opt6Square( struct kl_3opt_Square* kl_s_1 )
 {
     int32_t kl_t0;
 #line 20 "opt/borrows.kl"
@@ -85,7 +85,7 @@ int32_t kl__4side__6Square( struct kl__Square* kl_s_1 )
 }
 
 #line 38 "opt/borrows.kl"
-int32_t kl__7forward__6Square( struct kl__Square* kl_s_1 )
+int32_t kl_3opt_7forward__Q3opt6Square( struct kl_3opt_Square* kl_s_1 )
 {
     int32_t kl_t0;
 #line 20 "opt/borrows.kl"
@@ -95,9 +95,9 @@ int32_t kl__7forward__6Square( struct kl__Square* kl_s_1 )
 }
 
 #line 43 "opt/borrows.kl"
-struct kl__Square* kl__4keep__6Square( struct kl__Square* kl_s_1 )
+struct kl_3opt_Square* kl_3opt_4keep__Q3opt6Square( struct kl_3opt_Square* kl_s_1 )
 {
-    struct kl__Square* kl_t0;
+    struct kl_3opt_Square* kl_t0;
 #line 45 "opt/borrows.kl"
     kl_t0 = kl_s_1;
 #line 45 "opt/borrows.kl"
@@ -105,7 +105,7 @@ struct kl__Square* kl__4keep__6Square( struct kl__Square* kl_s_1 )
 }
 
 #line 48 "opt/borrows.kl"
-int32_t kl__7measure__5shape( struct kl__shape__ref kl_s_1 )
+int32_t kl_3opt_7measure__5shape( struct kl_3opt_shape__ref kl_s_1 )
 {
     int32_t kl_t0;
     kl__fn__FMP4voidE3i32 kl_t2;
@@ -121,7 +121,7 @@ int32_t kl__7measure__5shape( struct kl__shape__ref kl_s_1 )
 }
 
 #line 54 "opt/borrows.kl"
-int32_t kl__5widen__6Square( struct kl__Square* kl_s_1 )
+int32_t kl_3opt_5widen__Q3opt6Square( struct kl_3opt_Square* kl_s_1 )
 {
     int32_t kl_t0;
 #line 20 "opt/borrows.kl"
@@ -131,7 +131,7 @@ int32_t kl__5widen__6Square( struct kl__Square* kl_s_1 )
 }
 
 #line 59 "opt/borrows.kl"
-int32_t kl__4main__( void )
+int32_t kl_3opt_4main__( void )
 {
     int32_t kl_t0;
 #line 84 "opt/borrows.kl"
@@ -140,7 +140,7 @@ int32_t kl__4main__( void )
     return kl_t0;
 }
 
-void kl__Square__drop( void* kl_t1 )
+void kl_3opt_Square__drop( void* kl_t1 )
 {
     ( void ) kl_t1;
 #line 11 "opt/borrows.kl"
@@ -152,7 +152,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 59 "opt/borrows.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_3opt_4main__(  );
 #line 59 "opt/borrows.kl"
     return kl_t0;
 #line 59 "opt/borrows.kl"

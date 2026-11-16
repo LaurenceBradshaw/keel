@@ -4087,7 +4087,7 @@ void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-int32_t kl__4main__( void );
+int32_t kl_9list_walk_4main__( void );
 void kl_2kl4list_4list__I3i32E__RQ2kl4listI3i32E__ctor( struct kl_2kl4list_list__I3i32E* );
 void kl_2kl4list_4push__I3i32E__SQ2kl4listI3i32E_M3i32( struct kl_2kl4list_list__I3i32E*, int32_t );
 void kl_2kl4list_8truncate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
@@ -4117,7 +4117,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 6 "list_walk/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_9list_walk_4main__( void )
 {
     int32_t kl_t0;
     struct kl_2kl4list_list__I3i32E kl_xs_1;
@@ -5174,7 +5174,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 6 "list_walk/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_9list_walk_4main__(  );
 #line 6 "list_walk/main.kl"
     return kl_t0;
 #line 6 "list_walk/main.kl"

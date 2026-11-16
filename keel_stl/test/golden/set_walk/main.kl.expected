@@ -5505,7 +5505,7 @@ void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-int32_t kl__4main__( void );
+int32_t kl_8set_walk_4main__( void );
 void kl_2kl3set_3set__IQ2kl6stringE__RQ2kl3setIQ2kl6stringE__ctor( struct kl_2kl3set_set__IQ2kl6stringE* );
 bool kl_2kl3set_6insert__IQ2kl6stringE__SQ2kl3setIQ2kl6stringE_MQ2kl6string( struct kl_2kl3set_set__IQ2kl6stringE*, struct kl_2kl6string_string );
 bool kl_2kl3set_6remove__IQ2kl6stringE__SQ2kl3setIQ2kl6stringE_Q2kl6string( struct kl_2kl3set_set__IQ2kl6stringE*, struct kl_2kl6string_string* );
@@ -5547,7 +5547,7 @@ uint64_t kl_7prelude_6finish__SQ7prelude6hasher( struct kl_7prelude_hasher* );
 void kl_2kl4list_4list__IQ2kl6stringE__dtor( struct kl_2kl4list_list__IQ2kl6stringE* );
 
 #line 6 "set_walk/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_8set_walk_4main__( void )
 {
     int32_t kl_t0;
     struct kl_2kl3set_set__IQ2kl6stringE kl_keys_1;
@@ -6721,7 +6721,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 6 "set_walk/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_8set_walk_4main__(  );
 #line 6 "set_walk/main.kl"
     return kl_t0;
 #line 6 "set_walk/main.kl"

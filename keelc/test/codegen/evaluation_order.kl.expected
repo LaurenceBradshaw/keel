@@ -3,28 +3,28 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__P;
+struct kl_7codegen_P;
 
-struct kl__P
+struct kl_7codegen_P
 {
     int32_t kl_a;
     int32_t kl_b;
 };
-_Static_assert( sizeof( struct kl__P ) == 8 && _Alignof( struct kl__P ) == 4 && offsetof( struct kl__P, kl_a ) == 0 && offsetof( struct kl__P, kl_b ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_P ) == 8 && _Alignof( struct kl_7codegen_P ) == 4 && offsetof( struct kl_7codegen_P, kl_a ) == 0 && offsetof( struct kl_7codegen_P, kl_b ) == 4, "layout" );
 
-int32_t kl__trace__G;
+int32_t kl_7codegen_trace__G;
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__4note__3i32( int32_t );
-int32_t kl__5first__3i32_3i32_3i32( int32_t, int32_t, int32_t );
-int32_t kl__4main__( void );
+int32_t kl_7codegen_4note__3i32( int32_t );
+int32_t kl_7codegen_5first__3i32_3i32_3i32( int32_t, int32_t, int32_t );
+int32_t kl_7codegen_4main__( void );
 
 #line 6 "codegen/evaluation_order.kl"
-int32_t kl__4note__3i32( int32_t kl_digit_1 )
+int32_t kl_7codegen_4note__3i32( int32_t kl_digit_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -32,7 +32,7 @@ int32_t kl__4note__3i32( int32_t kl_digit_1 )
     bool kl_t4;
     int32_t kl_t5;
 #line 8 "codegen/evaluation_order.kl"
-    kl_t2 = __builtin_mul_overflow( kl__trace__G, 10, &( int32_t ) { 0 } );
+    kl_t2 = __builtin_mul_overflow( kl_7codegen_trace__G, 10, &( int32_t ) { 0 } );
 #line 8 "codegen/evaluation_order.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -40,7 +40,7 @@ int32_t kl__4note__3i32( int32_t kl_digit_1 )
     kl_rt_panic( "codegen/evaluation_order.kl", 8, "arithmetic overflow: trace * 10" );
     bb2:
 #line 8 "codegen/evaluation_order.kl"
-    kl_t3 = kl__trace__G * 10;
+    kl_t3 = kl_7codegen_trace__G * 10;
 #line 8 "codegen/evaluation_order.kl"
     kl_t4 = __builtin_add_overflow( kl_t3, kl_digit_1, &( int32_t ) { 0 } );
 #line 8 "codegen/evaluation_order.kl"
@@ -52,14 +52,14 @@ int32_t kl__4note__3i32( int32_t kl_digit_1 )
 #line 8 "codegen/evaluation_order.kl"
     kl_t5 = kl_t3 + kl_digit_1;
 #line 8 "codegen/evaluation_order.kl"
-    kl__trace__G = kl_t5;
+    kl_7codegen_trace__G = kl_t5;
     kl_t0 = kl_digit_1;
 #line 9 "codegen/evaluation_order.kl"
     return kl_t0;
 }
 
 #line 12 "codegen/evaluation_order.kl"
-int32_t kl__5first__3i32_3i32_3i32( int32_t kl_a_1, int32_t kl_t2, int32_t kl_t3 )
+int32_t kl_7codegen_5first__3i32_3i32_3i32( int32_t kl_a_1, int32_t kl_t2, int32_t kl_t3 )
 {
     int32_t kl_t0;
     ( void ) kl_t2;
@@ -71,7 +71,7 @@ int32_t kl__5first__3i32_3i32_3i32( int32_t kl_a_1, int32_t kl_t2, int32_t kl_t3
 }
 
 #line 23 "codegen/evaluation_order.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_t1;
@@ -89,8 +89,8 @@ int32_t kl__4main__( void )
     bool kl_t14;
     bool kl_t15;
     bool kl_t16;
-    struct kl__P kl_p_17;
-    struct kl__P kl_t18;
+    struct kl_7codegen_P kl_p_17;
+    struct kl_7codegen_P kl_t18;
     int32_t kl_t19;
     int32_t kl_t20;
     bool kl_t21;
@@ -104,14 +104,14 @@ int32_t kl__4main__( void )
     int32_t kl_t29;
     bool kl_t31;
 #line 25 "codegen/evaluation_order.kl"
-    kl_t1 = kl__4note__3i32( 1 );
+    kl_t1 = kl_7codegen_4note__3i32( 1 );
 #line 25 "codegen/evaluation_order.kl"
-    kl_t2 = kl__4note__3i32( 2 );
+    kl_t2 = kl_7codegen_4note__3i32( 2 );
 #line 25 "codegen/evaluation_order.kl"
-    kl_t3 = kl__4note__3i32( 3 );
+    kl_t3 = kl_7codegen_4note__3i32( 3 );
 #line 25 "codegen/evaluation_order.kl"
-    kl__5first__3i32_3i32_3i32( kl_t1, kl_t2, kl_t3 );
-    kl_t5 = kl__trace__G != 123;
+    kl_7codegen_5first__3i32_3i32_3i32( kl_t1, kl_t2, kl_t3 );
+    kl_t5 = kl_7codegen_trace__G != 123;
 #line 26 "codegen/evaluation_order.kl"
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
@@ -120,12 +120,12 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb2:
 #line 31 "codegen/evaluation_order.kl"
-    kl__trace__G = 0;
-    kl_t7 = kl__4note__3i32( 1 );
+    kl_7codegen_trace__G = 0;
+    kl_t7 = kl_7codegen_4note__3i32( 1 );
 #line 32 "codegen/evaluation_order.kl"
-    kl_t8 = kl__4note__3i32( 2 );
+    kl_t8 = kl_7codegen_4note__3i32( 2 );
 #line 32 "codegen/evaluation_order.kl"
-    kl_t9 = kl__4note__3i32( 3 );
+    kl_t9 = kl_7codegen_4note__3i32( 3 );
 #line 32 "codegen/evaluation_order.kl"
     kl_t10 = __builtin_mul_overflow( kl_t8, kl_t9, &( int32_t ) { 0 } );
 #line 32 "codegen/evaluation_order.kl"
@@ -148,7 +148,7 @@ int32_t kl__4main__( void )
     kl_t13 = kl_t7 + kl_t11;
 #line 32 "codegen/evaluation_order.kl"
     kl_sum_6 = kl_t13;
-    kl_t15 = kl__trace__G != 123;
+    kl_t15 = kl_7codegen_trace__G != 123;
 #line 33 "codegen/evaluation_order.kl"
     kl_t14 = kl_t15;
 #line 33 "codegen/evaluation_order.kl"
@@ -169,17 +169,17 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb10:
 #line 38 "codegen/evaluation_order.kl"
-    kl__trace__G = 0;
-    kl_t19 = kl__4note__3i32( 1 );
+    kl_7codegen_trace__G = 0;
+    kl_t19 = kl_7codegen_4note__3i32( 1 );
 #line 39 "codegen/evaluation_order.kl"
-    kl_t20 = kl__4note__3i32( 2 );
+    kl_t20 = kl_7codegen_4note__3i32( 2 );
 #line 39 "codegen/evaluation_order.kl"
     kl_t18.kl_a = kl_t19;
 #line 39 "codegen/evaluation_order.kl"
     kl_t18.kl_b = kl_t20;
 #line 39 "codegen/evaluation_order.kl"
     kl_p_17 = kl_t18;
-    kl_t22 = kl__trace__G != 12;
+    kl_t22 = kl_7codegen_trace__G != 12;
 #line 40 "codegen/evaluation_order.kl"
     kl_t21 = kl_t22;
 #line 40 "codegen/evaluation_order.kl"
@@ -200,23 +200,23 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb14:
 #line 45 "codegen/evaluation_order.kl"
-    kl__trace__G = 0;
+    kl_7codegen_trace__G = 0;
 #line 49 "codegen/evaluation_order.kl"
     kl_t25 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 4, 4, "codegen/evaluation_order.kl", 49, "out of memory: alloc<i32>( 4 )" );
 #line 49 "codegen/evaluation_order.kl"
     kl_slots_24 = kl_t25;
-    kl_t26 = kl__4note__3i32( 1 );
+    kl_t26 = kl_7codegen_4note__3i32( 1 );
 #line 50 "codegen/evaluation_order.kl"
     kl_t27 = ( int64_t ) kl_t26;
 #line 50 "codegen/evaluation_order.kl"
     kl_t28 = kl_slots_24 + kl_t27;
 #line 50 "codegen/evaluation_order.kl"
-    kl_t29 = kl__4note__3i32( 2 );
+    kl_t29 = kl_7codegen_4note__3i32( 2 );
 #line 50 "codegen/evaluation_order.kl"
     ( *kl_t28 ) = kl_t29;
     kl_rt_free( kl_slots_24 );
 #line 53 "codegen/evaluation_order.kl"
-    kl_t31 = kl__trace__G != 12;
+    kl_t31 = kl_7codegen_trace__G != 12;
 #line 53 "codegen/evaluation_order.kl"
     if ( kl_t31 ) goto bb15; else goto bb16;
     bb15:
@@ -234,7 +234,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 23 "codegen/evaluation_order.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 23 "codegen/evaluation_order.kl"
     return kl_t0;
 #line 23 "codegen/evaluation_order.kl"

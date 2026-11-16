@@ -4,9 +4,9 @@
 #include <stddef.h>
 
 struct kl__A3_3i32;
-struct kl__Bag__I3i32E;
+struct kl_7codegen_Bag__I3i32E;
 struct kl__A3_3f64;
-struct kl__Bag__I3f64E;
+struct kl_7codegen_Bag__I3f64E;
 
 struct kl__A3_3i32
 {
@@ -14,11 +14,11 @@ struct kl__A3_3i32
 };
 _Static_assert( sizeof( struct kl__A3_3i32 ) == 12 && _Alignof( struct kl__A3_3i32 ) == 4, "layout" );
 
-struct kl__Bag__I3i32E
+struct kl_7codegen_Bag__I3i32E
 {
     struct kl__A3_3i32 kl_items;
 };
-_Static_assert( sizeof( struct kl__Bag__I3i32E ) == 12 && _Alignof( struct kl__Bag__I3i32E ) == 4 && offsetof( struct kl__Bag__I3i32E, kl_items ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Bag__I3i32E ) == 12 && _Alignof( struct kl_7codegen_Bag__I3i32E ) == 4 && offsetof( struct kl_7codegen_Bag__I3i32E, kl_items ) == 0, "layout" );
 
 struct kl__A3_3f64
 {
@@ -26,34 +26,34 @@ struct kl__A3_3f64
 };
 _Static_assert( sizeof( struct kl__A3_3f64 ) == 24 && _Alignof( struct kl__A3_3f64 ) == 8, "layout" );
 
-struct kl__Bag__I3f64E
+struct kl_7codegen_Bag__I3f64E
 {
     struct kl__A3_3f64 kl_items;
 };
-_Static_assert( sizeof( struct kl__Bag__I3f64E ) == 24 && _Alignof( struct kl__Bag__I3f64E ) == 8 && offsetof( struct kl__Bag__I3f64E, kl_items ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Bag__I3f64E ) == 24 && _Alignof( struct kl_7codegen_Bag__I3f64E ) == 8 && offsetof( struct kl_7codegen_Bag__I3f64E, kl_items ) == 0, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__4main__( void );
-void kl__3Bag__I3i32E__R3BagI3i32E_A3_3i32__ctor( struct kl__Bag__I3i32E*, struct kl__A3_3i32 );
-int32_t kl__3sum__I3BagI3i32EE__3BagI3i32E( struct kl__Bag__I3i32E* );
-void kl__3Bag__I3f64E__R3BagI3f64E_A3_3f64__ctor( struct kl__Bag__I3f64E*, struct kl__A3_3f64 );
-double kl__11first_large__I3BagI3f64EE__3BagI3f64E( struct kl__Bag__I3f64E* );
+int32_t kl_7codegen_4main__( void );
+void kl_7codegen_3Bag__I3i32E__RQ7codegen3BagI3i32E_A3_3i32__ctor( struct kl_7codegen_Bag__I3i32E*, struct kl__A3_3i32 );
+int32_t kl_7codegen_3sum__IQ7codegen3BagI3i32EE__Q7codegen3BagI3i32E( struct kl_7codegen_Bag__I3i32E* );
+void kl_7codegen_3Bag__I3f64E__RQ7codegen3BagI3f64E_A3_3f64__ctor( struct kl_7codegen_Bag__I3f64E*, struct kl__A3_3f64 );
+double kl_7codegen_11first_large__IQ7codegen3BagI3f64EE__Q7codegen3BagI3f64E( struct kl_7codegen_Bag__I3f64E* );
 
 #line 63 "codegen/walk_bound.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__Bag__I3i32E kl_b_1;
-    struct kl__Bag__I3i32E* kl_t2;
+    struct kl_7codegen_Bag__I3i32E kl_b_1;
+    struct kl_7codegen_Bag__I3i32E* kl_t2;
     struct kl__A3_3i32 kl_t3;
     uint64_t kl_t4;
     uint64_t kl_t5;
     uint64_t kl_t6;
-    struct kl__Bag__I3i32E* kl_t8;
+    struct kl_7codegen_Bag__I3i32E* kl_t8;
     int32_t kl_t9;
     bool kl_t10;
-    struct kl__Bag__I3i32E* kl_t11;
+    struct kl_7codegen_Bag__I3i32E* kl_t11;
     struct kl__A3_3i32* kl_t12;
     uint64_t kl_t13;
     uint64_t kl_t14;
@@ -62,16 +62,16 @@ int32_t kl__4main__( void )
     int32_t* kl_t17;
     int32_t* kl_v_18;
     bool kl_t19;
-    struct kl__Bag__I3i32E* kl_t20;
+    struct kl_7codegen_Bag__I3i32E* kl_t20;
     int32_t kl_t21;
     bool kl_t22;
-    struct kl__Bag__I3f64E kl_f_23;
-    struct kl__Bag__I3f64E* kl_t24;
+    struct kl_7codegen_Bag__I3f64E kl_f_23;
+    struct kl_7codegen_Bag__I3f64E* kl_t24;
     struct kl__A3_3f64 kl_t25;
     uint64_t kl_t26;
     uint64_t kl_t27;
     uint64_t kl_t28;
-    struct kl__Bag__I3f64E* kl_t30;
+    struct kl_7codegen_Bag__I3f64E* kl_t30;
     double kl_t31;
     bool kl_t32;
     ( void ) kl_t4;
@@ -95,11 +95,11 @@ int32_t kl__4main__( void )
 #line 65 "codegen/walk_bound.kl"
     kl_t3.e[kl_t6] = 3;
 #line 65 "codegen/walk_bound.kl"
-    kl__3Bag__I3i32E__R3BagI3i32E_A3_3i32__ctor( kl_t2, kl_t3 );
+    kl_7codegen_3Bag__I3i32E__RQ7codegen3BagI3i32E_A3_3i32__ctor( kl_t2, kl_t3 );
 #line 67 "codegen/walk_bound.kl"
     kl_t8 = &kl_b_1;
 #line 67 "codegen/walk_bound.kl"
-    kl_t9 = kl__3sum__I3BagI3i32EE__3BagI3i32E( kl_t8 );
+    kl_t9 = kl_7codegen_3sum__IQ7codegen3BagI3i32EE__Q7codegen3BagI3i32E( kl_t8 );
 #line 67 "codegen/walk_bound.kl"
     kl_t10 = kl_t9 != 6;
 #line 67 "codegen/walk_bound.kl"
@@ -157,7 +157,7 @@ int32_t kl__4main__( void )
 #line 78 "codegen/walk_bound.kl"
     kl_t20 = &kl_b_1;
 #line 78 "codegen/walk_bound.kl"
-    kl_t21 = kl__3sum__I3BagI3i32EE__3BagI3i32E( kl_t20 );
+    kl_t21 = kl_7codegen_3sum__IQ7codegen3BagI3i32EE__Q7codegen3BagI3i32E( kl_t20 );
 #line 78 "codegen/walk_bound.kl"
     kl_t22 = kl_t21 != 60;
 #line 78 "codegen/walk_bound.kl"
@@ -182,11 +182,11 @@ int32_t kl__4main__( void )
 #line 83 "codegen/walk_bound.kl"
     kl_t25.e[kl_t28] = 4.0;
 #line 83 "codegen/walk_bound.kl"
-    kl__3Bag__I3f64E__R3BagI3f64E_A3_3f64__ctor( kl_t24, kl_t25 );
+    kl_7codegen_3Bag__I3f64E__RQ7codegen3BagI3f64E_A3_3f64__ctor( kl_t24, kl_t25 );
 #line 85 "codegen/walk_bound.kl"
     kl_t30 = &kl_f_23;
 #line 85 "codegen/walk_bound.kl"
-    kl_t31 = kl__11first_large__I3BagI3f64EE__3BagI3f64E( kl_t30 );
+    kl_t31 = kl_7codegen_11first_large__IQ7codegen3BagI3f64EE__Q7codegen3BagI3f64E( kl_t30 );
 #line 85 "codegen/walk_bound.kl"
     kl_t32 = kl_t31 != 2.5;
 #line 85 "codegen/walk_bound.kl"
@@ -203,7 +203,7 @@ int32_t kl__4main__( void )
 }
 
 #line 12 "codegen/walk_bound.kl"
-void kl__3Bag__I3i32E__R3BagI3i32E_A3_3i32__ctor( struct kl__Bag__I3i32E* kl_this_1, struct kl__A3_3i32 kl_given_2 )
+void kl_7codegen_3Bag__I3i32E__RQ7codegen3BagI3i32E_A3_3i32__ctor( struct kl_7codegen_Bag__I3i32E* kl_this_1, struct kl__A3_3i32 kl_given_2 )
 {
     ( *kl_this_1 ).kl_items = kl_given_2;
     return;
@@ -211,11 +211,11 @@ void kl__3Bag__I3i32E__R3BagI3i32E_A3_3i32__ctor( struct kl__Bag__I3i32E* kl_thi
 }
 
 #line 34 "codegen/walk_bound.kl"
-int32_t kl__3sum__I3BagI3i32EE__3BagI3i32E( struct kl__Bag__I3i32E* kl_c_1 )
+int32_t kl_7codegen_3sum__IQ7codegen3BagI3i32EE__Q7codegen3BagI3i32E( struct kl_7codegen_Bag__I3i32E* kl_c_1 )
 {
     int32_t kl_t0;
     int32_t kl_total_2;
-    struct kl__Bag__I3i32E* kl_t3;
+    struct kl_7codegen_Bag__I3i32E* kl_t3;
     struct kl__A3_3i32* kl_t4;
     uint64_t kl_t5;
     uint64_t kl_t6;
@@ -278,7 +278,7 @@ int32_t kl__3sum__I3BagI3i32EE__3BagI3i32E( struct kl__Bag__I3i32E* kl_c_1 )
 }
 
 #line 12 "codegen/walk_bound.kl"
-void kl__3Bag__I3f64E__R3BagI3f64E_A3_3f64__ctor( struct kl__Bag__I3f64E* kl_this_1, struct kl__A3_3f64 kl_given_2 )
+void kl_7codegen_3Bag__I3f64E__RQ7codegen3BagI3f64E_A3_3f64__ctor( struct kl_7codegen_Bag__I3f64E* kl_this_1, struct kl__A3_3f64 kl_given_2 )
 {
     ( *kl_this_1 ).kl_items = kl_given_2;
     return;
@@ -286,11 +286,11 @@ void kl__3Bag__I3f64E__R3BagI3f64E_A3_3f64__ctor( struct kl__Bag__I3f64E* kl_thi
 }
 
 #line 47 "codegen/walk_bound.kl"
-double kl__11first_large__I3BagI3f64EE__3BagI3f64E( struct kl__Bag__I3f64E* kl_c_1 )
+double kl_7codegen_11first_large__IQ7codegen3BagI3f64EE__Q7codegen3BagI3f64E( struct kl_7codegen_Bag__I3f64E* kl_c_1 )
 {
     double kl_t0;
     double kl_found_2;
-    struct kl__Bag__I3f64E* kl_t3;
+    struct kl_7codegen_Bag__I3f64E* kl_t3;
     struct kl__A3_3f64* kl_t4;
     uint64_t kl_t5;
     uint64_t kl_t6;
@@ -354,7 +354,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 63 "codegen/walk_bound.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 63 "codegen/walk_bound.kl"
     return kl_t0;
 #line 63 "codegen/walk_bound.kl"

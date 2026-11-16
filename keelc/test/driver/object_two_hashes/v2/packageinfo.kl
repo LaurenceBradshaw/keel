@@ -1,0 +1,2 @@
+//! The same package as the folder above, so this `inner` is the module built again.
+@package( object_two_hashes );

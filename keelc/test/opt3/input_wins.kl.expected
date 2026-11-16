@@ -11,11 +11,11 @@ struct kl__A2_3f64
 };
 _Static_assert( sizeof( struct kl__A2_3f64 ) == 16 && _Alignof( struct kl__A2_3f64 ) == 8, "layout" );
 
-void kl__9butterfly__RA2_3f64( struct kl__A2_3f64* );
-int32_t kl__4main__( void );
+void kl_4opt3_9butterfly__RA2_3f64( struct kl__A2_3f64* );
+int32_t kl_4opt3_4main__( void );
 
 #line 4 "opt3/input_wins.kl"
-void kl__9butterfly__RA2_3f64( struct kl__A2_3f64* kl_x_1 )
+void kl_4opt3_9butterfly__RA2_3f64( struct kl__A2_3f64* kl_x_1 )
 {
     double kl_a_2;
     uint64_t kl_t3;
@@ -53,7 +53,7 @@ void kl__9butterfly__RA2_3f64( struct kl__A2_3f64* kl_x_1 )
 }
 
 #line 11 "opt3/input_wins.kl"
-int32_t kl__4main__( void )
+int32_t kl_4opt3_4main__( void )
 {
     int32_t kl_t0;
 #line 15 "opt3/input_wins.kl"
@@ -66,7 +66,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 11 "opt3/input_wins.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_4opt3_4main__(  );
 #line 11 "opt3/input_wins.kl"
     return kl_t0;
 #line 11 "opt3/input_wins.kl"

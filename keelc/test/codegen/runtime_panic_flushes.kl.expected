@@ -16,11 +16,11 @@ _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 void kl_rt_write( int32_t, uint8_t*, uint64_t );
 
-int32_t kl__4main__( void );
+int32_t kl_7codegen_4main__( void );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 
 #line 4 "codegen/runtime_panic_flushes.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     struct kl_7prelude_str kl_t1;
     struct kl_7prelude_str* kl_t2;
@@ -54,7 +54,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 4 "codegen/runtime_panic_flushes.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 4 "codegen/runtime_panic_flushes.kl"
     return kl_t0;
 #line 4 "codegen/runtime_panic_flushes.kl"

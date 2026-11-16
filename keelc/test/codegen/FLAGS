@@ -1,1 +1,1 @@
---debug -O0 --emit-c --package t=../test_lib
+--debug -O0 --emit-c --package ../test_lib

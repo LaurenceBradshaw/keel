@@ -4331,7 +4331,7 @@ void kl_2kl6string_string__drop( void* kl_t1 )
 #include <stddef.h>
 
 struct kl_2kl4list_list__I3i32E;
-struct kl__Two;
+struct kl_7codegen_Two;
 struct kl_2kl6string_string;
 struct kl_7prelude_str;
 struct kl_2kl4list_list__IQ2kl6stringE;
@@ -4351,12 +4351,12 @@ struct kl_2kl4list_list__I3i32E
 };
 _Static_assert( sizeof( struct kl_2kl4list_list__I3i32E ) == 24 && _Alignof( struct kl_2kl4list_list__I3i32E ) == 8 && offsetof( struct kl_2kl4list_list__I3i32E, kl_data_ ) == 0 && offsetof( struct kl_2kl4list_list__I3i32E, kl_count_ ) == 8 && offsetof( struct kl_2kl4list_list__I3i32E, kl_cap_ ) == 16, "layout" );
 
-struct kl__Two
+struct kl_7codegen_Two
 {
     struct kl_2kl4list_list__I3i32E kl_a;
     struct kl_2kl4list_list__I3i32E kl_b;
 };
-_Static_assert( sizeof( struct kl__Two ) == 48 && _Alignof( struct kl__Two ) == 8 && offsetof( struct kl__Two, kl_a ) == 0 && offsetof( struct kl__Two, kl_b ) == 24, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Two ) == 48 && _Alignof( struct kl_7codegen_Two ) == 8 && offsetof( struct kl_7codegen_Two, kl_a ) == 0 && offsetof( struct kl_7codegen_Two, kl_b ) == 24, "layout" );
 
 struct kl_2kl6string_string
 {
@@ -4412,22 +4412,22 @@ void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-bool kl__4flag__3i32( int32_t );
-int32_t kl__19loan_ends_in_branch__RQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* );
-void kl__15loan_each_round__RQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* );
-void kl__9push_size__RQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* );
-void kl__3Two__R3Two__ctor( struct kl__Two* );
-void kl__15disjoint_fields__R3Two( struct kl__Two* );
-void kl__8two_refs__( void );
-void kl__14array_no_owner__( void );
-void kl__6rebind__( void );
-int32_t kl__8reborrow__RQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* );
-void kl__11payload_ref__RQ2kl8optionalIQ2kl6stringE( struct kl_2kl8optional_optional__IQ2kl6stringE* );
-void kl__13reassign_loop__( void );
-void kl__10walk_other__RQ2kl4listI3i32E_Q2kl4listI3i32E( struct kl_2kl4list_list__I3i32E*, struct kl_2kl4list_list__I3i32E* );
-void kl__7op_loan__RQ2kl4listI3i32E_RQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E*, struct kl_2kl4list_list__I3i32E* );
-void kl__6nested__RQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* );
-int32_t kl__4main__( void );
+bool kl_7codegen_4flag__3i32( int32_t );
+int32_t kl_7codegen_19loan_ends_in_branch__RQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* );
+void kl_7codegen_15loan_each_round__RQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* );
+void kl_7codegen_9push_size__RQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* );
+void kl_7codegen_3Two__RQ7codegen3Two__ctor( struct kl_7codegen_Two* );
+void kl_7codegen_15disjoint_fields__RQ7codegen3Two( struct kl_7codegen_Two* );
+void kl_7codegen_8two_refs__( void );
+void kl_7codegen_14array_no_owner__( void );
+void kl_7codegen_6rebind__( void );
+int32_t kl_7codegen_8reborrow__RQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* );
+void kl_7codegen_11payload_ref__RQ2kl8optionalIQ2kl6stringE( struct kl_2kl8optional_optional__IQ2kl6stringE* );
+void kl_7codegen_13reassign_loop__( void );
+void kl_7codegen_10walk_other__RQ2kl4listI3i32E_Q2kl4listI3i32E( struct kl_2kl4list_list__I3i32E*, struct kl_2kl4list_list__I3i32E* );
+void kl_7codegen_7op_loan__RQ2kl4listI3i32E_RQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E*, struct kl_2kl4list_list__I3i32E* );
+void kl_7codegen_6nested__RQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* );
+int32_t kl_7codegen_4main__( void );
 int32_t* kl_2kl4list_14operator_index__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list_list__I3i32E*, uint64_t );
 void kl_2kl4list_4push__I3i32E__SQ2kl4listI3i32E_M3i32( struct kl_2kl4list_list__I3i32E*, int32_t );
 uint64_t kl_2kl4list_4size__I3i32E__SQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* );
@@ -4461,7 +4461,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 10 "codegen/loans_accepted.kl"
-bool kl__4flag__3i32( int32_t kl_n_1 )
+bool kl_7codegen_4flag__3i32( int32_t kl_n_1 )
 {
     bool kl_t0;
     bool kl_t2;
@@ -4475,7 +4475,7 @@ bool kl__4flag__3i32( int32_t kl_n_1 )
 }
 
 #line 13 "codegen/loans_accepted.kl"
-int32_t kl__19loan_ends_in_branch__RQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* kl_l_1 )
+int32_t kl_7codegen_19loan_ends_in_branch__RQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* kl_l_1 )
 {
     int32_t kl_t0;
     int32_t* kl_x_2;
@@ -4491,7 +4491,7 @@ int32_t kl__19loan_ends_in_branch__RQ2kl4listI3i32E( struct kl_2kl4list_list__I3
     kl_t4 = kl_2kl4list_14operator_index__I3i32E__SQ2kl4listI3i32E_3u64( kl_t3, 0 );
 #line 15 "codegen/loans_accepted.kl"
     kl_x_2 = &( *kl_t4 );
-    kl_t5 = kl__4flag__3i32( 0 );
+    kl_t5 = kl_7codegen_4flag__3i32( 0 );
 #line 16 "codegen/loans_accepted.kl"
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
@@ -4516,7 +4516,7 @@ int32_t kl__19loan_ends_in_branch__RQ2kl4listI3i32E( struct kl_2kl4list_list__I3
 }
 
 #line 22 "codegen/loans_accepted.kl"
-void kl__15loan_each_round__RQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* kl_l_1 )
+void kl_7codegen_15loan_each_round__RQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* kl_l_1 )
 {
     int32_t kl_n_2;
     bool kl_t3;
@@ -4532,7 +4532,7 @@ void kl__15loan_each_round__RQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* k
     goto bb1;
     bb1:
 #line 25 "codegen/loans_accepted.kl"
-    kl_t3 = kl__4flag__3i32( kl_n_2 );
+    kl_t3 = kl_7codegen_4flag__3i32( kl_n_2 );
 #line 25 "codegen/loans_accepted.kl"
     if ( kl_t3 ) goto bb2; else goto bb3;
     bb2:
@@ -4576,7 +4576,7 @@ void kl__15loan_each_round__RQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* k
 }
 
 #line 29 "codegen/loans_accepted.kl"
-void kl__9push_size__RQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* kl_l_1 )
+void kl_7codegen_9push_size__RQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* kl_l_1 )
 {
     struct kl_2kl4list_list__I3i32E* kl_t2;
     struct kl_2kl4list_list__I3i32E* kl_t3;
@@ -4627,7 +4627,7 @@ void kl__9push_size__RQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* kl_l_1 )
 }
 
 #line 33 "codegen/loans_accepted.kl"
-void kl__3Two__R3Two__ctor( struct kl__Two* kl_this_1 )
+void kl_7codegen_3Two__RQ7codegen3Two__ctor( struct kl_7codegen_Two* kl_this_1 )
 {
     struct kl_2kl4list_list__I3i32E kl_t2;
     struct kl_2kl4list_list__I3i32E* kl_t3;
@@ -4677,7 +4677,7 @@ void kl__3Two__R3Two__ctor( struct kl__Two* kl_this_1 )
 }
 
 #line 34 "codegen/loans_accepted.kl"
-void kl__15disjoint_fields__R3Two( struct kl__Two* kl_t2_1 )
+void kl_7codegen_15disjoint_fields__RQ7codegen3Two( struct kl_7codegen_Two* kl_t2_1 )
 {
     int32_t* kl_x_2;
     struct kl_2kl4list_list__I3i32E* kl_t3;
@@ -4716,7 +4716,7 @@ void kl__15disjoint_fields__R3Two( struct kl__Two* kl_t2_1 )
 }
 
 #line 42 "codegen/loans_accepted.kl"
-void kl__8two_refs__( void )
+void kl_7codegen_8two_refs__( void )
 {
     int32_t kl_n_1;
     int32_t* kl_r1_2;
@@ -4763,7 +4763,7 @@ void kl__8two_refs__( void )
 }
 
 #line 53 "codegen/loans_accepted.kl"
-void kl__14array_no_owner__( void )
+void kl_7codegen_14array_no_owner__( void )
 {
     struct kl__A3_3i32 kl_a_1;
     struct kl__A3_3i32 kl_t2;
@@ -4842,7 +4842,7 @@ void kl__14array_no_owner__( void )
 }
 
 #line 63 "codegen/loans_accepted.kl"
-void kl__6rebind__( void )
+void kl_7codegen_6rebind__( void )
 {
     int32_t kl_a_1;
     int32_t kl_b_2;
@@ -4877,7 +4877,7 @@ void kl__6rebind__( void )
 }
 
 #line 74 "codegen/loans_accepted.kl"
-int32_t kl__8reborrow__RQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* kl_l_1 )
+int32_t kl_7codegen_8reborrow__RQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* kl_l_1 )
 {
     int32_t kl_t0;
     int32_t* kl_x_2;
@@ -4920,7 +4920,7 @@ int32_t kl__8reborrow__RQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* kl_l_1
 }
 
 #line 77 "codegen/loans_accepted.kl"
-void kl__11payload_ref__RQ2kl8optionalIQ2kl6stringE( struct kl_2kl8optional_optional__IQ2kl6stringE* kl_o_1 )
+void kl_7codegen_11payload_ref__RQ2kl8optionalIQ2kl6stringE( struct kl_2kl8optional_optional__IQ2kl6stringE* kl_o_1 )
 {
     bool kl_t2;
     struct kl_2kl6string_string* kl_s_3;
@@ -4980,7 +4980,7 @@ void kl__11payload_ref__RQ2kl8optionalIQ2kl6stringE( struct kl_2kl8optional_opti
 }
 
 #line 88 "codegen/loans_accepted.kl"
-void kl__13reassign_loop__( void )
+void kl_7codegen_13reassign_loop__( void )
 {
     struct kl_2kl6string_string kl_s_1;
     struct kl_7prelude_str kl_t2;
@@ -5038,7 +5038,7 @@ void kl__13reassign_loop__( void )
     goto bb1;
     bb1:
 #line 92 "codegen/loans_accepted.kl"
-    kl_t8 = kl__4flag__3i32( kl_n_7 );
+    kl_t8 = kl_7codegen_4flag__3i32( kl_n_7 );
 #line 92 "codegen/loans_accepted.kl"
     if ( kl_t8 ) goto bb2; else goto bb3;
     bb2:
@@ -5102,7 +5102,7 @@ void kl__13reassign_loop__( void )
 }
 
 #line 102 "codegen/loans_accepted.kl"
-void kl__10walk_other__RQ2kl4listI3i32E_Q2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* kl_l_1, struct kl_2kl4list_list__I3i32E* kl_m_2 )
+void kl_7codegen_10walk_other__RQ2kl4listI3i32E_Q2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* kl_l_1, struct kl_2kl4list_list__I3i32E* kl_m_2 )
 {
     struct kl_2kl4list_list__I3i32E* kl_t3;
     uint64_t kl_i_4;
@@ -5192,7 +5192,7 @@ void kl__10walk_other__RQ2kl4listI3i32E_Q2kl4listI3i32E( struct kl_2kl4list_list
 }
 
 #line 108 "codegen/loans_accepted.kl"
-void kl__7op_loan__RQ2kl4listI3i32E_RQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* kl_l_1, struct kl_2kl4list_list__I3i32E* kl_m_2 )
+void kl_7codegen_7op_loan__RQ2kl4listI3i32E_RQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* kl_l_1, struct kl_2kl4list_list__I3i32E* kl_m_2 )
 {
     struct kl_2kl4list_list__I3i32E* kl_t3;
     int32_t* kl_t4;
@@ -5243,7 +5243,7 @@ void kl__7op_loan__RQ2kl4listI3i32E_RQ2kl4listI3i32E( struct kl_2kl4list_list__I
 }
 
 #line 111 "codegen/loans_accepted.kl"
-void kl__6nested__RQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* kl_l_1 )
+void kl_7codegen_6nested__RQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* kl_l_1 )
 {
     struct kl_2kl4list_list__I3i32E* kl_t2;
     struct kl_2kl4list_list__I3i32E* kl_t3;
@@ -5302,7 +5302,7 @@ void kl__6nested__RQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* kl_l_1 )
 }
 
 #line 113 "codegen/loans_accepted.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     struct kl_2kl4list_list__I3i32E kl_l_1;
@@ -5321,10 +5321,10 @@ int32_t kl__4main__( void )
     struct kl_7prelude_textual__ref kl_t19;
     struct kl_2kl4list_list__I3i32E* kl_t21;
     struct kl_2kl4list_list__I3i32E* kl_t23;
-    struct kl__Two kl_t2_25;
-    struct kl__Two* kl_t26;
+    struct kl_7codegen_Two kl_t2_25;
+    struct kl_7codegen_Two* kl_t26;
     struct kl_2kl4list_list__I3i32E* kl_t28;
-    struct kl__Two* kl_t30;
+    struct kl_7codegen_Two* kl_t30;
     struct kl_2kl4list_list__I3i32E* kl_t32;
     int32_t* kl_t33;
     int64_t kl_t34;
@@ -5412,7 +5412,7 @@ int32_t kl__4main__( void )
     kl_2kl4list_4push__I3i32E__SQ2kl4listI3i32E_M3i32( kl_t9, 10 );
     kl_t11 = &kl_l_1;
 #line 119 "codegen/loans_accepted.kl"
-    kl_t12 = kl__19loan_ends_in_branch__RQ2kl4listI3i32E( kl_t11 );
+    kl_t12 = kl_7codegen_19loan_ends_in_branch__RQ2kl4listI3i32E( kl_t11 );
 #line 119 "codegen/loans_accepted.kl"
     kl_t13 = ( int64_t ) kl_t12;
 #line 31 "../test_lib/console.kl"
@@ -5429,19 +5429,19 @@ int32_t kl__4main__( void )
     kl_1t7console_5print__3i64_7textual( kl_t13, kl_t19 );
     kl_t21 = &kl_l_1;
 #line 120 "codegen/loans_accepted.kl"
-    kl__15loan_each_round__RQ2kl4listI3i32E( kl_t21 );
+    kl_7codegen_15loan_each_round__RQ2kl4listI3i32E( kl_t21 );
     kl_t23 = &kl_l_1;
 #line 121 "codegen/loans_accepted.kl"
-    kl__9push_size__RQ2kl4listI3i32E( kl_t23 );
+    kl_7codegen_9push_size__RQ2kl4listI3i32E( kl_t23 );
     kl_t26 = &kl_t2_25;
 #line 122 "codegen/loans_accepted.kl"
-    kl__3Two__R3Two__ctor( kl_t26 );
+    kl_7codegen_3Two__RQ7codegen3Two__ctor( kl_t26 );
     kl_t28 = &kl_t2_25.kl_a;
 #line 123 "codegen/loans_accepted.kl"
     kl_2kl4list_4push__I3i32E__SQ2kl4listI3i32E_M3i32( kl_t28, 1 );
     kl_t30 = &kl_t2_25;
 #line 124 "codegen/loans_accepted.kl"
-    kl__15disjoint_fields__R3Two( kl_t30 );
+    kl_7codegen_15disjoint_fields__RQ7codegen3Two( kl_t30 );
     kl_t32 = &kl_t2_25.kl_a;
 #line 125 "codegen/loans_accepted.kl"
     kl_t33 = kl_2kl4list_14operator_index__I3i32E__SQ2kl4listI3i32E_3u64( kl_t32, 0 );
@@ -5459,12 +5459,12 @@ int32_t kl__4main__( void )
     kl_t40 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t39, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 125 "codegen/loans_accepted.kl"
     kl_1t7console_5print__3i64_7textual( kl_t34, kl_t40 );
-    kl__8two_refs__(  );
-    kl__14array_no_owner__(  );
-    kl__6rebind__(  );
+    kl_7codegen_8two_refs__(  );
+    kl_7codegen_14array_no_owner__(  );
+    kl_7codegen_6rebind__(  );
     kl_t45 = &kl_l_1;
 #line 129 "codegen/loans_accepted.kl"
-    kl_t46 = kl__8reborrow__RQ2kl4listI3i32E( kl_t45 );
+    kl_t46 = kl_7codegen_8reborrow__RQ2kl4listI3i32E( kl_t45 );
 #line 129 "codegen/loans_accepted.kl"
     kl_t47 = ( int64_t ) kl_t46;
 #line 31 "../test_lib/console.kl"
@@ -5512,18 +5512,18 @@ int32_t kl__4main__( void )
     kl_t120 = false;
     kl_t62 = &kl_o_55;
 #line 131 "codegen/loans_accepted.kl"
-    kl__11payload_ref__RQ2kl8optionalIQ2kl6stringE( kl_t62 );
-    kl__13reassign_loop__(  );
+    kl_7codegen_11payload_ref__RQ2kl8optionalIQ2kl6stringE( kl_t62 );
+    kl_7codegen_13reassign_loop__(  );
     kl_t65 = &kl_l_1;
 #line 133 "codegen/loans_accepted.kl"
     kl_t66 = &kl_m_6;
 #line 133 "codegen/loans_accepted.kl"
-    kl__10walk_other__RQ2kl4listI3i32E_Q2kl4listI3i32E( kl_t65, kl_t66 );
+    kl_7codegen_10walk_other__RQ2kl4listI3i32E_Q2kl4listI3i32E( kl_t65, kl_t66 );
     kl_t68 = &kl_l_1;
 #line 134 "codegen/loans_accepted.kl"
     kl_t69 = &kl_m_6;
 #line 134 "codegen/loans_accepted.kl"
-    kl__7op_loan__RQ2kl4listI3i32E_RQ2kl4listI3i32E( kl_t68, kl_t69 );
+    kl_7codegen_7op_loan__RQ2kl4listI3i32E_RQ2kl4listI3i32E( kl_t68, kl_t69 );
     kl_t71 = &kl_l_1;
 #line 171 "<kl>/list.kl"
     kl_i_72 = 0;
@@ -5600,7 +5600,7 @@ int32_t kl__4main__( void )
     kl_2kl4list_4push__I3i32E__SQ2kl4listI3i32E_M3i32( kl_t101, 2 );
     kl_t103 = &kl_n_96;
 #line 140 "codegen/loans_accepted.kl"
-    kl__6nested__RQ2kl4listI3i32E( kl_t103 );
+    kl_7codegen_6nested__RQ2kl4listI3i32E( kl_t103 );
     kl_t105 = &kl_n_96;
 #line 171 "<kl>/list.kl"
     kl_i_106 = 0;
@@ -6414,7 +6414,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 113 "codegen/loans_accepted.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 113 "codegen/loans_accepted.kl"
     return kl_t0;
 #line 113 "codegen/loans_accepted.kl"

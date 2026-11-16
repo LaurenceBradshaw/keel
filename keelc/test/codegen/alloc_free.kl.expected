@@ -3,33 +3,33 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Node;
+struct kl_7codegen_Node;
 
-struct kl__Node
+struct kl_7codegen_Node
 {
     int32_t kl_value;
-    struct kl__Node* kl_next;
+    struct kl_7codegen_Node* kl_next;
 };
-_Static_assert( sizeof( struct kl__Node ) == 16 && _Alignof( struct kl__Node ) == 8 && offsetof( struct kl__Node, kl_value ) == 0 && offsetof( struct kl__Node, kl_next ) == 8, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Node ) == 16 && _Alignof( struct kl_7codegen_Node ) == 8 && offsetof( struct kl_7codegen_Node, kl_value ) == 0 && offsetof( struct kl_7codegen_Node, kl_next ) == 8, "layout" );
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-struct kl__Node* kl__4push__P4Node_3i32( struct kl__Node*, int32_t );
-int32_t kl__15sum_and_release__P4Node( struct kl__Node* );
-int32_t kl__4main__( void );
+struct kl_7codegen_Node* kl_7codegen_4push__PQ7codegen4Node_3i32( struct kl_7codegen_Node*, int32_t );
+int32_t kl_7codegen_15sum_and_release__PQ7codegen4Node( struct kl_7codegen_Node* );
+int32_t kl_7codegen_4main__( void );
 
 #line 12 "codegen/alloc_free.kl"
-struct kl__Node* kl__4push__P4Node_3i32( struct kl__Node* kl_head_1, int32_t kl_value_2 )
+struct kl_7codegen_Node* kl_7codegen_4push__PQ7codegen4Node_3i32( struct kl_7codegen_Node* kl_head_1, int32_t kl_value_2 )
 {
-    struct kl__Node* kl_t0;
-    struct kl__Node* kl_node_3;
-    struct kl__Node* kl_t4;
+    struct kl_7codegen_Node* kl_t0;
+    struct kl_7codegen_Node* kl_node_3;
+    struct kl_7codegen_Node* kl_t4;
 #line 14 "codegen/alloc_free.kl"
     kl_node_3 = NULL;
 #line 18 "codegen/alloc_free.kl"
-    kl_t4 = ( struct kl__Node* ) kl_rt_alloc( 16, "codegen/alloc_free.kl", 18, "out of memory: alloc<Node>()" );
+    kl_t4 = ( struct kl_7codegen_Node* ) kl_rt_alloc( 16, "codegen/alloc_free.kl", 18, "out of memory: alloc<Node>()" );
 #line 18 "codegen/alloc_free.kl"
     kl_node_3 = kl_t4;
 #line 23 "codegen/alloc_free.kl"
@@ -42,12 +42,12 @@ struct kl__Node* kl__4push__P4Node_3i32( struct kl__Node* kl_head_1, int32_t kl_
 }
 
 #line 29 "codegen/alloc_free.kl"
-int32_t kl__15sum_and_release__P4Node( struct kl__Node* kl_head_1 )
+int32_t kl_7codegen_15sum_and_release__PQ7codegen4Node( struct kl_7codegen_Node* kl_head_1 )
 {
     int32_t kl_t0;
     int32_t kl_total_2;
     bool kl_t3;
-    struct kl__Node* kl_next_4;
+    struct kl_7codegen_Node* kl_next_4;
     bool kl_t5;
     int32_t kl_t6;
 #line 31 "codegen/alloc_free.kl"
@@ -88,19 +88,19 @@ int32_t kl__15sum_and_release__P4Node( struct kl__Node* kl_head_1 )
 }
 
 #line 50 "codegen/alloc_free.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__Node* kl_head_1;
+    struct kl_7codegen_Node* kl_head_1;
     int32_t kl_i_2;
     bool kl_t3;
     bool kl_t4;
     int32_t kl_t5;
-    struct kl__Node* kl_t6;
+    struct kl_7codegen_Node* kl_t6;
     bool kl_t7;
     int32_t kl_t8;
-    struct kl__Node* kl_lone_9;
-    struct kl__Node* kl_t10;
+    struct kl_7codegen_Node* kl_lone_9;
+    struct kl_7codegen_Node* kl_t10;
     int32_t kl_total_11;
     int32_t kl_t12;
     int32_t kl_t13;
@@ -122,13 +122,13 @@ int32_t kl__4main__( void )
     if ( kl_t4 ) goto bb4; else goto bb5;
     bb3:
 #line 62 "codegen/alloc_free.kl"
-    kl_t10 = kl__4push__P4Node_3i32( NULL, 12 );
+    kl_t10 = kl_7codegen_4push__PQ7codegen4Node_3i32( NULL, 12 );
 #line 62 "codegen/alloc_free.kl"
     kl_lone_9 = kl_t10;
 #line 64 "codegen/alloc_free.kl"
-    kl_t12 = kl__15sum_and_release__P4Node( kl_head_1 );
+    kl_t12 = kl_7codegen_15sum_and_release__PQ7codegen4Node( kl_head_1 );
 #line 64 "codegen/alloc_free.kl"
-    kl_t13 = kl__15sum_and_release__P4Node( kl_lone_9 );
+    kl_t13 = kl_7codegen_15sum_and_release__PQ7codegen4Node( kl_lone_9 );
 #line 64 "codegen/alloc_free.kl"
     kl_t14 = __builtin_add_overflow( kl_t12, kl_t13, &( int32_t ) { 0 } );
 #line 64 "codegen/alloc_free.kl"
@@ -140,7 +140,7 @@ int32_t kl__4main__( void )
 #line 57 "codegen/alloc_free.kl"
     kl_t5 = kl_i_2 * 3;
 #line 57 "codegen/alloc_free.kl"
-    kl_t6 = kl__4push__P4Node_3i32( kl_head_1, kl_t5 );
+    kl_t6 = kl_7codegen_4push__PQ7codegen4Node_3i32( kl_head_1, kl_t5 );
 #line 57 "codegen/alloc_free.kl"
     kl_head_1 = kl_t6;
     kl_t7 = __builtin_add_overflow( kl_i_2, 1, &( int32_t ) { 0 } );
@@ -174,7 +174,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 50 "codegen/alloc_free.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 50 "codegen/alloc_free.kl"
     return kl_t0;
 #line 50 "codegen/alloc_free.kl"

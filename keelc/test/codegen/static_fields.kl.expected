@@ -3,33 +3,33 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Counter;
+struct kl_7codegen_Counter;
 
-struct kl__Counter
+struct kl_7codegen_Counter
 {
     int32_t kl_id;
 };
-_Static_assert( sizeof( struct kl__Counter ) == 4 && _Alignof( struct kl__Counter ) == 4 && offsetof( struct kl__Counter, kl_id ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Counter ) == 4 && _Alignof( struct kl_7codegen_Counter ) == 4 && offsetof( struct kl_7codegen_Counter, kl_id ) == 0, "layout" );
 
-int32_t kl__made__GS7Counter = 0;
-int32_t kl__limit__GS7Counter = 10;
-int32_t kl__made__GS5Tally = 100;
+int32_t kl_7codegen_made__GSQ7codegen7Counter = 0;
+int32_t kl_7codegen_limit__GSQ7codegen7Counter = 10;
+int32_t kl_7codegen_made__GSQ7codegen5Tally = 100;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__7Counter__R7Counter__ctor( struct kl__Counter* );
-int32_t kl__5total__S7Counter( struct kl__Counter* );
-int32_t kl__5count__S7Counter( void );
-void kl__5reset__S7Counter( struct kl__Counter* );
-int32_t kl__4main__( void );
+void kl_7codegen_7Counter__RQ7codegen7Counter__ctor( struct kl_7codegen_Counter* );
+int32_t kl_7codegen_5total__SQ7codegen7Counter( struct kl_7codegen_Counter* );
+int32_t kl_7codegen_5count__SQ7codegen7Counter( void );
+void kl_7codegen_5reset__SQ7codegen7Counter( struct kl_7codegen_Counter* );
+int32_t kl_7codegen_4main__( void );
 
 #line 11 "codegen/static_fields.kl"
-void kl__7Counter__R7Counter__ctor( struct kl__Counter* kl_this_1 )
+void kl_7codegen_7Counter__RQ7codegen7Counter__ctor( struct kl_7codegen_Counter* kl_this_1 )
 {
     bool kl_t2;
     int32_t kl_t3;
 #line 13 "codegen/static_fields.kl"
-    kl_t2 = __builtin_add_overflow( kl__made__GS7Counter, 1, &( int32_t ) { 0 } );
+    kl_t2 = __builtin_add_overflow( kl_7codegen_made__GSQ7codegen7Counter, 1, &( int32_t ) { 0 } );
 #line 13 "codegen/static_fields.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -37,57 +37,57 @@ void kl__7Counter__R7Counter__ctor( struct kl__Counter* kl_this_1 )
     kl_rt_panic( "codegen/static_fields.kl", 13, "arithmetic overflow: made + 1" );
     bb2:
 #line 13 "codegen/static_fields.kl"
-    kl_t3 = kl__made__GS7Counter + 1;
+    kl_t3 = kl_7codegen_made__GSQ7codegen7Counter + 1;
 #line 13 "codegen/static_fields.kl"
-    kl__made__GS7Counter = kl_t3;
-    ( *kl_this_1 ).kl_id = kl__made__GS7Counter;
+    kl_7codegen_made__GSQ7codegen7Counter = kl_t3;
+    ( *kl_this_1 ).kl_id = kl_7codegen_made__GSQ7codegen7Counter;
     return;
 #line 15 "codegen/static_fields.kl"
 }
 
 #line 17 "codegen/static_fields.kl"
-int32_t kl__5total__S7Counter( struct kl__Counter* kl_this_1 )
+int32_t kl_7codegen_5total__SQ7codegen7Counter( struct kl_7codegen_Counter* kl_this_1 )
 {
     int32_t kl_t0;
     ( void ) kl_this_1;
 #line 19 "codegen/static_fields.kl"
-    kl_t0 = kl__made__GS7Counter;
+    kl_t0 = kl_7codegen_made__GSQ7codegen7Counter;
 #line 19 "codegen/static_fields.kl"
     return kl_t0;
 }
 
 #line 22 "codegen/static_fields.kl"
-int32_t kl__5count__S7Counter( void )
+int32_t kl_7codegen_5count__SQ7codegen7Counter( void )
 {
     int32_t kl_t0;
 #line 24 "codegen/static_fields.kl"
-    kl_t0 = kl__made__GS7Counter;
+    kl_t0 = kl_7codegen_made__GSQ7codegen7Counter;
 #line 24 "codegen/static_fields.kl"
     return kl_t0;
 }
 
 #line 27 "codegen/static_fields.kl"
-void kl__5reset__S7Counter( struct kl__Counter* kl_this_1 )
+void kl_7codegen_5reset__SQ7codegen7Counter( struct kl_7codegen_Counter* kl_this_1 )
 {
     ( void ) kl_this_1;
 #line 29 "codegen/static_fields.kl"
-    kl__made__GS7Counter = 0;
+    kl_7codegen_made__GSQ7codegen7Counter = 0;
     return;
 #line 30 "codegen/static_fields.kl"
 }
 
 #line 41 "codegen/static_fields.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__Counter kl_a_1;
-    struct kl__Counter* kl_t2;
-    struct kl__Counter kl_b_4;
-    struct kl__Counter* kl_t5;
+    struct kl_7codegen_Counter kl_a_1;
+    struct kl_7codegen_Counter* kl_t2;
+    struct kl_7codegen_Counter kl_b_4;
+    struct kl_7codegen_Counter* kl_t5;
     bool kl_t7;
     bool kl_t8;
     bool kl_t9;
-    struct kl__Counter* kl_t10;
+    struct kl_7codegen_Counter* kl_t10;
     int32_t kl_t11;
     bool kl_t12;
     int32_t kl_t13;
@@ -98,8 +98,8 @@ int32_t kl__4main__( void )
     bool kl_t18;
     int32_t kl_t19;
     bool kl_t20;
-    struct kl__Counter* kl_t21;
-    struct kl__Counter* kl_t23;
+    struct kl_7codegen_Counter* kl_t21;
+    struct kl_7codegen_Counter* kl_t23;
     int32_t kl_t24;
     bool kl_t25;
     bool kl_t26;
@@ -109,10 +109,10 @@ int32_t kl__4main__( void )
 #line 43 "codegen/static_fields.kl"
     kl_t2 = &kl_a_1;
 #line 43 "codegen/static_fields.kl"
-    kl__7Counter__R7Counter__ctor( kl_t2 );
+    kl_7codegen_7Counter__RQ7codegen7Counter__ctor( kl_t2 );
     kl_t5 = &kl_b_4;
 #line 44 "codegen/static_fields.kl"
-    kl__7Counter__R7Counter__ctor( kl_t5 );
+    kl_7codegen_7Counter__RQ7codegen7Counter__ctor( kl_t5 );
 #line 47 "codegen/static_fields.kl"
     kl_t9 = kl_b_4.kl_id != 2;
 #line 47 "codegen/static_fields.kl"
@@ -123,7 +123,7 @@ int32_t kl__4main__( void )
 #line 47 "codegen/static_fields.kl"
     kl_t10 = &kl_a_1;
 #line 47 "codegen/static_fields.kl"
-    kl_t11 = kl__5total__S7Counter( kl_t10 );
+    kl_t11 = kl_7codegen_5total__SQ7codegen7Counter( kl_t10 );
 #line 47 "codegen/static_fields.kl"
     kl_t12 = kl_t11 != 2;
 #line 47 "codegen/static_fields.kl"
@@ -137,7 +137,7 @@ int32_t kl__4main__( void )
     if ( kl_t7 ) goto bb4; else goto bb3;
     bb3:
 #line 47 "codegen/static_fields.kl"
-    kl_t13 = kl__5count__S7Counter(  );
+    kl_t13 = kl_7codegen_5count__SQ7codegen7Counter(  );
 #line 47 "codegen/static_fields.kl"
     kl_t14 = kl_t13 != 2;
 #line 47 "codegen/static_fields.kl"
@@ -153,7 +153,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb6:
 #line 52 "codegen/static_fields.kl"
-    kl_t15 = __builtin_add_overflow( kl__made__GS5Tally, 1, &( int32_t ) { 0 } );
+    kl_t15 = __builtin_add_overflow( kl_7codegen_made__GSQ7codegen5Tally, 1, &( int32_t ) { 0 } );
 #line 52 "codegen/static_fields.kl"
     if ( kl_t15 ) goto bb7; else goto bb8;
     bb7:
@@ -161,18 +161,18 @@ int32_t kl__4main__( void )
     kl_rt_panic( "codegen/static_fields.kl", 52, "arithmetic overflow: Tally::made + 1" );
     bb8:
 #line 52 "codegen/static_fields.kl"
-    kl_t16 = kl__made__GS5Tally + 1;
+    kl_t16 = kl_7codegen_made__GSQ7codegen5Tally + 1;
 #line 52 "codegen/static_fields.kl"
-    kl__made__GS5Tally = kl_t16;
+    kl_7codegen_made__GSQ7codegen5Tally = kl_t16;
 #line 54 "codegen/static_fields.kl"
-    kl_t18 = kl__made__GS5Tally != 101;
+    kl_t18 = kl_7codegen_made__GSQ7codegen5Tally != 101;
 #line 54 "codegen/static_fields.kl"
     kl_t17 = kl_t18;
 #line 54 "codegen/static_fields.kl"
     if ( kl_t17 ) goto bb10; else goto bb9;
     bb9:
 #line 54 "codegen/static_fields.kl"
-    kl_t19 = kl__5count__S7Counter(  );
+    kl_t19 = kl_7codegen_5count__SQ7codegen7Counter(  );
 #line 54 "codegen/static_fields.kl"
     kl_t20 = kl_t19 != 2;
 #line 54 "codegen/static_fields.kl"
@@ -190,11 +190,11 @@ int32_t kl__4main__( void )
 #line 59 "codegen/static_fields.kl"
     kl_t21 = &kl_a_1;
 #line 59 "codegen/static_fields.kl"
-    kl__5reset__S7Counter( kl_t21 );
+    kl_7codegen_5reset__SQ7codegen7Counter( kl_t21 );
 #line 61 "codegen/static_fields.kl"
     kl_t23 = &kl_b_4;
 #line 61 "codegen/static_fields.kl"
-    kl_t24 = kl__5total__S7Counter( kl_t23 );
+    kl_t24 = kl_7codegen_5total__SQ7codegen7Counter( kl_t23 );
 #line 61 "codegen/static_fields.kl"
     kl_t25 = kl_t24 != 0;
 #line 61 "codegen/static_fields.kl"
@@ -205,7 +205,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb14:
 #line 66 "codegen/static_fields.kl"
-    kl_t26 = __builtin_add_overflow( kl__limit__GS7Counter, 5, &( int32_t ) { 0 } );
+    kl_t26 = __builtin_add_overflow( kl_7codegen_limit__GSQ7codegen7Counter, 5, &( int32_t ) { 0 } );
 #line 66 "codegen/static_fields.kl"
     if ( kl_t26 ) goto bb15; else goto bb16;
     bb15:
@@ -213,11 +213,11 @@ int32_t kl__4main__( void )
     kl_rt_panic( "codegen/static_fields.kl", 66, "arithmetic overflow: Counter::limit + 5" );
     bb16:
 #line 66 "codegen/static_fields.kl"
-    kl_t27 = kl__limit__GS7Counter + 5;
+    kl_t27 = kl_7codegen_limit__GSQ7codegen7Counter + 5;
 #line 66 "codegen/static_fields.kl"
-    kl__limit__GS7Counter = kl_t27;
+    kl_7codegen_limit__GSQ7codegen7Counter = kl_t27;
 #line 68 "codegen/static_fields.kl"
-    kl_t29 = &kl__limit__GS7Counter;
+    kl_t29 = &kl_7codegen_limit__GSQ7codegen7Counter;
 #line 68 "codegen/static_fields.kl"
     kl_at_28 = kl_t29;
 #line 70 "codegen/static_fields.kl"
@@ -230,7 +230,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 41 "codegen/static_fields.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 41 "codegen/static_fields.kl"
     return kl_t0;
 #line 41 "codegen/static_fields.kl"

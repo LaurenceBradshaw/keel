@@ -329,8 +329,8 @@ struct kl_7prelude_textual__vtable
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__3put__RL3i32_3u64( int32_t*, uint64_t, uint64_t );
-int32_t kl__4main__( void );
+int32_t kl_7codegen_3put__RL3i32_3u64( int32_t*, uint64_t, uint64_t );
+int32_t kl_7codegen_4main__( void );
 void kl_1t7console_5print__7textual_7textual( struct kl_7prelude_textual__ref, struct kl_7prelude_textual__ref );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 void kl_7prelude_str__drop( void* );
@@ -339,7 +339,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 4 "codegen/run_replace_out_of_range.kl"
-int32_t kl__3put__RL3i32_3u64( int32_t* kl_numbers_1_data, uint64_t kl_numbers_1_size, uint64_t kl_far_2 )
+int32_t kl_7codegen_3put__RL3i32_3u64( int32_t* kl_numbers_1_data, uint64_t kl_numbers_1_size, uint64_t kl_far_2 )
 {
     int32_t kl_t0;
 #line 4 "codegen/run_replace_out_of_range.kl"
@@ -380,7 +380,7 @@ int32_t kl__3put__RL3i32_3u64( int32_t* kl_numbers_1_data, uint64_t kl_numbers_1
 }
 
 #line 9 "codegen/run_replace_out_of_range.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     struct kl__A2_3i32 kl_numbers_1;
@@ -442,7 +442,7 @@ int32_t kl__4main__( void )
 #line 14 "codegen/run_replace_out_of_range.kl"
     kl_t20 = ( struct kl__run__L3i32__ref ) { ( int32_t* ) kl_t19, 2 };
 #line 14 "codegen/run_replace_out_of_range.kl"
-    kl_t21 = kl__3put__RL3i32_3u64( ( kl_t20 ).data, ( kl_t20 ).size, 2 );
+    kl_t21 = kl_7codegen_3put__RL3i32_3u64( ( kl_t20 ).data, ( kl_t20 ).size, 2 );
 #line 14 "codegen/run_replace_out_of_range.kl"
     kl_t0 = kl_t21;
 #line 14 "codegen/run_replace_out_of_range.kl"
@@ -453,7 +453,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 9 "codegen/run_replace_out_of_range.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 9 "codegen/run_replace_out_of_range.kl"
     return kl_t0;
 #line 9 "codegen/run_replace_out_of_range.kl"

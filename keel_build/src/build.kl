@@ -179,7 +179,7 @@ class Builder
             else if( line.starts_with( "depends " ) && line.size() > 8 + 17 )
             {
                 // `depends <module> <16 hex digits>`
-                imports.push( line.substring( 8, line.size() - 8 - 17 ) );
+                imports.push( as_written( line.substring( 8, line.size() - 8 - 17 ) ) );
                 hashes.push( line.substring( line.size() - 16, 16 ) );
             }
         }
@@ -237,7 +237,7 @@ class Builder
         {
             const ref kl::pair<kl::string, kl::path> package = packages.as_run()[i];
             args.push( "--package" );
-            args.push( package.first + "=" + package.second );
+            args.push( kl::string( package.second ) );
         }
 
         if( verbose_ )
@@ -259,8 +259,8 @@ class Builder
         }
     }
 
-    // `kl::a::b` is `<kl folder>/a/b.kl`, `p::q::x` is `<p's folder>/q/x.kl`, and `x` is `<root>/src/x.kl`,
-    // or `<root>/test/x.kl` when `in_tests`.
+    // `kl::a::b` is `<kl folder>/a/b.kl`, `p::q::x` is `<p's folder>/q/x.kl`, the project's own
+    // `name::q::x` is `<root>/src/q/x.kl`, and `x` is `<root>/src/x.kl`, or `<root>/test/x.kl` when `in_tests`.
     private kl::path source_of( const ref kl::string module ) const
     {
         if( module.starts_with( "kl::" ) )
@@ -273,6 +273,11 @@ class Builder
             kl::list<kl::string> pieces = module.split( "::" );
             const u64 top = pieces.as_run()[0].size();
             const kl::string rest = folders( module.substring( top + 2, module.size() - top - 2 ) ) + ".kl";
+
+            if( pieces.as_run()[0] == project_.name() )
+            {
+                return project_.root() / "src" / rest;
+            }
 
             const ref kl::list<kl::pair<kl::string, kl::path>> packages = project_.packages();
             for( u64 i : 0..packages.size() )
@@ -289,9 +294,32 @@ class Builder
         return project_.root() / folder( module ) / ( module + ".kl" );
     }
 
+    // A module as an import writes it: keelc names one in `src/` or `test/` through the project,
+    // `proj::calc`, which is written `calc`; one in a nested package keeps its name.
+    private kl::string as_written( move kl::string module ) const
+    {
+        const kl::string own = project_.name() + "::";
+        if( module.starts_with( own ) )
+        {
+            kl::string rest = module.substring( own.size(), module.size() - own.size() );
+            if( last_separator( rest ) == rest.size() )
+            {
+                return rest;
+            }
+        }
+        return module;
+    }
+
     // `source_of`'s path, under the cache.
     private kl::path object_of( const ref kl::string module ) const
     {
+        // The project's nested packages sit under `src/`, clear of the program the project builds.
+        const kl::string own = project_.name() + "::";
+        if( module.starts_with( own ) )
+        {
+            return cache_ / "src" / ( folders( module.substring( own.size(), module.size() - own.size() ) ) + ".klo" );
+        }
+
         if( last_separator( module ) < module.size() )
         {
             return cache_ / ( folders( module ) + ".klo" );

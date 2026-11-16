@@ -9283,8 +9283,8 @@ struct kl_2kl4list_list__IQ2kl6stringE;
 struct kl_7prelude_result__IQ2kl7process_Q2kl10file_errorE;
 struct kl_2kl4list_list__IQ2kl4pathE;
 struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE;
-struct kl__Pair__I3i32_3f64E;
-struct kl__Bag__IQ2kl6stringE;
+struct kl_7codegen_Pair__I3i32_3f64E;
+struct kl_7codegen_Bag__IQ2kl6stringE;
 
 struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
 
@@ -9404,20 +9404,20 @@ struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE
 };
 _Static_assert( sizeof( struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE ) == 40 && _Alignof( struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE ) == 8 && offsetof( struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE, kl_2ok_value ) == 8 && offsetof( struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE, kl_3err_error ) == 8, "layout" );
 
-struct kl__Pair__I3i32_3f64E
+struct kl_7codegen_Pair__I3i32_3f64E
 {
     int32_t kl_first;
     double kl_second;
 };
-_Static_assert( sizeof( struct kl__Pair__I3i32_3f64E ) == 16 && _Alignof( struct kl__Pair__I3i32_3f64E ) == 8 && offsetof( struct kl__Pair__I3i32_3f64E, kl_first ) == 0 && offsetof( struct kl__Pair__I3i32_3f64E, kl_second ) == 8, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Pair__I3i32_3f64E ) == 16 && _Alignof( struct kl_7codegen_Pair__I3i32_3f64E ) == 8 && offsetof( struct kl_7codegen_Pair__I3i32_3f64E, kl_first ) == 0 && offsetof( struct kl_7codegen_Pair__I3i32_3f64E, kl_second ) == 8, "layout" );
 
-struct kl__Bag__IQ2kl6stringE
+struct kl_7codegen_Bag__IQ2kl6stringE
 {
     struct kl_2kl4list_list__IQ2kl6stringE kl_items;
     struct kl_2kl6string_string kl_spare;
     int32_t kl_n;
 };
-_Static_assert( sizeof( struct kl__Bag__IQ2kl6stringE ) == 56 && _Alignof( struct kl__Bag__IQ2kl6stringE ) == 8 && offsetof( struct kl__Bag__IQ2kl6stringE, kl_items ) == 0 && offsetof( struct kl__Bag__IQ2kl6stringE, kl_spare ) == 24 && offsetof( struct kl__Bag__IQ2kl6stringE, kl_n ) == 48, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Bag__IQ2kl6stringE ) == 56 && _Alignof( struct kl_7codegen_Bag__IQ2kl6stringE ) == 8 && offsetof( struct kl_7codegen_Bag__IQ2kl6stringE, kl_items ) == 0 && offsetof( struct kl_7codegen_Bag__IQ2kl6stringE, kl_spare ) == 24 && offsetof( struct kl_7codegen_Bag__IQ2kl6stringE, kl_n ) == 48, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -9428,18 +9428,18 @@ struct kl_7prelude_textual__vtable
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-int32_t kl__4main__( void );
-struct kl__Pair__I3i32_3f64E kl__4make__I3i32_3f64E__3f64( double );
-uint64_t kl__4fill__IQ2kl6stringE__( void );
-void kl__3Bag__IQ2kl6stringE__R3BagIQ2kl6stringE_3i32__ctor( struct kl__Bag__IQ2kl6stringE*, int32_t );
-uint64_t kl__4size__IQ2kl6stringE__S3BagIQ2kl6stringE( struct kl__Bag__IQ2kl6stringE* );
+int32_t kl_7codegen_4main__( void );
+struct kl_7codegen_Pair__I3i32_3f64E kl_7codegen_4make__I3i32_3f64E__3f64( double );
+uint64_t kl_7codegen_4fill__IQ2kl6stringE__( void );
+void kl_7codegen_3Bag__IQ2kl6stringE__RQ7codegen3BagIQ2kl6stringE_3i32__ctor( struct kl_7codegen_Bag__IQ2kl6stringE*, int32_t );
+uint64_t kl_7codegen_4size__IQ2kl6stringE__SQ7codegen3BagIQ2kl6stringE( struct kl_7codegen_Bag__IQ2kl6stringE* );
 void kl_2kl4list_8truncate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
 uint64_t kl_2kl4list_4size__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
 struct kl_2kl6string_string* kl_2kl4list_14operator_index__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
 void kl_2kl4list_4swap__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t, uint64_t );
 void kl_2kl4list_8truncate__IQ2kl4pathE__SQ2kl4listIQ2kl4pathE_3u64( struct kl_2kl4list_list__IQ2kl4pathE*, uint64_t );
 void kl_2kl4list_4swap__IQ2kl4pathE__SQ2kl4listIQ2kl4pathE_3u64_3u64( struct kl_2kl4list_list__IQ2kl4pathE*, uint64_t, uint64_t );
-int32_t kl__4zero__I3i32E__( void );
+int32_t kl_7codegen_4zero__I3i32E__( void );
 void kl_7prelude_6result__IQ2kl7process_Q2kl10file_errorE__dtor( struct kl_7prelude_result__IQ2kl7process_Q2kl10file_errorE* );
 void kl_7prelude_6result__IQ2kl8captured_Q2kl10file_errorE__dtor( struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE* );
 void kl_2kl4list_list__IQ2kl6stringE__drop( void* );
@@ -9461,15 +9461,15 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 51 "codegen/generic_defaults.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__Pair__I3i32_3f64E kl_p_1;
-    struct kl__Pair__I3i32_3f64E kl_t2;
+    struct kl_7codegen_Pair__I3i32_3f64E kl_p_1;
+    struct kl_7codegen_Pair__I3i32_3f64E kl_t2;
     uint64_t kl_n_3;
     uint64_t kl_t4;
-    struct kl__Bag__IQ2kl6stringE kl_one_5;
-    struct kl__Bag__IQ2kl6stringE* kl_t6;
+    struct kl_7codegen_Bag__IQ2kl6stringE kl_one_5;
+    struct kl_7codegen_Bag__IQ2kl6stringE* kl_t6;
     struct kl_7prelude_str kl_t8;
     struct kl_7prelude_str* kl_t9;
     uint8_t* kl_t10;
@@ -9482,19 +9482,19 @@ int32_t kl__4main__( void )
     bool kl_t19;
     bool kl_t20;
     bool kl_t21;
-    struct kl__Bag__IQ2kl6stringE* kl_t22;
+    struct kl_7codegen_Bag__IQ2kl6stringE* kl_t22;
     uint64_t kl_t23;
     bool kl_t24;
 #line 53 "codegen/generic_defaults.kl"
-    kl_t2 = kl__4make__I3i32_3f64E__3f64( 2.5 );
+    kl_t2 = kl_7codegen_4make__I3i32_3f64E__3f64( 2.5 );
 #line 53 "codegen/generic_defaults.kl"
     kl_p_1 = kl_t2;
-    kl_t4 = kl__4fill__IQ2kl6stringE__(  );
+    kl_t4 = kl_7codegen_4fill__IQ2kl6stringE__(  );
 #line 54 "codegen/generic_defaults.kl"
     kl_n_3 = kl_t4;
     kl_t6 = &kl_one_5;
 #line 55 "codegen/generic_defaults.kl"
-    kl__3Bag__IQ2kl6stringE__R3BagIQ2kl6stringE_3i32__ctor( kl_t6, 1 );
+    kl_7codegen_3Bag__IQ2kl6stringE__RQ7codegen3BagIQ2kl6stringE_3i32__ctor( kl_t6, 1 );
 #line 46 "<kl>/console.kl"
     kl_t9 = &kl_t8;
 #line 46 "<kl>/console.kl"
@@ -9560,7 +9560,7 @@ int32_t kl__4main__( void )
 #line 59 "codegen/generic_defaults.kl"
     kl_t22 = &kl_one_5;
 #line 59 "codegen/generic_defaults.kl"
-    kl_t23 = kl__4size__IQ2kl6stringE__S3BagIQ2kl6stringE( kl_t22 );
+    kl_t23 = kl_7codegen_4size__IQ2kl6stringE__SQ7codegen3BagIQ2kl6stringE( kl_t22 );
 #line 59 "codegen/generic_defaults.kl"
     kl_t24 = kl_t23 == 0;
 #line 59 "codegen/generic_defaults.kl"
@@ -9573,13 +9573,13 @@ int32_t kl__4main__( void )
 }
 
 #line 40 "codegen/generic_defaults.kl"
-struct kl__Pair__I3i32_3f64E kl__4make__I3i32_3f64E__3f64( double kl_b_1 )
+struct kl_7codegen_Pair__I3i32_3f64E kl_7codegen_4make__I3i32_3f64E__3f64( double kl_b_1 )
 {
-    struct kl__Pair__I3i32_3f64E kl_t0;
-    struct kl__Pair__I3i32_3f64E kl_t2;
+    struct kl_7codegen_Pair__I3i32_3f64E kl_t0;
+    struct kl_7codegen_Pair__I3i32_3f64E kl_t2;
     int32_t kl_t3;
 #line 14 "codegen/generic_defaults.kl"
-    kl_t3 = kl__4zero__I3i32E__(  );
+    kl_t3 = kl_7codegen_4zero__I3i32E__(  );
 #line 42 "codegen/generic_defaults.kl"
     kl_t2.kl_first = kl_t3;
 #line 42 "codegen/generic_defaults.kl"
@@ -9591,20 +9591,20 @@ struct kl__Pair__I3i32_3f64E kl__4make__I3i32_3f64E__3f64( double kl_b_1 )
 }
 
 #line 45 "codegen/generic_defaults.kl"
-uint64_t kl__4fill__IQ2kl6stringE__( void )
+uint64_t kl_7codegen_4fill__IQ2kl6stringE__( void )
 {
     uint64_t kl_t0;
-    struct kl__Bag__IQ2kl6stringE kl_bag_1;
-    struct kl__Bag__IQ2kl6stringE* kl_t2;
-    struct kl__Bag__IQ2kl6stringE* kl_t4;
+    struct kl_7codegen_Bag__IQ2kl6stringE kl_bag_1;
+    struct kl_7codegen_Bag__IQ2kl6stringE* kl_t2;
+    struct kl_7codegen_Bag__IQ2kl6stringE* kl_t4;
     uint64_t kl_t5;
 #line 47 "codegen/generic_defaults.kl"
     kl_t2 = &kl_bag_1;
 #line 47 "codegen/generic_defaults.kl"
-    kl__3Bag__IQ2kl6stringE__R3BagIQ2kl6stringE_3i32__ctor( kl_t2, 2 );
+    kl_7codegen_3Bag__IQ2kl6stringE__RQ7codegen3BagIQ2kl6stringE_3i32__ctor( kl_t2, 2 );
     kl_t4 = &kl_bag_1;
 #line 48 "codegen/generic_defaults.kl"
-    kl_t5 = kl__4size__IQ2kl6stringE__S3BagIQ2kl6stringE( kl_t4 );
+    kl_t5 = kl_7codegen_4size__IQ2kl6stringE__SQ7codegen3BagIQ2kl6stringE( kl_t4 );
 #line 48 "codegen/generic_defaults.kl"
     kl_t0 = kl_t5;
 #line 48 "codegen/generic_defaults.kl"
@@ -9616,7 +9616,7 @@ uint64_t kl__4fill__IQ2kl6stringE__( void )
 }
 
 #line 24 "codegen/generic_defaults.kl"
-void kl__3Bag__IQ2kl6stringE__R3BagIQ2kl6stringE_3i32__ctor( struct kl__Bag__IQ2kl6stringE* kl_this_1, int32_t kl_k_2 )
+void kl_7codegen_3Bag__IQ2kl6stringE__RQ7codegen3BagIQ2kl6stringE_3i32__ctor( struct kl_7codegen_Bag__IQ2kl6stringE* kl_this_1, int32_t kl_k_2 )
 {
     struct kl_2kl4list_list__IQ2kl6stringE kl_t3;
     struct kl_2kl4list_list__IQ2kl6stringE* kl_t4;
@@ -9699,7 +9699,7 @@ void kl__3Bag__IQ2kl6stringE__R3BagIQ2kl6stringE_3i32__ctor( struct kl__Bag__IQ2
 }
 
 #line 34 "codegen/generic_defaults.kl"
-uint64_t kl__4size__IQ2kl6stringE__S3BagIQ2kl6stringE( struct kl__Bag__IQ2kl6stringE* kl_this_1 )
+uint64_t kl_7codegen_4size__IQ2kl6stringE__SQ7codegen3BagIQ2kl6stringE( struct kl_7codegen_Bag__IQ2kl6stringE* kl_this_1 )
 {
     uint64_t kl_t0;
     struct kl_2kl4list_list__IQ2kl6stringE* kl_t2;
@@ -10026,7 +10026,7 @@ void kl_2kl4list_4swap__IQ2kl4pathE__SQ2kl4listIQ2kl4pathE_3u64_3u64( struct kl_
 }
 
 #line 7 "codegen/generic_defaults.kl"
-int32_t kl__4zero__I3i32E__( void )
+int32_t kl_7codegen_4zero__I3i32E__( void )
 {
     int32_t kl_t0;
 #line 9 "codegen/generic_defaults.kl"
@@ -10103,7 +10103,7 @@ int main( void )
 #line 51 "codegen/generic_defaults.kl"
     kl_2kl2os_0build(  );
 #line 51 "codegen/generic_defaults.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 51 "codegen/generic_defaults.kl"
     kl_2kl2os_0drop(  );
 #line 51 "codegen/generic_defaults.kl"

@@ -11,17 +11,17 @@ struct kl__A4_3i64
 };
 _Static_assert( sizeof( struct kl__A4_3i64 ) == 32 && _Alignof( struct kl__A4_3i64 ) == 8, "layout" );
 
-struct kl__A4_3i64 kl__primes__G = { .e = { 3, 5, 7, 11 } };
-int64_t kl__total__G = 1;
+struct kl__A4_3i64 kl_10pure_calls_primes__G = { .e = { 3, 5, 7, 11 } };
+int64_t kl_10pure_calls_total__G = 1;
 
 int64_t labs( int64_t );
 
-int64_t kl__3mix__3i64( int64_t );
-int64_t kl__10twice_kept__3i64( int64_t );
-int32_t kl__4main__( void );
+int64_t kl_10pure_calls_3mix__3i64( int64_t );
+int64_t kl_10pure_calls_10twice_kept__3i64( int64_t );
+int32_t kl_10pure_calls_4main__( void );
 
 #line 10 "opt/pure_calls/main.kl"
-int64_t kl__3mix__3i64( int64_t kl_n_1 )
+int64_t kl_10pure_calls_3mix__3i64( int64_t kl_n_1 )
 {
     int64_t kl_t0;
     uint64_t kl_i_2;
@@ -52,7 +52,7 @@ int64_t kl__3mix__3i64( int64_t kl_n_1 )
 #line 15 "opt/pure_calls/main.kl"
     kl_t7 = kl_i_2 & 3;
 #line 15 "opt/pure_calls/main.kl"
-    kl_t0 = kl_t6 + kl__primes__G.e[kl_t7];
+    kl_t0 = kl_t6 + kl_10pure_calls_primes__G.e[kl_t7];
     kl_t8 = kl_t0 >> 7;
 #line 16 "opt/pure_calls/main.kl"
     kl_t0 = kl_t0 ^ kl_t8;
@@ -80,7 +80,7 @@ int64_t kl__3mix__3i64( int64_t kl_n_1 )
 }
 
 #line 43 "opt/pure_calls/main.kl"
-int64_t kl__10twice_kept__3i64( int64_t kl_n_1 )
+int64_t kl_10pure_calls_10twice_kept__3i64( int64_t kl_n_1 )
 {
     int64_t kl_t0;
     int64_t kl_x_2;
@@ -97,16 +97,16 @@ int64_t kl__10twice_kept__3i64( int64_t kl_n_1 )
     int64_t kl_t13;
     int64_t kl_t14;
 #line 35 "opt/pure_calls/main.kl"
-    kl_t12 = kl__3mix__3i64( kl_n_1 );
+    kl_t12 = kl_10pure_calls_3mix__3i64( kl_n_1 );
 #line 35 "opt/pure_calls/main.kl"
     kl_x_2 = kl_t12 + kl_n_1;
 #line 47 "opt/pure_calls/main.kl"
     kl_t3 = kl_n_1 + 1;
 #line 28 "opt/pure_calls/main.kl"
-    kl_t14 = kl__total__G + kl_n_1;
+    kl_t14 = kl_10pure_calls_total__G + kl_n_1;
     kl_t4 = kl_t12 + 1;
 #line 28 "opt/pure_calls/main.kl"
-    kl__total__G = kl_t14 + kl_n_1;
+    kl_10pure_calls_total__G = kl_t14 + kl_n_1;
 #line 50 "opt/pure_calls/main.kl"
     kl_t5 = kl_t4 + kl_t4;
 #line 50 "opt/pure_calls/main.kl"
@@ -120,7 +120,7 @@ int64_t kl__10twice_kept__3i64( int64_t kl_n_1 )
 #line 50 "opt/pure_calls/main.kl"
     kl_t10 = kl_t9 + kl_x_2;
 #line 35 "opt/pure_calls/main.kl"
-    kl_t13 = kl__3mix__3i64( kl_t3 );
+    kl_t13 = kl_10pure_calls_3mix__3i64( kl_t3 );
 #line 35 "opt/pure_calls/main.kl"
     kl_t11 = kl_t13 + kl_n_1;
 #line 50 "opt/pure_calls/main.kl"
@@ -131,7 +131,7 @@ int64_t kl__10twice_kept__3i64( int64_t kl_n_1 )
 }
 
 #line 54 "opt/pure_calls/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_10pure_calls_4main__( void )
 {
     int32_t kl_t0;
     int64_t kl_t1;
@@ -149,7 +149,7 @@ int32_t kl__4main__( void )
     int64_t kl_t13;
     int64_t kl_t14;
 #line 40 "opt/pure_calls/main.kl"
-    kl_t14 = kl__3mix__3i64( 27 );
+    kl_t14 = kl_10pure_calls_3mix__3i64( 27 );
 #line 40 "opt/pure_calls/main.kl"
     kl_t1 = kl_t14 + kl_t14;
 #line 56 "opt/pure_calls/main.kl"
@@ -163,13 +163,13 @@ int32_t kl__4main__( void )
 #line 58 "opt/pure_calls/main.kl"
     return kl_t0;
     bb2:
-    kl_kept_4 = kl__10twice_kept__3i64( -3 );
-    kl_t5 = kl__total__G != -5;
+    kl_kept_4 = kl_10pure_calls_10twice_kept__3i64( -3 );
+    kl_t5 = kl_10pure_calls_total__G != -5;
 #line 61 "opt/pure_calls/main.kl"
     if ( kl_t5 ) goto bb4; else goto bb3;
     bb3:
 #line 61 "opt/pure_calls/main.kl"
-    kl_t6 = kl__3mix__3i64( -3 );
+    kl_t6 = kl_10pure_calls_3mix__3i64( -3 );
 #line 61 "opt/pure_calls/main.kl"
     kl_t7 = 2 * kl_t6;
 #line 61 "opt/pure_calls/main.kl"
@@ -179,7 +179,7 @@ int32_t kl__4main__( void )
 #line 61 "opt/pure_calls/main.kl"
     kl_t10 = kl_t9 - 3;
 #line 61 "opt/pure_calls/main.kl"
-    kl_t11 = kl__3mix__3i64( -2 );
+    kl_t11 = kl_10pure_calls_3mix__3i64( -2 );
 #line 61 "opt/pure_calls/main.kl"
     kl_t12 = kl_t10 + kl_t11;
 #line 61 "opt/pure_calls/main.kl"
@@ -202,7 +202,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 54 "opt/pure_calls/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_10pure_calls_4main__(  );
 #line 54 "opt/pure_calls/main.kl"
     return kl_t0;
 #line 54 "opt/pure_calls/main.kl"

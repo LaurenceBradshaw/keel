@@ -54,7 +54,7 @@ int main( int argc, char** argv )
         ( "o,output",  "Write the pages into this directory",                cxxopts::value<std::string>() )
         ( "keelc",     "The keelc to run (default: the one beside keeldoc)", cxxopts::value<std::string>() )
         ( "h,help",    "Print usage and exit" )
-        ( "package",   "The package, as name=<dir>",                         cxxopts::value<std::string>() );
+        ( "package",   "The package's folder",                         cxxopts::value<std::string>() );
     // clang-format on
 
     options.parse_positional( { "package" } );
@@ -84,18 +84,17 @@ int main( int argc, char** argv )
         return 2;
     }
 
-    const std::string package = args["package"].as<std::string>();
-    const std::size_t equals  = package.find( '=' );
-    if( equals == 0 || equals == std::string::npos || equals + 1 == package.size() )
-    {
-        fmt::print( stderr, "keeldoc: the package is name=<dir>, not '{}'\n", package );
-        return 2;
-    }
-
-    const std::string           name = package.substr( 0, equals );
-    const std::filesystem::path dir  = package.substr( equals + 1 );
+    const std::filesystem::path dir = args["package"].as<std::string>();
     const std::filesystem::path keelc =
         args.count( "keelc" ) ? std::filesystem::path( args["keelc"].as<std::string>() ) : default_keelc();
+
+    std::string       named_error;
+    const std::string name = keeldoc::package_name( keelc, dir, named_error );
+    if( !named_error.empty() )
+    {
+        fmt::print( stderr, "keeldoc: {}\n", named_error );
+        return 1;
+    }
 
     std::string                        error;
     const std::vector<keeldoc::Record> records = keeldoc::run_keelc( keelc, name, dir, error );

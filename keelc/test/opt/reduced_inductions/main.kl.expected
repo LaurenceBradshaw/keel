@@ -52,14 +52,14 @@ void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-int64_t kl__4rows__A256_3i64( struct kl__A256_3i64* );
-int64_t kl__6walked__Q2kl4listI3i64E( struct kl_2kl4list_list__I3i64E* );
-uint64_t kl__7bounded__3u64( uint64_t );
-int32_t kl__4main__( void );
+int64_t kl_18reduced_inductions_4rows__A256_3i64( struct kl__A256_3i64* );
+int64_t kl_18reduced_inductions_6walked__Q2kl4listI3i64E( struct kl_2kl4list_list__I3i64E* );
+uint64_t kl_18reduced_inductions_7bounded__3u64( uint64_t );
+int32_t kl_18reduced_inductions_4main__( void );
 void kl_2kl4list_10reallocate__I3i64E__SQ2kl4listI3i64E_3u64( struct kl_2kl4list_list__I3i64E*, uint64_t );
 
 #line 19 "opt/reduced_inductions/main.kl"
-int64_t kl__4rows__A256_3i64( struct kl__A256_3i64* kl_a_1 )
+int64_t kl_18reduced_inductions_4rows__A256_3i64( struct kl__A256_3i64* kl_a_1 )
 {
     int64_t kl_t0;
     bool kl_t2;
@@ -149,7 +149,7 @@ int64_t kl__4rows__A256_3i64( struct kl__A256_3i64* kl_a_1 )
 }
 
 #line 33 "opt/reduced_inductions/main.kl"
-int64_t kl__6walked__Q2kl4listI3i64E( struct kl_2kl4list_list__I3i64E* kl_xs_1 )
+int64_t kl_18reduced_inductions_6walked__Q2kl4listI3i64E( struct kl_2kl4list_list__I3i64E* kl_xs_1 )
 {
     int64_t kl_t0;
     uint64_t kl_i_2;
@@ -192,7 +192,7 @@ int64_t kl__6walked__Q2kl4listI3i64E( struct kl_2kl4list_list__I3i64E* kl_xs_1 )
 }
 
 #line 45 "opt/reduced_inductions/main.kl"
-uint64_t kl__7bounded__3u64( uint64_t kl_stop_1 )
+uint64_t kl_18reduced_inductions_7bounded__3u64( uint64_t kl_stop_1 )
 {
     uint64_t kl_t0;
     uint8_t kl_i_2;
@@ -240,7 +240,7 @@ uint64_t kl__7bounded__3u64( uint64_t kl_stop_1 )
 }
 
 #line 60 "opt/reduced_inductions/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_18reduced_inductions_4main__( void )
 {
     int32_t kl_t0;
     struct kl_2kl4list_list__I3i64E kl_xs_1;
@@ -360,7 +360,7 @@ int32_t kl__4main__( void )
     kl_a_12.e[kl_t15] = 2;
     kl_t16 = &kl_a_12;
 #line 78 "opt/reduced_inductions/main.kl"
-    kl_t17 = kl__4rows__A256_3i64( kl_t16 );
+    kl_t17 = kl_18reduced_inductions_4rows__A256_3i64( kl_t16 );
 #line 78 "opt/reduced_inductions/main.kl"
     kl_t18 = kl_t17 != 257;
 #line 78 "opt/reduced_inductions/main.kl"
@@ -383,7 +383,7 @@ int32_t kl__4main__( void )
 #line 83 "opt/reduced_inductions/main.kl"
     kl_t22 = kl_t20 * 1980;
 #line 83 "opt/reduced_inductions/main.kl"
-    kl_t23 = kl__7bounded__3u64( kl_t22 );
+    kl_t23 = kl_18reduced_inductions_7bounded__3u64( kl_t22 );
 #line 83 "opt/reduced_inductions/main.kl"
     kl_t24 = kl_t23 != 9900;
 #line 83 "opt/reduced_inductions/main.kl"
@@ -536,7 +536,7 @@ int32_t kl__4main__( void )
 #line 65 "opt/reduced_inductions/main.kl"
     kl_t4 = &kl_xs_1;
 #line 65 "opt/reduced_inductions/main.kl"
-    kl_t5 = kl__6walked__Q2kl4listI3i64E( kl_t4 );
+    kl_t5 = kl_18reduced_inductions_6walked__Q2kl4listI3i64E( kl_t4 );
 #line 65 "opt/reduced_inductions/main.kl"
     kl_t6 = kl_t5 != 9;
 #line 65 "opt/reduced_inductions/main.kl"
@@ -649,7 +649,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 60 "opt/reduced_inductions/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_18reduced_inductions_4main__(  );
 #line 60 "opt/reduced_inductions/main.kl"
     return kl_t0;
 #line 60 "opt/reduced_inductions/main.kl"

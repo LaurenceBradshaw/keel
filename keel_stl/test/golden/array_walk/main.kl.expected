@@ -4083,7 +4083,7 @@ struct kl_7prelude_textual__vtable
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-int32_t kl__4main__( void );
+int32_t kl_10array_walk_4main__( void );
 struct kl__run__LQ2kl6string__ref kl_2kl4list_6as_run__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
 void kl_2kl4list_8truncate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
 uint64_t kl_2kl4list_4size__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
@@ -4107,7 +4107,7 @@ struct kl__run__L2u8__ref kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_
 static const struct kl_7prelude_textual__vtable kl_2kl6string_string__as_kl_7prelude_textual = { kl_2kl6string_string__drop, kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 6 "array_walk/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_10array_walk_4main__( void )
 {
     int32_t kl_t0;
     struct kl__A3_Q2kl6string kl_words_1;
@@ -4764,7 +4764,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 6 "array_walk/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_10array_walk_4main__(  );
 #line 6 "array_walk/main.kl"
     return kl_t0;
 #line 6 "array_walk/main.kl"

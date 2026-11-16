@@ -348,6 +348,17 @@ void Recovery::report_dropped( u32 begin, u32 end, const Scan_failure& failure, 
     const Token& first = cursor_.tokens()[begin];
     const Token& last  = cursor_.tokens()[end - 1];
 
+    // `@package( name );` stands alone, so it is never a declaration's directive.
+    if( first.is( Token_kind::At ) && begin + 1 < end && sm_.text( cursor_.tokens()[begin + 1].span ) == "package" )
+    {
+        fail_at(
+            Span::merge( first.span, cursor_.tokens()[begin + 1].span ),
+            "`@package` is written only in `packageinfo.kl`",
+            "it names the package that folder holds"
+        );
+        return;
+    }
+
     const bool same_line = next && line_of( last ) == line_of( cursor_.tokens()[*next] );
 
     const std::string_view word_hint = dropped_word_hint( sm_.text( first.span ), place );

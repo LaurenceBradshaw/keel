@@ -432,7 +432,7 @@ keelc examples/hello.kl -o hello && ./hello
 ```
 
 keelc finds the library, `kl`, at `../lib/keel/<version>/kl` from its own folder, which the build
-links to `keel_stl/src`; `--package kl=<dir>` names another.
+links to `keel_stl/src`; `--package <dir>` gives another, named by its `packageinfo.kl`.
 
 | Flag | Effect |
 | --- | --- |
@@ -458,7 +458,7 @@ links to `keel_stl/src`; `--package kl=<dir>` names another.
 | `--runtime <path>` | Link this runtime library instead of the one keelc carries |
 | `file.c` / `file.o` / `file.a` after the `.kl` | Compile or link the program's own C with it |
 | `-l <name>` / `-L <dir>` | Link a C library, or search a directory for one; may be repeated |
-| `--package name=<dir>` | Make a package importable as `name`; may be repeated |
+| `--package <dir>` | Make a package importable, named by its `packageinfo.kl`'s `@package( name );` or the folder; may be repeated |
 | `-W<name>` / `-Wno-<name>` | Turn a warning on or off: `unused-parameter`, `unused-variable`, `void-variable`, `constant-comparison`, `needless-move`, `unreachable-code`, `unconditional-recursion`, `unused-import`, `unused-private`, `needless-deref`, `linear-map` (-O3 only), and `large-local` (off by default) |
 | `-Werror` / `-Werror=<name>` | Make every warning, or that one, an error |
 
@@ -478,7 +478,7 @@ them. `examples/debugging.kl` is a program to step through. For `--backend c`, b
 library's are in [`keel_stl/docs`](keel_stl/docs); after changing a doc comment, regenerate them:
 
 ```sh
-build/debug/bin/keeldoc -o keel_stl/docs kl=keel_stl/src
+build/debug/bin/keeldoc -o keel_stl/docs keel_stl/src
 ```
 
 ## Testing

@@ -3,32 +3,32 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Tracked;
+struct kl_7codegen_Tracked;
 
-struct kl__Tracked
+struct kl_7codegen_Tracked
 {
     int64_t kl_id;
 };
-_Static_assert( sizeof( struct kl__Tracked ) == 8 && _Alignof( struct kl__Tracked ) == 8 && offsetof( struct kl__Tracked, kl_id ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Tracked ) == 8 && _Alignof( struct kl_7codegen_Tracked ) == 8 && offsetof( struct kl_7codegen_Tracked, kl_id ) == 0, "layout" );
 
-int64_t kl__made__G;
-int64_t kl__dropped__G;
+int64_t kl_7codegen_made__G;
+int64_t kl_7codegen_dropped__G;
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__7Tracked__R7Tracked_3i64__ctor( struct kl__Tracked*, int64_t );
-void kl__7Tracked__dtor( struct kl__Tracked* );
-int32_t kl__4main__( void );
+void kl_7codegen_7Tracked__RQ7codegen7Tracked_3i64__ctor( struct kl_7codegen_Tracked*, int64_t );
+void kl_7codegen_7Tracked__dtor( struct kl_7codegen_Tracked* );
+int32_t kl_7codegen_4main__( void );
 
 #line 10 "codegen/ptr_init.kl"
-void kl__7Tracked__R7Tracked_3i64__ctor( struct kl__Tracked* kl_this_1, int64_t kl_x_2 )
+void kl_7codegen_7Tracked__RQ7codegen7Tracked_3i64__ctor( struct kl_7codegen_Tracked* kl_this_1, int64_t kl_x_2 )
 {
     bool kl_t3;
 #line 12 "codegen/ptr_init.kl"
     ( *kl_this_1 ).kl_id = kl_x_2;
-    kl_t3 = __builtin_add_overflow( kl__made__G, 1, &( int64_t ) { 0 } );
+    kl_t3 = __builtin_add_overflow( kl_7codegen_made__G, 1, &( int64_t ) { 0 } );
 #line 13 "codegen/ptr_init.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -36,18 +36,18 @@ void kl__7Tracked__R7Tracked_3i64__ctor( struct kl__Tracked* kl_this_1, int64_t 
     kl_rt_panic( "codegen/ptr_init.kl", 13, "arithmetic overflow: made += 1;" );
     bb2:
 #line 13 "codegen/ptr_init.kl"
-    kl__made__G = kl__made__G + 1;
+    kl_7codegen_made__G = kl_7codegen_made__G + 1;
     return;
 #line 14 "codegen/ptr_init.kl"
 }
 
 #line 16 "codegen/ptr_init.kl"
-void kl__7Tracked__dtor( struct kl__Tracked* kl_this_1 )
+void kl_7codegen_7Tracked__dtor( struct kl_7codegen_Tracked* kl_this_1 )
 {
     bool kl_t2;
     ( void ) kl_this_1;
 #line 18 "codegen/ptr_init.kl"
-    kl_t2 = __builtin_add_overflow( kl__dropped__G, 1, &( int64_t ) { 0 } );
+    kl_t2 = __builtin_add_overflow( kl_7codegen_dropped__G, 1, &( int64_t ) { 0 } );
 #line 18 "codegen/ptr_init.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -55,26 +55,26 @@ void kl__7Tracked__dtor( struct kl__Tracked* kl_this_1 )
     kl_rt_panic( "codegen/ptr_init.kl", 18, "arithmetic overflow: dropped += 1;" );
     bb2:
 #line 18 "codegen/ptr_init.kl"
-    kl__dropped__G = kl__dropped__G + 1;
+    kl_7codegen_dropped__G = kl_7codegen_dropped__G + 1;
     return;
 #line 19 "codegen/ptr_init.kl"
 }
 
 #line 22 "codegen/ptr_init.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__Tracked* kl_one_1;
-    struct kl__Tracked* kl_two_2;
+    struct kl_7codegen_Tracked* kl_one_1;
+    struct kl_7codegen_Tracked* kl_two_2;
     int32_t* kl_plain_3;
-    struct kl__Tracked* kl_t4;
-    struct kl__Tracked kl_named_5;
-    struct kl__Tracked* kl_t6;
-    struct kl__Tracked* kl_t8;
-    struct kl__Tracked* kl_t9;
-    struct kl__Tracked* kl_t10;
-    struct kl__Tracked kl_t11;
-    struct kl__Tracked* kl_t12;
+    struct kl_7codegen_Tracked* kl_t4;
+    struct kl_7codegen_Tracked kl_named_5;
+    struct kl_7codegen_Tracked* kl_t6;
+    struct kl_7codegen_Tracked* kl_t8;
+    struct kl_7codegen_Tracked* kl_t9;
+    struct kl_7codegen_Tracked* kl_t10;
+    struct kl_7codegen_Tracked kl_t11;
+    struct kl_7codegen_Tracked* kl_t12;
     int32_t* kl_t14;
     int32_t* kl_t15;
     bool kl_t16;
@@ -83,8 +83,8 @@ int32_t kl__4main__( void )
     bool kl_t19;
     bool kl_t20;
     bool kl_t21;
-    struct kl__Tracked* kl_t22;
-    struct kl__Tracked* kl_t24;
+    struct kl_7codegen_Tracked* kl_t22;
+    struct kl_7codegen_Tracked* kl_t24;
     bool kl_t27;
     bool kl_t28;
     bool kl_t29;
@@ -99,7 +99,7 @@ int32_t kl__4main__( void )
     kl_two_2 = NULL;
     kl_plain_3 = NULL;
 #line 29 "codegen/ptr_init.kl"
-    kl_t4 = ( struct kl__Tracked* ) kl_rt_alloc( 8, "codegen/ptr_init.kl", 29, "out of memory: alloc<Tracked>()" );
+    kl_t4 = ( struct kl_7codegen_Tracked* ) kl_rt_alloc( 8, "codegen/ptr_init.kl", 29, "out of memory: alloc<Tracked>()" );
 #line 29 "codegen/ptr_init.kl"
     kl_one_1 = kl_t4;
     kl_t30 = false;
@@ -108,14 +108,14 @@ int32_t kl__4main__( void )
 #line 30 "codegen/ptr_init.kl"
     kl_t30 = true;
 #line 30 "codegen/ptr_init.kl"
-    kl__7Tracked__R7Tracked_3i64__ctor( kl_t6, 7 );
+    kl_7codegen_7Tracked__RQ7codegen7Tracked_3i64__ctor( kl_t6, 7 );
     kl_t8 = kl_one_1;
 #line 31 "codegen/ptr_init.kl"
     ( *kl_t8 ) = kl_named_5;
 #line 31 "codegen/ptr_init.kl"
     kl_t30 = false;
 #line 33 "codegen/ptr_init.kl"
-    kl_t9 = ( struct kl__Tracked* ) kl_rt_alloc( 8, "codegen/ptr_init.kl", 33, "out of memory: alloc<Tracked>()" );
+    kl_t9 = ( struct kl_7codegen_Tracked* ) kl_rt_alloc( 8, "codegen/ptr_init.kl", 33, "out of memory: alloc<Tracked>()" );
 #line 33 "codegen/ptr_init.kl"
     kl_two_2 = kl_t9;
     kl_t10 = kl_two_2;
@@ -126,13 +126,13 @@ int32_t kl__4main__( void )
 #line 34 "codegen/ptr_init.kl"
     kl_t31 = true;
 #line 34 "codegen/ptr_init.kl"
-    kl__7Tracked__R7Tracked_3i64__ctor( kl_t12, 9 );
+    kl_7codegen_7Tracked__RQ7codegen7Tracked_3i64__ctor( kl_t12, 9 );
 #line 34 "codegen/ptr_init.kl"
     ( *kl_t10 ) = kl_t11;
 #line 34 "codegen/ptr_init.kl"
     kl_t31 = false;
 #line 34 "codegen/ptr_init.kl"
-    if ( kl_t31 ) kl__7Tracked__dtor( &kl_t11 );
+    if ( kl_t31 ) kl_7codegen_7Tracked__dtor( &kl_t11 );
 #line 34 "codegen/ptr_init.kl"
     kl_t31 = false;
 #line 36 "codegen/ptr_init.kl"
@@ -142,11 +142,11 @@ int32_t kl__4main__( void )
     kl_t15 = kl_plain_3;
 #line 37 "codegen/ptr_init.kl"
     ( *kl_t15 ) = 5;
-    if ( kl_t30 ) kl__7Tracked__dtor( &kl_named_5 );
+    if ( kl_t30 ) kl_7codegen_7Tracked__dtor( &kl_named_5 );
 #line 38 "codegen/ptr_init.kl"
     kl_t30 = false;
 #line 40 "codegen/ptr_init.kl"
-    kl_t16 = kl__dropped__G != 0;
+    kl_t16 = kl_7codegen_dropped__G != 0;
 #line 40 "codegen/ptr_init.kl"
     if ( kl_t16 ) goto bb1; else goto bb2;
     bb1:
@@ -190,22 +190,22 @@ int32_t kl__4main__( void )
 #line 52 "codegen/ptr_init.kl"
     kl_t22 = kl_one_1;
 #line 52 "codegen/ptr_init.kl"
-    kl__7Tracked__dtor( &( *kl_t22 ) );
+    kl_7codegen_7Tracked__dtor( &( *kl_t22 ) );
     kl_rt_free( kl_one_1 );
     kl_t24 = kl_two_2;
 #line 54 "codegen/ptr_init.kl"
-    kl__7Tracked__dtor( &( *kl_t24 ) );
+    kl_7codegen_7Tracked__dtor( &( *kl_t24 ) );
     kl_rt_free( kl_two_2 );
     kl_rt_free( kl_plain_3 );
 #line 59 "codegen/ptr_init.kl"
-    kl_t28 = kl__made__G != 2;
+    kl_t28 = kl_7codegen_made__G != 2;
 #line 59 "codegen/ptr_init.kl"
     kl_t27 = kl_t28;
 #line 59 "codegen/ptr_init.kl"
     if ( kl_t27 ) goto bb10; else goto bb9;
     bb9:
 #line 59 "codegen/ptr_init.kl"
-    kl_t29 = kl__dropped__G != 2;
+    kl_t29 = kl_7codegen_dropped__G != 2;
 #line 59 "codegen/ptr_init.kl"
     kl_t27 = kl_t29;
 #line 59 "codegen/ptr_init.kl"
@@ -228,7 +228,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 22 "codegen/ptr_init.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 22 "codegen/ptr_init.kl"
     return kl_t0;
 #line 22 "codegen/ptr_init.kl"

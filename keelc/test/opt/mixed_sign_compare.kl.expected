@@ -3,13 +3,13 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-int32_t kl__4main__( void );
+int32_t kl_3opt_4main__( void );
 bool kl_cmp_gt_i64_u64( int64_t, uint64_t );
 bool kl_cmp_eq_i64_u64( int64_t, uint64_t );
 bool kl_cmp_ge_i64_u64( int64_t, uint64_t );
 
 #line 2 "opt/mixed_sign_compare.kl"
-int32_t kl__4main__( void )
+int32_t kl_3opt_4main__( void )
 {
     int32_t kl_t0;
 #line 10 "opt/mixed_sign_compare.kl"
@@ -94,7 +94,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 2 "opt/mixed_sign_compare.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_3opt_4main__(  );
 #line 2 "opt/mixed_sign_compare.kl"
     return kl_t0;
 #line 2 "opt/mixed_sign_compare.kl"

@@ -1,2 +1,2 @@
 build <id>
-package kl somewhere
+package kl ../../keel_stl/src

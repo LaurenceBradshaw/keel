@@ -3,16 +3,16 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-uint64_t kl__7bits_of__3f64( double );
-double kl__9from_bits__3u64( uint64_t );
-uint32_t kl__11narrow_bits__3f32( float );
-uint64_t kl__11unsigned_of__3i64( int64_t );
-int64_t kl__4same__3i64( int64_t );
-uint32_t kl__8low_half__3u64( uint64_t );
-int32_t kl__4main__( void );
+uint64_t kl_3opt_7bits_of__3f64( double );
+double kl_3opt_9from_bits__3u64( uint64_t );
+uint32_t kl_3opt_11narrow_bits__3f32( float );
+uint64_t kl_3opt_11unsigned_of__3i64( int64_t );
+int64_t kl_3opt_4same__3i64( int64_t );
+uint32_t kl_3opt_8low_half__3u64( uint64_t );
+int32_t kl_3opt_4main__( void );
 
 #line 5 "opt/bits.kl"
-uint64_t kl__7bits_of__3f64( double kl_x_1 )
+uint64_t kl_3opt_7bits_of__3f64( double kl_x_1 )
 {
     uint64_t kl_t0;
 #line 5 "opt/bits.kl"
@@ -23,7 +23,7 @@ uint64_t kl__7bits_of__3f64( double kl_x_1 )
 }
 
 #line 7 "opt/bits.kl"
-double kl__9from_bits__3u64( uint64_t kl_x_1 )
+double kl_3opt_9from_bits__3u64( uint64_t kl_x_1 )
 {
     double kl_t0;
 #line 7 "opt/bits.kl"
@@ -34,7 +34,7 @@ double kl__9from_bits__3u64( uint64_t kl_x_1 )
 }
 
 #line 9 "opt/bits.kl"
-uint32_t kl__11narrow_bits__3f32( float kl_x_1 )
+uint32_t kl_3opt_11narrow_bits__3f32( float kl_x_1 )
 {
     uint32_t kl_t0;
 #line 9 "opt/bits.kl"
@@ -45,7 +45,7 @@ uint32_t kl__11narrow_bits__3f32( float kl_x_1 )
 }
 
 #line 12 "opt/bits.kl"
-uint64_t kl__11unsigned_of__3i64( int64_t kl_x_1 )
+uint64_t kl_3opt_11unsigned_of__3i64( int64_t kl_x_1 )
 {
     uint64_t kl_t0;
 #line 12 "opt/bits.kl"
@@ -56,7 +56,7 @@ uint64_t kl__11unsigned_of__3i64( int64_t kl_x_1 )
 }
 
 #line 15 "opt/bits.kl"
-int64_t kl__4same__3i64( int64_t kl_x_1 )
+int64_t kl_3opt_4same__3i64( int64_t kl_x_1 )
 {
     int64_t kl_t0;
 #line 15 "opt/bits.kl"
@@ -67,7 +67,7 @@ int64_t kl__4same__3i64( int64_t kl_x_1 )
 }
 
 #line 18 "opt/bits.kl"
-uint32_t kl__8low_half__3u64( uint64_t kl_x_1 )
+uint32_t kl_3opt_8low_half__3u64( uint64_t kl_x_1 )
 {
     uint32_t kl_t0;
     uint64_t* kl_t2;
@@ -84,7 +84,7 @@ uint32_t kl__8low_half__3u64( uint64_t kl_x_1 )
 }
 
 #line 20 "opt/bits.kl"
-int32_t kl__4main__( void )
+int32_t kl_3opt_4main__( void )
 {
     int32_t kl_t0;
     uint32_t kl_t1;
@@ -119,7 +119,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 20 "opt/bits.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_3opt_4main__(  );
 #line 20 "opt/bits.kl"
     return kl_t0;
 #line 20 "opt/bits.kl"

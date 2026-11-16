@@ -109,6 +109,11 @@ public:
         return modules_.package_of( file );
     }
 
+    Symbol_id program_package() const
+    {
+        return modules_.program_package();
+    }
+
     bool is_package( Symbol_id package ) const
     {
         return modules_.is_package( package );

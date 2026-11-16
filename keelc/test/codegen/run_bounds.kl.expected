@@ -324,8 +324,8 @@ void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-uint8_t kl__2at__L2u8_3u64( uint8_t*, uint64_t, uint64_t );
-int32_t kl__4main__( void );
+uint8_t kl_7codegen_2at__L2u8_3u64( uint8_t*, uint64_t, uint64_t );
+int32_t kl_7codegen_4main__( void );
 void kl_1t7console_5print__7textual_7textual( struct kl_7prelude_textual__ref, struct kl_7prelude_textual__ref );
 void kl_1t7console_5print__3u64_7textual( uint64_t, struct kl_7prelude_textual__ref );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
@@ -335,7 +335,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 5 "codegen/run_bounds.kl"
-uint8_t kl__2at__L2u8_3u64( uint8_t* kl_text_1_data, uint64_t kl_text_1_size, uint64_t kl_i_2 )
+uint8_t kl_7codegen_2at__L2u8_3u64( uint8_t* kl_text_1_data, uint64_t kl_text_1_size, uint64_t kl_i_2 )
 {
     uint8_t kl_t0;
 #line 5 "codegen/run_bounds.kl"
@@ -365,7 +365,7 @@ uint8_t kl__2at__L2u8_3u64( uint8_t* kl_text_1_data, uint64_t kl_text_1_size, ui
 }
 
 #line 10 "codegen/run_bounds.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     uint8_t* kl_data_1;
@@ -439,7 +439,7 @@ int32_t kl__4main__( void )
 #line 19 "codegen/run_bounds.kl"
     kl_t10 = kl_t9;
 #line 19 "codegen/run_bounds.kl"
-    kl_t11 = kl__2at__L2u8_3u64( ( kl_t10 ).data, ( kl_t10 ).size, 3 );
+    kl_t11 = kl_7codegen_2at__L2u8_3u64( ( kl_t10 ).data, ( kl_t10 ).size, 3 );
 #line 19 "codegen/run_bounds.kl"
     kl_t12 = ( uint64_t ) kl_t11;
 #line 41 "../test_lib/console.kl"
@@ -474,7 +474,7 @@ int32_t kl__4main__( void )
 #line 20 "codegen/run_bounds.kl"
     kl_t26 = kl_t25;
 #line 20 "codegen/run_bounds.kl"
-    kl_t27 = kl__2at__L2u8_3u64( ( kl_t26 ).data, ( kl_t26 ).size, 4 );
+    kl_t27 = kl_7codegen_2at__L2u8_3u64( ( kl_t26 ).data, ( kl_t26 ).size, 4 );
 #line 20 "codegen/run_bounds.kl"
     kl_t28 = ( uint64_t ) kl_t27;
 #line 41 "../test_lib/console.kl"
@@ -519,7 +519,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 10 "codegen/run_bounds.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 10 "codegen/run_bounds.kl"
     return kl_t0;
 #line 10 "codegen/run_bounds.kl"

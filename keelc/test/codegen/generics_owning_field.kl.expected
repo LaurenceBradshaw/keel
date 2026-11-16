@@ -3,46 +3,46 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Buf;
-struct kl__Box__I3BufE;
-struct kl__Box__I3i32E;
-struct kl__Box__I3BoxI3BufEE;
+struct kl_7codegen_Buf;
+struct kl_7codegen_Box__IQ7codegen3BufE;
+struct kl_7codegen_Box__I3i32E;
+struct kl_7codegen_Box__IQ7codegen3BoxIQ7codegen3BufEE;
 
-struct kl__Buf
+struct kl_7codegen_Buf
 {
     int32_t kl_v;
 };
-_Static_assert( sizeof( struct kl__Buf ) == 4 && _Alignof( struct kl__Buf ) == 4 && offsetof( struct kl__Buf, kl_v ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Buf ) == 4 && _Alignof( struct kl_7codegen_Buf ) == 4 && offsetof( struct kl_7codegen_Buf, kl_v ) == 0, "layout" );
 
-struct kl__Box__I3BufE
+struct kl_7codegen_Box__IQ7codegen3BufE
 {
-    struct kl__Buf kl_v;
+    struct kl_7codegen_Buf kl_v;
 };
-_Static_assert( sizeof( struct kl__Box__I3BufE ) == 4 && _Alignof( struct kl__Box__I3BufE ) == 4 && offsetof( struct kl__Box__I3BufE, kl_v ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Box__IQ7codegen3BufE ) == 4 && _Alignof( struct kl_7codegen_Box__IQ7codegen3BufE ) == 4 && offsetof( struct kl_7codegen_Box__IQ7codegen3BufE, kl_v ) == 0, "layout" );
 
-struct kl__Box__I3i32E
+struct kl_7codegen_Box__I3i32E
 {
     int32_t kl_v;
 };
-_Static_assert( sizeof( struct kl__Box__I3i32E ) == 4 && _Alignof( struct kl__Box__I3i32E ) == 4 && offsetof( struct kl__Box__I3i32E, kl_v ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Box__I3i32E ) == 4 && _Alignof( struct kl_7codegen_Box__I3i32E ) == 4 && offsetof( struct kl_7codegen_Box__I3i32E, kl_v ) == 0, "layout" );
 
-struct kl__Box__I3BoxI3BufEE
+struct kl_7codegen_Box__IQ7codegen3BoxIQ7codegen3BufEE
 {
-    struct kl__Box__I3BufE kl_v;
+    struct kl_7codegen_Box__IQ7codegen3BufE kl_v;
 };
-_Static_assert( sizeof( struct kl__Box__I3BoxI3BufEE ) == 4 && _Alignof( struct kl__Box__I3BoxI3BufEE ) == 4 && offsetof( struct kl__Box__I3BoxI3BufEE, kl_v ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Box__IQ7codegen3BoxIQ7codegen3BufEE ) == 4 && _Alignof( struct kl_7codegen_Box__IQ7codegen3BoxIQ7codegen3BufEE ) == 4 && offsetof( struct kl_7codegen_Box__IQ7codegen3BoxIQ7codegen3BufEE, kl_v ) == 0, "layout" );
 
-int32_t kl__destroyed__G = 0;
+int32_t kl_7codegen_destroyed__G = 0;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__3Buf__R3Buf_3i32__ctor( struct kl__Buf*, int32_t );
-void kl__3Buf__dtor( struct kl__Buf* );
-int32_t kl__5early__3i32( int32_t );
-int32_t kl__4main__( void );
+void kl_7codegen_3Buf__RQ7codegen3Buf_3i32__ctor( struct kl_7codegen_Buf*, int32_t );
+void kl_7codegen_3Buf__dtor( struct kl_7codegen_Buf* );
+int32_t kl_7codegen_5early__3i32( int32_t );
+int32_t kl_7codegen_4main__( void );
 
 #line 13 "codegen/generics_owning_field.kl"
-void kl__3Buf__R3Buf_3i32__ctor( struct kl__Buf* kl_this_1, int32_t kl_n_2 )
+void kl_7codegen_3Buf__RQ7codegen3Buf_3i32__ctor( struct kl_7codegen_Buf* kl_this_1, int32_t kl_n_2 )
 {
     ( *kl_this_1 ).kl_v = kl_n_2;
     return;
@@ -50,13 +50,13 @@ void kl__3Buf__R3Buf_3i32__ctor( struct kl__Buf* kl_this_1, int32_t kl_n_2 )
 }
 
 #line 18 "codegen/generics_owning_field.kl"
-void kl__3Buf__dtor( struct kl__Buf* kl_this_1 )
+void kl_7codegen_3Buf__dtor( struct kl_7codegen_Buf* kl_this_1 )
 {
     bool kl_t2;
     int32_t kl_t3;
     ( void ) kl_this_1;
 #line 20 "codegen/generics_owning_field.kl"
-    kl_t2 = __builtin_add_overflow( kl__destroyed__G, 1, &( int32_t ) { 0 } );
+    kl_t2 = __builtin_add_overflow( kl_7codegen_destroyed__G, 1, &( int32_t ) { 0 } );
 #line 20 "codegen/generics_owning_field.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -64,20 +64,20 @@ void kl__3Buf__dtor( struct kl__Buf* kl_this_1 )
     kl_rt_panic( "codegen/generics_owning_field.kl", 20, "arithmetic overflow: destroyed + 1" );
     bb2:
 #line 20 "codegen/generics_owning_field.kl"
-    kl_t3 = kl__destroyed__G + 1;
+    kl_t3 = kl_7codegen_destroyed__G + 1;
 #line 20 "codegen/generics_owning_field.kl"
-    kl__destroyed__G = kl_t3;
+    kl_7codegen_destroyed__G = kl_t3;
     return;
 #line 21 "codegen/generics_owning_field.kl"
 }
 
 #line 32 "codegen/generics_owning_field.kl"
-int32_t kl__5early__3i32( int32_t kl_n_1 )
+int32_t kl_7codegen_5early__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
-    struct kl__Box__I3BufE kl_b_2;
-    struct kl__Buf kl_t3;
-    struct kl__Buf* kl_t4;
+    struct kl_7codegen_Box__IQ7codegen3BufE kl_b_2;
+    struct kl_7codegen_Buf kl_t3;
+    struct kl_7codegen_Buf* kl_t4;
     bool kl_t6;
     bool kl_t7;
     bool kl_t8;
@@ -93,9 +93,9 @@ int32_t kl__5early__3i32( int32_t kl_n_1 )
 #line 35 "codegen/generics_owning_field.kl"
     kl_t8 = true;
 #line 35 "codegen/generics_owning_field.kl"
-    kl__3Buf__R3Buf_3i32__ctor( kl_t4, kl_n_1 );
+    kl_7codegen_3Buf__RQ7codegen3Buf_3i32__ctor( kl_t4, kl_n_1 );
 #line 35 "codegen/generics_owning_field.kl"
-    if ( kl_t7 ) kl__3Buf__dtor( &kl_b_2.kl_v );
+    if ( kl_t7 ) kl_7codegen_3Buf__dtor( &kl_b_2.kl_v );
 #line 35 "codegen/generics_owning_field.kl"
     kl_b_2.kl_v = kl_t3;
 #line 35 "codegen/generics_owning_field.kl"
@@ -103,7 +103,7 @@ int32_t kl__5early__3i32( int32_t kl_n_1 )
 #line 35 "codegen/generics_owning_field.kl"
     kl_t7 = true;
 #line 35 "codegen/generics_owning_field.kl"
-    if ( kl_t8 ) kl__3Buf__dtor( &kl_t3 );
+    if ( kl_t8 ) kl_7codegen_3Buf__dtor( &kl_t3 );
 #line 35 "codegen/generics_owning_field.kl"
     kl_t8 = false;
 #line 37 "codegen/generics_owning_field.kl"
@@ -113,7 +113,7 @@ int32_t kl__5early__3i32( int32_t kl_n_1 )
     bb1:
     kl_t0 = 1;
 #line 39 "codegen/generics_owning_field.kl"
-    if ( kl_t7 ) kl__3Buf__dtor( &kl_b_2.kl_v );
+    if ( kl_t7 ) kl_7codegen_3Buf__dtor( &kl_b_2.kl_v );
 #line 39 "codegen/generics_owning_field.kl"
     kl_t7 = false;
 #line 39 "codegen/generics_owning_field.kl"
@@ -122,7 +122,7 @@ int32_t kl__5early__3i32( int32_t kl_n_1 )
 #line 42 "codegen/generics_owning_field.kl"
     kl_t0 = 0;
 #line 42 "codegen/generics_owning_field.kl"
-    if ( kl_t7 ) kl__3Buf__dtor( &kl_b_2.kl_v );
+    if ( kl_t7 ) kl_7codegen_3Buf__dtor( &kl_b_2.kl_v );
 #line 42 "codegen/generics_owning_field.kl"
     kl_t7 = false;
 #line 42 "codegen/generics_owning_field.kl"
@@ -130,20 +130,20 @@ int32_t kl__5early__3i32( int32_t kl_n_1 )
 }
 
 #line 45 "codegen/generics_owning_field.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__Box__I3BufE kl_a_1;
-    struct kl__Buf kl_t2;
-    struct kl__Buf* kl_t3;
+    struct kl_7codegen_Box__IQ7codegen3BufE kl_a_1;
+    struct kl_7codegen_Buf kl_t2;
+    struct kl_7codegen_Buf* kl_t3;
     bool kl_t5;
-    struct kl__Box__I3i32E kl_n_6;
+    struct kl_7codegen_Box__I3i32E kl_n_6;
     bool kl_t7;
     bool kl_t8;
-    struct kl__Box__I3BoxI3BufEE kl_outer_9;
-    struct kl__Box__I3BufE kl_inner_10;
-    struct kl__Buf kl_t11;
-    struct kl__Buf* kl_t12;
+    struct kl_7codegen_Box__IQ7codegen3BoxIQ7codegen3BufEE kl_outer_9;
+    struct kl_7codegen_Box__IQ7codegen3BufE kl_inner_10;
+    struct kl_7codegen_Buf kl_t11;
+    struct kl_7codegen_Buf* kl_t12;
     bool kl_t14;
     int32_t kl_t15;
     bool kl_t16;
@@ -174,9 +174,9 @@ int32_t kl__4main__( void )
 #line 50 "codegen/generics_owning_field.kl"
     kl_t22 = true;
 #line 50 "codegen/generics_owning_field.kl"
-    kl__3Buf__R3Buf_3i32__ctor( kl_t3, 7 );
+    kl_7codegen_3Buf__RQ7codegen3Buf_3i32__ctor( kl_t3, 7 );
 #line 50 "codegen/generics_owning_field.kl"
-    if ( kl_t21 ) kl__3Buf__dtor( &kl_a_1.kl_v );
+    if ( kl_t21 ) kl_7codegen_3Buf__dtor( &kl_a_1.kl_v );
 #line 50 "codegen/generics_owning_field.kl"
     kl_a_1.kl_v = kl_t2;
 #line 50 "codegen/generics_owning_field.kl"
@@ -184,14 +184,14 @@ int32_t kl__4main__( void )
 #line 50 "codegen/generics_owning_field.kl"
     kl_t21 = true;
 #line 50 "codegen/generics_owning_field.kl"
-    if ( kl_t22 ) kl__3Buf__dtor( &kl_t2 );
+    if ( kl_t22 ) kl_7codegen_3Buf__dtor( &kl_t2 );
 #line 50 "codegen/generics_owning_field.kl"
     kl_t22 = false;
-    if ( kl_t21 ) kl__3Buf__dtor( &kl_a_1.kl_v );
+    if ( kl_t21 ) kl_7codegen_3Buf__dtor( &kl_a_1.kl_v );
 #line 51 "codegen/generics_owning_field.kl"
     kl_t21 = false;
 #line 53 "codegen/generics_owning_field.kl"
-    kl_t5 = kl__destroyed__G != 1;
+    kl_t5 = kl_7codegen_destroyed__G != 1;
 #line 53 "codegen/generics_owning_field.kl"
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
@@ -211,7 +211,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb4:
 #line 70 "codegen/generics_owning_field.kl"
-    kl_t8 = kl__destroyed__G != 1;
+    kl_t8 = kl_7codegen_destroyed__G != 1;
 #line 70 "codegen/generics_owning_field.kl"
     if ( kl_t8 ) goto bb5; else goto bb6;
     bb5:
@@ -228,9 +228,9 @@ int32_t kl__4main__( void )
 #line 80 "codegen/generics_owning_field.kl"
     kl_t25 = true;
 #line 80 "codegen/generics_owning_field.kl"
-    kl__3Buf__R3Buf_3i32__ctor( kl_t12, 11 );
+    kl_7codegen_3Buf__RQ7codegen3Buf_3i32__ctor( kl_t12, 11 );
 #line 80 "codegen/generics_owning_field.kl"
-    if ( kl_t24 ) kl__3Buf__dtor( &kl_inner_10.kl_v );
+    if ( kl_t24 ) kl_7codegen_3Buf__dtor( &kl_inner_10.kl_v );
 #line 80 "codegen/generics_owning_field.kl"
     kl_inner_10.kl_v = kl_t11;
 #line 80 "codegen/generics_owning_field.kl"
@@ -238,25 +238,25 @@ int32_t kl__4main__( void )
 #line 80 "codegen/generics_owning_field.kl"
     kl_t24 = true;
 #line 80 "codegen/generics_owning_field.kl"
-    if ( kl_t25 ) kl__3Buf__dtor( &kl_t11 );
+    if ( kl_t25 ) kl_7codegen_3Buf__dtor( &kl_t11 );
 #line 80 "codegen/generics_owning_field.kl"
     kl_t25 = false;
-    if ( kl_t23 ) kl__3Buf__dtor( &kl_outer_9.kl_v.kl_v );
+    if ( kl_t23 ) kl_7codegen_3Buf__dtor( &kl_outer_9.kl_v.kl_v );
 #line 81 "codegen/generics_owning_field.kl"
     kl_outer_9.kl_v = kl_inner_10;
 #line 81 "codegen/generics_owning_field.kl"
     kl_t24 = false;
 #line 81 "codegen/generics_owning_field.kl"
     kl_t23 = true;
-    if ( kl_t24 ) kl__3Buf__dtor( &kl_inner_10.kl_v );
+    if ( kl_t24 ) kl_7codegen_3Buf__dtor( &kl_inner_10.kl_v );
 #line 82 "codegen/generics_owning_field.kl"
     kl_t24 = false;
 #line 82 "codegen/generics_owning_field.kl"
-    if ( kl_t23 ) kl__3Buf__dtor( &kl_outer_9.kl_v.kl_v );
+    if ( kl_t23 ) kl_7codegen_3Buf__dtor( &kl_outer_9.kl_v.kl_v );
 #line 82 "codegen/generics_owning_field.kl"
     kl_t23 = false;
 #line 84 "codegen/generics_owning_field.kl"
-    kl_t14 = kl__destroyed__G != 2;
+    kl_t14 = kl_7codegen_destroyed__G != 2;
 #line 84 "codegen/generics_owning_field.kl"
     if ( kl_t14 ) goto bb7; else goto bb8;
     bb7:
@@ -265,7 +265,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb8:
 #line 89 "codegen/generics_owning_field.kl"
-    kl_t15 = kl__5early__3i32( 5 );
+    kl_t15 = kl_7codegen_5early__3i32( 5 );
 #line 89 "codegen/generics_owning_field.kl"
     kl_t16 = kl_t15 != 1;
 #line 89 "codegen/generics_owning_field.kl"
@@ -276,7 +276,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb10:
 #line 94 "codegen/generics_owning_field.kl"
-    kl_t17 = kl__destroyed__G != 3;
+    kl_t17 = kl_7codegen_destroyed__G != 3;
 #line 94 "codegen/generics_owning_field.kl"
     if ( kl_t17 ) goto bb11; else goto bb12;
     bb11:
@@ -285,7 +285,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb12:
 #line 99 "codegen/generics_owning_field.kl"
-    kl_t18 = kl__5early__3i32( 1 );
+    kl_t18 = kl_7codegen_5early__3i32( 1 );
 #line 99 "codegen/generics_owning_field.kl"
     kl_t19 = kl_t18 != 0;
 #line 99 "codegen/generics_owning_field.kl"
@@ -296,7 +296,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb14:
 #line 104 "codegen/generics_owning_field.kl"
-    kl_t20 = kl__destroyed__G != 4;
+    kl_t20 = kl_7codegen_destroyed__G != 4;
 #line 104 "codegen/generics_owning_field.kl"
     if ( kl_t20 ) goto bb15; else goto bb16;
     bb15:
@@ -314,7 +314,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 45 "codegen/generics_owning_field.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 45 "codegen/generics_owning_field.kl"
     return kl_t0;
 #line 45 "codegen/generics_owning_field.kl"

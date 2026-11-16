@@ -4034,27 +4034,27 @@ void kl_2kl6string_string__drop( void* kl_t1 )
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Square;
+struct kl_13list_of_boxes_Square;
 struct kl_2kl6string_string;
-struct kl__Labelled;
+struct kl_13list_of_boxes_Labelled;
 struct kl_7prelude_str;
 struct kl_2kl4list_list__IQ2kl6stringE;
 struct kl_7prelude_box__I5ShapeE;
-struct kl_7prelude_box__I6SquareE;
-struct kl_7prelude_box__I8LabelledE;
+struct kl_7prelude_box__IQ13list_of_boxes6SquareE;
+struct kl_7prelude_box__IQ13list_of_boxes8LabelledE;
 struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE;
 
-struct kl__Shape__vtable;
-struct kl__Shape__ref { void* self; const struct kl__Shape__vtable* vtable; };
+struct kl_13list_of_boxes_Shape__vtable;
+struct kl_13list_of_boxes_Shape__ref { void* self; const struct kl_13list_of_boxes_Shape__vtable* vtable; };
 
 typedef void ( *kl__fn__FMP4voidM3f64E4void )( void*, double );
 typedef double ( *kl__fn__FMP4voidE3f64 )( void* );
 
-struct kl__Square
+struct kl_13list_of_boxes_Square
 {
     double kl_side;
 };
-_Static_assert( sizeof( struct kl__Square ) == 8 && _Alignof( struct kl__Square ) == 8 && offsetof( struct kl__Square, kl_side ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_13list_of_boxes_Square ) == 8 && _Alignof( struct kl_13list_of_boxes_Square ) == 8 && offsetof( struct kl_13list_of_boxes_Square, kl_side ) == 0, "layout" );
 
 struct kl_2kl6string_string
 {
@@ -4064,11 +4064,11 @@ struct kl_2kl6string_string
 };
 _Static_assert( sizeof( struct kl_2kl6string_string ) == 24 && _Alignof( struct kl_2kl6string_string ) == 8 && offsetof( struct kl_2kl6string_string, kl_data_ ) == 0 && offsetof( struct kl_2kl6string_string, kl_size_ ) == 8 && offsetof( struct kl_2kl6string_string, kl_cap_ ) == 16, "layout" );
 
-struct kl__Labelled
+struct kl_13list_of_boxes_Labelled
 {
     struct kl_2kl6string_string kl_label;
 };
-_Static_assert( sizeof( struct kl__Labelled ) == 24 && _Alignof( struct kl__Labelled ) == 8 && offsetof( struct kl__Labelled, kl_label ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_13list_of_boxes_Labelled ) == 24 && _Alignof( struct kl_13list_of_boxes_Labelled ) == 8 && offsetof( struct kl_13list_of_boxes_Labelled, kl_label ) == 0, "layout" );
 
 struct kl_7prelude_str
 {
@@ -4087,21 +4087,21 @@ _Static_assert( sizeof( struct kl_2kl4list_list__IQ2kl6stringE ) == 24 && _Align
 
 struct kl_7prelude_box__I5ShapeE
 {
-    struct kl__Shape__ref kl_p_;
+    struct kl_13list_of_boxes_Shape__ref kl_p_;
 };
 _Static_assert( sizeof( struct kl_7prelude_box__I5ShapeE ) == 16 && _Alignof( struct kl_7prelude_box__I5ShapeE ) == 8 && offsetof( struct kl_7prelude_box__I5ShapeE, kl_p_ ) == 0, "layout" );
 
-struct kl_7prelude_box__I6SquareE
+struct kl_7prelude_box__IQ13list_of_boxes6SquareE
 {
-    struct kl__Square* kl_p_;
+    struct kl_13list_of_boxes_Square* kl_p_;
 };
-_Static_assert( sizeof( struct kl_7prelude_box__I6SquareE ) == 8 && _Alignof( struct kl_7prelude_box__I6SquareE ) == 8 && offsetof( struct kl_7prelude_box__I6SquareE, kl_p_ ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7prelude_box__IQ13list_of_boxes6SquareE ) == 8 && _Alignof( struct kl_7prelude_box__IQ13list_of_boxes6SquareE ) == 8 && offsetof( struct kl_7prelude_box__IQ13list_of_boxes6SquareE, kl_p_ ) == 0, "layout" );
 
-struct kl_7prelude_box__I8LabelledE
+struct kl_7prelude_box__IQ13list_of_boxes8LabelledE
 {
-    struct kl__Labelled* kl_p_;
+    struct kl_13list_of_boxes_Labelled* kl_p_;
 };
-_Static_assert( sizeof( struct kl_7prelude_box__I8LabelledE ) == 8 && _Alignof( struct kl_7prelude_box__I8LabelledE ) == 8 && offsetof( struct kl_7prelude_box__I8LabelledE, kl_p_ ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7prelude_box__IQ13list_of_boxes8LabelledE ) == 8 && _Alignof( struct kl_7prelude_box__IQ13list_of_boxes8LabelledE ) == 8 && offsetof( struct kl_7prelude_box__IQ13list_of_boxes8LabelledE, kl_p_ ) == 0, "layout" );
 
 struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE
 {
@@ -4111,7 +4111,7 @@ struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE
 };
 _Static_assert( sizeof( struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE ) == 24 && _Alignof( struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE ) == 8 && offsetof( struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE, kl_data_ ) == 0 && offsetof( struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE, kl_count_ ) == 8 && offsetof( struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE, kl_cap_ ) == 16, "layout" );
 
-struct kl__Shape__vtable
+struct kl_13list_of_boxes_Shape__vtable
 {
     void ( *drop )( void* );
     double ( *kl__4area__ )( void* );
@@ -4124,20 +4124,20 @@ void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-double kl__4area__S6Square( struct kl__Square* );
-void kl__4grow__S6Square_3f64( struct kl__Square*, double );
-void kl__8Labelled__R8Labelled_3u64__ctor( struct kl__Labelled*, uint64_t );
-double kl__4area__S8Labelled( struct kl__Labelled* );
-void kl__4grow__S8Labelled_3f64( struct kl__Labelled*, double );
-struct kl_7prelude_box__I5ShapeE kl__4make__3u64( uint64_t );
-int32_t kl__4main__( void );
-void kl_7prelude_3box__I6SquareE__RQ7prelude3boxI6SquareE_M6Square__ctor( struct kl_7prelude_box__I6SquareE*, struct kl__Square );
-void kl_7prelude_3box__I8LabelledE__RQ7prelude3boxI8LabelledE_M8Labelled__ctor( struct kl_7prelude_box__I8LabelledE*, struct kl__Labelled );
+double kl_13list_of_boxes_4area__SQ13list_of_boxes6Square( struct kl_13list_of_boxes_Square* );
+void kl_13list_of_boxes_4grow__SQ13list_of_boxes6Square_3f64( struct kl_13list_of_boxes_Square*, double );
+void kl_13list_of_boxes_8Labelled__RQ13list_of_boxes8Labelled_3u64__ctor( struct kl_13list_of_boxes_Labelled*, uint64_t );
+double kl_13list_of_boxes_4area__SQ13list_of_boxes8Labelled( struct kl_13list_of_boxes_Labelled* );
+void kl_13list_of_boxes_4grow__SQ13list_of_boxes8Labelled_3f64( struct kl_13list_of_boxes_Labelled*, double );
+struct kl_7prelude_box__I5ShapeE kl_13list_of_boxes_4make__3u64( uint64_t );
+int32_t kl_13list_of_boxes_4main__( void );
+void kl_7prelude_3box__IQ13list_of_boxes6SquareE__RQ7prelude3boxIQ13list_of_boxes6SquareE_MQ13list_of_boxes6Square__ctor( struct kl_7prelude_box__IQ13list_of_boxes6SquareE*, struct kl_13list_of_boxes_Square );
+void kl_7prelude_3box__IQ13list_of_boxes8LabelledE__RQ7prelude3boxIQ13list_of_boxes8LabelledE_MQ13list_of_boxes8Labelled__ctor( struct kl_7prelude_box__IQ13list_of_boxes8LabelledE*, struct kl_13list_of_boxes_Labelled );
 void kl_2kl4list_4list__IQ7prelude3boxI5ShapeEE__RQ2kl4listIQ7prelude3boxI5ShapeEE__ctor( struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE* );
 void kl_2kl4list_4push__IQ7prelude3boxI5ShapeEE__SQ2kl4listIQ7prelude3boxI5ShapeEE_MQ7prelude3boxI5ShapeE( struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE*, struct kl_7prelude_box__I5ShapeE );
 uint64_t kl_2kl4list_4size__IQ7prelude3boxI5ShapeEE__SQ2kl4listIQ7prelude3boxI5ShapeEE( struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE* );
 struct kl_7prelude_box__I5ShapeE* kl_2kl4list_14operator_index__IQ7prelude3boxI5ShapeEE__SQ2kl4listIQ7prelude3boxI5ShapeEE_3u64( struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE*, uint64_t );
-struct kl__Shape__ref kl_7prelude_3get__I5ShapeE__SQ7prelude3boxI5ShapeE( struct kl_7prelude_box__I5ShapeE* );
+struct kl_13list_of_boxes_Shape__ref kl_7prelude_3get__I5ShapeE__SQ7prelude3boxI5ShapeE( struct kl_7prelude_box__I5ShapeE* );
 struct kl_7prelude_box__I5ShapeE kl_2kl4list_3pop__IQ7prelude3boxI5ShapeEE__SQ2kl4listIQ7prelude3boxI5ShapeEE( struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE* );
 void kl_2kl4list_8truncate__IQ7prelude3boxI5ShapeEE__SQ2kl4listIQ7prelude3boxI5ShapeEE_3u64( struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE*, uint64_t );
 void kl_2kl4list_8truncate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
@@ -4145,20 +4145,20 @@ uint64_t kl_2kl4list_4size__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2k
 struct kl_2kl6string_string* kl_2kl4list_14operator_index__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
 void kl_2kl4list_4swap__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t, uint64_t );
 void kl_7prelude_3box__I5ShapeE__dtor( struct kl_7prelude_box__I5ShapeE* );
-void kl_7prelude_3box__I6SquareE__dtor( struct kl_7prelude_box__I6SquareE* );
-void kl_7prelude_3box__I8LabelledE__dtor( struct kl_7prelude_box__I8LabelledE* );
+void kl_7prelude_3box__IQ13list_of_boxes6SquareE__dtor( struct kl_7prelude_box__IQ13list_of_boxes6SquareE* );
+void kl_7prelude_3box__IQ13list_of_boxes8LabelledE__dtor( struct kl_7prelude_box__IQ13list_of_boxes8LabelledE* );
 void kl_2kl4list_4list__IQ7prelude3boxI5ShapeEE__dtor( struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE* );
 void kl_2kl4list_4swap__IQ7prelude3boxI5ShapeEE__SQ2kl4listIQ7prelude3boxI5ShapeEE_3u64_3u64( struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE*, uint64_t, uint64_t );
 void kl_2kl4list_20reallocate_if_needed__IQ7prelude3boxI5ShapeEE__SQ2kl4listIQ7prelude3boxI5ShapeEE( struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE* );
 void kl_2kl4list_10reallocate__IQ7prelude3boxI5ShapeEE__SQ2kl4listIQ7prelude3boxI5ShapeEE_3u64( struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE*, uint64_t );
-void kl__Labelled__drop( void* );
+void kl_13list_of_boxes_Labelled__drop( void* );
 void kl_2kl4list_list__IQ2kl6stringE__drop( void* );
 void kl_2kl4list_list__IQ7prelude3boxI5ShapeEE__drop( void* );
-void kl__Square__drop( void* );
-double kl__Square__as_kl__Shape__kl__4area__( void* );
-void kl__Square__as_kl__Shape__kl__4grow__3f64( void*, double );
-double kl__Labelled__as_kl__Shape__kl__4area__( void* );
-void kl__Labelled__as_kl__Shape__kl__4grow__3f64( void*, double );
+void kl_13list_of_boxes_Square__drop( void* );
+double kl_13list_of_boxes_Square__as_kl_13list_of_boxes_Shape__kl__4area__( void* );
+void kl_13list_of_boxes_Square__as_kl_13list_of_boxes_Shape__kl__4grow__3f64( void*, double );
+double kl_13list_of_boxes_Labelled__as_kl_13list_of_boxes_Shape__kl__4area__( void* );
+void kl_13list_of_boxes_Labelled__as_kl_13list_of_boxes_Shape__kl__4grow__3f64( void*, double );
 void kl_2kl6string_6string__RQ2kl6string__ctor( struct kl_2kl6string_string* );
 void kl_2kl6string_6string__dtor( struct kl_2kl6string_string* );
 uint64_t kl_2kl6string_4size__SQ2kl6string( struct kl_2kl6string_string* );
@@ -4166,46 +4166,46 @@ void kl_2kl6string_4push__SQ2kl6string_2u8( struct kl_2kl6string_string*, uint8_
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 void kl_2kl4list_4list__IQ2kl6stringE__dtor( struct kl_2kl4list_list__IQ2kl6stringE* );
 
-static const struct kl__Shape__vtable kl__Square__as_kl__Shape = { kl__Square__drop, kl__Square__as_kl__Shape__kl__4area__, kl__Square__as_kl__Shape__kl__4grow__3f64 };
+static const struct kl_13list_of_boxes_Shape__vtable kl_13list_of_boxes_Square__as_kl_13list_of_boxes_Shape = { kl_13list_of_boxes_Square__drop, kl_13list_of_boxes_Square__as_kl_13list_of_boxes_Shape__kl__4area__, kl_13list_of_boxes_Square__as_kl_13list_of_boxes_Shape__kl__4grow__3f64 };
 
-static const struct kl__Shape__vtable kl__Labelled__as_kl__Shape = { kl__Labelled__drop, kl__Labelled__as_kl__Shape__kl__4area__, kl__Labelled__as_kl__Shape__kl__4grow__3f64 };
+static const struct kl_13list_of_boxes_Shape__vtable kl_13list_of_boxes_Labelled__as_kl_13list_of_boxes_Shape = { kl_13list_of_boxes_Labelled__drop, kl_13list_of_boxes_Labelled__as_kl_13list_of_boxes_Shape__kl__4area__, kl_13list_of_boxes_Labelled__as_kl_13list_of_boxes_Shape__kl__4grow__3f64 };
 
-double kl__Square__as_kl__Shape__kl__4area__( void* kl_t1 )
+double kl_13list_of_boxes_Square__as_kl_13list_of_boxes_Shape__kl__4area__( void* kl_t1 )
 {
     double kl_t0;
-    struct kl__Square* kl_t2;
-    kl_t2 = ( struct kl__Square* ) kl_t1;
-    kl_t0 = kl__4area__S6Square( kl_t2 );
+    struct kl_13list_of_boxes_Square* kl_t2;
+    kl_t2 = ( struct kl_13list_of_boxes_Square* ) kl_t1;
+    kl_t0 = kl_13list_of_boxes_4area__SQ13list_of_boxes6Square( kl_t2 );
     return kl_t0;
 }
 
-void kl__Square__as_kl__Shape__kl__4grow__3f64( void* kl_t1, double kl_t2 )
+void kl_13list_of_boxes_Square__as_kl_13list_of_boxes_Shape__kl__4grow__3f64( void* kl_t1, double kl_t2 )
 {
-    struct kl__Square* kl_t3;
-    kl_t3 = ( struct kl__Square* ) kl_t1;
-    kl__4grow__S6Square_3f64( kl_t3, kl_t2 );
+    struct kl_13list_of_boxes_Square* kl_t3;
+    kl_t3 = ( struct kl_13list_of_boxes_Square* ) kl_t1;
+    kl_13list_of_boxes_4grow__SQ13list_of_boxes6Square_3f64( kl_t3, kl_t2 );
     return;
 }
 
-double kl__Labelled__as_kl__Shape__kl__4area__( void* kl_t1 )
+double kl_13list_of_boxes_Labelled__as_kl_13list_of_boxes_Shape__kl__4area__( void* kl_t1 )
 {
     double kl_t0;
-    struct kl__Labelled* kl_t2;
-    kl_t2 = ( struct kl__Labelled* ) kl_t1;
-    kl_t0 = kl__4area__S8Labelled( kl_t2 );
+    struct kl_13list_of_boxes_Labelled* kl_t2;
+    kl_t2 = ( struct kl_13list_of_boxes_Labelled* ) kl_t1;
+    kl_t0 = kl_13list_of_boxes_4area__SQ13list_of_boxes8Labelled( kl_t2 );
     return kl_t0;
 }
 
-void kl__Labelled__as_kl__Shape__kl__4grow__3f64( void* kl_t1, double kl_t2 )
+void kl_13list_of_boxes_Labelled__as_kl_13list_of_boxes_Shape__kl__4grow__3f64( void* kl_t1, double kl_t2 )
 {
-    struct kl__Labelled* kl_t3;
-    kl_t3 = ( struct kl__Labelled* ) kl_t1;
-    kl__4grow__S8Labelled_3f64( kl_t3, kl_t2 );
+    struct kl_13list_of_boxes_Labelled* kl_t3;
+    kl_t3 = ( struct kl_13list_of_boxes_Labelled* ) kl_t1;
+    kl_13list_of_boxes_4grow__SQ13list_of_boxes8Labelled_3f64( kl_t3, kl_t2 );
     return;
 }
 
 #line 17 "list_of_boxes/main.kl"
-double kl__4area__S6Square( struct kl__Square* kl_this_1 )
+double kl_13list_of_boxes_4area__SQ13list_of_boxes6Square( struct kl_13list_of_boxes_Square* kl_this_1 )
 {
     double kl_t0;
     double kl_t2;
@@ -4219,7 +4219,7 @@ double kl__4area__S6Square( struct kl__Square* kl_this_1 )
 }
 
 #line 18 "list_of_boxes/main.kl"
-void kl__4grow__S6Square_3f64( struct kl__Square* kl_this_1, double kl_by_2 )
+void kl_13list_of_boxes_4grow__SQ13list_of_boxes6Square_3f64( struct kl_13list_of_boxes_Square* kl_this_1, double kl_by_2 )
 {
     double kl_t3;
 #line 18 "list_of_boxes/main.kl"
@@ -4232,7 +4232,7 @@ void kl__4grow__S6Square_3f64( struct kl__Square* kl_this_1, double kl_by_2 )
 }
 
 #line 25 "list_of_boxes/main.kl"
-void kl__8Labelled__R8Labelled_3u64__ctor( struct kl__Labelled* kl_this_1, uint64_t kl_n_2 )
+void kl_13list_of_boxes_8Labelled__RQ13list_of_boxes8Labelled_3u64__ctor( struct kl_13list_of_boxes_Labelled* kl_this_1, uint64_t kl_n_2 )
 {
     struct kl_2kl6string_string kl_t3;
     struct kl_2kl6string_string* kl_t4;
@@ -4293,7 +4293,7 @@ void kl__8Labelled__R8Labelled_3u64__ctor( struct kl__Labelled* kl_this_1, uint6
 }
 
 #line 34 "list_of_boxes/main.kl"
-double kl__4area__S8Labelled( struct kl__Labelled* kl_this_1 )
+double kl_13list_of_boxes_4area__SQ13list_of_boxes8Labelled( struct kl_13list_of_boxes_Labelled* kl_this_1 )
 {
     double kl_t0;
     struct kl_2kl6string_string* kl_t2;
@@ -4331,7 +4331,7 @@ double kl__4area__S8Labelled( struct kl__Labelled* kl_this_1 )
 }
 
 #line 35 "list_of_boxes/main.kl"
-void kl__4grow__S8Labelled_3f64( struct kl__Labelled* kl_this_1, double kl_t2 )
+void kl_13list_of_boxes_4grow__SQ13list_of_boxes8Labelled_3f64( struct kl_13list_of_boxes_Labelled* kl_this_1, double kl_t2 )
 {
     struct kl_2kl6string_string* kl_t3;
     ( void ) kl_t2;
@@ -4345,27 +4345,27 @@ void kl__4grow__S8Labelled_3f64( struct kl__Labelled* kl_this_1, double kl_t2 )
 }
 
 #line 38 "list_of_boxes/main.kl"
-struct kl_7prelude_box__I5ShapeE kl__4make__3u64( uint64_t kl_i_1 )
+struct kl_7prelude_box__I5ShapeE kl_13list_of_boxes_4make__3u64( uint64_t kl_i_1 )
 {
     struct kl_7prelude_box__I5ShapeE kl_t0;
     uint64_t kl_t2;
     bool kl_t3;
-    struct kl_7prelude_box__I6SquareE kl_t4;
-    struct kl_7prelude_box__I6SquareE* kl_t5;
-    struct kl__Square kl_t6;
+    struct kl_7prelude_box__IQ13list_of_boxes6SquareE kl_t4;
+    struct kl_7prelude_box__IQ13list_of_boxes6SquareE* kl_t5;
+    struct kl_13list_of_boxes_Square kl_t6;
     double kl_t7;
     bool kl_t8;
     uint64_t kl_t9;
     bool kl_t10;
-    struct kl_7prelude_box__I6SquareE kl_t12;
-    struct kl__Square* kl_t13;
+    struct kl_7prelude_box__IQ13list_of_boxes6SquareE kl_t12;
+    struct kl_13list_of_boxes_Square* kl_t13;
     struct kl_7prelude_box__I5ShapeE kl_t14;
-    struct kl_7prelude_box__I8LabelledE kl_labelled_15;
-    struct kl_7prelude_box__I8LabelledE* kl_t16;
-    struct kl__Labelled kl_t17;
-    struct kl__Labelled* kl_t18;
-    struct kl_7prelude_box__I8LabelledE kl_t21;
-    struct kl__Labelled* kl_t22;
+    struct kl_7prelude_box__IQ13list_of_boxes8LabelledE kl_labelled_15;
+    struct kl_7prelude_box__IQ13list_of_boxes8LabelledE* kl_t16;
+    struct kl_13list_of_boxes_Labelled kl_t17;
+    struct kl_13list_of_boxes_Labelled* kl_t18;
+    struct kl_7prelude_box__IQ13list_of_boxes8LabelledE kl_t21;
+    struct kl_13list_of_boxes_Labelled* kl_t22;
     struct kl_7prelude_box__I5ShapeE kl_t23;
     bool kl_t24;
     bool kl_t25;
@@ -4408,7 +4408,7 @@ struct kl_7prelude_box__I5ShapeE kl__4make__3u64( uint64_t kl_i_1 )
 #line 42 "list_of_boxes/main.kl"
     kl_t6.kl_side = kl_t7;
 #line 42 "list_of_boxes/main.kl"
-    kl_7prelude_3box__I6SquareE__RQ7prelude3boxI6SquareE_M6Square__ctor( kl_t5, kl_t6 );
+    kl_7prelude_3box__IQ13list_of_boxes6SquareE__RQ7prelude3boxIQ13list_of_boxes6SquareE_MQ13list_of_boxes6Square__ctor( kl_t5, kl_t6 );
 #line 42 "list_of_boxes/main.kl"
     kl_t12 = kl_t4;
 #line 42 "list_of_boxes/main.kl"
@@ -4416,11 +4416,11 @@ struct kl_7prelude_box__I5ShapeE kl__4make__3u64( uint64_t kl_i_1 )
 #line 42 "list_of_boxes/main.kl"
     kl_t13 = kl_t12.kl_p_;
 #line 42 "list_of_boxes/main.kl"
-    kl_t14.kl_p_ = ( struct kl__Shape__ref ) { ( void* ) kl_t13, &kl__Square__as_kl__Shape };
+    kl_t14.kl_p_ = ( struct kl_13list_of_boxes_Shape__ref ) { ( void* ) kl_t13, &kl_13list_of_boxes_Square__as_kl_13list_of_boxes_Shape };
 #line 42 "list_of_boxes/main.kl"
     kl_t0 = kl_t14;
 #line 42 "list_of_boxes/main.kl"
-    if ( kl_t24 ) kl_7prelude_3box__I6SquareE__dtor( &kl_t4 );
+    if ( kl_t24 ) kl_7prelude_3box__IQ13list_of_boxes6SquareE__dtor( &kl_t4 );
 #line 42 "list_of_boxes/main.kl"
     kl_t24 = false;
 #line 42 "list_of_boxes/main.kl"
@@ -4439,9 +4439,9 @@ struct kl_7prelude_box__I5ShapeE kl__4make__3u64( uint64_t kl_i_1 )
 #line 45 "list_of_boxes/main.kl"
     kl_t26 = true;
 #line 45 "list_of_boxes/main.kl"
-    kl__8Labelled__R8Labelled_3u64__ctor( kl_t18, kl_i_1 );
+    kl_13list_of_boxes_8Labelled__RQ13list_of_boxes8Labelled_3u64__ctor( kl_t18, kl_i_1 );
 #line 45 "list_of_boxes/main.kl"
-    kl_7prelude_3box__I8LabelledE__RQ7prelude3boxI8LabelledE_M8Labelled__ctor( kl_t16, kl_t17 );
+    kl_7prelude_3box__IQ13list_of_boxes8LabelledE__RQ7prelude3boxIQ13list_of_boxes8LabelledE_MQ13list_of_boxes8Labelled__ctor( kl_t16, kl_t17 );
 #line 45 "list_of_boxes/main.kl"
     kl_t26 = false;
 #line 45 "list_of_boxes/main.kl"
@@ -4454,11 +4454,11 @@ struct kl_7prelude_box__I5ShapeE kl__4make__3u64( uint64_t kl_i_1 )
 #line 46 "list_of_boxes/main.kl"
     kl_t22 = kl_t21.kl_p_;
 #line 46 "list_of_boxes/main.kl"
-    kl_t23.kl_p_ = ( struct kl__Shape__ref ) { ( void* ) kl_t22, &kl__Labelled__as_kl__Shape };
+    kl_t23.kl_p_ = ( struct kl_13list_of_boxes_Shape__ref ) { ( void* ) kl_t22, &kl_13list_of_boxes_Labelled__as_kl_13list_of_boxes_Shape };
 #line 46 "list_of_boxes/main.kl"
     kl_t0 = kl_t23;
 #line 46 "list_of_boxes/main.kl"
-    if ( kl_t25 ) kl_7prelude_3box__I8LabelledE__dtor( &kl_labelled_15 );
+    if ( kl_t25 ) kl_7prelude_3box__IQ13list_of_boxes8LabelledE__dtor( &kl_labelled_15 );
 #line 46 "list_of_boxes/main.kl"
     kl_t25 = false;
 #line 46 "list_of_boxes/main.kl"
@@ -4466,7 +4466,7 @@ struct kl_7prelude_box__I5ShapeE kl__4make__3u64( uint64_t kl_i_1 )
 }
 
 #line 49 "list_of_boxes/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_13list_of_boxes_4main__( void )
 {
     int32_t kl_t0;
     struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE kl_shapes_1;
@@ -4484,13 +4484,13 @@ int32_t kl__4main__( void )
     struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE* kl_t15;
     struct kl_7prelude_box__I5ShapeE* kl_t16;
     struct kl_7prelude_box__I5ShapeE* kl_t17;
-    struct kl__Shape__ref kl_t18;
-    struct kl__Shape__ref kl_t19;
+    struct kl_13list_of_boxes_Shape__ref kl_t18;
+    struct kl_13list_of_boxes_Shape__ref kl_t19;
     struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE* kl_t21;
     struct kl_7prelude_box__I5ShapeE* kl_t22;
     struct kl_7prelude_box__I5ShapeE* kl_t23;
-    struct kl__Shape__ref kl_t24;
-    struct kl__Shape__ref kl_t25;
+    struct kl_13list_of_boxes_Shape__ref kl_t24;
+    struct kl_13list_of_boxes_Shape__ref kl_t25;
     double kl_t26;
     double kl_t27;
     bool kl_t28;
@@ -4504,8 +4504,8 @@ int32_t kl__4main__( void )
     struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE* kl_t36;
     struct kl_7prelude_box__I5ShapeE kl_t37;
     struct kl_7prelude_box__I5ShapeE* kl_t38;
-    struct kl__Shape__ref kl_t39;
-    struct kl__Shape__ref kl_t40;
+    struct kl_13list_of_boxes_Shape__ref kl_t39;
+    struct kl_13list_of_boxes_Shape__ref kl_t40;
     double kl_t41;
     bool kl_t42;
     struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE* kl_t43;
@@ -4540,7 +4540,7 @@ int32_t kl__4main__( void )
     bb2:
     kl_t6 = &kl_shapes_1;
 #line 55 "list_of_boxes/main.kl"
-    kl_t7 = kl__4make__3u64( kl_i_4 );
+    kl_t7 = kl_13list_of_boxes_4make__3u64( kl_i_4 );
 #line 55 "list_of_boxes/main.kl"
     kl_t48 = true;
 #line 55 "list_of_boxes/main.kl"
@@ -4723,11 +4723,11 @@ int32_t kl__4main__( void )
 }
 
 #line 423 "<prelude>"
-void kl_7prelude_3box__I6SquareE__RQ7prelude3boxI6SquareE_M6Square__ctor( struct kl_7prelude_box__I6SquareE* kl_this_1, struct kl__Square kl_value_2 )
+void kl_7prelude_3box__IQ13list_of_boxes6SquareE__RQ7prelude3boxIQ13list_of_boxes6SquareE_MQ13list_of_boxes6Square__ctor( struct kl_7prelude_box__IQ13list_of_boxes6SquareE* kl_this_1, struct kl_13list_of_boxes_Square kl_value_2 )
 {
-    struct kl__Square* kl_t3;
-    struct kl__Square* kl_t4;
-    kl_t3 = ( struct kl__Square* ) kl_rt_alloc( 8, "<prelude>", 427, "out of memory: alloc<T>()" );
+    struct kl_13list_of_boxes_Square* kl_t3;
+    struct kl_13list_of_boxes_Square* kl_t4;
+    kl_t3 = ( struct kl_13list_of_boxes_Square* ) kl_rt_alloc( 8, "<prelude>", 427, "out of memory: alloc<T>()" );
 #line 427 "<prelude>"
     ( *kl_this_1 ).kl_p_ = kl_t3;
     kl_t4 = ( *kl_this_1 ).kl_p_;
@@ -4739,15 +4739,15 @@ void kl_7prelude_3box__I6SquareE__RQ7prelude3boxI6SquareE_M6Square__ctor( struct
 }
 
 #line 423 "<prelude>"
-void kl_7prelude_3box__I8LabelledE__RQ7prelude3boxI8LabelledE_M8Labelled__ctor( struct kl_7prelude_box__I8LabelledE* kl_this_1, struct kl__Labelled kl_value_2 )
+void kl_7prelude_3box__IQ13list_of_boxes8LabelledE__RQ7prelude3boxIQ13list_of_boxes8LabelledE_MQ13list_of_boxes8Labelled__ctor( struct kl_7prelude_box__IQ13list_of_boxes8LabelledE* kl_this_1, struct kl_13list_of_boxes_Labelled kl_value_2 )
 {
-    struct kl__Labelled* kl_t3;
-    struct kl__Labelled* kl_t4;
+    struct kl_13list_of_boxes_Labelled* kl_t3;
+    struct kl_13list_of_boxes_Labelled* kl_t4;
     bool kl_t5;
 #line 427 "<prelude>"
     kl_t5 = true;
 #line 427 "<prelude>"
-    kl_t3 = ( struct kl__Labelled* ) kl_rt_alloc( 24, "<prelude>", 427, "out of memory: alloc<T>()" );
+    kl_t3 = ( struct kl_13list_of_boxes_Labelled* ) kl_rt_alloc( 24, "<prelude>", 427, "out of memory: alloc<T>()" );
 #line 427 "<prelude>"
     ( *kl_this_1 ).kl_p_ = kl_t3;
     kl_t4 = ( *kl_this_1 ).kl_p_;
@@ -4853,9 +4853,9 @@ struct kl_7prelude_box__I5ShapeE* kl_2kl4list_14operator_index__IQ7prelude3boxI5
 }
 
 #line 447 "<prelude>"
-struct kl__Shape__ref kl_7prelude_3get__I5ShapeE__SQ7prelude3boxI5ShapeE( struct kl_7prelude_box__I5ShapeE* kl_this_1 )
+struct kl_13list_of_boxes_Shape__ref kl_7prelude_3get__I5ShapeE__SQ7prelude3boxI5ShapeE( struct kl_7prelude_box__I5ShapeE* kl_this_1 )
 {
-    struct kl__Shape__ref kl_t0;
+    struct kl_13list_of_boxes_Shape__ref kl_t0;
 #line 449 "<prelude>"
     kl_t0 = ( *kl_this_1 ).kl_p_;
 #line 449 "<prelude>"
@@ -5143,9 +5143,9 @@ void kl_2kl4list_4swap__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64_3u64( struct
 void kl_7prelude_3box__I5ShapeE__dtor( struct kl_7prelude_box__I5ShapeE* kl_this_1 )
 {
     bool kl_t2;
-    struct kl__Shape__ref kl_t3;
+    struct kl_13list_of_boxes_Shape__ref kl_t3;
 #line 434 "<prelude>"
-    kl_t2 = ( ( *kl_this_1 ).kl_p_ ).self == ( ( struct kl__Shape__ref ) { NULL, NULL } ).self;
+    kl_t2 = ( ( *kl_this_1 ).kl_p_ ).self == ( ( struct kl_13list_of_boxes_Shape__ref ) { NULL, NULL } ).self;
 #line 434 "<prelude>"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -5162,7 +5162,7 @@ void kl_7prelude_3box__I5ShapeE__dtor( struct kl_7prelude_box__I5ShapeE* kl_this
 }
 
 #line 432 "<prelude>"
-void kl_7prelude_3box__I6SquareE__dtor( struct kl_7prelude_box__I6SquareE* kl_this_1 )
+void kl_7prelude_3box__IQ13list_of_boxes6SquareE__dtor( struct kl_7prelude_box__IQ13list_of_boxes6SquareE* kl_this_1 )
 {
     bool kl_t2;
 #line 434 "<prelude>"
@@ -5180,10 +5180,10 @@ void kl_7prelude_3box__I6SquareE__dtor( struct kl_7prelude_box__I6SquareE* kl_th
 }
 
 #line 432 "<prelude>"
-void kl_7prelude_3box__I8LabelledE__dtor( struct kl_7prelude_box__I8LabelledE* kl_this_1 )
+void kl_7prelude_3box__IQ13list_of_boxes8LabelledE__dtor( struct kl_7prelude_box__IQ13list_of_boxes8LabelledE* kl_this_1 )
 {
     bool kl_t2;
-    struct kl__Labelled* kl_t3;
+    struct kl_13list_of_boxes_Labelled* kl_t3;
 #line 434 "<prelude>"
     kl_t2 = ( *kl_this_1 ).kl_p_ == NULL;
 #line 434 "<prelude>"
@@ -5433,11 +5433,11 @@ void kl_2kl4list_10reallocate__IQ7prelude3boxI5ShapeEE__SQ2kl4listIQ7prelude3box
 #line 471 "../../src/list.kl"
 }
 
-void kl__Labelled__drop( void* kl_t1 )
+void kl_13list_of_boxes_Labelled__drop( void* kl_t1 )
 {
-    struct kl__Labelled* kl_t2;
+    struct kl_13list_of_boxes_Labelled* kl_t2;
 #line 21 "list_of_boxes/main.kl"
-    kl_t2 = ( struct kl__Labelled* ) kl_t1;
+    kl_t2 = ( struct kl_13list_of_boxes_Labelled* ) kl_t1;
 #line 21 "list_of_boxes/main.kl"
     kl_2kl6string_6string__dtor( &( *kl_t2 ).kl_label );
 #line 21 "list_of_boxes/main.kl"
@@ -5469,12 +5469,12 @@ void kl_2kl4list_list__IQ7prelude3boxI5ShapeEE__drop( void* kl_t1 )
 #line 11 "../../src/list.kl"
 }
 
-void kl__Square__drop( void* kl_t1 )
+void kl_13list_of_boxes_Square__drop( void* kl_t1 )
 {
-    struct kl__Square* kl_t2;
+    struct kl_13list_of_boxes_Square* kl_t2;
     ( void ) kl_t2;
 #line 13 "list_of_boxes/main.kl"
-    kl_t2 = ( struct kl__Square* ) kl_t1;
+    kl_t2 = ( struct kl_13list_of_boxes_Square* ) kl_t1;
 #line 13 "list_of_boxes/main.kl"
     return;
 #line 13 "list_of_boxes/main.kl"
@@ -5484,7 +5484,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 49 "list_of_boxes/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_13list_of_boxes_4main__(  );
 #line 49 "list_of_boxes/main.kl"
     return kl_t0;
 #line 49 "list_of_boxes/main.kl"

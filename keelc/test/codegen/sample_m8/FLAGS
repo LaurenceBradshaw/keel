@@ -1,1 +1,1 @@
---debug -O0 --emit-c --package kl=../../keel_stl/src --package geo=codegen/sample_m8/geo
+--debug -O0 --emit-c --package ../../keel_stl/src --package codegen/sample_m8/geo

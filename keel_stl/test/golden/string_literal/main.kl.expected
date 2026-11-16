@@ -5531,10 +5531,10 @@ void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-uint64_t kl__6length__Q2kl6string( struct kl_2kl6string_string* );
-uint64_t kl__4peek__Q2kl6string( struct kl_2kl6string_string* );
-struct kl_2kl6string_string kl__8greeting__( void );
-int32_t kl__4main__( void );
+uint64_t kl_14string_literal_6length__Q2kl6string( struct kl_2kl6string_string* );
+uint64_t kl_14string_literal_4peek__Q2kl6string( struct kl_2kl6string_string* );
+struct kl_2kl6string_string kl_14string_literal_8greeting__( void );
+int32_t kl_14string_literal_4main__( void );
 uint64_t kl_2kl4list_4size__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
 struct kl_2kl6string_string* kl_2kl4list_14operator_index__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
 void kl_2kl3map_3map__IQ2kl6string_3i32E__RQ2kl3mapIQ2kl6string_3i32E__ctor( struct kl_2kl3map_map__IQ2kl6string_3i32E* );
@@ -5581,7 +5581,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 8 "string_literal/main.kl"
-uint64_t kl__6length__Q2kl6string( struct kl_2kl6string_string* kl_s_1 )
+uint64_t kl_14string_literal_6length__Q2kl6string( struct kl_2kl6string_string* kl_s_1 )
 {
     uint64_t kl_t0;
     struct kl_2kl6string_string* kl_t2;
@@ -5597,7 +5597,7 @@ uint64_t kl__6length__Q2kl6string( struct kl_2kl6string_string* kl_s_1 )
 }
 
 #line 13 "string_literal/main.kl"
-uint64_t kl__4peek__Q2kl6string( struct kl_2kl6string_string* kl_s_1 )
+uint64_t kl_14string_literal_4peek__Q2kl6string( struct kl_2kl6string_string* kl_s_1 )
 {
     uint64_t kl_t0;
     struct kl_2kl6string_string* kl_t2;
@@ -5613,7 +5613,7 @@ uint64_t kl__4peek__Q2kl6string( struct kl_2kl6string_string* kl_s_1 )
 }
 
 #line 18 "string_literal/main.kl"
-struct kl_2kl6string_string kl__8greeting__( void )
+struct kl_2kl6string_string kl_14string_literal_8greeting__( void )
 {
     struct kl_2kl6string_string kl_t0;
     struct kl_7prelude_str kl_t1;
@@ -5646,7 +5646,7 @@ struct kl_2kl6string_string kl__8greeting__( void )
 }
 
 #line 23 "string_literal/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_14string_literal_4main__( void )
 {
     int32_t kl_t0;
     struct kl_2kl6string_string kl_s_1;
@@ -5857,7 +5857,7 @@ int32_t kl__4main__( void )
 #line 27 "string_literal/main.kl"
     kl_t17 = &kl_t16;
 #line 27 "string_literal/main.kl"
-    kl_t18 = kl__6length__Q2kl6string( kl_t17 );
+    kl_t18 = kl_14string_literal_6length__Q2kl6string( kl_t17 );
 #line 27 "string_literal/main.kl"
     kl_t19 = kl_t18 != 4;
 #line 27 "string_literal/main.kl"
@@ -5883,7 +5883,7 @@ int32_t kl__4main__( void )
 #line 27 "string_literal/main.kl"
     kl_t25 = &kl_t24;
 #line 27 "string_literal/main.kl"
-    kl_t26 = kl__4peek__Q2kl6string( kl_t25 );
+    kl_t26 = kl_14string_literal_4peek__Q2kl6string( kl_t25 );
 #line 27 "string_literal/main.kl"
     kl_t27 = kl_t26 != 5;
 #line 27 "string_literal/main.kl"
@@ -5911,7 +5911,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb6:
 #line 32 "string_literal/main.kl"
-    kl_t28 = kl__8greeting__(  );
+    kl_t28 = kl_14string_literal_8greeting__(  );
 #line 32 "string_literal/main.kl"
     kl_t29 = &kl_t28;
 #line 32 "string_literal/main.kl"
@@ -7129,7 +7129,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 23 "string_literal/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_14string_literal_4main__(  );
 #line 23 "string_literal/main.kl"
     return kl_t0;
 #line 23 "string_literal/main.kl"

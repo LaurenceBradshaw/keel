@@ -3,56 +3,56 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Point;
-struct kl__Tracked;
-struct kl__Ints;
+struct kl_7codegen_Point;
+struct kl_7codegen_Tracked;
+struct kl_7codegen_Ints;
 
 typedef int32_t ( *kl__fn__FN3i323u64E3i32 )( int32_t*, uint64_t );
 
-struct kl__Point
+struct kl_7codegen_Point
 {
     int32_t kl_x;
     int32_t kl_y;
 };
-_Static_assert( sizeof( struct kl__Point ) == 8 && _Alignof( struct kl__Point ) == 4 && offsetof( struct kl__Point, kl_x ) == 0 && offsetof( struct kl__Point, kl_y ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Point ) == 8 && _Alignof( struct kl_7codegen_Point ) == 4 && offsetof( struct kl_7codegen_Point, kl_x ) == 0 && offsetof( struct kl_7codegen_Point, kl_y ) == 4, "layout" );
 
-struct kl__Tracked
+struct kl_7codegen_Tracked
 {
     int32_t kl_n;
 };
-_Static_assert( sizeof( struct kl__Tracked ) == 4 && _Alignof( struct kl__Tracked ) == 4 && offsetof( struct kl__Tracked, kl_n ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Tracked ) == 4 && _Alignof( struct kl_7codegen_Tracked ) == 4 && offsetof( struct kl_7codegen_Tracked, kl_n ) == 0, "layout" );
 
-struct kl__Ints
+struct kl_7codegen_Ints
 {
     int32_t* kl_data;
     uint64_t kl_size;
 };
-_Static_assert( sizeof( struct kl__Ints ) == 16 && _Alignof( struct kl__Ints ) == 8 && offsetof( struct kl__Ints, kl_data ) == 0 && offsetof( struct kl__Ints, kl_size ) == 8, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Ints ) == 16 && _Alignof( struct kl_7codegen_Ints ) == 8 && offsetof( struct kl_7codegen_Ints, kl_data ) == 0 && offsetof( struct kl_7codegen_Ints, kl_size ) == 8, "layout" );
 
-int32_t kl__live__G = 0;
+int32_t kl_7codegen_live__G = 0;
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__3sum__S5Point( struct kl__Point* );
-void kl__7Tracked__R7Tracked_3i32__ctor( struct kl__Tracked*, int32_t );
-void kl__7Tracked__dtor( struct kl__Tracked* );
-void kl__4Ints__R4Ints_3u64__ctor( struct kl__Ints*, uint64_t );
-void kl__4Ints__dtor( struct kl__Ints* );
-void kl__3set__S4Ints_3u64_3i32( struct kl__Ints*, uint64_t, int32_t );
-int32_t kl__3get__S4Ints_3u64( struct kl__Ints*, uint64_t );
-int32_t kl__3sum__N3i32_3u64( int32_t*, uint64_t );
-int32_t kl__14sum_by_walking__N3i32_3u64( int32_t*, uint64_t );
-void kl__4bump__R3i32( int32_t* );
-int32_t kl__5which__P3i32( int32_t* );
-int32_t kl__5which__N3i32( int32_t* );
-int32_t kl__4main__( void );
-void kl__4fill__I3f64E__N3f64_3u64_3f64( double*, uint64_t, double );
+int32_t kl_7codegen_3sum__SQ7codegen5Point( struct kl_7codegen_Point* );
+void kl_7codegen_7Tracked__RQ7codegen7Tracked_3i32__ctor( struct kl_7codegen_Tracked*, int32_t );
+void kl_7codegen_7Tracked__dtor( struct kl_7codegen_Tracked* );
+void kl_7codegen_4Ints__RQ7codegen4Ints_3u64__ctor( struct kl_7codegen_Ints*, uint64_t );
+void kl_7codegen_4Ints__dtor( struct kl_7codegen_Ints* );
+void kl_7codegen_3set__SQ7codegen4Ints_3u64_3i32( struct kl_7codegen_Ints*, uint64_t, int32_t );
+int32_t kl_7codegen_3get__SQ7codegen4Ints_3u64( struct kl_7codegen_Ints*, uint64_t );
+int32_t kl_7codegen_3sum__N3i32_3u64( int32_t*, uint64_t );
+int32_t kl_7codegen_14sum_by_walking__N3i32_3u64( int32_t*, uint64_t );
+void kl_7codegen_4bump__R3i32( int32_t* );
+int32_t kl_7codegen_5which__P3i32( int32_t* );
+int32_t kl_7codegen_5which__N3i32( int32_t* );
+int32_t kl_7codegen_4main__( void );
+void kl_7codegen_4fill__I3f64E__N3f64_3u64_3f64( double*, uint64_t, double );
 
 #line 12 "codegen/many_pointers.kl"
-int32_t kl__3sum__S5Point( struct kl__Point* kl_this_1 )
+int32_t kl_7codegen_3sum__SQ7codegen5Point( struct kl_7codegen_Point* kl_this_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -74,13 +74,13 @@ int32_t kl__3sum__S5Point( struct kl__Point* kl_this_1 )
 }
 
 #line 22 "codegen/many_pointers.kl"
-void kl__7Tracked__R7Tracked_3i32__ctor( struct kl__Tracked* kl_this_1, int32_t kl_m_2 )
+void kl_7codegen_7Tracked__RQ7codegen7Tracked_3i32__ctor( struct kl_7codegen_Tracked* kl_this_1, int32_t kl_m_2 )
 {
     bool kl_t3;
     int32_t kl_t4;
 #line 24 "codegen/many_pointers.kl"
     ( *kl_this_1 ).kl_n = kl_m_2;
-    kl_t3 = __builtin_add_overflow( kl__live__G, 1, &( int32_t ) { 0 } );
+    kl_t3 = __builtin_add_overflow( kl_7codegen_live__G, 1, &( int32_t ) { 0 } );
 #line 25 "codegen/many_pointers.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -88,21 +88,21 @@ void kl__7Tracked__R7Tracked_3i32__ctor( struct kl__Tracked* kl_this_1, int32_t 
     kl_rt_panic( "codegen/many_pointers.kl", 25, "arithmetic overflow: live + 1" );
     bb2:
 #line 25 "codegen/many_pointers.kl"
-    kl_t4 = kl__live__G + 1;
+    kl_t4 = kl_7codegen_live__G + 1;
 #line 25 "codegen/many_pointers.kl"
-    kl__live__G = kl_t4;
+    kl_7codegen_live__G = kl_t4;
     return;
 #line 26 "codegen/many_pointers.kl"
 }
 
 #line 28 "codegen/many_pointers.kl"
-void kl__7Tracked__dtor( struct kl__Tracked* kl_this_1 )
+void kl_7codegen_7Tracked__dtor( struct kl_7codegen_Tracked* kl_this_1 )
 {
     bool kl_t2;
     int32_t kl_t3;
     ( void ) kl_this_1;
 #line 30 "codegen/many_pointers.kl"
-    kl_t2 = __builtin_sub_overflow( kl__live__G, 1, &( int32_t ) { 0 } );
+    kl_t2 = __builtin_sub_overflow( kl_7codegen_live__G, 1, &( int32_t ) { 0 } );
 #line 30 "codegen/many_pointers.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -110,15 +110,15 @@ void kl__7Tracked__dtor( struct kl__Tracked* kl_this_1 )
     kl_rt_panic( "codegen/many_pointers.kl", 30, "arithmetic overflow: live - 1" );
     bb2:
 #line 30 "codegen/many_pointers.kl"
-    kl_t3 = kl__live__G - 1;
+    kl_t3 = kl_7codegen_live__G - 1;
 #line 30 "codegen/many_pointers.kl"
-    kl__live__G = kl_t3;
+    kl_7codegen_live__G = kl_t3;
     return;
 #line 31 "codegen/many_pointers.kl"
 }
 
 #line 40 "codegen/many_pointers.kl"
-void kl__4Ints__R4Ints_3u64__ctor( struct kl__Ints* kl_this_1, uint64_t kl_n_2 )
+void kl_7codegen_4Ints__RQ7codegen4Ints_3u64__ctor( struct kl_7codegen_Ints* kl_this_1, uint64_t kl_n_2 )
 {
     int32_t* kl_t3;
 #line 44 "codegen/many_pointers.kl"
@@ -132,7 +132,7 @@ void kl__4Ints__R4Ints_3u64__ctor( struct kl__Ints* kl_this_1, uint64_t kl_n_2 )
 }
 
 #line 49 "codegen/many_pointers.kl"
-void kl__4Ints__dtor( struct kl__Ints* kl_this_1 )
+void kl_7codegen_4Ints__dtor( struct kl_7codegen_Ints* kl_this_1 )
 {
 #line 53 "codegen/many_pointers.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data );
@@ -142,7 +142,7 @@ void kl__4Ints__dtor( struct kl__Ints* kl_this_1 )
 }
 
 #line 57 "codegen/many_pointers.kl"
-void kl__3set__S4Ints_3u64_3i32( struct kl__Ints* kl_this_1, uint64_t kl_i_2, int32_t kl_v_3 )
+void kl_7codegen_3set__SQ7codegen4Ints_3u64_3i32( struct kl_7codegen_Ints* kl_this_1, uint64_t kl_i_2, int32_t kl_v_3 )
 {
     int32_t* kl_t4;
 #line 61 "codegen/many_pointers.kl"
@@ -155,7 +155,7 @@ void kl__3set__S4Ints_3u64_3i32( struct kl__Ints* kl_this_1, uint64_t kl_i_2, in
 }
 
 #line 65 "codegen/many_pointers.kl"
-int32_t kl__3get__S4Ints_3u64( struct kl__Ints* kl_this_1, uint64_t kl_i_2 )
+int32_t kl_7codegen_3get__SQ7codegen4Ints_3u64( struct kl_7codegen_Ints* kl_this_1, uint64_t kl_i_2 )
 {
     int32_t kl_t0;
     int32_t kl_r_3;
@@ -173,7 +173,7 @@ int32_t kl__3get__S4Ints_3u64( struct kl__Ints* kl_this_1, uint64_t kl_i_2 )
 }
 
 #line 76 "codegen/many_pointers.kl"
-int32_t kl__3sum__N3i32_3u64( int32_t* kl_p_1, uint64_t kl_n_2 )
+int32_t kl_7codegen_3sum__N3i32_3u64( int32_t* kl_p_1, uint64_t kl_n_2 )
 {
     int32_t kl_t0;
     int32_t kl_total_3;
@@ -232,7 +232,7 @@ int32_t kl__3sum__N3i32_3u64( int32_t* kl_p_1, uint64_t kl_n_2 )
 }
 
 #line 92 "codegen/many_pointers.kl"
-int32_t kl__14sum_by_walking__N3i32_3u64( int32_t* kl_p_1, uint64_t kl_n_2 )
+int32_t kl_7codegen_14sum_by_walking__N3i32_3u64( int32_t* kl_p_1, uint64_t kl_n_2 )
 {
     int32_t kl_t0;
     int32_t kl_total_3;
@@ -284,7 +284,7 @@ int32_t kl__14sum_by_walking__N3i32_3u64( int32_t* kl_p_1, uint64_t kl_n_2 )
 }
 
 #line 123 "codegen/many_pointers.kl"
-void kl__4bump__R3i32( int32_t* kl_v_1 )
+void kl_7codegen_4bump__R3i32( int32_t* kl_v_1 )
 {
     bool kl_t2;
     int32_t kl_t3;
@@ -305,7 +305,7 @@ void kl__4bump__R3i32( int32_t* kl_v_1 )
 }
 
 #line 128 "codegen/many_pointers.kl"
-int32_t kl__5which__P3i32( int32_t* kl_t1 )
+int32_t kl_7codegen_5which__P3i32( int32_t* kl_t1 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
@@ -316,7 +316,7 @@ int32_t kl__5which__P3i32( int32_t* kl_t1 )
 }
 
 #line 133 "codegen/many_pointers.kl"
-int32_t kl__5which__N3i32( int32_t* kl_t1 )
+int32_t kl_7codegen_5which__N3i32( int32_t* kl_t1 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
@@ -327,7 +327,7 @@ int32_t kl__5which__N3i32( int32_t* kl_t1 )
 }
 
 #line 138 "codegen/many_pointers.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     int32_t* kl_a_1;
@@ -389,18 +389,18 @@ int32_t kl__4main__( void )
     int32_t kl_through_58;
     int32_t* kl_t59;
     bool kl_t60;
-    struct kl__Point* kl_points_62;
+    struct kl_7codegen_Point* kl_points_62;
     int32_t kl_points_sum_63;
-    struct kl__Point* kl_t64;
-    struct kl__Point* kl_t65;
-    struct kl__Point kl_t66;
-    struct kl__Point* kl_t67;
-    struct kl__Point* kl_t68;
-    struct kl__Point* kl_t69;
-    struct kl__Point* kl_t70;
+    struct kl_7codegen_Point* kl_t64;
+    struct kl_7codegen_Point* kl_t65;
+    struct kl_7codegen_Point kl_t66;
+    struct kl_7codegen_Point* kl_t67;
+    struct kl_7codegen_Point* kl_t68;
+    struct kl_7codegen_Point* kl_t69;
+    struct kl_7codegen_Point* kl_t70;
     int32_t kl_t71;
-    struct kl__Point* kl_t72;
-    struct kl__Point* kl_t73;
+    struct kl_7codegen_Point* kl_t72;
+    struct kl_7codegen_Point* kl_t73;
     int32_t kl_t74;
     bool kl_t75;
     int32_t kl_t76;
@@ -439,28 +439,28 @@ int32_t kl__4main__( void )
     int32_t* kl_t115;
     int32_t kl_t116;
     bool kl_t118;
-    struct kl__Ints kl_ints_119;
-    struct kl__Ints* kl_t120;
-    struct kl__Ints* kl_t122;
-    struct kl__Ints* kl_t124;
-    struct kl__Ints* kl_t126;
+    struct kl_7codegen_Ints kl_ints_119;
+    struct kl_7codegen_Ints* kl_t120;
+    struct kl_7codegen_Ints* kl_t122;
+    struct kl_7codegen_Ints* kl_t124;
+    struct kl_7codegen_Ints* kl_t126;
     int32_t kl_t127;
-    struct kl__Ints* kl_t128;
+    struct kl_7codegen_Ints* kl_t128;
     int32_t kl_t129;
     bool kl_t130;
     int32_t kl_t131;
     bool kl_t132;
-    struct kl__Tracked* kl_cs_133;
-    struct kl__Tracked* kl_t134;
-    struct kl__Tracked kl_t_135;
-    struct kl__Tracked* kl_t136;
-    struct kl__Tracked* kl_t138;
-    struct kl__Tracked kl_t139;
-    struct kl__Tracked* kl_t140;
-    struct kl__Tracked* kl_t142;
+    struct kl_7codegen_Tracked* kl_cs_133;
+    struct kl_7codegen_Tracked* kl_t134;
+    struct kl_7codegen_Tracked kl_t_135;
+    struct kl_7codegen_Tracked* kl_t136;
+    struct kl_7codegen_Tracked* kl_t138;
+    struct kl_7codegen_Tracked kl_t139;
+    struct kl_7codegen_Tracked* kl_t140;
+    struct kl_7codegen_Tracked* kl_t142;
     int32_t kl_held_143;
-    struct kl__Tracked* kl_t144;
-    struct kl__Tracked* kl_t145;
+    struct kl_7codegen_Tracked* kl_t144;
+    struct kl_7codegen_Tracked* kl_t145;
     bool kl_t146;
     int32_t kl_t147;
     bool kl_t149;
@@ -499,7 +499,7 @@ int32_t kl__4main__( void )
     if ( kl_t7 ) goto bb4; else goto bb5;
     bb3:
 #line 152 "codegen/many_pointers.kl"
-    kl_t10 = kl__3sum__N3i32_3u64( kl_a_1, 5 );
+    kl_t10 = kl_7codegen_3sum__N3i32_3u64( kl_a_1, 5 );
 #line 152 "codegen/many_pointers.kl"
     kl_t11 = kl_t10 != 100;
 #line 152 "codegen/many_pointers.kl"
@@ -534,7 +534,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb10:
 #line 153 "codegen/many_pointers.kl"
-    kl_t12 = kl__14sum_by_walking__N3i32_3u64( kl_a_1, 5 );
+    kl_t12 = kl_7codegen_14sum_by_walking__N3i32_3u64( kl_a_1, 5 );
 #line 153 "codegen/many_pointers.kl"
     kl_t13 = kl_t12 != 100;
 #line 153 "codegen/many_pointers.kl"
@@ -550,7 +550,7 @@ int32_t kl__4main__( void )
     kl_t15 = kl_a_1 + 2;
 #line 157 "codegen/many_pointers.kl"
     kl_rest_14 = kl_t15;
-    kl_t16 = kl__3sum__N3i32_3u64( kl_rest_14, 3 );
+    kl_t16 = kl_7codegen_3sum__N3i32_3u64( kl_rest_14, 3 );
 #line 158 "codegen/many_pointers.kl"
     kl_t17 = kl_t16 != 90;
 #line 158 "codegen/many_pointers.kl"
@@ -652,7 +652,7 @@ int32_t kl__4main__( void )
 #line 184 "codegen/many_pointers.kl"
     kl_t39 = &( *kl_t38 );
 #line 184 "codegen/many_pointers.kl"
-    kl__4bump__R3i32( kl_t39 );
+    kl_7codegen_4bump__R3i32( kl_t39 );
 #line 186 "codegen/many_pointers.kl"
     kl_first_41 = 0;
     kl_t42 = kl_a_1 + 0;
@@ -703,7 +703,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb34:
 #line 194 "codegen/many_pointers.kl"
-    kl_t52 = kl__5which__P3i32( kl_one_25 );
+    kl_t52 = kl_7codegen_5which__P3i32( kl_one_25 );
 #line 194 "codegen/many_pointers.kl"
     kl_t53 = kl_t52 != 1;
 #line 194 "codegen/many_pointers.kl"
@@ -712,7 +712,7 @@ int32_t kl__4main__( void )
     if ( kl_t51 ) goto bb36; else goto bb35;
     bb35:
 #line 194 "codegen/many_pointers.kl"
-    kl_t54 = kl__5which__N3i32( kl_a_1 );
+    kl_t54 = kl_7codegen_5which__N3i32( kl_a_1 );
 #line 194 "codegen/many_pointers.kl"
     kl_t55 = kl_t54 != 2;
 #line 194 "codegen/many_pointers.kl"
@@ -751,7 +751,7 @@ int32_t kl__4main__( void )
     kl_points_62 = NULL;
     kl_points_sum_63 = 0;
 #line 210 "codegen/many_pointers.kl"
-    kl_t64 = ( struct kl__Point* ) kl_rt_alloc_many( ( size_t ) 2, 8, "codegen/many_pointers.kl", 210, "out of memory: alloc<Point>( 2 )" );
+    kl_t64 = ( struct kl_7codegen_Point* ) kl_rt_alloc_many( ( size_t ) 2, 8, "codegen/many_pointers.kl", 210, "out of memory: alloc<Point>( 2 )" );
 #line 210 "codegen/many_pointers.kl"
     kl_points_62 = kl_t64;
     kl_t65 = kl_points_62 + 0;
@@ -771,13 +771,13 @@ int32_t kl__4main__( void )
 #line 214 "codegen/many_pointers.kl"
     kl_t70 = &( *kl_t69 );
 #line 214 "codegen/many_pointers.kl"
-    kl_t71 = kl__3sum__S5Point( kl_t70 );
+    kl_t71 = kl_7codegen_3sum__SQ7codegen5Point( kl_t70 );
 #line 214 "codegen/many_pointers.kl"
     kl_t72 = kl_points_62 + 1;
 #line 214 "codegen/many_pointers.kl"
     kl_t73 = &( *kl_t72 );
 #line 214 "codegen/many_pointers.kl"
-    kl_t74 = kl__3sum__S5Point( kl_t73 );
+    kl_t74 = kl_7codegen_3sum__SQ7codegen5Point( kl_t73 );
 #line 214 "codegen/many_pointers.kl"
     kl_t75 = __builtin_add_overflow( kl_t71, kl_t74, &( int32_t ) { 0 } );
 #line 214 "codegen/many_pointers.kl"
@@ -851,7 +851,7 @@ int32_t kl__4main__( void )
     kl_t98 = ( double* ) kl_rt_alloc_many( ( size_t ) 4, 8, "codegen/many_pointers.kl", 238, "out of memory: alloc<f64>( 4 )" );
 #line 238 "codegen/many_pointers.kl"
     kl_halves_96 = kl_t98;
-    kl__4fill__I3f64E__N3f64_3u64_3f64( kl_halves_96, 4, 0.5 );
+    kl_7codegen_4fill__I3f64E__N3f64_3u64_3f64( kl_halves_96, 4, 0.5 );
 #line 242 "codegen/many_pointers.kl"
     kl_t100 = kl_halves_96 + 0;
 #line 242 "codegen/many_pointers.kl"
@@ -880,7 +880,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb48:
 #line 248 "codegen/many_pointers.kl"
-    kl_t110 = kl__3sum__N3i32_3u64;
+    kl_t110 = kl_7codegen_3sum__N3i32_3u64;
 #line 248 "codegen/many_pointers.kl"
     kl_adder_109 = kl_t110;
     kl_two_111 = NULL;
@@ -912,20 +912,20 @@ int32_t kl__4main__( void )
 #line 263 "codegen/many_pointers.kl"
     kl_t120 = &kl_ints_119;
 #line 263 "codegen/many_pointers.kl"
-    kl__4Ints__R4Ints_3u64__ctor( kl_t120, 3 );
+    kl_7codegen_4Ints__RQ7codegen4Ints_3u64__ctor( kl_t120, 3 );
     kl_t122 = &kl_ints_119;
 #line 264 "codegen/many_pointers.kl"
-    kl__3set__S4Ints_3u64_3i32( kl_t122, 0, 4 );
+    kl_7codegen_3set__SQ7codegen4Ints_3u64_3i32( kl_t122, 0, 4 );
     kl_t124 = &kl_ints_119;
 #line 265 "codegen/many_pointers.kl"
-    kl__3set__S4Ints_3u64_3i32( kl_t124, 2, 5 );
+    kl_7codegen_3set__SQ7codegen4Ints_3u64_3i32( kl_t124, 2, 5 );
     kl_t126 = &kl_ints_119;
 #line 266 "codegen/many_pointers.kl"
-    kl_t127 = kl__3get__S4Ints_3u64( kl_t126, 0 );
+    kl_t127 = kl_7codegen_3get__SQ7codegen4Ints_3u64( kl_t126, 0 );
 #line 266 "codegen/many_pointers.kl"
     kl_t128 = &kl_ints_119;
 #line 266 "codegen/many_pointers.kl"
-    kl_t129 = kl__3get__S4Ints_3u64( kl_t128, 2 );
+    kl_t129 = kl_7codegen_3get__SQ7codegen4Ints_3u64( kl_t128, 2 );
 #line 266 "codegen/many_pointers.kl"
     kl_t130 = __builtin_add_overflow( kl_t127, kl_t129, &( int32_t ) { 0 } );
 #line 266 "codegen/many_pointers.kl"
@@ -944,15 +944,15 @@ int32_t kl__4main__( void )
 #line 266 "codegen/many_pointers.kl"
     kl_t0 = 16;
 #line 266 "codegen/many_pointers.kl"
-    kl__4Ints__dtor( &kl_ints_119 );
+    kl_7codegen_4Ints__dtor( &kl_ints_119 );
 #line 266 "codegen/many_pointers.kl"
     return kl_t0;
     bb54:
 #line 267 "codegen/many_pointers.kl"
-    kl__4Ints__dtor( &kl_ints_119 );
+    kl_7codegen_4Ints__dtor( &kl_ints_119 );
 #line 272 "codegen/many_pointers.kl"
     kl_cs_133 = NULL;
-    kl_t134 = ( struct kl__Tracked* ) kl_rt_alloc_many( ( size_t ) 2, 4, "codegen/many_pointers.kl", 273, "out of memory: alloc<Tracked>( 2 )" );
+    kl_t134 = ( struct kl_7codegen_Tracked* ) kl_rt_alloc_many( ( size_t ) 2, 4, "codegen/many_pointers.kl", 273, "out of memory: alloc<Tracked>( 2 )" );
 #line 273 "codegen/many_pointers.kl"
     kl_cs_133 = kl_t134;
 #line 275 "codegen/many_pointers.kl"
@@ -962,7 +962,7 @@ int32_t kl__4main__( void )
 #line 275 "codegen/many_pointers.kl"
     kl_t155 = true;
 #line 275 "codegen/many_pointers.kl"
-    kl__7Tracked__R7Tracked_3i32__ctor( kl_t136, 2 );
+    kl_7codegen_7Tracked__RQ7codegen7Tracked_3i32__ctor( kl_t136, 2 );
 #line 278 "codegen/many_pointers.kl"
     kl_t138 = kl_cs_133 + 0;
 #line 278 "codegen/many_pointers.kl"
@@ -972,13 +972,13 @@ int32_t kl__4main__( void )
 #line 278 "codegen/many_pointers.kl"
     kl_t156 = true;
 #line 278 "codegen/many_pointers.kl"
-    kl__7Tracked__R7Tracked_3i32__ctor( kl_t140, 1 );
+    kl_7codegen_7Tracked__RQ7codegen7Tracked_3i32__ctor( kl_t140, 1 );
 #line 278 "codegen/many_pointers.kl"
     ( *kl_t138 ) = kl_t139;
 #line 278 "codegen/many_pointers.kl"
     kl_t156 = false;
 #line 278 "codegen/many_pointers.kl"
-    if ( kl_t156 ) kl__7Tracked__dtor( &kl_t139 );
+    if ( kl_t156 ) kl_7codegen_7Tracked__dtor( &kl_t139 );
 #line 278 "codegen/many_pointers.kl"
     kl_t156 = false;
     kl_t142 = kl_cs_133 + 1;
@@ -987,7 +987,7 @@ int32_t kl__4main__( void )
 #line 279 "codegen/many_pointers.kl"
     kl_t155 = false;
 #line 281 "codegen/many_pointers.kl"
-    if ( kl_t155 ) kl__7Tracked__dtor( &kl_t_135 );
+    if ( kl_t155 ) kl_7codegen_7Tracked__dtor( &kl_t_135 );
 #line 281 "codegen/many_pointers.kl"
     kl_t155 = false;
     kl_held_143 = 0;
@@ -1019,7 +1019,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb58:
 #line 289 "codegen/many_pointers.kl"
-    kl_t150 = kl__live__G != 2;
+    kl_t150 = kl_7codegen_live__G != 2;
 #line 289 "codegen/many_pointers.kl"
     if ( kl_t150 ) goto bb59; else goto bb60;
     bb59:
@@ -1051,7 +1051,7 @@ int32_t kl__4main__( void )
 }
 
 #line 112 "codegen/many_pointers.kl"
-void kl__4fill__I3f64E__N3f64_3u64_3f64( double* kl_p_1, uint64_t kl_n_2, double kl_v_3 )
+void kl_7codegen_4fill__I3f64E__N3f64_3u64_3f64( double* kl_p_1, uint64_t kl_n_2, double kl_v_3 )
 {
     uint64_t kl_i_4;
     bool kl_t5;
@@ -1095,7 +1095,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 138 "codegen/many_pointers.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 138 "codegen/many_pointers.kl"
     return kl_t0;
 #line 138 "codegen/many_pointers.kl"

@@ -328,8 +328,8 @@ struct kl_7prelude_textual__vtable
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__2at__A4_3i32_3u64( struct kl__A4_3i32*, uint64_t );
-int32_t kl__4main__( void );
+int32_t kl_7codegen_2at__A4_3i32_3u64( struct kl__A4_3i32*, uint64_t );
+int32_t kl_7codegen_4main__( void );
 void kl_1t7console_5print__7textual_7textual( struct kl_7prelude_textual__ref, struct kl_7prelude_textual__ref );
 void kl_1t7console_5print__3i64_7textual( int64_t, struct kl_7prelude_textual__ref );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
@@ -339,7 +339,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 5 "codegen/fixed_array_bounds.kl"
-int32_t kl__2at__A4_3i32_3u64( struct kl__A4_3i32* kl_values_1, uint64_t kl_i_2 )
+int32_t kl_7codegen_2at__A4_3i32_3u64( struct kl__A4_3i32* kl_values_1, uint64_t kl_i_2 )
 {
     int32_t kl_t0;
     uint64_t kl_t3;
@@ -361,7 +361,7 @@ int32_t kl__2at__A4_3i32_3u64( struct kl__A4_3i32* kl_values_1, uint64_t kl_i_2 
 }
 
 #line 10 "codegen/fixed_array_bounds.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     struct kl__A4_3i32 kl_a_1;
@@ -421,7 +421,7 @@ int32_t kl__4main__( void )
 #line 14 "codegen/fixed_array_bounds.kl"
     kl_t7 = &kl_a_1;
 #line 14 "codegen/fixed_array_bounds.kl"
-    kl_t8 = kl__2at__A4_3i32_3u64( kl_t7, 3 );
+    kl_t8 = kl_7codegen_2at__A4_3i32_3u64( kl_t7, 3 );
 #line 14 "codegen/fixed_array_bounds.kl"
     kl_t9 = ( int64_t ) kl_t8;
 #line 31 "../test_lib/console.kl"
@@ -438,7 +438,7 @@ int32_t kl__4main__( void )
     kl_1t7console_5print__3i64_7textual( kl_t9, kl_t15 );
     kl_t17 = &kl_a_1;
 #line 15 "codegen/fixed_array_bounds.kl"
-    kl_t18 = kl__2at__A4_3i32_3u64( kl_t17, 4 );
+    kl_t18 = kl_7codegen_2at__A4_3i32_3u64( kl_t17, 4 );
 #line 15 "codegen/fixed_array_bounds.kl"
     kl_t19 = ( int64_t ) kl_t18;
 #line 31 "../test_lib/console.kl"
@@ -483,7 +483,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 10 "codegen/fixed_array_bounds.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 10 "codegen/fixed_array_bounds.kl"
     return kl_t0;
 #line 10 "codegen/fixed_array_bounds.kl"

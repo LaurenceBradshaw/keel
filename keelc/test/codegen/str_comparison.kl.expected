@@ -29,9 +29,9 @@ void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 
-int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
-bool kl__6before__IQ7prelude3strE__Q7prelude3str_Q7prelude3str( struct kl_7prelude_str*, struct kl_7prelude_str* );
-uint64_t kl__6hashed__IQ7prelude3strE__Q7prelude3str( struct kl_7prelude_str* );
+int32_t kl_7codegen_4main__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
+bool kl_7codegen_6before__IQ7prelude3strE__Q7prelude3str_Q7prelude3str( struct kl_7prelude_str*, struct kl_7prelude_str* );
+uint64_t kl_7codegen_6hashed__IQ7prelude3strE__Q7prelude3str( struct kl_7prelude_str* );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 bool kl_7prelude_11operator_eq__SQ7prelude3str_Q7prelude3str( struct kl_7prelude_str*, struct kl_7prelude_str* );
 int32_t kl_7prelude_16operator_compare__SQ7prelude3str_Q7prelude3str( struct kl_7prelude_str*, struct kl_7prelude_str* );
@@ -40,7 +40,7 @@ void kl_7prelude_6hasher__RQ7prelude6hasher_3u64_3u64__ctor( struct kl_7prelude_
 uint64_t kl_7prelude_6finish__SQ7prelude6hasher( struct kl_7prelude_hasher* );
 
 #line 12 "codegen/str_comparison.kl"
-int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t kl_t1_size )
+int32_t kl_7codegen_4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t kl_t1_size )
 {
     int32_t kl_t0;
 #line 12 "codegen/str_comparison.kl"
@@ -286,7 +286,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 #line 23 "codegen/str_comparison.kl"
     kl_t60 = &kl_b_7;
 #line 23 "codegen/str_comparison.kl"
-    kl_t61 = kl__6before__IQ7prelude3strE__Q7prelude3str_Q7prelude3str( kl_t59, kl_t60 );
+    kl_t61 = kl_7codegen_6before__IQ7prelude3strE__Q7prelude3str_Q7prelude3str( kl_t59, kl_t60 );
 #line 23 "codegen/str_comparison.kl"
     kl_t62 = !kl_t61;
 #line 23 "codegen/str_comparison.kl"
@@ -330,7 +330,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 #line 25 "codegen/str_comparison.kl"
     kl_t76 = &kl_a_2;
 #line 25 "codegen/str_comparison.kl"
-    kl_t77 = kl__6hashed__IQ7prelude3strE__Q7prelude3str( kl_t76 );
+    kl_t77 = kl_7codegen_6hashed__IQ7prelude3strE__Q7prelude3str( kl_t76 );
 #line 25 "codegen/str_comparison.kl"
     kl_t79 = &kl_t78;
 #line 25 "codegen/str_comparison.kl"
@@ -340,7 +340,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 #line 25 "codegen/str_comparison.kl"
     kl_t82 = &kl_t78;
 #line 25 "codegen/str_comparison.kl"
-    kl_t83 = kl__6hashed__IQ7prelude3strE__Q7prelude3str( kl_t82 );
+    kl_t83 = kl_7codegen_6hashed__IQ7prelude3strE__Q7prelude3str( kl_t82 );
 #line 25 "codegen/str_comparison.kl"
     kl_t84 = kl_t77 != kl_t83;
 #line 25 "codegen/str_comparison.kl"
@@ -354,11 +354,11 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 #line 26 "codegen/str_comparison.kl"
     kl_t85 = &kl_a_2;
 #line 26 "codegen/str_comparison.kl"
-    kl_t86 = kl__6hashed__IQ7prelude3strE__Q7prelude3str( kl_t85 );
+    kl_t86 = kl_7codegen_6hashed__IQ7prelude3strE__Q7prelude3str( kl_t85 );
 #line 26 "codegen/str_comparison.kl"
     kl_t87 = &kl_b_7;
 #line 26 "codegen/str_comparison.kl"
-    kl_t88 = kl__6hashed__IQ7prelude3strE__Q7prelude3str( kl_t87 );
+    kl_t88 = kl_7codegen_6hashed__IQ7prelude3strE__Q7prelude3str( kl_t87 );
 #line 26 "codegen/str_comparison.kl"
     kl_t89 = kl_t86 == kl_t88;
 #line 26 "codegen/str_comparison.kl"
@@ -376,7 +376,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 }
 
 #line 10 "codegen/str_comparison.kl"
-bool kl__6before__IQ7prelude3strE__Q7prelude3str_Q7prelude3str( struct kl_7prelude_str* kl_a_1, struct kl_7prelude_str* kl_b_2 )
+bool kl_7codegen_6before__IQ7prelude3strE__Q7prelude3str_Q7prelude3str( struct kl_7prelude_str* kl_a_1, struct kl_7prelude_str* kl_b_2 )
 {
     bool kl_t0;
     struct kl_7prelude_str* kl_t3;
@@ -399,7 +399,7 @@ bool kl__6before__IQ7prelude3strE__Q7prelude3str_Q7prelude3str( struct kl_7prelu
 }
 
 #line 3 "codegen/str_comparison.kl"
-uint64_t kl__6hashed__IQ7prelude3strE__Q7prelude3str( struct kl_7prelude_str* kl_value_1 )
+uint64_t kl_7codegen_6hashed__IQ7prelude3strE__Q7prelude3str( struct kl_7prelude_str* kl_value_1 )
 {
     uint64_t kl_t0;
     struct kl_7prelude_hasher kl_h_2;
@@ -514,7 +514,7 @@ int main( int argc, char** argv )
 #line 12 "codegen/str_comparison.kl"
     kl_t17 = ( struct kl__run__LQ7prelude3str__ref ) { ( struct kl_7prelude_str* ) kl_t7, kl_t3 };
 #line 12 "codegen/str_comparison.kl"
-    kl_t0 = kl__4main__LQ7prelude3str( ( kl_t17 ).data, ( kl_t17 ).size );
+    kl_t0 = kl_7codegen_4main__LQ7prelude3str( ( kl_t17 ).data, ( kl_t17 ).size );
 #line 12 "codegen/str_comparison.kl"
     kl_rt_free( kl_t7 );
 #line 12 "codegen/str_comparison.kl"

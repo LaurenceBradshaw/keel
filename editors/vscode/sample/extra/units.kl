@@ -1,4 +1,4 @@
-// A module of the package `extra`, which the command line names: `--package extra=<this folder>`.
+// A module of the package `extra`, which the command line names: `--package <this folder>`.
 
 i32 scale = 10;
 

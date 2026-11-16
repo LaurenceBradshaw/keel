@@ -497,19 +497,20 @@ TEST_CASE( "the_shim_builds_modules_dependencies_first_and_drops_them_in_reverse
         { "main.kl", "import a;\nimport b;\nBuf third = Buf();\ni32 main() { return 0; }\n" },
         { "b.kl", "import a;\nBuf second = Buf();\n" },
         { "a.kl", std::string( k_buf ) + "Buf first = Buf();\n" },
+        { "packageinfo.kl", "@package( app );\n" },
     } );
     REQUIRE( split.clean() );
 
     const std::string shim = split.shim();
     const auto        at   = [&]( std::string_view call ) { return shim.find( call ); };
 
-    REQUIRE( at( "kl_1a_0build(  );" ) < at( "kl_1b_0build(  );" ) );
-    REQUIRE( at( "kl_1b_0build(  );" ) < at( "kl__0build(  );" ) );
-    REQUIRE( at( "kl__0build(  );" ) < at( "kl__4main__(  );" ) );
-    REQUIRE( at( "kl__4main__(  );" ) < at( "kl__0drop(  );" ) );
-    REQUIRE( at( "kl__0drop(  );" ) < at( "kl_1b_0drop(  );" ) );
-    REQUIRE( at( "kl_1b_0drop(  );" ) < at( "kl_1a_0drop(  );" ) );
-    REQUIRE( at( "kl_1a_0drop(  );" ) < at( "return result;" ) );
+    REQUIRE( at( "kl_3app1a_0build(  );" ) < at( "kl_3app1b_0build(  );" ) );
+    REQUIRE( at( "kl_3app1b_0build(  );" ) < at( "kl_3app_0build(  );" ) );
+    REQUIRE( at( "kl_3app_0build(  );" ) < at( "kl_3app_4main__(  );" ) );
+    REQUIRE( at( "kl_3app_4main__(  );" ) < at( "kl_3app_0drop(  );" ) );
+    REQUIRE( at( "kl_3app_0drop(  );" ) < at( "kl_3app1b_0drop(  );" ) );
+    REQUIRE( at( "kl_3app1b_0drop(  );" ) < at( "kl_3app1a_0drop(  );" ) );
+    REQUIRE( at( "kl_3app1a_0drop(  );" ) < at( "return result;" ) );
 }
 
 TEST_CASE( "parts_follows_a_vtable_to_its_drop_function", "[codegen][parts][interfaces]" )

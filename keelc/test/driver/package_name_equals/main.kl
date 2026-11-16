@@ -1,0 +1,6 @@
+// `--package` takes only a folder: the package is named by its packageinfo.kl or the folder, so
+// `name=<dir>` is refused, with the spelling to write instead.
+i32 main()
+{
+    return 0;
+}

@@ -216,6 +216,28 @@ public:
         return std::find( missing_packages_.begin(), missing_packages_.end(), package ) != missing_packages_.end();
     }
 
+    // Whether a file of the package `from` imports a module of `to`.
+    bool package_imports( Symbol_id from, Symbol_id to ) const
+    {
+        for( u32 file = 0; file < edges_.size(); ++file )
+        {
+            if( package_of( File_id { file } ) == from && imports_from( File_id { file }, to ) )
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Whether `file` imports a module of `package`.
+    bool imports_from( File_id file, Symbol_id package ) const
+    {
+        return file.v < edges_.size() &&
+               std::any_of(
+                   edges_[file.v].begin(), edges_[file.v].end(), [&]( File_id to ) { return package_of( to ) == package; }
+               );
+    }
+
     // Each file's package.
     void place( File_id file, Symbol_id package )
     {
@@ -265,6 +287,18 @@ public:
         return program_.is_valid() && file == program_;
     }
 
+    // The package the program's folder names, whose types read bare in its diagnostics; none when
+    // the input is in a given package or its folder names none.
+    void set_program_package( Symbol_id package )
+    {
+        program_package_ = package;
+    }
+
+    Symbol_id program_package() const
+    {
+        return program_package_;
+    }
+
     // A module read from an object: checked when it was built, so nothing checks it again.
     void set_loaded( File_id file )
     {
@@ -291,10 +325,11 @@ private:
     File_id                           prelude_;
     Symbol_id                         prelude_package_;
     File_id                           program_;
+    Symbol_id                         program_package_;
     std::vector<File_id>              loaded_;
 };
 
-// `name`, or `package::name` when there is a package. The program's own package has no name.
+// `name`, or `package::name` when there is a package. A program whose folder names no package has none.
 inline std::string qualified( const Interner& interner, Symbol_id package, std::string_view name )
 {
     if( !package.is_valid() )
@@ -322,6 +357,18 @@ inline std::string module_name( const Module_graph& modules, const Source_manage
 {
     return qualified(
         interner, modules.package_of( file ), std::filesystem::path( sm.file( file ).path ).stem().generic_string()
+    );
+}
+
+// A module as a diagnostic writes it: the program's own package is left off, as its types are.
+inline std::string
+shown_module_name( const Module_graph& modules, const Source_manager& sm, const Interner& interner, File_id file )
+{
+    const Symbol_id package = modules.package_of( file );
+    return qualified(
+        interner,
+        package == modules.program_package() ? Symbol_id {} : package,
+        std::filesystem::path( sm.file( file ).path ).stem().generic_string()
     );
 }
 } // namespace keel

@@ -3,40 +3,40 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__span;
-struct kl__moves;
-struct kl__counter;
+struct kl_7codegen_span;
+struct kl_7codegen_moves;
+struct kl_7codegen_counter;
 
-struct kl__span
+struct kl_7codegen_span
 {
     uint64_t kl_from;
     uint64_t kl_count;
 };
-_Static_assert( sizeof( struct kl__span ) == 16 && _Alignof( struct kl__span ) == 8 && offsetof( struct kl__span, kl_from ) == 0 && offsetof( struct kl__span, kl_count ) == 8, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_span ) == 16 && _Alignof( struct kl_7codegen_span ) == 8 && offsetof( struct kl_7codegen_span, kl_from ) == 0 && offsetof( struct kl_7codegen_span, kl_count ) == 8, "layout" );
 
-struct kl__moves
+struct kl_7codegen_moves
 {
-    struct kl__span kl_first;
-    struct kl__span kl_second;
+    struct kl_7codegen_span kl_first;
+    struct kl_7codegen_span kl_second;
 };
-_Static_assert( sizeof( struct kl__moves ) == 32 && _Alignof( struct kl__moves ) == 8 && offsetof( struct kl__moves, kl_first ) == 0 && offsetof( struct kl__moves, kl_second ) == 16, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_moves ) == 32 && _Alignof( struct kl_7codegen_moves ) == 8 && offsetof( struct kl_7codegen_moves, kl_first ) == 0 && offsetof( struct kl_7codegen_moves, kl_second ) == 16, "layout" );
 
-struct kl__counter
+struct kl_7codegen_counter
 {
     uint64_t kl_total_;
 };
-_Static_assert( sizeof( struct kl__counter ) == 8 && _Alignof( struct kl__counter ) == 8 && offsetof( struct kl__counter, kl_total_ ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_counter ) == 8 && _Alignof( struct kl_7codegen_counter ) == 8 && offsetof( struct kl_7codegen_counter, kl_total_ ) == 0, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__7counter__R7counter__ctor( struct kl__counter* );
-struct kl__moves kl__4plan__S7counter_3u64( struct kl__counter*, uint64_t );
-void kl__4take__S7counter_5moves( struct kl__counter*, struct kl__moves );
-uint64_t kl__5total__S7counter( struct kl__counter* );
-int32_t kl__4main__( void );
+void kl_7codegen_7counter__RQ7codegen7counter__ctor( struct kl_7codegen_counter* );
+struct kl_7codegen_moves kl_7codegen_4plan__SQ7codegen7counter_3u64( struct kl_7codegen_counter*, uint64_t );
+void kl_7codegen_4take__SQ7codegen7counter_Q7codegen5moves( struct kl_7codegen_counter*, struct kl_7codegen_moves );
+uint64_t kl_7codegen_5total__SQ7codegen7counter( struct kl_7codegen_counter* );
+int32_t kl_7codegen_4main__( void );
 
 #line 18 "codegen/plain_result.kl"
-void kl__7counter__R7counter__ctor( struct kl__counter* kl_this_1 )
+void kl_7codegen_7counter__RQ7codegen7counter__ctor( struct kl_7codegen_counter* kl_this_1 )
 {
     ( *kl_this_1 ).kl_total_ = 0;
     return;
@@ -44,12 +44,12 @@ void kl__7counter__R7counter__ctor( struct kl__counter* kl_this_1 )
 }
 
 #line 23 "codegen/plain_result.kl"
-struct kl__moves kl__4plan__S7counter_3u64( struct kl__counter* kl_this_1, uint64_t kl_n_2 )
+struct kl_7codegen_moves kl_7codegen_4plan__SQ7codegen7counter_3u64( struct kl_7codegen_counter* kl_this_1, uint64_t kl_n_2 )
 {
-    struct kl__moves kl_t0;
-    struct kl__moves kl_t3;
-    struct kl__span kl_t4;
-    struct kl__span kl_t5;
+    struct kl_7codegen_moves kl_t0;
+    struct kl_7codegen_moves kl_t3;
+    struct kl_7codegen_span kl_t4;
+    struct kl_7codegen_span kl_t5;
     bool kl_t6;
     uint64_t kl_t7;
     ( void ) kl_this_1;
@@ -82,7 +82,7 @@ struct kl__moves kl__4plan__S7counter_3u64( struct kl__counter* kl_this_1, uint6
 }
 
 #line 28 "codegen/plain_result.kl"
-void kl__4take__S7counter_5moves( struct kl__counter* kl_this_1, struct kl__moves kl_m_2 )
+void kl_7codegen_4take__SQ7codegen7counter_Q7codegen5moves( struct kl_7codegen_counter* kl_this_1, struct kl_7codegen_moves kl_m_2 )
 {
     bool kl_t3;
     uint64_t kl_t4;
@@ -112,7 +112,7 @@ void kl__4take__S7counter_5moves( struct kl__counter* kl_this_1, struct kl__move
 }
 
 #line 33 "codegen/plain_result.kl"
-uint64_t kl__5total__S7counter( struct kl__counter* kl_this_1 )
+uint64_t kl_7codegen_5total__SQ7codegen7counter( struct kl_7codegen_counter* kl_this_1 )
 {
     uint64_t kl_t0;
 #line 35 "codegen/plain_result.kl"
@@ -122,46 +122,46 @@ uint64_t kl__5total__S7counter( struct kl__counter* kl_this_1 )
 }
 
 #line 41 "codegen/plain_result.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__counter kl_c_1;
-    struct kl__counter* kl_t2;
-    struct kl__counter* kl_t4;
-    struct kl__counter* kl_t5;
-    struct kl__moves kl_t6;
-    struct kl__moves kl_later_8;
-    struct kl__counter* kl_t9;
-    struct kl__moves kl_t10;
-    struct kl__counter* kl_t11;
+    struct kl_7codegen_counter kl_c_1;
+    struct kl_7codegen_counter* kl_t2;
+    struct kl_7codegen_counter* kl_t4;
+    struct kl_7codegen_counter* kl_t5;
+    struct kl_7codegen_moves kl_t6;
+    struct kl_7codegen_moves kl_later_8;
+    struct kl_7codegen_counter* kl_t9;
+    struct kl_7codegen_moves kl_t10;
+    struct kl_7codegen_counter* kl_t11;
     int32_t kl_t13;
-    struct kl__counter* kl_t14;
+    struct kl_7codegen_counter* kl_t14;
     uint64_t kl_t15;
     bool kl_t16;
 #line 43 "codegen/plain_result.kl"
     kl_t2 = &kl_c_1;
 #line 43 "codegen/plain_result.kl"
-    kl__7counter__R7counter__ctor( kl_t2 );
+    kl_7codegen_7counter__RQ7codegen7counter__ctor( kl_t2 );
     kl_t4 = &kl_c_1;
 #line 44 "codegen/plain_result.kl"
     kl_t5 = &kl_c_1;
 #line 44 "codegen/plain_result.kl"
-    kl_t6 = kl__4plan__S7counter_3u64( kl_t5, 2 );
+    kl_t6 = kl_7codegen_4plan__SQ7codegen7counter_3u64( kl_t5, 2 );
 #line 44 "codegen/plain_result.kl"
-    kl__4take__S7counter_5moves( kl_t4, kl_t6 );
+    kl_7codegen_4take__SQ7codegen7counter_Q7codegen5moves( kl_t4, kl_t6 );
 #line 46 "codegen/plain_result.kl"
     kl_t9 = &kl_c_1;
 #line 46 "codegen/plain_result.kl"
-    kl_t10 = kl__4plan__S7counter_3u64( kl_t9, 3 );
+    kl_t10 = kl_7codegen_4plan__SQ7codegen7counter_3u64( kl_t9, 3 );
 #line 46 "codegen/plain_result.kl"
     kl_later_8 = kl_t10;
     kl_t11 = &kl_c_1;
 #line 47 "codegen/plain_result.kl"
-    kl__4take__S7counter_5moves( kl_t11, kl_later_8 );
+    kl_7codegen_4take__SQ7codegen7counter_Q7codegen5moves( kl_t11, kl_later_8 );
 #line 49 "codegen/plain_result.kl"
     kl_t14 = &kl_c_1;
 #line 49 "codegen/plain_result.kl"
-    kl_t15 = kl__5total__S7counter( kl_t14 );
+    kl_t15 = kl_7codegen_5total__SQ7codegen7counter( kl_t14 );
 #line 49 "codegen/plain_result.kl"
     kl_t16 = kl_t15 == 12;
 #line 49 "codegen/plain_result.kl"
@@ -187,7 +187,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 41 "codegen/plain_result.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 41 "codegen/plain_result.kl"
     return kl_t0;
 #line 41 "codegen/plain_result.kl"

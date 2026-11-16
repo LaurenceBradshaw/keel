@@ -61,6 +61,11 @@ Program load_program(
 );
 
 // Why `name` cannot be given to `--package`, or nothing when it can.
+// The name `packageinfo.kl` in `folder` declares, `@package( name );`, if it declares one. The loader
+// reports a malformed one.
+std::optional<std::string> declared_package_name( const std::filesystem::path& folder );
+// The folder's own name, the fallback when none is declared; a `src/` or `test/` takes its parent's.
+std::string                folder_package_name( const std::filesystem::path& folder );
 std::optional<std::string> package_name_error( std::string_view name, const Interner& interner );
 
 } // namespace keel

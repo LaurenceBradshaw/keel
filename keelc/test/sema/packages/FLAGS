@@ -1,1 +1,1 @@
---check --package atlas=sema/packages/atlas
+--check --package sema/packages/atlas

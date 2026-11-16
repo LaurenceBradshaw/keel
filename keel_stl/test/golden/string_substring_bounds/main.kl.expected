@@ -9411,7 +9411,7 @@ struct kl_7prelude_textual__vtable
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-int32_t kl__4main__( void );
+int32_t kl_23string_substring_bounds_4main__( void );
 void kl_2kl4list_8truncate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
 uint64_t kl_2kl4list_4size__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
 struct kl_2kl6string_string* kl_2kl4list_14operator_index__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
@@ -9438,7 +9438,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 7 "string_substring_bounds/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_23string_substring_bounds_4main__( void )
 {
     int32_t kl_t0;
     struct kl_2kl6string_string kl_text_1;
@@ -9900,7 +9900,7 @@ int main( void )
 #line 7 "string_substring_bounds/main.kl"
     kl_2kl2os_0build(  );
 #line 7 "string_substring_bounds/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_23string_substring_bounds_4main__(  );
 #line 7 "string_substring_bounds/main.kl"
     kl_2kl2os_0drop(  );
 #line 7 "string_substring_bounds/main.kl"

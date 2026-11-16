@@ -3,9 +3,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Opt__I3i32E;
+struct kl_3opt_Opt__I3i32E;
 
-struct kl__Opt__I3i32E
+struct kl_3opt_Opt__I3i32E
 {
     int32_t tag;
     union
@@ -16,13 +16,13 @@ struct kl__Opt__I3i32E
         };
     };
 };
-_Static_assert( sizeof( struct kl__Opt__I3i32E ) == 8 && _Alignof( struct kl__Opt__I3i32E ) == 4 && offsetof( struct kl__Opt__I3i32E, kl_4Some_v ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_3opt_Opt__I3i32E ) == 8 && _Alignof( struct kl_3opt_Opt__I3i32E ) == 4 && offsetof( struct kl_3opt_Opt__I3i32E, kl_4Some_v ) == 4, "layout" );
 
-int32_t kl__4main__( void );
-int32_t kl__6unwrap__I3i32E__3OptI3i32E_3i32( struct kl__Opt__I3i32E, int32_t );
+int32_t kl_3opt_4main__( void );
+int32_t kl_3opt_6unwrap__I3i32E__Q3opt3OptI3i32E_3i32( struct kl_3opt_Opt__I3i32E, int32_t );
 
 #line 13 "opt/moves_fields_overwritten.kl"
-int32_t kl__4main__( void )
+int32_t kl_3opt_4main__( void )
 {
     int32_t kl_t0;
 #line 20 "opt/moves_fields_overwritten.kl"
@@ -32,7 +32,7 @@ int32_t kl__4main__( void )
 }
 
 #line 4 "opt/moves_fields_overwritten.kl"
-int32_t kl__6unwrap__I3i32E__3OptI3i32E_3i32( struct kl__Opt__I3i32E kl_o_1, int32_t kl_fallback_2 )
+int32_t kl_3opt_6unwrap__I3i32E__Q3opt3OptI3i32E_3i32( struct kl_3opt_Opt__I3i32E kl_o_1, int32_t kl_fallback_2 )
 {
     int32_t kl_t0;
     bool kl_t3;
@@ -56,7 +56,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 13 "opt/moves_fields_overwritten.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_3opt_4main__(  );
 #line 13 "opt/moves_fields_overwritten.kl"
     return kl_t0;
 #line 13 "opt/moves_fields_overwritten.kl"

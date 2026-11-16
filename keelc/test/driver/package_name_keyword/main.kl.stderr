@@ -1,1 +1,1 @@
-keelc: --package name 'struct' is a keyword
+keelc: --package driver/package_name_keyword/struct: name 'struct' is a keyword; name the package in its packageinfo.kl, `@package( name );`

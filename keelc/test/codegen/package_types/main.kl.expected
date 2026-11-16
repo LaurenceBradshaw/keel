@@ -95,18 +95,18 @@ struct kl_5kinds6shapes_Point kl_5kinds6shapes_6origin__( void )
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Point;
+struct kl_13package_types_Point;
 struct kl_5kinds6shapes_Point;
 struct kl_5kinds6shapes_Counter;
 struct kl_5kinds6shapes_Shape;
 struct kl_5kinds6shapes_Box__I3i32E;
 struct kl_5kinds6shapes_Box__IQ5kinds5PointE;
 
-struct kl__Point
+struct kl_13package_types_Point
 {
     int32_t kl_x;
 };
-_Static_assert( sizeof( struct kl__Point ) == 4 && _Alignof( struct kl__Point ) == 4 && offsetof( struct kl__Point, kl_x ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_13package_types_Point ) == 4 && _Alignof( struct kl_13package_types_Point ) == 4 && offsetof( struct kl_13package_types_Point, kl_x ) == 0, "layout" );
 
 struct kl_5kinds6shapes_Point
 {
@@ -154,10 +154,10 @@ extern int32_t kl_5kinds6shapes_made__G;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__7measure__Q5kinds5Shape( struct kl_5kinds6shapes_Shape );
-int32_t kl__4main__( void );
-struct kl_5kinds6shapes_Point kl__4same__IQ5kinds5PointE__Q5kinds5Point( struct kl_5kinds6shapes_Point );
-struct kl__Point kl__4same__I5PointE__5Point( struct kl__Point );
+int32_t kl_13package_types_7measure__Q5kinds5Shape( struct kl_5kinds6shapes_Shape );
+int32_t kl_13package_types_4main__( void );
+struct kl_5kinds6shapes_Point kl_13package_types_4same__IQ5kinds5PointE__Q5kinds5Point( struct kl_5kinds6shapes_Point );
+struct kl_13package_types_Point kl_13package_types_4same__IQ13package_types5PointE__Q13package_types5Point( struct kl_13package_types_Point );
 struct kl_5kinds6shapes_Box__I3i32E kl_5kinds6shapes_2of__I3i32E__SQ5kinds3BoxI3i32E_3i32( int32_t );
 void kl_5kinds6shapes_7Counter__RQ5kinds7Counter_3i32__ctor( struct kl_5kinds6shapes_Counter*, int32_t );
 struct kl_5kinds6shapes_Counter kl_5kinds6shapes_4zero__SQ5kinds7Counter( void );
@@ -165,7 +165,7 @@ int32_t kl_5kinds6shapes_3get__SQ5kinds7Counter( struct kl_5kinds6shapes_Counter
 struct kl_5kinds6shapes_Point kl_5kinds6shapes_6origin__( void );
 
 #line 17 "codegen/package_types/main.kl"
-int32_t kl__7measure__Q5kinds5Shape( struct kl_5kinds6shapes_Shape kl_s_1 )
+int32_t kl_13package_types_7measure__Q5kinds5Shape( struct kl_5kinds6shapes_Shape kl_s_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -226,7 +226,7 @@ int32_t kl__7measure__Q5kinds5Shape( struct kl_5kinds6shapes_Shape kl_s_1 )
 }
 
 #line 28 "codegen/package_types/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_13package_types_4main__( void )
 {
     int32_t kl_t0;
     struct kl_5kinds6shapes_Point kl_p_1;
@@ -236,15 +236,15 @@ int32_t kl__4main__( void )
     bool kl_t5;
     struct kl_5kinds6shapes_Point kl_q_6;
     struct kl_5kinds6shapes_Point kl_t7;
-    struct kl__Point kl_own_8;
-    struct kl__Point kl_t9;
+    struct kl_13package_types_Point kl_own_8;
+    struct kl_13package_types_Point kl_t9;
     bool kl_t10;
     int32_t kl_t11;
     bool kl_t12;
     bool kl_t13;
     struct kl_5kinds6shapes_Point kl_t14;
     bool kl_t15;
-    struct kl__Point kl_t16;
+    struct kl_13package_types_Point kl_t16;
     bool kl_t17;
     struct kl_5kinds6shapes_Box__I3i32E kl_b_18;
     struct kl_5kinds6shapes_Box__I3i32E kl_t19;
@@ -327,7 +327,7 @@ int32_t kl__4main__( void )
 #line 35 "codegen/package_types/main.kl"
     return kl_t0;
     bb8:
-    kl_t14 = kl__4same__IQ5kinds5PointE__Q5kinds5Point( kl_p_1 );
+    kl_t14 = kl_13package_types_4same__IQ5kinds5PointE__Q5kinds5Point( kl_p_1 );
 #line 37 "codegen/package_types/main.kl"
     kl_t15 = kl_t14.kl_y != 8;
 #line 37 "codegen/package_types/main.kl"
@@ -336,7 +336,7 @@ int32_t kl__4main__( void )
     if ( kl_t13 ) goto bb10; else goto bb9;
     bb9:
 #line 37 "codegen/package_types/main.kl"
-    kl_t16 = kl__4same__I5PointE__5Point( kl_own_8 );
+    kl_t16 = kl_13package_types_4same__IQ13package_types5PointE__Q13package_types5Point( kl_own_8 );
 #line 37 "codegen/package_types/main.kl"
     kl_t17 = kl_t16.kl_x != 5;
 #line 37 "codegen/package_types/main.kl"
@@ -393,7 +393,7 @@ int32_t kl__4main__( void )
 #line 46 "codegen/package_types/main.kl"
     kl_t28.kl_6Circle_radius = 2;
 #line 46 "codegen/package_types/main.kl"
-    kl_t29 = kl__7measure__Q5kinds5Shape( kl_t28 );
+    kl_t29 = kl_13package_types_7measure__Q5kinds5Shape( kl_t28 );
 #line 46 "codegen/package_types/main.kl"
     kl_t30 = kl_t29 != 12;
 #line 46 "codegen/package_types/main.kl"
@@ -406,7 +406,7 @@ int32_t kl__4main__( void )
 #line 46 "codegen/package_types/main.kl"
     kl_t31.kl_6Square_side = 3;
 #line 46 "codegen/package_types/main.kl"
-    kl_t32 = kl__7measure__Q5kinds5Shape( kl_t31 );
+    kl_t32 = kl_13package_types_7measure__Q5kinds5Shape( kl_t31 );
 #line 46 "codegen/package_types/main.kl"
     kl_t33 = kl_t32 != 9;
 #line 46 "codegen/package_types/main.kl"
@@ -482,7 +482,7 @@ int32_t kl__4main__( void )
 }
 
 #line 12 "codegen/package_types/main.kl"
-struct kl_5kinds6shapes_Point kl__4same__IQ5kinds5PointE__Q5kinds5Point( struct kl_5kinds6shapes_Point kl_v_1 )
+struct kl_5kinds6shapes_Point kl_13package_types_4same__IQ5kinds5PointE__Q5kinds5Point( struct kl_5kinds6shapes_Point kl_v_1 )
 {
     struct kl_5kinds6shapes_Point kl_t0;
 #line 14 "codegen/package_types/main.kl"
@@ -492,9 +492,9 @@ struct kl_5kinds6shapes_Point kl__4same__IQ5kinds5PointE__Q5kinds5Point( struct 
 }
 
 #line 12 "codegen/package_types/main.kl"
-struct kl__Point kl__4same__I5PointE__5Point( struct kl__Point kl_v_1 )
+struct kl_13package_types_Point kl_13package_types_4same__IQ13package_types5PointE__Q13package_types5Point( struct kl_13package_types_Point kl_v_1 )
 {
-    struct kl__Point kl_t0;
+    struct kl_13package_types_Point kl_t0;
 #line 14 "codegen/package_types/main.kl"
     kl_t0 = kl_v_1;
 #line 14 "codegen/package_types/main.kl"
@@ -518,7 +518,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 28 "codegen/package_types/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_13package_types_4main__(  );
 #line 28 "codegen/package_types/main.kl"
     return kl_t0;
 #line 28 "codegen/package_types/main.kl"

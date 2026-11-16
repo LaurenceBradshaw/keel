@@ -160,7 +160,7 @@ run_keelc( const std::filesystem::path& keelc, const std::string& name, const st
     const std::string command = fmt::format(
         "{} --check --diagnostics=json --declarations --with-prelude --package {} {} 2>&1",
         shell_quote( keelc.generic_string() ),
-        shell_quote( name + "=" + dir.generic_string() ),
+        shell_quote( dir.generic_string() ),
         shell_quote( root.generic_string() )
     );
 
@@ -205,6 +205,44 @@ run_keelc( const std::filesystem::path& keelc, const std::string& name, const st
     std::error_code ec;
     std::filesystem::remove_all( root_dir, ec );
     return records;
+}
+
+std::string package_name( const std::filesystem::path& keelc, const std::filesystem::path& dir, std::string& error )
+{
+    const std::string command = fmt::format(
+        "{} --print-config --package {} 2>&1", shell_quote( keelc.generic_string() ), shell_quote( dir.generic_string() )
+    );
+
+    std::string output;
+    FILE*       pipe = open_pipe( command );
+    if( pipe == nullptr )
+    {
+        error = fmt::format( "cannot run '{}'", keelc.generic_string() );
+        return {};
+    }
+
+    std::array<char, 4096> buffer {};
+    for( std::size_t n; ( n = std::fread( buffer.data(), 1, buffer.size(), pipe ) ) > 0; )
+    {
+        output.append( buffer.data(), n );
+    }
+
+    if( const int status = close_pipe( pipe ); status != 0 )
+    {
+        error =
+            fmt::format( "'{}' could not name the package in '{}': {}", keelc.generic_string(), dir.generic_string(), output );
+        return {};
+    }
+
+    // The given folder's line comes first: `package <name> <folder>`.
+    const std::size_t line = output.find( "\npackage " );
+    if( line == std::string::npos )
+    {
+        error = fmt::format( "'{}' named no package for '{}'", keelc.generic_string(), dir.generic_string() );
+        return {};
+    }
+    const std::size_t start = line + 9;
+    return output.substr( start, output.find( ' ', start ) - start );
 }
 
 std::string print_prelude( const std::filesystem::path& keelc, std::string& error )

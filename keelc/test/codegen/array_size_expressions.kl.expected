@@ -333,12 +333,12 @@ struct kl_7prelude_textual__vtable
     struct kl__run__L2u8__ref ( *kl__7as_text__ )( void* );
 };
 
-uint64_t kl__N__G = 3;
+uint64_t kl_7codegen_N__G = 3;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-uint64_t kl__3sum__A4_3i32( struct kl__A4_3i32* );
-int32_t kl__4main__( void );
+uint64_t kl_7codegen_3sum__A4_3i32( struct kl__A4_3i32* );
+int32_t kl_7codegen_4main__( void );
 void kl_1t7console_5print__3i64_7textual( int64_t, struct kl_7prelude_textual__ref );
 void kl_1t7console_5print__3u64_7textual( uint64_t, struct kl_7prelude_textual__ref );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
@@ -348,7 +348,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 6 "codegen/array_size_expressions.kl"
-uint64_t kl__3sum__A4_3i32( struct kl__A4_3i32* kl_a_1 )
+uint64_t kl_7codegen_3sum__A4_3i32( struct kl__A4_3i32* kl_a_1 )
 {
     uint64_t kl_t0;
     uint64_t kl_t2;
@@ -390,7 +390,7 @@ uint64_t kl__3sum__A4_3i32( struct kl__A4_3i32* kl_a_1 )
 }
 
 #line 11 "codegen/array_size_expressions.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     struct kl__A4_3i32 kl_a_1;
@@ -462,7 +462,7 @@ int32_t kl__4main__( void )
     kl_b_7.e[kl_t11] = 9;
     kl_t12 = &kl_a_1;
 #line 16 "codegen/array_size_expressions.kl"
-    kl_t13 = kl__3sum__A4_3i32( kl_t12 );
+    kl_t13 = kl_7codegen_3sum__A4_3i32( kl_t12 );
 #line 41 "../test_lib/console.kl"
     kl_t15 = &kl_t14;
 #line 41 "../test_lib/console.kl"
@@ -499,7 +499,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 11 "codegen/array_size_expressions.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 11 "codegen/array_size_expressions.kl"
     return kl_t0;
 #line 11 "codegen/array_size_expressions.kl"

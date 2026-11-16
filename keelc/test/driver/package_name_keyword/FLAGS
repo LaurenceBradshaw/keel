@@ -1,1 +1,1 @@
---check --package struct=.
+--check --package driver/package_name_keyword/struct

@@ -3,10 +3,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-int32_t kl_3far_4pick__3i32( int32_t );
+int32_t kl_18modules_visibility3far_4pick__3i32( int32_t );
 
 #line 2 "codegen/modules_visibility/far.kl"
-int32_t kl_3far_4pick__3i32( int32_t kl_t1 )
+int32_t kl_18modules_visibility3far_4pick__3i32( int32_t kl_t1 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
@@ -27,26 +27,26 @@ int32_t kl_3far_4pick__3i32( int32_t kl_t1 )
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl_4geom_Point;
+struct kl_18modules_visibility4geom_Point;
 
-struct kl_4geom_Point
+struct kl_18modules_visibility4geom_Point
 {
     int32_t kl_x;
     int32_t kl_y;
 };
-_Static_assert( sizeof( struct kl_4geom_Point ) == 8 && _Alignof( struct kl_4geom_Point ) == 4 && offsetof( struct kl_4geom_Point, kl_x ) == 0 && offsetof( struct kl_4geom_Point, kl_y ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_18modules_visibility4geom_Point ) == 8 && _Alignof( struct kl_18modules_visibility4geom_Point ) == 4 && offsetof( struct kl_18modules_visibility4geom_Point, kl_x ) == 0 && offsetof( struct kl_18modules_visibility4geom_Point, kl_y ) == 4, "layout" );
 
-int32_t kl_5route_3via__3i32( int32_t );
-struct kl_4geom_Point kl_5route_6origin__( void );
-int32_t kl_3far_4pick__3i32( int32_t );
+int32_t kl_18modules_visibility5route_3via__3i32( int32_t );
+struct kl_18modules_visibility4geom_Point kl_18modules_visibility5route_6origin__( void );
+int32_t kl_18modules_visibility3far_4pick__3i32( int32_t );
 
 #line 5 "codegen/modules_visibility/route.kl"
-int32_t kl_5route_3via__3i32( int32_t kl_v_1 )
+int32_t kl_18modules_visibility5route_3via__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
 #line 7 "codegen/modules_visibility/route.kl"
-    kl_t2 = kl_3far_4pick__3i32( kl_v_1 );
+    kl_t2 = kl_18modules_visibility3far_4pick__3i32( kl_v_1 );
 #line 7 "codegen/modules_visibility/route.kl"
     kl_t0 = kl_t2;
 #line 7 "codegen/modules_visibility/route.kl"
@@ -54,10 +54,10 @@ int32_t kl_5route_3via__3i32( int32_t kl_v_1 )
 }
 
 #line 10 "codegen/modules_visibility/route.kl"
-struct kl_4geom_Point kl_5route_6origin__( void )
+struct kl_18modules_visibility4geom_Point kl_18modules_visibility5route_6origin__( void )
 {
-    struct kl_4geom_Point kl_t0;
-    struct kl_4geom_Point kl_t1;
+    struct kl_18modules_visibility4geom_Point kl_t0;
+    struct kl_18modules_visibility4geom_Point kl_t1;
 #line 12 "codegen/modules_visibility/route.kl"
     kl_t1.kl_x = 7;
 #line 12 "codegen/modules_visibility/route.kl"
@@ -73,24 +73,24 @@ struct kl_4geom_Point kl_5route_6origin__( void )
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl_4geom_Point;
+struct kl_18modules_visibility4geom_Point;
 
 typedef int32_t ( *kl__fn__F3i64E3i32 )( int64_t );
 
-struct kl_4geom_Point
+struct kl_18modules_visibility4geom_Point
 {
     int32_t kl_x;
     int32_t kl_y;
 };
-_Static_assert( sizeof( struct kl_4geom_Point ) == 8 && _Alignof( struct kl_4geom_Point ) == 4 && offsetof( struct kl_4geom_Point, kl_x ) == 0 && offsetof( struct kl_4geom_Point, kl_y ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_18modules_visibility4geom_Point ) == 8 && _Alignof( struct kl_18modules_visibility4geom_Point ) == 4 && offsetof( struct kl_18modules_visibility4geom_Point, kl_x ) == 0 && offsetof( struct kl_18modules_visibility4geom_Point, kl_y ) == 4, "layout" );
 
-int32_t kl__4pick__3i64( int64_t );
-int32_t kl__4main__( void );
-int32_t kl_5route_3via__3i32( int32_t );
-struct kl_4geom_Point kl_5route_6origin__( void );
+int32_t kl_18modules_visibility_4pick__3i64( int64_t );
+int32_t kl_18modules_visibility_4main__( void );
+int32_t kl_18modules_visibility5route_3via__3i32( int32_t );
+struct kl_18modules_visibility4geom_Point kl_18modules_visibility5route_6origin__( void );
 
 #line 6 "codegen/modules_visibility/main.kl"
-int32_t kl__4pick__3i64( int64_t kl_t1 )
+int32_t kl_18modules_visibility_4pick__3i64( int64_t kl_t1 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
@@ -101,7 +101,7 @@ int32_t kl__4pick__3i64( int64_t kl_t1 )
 }
 
 #line 11 "codegen/modules_visibility/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_18modules_visibility_4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_x_1;
@@ -115,15 +115,15 @@ int32_t kl__4main__( void )
     bool kl_t9;
     int32_t kl_t10;
     bool kl_t11;
-    struct kl_4geom_Point kl_p_12;
-    struct kl_4geom_Point kl_t13;
+    struct kl_18modules_visibility4geom_Point kl_p_12;
+    struct kl_18modules_visibility4geom_Point kl_t13;
     bool kl_t14;
 #line 13 "codegen/modules_visibility/main.kl"
     kl_x_1 = 5;
 #line 16 "codegen/modules_visibility/main.kl"
     kl_t2 = ( int64_t ) kl_x_1;
 #line 16 "codegen/modules_visibility/main.kl"
-    kl_t3 = kl__4pick__3i64( kl_t2 );
+    kl_t3 = kl_18modules_visibility_4pick__3i64( kl_t2 );
 #line 16 "codegen/modules_visibility/main.kl"
     kl_t4 = kl_t3 != 1;
 #line 16 "codegen/modules_visibility/main.kl"
@@ -135,7 +135,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb2:
 #line 19 "codegen/modules_visibility/main.kl"
-    kl_t6 = kl__4pick__3i64;
+    kl_t6 = kl_18modules_visibility_4pick__3i64;
 #line 19 "codegen/modules_visibility/main.kl"
     kl_f_5 = kl_t6;
     kl_t7 = ( int64_t ) kl_x_1;
@@ -152,7 +152,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb4:
 #line 23 "codegen/modules_visibility/main.kl"
-    kl_t10 = kl_5route_3via__3i32( kl_x_1 );
+    kl_t10 = kl_18modules_visibility5route_3via__3i32( kl_x_1 );
 #line 23 "codegen/modules_visibility/main.kl"
     kl_t11 = kl_t10 != 2;
 #line 23 "codegen/modules_visibility/main.kl"
@@ -164,7 +164,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb6:
 #line 26 "codegen/modules_visibility/main.kl"
-    kl_t13 = kl_5route_6origin__(  );
+    kl_t13 = kl_18modules_visibility5route_6origin__(  );
 #line 26 "codegen/modules_visibility/main.kl"
     kl_p_12 = kl_t13;
     kl_t14 = kl_p_12.kl_x != 7;
@@ -185,7 +185,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 11 "codegen/modules_visibility/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_18modules_visibility_4main__(  );
 #line 11 "codegen/modules_visibility/main.kl"
     return kl_t0;
 #line 11 "codegen/modules_visibility/main.kl"

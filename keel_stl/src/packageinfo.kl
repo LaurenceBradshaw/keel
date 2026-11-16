@@ -5,3 +5,4 @@
 //!
 //! Each module is imported by name through the package, `import kl::list;`, and its declarations
 //! are written through the package too, `kl::list<i32>`.
+@package( kl );

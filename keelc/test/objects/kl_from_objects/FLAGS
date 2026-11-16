@@ -1,1 +1,1 @@
---debug --check --package kl=../../keel_stl/src
+--debug --check --package ../../keel_stl/src

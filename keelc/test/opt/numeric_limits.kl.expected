@@ -3,14 +3,14 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-int32_t kl__g_min__G = -2147483648;
+int32_t kl_3opt_g_min__G = -2147483648;
 
-int32_t kl__4main__( void );
-uint16_t kl__3top__I3u16E__( void );
-int64_t kl__3top__I3i64E__( void );
+int32_t kl_3opt_4main__( void );
+uint16_t kl_3opt_3top__I3u16E__( void );
+int64_t kl_3opt_3top__I3i64E__( void );
 
 #line 8 "opt/numeric_limits.kl"
-int32_t kl__4main__( void )
+int32_t kl_3opt_4main__( void )
 {
     int32_t kl_t0;
 #line 20 "opt/numeric_limits.kl"
@@ -20,7 +20,7 @@ int32_t kl__4main__( void )
 }
 
 #line 6 "opt/numeric_limits.kl"
-uint16_t kl__3top__I3u16E__( void )
+uint16_t kl_3opt_3top__I3u16E__( void )
 {
     uint16_t kl_t0;
 #line 6 "opt/numeric_limits.kl"
@@ -31,7 +31,7 @@ uint16_t kl__3top__I3u16E__( void )
 }
 
 #line 6 "opt/numeric_limits.kl"
-int64_t kl__3top__I3i64E__( void )
+int64_t kl_3opt_3top__I3i64E__( void )
 {
     int64_t kl_t0;
 #line 6 "opt/numeric_limits.kl"
@@ -45,7 +45,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 8 "opt/numeric_limits.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_3opt_4main__(  );
 #line 8 "opt/numeric_limits.kl"
     return kl_t0;
 #line 8 "opt/numeric_limits.kl"

@@ -27,13 +27,13 @@ void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__3sum__L3i32( int32_t*, uint64_t );
-void kl__5clear__RL3i32( int32_t*, uint64_t );
-struct kl__run__L3i32__ref kl__6middle__A6_3i32( struct kl__A6_3i32* );
-int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
+int32_t kl_7codegen_3sum__L3i32( int32_t*, uint64_t );
+void kl_7codegen_5clear__RL3i32( int32_t*, uint64_t );
+struct kl__run__L3i32__ref kl_7codegen_6middle__A6_3i32( struct kl__A6_3i32* );
+int32_t kl_7codegen_4main__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
 
 #line 3 "codegen/fixed_array_slices.kl"
-int32_t kl__3sum__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
+int32_t kl_7codegen_3sum__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
 {
     int32_t kl_t0;
 #line 3 "codegen/fixed_array_slices.kl"
@@ -103,7 +103,7 @@ int32_t kl__3sum__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
 }
 
 #line 15 "codegen/fixed_array_slices.kl"
-void kl__5clear__RL3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
+void kl_7codegen_5clear__RL3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
 {
 #line 15 "codegen/fixed_array_slices.kl"
     struct kl__run__L3i32__ref kl_values_1 = { kl_values_1_data, kl_values_1_size };
@@ -157,7 +157,7 @@ void kl__5clear__RL3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
 }
 
 #line 23 "codegen/fixed_array_slices.kl"
-struct kl__run__L3i32__ref kl__6middle__A6_3i32( struct kl__A6_3i32* kl_values_1 )
+struct kl__run__L3i32__ref kl_7codegen_6middle__A6_3i32( struct kl__A6_3i32* kl_values_1 )
 {
     struct kl__run__L3i32__ref kl_t0;
     uint64_t kl_t2;
@@ -204,7 +204,7 @@ struct kl__run__L3i32__ref kl__6middle__A6_3i32( struct kl__A6_3i32* kl_values_1
 }
 
 #line 28 "codegen/fixed_array_slices.kl"
-int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_args_1_data, uint64_t kl_args_1_size )
+int32_t kl_7codegen_4main__LQ7prelude3str( struct kl_7prelude_str* kl_args_1_data, uint64_t kl_args_1_size )
 {
     int32_t kl_t0;
 #line 28 "codegen/fixed_array_slices.kl"
@@ -395,7 +395,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_args_1_data, uint6
 #line 33 "codegen/fixed_array_slices.kl"
     kl_t25 = kl_t24;
 #line 33 "codegen/fixed_array_slices.kl"
-    kl_t26 = kl__3sum__L3i32( ( kl_t25 ).data, ( kl_t25 ).size );
+    kl_t26 = kl_7codegen_3sum__L3i32( ( kl_t25 ).data, ( kl_t25 ).size );
 #line 33 "codegen/fixed_array_slices.kl"
     kl_t27 = kl_t26 != 6;
 #line 33 "codegen/fixed_array_slices.kl"
@@ -438,7 +438,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_args_1_data, uint6
 #line 33 "codegen/fixed_array_slices.kl"
     kl_t37 = kl_t36;
 #line 33 "codegen/fixed_array_slices.kl"
-    kl_t38 = kl__3sum__L3i32( ( kl_t37 ).data, ( kl_t37 ).size );
+    kl_t38 = kl_7codegen_3sum__L3i32( ( kl_t37 ).data, ( kl_t37 ).size );
 #line 33 "codegen/fixed_array_slices.kl"
     kl_t39 = kl_t38 != 0;
 #line 33 "codegen/fixed_array_slices.kl"
@@ -449,11 +449,11 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_args_1_data, uint6
 #line 33 "codegen/fixed_array_slices.kl"
     kl_t40 = &kl_a_2;
 #line 33 "codegen/fixed_array_slices.kl"
-    kl_t41 = kl__6middle__A6_3i32( kl_t40 );
+    kl_t41 = kl_7codegen_6middle__A6_3i32( kl_t40 );
 #line 33 "codegen/fixed_array_slices.kl"
     kl_t42 = kl_t41;
 #line 33 "codegen/fixed_array_slices.kl"
-    kl_t43 = kl__3sum__L3i32( ( kl_t42 ).data, ( kl_t42 ).size );
+    kl_t43 = kl_7codegen_3sum__L3i32( ( kl_t42 ).data, ( kl_t42 ).size );
 #line 33 "codegen/fixed_array_slices.kl"
     kl_t44 = kl_t43 != 14;
 #line 33 "codegen/fixed_array_slices.kl"
@@ -599,7 +599,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_args_1_data, uint6
 #line 44 "codegen/fixed_array_slices.kl"
     kl_t80 = kl_t79;
 #line 44 "codegen/fixed_array_slices.kl"
-    kl__5clear__RL3i32( ( kl_t80 ).data, ( kl_t80 ).size );
+    kl_7codegen_5clear__RL3i32( ( kl_t80 ).data, ( kl_t80 ).size );
     kl_t83 = 0;
 #line 45 "codegen/fixed_array_slices.kl"
     kl_t84 = &kl_a_2.e[kl_t83];
@@ -652,7 +652,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_args_1_data, uint6
 #line 48 "codegen/fixed_array_slices.kl"
     kl_t100 = ( struct kl__run__L3i32__ref ) { ( int32_t* ) kl_t99, 6 };
 #line 48 "codegen/fixed_array_slices.kl"
-    kl_t101 = kl__3sum__L3i32( ( kl_t100 ).data, ( kl_t100 ).size );
+    kl_t101 = kl_7codegen_3sum__L3i32( ( kl_t100 ).data, ( kl_t100 ).size );
 #line 48 "codegen/fixed_array_slices.kl"
     kl_t102 = 1 + 40;
 #line 48 "codegen/fixed_array_slices.kl"
@@ -784,7 +784,7 @@ int main( int argc, char** argv )
 #line 28 "codegen/fixed_array_slices.kl"
     kl_t17 = ( struct kl__run__LQ7prelude3str__ref ) { ( struct kl_7prelude_str* ) kl_t7, kl_t3 };
 #line 28 "codegen/fixed_array_slices.kl"
-    kl_t0 = kl__4main__LQ7prelude3str( ( kl_t17 ).data, ( kl_t17 ).size );
+    kl_t0 = kl_7codegen_4main__LQ7prelude3str( ( kl_t17 ).data, ( kl_t17 ).size );
 #line 28 "codegen/fixed_array_slices.kl"
     kl_rt_free( kl_t7 );
 #line 28 "codegen/fixed_array_slices.kl"

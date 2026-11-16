@@ -321,9 +321,9 @@ struct kl_7prelude_textual__vtable
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__4main__( void );
-int64_t kl__4once__I3i32E__3i32( int32_t );
-int64_t kl__5count__IP3i32E__3i64_P3i32( int64_t, int32_t* );
+int32_t kl_7codegen_4main__( void );
+int64_t kl_7codegen_4once__I3i32E__3i32( int32_t );
+int64_t kl_7codegen_5count__IP3i32E__3i64_P3i32( int64_t, int32_t* );
 void kl_1t7console_5print__3i64_7textual( int64_t, struct kl_7prelude_textual__ref );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 void kl_7prelude_str__drop( void* );
@@ -332,7 +332,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 21 "codegen/generic_recursion_entered_growing.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     int64_t kl_t1;
@@ -342,7 +342,7 @@ int32_t kl__4main__( void )
     struct kl_7prelude_str* kl_t6;
     struct kl_7prelude_textual__ref kl_t7;
 #line 23 "codegen/generic_recursion_entered_growing.kl"
-    kl_t1 = kl__4once__I3i32E__3i32( 5 );
+    kl_t1 = kl_7codegen_4once__I3i32E__3i32( 5 );
 #line 31 "../test_lib/console.kl"
     kl_t3 = &kl_t2;
 #line 31 "../test_lib/console.kl"
@@ -361,7 +361,7 @@ int32_t kl__4main__( void )
 }
 
 #line 15 "codegen/generic_recursion_entered_growing.kl"
-int64_t kl__4once__I3i32E__3i32( int32_t kl_x_1 )
+int64_t kl_7codegen_4once__I3i32E__3i32( int32_t kl_x_1 )
 {
     int64_t kl_t0;
     int32_t* kl_p_2;
@@ -371,7 +371,7 @@ int64_t kl__4once__I3i32E__3i32( int32_t kl_x_1 )
     kl_t3 = &kl_x_1;
 #line 17 "codegen/generic_recursion_entered_growing.kl"
     kl_p_2 = kl_t3;
-    kl_t4 = kl__5count__IP3i32E__3i64_P3i32( 2, kl_p_2 );
+    kl_t4 = kl_7codegen_5count__IP3i32E__3i64_P3i32( 2, kl_p_2 );
 #line 18 "codegen/generic_recursion_entered_growing.kl"
     kl_t0 = kl_t4;
 #line 18 "codegen/generic_recursion_entered_growing.kl"
@@ -379,7 +379,7 @@ int64_t kl__4once__I3i32E__3i32( int32_t kl_x_1 )
 }
 
 #line 5 "codegen/generic_recursion_entered_growing.kl"
-int64_t kl__5count__IP3i32E__3i64_P3i32( int64_t kl_n_1, int32_t* kl_x_2 )
+int64_t kl_7codegen_5count__IP3i32E__3i64_P3i32( int64_t kl_n_1, int32_t* kl_x_2 )
 {
     int64_t kl_t0;
     bool kl_t3;
@@ -408,7 +408,7 @@ int64_t kl__5count__IP3i32E__3i64_P3i32( int64_t kl_n_1, int32_t* kl_x_2 )
 #line 12 "codegen/generic_recursion_entered_growing.kl"
     kl_t5 = kl_n_1 - 1;
 #line 12 "codegen/generic_recursion_entered_growing.kl"
-    kl_t6 = kl__5count__IP3i32E__3i64_P3i32( kl_t5, kl_x_2 );
+    kl_t6 = kl_7codegen_5count__IP3i32E__3i64_P3i32( kl_t5, kl_x_2 );
 #line 12 "codegen/generic_recursion_entered_growing.kl"
     kl_t7 = __builtin_add_overflow( 1, kl_t6, &( int64_t ) { 0 } );
 #line 12 "codegen/generic_recursion_entered_growing.kl"
@@ -429,7 +429,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 21 "codegen/generic_recursion_entered_growing.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 21 "codegen/generic_recursion_entered_growing.kl"
     return kl_t0;
 #line 21 "codegen/generic_recursion_entered_growing.kl"

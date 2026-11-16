@@ -3,82 +3,82 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Box;
-struct kl__Point;
+struct kl_3opt_Box;
+struct kl_3opt_Point;
 
-struct kl__Box
+struct kl_3opt_Box
 {
     int32_t kl_value;
 };
-_Static_assert( sizeof( struct kl__Box ) == 4 && _Alignof( struct kl__Box ) == 4 && offsetof( struct kl__Box, kl_value ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_3opt_Box ) == 4 && _Alignof( struct kl_3opt_Box ) == 4 && offsetof( struct kl_3opt_Box, kl_value ) == 0, "layout" );
 
-struct kl__Point
+struct kl_3opt_Point
 {
     int32_t kl_x;
     int32_t kl_y;
 };
-_Static_assert( sizeof( struct kl__Point ) == 8 && _Alignof( struct kl__Point ) == 4 && offsetof( struct kl__Point, kl_x ) == 0 && offsetof( struct kl__Point, kl_y ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_3opt_Point ) == 8 && _Alignof( struct kl_3opt_Point ) == 4 && offsetof( struct kl_3opt_Point, kl_x ) == 0 && offsetof( struct kl_3opt_Point, kl_y ) == 4, "layout" );
 
-int32_t kl__live__G;
-int32_t kl__destroyed__G;
+int32_t kl_3opt_live__G;
+int32_t kl_3opt_destroyed__G;
 
-void kl__3Box__R3Box_3i32__ctor( struct kl__Box*, int32_t );
-void kl__3Box__dtor( struct kl__Box* );
-struct kl__Box kl__4made__3i32( int32_t );
-struct kl__Box kl__6chosen__4bool( bool );
-struct kl__Box kl__6called__4bool( bool );
-struct kl__Box kl__6nested__3i32( int32_t );
-struct kl__Point kl__5point__4bool( bool );
-int32_t kl__4main__( void );
+void kl_3opt_3Box__RQ3opt3Box_3i32__ctor( struct kl_3opt_Box*, int32_t );
+void kl_3opt_3Box__dtor( struct kl_3opt_Box* );
+struct kl_3opt_Box kl_3opt_4made__3i32( int32_t );
+struct kl_3opt_Box kl_3opt_6chosen__4bool( bool );
+struct kl_3opt_Box kl_3opt_6called__4bool( bool );
+struct kl_3opt_Box kl_3opt_6nested__3i32( int32_t );
+struct kl_3opt_Point kl_3opt_5point__4bool( bool );
+int32_t kl_3opt_4main__( void );
 
 #line 11 "opt/moves_conditional.kl"
-void kl__3Box__R3Box_3i32__ctor( struct kl__Box* kl_this_1, int32_t kl_v_2 )
+void kl_3opt_3Box__RQ3opt3Box_3i32__ctor( struct kl_3opt_Box* kl_this_1, int32_t kl_v_2 )
 {
     ( *kl_this_1 ).kl_value = kl_v_2;
-    kl__live__G = kl__live__G + 1;
+    kl_3opt_live__G = kl_3opt_live__G + 1;
     return;
 #line 15 "opt/moves_conditional.kl"
 }
 
 #line 17 "opt/moves_conditional.kl"
-void kl__3Box__dtor( struct kl__Box* kl_this_1 )
+void kl_3opt_3Box__dtor( struct kl_3opt_Box* kl_this_1 )
 {
     ( void ) kl_this_1;
 #line 19 "opt/moves_conditional.kl"
-    kl__live__G = kl__live__G - 1;
-    kl__destroyed__G = kl__destroyed__G + 1;
+    kl_3opt_live__G = kl_3opt_live__G - 1;
+    kl_3opt_destroyed__G = kl_3opt_destroyed__G + 1;
     return;
 #line 21 "opt/moves_conditional.kl"
 }
 
 #line 32 "opt/moves_conditional.kl"
-struct kl__Box kl__4made__3i32( int32_t kl_v_1 )
+struct kl_3opt_Box kl_3opt_4made__3i32( int32_t kl_v_1 )
 {
-    struct kl__Box kl_t0;
+    struct kl_3opt_Box kl_t0;
 #line 13 "opt/moves_conditional.kl"
     kl_t0.kl_value = kl_v_1;
-    kl__live__G = kl__live__G + 1;
+    kl_3opt_live__G = kl_3opt_live__G + 1;
 #line 34 "opt/moves_conditional.kl"
     return kl_t0;
 }
 
 #line 37 "opt/moves_conditional.kl"
-struct kl__Box kl__6chosen__4bool( bool kl_c_1 )
+struct kl_3opt_Box kl_3opt_6chosen__4bool( bool kl_c_1 )
 {
-    struct kl__Box kl_t0;
+    struct kl_3opt_Box kl_t0;
 #line 39 "opt/moves_conditional.kl"
     if ( kl_c_1 ) goto bb1; else goto bb2;
     bb1:
 #line 39 "opt/moves_conditional.kl"
     kl_t0.kl_value = 1;
 #line 14 "opt/moves_conditional.kl"
-    kl__live__G = kl__live__G + 1;
+    kl_3opt_live__G = kl_3opt_live__G + 1;
     goto bb3;
     bb2:
 #line 39 "opt/moves_conditional.kl"
     kl_t0.kl_value = 2;
 #line 14 "opt/moves_conditional.kl"
-    kl__live__G = kl__live__G + 1;
+    kl_3opt_live__G = kl_3opt_live__G + 1;
     goto bb3;
     bb3:
 #line 40 "opt/moves_conditional.kl"
@@ -86,22 +86,22 @@ struct kl__Box kl__6chosen__4bool( bool kl_c_1 )
 }
 
 #line 43 "opt/moves_conditional.kl"
-struct kl__Box kl__6called__4bool( bool kl_c_1 )
+struct kl_3opt_Box kl_3opt_6called__4bool( bool kl_c_1 )
 {
-    struct kl__Box kl_t0;
+    struct kl_3opt_Box kl_t0;
 #line 45 "opt/moves_conditional.kl"
     if ( kl_c_1 ) goto bb1; else goto bb2;
     bb1:
 #line 45 "opt/moves_conditional.kl"
     kl_t0.kl_value = 3;
 #line 14 "opt/moves_conditional.kl"
-    kl__live__G = kl__live__G + 1;
+    kl_3opt_live__G = kl_3opt_live__G + 1;
     goto bb3;
     bb2:
 #line 45 "opt/moves_conditional.kl"
     kl_t0.kl_value = 4;
 #line 14 "opt/moves_conditional.kl"
-    kl__live__G = kl__live__G + 1;
+    kl_3opt_live__G = kl_3opt_live__G + 1;
     goto bb3;
     bb3:
 #line 46 "opt/moves_conditional.kl"
@@ -109,9 +109,9 @@ struct kl__Box kl__6called__4bool( bool kl_c_1 )
 }
 
 #line 49 "opt/moves_conditional.kl"
-struct kl__Box kl__6nested__3i32( int32_t kl_n_1 )
+struct kl_3opt_Box kl_3opt_6nested__3i32( int32_t kl_n_1 )
 {
-    struct kl__Box kl_t0;
+    struct kl_3opt_Box kl_t0;
     bool kl_t2;
     bool kl_t3;
 #line 51 "opt/moves_conditional.kl"
@@ -122,7 +122,7 @@ struct kl__Box kl__6nested__3i32( int32_t kl_n_1 )
 #line 51 "opt/moves_conditional.kl"
     kl_t0.kl_value = 5;
 #line 14 "opt/moves_conditional.kl"
-    kl__live__G = kl__live__G + 1;
+    kl_3opt_live__G = kl_3opt_live__G + 1;
     goto bb3;
     bb2:
 #line 51 "opt/moves_conditional.kl"
@@ -136,21 +136,21 @@ struct kl__Box kl__6nested__3i32( int32_t kl_n_1 )
 #line 51 "opt/moves_conditional.kl"
     kl_t0.kl_value = 6;
 #line 14 "opt/moves_conditional.kl"
-    kl__live__G = kl__live__G + 1;
+    kl_3opt_live__G = kl_3opt_live__G + 1;
     goto bb3;
     bb5:
 #line 51 "opt/moves_conditional.kl"
     kl_t0.kl_value = 7;
 #line 14 "opt/moves_conditional.kl"
-    kl__live__G = kl__live__G + 1;
+    kl_3opt_live__G = kl_3opt_live__G + 1;
     goto bb3;
 #line 52 "opt/moves_conditional.kl"
 }
 
 #line 54 "opt/moves_conditional.kl"
-struct kl__Point kl__5point__4bool( bool kl_c_1 )
+struct kl_3opt_Point kl_3opt_5point__4bool( bool kl_c_1 )
 {
-    struct kl__Point kl_t0;
+    struct kl_3opt_Point kl_t0;
 #line 56 "opt/moves_conditional.kl"
     if ( kl_c_1 ) goto bb1; else goto bb2;
     bb1:
@@ -173,7 +173,7 @@ struct kl__Point kl__5point__4bool( bool kl_c_1 )
 }
 
 #line 60 "opt/moves_conditional.kl"
-int32_t kl__4main__( void )
+int32_t kl_3opt_4main__( void )
 {
     int32_t kl_t0;
     bool kl_t1;
@@ -185,46 +185,46 @@ int32_t kl__4main__( void )
     int32_t kl_t7;
     int32_t kl_t8;
 #line 14 "opt/moves_conditional.kl"
-    kl_t4 = kl__live__G + 1;
+    kl_t4 = kl_3opt_live__G + 1;
 #line 14 "opt/moves_conditional.kl"
-    kl_t5 = kl__live__G + 4;
+    kl_t5 = kl_3opt_live__G + 4;
 #line 14 "opt/moves_conditional.kl"
-    kl__live__G = kl_t5;
+    kl_3opt_live__G = kl_t5;
 #line 67 "opt/moves_conditional.kl"
     kl_t1 = kl_t5 != 4;
 #line 67 "opt/moves_conditional.kl"
     if ( kl_t1 ) goto bb2; else goto bb1;
     bb1:
 #line 67 "opt/moves_conditional.kl"
-    kl_t1 = kl__destroyed__G != 0;
+    kl_t1 = kl_3opt_destroyed__G != 0;
 #line 67 "opt/moves_conditional.kl"
     if ( kl_t1 ) goto bb2; else goto bb3;
     bb2:
     kl_t0 = 1;
 #line 19 "opt/moves_conditional.kl"
-    kl__live__G = kl__live__G - 4;
-    kl__destroyed__G = kl__destroyed__G + 4;
+    kl_3opt_live__G = kl_3opt_live__G - 4;
+    kl_3opt_destroyed__G = kl_3opt_destroyed__G + 4;
 #line 69 "opt/moves_conditional.kl"
     return kl_t0;
     bb3:
 #line 14 "opt/moves_conditional.kl"
     kl_t6 = kl_t4 + 6;
 #line 14 "opt/moves_conditional.kl"
-    kl__live__G = kl_t6;
+    kl_3opt_live__G = kl_t6;
 #line 75 "opt/moves_conditional.kl"
     kl_t2 = kl_t6 != 7;
 #line 75 "opt/moves_conditional.kl"
     if ( kl_t2 ) goto bb5; else goto bb4;
     bb4:
 #line 75 "opt/moves_conditional.kl"
-    kl_t2 = kl__destroyed__G != 0;
+    kl_t2 = kl_3opt_destroyed__G != 0;
 #line 75 "opt/moves_conditional.kl"
     if ( kl_t2 ) goto bb5; else goto bb9;
     bb5:
     kl_t0 = 2;
 #line 19 "opt/moves_conditional.kl"
-    kl__live__G = kl__live__G - 7;
-    kl__destroyed__G = kl__destroyed__G + 7;
+    kl_3opt_live__G = kl_3opt_live__G - 7;
+    kl_3opt_destroyed__G = kl_3opt_destroyed__G + 7;
 #line 77 "opt/moves_conditional.kl"
     return kl_t0;
     bb6:
@@ -245,10 +245,10 @@ int32_t kl__4main__( void )
 #line 19 "opt/moves_conditional.kl"
     kl_t7 = kl_t4 - 1;
 #line 19 "opt/moves_conditional.kl"
-    kl__live__G = kl_t7;
-    kl_t8 = kl__destroyed__G + 7;
+    kl_3opt_live__G = kl_t7;
+    kl_t8 = kl_3opt_destroyed__G + 7;
 #line 20 "opt/moves_conditional.kl"
-    kl__destroyed__G = kl_t8;
+    kl_3opt_destroyed__G = kl_t8;
 #line 81 "opt/moves_conditional.kl"
     kl_t3 = kl_t7 != 0;
 #line 81 "opt/moves_conditional.kl"
@@ -260,7 +260,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 60 "opt/moves_conditional.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_3opt_4main__(  );
 #line 60 "opt/moves_conditional.kl"
     return kl_t0;
 #line 60 "opt/moves_conditional.kl"

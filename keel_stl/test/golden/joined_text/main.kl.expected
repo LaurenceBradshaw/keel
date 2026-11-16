@@ -9437,10 +9437,10 @@ struct kl_7prelude_textual__vtable
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-struct kl_2kl6string_string kl__8returned__Q2kl4path( struct kl_2kl2os_path* );
-struct kl_7prelude_result__I3u64_Q2kl6stringE kl__6failed__Q2kl4path( struct kl_2kl2os_path* );
-uint64_t kl__6length__MQ2kl6string( struct kl_2kl6string_string );
-int32_t kl__4main__( void );
+struct kl_2kl6string_string kl_11joined_text_8returned__Q2kl4path( struct kl_2kl2os_path* );
+struct kl_7prelude_result__I3u64_Q2kl6stringE kl_11joined_text_6failed__Q2kl4path( struct kl_2kl2os_path* );
+uint64_t kl_11joined_text_6length__MQ2kl6string( struct kl_2kl6string_string );
+int32_t kl_11joined_text_4main__( void );
 void kl_2kl4list_8truncate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
 uint64_t kl_2kl4list_4size__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
 struct kl_2kl6string_string* kl_2kl4list_14operator_index__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
@@ -9491,7 +9491,7 @@ static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_
 static const struct kl_7prelude_textual__vtable kl_2kl6string_string__as_kl_7prelude_textual = { kl_2kl6string_string__drop, kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 10 "joined_text/main.kl"
-struct kl_2kl6string_string kl__8returned__Q2kl4path( struct kl_2kl2os_path* kl_p_1 )
+struct kl_2kl6string_string kl_11joined_text_8returned__Q2kl4path( struct kl_2kl2os_path* kl_p_1 )
 {
     struct kl_2kl6string_string kl_t0;
     struct kl_7prelude_str kl_t2;
@@ -9547,7 +9547,7 @@ struct kl_2kl6string_string kl__8returned__Q2kl4path( struct kl_2kl2os_path* kl_
 }
 
 #line 15 "joined_text/main.kl"
-struct kl_7prelude_result__I3u64_Q2kl6stringE kl__6failed__Q2kl4path( struct kl_2kl2os_path* kl_p_1 )
+struct kl_7prelude_result__I3u64_Q2kl6stringE kl_11joined_text_6failed__Q2kl4path( struct kl_2kl2os_path* kl_p_1 )
 {
     struct kl_7prelude_result__I3u64_Q2kl6stringE kl_t0;
     struct kl_7prelude_result__I3u64_Q2kl6stringE kl_t2;
@@ -9621,7 +9621,7 @@ struct kl_7prelude_result__I3u64_Q2kl6stringE kl__6failed__Q2kl4path( struct kl_
 }
 
 #line 20 "joined_text/main.kl"
-uint64_t kl__6length__MQ2kl6string( struct kl_2kl6string_string kl_s_1 )
+uint64_t kl_11joined_text_6length__MQ2kl6string( struct kl_2kl6string_string kl_s_1 )
 {
     uint64_t kl_t0;
     struct kl_2kl6string_string* kl_t2;
@@ -9639,7 +9639,7 @@ uint64_t kl__6length__MQ2kl6string( struct kl_2kl6string_string kl_s_1 )
 }
 
 #line 25 "joined_text/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_11joined_text_4main__( void )
 {
     int32_t kl_t0;
     struct kl_2kl2os_path kl_p_1;
@@ -9943,7 +9943,7 @@ int32_t kl__4main__( void )
 #line 35 "joined_text/main.kl"
     kl_t49 = &kl_p_1;
 #line 35 "joined_text/main.kl"
-    kl_t50 = kl__8returned__Q2kl4path( kl_t49 );
+    kl_t50 = kl_11joined_text_8returned__Q2kl4path( kl_t49 );
 #line 35 "joined_text/main.kl"
     kl_t51 = &kl_t50;
 #line 35 "joined_text/main.kl"
@@ -10014,7 +10014,7 @@ int32_t kl__4main__( void )
 #line 40 "joined_text/main.kl"
     kl_t79 = &kl_p_1;
 #line 40 "joined_text/main.kl"
-    kl_t80 = kl__6failed__Q2kl4path( kl_t79 );
+    kl_t80 = kl_11joined_text_6failed__Q2kl4path( kl_t79 );
 #line 40 "joined_text/main.kl"
     kl_t207 = true;
 #line 40 "joined_text/main.kl"
@@ -10109,7 +10109,7 @@ int32_t kl__4main__( void )
 #line 46 "joined_text/main.kl"
     kl_t210 = true;
 #line 46 "joined_text/main.kl"
-    kl_t112 = kl__6length__MQ2kl6string( kl_t111 );
+    kl_t112 = kl_11joined_text_6length__MQ2kl6string( kl_t111 );
 #line 46 "joined_text/main.kl"
     kl_t210 = false;
 #line 46 "../../src/console.kl"
@@ -10747,7 +10747,7 @@ int main( void )
 #line 25 "joined_text/main.kl"
     kl_2kl2os_0build(  );
 #line 25 "joined_text/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_11joined_text_4main__(  );
 #line 25 "joined_text/main.kl"
     kl_2kl2os_0drop(  );
 #line 25 "joined_text/main.kl"

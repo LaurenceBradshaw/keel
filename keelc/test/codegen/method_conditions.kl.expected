@@ -4,9 +4,9 @@
 #include <stddef.h>
 
 struct kl_7prelude_str;
-struct kl__pair__I3i32E;
-struct kl__pair__I3f64E;
-struct kl__pair__I4boolE;
+struct kl_7codegen_pair__I3i32E;
+struct kl_7codegen_pair__I3f64E;
+struct kl_7codegen_pair__I4boolE;
 
 struct kl__run__LQ7prelude3str__ref { struct kl_7prelude_str* data; uint64_t size; };
 
@@ -17,73 +17,73 @@ struct kl_7prelude_str
 };
 _Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
-struct kl__pair__I3i32E
+struct kl_7codegen_pair__I3i32E
 {
     int32_t kl_a;
     int32_t kl_b;
 };
-_Static_assert( sizeof( struct kl__pair__I3i32E ) == 8 && _Alignof( struct kl__pair__I3i32E ) == 4 && offsetof( struct kl__pair__I3i32E, kl_a ) == 0 && offsetof( struct kl__pair__I3i32E, kl_b ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_pair__I3i32E ) == 8 && _Alignof( struct kl_7codegen_pair__I3i32E ) == 4 && offsetof( struct kl_7codegen_pair__I3i32E, kl_a ) == 0 && offsetof( struct kl_7codegen_pair__I3i32E, kl_b ) == 4, "layout" );
 
-struct kl__pair__I3f64E
+struct kl_7codegen_pair__I3f64E
 {
     double kl_a;
     double kl_b;
 };
-_Static_assert( sizeof( struct kl__pair__I3f64E ) == 16 && _Alignof( struct kl__pair__I3f64E ) == 8 && offsetof( struct kl__pair__I3f64E, kl_a ) == 0 && offsetof( struct kl__pair__I3f64E, kl_b ) == 8, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_pair__I3f64E ) == 16 && _Alignof( struct kl_7codegen_pair__I3f64E ) == 8 && offsetof( struct kl_7codegen_pair__I3f64E, kl_a ) == 0 && offsetof( struct kl_7codegen_pair__I3f64E, kl_b ) == 8, "layout" );
 
-struct kl__pair__I4boolE
+struct kl_7codegen_pair__I4boolE
 {
     bool kl_a;
     bool kl_b;
 };
-_Static_assert( sizeof( struct kl__pair__I4boolE ) == 2 && _Alignof( struct kl__pair__I4boolE ) == 1 && offsetof( struct kl__pair__I4boolE, kl_a ) == 0 && offsetof( struct kl__pair__I4boolE, kl_b ) == 1, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_pair__I4boolE ) == 2 && _Alignof( struct kl_7codegen_pair__I4boolE ) == 1 && offsetof( struct kl_7codegen_pair__I4boolE, kl_a ) == 0 && offsetof( struct kl_7codegen_pair__I4boolE, kl_b ) == 1, "layout" );
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
-struct kl__pair__I3i32E kl__12operator_rem__I3i32E__S4pairI3i32E_3i32( struct kl__pair__I3i32E*, int32_t );
-int32_t kl__7sum_mod__I3i32E__S4pairI3i32E_3i32( struct kl__pair__I3i32E*, int32_t );
-int32_t kl__6folded__I3i32E__4pairI3i32E_3i32( struct kl__pair__I3i32E*, int32_t );
-double kl__10halved_sum__I3f64E__S4pairI3f64E( struct kl__pair__I3f64E* );
-double kl__3sum__I3f64E__S4pairI3f64E( struct kl__pair__I3f64E* );
-bool kl__4same__I4boolE__S4pairI4boolE( struct kl__pair__I4boolE* );
-int32_t kl__3sum__I3i32E__S4pairI3i32E( struct kl__pair__I3i32E* );
+int32_t kl_7codegen_4main__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
+struct kl_7codegen_pair__I3i32E kl_7codegen_12operator_rem__I3i32E__SQ7codegen4pairI3i32E_3i32( struct kl_7codegen_pair__I3i32E*, int32_t );
+int32_t kl_7codegen_7sum_mod__I3i32E__SQ7codegen4pairI3i32E_3i32( struct kl_7codegen_pair__I3i32E*, int32_t );
+int32_t kl_7codegen_6folded__I3i32E__Q7codegen4pairI3i32E_3i32( struct kl_7codegen_pair__I3i32E*, int32_t );
+double kl_7codegen_10halved_sum__I3f64E__SQ7codegen4pairI3f64E( struct kl_7codegen_pair__I3f64E* );
+double kl_7codegen_3sum__I3f64E__SQ7codegen4pairI3f64E( struct kl_7codegen_pair__I3f64E* );
+bool kl_7codegen_4same__I4boolE__SQ7codegen4pairI4boolE( struct kl_7codegen_pair__I4boolE* );
+int32_t kl_7codegen_3sum__I3i32E__SQ7codegen4pairI3i32E( struct kl_7codegen_pair__I3i32E* );
 
 #line 28 "codegen/method_conditions.kl"
-int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t kl_t1_size )
+int32_t kl_7codegen_4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t kl_t1_size )
 {
     int32_t kl_t0;
 #line 28 "codegen/method_conditions.kl"
     struct kl__run__LQ7prelude3str__ref kl_t1 = { kl_t1_data, kl_t1_size };
-    struct kl__pair__I3i32E kl_p_2;
-    struct kl__pair__I3i32E kl_t3;
-    struct kl__pair__I3i32E kl_q_4;
-    struct kl__pair__I3i32E* kl_t5;
-    struct kl__pair__I3i32E kl_t6;
+    struct kl_7codegen_pair__I3i32E kl_p_2;
+    struct kl_7codegen_pair__I3i32E kl_t3;
+    struct kl_7codegen_pair__I3i32E kl_q_4;
+    struct kl_7codegen_pair__I3i32E* kl_t5;
+    struct kl_7codegen_pair__I3i32E kl_t6;
     bool kl_t7;
     bool kl_t8;
     bool kl_t9;
-    struct kl__pair__I3i32E* kl_t10;
+    struct kl_7codegen_pair__I3i32E* kl_t10;
     int32_t kl_t11;
     bool kl_t12;
-    struct kl__pair__I3i32E* kl_t13;
+    struct kl_7codegen_pair__I3i32E* kl_t13;
     int32_t kl_t14;
     bool kl_t15;
-    struct kl__pair__I3f64E kl_f_16;
-    struct kl__pair__I3f64E kl_t17;
+    struct kl_7codegen_pair__I3f64E kl_f_16;
+    struct kl_7codegen_pair__I3f64E kl_t17;
     bool kl_t18;
-    struct kl__pair__I3f64E* kl_t19;
+    struct kl_7codegen_pair__I3f64E* kl_t19;
     double kl_t20;
     bool kl_t21;
-    struct kl__pair__I3f64E* kl_t22;
+    struct kl_7codegen_pair__I3f64E* kl_t22;
     double kl_t23;
     bool kl_t24;
-    struct kl__pair__I4boolE kl_s_25;
-    struct kl__pair__I4boolE kl_t26;
-    struct kl__pair__I4boolE* kl_t27;
+    struct kl_7codegen_pair__I4boolE kl_s_25;
+    struct kl_7codegen_pair__I4boolE kl_t26;
+    struct kl_7codegen_pair__I4boolE* kl_t27;
     bool kl_t28;
     bool kl_t29;
     ( void ) kl_t1;
@@ -95,7 +95,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
     kl_p_2 = kl_t3;
     kl_t5 = &kl_p_2;
 #line 31 "codegen/method_conditions.kl"
-    kl_t6 = kl__12operator_rem__I3i32E__S4pairI3i32E_3i32( kl_t5, 5 );
+    kl_t6 = kl_7codegen_12operator_rem__I3i32E__SQ7codegen4pairI3i32E_3i32( kl_t5, 5 );
 #line 31 "codegen/method_conditions.kl"
     kl_q_4 = kl_t6;
 #line 33 "codegen/method_conditions.kl"
@@ -122,7 +122,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 #line 38 "codegen/method_conditions.kl"
     kl_t10 = &kl_p_2;
 #line 38 "codegen/method_conditions.kl"
-    kl_t11 = kl__7sum_mod__I3i32E__S4pairI3i32E_3i32( kl_t10, 5 );
+    kl_t11 = kl_7codegen_7sum_mod__I3i32E__SQ7codegen4pairI3i32E_3i32( kl_t10, 5 );
 #line 38 "codegen/method_conditions.kl"
     kl_t12 = kl_t11 != 4;
 #line 38 "codegen/method_conditions.kl"
@@ -135,7 +135,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 #line 43 "codegen/method_conditions.kl"
     kl_t13 = &kl_p_2;
 #line 43 "codegen/method_conditions.kl"
-    kl_t14 = kl__6folded__I3i32E__4pairI3i32E_3i32( kl_t13, 5 );
+    kl_t14 = kl_7codegen_6folded__I3i32E__Q7codegen4pairI3i32E_3i32( kl_t13, 5 );
 #line 43 "codegen/method_conditions.kl"
     kl_t15 = kl_t14 != 4;
 #line 43 "codegen/method_conditions.kl"
@@ -154,7 +154,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 #line 50 "codegen/method_conditions.kl"
     kl_t19 = &kl_f_16;
 #line 50 "codegen/method_conditions.kl"
-    kl_t20 = kl__10halved_sum__I3f64E__S4pairI3f64E( kl_t19 );
+    kl_t20 = kl_7codegen_10halved_sum__I3f64E__SQ7codegen4pairI3f64E( kl_t19 );
 #line 50 "codegen/method_conditions.kl"
     kl_t21 = kl_t20 != 1.5;
 #line 50 "codegen/method_conditions.kl"
@@ -165,7 +165,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 #line 50 "codegen/method_conditions.kl"
     kl_t22 = &kl_f_16;
 #line 50 "codegen/method_conditions.kl"
-    kl_t23 = kl__3sum__I3f64E__S4pairI3f64E( kl_t22 );
+    kl_t23 = kl_7codegen_3sum__I3f64E__SQ7codegen4pairI3f64E( kl_t22 );
 #line 50 "codegen/method_conditions.kl"
     kl_t24 = kl_t23 != 3.0;
 #line 50 "codegen/method_conditions.kl"
@@ -189,7 +189,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 #line 57 "codegen/method_conditions.kl"
     kl_t27 = &kl_s_25;
 #line 57 "codegen/method_conditions.kl"
-    kl_t28 = kl__4same__I4boolE__S4pairI4boolE( kl_t27 );
+    kl_t28 = kl_7codegen_4same__I4boolE__SQ7codegen4pairI4boolE( kl_t27 );
 #line 57 "codegen/method_conditions.kl"
     kl_t29 = !kl_t28;
 #line 57 "codegen/method_conditions.kl"
@@ -206,10 +206,10 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 }
 
 #line 8 "codegen/method_conditions.kl"
-struct kl__pair__I3i32E kl__12operator_rem__I3i32E__S4pairI3i32E_3i32( struct kl__pair__I3i32E* kl_this_1, int32_t kl_m_2 )
+struct kl_7codegen_pair__I3i32E kl_7codegen_12operator_rem__I3i32E__SQ7codegen4pairI3i32E_3i32( struct kl_7codegen_pair__I3i32E* kl_this_1, int32_t kl_m_2 )
 {
-    struct kl__pair__I3i32E kl_t0;
-    struct kl__pair__I3i32E kl_t3;
+    struct kl_7codegen_pair__I3i32E kl_t0;
+    struct kl_7codegen_pair__I3i32E kl_t3;
     bool kl_t4;
     int32_t kl_t5;
     bool kl_t6;
@@ -280,11 +280,11 @@ struct kl__pair__I3i32E kl__12operator_rem__I3i32E__S4pairI3i32E_3i32( struct kl
 }
 
 #line 14 "codegen/method_conditions.kl"
-int32_t kl__7sum_mod__I3i32E__S4pairI3i32E_3i32( struct kl__pair__I3i32E* kl_this_1, int32_t kl_m_2 )
+int32_t kl_7codegen_7sum_mod__I3i32E__SQ7codegen4pairI3i32E_3i32( struct kl_7codegen_pair__I3i32E* kl_this_1, int32_t kl_m_2 )
 {
     int32_t kl_t0;
-    struct kl__pair__I3i32E kl_r_3;
-    struct kl__pair__I3i32E kl_t4;
+    struct kl_7codegen_pair__I3i32E kl_r_3;
+    struct kl_7codegen_pair__I3i32E kl_t4;
     bool kl_t5;
     int32_t kl_t6;
     bool kl_t7;
@@ -293,7 +293,7 @@ int32_t kl__7sum_mod__I3i32E__S4pairI3i32E_3i32( struct kl__pair__I3i32E* kl_thi
     int32_t kl_t10;
     bool kl_t11;
     int32_t kl_t12;
-    struct kl__pair__I3i32E* kl_t13;
+    struct kl_7codegen_pair__I3i32E* kl_t13;
     int32_t kl_t14;
 #line 16 "codegen/method_conditions.kl"
     kl_t5 = kl_m_2 != 0;
@@ -353,7 +353,7 @@ int32_t kl__7sum_mod__I3i32E__S4pairI3i32E_3i32( struct kl__pair__I3i32E* kl_thi
     kl_r_3 = kl_t4;
     kl_t13 = &kl_r_3;
 #line 17 "codegen/method_conditions.kl"
-    kl_t14 = kl__3sum__I3i32E__S4pairI3i32E( kl_t13 );
+    kl_t14 = kl_7codegen_3sum__I3i32E__SQ7codegen4pairI3i32E( kl_t13 );
 #line 17 "codegen/method_conditions.kl"
     kl_t0 = kl_t14;
 #line 17 "codegen/method_conditions.kl"
@@ -361,23 +361,23 @@ int32_t kl__7sum_mod__I3i32E__S4pairI3i32E_3i32( struct kl__pair__I3i32E* kl_thi
 }
 
 #line 22 "codegen/method_conditions.kl"
-int32_t kl__6folded__I3i32E__4pairI3i32E_3i32( struct kl__pair__I3i32E* kl_p_1, int32_t kl_m_2 )
+int32_t kl_7codegen_6folded__I3i32E__Q7codegen4pairI3i32E_3i32( struct kl_7codegen_pair__I3i32E* kl_p_1, int32_t kl_m_2 )
 {
     int32_t kl_t0;
-    struct kl__pair__I3i32E kl_r_3;
-    struct kl__pair__I3i32E* kl_t4;
-    struct kl__pair__I3i32E kl_t5;
-    struct kl__pair__I3i32E* kl_t6;
+    struct kl_7codegen_pair__I3i32E kl_r_3;
+    struct kl_7codegen_pair__I3i32E* kl_t4;
+    struct kl_7codegen_pair__I3i32E kl_t5;
+    struct kl_7codegen_pair__I3i32E* kl_t6;
     int32_t kl_t7;
 #line 24 "codegen/method_conditions.kl"
     kl_t4 = &( *kl_p_1 );
 #line 24 "codegen/method_conditions.kl"
-    kl_t5 = kl__12operator_rem__I3i32E__S4pairI3i32E_3i32( kl_t4, kl_m_2 );
+    kl_t5 = kl_7codegen_12operator_rem__I3i32E__SQ7codegen4pairI3i32E_3i32( kl_t4, kl_m_2 );
 #line 24 "codegen/method_conditions.kl"
     kl_r_3 = kl_t5;
     kl_t6 = &kl_r_3;
 #line 25 "codegen/method_conditions.kl"
-    kl_t7 = kl__3sum__I3i32E__S4pairI3i32E( kl_t6 );
+    kl_t7 = kl_7codegen_3sum__I3i32E__SQ7codegen4pairI3i32E( kl_t6 );
 #line 25 "codegen/method_conditions.kl"
     kl_t0 = kl_t7;
 #line 25 "codegen/method_conditions.kl"
@@ -385,7 +385,7 @@ int32_t kl__6folded__I3i32E__4pairI3i32E_3i32( struct kl__pair__I3i32E* kl_p_1, 
 }
 
 #line 10 "codegen/method_conditions.kl"
-double kl__10halved_sum__I3f64E__S4pairI3f64E( struct kl__pair__I3f64E* kl_this_1 )
+double kl_7codegen_10halved_sum__I3f64E__SQ7codegen4pairI3f64E( struct kl_7codegen_pair__I3f64E* kl_this_1 )
 {
     double kl_t0;
     double kl_t2;
@@ -402,7 +402,7 @@ double kl__10halved_sum__I3f64E__S4pairI3f64E( struct kl__pair__I3f64E* kl_this_
 }
 
 #line 9 "codegen/method_conditions.kl"
-double kl__3sum__I3f64E__S4pairI3f64E( struct kl__pair__I3f64E* kl_this_1 )
+double kl_7codegen_3sum__I3f64E__SQ7codegen4pairI3f64E( struct kl_7codegen_pair__I3f64E* kl_this_1 )
 {
     double kl_t0;
     double kl_t2;
@@ -416,7 +416,7 @@ double kl__3sum__I3f64E__S4pairI3f64E( struct kl__pair__I3f64E* kl_this_1 )
 }
 
 #line 11 "codegen/method_conditions.kl"
-bool kl__4same__I4boolE__S4pairI4boolE( struct kl__pair__I4boolE* kl_this_1 )
+bool kl_7codegen_4same__I4boolE__SQ7codegen4pairI4boolE( struct kl_7codegen_pair__I4boolE* kl_this_1 )
 {
     bool kl_t0;
     bool kl_t2;
@@ -430,7 +430,7 @@ bool kl__4same__I4boolE__S4pairI4boolE( struct kl__pair__I4boolE* kl_this_1 )
 }
 
 #line 9 "codegen/method_conditions.kl"
-int32_t kl__3sum__I3i32E__S4pairI3i32E( struct kl__pair__I3i32E* kl_this_1 )
+int32_t kl_7codegen_3sum__I3i32E__SQ7codegen4pairI3i32E( struct kl_7codegen_pair__I3i32E* kl_this_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -540,7 +540,7 @@ int main( int argc, char** argv )
 #line 28 "codegen/method_conditions.kl"
     kl_t17 = ( struct kl__run__LQ7prelude3str__ref ) { ( struct kl_7prelude_str* ) kl_t7, kl_t3 };
 #line 28 "codegen/method_conditions.kl"
-    kl_t0 = kl__4main__LQ7prelude3str( ( kl_t17 ).data, ( kl_t17 ).size );
+    kl_t0 = kl_7codegen_4main__LQ7prelude3str( ( kl_t17 ).data, ( kl_t17 ).size );
 #line 28 "codegen/method_conditions.kl"
     kl_rt_free( kl_t7 );
 #line 28 "codegen/method_conditions.kl"

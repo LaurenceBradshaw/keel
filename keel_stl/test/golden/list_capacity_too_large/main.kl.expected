@@ -45,7 +45,7 @@ void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-int32_t kl__4main__( void );
+int32_t kl_23list_capacity_too_large_4main__( void );
 struct kl_2kl4list_list__I3i32E kl_2kl4list_13with_capacity__I3i32E__SQ2kl4listI3i32E_3u64( uint64_t );
 void kl_2kl4list_4push__I3i32E__SQ2kl4listI3i32E_M3i32( struct kl_2kl4list_list__I3i32E*, int32_t );
 void kl_2kl4list_4list__I3i32E__dtor( struct kl_2kl4list_list__I3i32E* );
@@ -60,7 +60,7 @@ void kl_2kl4list_list__I3i32E__drop( void* );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 
 #line 5 "list_capacity_too_large/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_23list_capacity_too_large_4main__( void )
 {
     int32_t kl_t0;
     struct kl_2kl4list_list__I3i32E kl_values_1;
@@ -456,7 +456,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 5 "list_capacity_too_large/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_23list_capacity_too_large_4main__(  );
 #line 5 "list_capacity_too_large/main.kl"
     return kl_t0;
 #line 5 "list_capacity_too_large/main.kl"

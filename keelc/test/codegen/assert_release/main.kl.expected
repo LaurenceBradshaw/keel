@@ -388,7 +388,7 @@ void kl_1t7console_6eprint__4bool_7textual( bool kl_value_1, struct kl_7prelude_
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Noisy;
+struct kl_14assert_release_Noisy;
 struct kl_7prelude_str;
 
 struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
@@ -396,11 +396,11 @@ struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
 struct kl_7prelude_textual__vtable;
 struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
 
-struct kl__Noisy
+struct kl_14assert_release_Noisy
 {
     bool kl_ok_;
 };
-_Static_assert( sizeof( struct kl__Noisy ) == 1 && _Alignof( struct kl__Noisy ) == 1 && offsetof( struct kl__Noisy, kl_ok_ ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_14assert_release_Noisy ) == 1 && _Alignof( struct kl_14assert_release_Noisy ) == 1 && offsetof( struct kl_14assert_release_Noisy, kl_ok_ ) == 0, "layout" );
 
 struct kl_7prelude_str
 {
@@ -415,11 +415,11 @@ struct kl_7prelude_textual__vtable
     struct kl__run__L2u8__ref ( *kl__7as_text__ )( void* );
 };
 
-void kl__5Noisy__R5Noisy__ctor( struct kl__Noisy* );
-void kl__5Noisy__dtor( struct kl__Noisy* );
-bool kl__2ok__S5Noisy( struct kl__Noisy* );
-bool kl__5shout__( void );
-int32_t kl__4main__( void );
+void kl_14assert_release_5Noisy__RQ14assert_release5Noisy__ctor( struct kl_14assert_release_Noisy* );
+void kl_14assert_release_5Noisy__dtor( struct kl_14assert_release_Noisy* );
+bool kl_14assert_release_2ok__SQ14assert_release5Noisy( struct kl_14assert_release_Noisy* );
+bool kl_14assert_release_5shout__( void );
+int32_t kl_14assert_release_4main__( void );
 void kl_1t7console_5print__7textual_7textual( struct kl_7prelude_textual__ref, struct kl_7prelude_textual__ref );
 void kl_7prelude_str__drop( void* );
 struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__( void* );
@@ -427,7 +427,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 8 "codegen/assert_release/main.kl"
-void kl__5Noisy__R5Noisy__ctor( struct kl__Noisy* kl_this_1 )
+void kl_14assert_release_5Noisy__RQ14assert_release5Noisy__ctor( struct kl_14assert_release_Noisy* kl_this_1 )
 {
     struct kl_7prelude_str kl_t2;
     struct kl_7prelude_str* kl_t3;
@@ -459,7 +459,7 @@ void kl__5Noisy__R5Noisy__ctor( struct kl__Noisy* kl_this_1 )
 }
 
 #line 14 "codegen/assert_release/main.kl"
-void kl__5Noisy__dtor( struct kl__Noisy* kl_this_1 )
+void kl_14assert_release_5Noisy__dtor( struct kl_14assert_release_Noisy* kl_this_1 )
 {
     struct kl_7prelude_str kl_t2;
     struct kl_7prelude_str* kl_t3;
@@ -491,7 +491,7 @@ void kl__5Noisy__dtor( struct kl__Noisy* kl_this_1 )
 }
 
 #line 19 "codegen/assert_release/main.kl"
-bool kl__2ok__S5Noisy( struct kl__Noisy* kl_this_1 )
+bool kl_14assert_release_2ok__SQ14assert_release5Noisy( struct kl_14assert_release_Noisy* kl_this_1 )
 {
     bool kl_t0;
 #line 21 "codegen/assert_release/main.kl"
@@ -501,7 +501,7 @@ bool kl__2ok__S5Noisy( struct kl__Noisy* kl_this_1 )
 }
 
 #line 27 "codegen/assert_release/main.kl"
-bool kl__5shout__( void )
+bool kl_14assert_release_5shout__( void )
 {
     bool kl_t0;
     struct kl_7prelude_str kl_t1;
@@ -534,7 +534,7 @@ bool kl__5shout__( void )
 }
 
 #line 33 "codegen/assert_release/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_14assert_release_4main__( void )
 {
     int32_t kl_t0;
     struct kl_7prelude_str kl_t1;
@@ -570,7 +570,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 33 "codegen/assert_release/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_14assert_release_4main__(  );
 #line 33 "codegen/assert_release/main.kl"
     return kl_t0;
 #line 33 "codegen/assert_release/main.kl"

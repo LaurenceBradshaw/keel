@@ -9438,8 +9438,8 @@ void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-int32_t kl__3sum__L3i32( int32_t*, uint64_t );
-int32_t kl__4main__( void );
+int32_t kl_11string_text_3sum__L3i32( int32_t*, uint64_t );
+int32_t kl_11string_text_4main__( void );
 uint64_t kl_2kl8optional_8value_or__I3u64E__MQ2kl8optionalI3u64E_M3u64( struct kl_2kl8optional_optional__I3u64E, uint64_t );
 void kl_2kl4list_4list__I3i32E__RQ2kl4listI3i32E__ctor( struct kl_2kl4list_list__I3i32E* );
 void kl_2kl4list_4push__I3i32E__SQ2kl4listI3i32E_M3i32( struct kl_2kl4list_list__I3i32E*, int32_t );
@@ -9487,7 +9487,7 @@ static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_
 static const struct kl_7prelude_textual__vtable kl_2kl6string_string__as_kl_7prelude_textual = { kl_2kl6string_string__drop, kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 8 "string_text/main.kl"
-int32_t kl__3sum__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
+int32_t kl_11string_text_3sum__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
 {
     int32_t kl_t0;
 #line 8 "string_text/main.kl"
@@ -9565,7 +9565,7 @@ int32_t kl__3sum__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
 }
 
 #line 19 "string_text/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_11string_text_4main__( void )
 {
     int32_t kl_t0;
     struct kl_2kl6string_string kl_text_1;
@@ -10007,7 +10007,7 @@ int32_t kl__4main__( void )
 #line 60 "string_text/main.kl"
     kl_t128 = kl_t127;
 #line 60 "string_text/main.kl"
-    kl_t129 = kl__3sum__L3i32( ( kl_t128 ).data, ( kl_t128 ).size );
+    kl_t129 = kl_11string_text_3sum__L3i32( ( kl_t128 ).data, ( kl_t128 ).size );
 #line 60 "string_text/main.kl"
     kl_t130 = kl_t129 != 6;
 #line 60 "string_text/main.kl"
@@ -10836,7 +10836,7 @@ int main( void )
 #line 19 "string_text/main.kl"
     kl_2kl2os_0build(  );
 #line 19 "string_text/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_11string_text_4main__(  );
 #line 19 "string_text/main.kl"
     kl_2kl2os_0drop(  );
 #line 19 "string_text/main.kl"

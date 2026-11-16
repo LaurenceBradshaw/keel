@@ -299,9 +299,9 @@ void kl_1t7console_6eprint__4bool_7textual( bool kl_value_1, struct kl_7prelude_
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__P;
+struct kl_7codegen_P;
 struct kl__A3_3i32;
-struct kl__N;
+struct kl_7codegen_N;
 struct kl_7prelude_str;
 
 struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
@@ -309,7 +309,7 @@ struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
 struct kl_7prelude_textual__vtable;
 struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
 
-struct kl__P
+struct kl_7codegen_P
 {
     int32_t tag;
     union
@@ -320,7 +320,7 @@ struct kl__P
         };
     };
 };
-_Static_assert( sizeof( struct kl__P ) == 8 && _Alignof( struct kl__P ) == 4 && offsetof( struct kl__P, kl_4Some_n ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_P ) == 8 && _Alignof( struct kl_7codegen_P ) == 4 && offsetof( struct kl_7codegen_P, kl_4Some_n ) == 4, "layout" );
 
 struct kl__A3_3i32
 {
@@ -328,14 +328,14 @@ struct kl__A3_3i32
 };
 _Static_assert( sizeof( struct kl__A3_3i32 ) == 12 && _Alignof( struct kl__A3_3i32 ) == 4, "layout" );
 
-struct kl__N
+struct kl_7codegen_N
 {
     int32_t kl_v;
     int32_t kl_k;
-    struct kl__P kl_p;
+    struct kl_7codegen_P kl_p;
     struct kl__A3_3i32 kl_items;
 };
-_Static_assert( sizeof( struct kl__N ) == 28 && _Alignof( struct kl__N ) == 4 && offsetof( struct kl__N, kl_v ) == 0 && offsetof( struct kl__N, kl_k ) == 4 && offsetof( struct kl__N, kl_p ) == 8 && offsetof( struct kl__N, kl_items ) == 16, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_N ) == 28 && _Alignof( struct kl_7codegen_N ) == 4 && offsetof( struct kl_7codegen_N, kl_v ) == 0 && offsetof( struct kl_7codegen_N, kl_k ) == 4 && offsetof( struct kl_7codegen_N, kl_p ) == 8 && offsetof( struct kl_7codegen_N, kl_items ) == 16, "layout" );
 
 struct kl_7prelude_str
 {
@@ -352,10 +352,10 @@ struct kl_7prelude_textual__vtable
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__1N__R1N_3i32__ctor( struct kl__N*, int32_t );
-void kl__1N__dtor( struct kl__N* );
-struct kl__N kl__4make__3i32( int32_t );
-int32_t kl__4main__( void );
+void kl_7codegen_1N__RQ7codegen1N_3i32__ctor( struct kl_7codegen_N*, int32_t );
+void kl_7codegen_1N__dtor( struct kl_7codegen_N* );
+struct kl_7codegen_N kl_7codegen_4make__3i32( int32_t );
+int32_t kl_7codegen_4main__( void );
 void kl_1t7console_5print__7textual_7textual( struct kl_7prelude_textual__ref, struct kl_7prelude_textual__ref );
 void kl_1t7console_5print__3i64_7textual( int64_t, struct kl_7prelude_textual__ref );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
@@ -365,9 +365,9 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 24 "codegen/switch_temporary_field.kl"
-void kl__1N__R1N_3i32__ctor( struct kl__N* kl_this_1, int32_t kl_v_2 )
+void kl_7codegen_1N__RQ7codegen1N_3i32__ctor( struct kl_7codegen_N* kl_this_1, int32_t kl_v_2 )
 {
-    struct kl__P kl_t3;
+    struct kl_7codegen_P kl_t3;
     bool kl_t4;
     int32_t kl_t5;
     struct kl__A3_3i32 kl_t6;
@@ -437,7 +437,7 @@ void kl__1N__R1N_3i32__ctor( struct kl__N* kl_this_1, int32_t kl_v_2 )
 }
 
 #line 32 "codegen/switch_temporary_field.kl"
-void kl__1N__dtor( struct kl__N* kl_this_1 )
+void kl_7codegen_1N__dtor( struct kl_7codegen_N* kl_this_1 )
 {
     struct kl_7prelude_str kl_t2;
     struct kl_7prelude_str* kl_t3;
@@ -495,11 +495,11 @@ void kl__1N__dtor( struct kl__N* kl_this_1 )
 }
 
 #line 39 "codegen/switch_temporary_field.kl"
-struct kl__N kl__4make__3i32( int32_t kl_v_1 )
+struct kl_7codegen_N kl_7codegen_4make__3i32( int32_t kl_v_1 )
 {
-    struct kl__N kl_t0;
-    struct kl__N kl_t2;
-    struct kl__N* kl_t3;
+    struct kl_7codegen_N kl_t0;
+    struct kl_7codegen_N kl_t2;
+    struct kl_7codegen_N* kl_t3;
     bool kl_t5;
 #line 41 "codegen/switch_temporary_field.kl"
     kl_t5 = false;
@@ -510,13 +510,13 @@ struct kl__N kl__4make__3i32( int32_t kl_v_1 )
 #line 41 "codegen/switch_temporary_field.kl"
     kl_t5 = true;
 #line 41 "codegen/switch_temporary_field.kl"
-    kl__1N__R1N_3i32__ctor( kl_t3, kl_v_1 );
+    kl_7codegen_1N__RQ7codegen1N_3i32__ctor( kl_t3, kl_v_1 );
 #line 41 "codegen/switch_temporary_field.kl"
     kl_t0 = kl_t2;
 #line 41 "codegen/switch_temporary_field.kl"
     kl_t5 = false;
 #line 41 "codegen/switch_temporary_field.kl"
-    if ( kl_t5 ) kl__1N__dtor( &kl_t2 );
+    if ( kl_t5 ) kl_7codegen_1N__dtor( &kl_t2 );
 #line 41 "codegen/switch_temporary_field.kl"
     kl_t5 = false;
 #line 41 "codegen/switch_temporary_field.kl"
@@ -524,10 +524,10 @@ struct kl__N kl__4make__3i32( int32_t kl_v_1 )
 }
 
 #line 44 "codegen/switch_temporary_field.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__N kl_t1;
+    struct kl_7codegen_N kl_t1;
     bool kl_t2;
     struct kl_7prelude_str kl_t3;
     struct kl_7prelude_str* kl_t4;
@@ -539,7 +539,7 @@ int32_t kl__4main__( void )
     uint8_t* kl_t11;
     struct kl_7prelude_str* kl_t13;
     struct kl_7prelude_textual__ref kl_t14;
-    struct kl__N kl_t16;
+    struct kl_7codegen_N kl_t16;
     bool kl_t17;
     struct kl_7prelude_str kl_t18;
     struct kl_7prelude_str* kl_t19;
@@ -551,7 +551,7 @@ int32_t kl__4main__( void )
     uint8_t* kl_t26;
     struct kl_7prelude_str* kl_t28;
     struct kl_7prelude_textual__ref kl_t29;
-    struct kl__N kl_t31;
+    struct kl_7codegen_N kl_t31;
     bool kl_t32;
     int32_t kl_n_33;
     int64_t kl_t34;
@@ -560,7 +560,7 @@ int32_t kl__4main__( void )
     uint8_t* kl_t37;
     struct kl_7prelude_str* kl_t39;
     struct kl_7prelude_textual__ref kl_t40;
-    struct kl__N kl_t42;
+    struct kl_7codegen_N kl_t42;
     struct kl__A3_3i32* kl_t43;
     uint64_t kl_t44;
     uint64_t kl_t45;
@@ -583,7 +583,7 @@ int32_t kl__4main__( void )
     struct kl_7prelude_str* kl_t66;
     struct kl_7prelude_textual__ref kl_t67;
 #line 46 "codegen/switch_temporary_field.kl"
-    kl_t1 = kl__4make__3i32( 1 );
+    kl_t1 = kl_7codegen_4make__3i32( 1 );
 #line 48 "codegen/switch_temporary_field.kl"
     kl_t2 = kl_t1.kl_v == 1;
 #line 48 "codegen/switch_temporary_field.kl"
@@ -615,14 +615,14 @@ int32_t kl__4main__( void )
     bb2:
     kl_t0 = 1;
 #line 52 "codegen/switch_temporary_field.kl"
-    kl__1N__dtor( &kl_t1 );
+    kl_7codegen_1N__dtor( &kl_t1 );
 #line 52 "codegen/switch_temporary_field.kl"
     return kl_t0;
     bb3:
 #line 46 "codegen/switch_temporary_field.kl"
-    kl__1N__dtor( &kl_t1 );
+    kl_7codegen_1N__dtor( &kl_t1 );
 #line 55 "codegen/switch_temporary_field.kl"
-    kl_t16 = kl__4make__3i32( 2 );
+    kl_t16 = kl_7codegen_4make__3i32( 2 );
 #line 57 "codegen/switch_temporary_field.kl"
     kl_t17 = kl_t16.kl_k == 0;
 #line 57 "codegen/switch_temporary_field.kl"
@@ -654,14 +654,14 @@ int32_t kl__4main__( void )
     bb5:
     kl_t0 = 2;
 #line 61 "codegen/switch_temporary_field.kl"
-    kl__1N__dtor( &kl_t16 );
+    kl_7codegen_1N__dtor( &kl_t16 );
 #line 61 "codegen/switch_temporary_field.kl"
     return kl_t0;
     bb6:
 #line 55 "codegen/switch_temporary_field.kl"
-    kl__1N__dtor( &kl_t16 );
+    kl_7codegen_1N__dtor( &kl_t16 );
 #line 64 "codegen/switch_temporary_field.kl"
-    kl_t31 = kl__4make__3i32( 3 );
+    kl_t31 = kl_7codegen_4make__3i32( 3 );
 #line 66 "codegen/switch_temporary_field.kl"
     kl_t32 = kl_t31.kl_p.tag == 0;
 #line 66 "codegen/switch_temporary_field.kl"
@@ -686,14 +686,14 @@ int32_t kl__4main__( void )
     bb8:
     kl_t0 = 3;
 #line 70 "codegen/switch_temporary_field.kl"
-    kl__1N__dtor( &kl_t31 );
+    kl_7codegen_1N__dtor( &kl_t31 );
 #line 70 "codegen/switch_temporary_field.kl"
     return kl_t0;
     bb9:
 #line 64 "codegen/switch_temporary_field.kl"
-    kl__1N__dtor( &kl_t31 );
+    kl_7codegen_1N__dtor( &kl_t31 );
 #line 73 "codegen/switch_temporary_field.kl"
-    kl_t42 = kl__4make__3i32( 4 );
+    kl_t42 = kl_7codegen_4make__3i32( 4 );
 #line 73 "codegen/switch_temporary_field.kl"
     kl_t43 = &kl_t42.kl_items;
 #line 73 "codegen/switch_temporary_field.kl"
@@ -728,7 +728,7 @@ int32_t kl__4main__( void )
     goto bb13;
     bb12:
 #line 73 "codegen/switch_temporary_field.kl"
-    kl__1N__dtor( &kl_t42 );
+    kl_7codegen_1N__dtor( &kl_t42 );
 #line 78 "codegen/switch_temporary_field.kl"
     kl_t57 = &kl_t56;
 #line 78 "codegen/switch_temporary_field.kl"
@@ -766,7 +766,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 44 "codegen/switch_temporary_field.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 44 "codegen/switch_temporary_field.kl"
     return kl_t0;
 #line 44 "codegen/switch_temporary_field.kl"

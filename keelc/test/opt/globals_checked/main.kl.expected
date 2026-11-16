@@ -3,22 +3,22 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-int32_t kl__live__G;
+int32_t kl_15globals_checked_live__G;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__7counter__( void );
-int32_t kl__10not_undone__3i32( int32_t );
-int32_t kl__5twice__3i32( int32_t );
-int32_t kl__4main__( void );
+int32_t kl_15globals_checked_7counter__( void );
+int32_t kl_15globals_checked_10not_undone__3i32( int32_t );
+int32_t kl_15globals_checked_5twice__3i32( int32_t );
+int32_t kl_15globals_checked_4main__( void );
 
 #line 8 "opt/globals_checked/main.kl"
-int32_t kl__7counter__( void )
+int32_t kl_15globals_checked_7counter__( void )
 {
     int32_t kl_t0;
     bool kl_t1;
 #line 10 "opt/globals_checked/main.kl"
-    kl_t1 = __builtin_add_overflow( kl__live__G, 1, &( int32_t ) { 0 } );
+    kl_t1 = __builtin_add_overflow( kl_15globals_checked_live__G, 1, &( int32_t ) { 0 } );
 #line 10 "opt/globals_checked/main.kl"
     if ( kl_t1 ) goto bb1; else goto bb2;
     bb1:
@@ -26,12 +26,12 @@ int32_t kl__7counter__( void )
     kl_rt_panic( "opt/globals_checked/main.kl", 10, "arithmetic overflow: live += 1;" );
     bb2:
 #line 11 "opt/globals_checked/main.kl"
-    kl_t0 = kl__live__G;
+    kl_t0 = kl_15globals_checked_live__G;
     return kl_t0;
 }
 
 #line 16 "opt/globals_checked/main.kl"
-int32_t kl__10not_undone__3i32( int32_t kl_x_1 )
+int32_t kl_15globals_checked_10not_undone__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
     int32_t kl_t_2;
@@ -61,7 +61,7 @@ int32_t kl__10not_undone__3i32( int32_t kl_x_1 )
 }
 
 #line 23 "opt/globals_checked/main.kl"
-int32_t kl__5twice__3i32( int32_t kl_x_1 )
+int32_t kl_15globals_checked_5twice__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
     int32_t kl_a_2;
@@ -105,15 +105,15 @@ int32_t kl__5twice__3i32( int32_t kl_x_1 )
 }
 
 #line 30 "opt/globals_checked/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_15globals_checked_4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_t1;
     bool kl_t2;
 #line 11 "opt/globals_checked/main.kl"
-    kl__live__G = 3;
+    kl_15globals_checked_live__G = 3;
 #line 41 "opt/globals_checked/main.kl"
-    kl_t1 = kl__5twice__3i32( 2 );
+    kl_t1 = kl_15globals_checked_5twice__3i32( 2 );
 #line 41 "opt/globals_checked/main.kl"
     kl_t2 = kl_t1 != 9;
 #line 41 "opt/globals_checked/main.kl"
@@ -133,7 +133,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 30 "opt/globals_checked/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_15globals_checked_4main__(  );
 #line 30 "opt/globals_checked/main.kl"
     return kl_t0;
 #line 30 "opt/globals_checked/main.kl"

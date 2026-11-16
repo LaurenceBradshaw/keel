@@ -16,7 +16,7 @@ cd "$( dirname "$0" )/../.."
 lldb="$( command -v lldb || echo "/c/Program Files/LLVM/bin/lldb.exe" )"
 export LLDB_USE_NATIVE_PDB_READER=1
 
-./build/windows-debug/bin/keelc.exe --debug -O1 --package kl=keel_stl/src examples/debugging.kl \
+./build/windows-debug/bin/keelc.exe --debug -O1 --package keel_stl/src examples/debugging.kl \
     -o build/examples/debugging.exe
 
 # -F: lldb resolves a qualified name from a .pdb only as the full name.

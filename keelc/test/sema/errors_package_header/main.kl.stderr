@@ -1,0 +1,19 @@
+error: `@package` is written only in `packageinfo.kl`
+ --> sema/errors_package_header/main.kl:5:1
+  |
+5 | @package( main );
+  | ^^^^^^^^ it names the package that folder holds
+
+error: `@package` takes the package's name, `@package( name );`
+ --> sema/errors_package_header/hdr/packageinfo.kl:2:1
+  |
+2 | @package( struct );
+  | ^^^^^^^^ a package's name is an identifier
+
+error: a nested package's name is its folder's
+ --> sema/errors_package_header/hdr/inner/packageinfo.kl:2:11
+  |
+2 | @package( inner );
+  |           ^^^^^ remove `@package`; this package is `hdr::inner`
+
+3 errors generated

@@ -9272,9 +9272,9 @@ bool kl_2kl7console_5input__RQ2kl6string( struct kl_2kl6string_string* kl_line_1
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Counter;
+struct kl_7codegen_Counter;
 struct kl_2kl6string_string;
-struct kl__Named;
+struct kl_7codegen_Named;
 struct kl_2kl2os_path;
 struct kl_2kl2os_process;
 struct kl_2kl2os_captured;
@@ -9285,18 +9285,18 @@ struct kl_2kl4list_list__IQ2kl6stringE;
 struct kl_7prelude_result__IQ2kl7process_Q2kl10file_errorE;
 struct kl_2kl4list_list__IQ2kl4pathE;
 struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE;
-struct kl__Wrap__I3f64E;
+struct kl_7codegen_Wrap__I3f64E;
 
 struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
 
 struct kl_7prelude_textual__vtable;
 struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
 
-struct kl__Counter
+struct kl_7codegen_Counter
 {
     int32_t kl_n;
 };
-_Static_assert( sizeof( struct kl__Counter ) == 4 && _Alignof( struct kl__Counter ) == 4 && offsetof( struct kl__Counter, kl_n ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Counter ) == 4 && _Alignof( struct kl_7codegen_Counter ) == 4 && offsetof( struct kl_7codegen_Counter, kl_n ) == 0, "layout" );
 
 struct kl_2kl6string_string
 {
@@ -9306,12 +9306,12 @@ struct kl_2kl6string_string
 };
 _Static_assert( sizeof( struct kl_2kl6string_string ) == 24 && _Alignof( struct kl_2kl6string_string ) == 8 && offsetof( struct kl_2kl6string_string, kl_data_ ) == 0 && offsetof( struct kl_2kl6string_string, kl_size_ ) == 8 && offsetof( struct kl_2kl6string_string, kl_cap_ ) == 16, "layout" );
 
-struct kl__Named
+struct kl_7codegen_Named
 {
     struct kl_2kl6string_string kl_label;
     int32_t kl_size;
 };
-_Static_assert( sizeof( struct kl__Named ) == 32 && _Alignof( struct kl__Named ) == 8 && offsetof( struct kl__Named, kl_label ) == 0 && offsetof( struct kl__Named, kl_size ) == 24, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Named ) == 32 && _Alignof( struct kl_7codegen_Named ) == 8 && offsetof( struct kl_7codegen_Named, kl_label ) == 0 && offsetof( struct kl_7codegen_Named, kl_size ) == 24, "layout" );
 
 struct kl_2kl2os_path
 {
@@ -9418,11 +9418,11 @@ struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE
 };
 _Static_assert( sizeof( struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE ) == 40 && _Alignof( struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE ) == 8 && offsetof( struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE, kl_2ok_value ) == 8 && offsetof( struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE, kl_3err_error ) == 8, "layout" );
 
-struct kl__Wrap__I3f64E
+struct kl_7codegen_Wrap__I3f64E
 {
     double kl_v;
 };
-_Static_assert( sizeof( struct kl__Wrap__I3f64E ) == 8 && _Alignof( struct kl__Wrap__I3f64E ) == 8 && offsetof( struct kl__Wrap__I3f64E, kl_v ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Wrap__I3f64E ) == 8 && _Alignof( struct kl_7codegen_Wrap__I3f64E ) == 8 && offsetof( struct kl_7codegen_Wrap__I3f64E, kl_v ) == 0, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -9430,24 +9430,24 @@ struct kl_7prelude_textual__vtable
     struct kl__run__L2u8__ref ( *kl__7as_text__ )( void* );
 };
 
-int32_t kl__limit__G = 40;
-int32_t kl__step__GS7Counter = 5;
+int32_t kl_7codegen_limit__G = 40;
+int32_t kl_7codegen_step__GSQ7codegen7Counter = 5;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-int32_t kl__4tick__3i32( int32_t );
-int32_t kl__3add__3i32_3i32_3i32( int32_t, int32_t, int32_t );
-uint64_t kl__6length__Q2kl6string( struct kl_2kl6string_string* );
-uint64_t kl__4keep__MQ2kl6string( struct kl_2kl6string_string );
-int32_t kl__6capped__3i32_3i32( int32_t, int32_t );
-int32_t kl__6bumped__S7Counter_3i32( struct kl__Counter*, int32_t );
-struct kl__Counter kl__2at__S7Counter_3i32( int32_t );
-void kl__5Named__R5Named_Q7prelude3str_3i32__ctor( struct kl__Named*, struct kl_7prelude_str, int32_t );
-int32_t kl__4main__( void );
-int32_t kl__6either__I3i32E__3i32_3i32( int32_t, int32_t );
-uint64_t kl__6either__I3u64E__3u64_3u64( uint64_t, uint64_t );
-double kl__4plus__I3f64E__S4WrapI3f64E_3f64( struct kl__Wrap__I3f64E*, double );
+int32_t kl_7codegen_4tick__3i32( int32_t );
+int32_t kl_7codegen_3add__3i32_3i32_3i32( int32_t, int32_t, int32_t );
+uint64_t kl_7codegen_6length__Q2kl6string( struct kl_2kl6string_string* );
+uint64_t kl_7codegen_4keep__MQ2kl6string( struct kl_2kl6string_string );
+int32_t kl_7codegen_6capped__3i32_3i32( int32_t, int32_t );
+int32_t kl_7codegen_6bumped__SQ7codegen7Counter_3i32( struct kl_7codegen_Counter*, int32_t );
+struct kl_7codegen_Counter kl_7codegen_2at__SQ7codegen7Counter_3i32( int32_t );
+void kl_7codegen_5Named__RQ7codegen5Named_Q7prelude3str_3i32__ctor( struct kl_7codegen_Named*, struct kl_7prelude_str, int32_t );
+int32_t kl_7codegen_4main__( void );
+int32_t kl_7codegen_6either__I3i32E__3i32_3i32( int32_t, int32_t );
+uint64_t kl_7codegen_6either__I3u64E__3u64_3u64( uint64_t, uint64_t );
+double kl_7codegen_4plus__I3f64E__SQ7codegen4WrapI3f64E_3f64( struct kl_7codegen_Wrap__I3f64E*, double );
 void kl_2kl4list_8truncate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
 uint64_t kl_2kl4list_4size__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
 struct kl_2kl6string_string* kl_2kl4list_14operator_index__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
@@ -9479,7 +9479,7 @@ static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_
 static const struct kl_7prelude_textual__vtable kl_2kl6string_string__as_kl_7prelude_textual = { kl_2kl6string_string__drop, kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 5 "codegen/param_defaults.kl"
-int32_t kl__4tick__3i32( int32_t kl_n_1 )
+int32_t kl_7codegen_4tick__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
     int64_t kl_t2;
@@ -9508,7 +9508,7 @@ int32_t kl__4tick__3i32( int32_t kl_n_1 )
 }
 
 #line 13 "codegen/param_defaults.kl"
-int32_t kl__3add__3i32_3i32_3i32( int32_t kl_a_1, int32_t kl_b_2, int32_t kl_c_3 )
+int32_t kl_7codegen_3add__3i32_3i32_3i32( int32_t kl_a_1, int32_t kl_b_2, int32_t kl_c_3 )
 {
     int32_t kl_t0;
     bool kl_t4;
@@ -9542,7 +9542,7 @@ int32_t kl__3add__3i32_3i32_3i32( int32_t kl_a_1, int32_t kl_b_2, int32_t kl_c_3
 }
 
 #line 19 "codegen/param_defaults.kl"
-uint64_t kl__6length__Q2kl6string( struct kl_2kl6string_string* kl_text_1 )
+uint64_t kl_7codegen_6length__Q2kl6string( struct kl_2kl6string_string* kl_text_1 )
 {
     uint64_t kl_t0;
     struct kl_2kl6string_string* kl_t2;
@@ -9558,7 +9558,7 @@ uint64_t kl__6length__Q2kl6string( struct kl_2kl6string_string* kl_text_1 )
 }
 
 #line 24 "codegen/param_defaults.kl"
-uint64_t kl__4keep__MQ2kl6string( struct kl_2kl6string_string kl_text_1 )
+uint64_t kl_7codegen_4keep__MQ2kl6string( struct kl_2kl6string_string kl_text_1 )
 {
     uint64_t kl_t0;
     struct kl_2kl6string_string* kl_t2;
@@ -9576,7 +9576,7 @@ uint64_t kl__4keep__MQ2kl6string( struct kl_2kl6string_string kl_text_1 )
 }
 
 #line 29 "codegen/param_defaults.kl"
-int32_t kl__6capped__3i32_3i32( int32_t kl_n_1, int32_t kl_most_2 )
+int32_t kl_7codegen_6capped__3i32_3i32( int32_t kl_n_1, int32_t kl_most_2 )
 {
     int32_t kl_t0;
     int32_t kl_t3;
@@ -9603,7 +9603,7 @@ int32_t kl__6capped__3i32_3i32( int32_t kl_n_1, int32_t kl_most_2 )
 }
 
 #line 45 "codegen/param_defaults.kl"
-int32_t kl__6bumped__S7Counter_3i32( struct kl__Counter* kl_this_1, int32_t kl_by_2 )
+int32_t kl_7codegen_6bumped__SQ7codegen7Counter_3i32( struct kl_7codegen_Counter* kl_this_1, int32_t kl_by_2 )
 {
     int32_t kl_t0;
     bool kl_t3;
@@ -9625,10 +9625,10 @@ int32_t kl__6bumped__S7Counter_3i32( struct kl__Counter* kl_this_1, int32_t kl_b
 }
 
 #line 50 "codegen/param_defaults.kl"
-struct kl__Counter kl__2at__S7Counter_3i32( int32_t kl_n_1 )
+struct kl_7codegen_Counter kl_7codegen_2at__SQ7codegen7Counter_3i32( int32_t kl_n_1 )
 {
-    struct kl__Counter kl_t0;
-    struct kl__Counter kl_t2;
+    struct kl_7codegen_Counter kl_t0;
+    struct kl_7codegen_Counter kl_t2;
 #line 52 "codegen/param_defaults.kl"
     kl_t2.kl_n = kl_n_1;
 #line 52 "codegen/param_defaults.kl"
@@ -9638,7 +9638,7 @@ struct kl__Counter kl__2at__S7Counter_3i32( int32_t kl_n_1 )
 }
 
 #line 71 "codegen/param_defaults.kl"
-void kl__5Named__R5Named_Q7prelude3str_3i32__ctor( struct kl__Named* kl_this_1, struct kl_7prelude_str kl_text_2, int32_t kl_size_3 )
+void kl_7codegen_5Named__RQ7codegen5Named_Q7prelude3str_3i32__ctor( struct kl_7codegen_Named* kl_this_1, struct kl_7prelude_str kl_text_2, int32_t kl_size_3 )
 {
     struct kl_2kl6string_string kl_t4;
     struct kl_2kl6string_string* kl_t5;
@@ -9673,7 +9673,7 @@ void kl__5Named__R5Named_Q7prelude3str_3i32__ctor( struct kl__Named* kl_this_1, 
 }
 
 #line 78 "codegen/param_defaults.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_failures_1;
@@ -9737,45 +9737,45 @@ int32_t kl__4main__( void )
     uint64_t kl_t65;
     bool kl_t66;
     bool kl_t67;
-    struct kl__Counter kl_c_68;
-    struct kl__Counter kl_t69;
+    struct kl_7codegen_Counter kl_c_68;
+    struct kl_7codegen_Counter kl_t69;
     bool kl_t70;
     bool kl_t71;
     bool kl_t72;
-    struct kl__Counter* kl_t73;
+    struct kl_7codegen_Counter* kl_t73;
     int32_t kl_t74;
     bool kl_t75;
-    struct kl__Counter* kl_t76;
+    struct kl_7codegen_Counter* kl_t76;
     int32_t kl_t77;
     bool kl_t78;
     bool kl_t79;
-    struct kl__Counter kl_t80;
-    struct kl__Counter* kl_t81;
+    struct kl_7codegen_Counter kl_t80;
+    struct kl_7codegen_Counter* kl_t81;
     int32_t kl_t82;
     bool kl_t83;
     bool kl_t84;
-    struct kl__Wrap__I3f64E kl_w_85;
-    struct kl__Wrap__I3f64E kl_t86;
+    struct kl_7codegen_Wrap__I3f64E kl_w_85;
+    struct kl_7codegen_Wrap__I3f64E kl_t86;
     bool kl_t87;
-    struct kl__Wrap__I3f64E* kl_t88;
+    struct kl_7codegen_Wrap__I3f64E* kl_t88;
     double kl_t89;
     bool kl_t90;
-    struct kl__Wrap__I3f64E* kl_t91;
+    struct kl_7codegen_Wrap__I3f64E* kl_t91;
     double kl_t92;
     bool kl_t93;
     bool kl_t94;
-    struct kl__Named kl_a_95;
-    struct kl__Named* kl_t96;
+    struct kl_7codegen_Named kl_a_95;
+    struct kl_7codegen_Named* kl_t96;
     struct kl_7prelude_str kl_t97;
     struct kl_7prelude_str* kl_t98;
     uint8_t* kl_t99;
-    struct kl__Named kl_b_102;
-    struct kl__Named* kl_t103;
+    struct kl_7codegen_Named kl_b_102;
+    struct kl_7codegen_Named* kl_t103;
     struct kl_7prelude_str kl_t104;
     struct kl_7prelude_str* kl_t105;
     uint8_t* kl_t106;
-    struct kl__Named kl_d_109;
-    struct kl__Named* kl_t110;
+    struct kl_7codegen_Named kl_d_109;
+    struct kl_7codegen_Named* kl_t110;
     struct kl_7prelude_str kl_t111;
     struct kl_7prelude_str* kl_t112;
     uint8_t* kl_t113;
@@ -9805,11 +9805,11 @@ int32_t kl__4main__( void )
 #line 80 "codegen/param_defaults.kl"
     kl_failures_1 = 0;
 #line 83 "codegen/param_defaults.kl"
-    kl_t2 = kl__4tick__3i32( 1 );
+    kl_t2 = kl_7codegen_4tick__3i32( 1 );
 #line 13 "codegen/param_defaults.kl"
-    kl_t3 = kl__4tick__3i32( 3 );
+    kl_t3 = kl_7codegen_4tick__3i32( 3 );
 #line 83 "codegen/param_defaults.kl"
-    kl_t4 = kl__3add__3i32_3i32_3i32( kl_t2, 2, kl_t3 );
+    kl_t4 = kl_7codegen_3add__3i32_3i32_3i32( kl_t2, 2, kl_t3 );
 #line 83 "codegen/param_defaults.kl"
     kl_t5 = kl_t4 != 6;
 #line 83 "codegen/param_defaults.kl"
@@ -9829,9 +9829,9 @@ int32_t kl__4main__( void )
     goto bb4;
     bb4:
 #line 13 "codegen/param_defaults.kl"
-    kl_t7 = kl__4tick__3i32( 3 );
+    kl_t7 = kl_7codegen_4tick__3i32( 3 );
 #line 84 "codegen/param_defaults.kl"
-    kl_t8 = kl__3add__3i32_3i32_3i32( 1, 10, kl_t7 );
+    kl_t8 = kl_7codegen_3add__3i32_3i32_3i32( 1, 10, kl_t7 );
 #line 84 "codegen/param_defaults.kl"
     kl_t9 = kl_t8 != 14;
 #line 84 "codegen/param_defaults.kl"
@@ -9851,7 +9851,7 @@ int32_t kl__4main__( void )
     goto bb8;
     bb8:
 #line 85 "codegen/param_defaults.kl"
-    kl_t11 = kl__3add__3i32_3i32_3i32( 1, 10, 100 );
+    kl_t11 = kl_7codegen_3add__3i32_3i32_3i32( 1, 10, 100 );
 #line 85 "codegen/param_defaults.kl"
     kl_t12 = kl_t11 != 111;
 #line 85 "codegen/param_defaults.kl"
@@ -9887,7 +9887,7 @@ int32_t kl__4main__( void )
 #line 19 "codegen/param_defaults.kl"
     kl_t23 = &kl_t14;
 #line 87 "codegen/param_defaults.kl"
-    kl_t24 = kl__6length__Q2kl6string( kl_t23 );
+    kl_t24 = kl_7codegen_6length__Q2kl6string( kl_t23 );
 #line 87 "codegen/param_defaults.kl"
     kl_t25 = kl_t24 != 5;
 #line 87 "codegen/param_defaults.kl"
@@ -9925,7 +9925,7 @@ int32_t kl__4main__( void )
 #line 88 "codegen/param_defaults.kl"
     kl_t36 = &kl_t27;
 #line 88 "codegen/param_defaults.kl"
-    kl_t37 = kl__6length__Q2kl6string( kl_t36 );
+    kl_t37 = kl_7codegen_6length__Q2kl6string( kl_t36 );
 #line 88 "codegen/param_defaults.kl"
     kl_t38 = kl_t37 != 5;
 #line 88 "codegen/param_defaults.kl"
@@ -9965,7 +9965,7 @@ int32_t kl__4main__( void )
 #line 24 "codegen/param_defaults.kl"
     kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t41, kl_t47 );
 #line 89 "codegen/param_defaults.kl"
-    kl_t49 = kl__4keep__MQ2kl6string( kl_t40 );
+    kl_t49 = kl_7codegen_4keep__MQ2kl6string( kl_t40 );
 #line 89 "codegen/param_defaults.kl"
     kl_t140 = false;
 #line 89 "codegen/param_defaults.kl"
@@ -9990,7 +9990,7 @@ int32_t kl__4main__( void )
 #line 89 "codegen/param_defaults.kl"
     goto bb24;
     bb24:
-    kl_t52 = kl__6capped__3i32_3i32( 99, kl__limit__G );
+    kl_t52 = kl_7codegen_6capped__3i32_3i32( 99, kl_7codegen_limit__G );
 #line 91 "codegen/param_defaults.kl"
     kl_t53 = kl_t52 != 40;
 #line 91 "codegen/param_defaults.kl"
@@ -10010,8 +10010,8 @@ int32_t kl__4main__( void )
     goto bb28;
     bb28:
 #line 92 "codegen/param_defaults.kl"
-    kl__limit__G = 50;
-    kl_t55 = kl__6capped__3i32_3i32( 99, kl__limit__G );
+    kl_7codegen_limit__G = 50;
+    kl_t55 = kl_7codegen_6capped__3i32_3i32( 99, kl_7codegen_limit__G );
 #line 93 "codegen/param_defaults.kl"
     kl_t56 = kl_t55 != 50;
 #line 93 "codegen/param_defaults.kl"
@@ -10031,7 +10031,7 @@ int32_t kl__4main__( void )
     goto bb32;
     bb32:
     kl_zero_58 = 0;
-    kl_t59 = kl__6either__I3i32E__3i32_3i32( kl_zero_58, 0 );
+    kl_t59 = kl_7codegen_6either__I3i32E__3i32_3i32( kl_zero_58, 0 );
 #line 96 "codegen/param_defaults.kl"
     kl_t60 = kl_t59 != 0;
 #line 96 "codegen/param_defaults.kl"
@@ -10051,7 +10051,7 @@ int32_t kl__4main__( void )
     goto bb36;
     bb36:
 #line 97 "codegen/param_defaults.kl"
-    kl_t62 = kl__6either__I3i32E__3i32_3i32( kl_zero_58, 9 );
+    kl_t62 = kl_7codegen_6either__I3i32E__3i32_3i32( kl_zero_58, 9 );
 #line 97 "codegen/param_defaults.kl"
     kl_t63 = kl_t62 != 9;
 #line 97 "codegen/param_defaults.kl"
@@ -10071,7 +10071,7 @@ int32_t kl__4main__( void )
     goto bb40;
     bb40:
 #line 98 "codegen/param_defaults.kl"
-    kl_t65 = kl__6either__I3u64E__3u64_3u64( 4, 0 );
+    kl_t65 = kl_7codegen_6either__I3u64E__3u64_3u64( 4, 0 );
 #line 98 "codegen/param_defaults.kl"
     kl_t66 = kl_t65 != 4;
 #line 98 "codegen/param_defaults.kl"
@@ -10090,7 +10090,7 @@ int32_t kl__4main__( void )
 #line 98 "codegen/param_defaults.kl"
     goto bb44;
     bb44:
-    kl_t69 = kl__2at__S7Counter_3i32( 7 );
+    kl_t69 = kl_7codegen_2at__SQ7codegen7Counter_3i32( 7 );
 #line 100 "codegen/param_defaults.kl"
     kl_c_68 = kl_t69;
     kl_t72 = kl_c_68.kl_n != 7;
@@ -10102,7 +10102,7 @@ int32_t kl__4main__( void )
 #line 101 "codegen/param_defaults.kl"
     kl_t73 = &kl_c_68;
 #line 101 "codegen/param_defaults.kl"
-    kl_t74 = kl__6bumped__S7Counter_3i32( kl_t73, kl__step__GS7Counter );
+    kl_t74 = kl_7codegen_6bumped__SQ7codegen7Counter_3i32( kl_t73, kl_7codegen_step__GSQ7codegen7Counter );
 #line 101 "codegen/param_defaults.kl"
     kl_t75 = kl_t74 != 12;
 #line 101 "codegen/param_defaults.kl"
@@ -10118,7 +10118,7 @@ int32_t kl__4main__( void )
 #line 101 "codegen/param_defaults.kl"
     kl_t76 = &kl_c_68;
 #line 101 "codegen/param_defaults.kl"
-    kl_t77 = kl__6bumped__S7Counter_3i32( kl_t76, 1 );
+    kl_t77 = kl_7codegen_6bumped__SQ7codegen7Counter_3i32( kl_t76, 1 );
 #line 101 "codegen/param_defaults.kl"
     kl_t78 = kl_t77 != 8;
 #line 101 "codegen/param_defaults.kl"
@@ -10143,11 +10143,11 @@ int32_t kl__4main__( void )
     goto bb52;
     bb52:
 #line 102 "codegen/param_defaults.kl"
-    kl_t80 = kl__2at__S7Counter_3i32( 2 );
+    kl_t80 = kl_7codegen_2at__SQ7codegen7Counter_3i32( 2 );
 #line 102 "codegen/param_defaults.kl"
     kl_t81 = &kl_t80;
 #line 102 "codegen/param_defaults.kl"
-    kl_t82 = kl__6bumped__S7Counter_3i32( kl_t81, kl__step__GS7Counter );
+    kl_t82 = kl_7codegen_6bumped__SQ7codegen7Counter_3i32( kl_t81, kl_7codegen_step__GSQ7codegen7Counter );
 #line 102 "codegen/param_defaults.kl"
     kl_t83 = kl_t82 != 7;
 #line 102 "codegen/param_defaults.kl"
@@ -10171,7 +10171,7 @@ int32_t kl__4main__( void )
     kl_w_85 = kl_t86;
     kl_t88 = &kl_w_85;
 #line 105 "codegen/param_defaults.kl"
-    kl_t89 = kl__4plus__I3f64E__S4WrapI3f64E_3f64( kl_t88, 0.0 );
+    kl_t89 = kl_7codegen_4plus__I3f64E__SQ7codegen4WrapI3f64E_3f64( kl_t88, 0.0 );
 #line 105 "codegen/param_defaults.kl"
     kl_t90 = kl_t89 != 1.5;
 #line 105 "codegen/param_defaults.kl"
@@ -10182,7 +10182,7 @@ int32_t kl__4main__( void )
 #line 105 "codegen/param_defaults.kl"
     kl_t91 = &kl_w_85;
 #line 105 "codegen/param_defaults.kl"
-    kl_t92 = kl__4plus__I3f64E__S4WrapI3f64E_3f64( kl_t91, 1.0 );
+    kl_t92 = kl_7codegen_4plus__I3f64E__SQ7codegen4WrapI3f64E_3f64( kl_t91, 1.0 );
 #line 105 "codegen/param_defaults.kl"
     kl_t93 = kl_t92 != 2.5;
 #line 105 "codegen/param_defaults.kl"
@@ -10214,7 +10214,7 @@ int32_t kl__4main__( void )
 #line 71 "codegen/param_defaults.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t98, kl_t99, 9 );
 #line 107 "codegen/param_defaults.kl"
-    kl__5Named__R5Named_Q7prelude3str_3i32__ctor( kl_t96, kl_t97, 1 );
+    kl_7codegen_5Named__RQ7codegen5Named_Q7prelude3str_3i32__ctor( kl_t96, kl_t97, 1 );
     kl_t103 = &kl_b_102;
 #line 108 "codegen/param_defaults.kl"
     kl_t105 = &kl_t104;
@@ -10223,7 +10223,7 @@ int32_t kl__4main__( void )
 #line 108 "codegen/param_defaults.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t105, kl_t106, 5 );
 #line 108 "codegen/param_defaults.kl"
-    kl__5Named__R5Named_Q7prelude3str_3i32__ctor( kl_t103, kl_t104, 1 );
+    kl_7codegen_5Named__RQ7codegen5Named_Q7prelude3str_3i32__ctor( kl_t103, kl_t104, 1 );
     kl_t110 = &kl_d_109;
 #line 109 "codegen/param_defaults.kl"
     kl_t112 = &kl_t111;
@@ -10232,7 +10232,7 @@ int32_t kl__4main__( void )
 #line 109 "codegen/param_defaults.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t112, kl_t113, 4 );
 #line 109 "codegen/param_defaults.kl"
-    kl__5Named__R5Named_Q7prelude3str_3i32__ctor( kl_t110, kl_t111, 3 );
+    kl_7codegen_5Named__RQ7codegen5Named_Q7prelude3str_3i32__ctor( kl_t110, kl_t111, 3 );
     kl_t116 = &kl_a_95.kl_label;
 #line 110 "codegen/param_defaults.kl"
     kl_t117 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t116, &kl_2kl6string_string__as_kl_7prelude_textual };
@@ -10316,7 +10316,7 @@ int32_t kl__4main__( void )
 }
 
 #line 34 "codegen/param_defaults.kl"
-int32_t kl__6either__I3i32E__3i32_3i32( int32_t kl_value_1, int32_t kl_fallback_2 )
+int32_t kl_7codegen_6either__I3i32E__3i32_3i32( int32_t kl_value_1, int32_t kl_fallback_2 )
 {
     int32_t kl_t0;
     int32_t kl_t3;
@@ -10343,7 +10343,7 @@ int32_t kl__6either__I3i32E__3i32_3i32( int32_t kl_value_1, int32_t kl_fallback_
 }
 
 #line 34 "codegen/param_defaults.kl"
-uint64_t kl__6either__I3u64E__3u64_3u64( uint64_t kl_value_1, uint64_t kl_fallback_2 )
+uint64_t kl_7codegen_6either__I3u64E__3u64_3u64( uint64_t kl_value_1, uint64_t kl_fallback_2 )
 {
     uint64_t kl_t0;
     uint64_t kl_t3;
@@ -10370,7 +10370,7 @@ uint64_t kl__6either__I3u64E__3u64_3u64( uint64_t kl_value_1, uint64_t kl_fallba
 }
 
 #line 60 "codegen/param_defaults.kl"
-double kl__4plus__I3f64E__S4WrapI3f64E_3f64( struct kl__Wrap__I3f64E* kl_this_1, double kl_by_2 )
+double kl_7codegen_4plus__I3f64E__SQ7codegen4WrapI3f64E_3f64( struct kl_7codegen_Wrap__I3f64E* kl_this_1, double kl_by_2 )
 {
     double kl_t0;
     double kl_t3;
@@ -10761,7 +10761,7 @@ int main( void )
 #line 78 "codegen/param_defaults.kl"
     kl_2kl2os_0build(  );
 #line 78 "codegen/param_defaults.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 78 "codegen/param_defaults.kl"
     kl_2kl2os_0drop(  );
 #line 78 "codegen/param_defaults.kl"

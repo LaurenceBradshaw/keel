@@ -18,10 +18,10 @@ void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 
-int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
+int32_t kl_7codegen_4main__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
 
 #line 2 "codegen/main_no_arguments.kl"
-int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_args_1_data, uint64_t kl_args_1_size )
+int32_t kl_7codegen_4main__LQ7prelude3str( struct kl_7prelude_str* kl_args_1_data, uint64_t kl_args_1_size )
 {
     int32_t kl_t0;
 #line 2 "codegen/main_no_arguments.kl"
@@ -140,7 +140,7 @@ int main( int argc, char** argv )
 #line 2 "codegen/main_no_arguments.kl"
     kl_t17 = ( struct kl__run__LQ7prelude3str__ref ) { ( struct kl_7prelude_str* ) kl_t7, kl_t3 };
 #line 2 "codegen/main_no_arguments.kl"
-    kl_t0 = kl__4main__LQ7prelude3str( ( kl_t17 ).data, ( kl_t17 ).size );
+    kl_t0 = kl_7codegen_4main__LQ7prelude3str( ( kl_t17 ).data, ( kl_t17 ).size );
 #line 2 "codegen/main_no_arguments.kl"
     kl_rt_free( kl_t7 );
 #line 2 "codegen/main_no_arguments.kl"

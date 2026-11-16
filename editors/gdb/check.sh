@@ -10,7 +10,7 @@ set -euo pipefail
 
 cd "$( dirname "$0" )/../.."
 
-./build/debug/bin/keelc --debug --package kl=keel_stl/src examples/debugging.kl \
+./build/debug/bin/keelc --debug --package keel_stl/src examples/debugging.kl \
     -o build/examples/debugging
 
 out="$( gdb -batch -nx -ex "break debugging.kl:16" -ex "break debugging.kl:39" -ex "break kl::print" -ex run -ex bt \

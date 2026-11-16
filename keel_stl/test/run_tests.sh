@@ -90,7 +90,7 @@ run_one()
 
     {
         # libm: math_tests and trig_tests check kl against C's maths.
-        if ! "$keelc" --quiet --backend "$with" "${flags[@]}" --package kl=../src "$src" --runtime "$runtime" -l m -o "${build_dir}/program" \
+        if ! "$keelc" --quiet --backend "$with" "${flags[@]}" --package ../src "$src" --runtime "$runtime" -l m -o "${build_dir}/program" \
             > "${build_dir}/build.log" 2>&1; then
             echo "    keelc did not build it:"
             sed 's/^/      /' < "${build_dir}/build.log"

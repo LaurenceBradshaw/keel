@@ -1,2 +1,2 @@
-// Read as `pk::shown`, never through `pk::tools`.
+// Read as `app::pk::shown`, never through `app::pk::tools`.
 i32 shown() { return 1; }

@@ -3,29 +3,29 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Point;
-struct kl__Line;
+struct kl_7codegen_Point;
+struct kl_7codegen_Line;
 
-struct kl__Point
+struct kl_7codegen_Point
 {
     double kl_x;
     double kl_y;
 };
-_Static_assert( sizeof( struct kl__Point ) == 16 && _Alignof( struct kl__Point ) == 8 && offsetof( struct kl__Point, kl_x ) == 0 && offsetof( struct kl__Point, kl_y ) == 8, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Point ) == 16 && _Alignof( struct kl_7codegen_Point ) == 8 && offsetof( struct kl_7codegen_Point, kl_x ) == 0 && offsetof( struct kl_7codegen_Point, kl_y ) == 8, "layout" );
 
-struct kl__Line
+struct kl_7codegen_Line
 {
-    struct kl__Point kl_a;
-    struct kl__Point kl_b;
+    struct kl_7codegen_Point kl_a;
+    struct kl_7codegen_Point kl_b;
 };
-_Static_assert( sizeof( struct kl__Line ) == 32 && _Alignof( struct kl__Line ) == 8 && offsetof( struct kl__Line, kl_a ) == 0 && offsetof( struct kl__Line, kl_b ) == 16, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Line ) == 32 && _Alignof( struct kl_7codegen_Line ) == 8 && offsetof( struct kl_7codegen_Line, kl_a ) == 0 && offsetof( struct kl_7codegen_Line, kl_b ) == 16, "layout" );
 
-double kl__3abs__3f64( double );
-double kl__8distance__4Line( struct kl__Line );
-int32_t kl__4main__( void );
+double kl_7codegen_3abs__3f64( double );
+double kl_7codegen_8distance__Q7codegen4Line( struct kl_7codegen_Line );
+int32_t kl_7codegen_4main__( void );
 
 #line 16 "codegen/structs.kl"
-double kl__3abs__3f64( double kl_v_1 )
+double kl_7codegen_3abs__3f64( double kl_v_1 )
 {
     double kl_t0;
     bool kl_t2;
@@ -49,7 +49,7 @@ double kl__3abs__3f64( double kl_v_1 )
 }
 
 #line 23 "codegen/structs.kl"
-double kl__8distance__4Line( struct kl__Line kl_l_1 )
+double kl_7codegen_8distance__Q7codegen4Line( struct kl_7codegen_Line kl_l_1 )
 {
     double kl_t0;
     double kl_t2;
@@ -60,11 +60,11 @@ double kl__8distance__4Line( struct kl__Line kl_l_1 )
 #line 25 "codegen/structs.kl"
     kl_t2 = kl_l_1.kl_b.kl_x - kl_l_1.kl_a.kl_x;
 #line 25 "codegen/structs.kl"
-    kl_t3 = kl__3abs__3f64( kl_t2 );
+    kl_t3 = kl_7codegen_3abs__3f64( kl_t2 );
 #line 25 "codegen/structs.kl"
     kl_t4 = kl_l_1.kl_b.kl_y - kl_l_1.kl_a.kl_y;
 #line 25 "codegen/structs.kl"
-    kl_t5 = kl__3abs__3f64( kl_t4 );
+    kl_t5 = kl_7codegen_3abs__3f64( kl_t4 );
 #line 25 "codegen/structs.kl"
     kl_t6 = kl_t3 + kl_t5;
 #line 25 "codegen/structs.kl"
@@ -74,23 +74,23 @@ double kl__8distance__4Line( struct kl__Line kl_l_1 )
 }
 
 #line 29 "codegen/structs.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__Line kl_l_1;
-    struct kl__Line kl_t2;
-    struct kl__Point kl_t3;
-    struct kl__Point kl_t4;
+    struct kl_7codegen_Line kl_l_1;
+    struct kl_7codegen_Line kl_t2;
+    struct kl_7codegen_Point kl_t3;
+    struct kl_7codegen_Point kl_t4;
     double kl_t5;
     bool kl_t6;
-    struct kl__Line kl_flipped_7;
-    struct kl__Line kl_t8;
-    struct kl__Point kl_t9;
-    struct kl__Point kl_t10;
+    struct kl_7codegen_Line kl_flipped_7;
+    struct kl_7codegen_Line kl_t8;
+    struct kl_7codegen_Point kl_t9;
+    struct kl_7codegen_Point kl_t10;
     double kl_t11;
     bool kl_t12;
-    struct kl__Point kl_p_13;
-    struct kl__Point kl_t14;
+    struct kl_7codegen_Point kl_p_13;
+    struct kl_7codegen_Point kl_t14;
     bool kl_t15;
     bool kl_t16;
     bool kl_t17;
@@ -109,7 +109,7 @@ int32_t kl__4main__( void )
 #line 31 "codegen/structs.kl"
     kl_l_1 = kl_t2;
 #line 33 "codegen/structs.kl"
-    kl_t5 = kl__8distance__4Line( kl_l_1 );
+    kl_t5 = kl_7codegen_8distance__Q7codegen4Line( kl_l_1 );
 #line 33 "codegen/structs.kl"
     kl_t6 = kl_t5 != 7.0;
 #line 33 "codegen/structs.kl"
@@ -135,7 +135,7 @@ int32_t kl__4main__( void )
 #line 37 "codegen/structs.kl"
     kl_flipped_7 = kl_t8;
 #line 39 "codegen/structs.kl"
-    kl_t11 = kl__8distance__4Line( kl_flipped_7 );
+    kl_t11 = kl_7codegen_8distance__Q7codegen4Line( kl_flipped_7 );
 #line 39 "codegen/structs.kl"
     kl_t12 = kl_t11 != 7.0;
 #line 39 "codegen/structs.kl"
@@ -194,7 +194,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 29 "codegen/structs.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 29 "codegen/structs.kl"
     return kl_t0;
 #line 29 "codegen/structs.kl"

@@ -1,0 +1,1 @@
+keelc: --package takes the package's folder, not 'kl=../../keel_stl/src': write --package ../../keel_stl/src

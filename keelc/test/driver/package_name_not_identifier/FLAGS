@@ -1,1 +1,1 @@
---check --package a-b=.
+--check --package driver/package_name_not_identifier/a-b

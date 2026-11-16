@@ -3,17 +3,17 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Res;
-struct kl__Shape;
-struct kl__Held;
+struct kl_3opt_Res;
+struct kl_3opt_Shape;
+struct kl_3opt_Held;
 
-struct kl__Res
+struct kl_3opt_Res
 {
     int32_t kl_v;
 };
-_Static_assert( sizeof( struct kl__Res ) == 4 && _Alignof( struct kl__Res ) == 4 && offsetof( struct kl__Res, kl_v ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_3opt_Res ) == 4 && _Alignof( struct kl_3opt_Res ) == 4 && offsetof( struct kl_3opt_Res, kl_v ) == 0, "layout" );
 
-struct kl__Shape
+struct kl_3opt_Shape
 {
     int32_t tag;
     union
@@ -29,35 +29,35 @@ struct kl__Shape
         };
     };
 };
-_Static_assert( sizeof( struct kl__Shape ) == 12 && _Alignof( struct kl__Shape ) == 4 && offsetof( struct kl__Shape, kl_6circle_r ) == 4 && offsetof( struct kl__Shape, kl_4rect_w ) == 4 && offsetof( struct kl__Shape, kl_4rect_h ) == 8, "layout" );
+_Static_assert( sizeof( struct kl_3opt_Shape ) == 12 && _Alignof( struct kl_3opt_Shape ) == 4 && offsetof( struct kl_3opt_Shape, kl_6circle_r ) == 4 && offsetof( struct kl_3opt_Shape, kl_4rect_w ) == 4 && offsetof( struct kl_3opt_Shape, kl_4rect_h ) == 8, "layout" );
 
-struct kl__Held
+struct kl_3opt_Held
 {
     int32_t tag;
     union
     {
         struct
         {
-            struct kl__Res kl_4full_r;
+            struct kl_3opt_Res kl_4full_r;
         };
     };
 };
-_Static_assert( sizeof( struct kl__Held ) == 8 && _Alignof( struct kl__Held ) == 4 && offsetof( struct kl__Held, kl_4full_r ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_3opt_Held ) == 8 && _Alignof( struct kl_3opt_Held ) == 4 && offsetof( struct kl_3opt_Held, kl_4full_r ) == 4, "layout" );
 
-int32_t kl__dropped__G = 0;
+int32_t kl_3opt_dropped__G = 0;
 
-void kl__3Res__R3Res_3i32__ctor( struct kl__Res*, int32_t );
-void kl__3Res__dtor( struct kl__Res* );
-struct kl__Shape kl__4make__3i32( int32_t );
-int32_t kl__5built__3i32( int32_t );
-int32_t kl__13dropped_whole__3i32( int32_t );
-int32_t kl__5moved__3i32( int32_t );
-int32_t kl__5given__5Shape( struct kl__Shape );
-int32_t kl__4main__( void );
-void kl__4Held__dtor( struct kl__Held* );
+void kl_3opt_3Res__RQ3opt3Res_3i32__ctor( struct kl_3opt_Res*, int32_t );
+void kl_3opt_3Res__dtor( struct kl_3opt_Res* );
+struct kl_3opt_Shape kl_3opt_4make__3i32( int32_t );
+int32_t kl_3opt_5built__3i32( int32_t );
+int32_t kl_3opt_13dropped_whole__3i32( int32_t );
+int32_t kl_3opt_5moved__3i32( int32_t );
+int32_t kl_3opt_5given__Q3opt5Shape( struct kl_3opt_Shape );
+int32_t kl_3opt_4main__( void );
+void kl_3opt_4Held__dtor( struct kl_3opt_Held* );
 
 #line 10 "opt/known_tags.kl"
-void kl__3Res__R3Res_3i32__ctor( struct kl__Res* kl_this_1, int32_t kl_x_2 )
+void kl_3opt_3Res__RQ3opt3Res_3i32__ctor( struct kl_3opt_Res* kl_this_1, int32_t kl_x_2 )
 {
 #line 10 "opt/known_tags.kl"
     ( *kl_this_1 ).kl_v = kl_x_2;
@@ -67,23 +67,23 @@ void kl__3Res__R3Res_3i32__ctor( struct kl__Res* kl_this_1, int32_t kl_x_2 )
 }
 
 #line 11 "opt/known_tags.kl"
-void kl__3Res__dtor( struct kl__Res* kl_this_1 )
+void kl_3opt_3Res__dtor( struct kl_3opt_Res* kl_this_1 )
 {
     int32_t kl_t2;
     ( void ) kl_this_1;
 #line 11 "opt/known_tags.kl"
-    kl_t2 = kl__dropped__G + 1;
+    kl_t2 = kl_3opt_dropped__G + 1;
 #line 11 "opt/known_tags.kl"
-    kl__dropped__G = kl_t2;
+    kl_3opt_dropped__G = kl_t2;
 #line 11 "opt/known_tags.kl"
     return;
 #line 11 "opt/known_tags.kl"
 }
 
 #line 17 "opt/known_tags.kl"
-struct kl__Shape kl__4make__3i32( int32_t kl_w_1 )
+struct kl_3opt_Shape kl_3opt_4make__3i32( int32_t kl_w_1 )
 {
-    struct kl__Shape kl_t0;
+    struct kl_3opt_Shape kl_t0;
 #line 17 "opt/known_tags.kl"
     kl_t0.tag = 1;
 #line 17 "opt/known_tags.kl"
@@ -96,7 +96,7 @@ struct kl__Shape kl__4make__3i32( int32_t kl_w_1 )
 }
 
 #line 20 "opt/known_tags.kl"
-int32_t kl__5built__3i32( int32_t kl_w_1 )
+int32_t kl_3opt_5built__3i32( int32_t kl_w_1 )
 {
     int32_t kl_t0;
 #line 24 "opt/known_tags.kl"
@@ -107,12 +107,12 @@ int32_t kl__5built__3i32( int32_t kl_w_1 )
 }
 
 #line 30 "opt/known_tags.kl"
-int32_t kl__13dropped_whole__3i32( int32_t kl_x_1 )
+int32_t kl_3opt_13dropped_whole__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
-    struct kl__Res* kl_r_2;
+    struct kl_3opt_Res* kl_r_2;
     int32_t kl_t3;
-    struct kl__Res kl_h_4;
+    struct kl_3opt_Res kl_h_4;
 #line 10 "opt/known_tags.kl"
     kl_h_4.kl_v = kl_x_1;
 #line 35 "opt/known_tags.kl"
@@ -120,20 +120,20 @@ int32_t kl__13dropped_whole__3i32( int32_t kl_x_1 )
 #line 35 "opt/known_tags.kl"
     kl_t0 = ( *kl_r_2 ).kl_v;
 #line 11 "opt/known_tags.kl"
-    kl_t3 = kl__dropped__G + 1;
+    kl_t3 = kl_3opt_dropped__G + 1;
 #line 11 "opt/known_tags.kl"
-    kl__dropped__G = kl_t3;
+    kl_3opt_dropped__G = kl_t3;
 #line 35 "opt/known_tags.kl"
     return kl_t0;
 #line 38 "opt/known_tags.kl"
 }
 
 #line 41 "opt/known_tags.kl"
-int32_t kl__5moved__3i32( int32_t kl_x_1 )
+int32_t kl_3opt_5moved__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
-    struct kl__Held kl_h_2;
-    struct kl__Res* kl_r_3;
+    struct kl_3opt_Held kl_h_2;
+    struct kl_3opt_Res* kl_r_3;
     int32_t kl_t4;
 #line 43 "opt/known_tags.kl"
     kl_h_2.tag = 0;
@@ -144,16 +144,16 @@ int32_t kl__5moved__3i32( int32_t kl_x_1 )
 #line 47 "opt/known_tags.kl"
     kl_t0 = ( *kl_r_3 ).kl_v;
 #line 11 "opt/known_tags.kl"
-    kl_t4 = kl__dropped__G + 1;
+    kl_t4 = kl_3opt_dropped__G + 1;
 #line 11 "opt/known_tags.kl"
-    kl__dropped__G = kl_t4;
+    kl_3opt_dropped__G = kl_t4;
 #line 47 "opt/known_tags.kl"
     return kl_t0;
 #line 50 "opt/known_tags.kl"
 }
 
 #line 53 "opt/known_tags.kl"
-int32_t kl__5given__5Shape( struct kl__Shape kl_s_1 )
+int32_t kl_3opt_5given__Q3opt5Shape( struct kl_3opt_Shape kl_s_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -174,18 +174,18 @@ int32_t kl__5given__5Shape( struct kl__Shape kl_s_1 )
 }
 
 #line 62 "opt/known_tags.kl"
-int32_t kl__4main__( void )
+int32_t kl_3opt_4main__( void )
 {
     int32_t kl_t0;
     bool kl_t1;
     int32_t kl_t2;
     int32_t kl_t3;
-    struct kl__Held kl_h_4;
-    struct kl__Res* kl_r_5;
-    struct kl__Res* kl_r_6;
+    struct kl_3opt_Held kl_h_4;
+    struct kl_3opt_Res* kl_r_5;
+    struct kl_3opt_Res* kl_r_6;
     int32_t kl_t7;
     int32_t kl_t8;
-    struct kl__Res kl_h_9;
+    struct kl_3opt_Res kl_h_9;
 #line 10 "opt/known_tags.kl"
     kl_h_9.kl_v = 4;
 #line 35 "opt/known_tags.kl"
@@ -193,9 +193,9 @@ int32_t kl__4main__( void )
 #line 35 "opt/known_tags.kl"
     kl_t2 = ( *kl_r_6 ).kl_v;
 #line 11 "opt/known_tags.kl"
-    kl_t7 = kl__dropped__G + 1;
+    kl_t7 = kl_3opt_dropped__G + 1;
 #line 11 "opt/known_tags.kl"
-    kl__dropped__G = kl_t7;
+    kl_3opt_dropped__G = kl_t7;
 #line 69 "opt/known_tags.kl"
     kl_t1 = kl_t2 != 4;
 #line 69 "opt/known_tags.kl"
@@ -210,9 +210,9 @@ int32_t kl__4main__( void )
 #line 47 "opt/known_tags.kl"
     kl_t3 = ( *kl_r_5 ).kl_v;
 #line 11 "opt/known_tags.kl"
-    kl_t8 = kl__dropped__G + 1;
+    kl_t8 = kl_3opt_dropped__G + 1;
 #line 11 "opt/known_tags.kl"
-    kl__dropped__G = kl_t8;
+    kl_3opt_dropped__G = kl_t8;
 #line 69 "opt/known_tags.kl"
     kl_t1 = kl_t3 != 5;
 #line 69 "opt/known_tags.kl"
@@ -234,7 +234,7 @@ int32_t kl__4main__( void )
 }
 
 #line 15 "opt/known_tags.kl"
-void kl__4Held__dtor( struct kl__Held* kl_t1 )
+void kl_3opt_4Held__dtor( struct kl_3opt_Held* kl_t1 )
 {
     bool kl_t2;
     int32_t kl_t3;
@@ -247,9 +247,9 @@ void kl__4Held__dtor( struct kl__Held* kl_t1 )
     return;
     bb2:
 #line 11 "opt/known_tags.kl"
-    kl_t3 = kl__dropped__G + 1;
+    kl_t3 = kl_3opt_dropped__G + 1;
 #line 11 "opt/known_tags.kl"
-    kl__dropped__G = kl_t3;
+    kl_3opt_dropped__G = kl_t3;
 #line 11 "opt/known_tags.kl"
     goto bb1;
 #line 15 "opt/known_tags.kl"
@@ -259,7 +259,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 62 "opt/known_tags.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_3opt_4main__(  );
 #line 62 "opt/known_tags.kl"
     return kl_t0;
 #line 62 "opt/known_tags.kl"

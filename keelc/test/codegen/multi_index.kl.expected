@@ -5,7 +5,7 @@
 
 struct kl_7prelude_str;
 struct kl__A6_3i32;
-struct kl__grid__I3i32_V2__V3_E;
+struct kl_7codegen_grid__I3i32_V2__V3_E;
 
 struct kl__run__LQ7prelude3str__ref { struct kl_7prelude_str* data; uint64_t size; };
 
@@ -22,30 +22,30 @@ struct kl__A6_3i32
 };
 _Static_assert( sizeof( struct kl__A6_3i32 ) == 24 && _Alignof( struct kl__A6_3i32 ) == 4, "layout" );
 
-struct kl__grid__I3i32_V2__V3_E
+struct kl_7codegen_grid__I3i32_V2__V3_E
 {
     struct kl__A6_3i32 kl_cells;
 };
-_Static_assert( sizeof( struct kl__grid__I3i32_V2__V3_E ) == 24 && _Alignof( struct kl__grid__I3i32_V2__V3_E ) == 4 && offsetof( struct kl__grid__I3i32_V2__V3_E, kl_cells ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_grid__I3i32_V2__V3_E ) == 24 && _Alignof( struct kl_7codegen_grid__I3i32_V2__V3_E ) == 4 && offsetof( struct kl_7codegen_grid__I3i32_V2__V3_E, kl_cells ) == 0, "layout" );
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
-int32_t* kl__14operator_index__I3i32_V2__V3_E__S4gridI3i32_V2__V3_E_3u64_3u64( struct kl__grid__I3i32_V2__V3_E*, uint64_t, uint64_t );
-int32_t* kl__14operator_index__I3i32_V2__V3_E__S4gridI3i32_V2__V3_E_3u64( struct kl__grid__I3i32_V2__V3_E*, uint64_t );
-int32_t kl__6corner__I4gridI3i32_V2__V3_E_3i32E__4gridI3i32_V2__V3_E( struct kl__grid__I3i32_V2__V3_E* );
+int32_t kl_7codegen_4main__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
+int32_t* kl_7codegen_14operator_index__I3i32_V2__V3_E__SQ7codegen4gridI3i32_V2__V3_E_3u64_3u64( struct kl_7codegen_grid__I3i32_V2__V3_E*, uint64_t, uint64_t );
+int32_t* kl_7codegen_14operator_index__I3i32_V2__V3_E__SQ7codegen4gridI3i32_V2__V3_E_3u64( struct kl_7codegen_grid__I3i32_V2__V3_E*, uint64_t );
+int32_t kl_7codegen_6corner__IQ7codegen4gridI3i32_V2__V3_E_3i32E__Q7codegen4gridI3i32_V2__V3_E( struct kl_7codegen_grid__I3i32_V2__V3_E* );
 
 #line 19 "codegen/multi_index.kl"
-int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t kl_t1_size )
+int32_t kl_7codegen_4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t kl_t1_size )
 {
     int32_t kl_t0;
 #line 19 "codegen/multi_index.kl"
     struct kl__run__LQ7prelude3str__ref kl_t1 = { kl_t1_data, kl_t1_size };
-    struct kl__grid__I3i32_V2__V3_E kl_g_2;
-    struct kl__grid__I3i32_V2__V3_E kl_t3;
+    struct kl_7codegen_grid__I3i32_V2__V3_E kl_g_2;
+    struct kl_7codegen_grid__I3i32_V2__V3_E kl_t3;
     struct kl__A6_3i32 kl_t4;
     uint64_t kl_t5;
     uint64_t kl_t6;
@@ -54,31 +54,31 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
     uint64_t kl_t9;
     uint64_t kl_t10;
     bool kl_t11;
-    struct kl__grid__I3i32_V2__V3_E* kl_t12;
+    struct kl_7codegen_grid__I3i32_V2__V3_E* kl_t12;
     int32_t* kl_t13;
     bool kl_t14;
-    struct kl__grid__I3i32_V2__V3_E* kl_t15;
+    struct kl_7codegen_grid__I3i32_V2__V3_E* kl_t15;
     int32_t* kl_t16;
     bool kl_t17;
-    struct kl__grid__I3i32_V2__V3_E* kl_t18;
+    struct kl_7codegen_grid__I3i32_V2__V3_E* kl_t18;
     int32_t* kl_t19;
-    struct kl__grid__I3i32_V2__V3_E* kl_t20;
+    struct kl_7codegen_grid__I3i32_V2__V3_E* kl_t20;
     int32_t* kl_t21;
     bool kl_t22;
     uint64_t kl_r_23;
-    struct kl__grid__I3i32_V2__V3_E* kl_t24;
+    struct kl_7codegen_grid__I3i32_V2__V3_E* kl_t24;
     bool kl_t25;
     uint64_t kl_t26;
-    struct kl__grid__I3i32_V2__V3_E* kl_t27;
+    struct kl_7codegen_grid__I3i32_V2__V3_E* kl_t27;
     int32_t* kl_t28;
     uint64_t kl_t29;
     bool kl_t30;
     int32_t* kl_t31;
     bool kl_t32;
-    struct kl__grid__I3i32_V2__V3_E* kl_t33;
+    struct kl_7codegen_grid__I3i32_V2__V3_E* kl_t33;
     int32_t* kl_t34;
     bool kl_t35;
-    struct kl__grid__I3i32_V2__V3_E* kl_t36;
+    struct kl_7codegen_grid__I3i32_V2__V3_E* kl_t36;
     int32_t kl_t37;
     bool kl_t38;
     ( void ) kl_t1;
@@ -119,7 +119,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 #line 23 "codegen/multi_index.kl"
     kl_t12 = &kl_g_2;
 #line 23 "codegen/multi_index.kl"
-    kl_t13 = kl__14operator_index__I3i32_V2__V3_E__S4gridI3i32_V2__V3_E_3u64_3u64( kl_t12, 1, 0 );
+    kl_t13 = kl_7codegen_14operator_index__I3i32_V2__V3_E__SQ7codegen4gridI3i32_V2__V3_E_3u64_3u64( kl_t12, 1, 0 );
 #line 23 "codegen/multi_index.kl"
     kl_t14 = ( *kl_t13 ) != 3;
 #line 23 "codegen/multi_index.kl"
@@ -130,7 +130,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 #line 23 "codegen/multi_index.kl"
     kl_t15 = &kl_g_2;
 #line 23 "codegen/multi_index.kl"
-    kl_t16 = kl__14operator_index__I3i32_V2__V3_E__S4gridI3i32_V2__V3_E_3u64_3u64( kl_t15, 0, 2 );
+    kl_t16 = kl_7codegen_14operator_index__I3i32_V2__V3_E__SQ7codegen4gridI3i32_V2__V3_E_3u64_3u64( kl_t15, 0, 2 );
 #line 23 "codegen/multi_index.kl"
     kl_t17 = ( *kl_t16 ) != 2;
 #line 23 "codegen/multi_index.kl"
@@ -148,13 +148,13 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 #line 28 "codegen/multi_index.kl"
     kl_t18 = &kl_g_2;
 #line 28 "codegen/multi_index.kl"
-    kl_t19 = kl__14operator_index__I3i32_V2__V3_E__S4gridI3i32_V2__V3_E_3u64_3u64( kl_t18, 1, 1 );
+    kl_t19 = kl_7codegen_14operator_index__I3i32_V2__V3_E__SQ7codegen4gridI3i32_V2__V3_E_3u64_3u64( kl_t18, 1, 1 );
 #line 28 "codegen/multi_index.kl"
     ( *kl_t19 ) = 40;
 #line 30 "codegen/multi_index.kl"
     kl_t20 = &kl_g_2;
 #line 30 "codegen/multi_index.kl"
-    kl_t21 = kl__14operator_index__I3i32_V2__V3_E__S4gridI3i32_V2__V3_E_3u64( kl_t20, 4 );
+    kl_t21 = kl_7codegen_14operator_index__I3i32_V2__V3_E__SQ7codegen4gridI3i32_V2__V3_E_3u64( kl_t20, 4 );
 #line 30 "codegen/multi_index.kl"
     kl_t22 = ( *kl_t21 ) != 40;
 #line 30 "codegen/multi_index.kl"
@@ -180,7 +180,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 #line 36 "codegen/multi_index.kl"
     kl_t27 = &kl_g_2;
 #line 36 "codegen/multi_index.kl"
-    kl_t28 = kl__14operator_index__I3i32_V2__V3_E__S4gridI3i32_V2__V3_E_3u64_3u64( kl_t27, 0, 1 );
+    kl_t28 = kl_7codegen_14operator_index__I3i32_V2__V3_E__SQ7codegen4gridI3i32_V2__V3_E_3u64_3u64( kl_t27, 0, 1 );
 #line 36 "codegen/multi_index.kl"
     kl_t29 = ( uint64_t ) ( *kl_t28 );
 #line 36 "codegen/multi_index.kl"
@@ -192,7 +192,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
     kl_rt_panic( "codegen/multi_index.kl", 36, "cast out of range: cast<u64>( g[0, 1] )" );
     bb10:
 #line 36 "codegen/multi_index.kl"
-    kl_t31 = kl__14operator_index__I3i32_V2__V3_E__S4gridI3i32_V2__V3_E_3u64_3u64( kl_t24, kl_t26, kl_t29 );
+    kl_t31 = kl_7codegen_14operator_index__I3i32_V2__V3_E__SQ7codegen4gridI3i32_V2__V3_E_3u64_3u64( kl_t24, kl_t26, kl_t29 );
 #line 36 "codegen/multi_index.kl"
     kl_t32 = __builtin_add_overflow( ( *kl_t31 ), 2, &( int32_t ) { 0 } );
 #line 36 "codegen/multi_index.kl"
@@ -206,7 +206,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 #line 38 "codegen/multi_index.kl"
     kl_t33 = &kl_g_2;
 #line 38 "codegen/multi_index.kl"
-    kl_t34 = kl__14operator_index__I3i32_V2__V3_E__S4gridI3i32_V2__V3_E_3u64_3u64( kl_t33, 1, 1 );
+    kl_t34 = kl_7codegen_14operator_index__I3i32_V2__V3_E__SQ7codegen4gridI3i32_V2__V3_E_3u64_3u64( kl_t33, 1, 1 );
 #line 38 "codegen/multi_index.kl"
     kl_t35 = ( *kl_t34 ) != 42;
 #line 38 "codegen/multi_index.kl"
@@ -219,7 +219,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 #line 43 "codegen/multi_index.kl"
     kl_t36 = &kl_g_2;
 #line 43 "codegen/multi_index.kl"
-    kl_t37 = kl__6corner__I4gridI3i32_V2__V3_E_3i32E__4gridI3i32_V2__V3_E( kl_t36 );
+    kl_t37 = kl_7codegen_6corner__IQ7codegen4gridI3i32_V2__V3_E_3i32E__Q7codegen4gridI3i32_V2__V3_E( kl_t36 );
 #line 43 "codegen/multi_index.kl"
     kl_t38 = kl_t37 != 5;
 #line 43 "codegen/multi_index.kl"
@@ -236,7 +236,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 }
 
 #line 12 "codegen/multi_index.kl"
-int32_t* kl__14operator_index__I3i32_V2__V3_E__S4gridI3i32_V2__V3_E_3u64_3u64( struct kl__grid__I3i32_V2__V3_E* kl_this_1, uint64_t kl_r_2, uint64_t kl_c_3 )
+int32_t* kl_7codegen_14operator_index__I3i32_V2__V3_E__SQ7codegen4gridI3i32_V2__V3_E_3u64_3u64( struct kl_7codegen_grid__I3i32_V2__V3_E* kl_this_1, uint64_t kl_r_2, uint64_t kl_c_3 )
 {
     int32_t* kl_t0;
     bool kl_t4;
@@ -283,7 +283,7 @@ int32_t* kl__14operator_index__I3i32_V2__V3_E__S4gridI3i32_V2__V3_E_3u64_3u64( s
 }
 
 #line 13 "codegen/multi_index.kl"
-int32_t* kl__14operator_index__I3i32_V2__V3_E__S4gridI3i32_V2__V3_E_3u64( struct kl__grid__I3i32_V2__V3_E* kl_this_1, uint64_t kl_at_2 )
+int32_t* kl_7codegen_14operator_index__I3i32_V2__V3_E__SQ7codegen4gridI3i32_V2__V3_E_3u64( struct kl_7codegen_grid__I3i32_V2__V3_E* kl_this_1, uint64_t kl_at_2 )
 {
     int32_t* kl_t0;
     uint64_t kl_t3;
@@ -306,15 +306,15 @@ int32_t* kl__14operator_index__I3i32_V2__V3_E__S4gridI3i32_V2__V3_E_3u64( struct
 }
 
 #line 17 "codegen/multi_index.kl"
-int32_t kl__6corner__I4gridI3i32_V2__V3_E_3i32E__4gridI3i32_V2__V3_E( struct kl__grid__I3i32_V2__V3_E* kl_g_1 )
+int32_t kl_7codegen_6corner__IQ7codegen4gridI3i32_V2__V3_E_3i32E__Q7codegen4gridI3i32_V2__V3_E( struct kl_7codegen_grid__I3i32_V2__V3_E* kl_g_1 )
 {
     int32_t kl_t0;
-    struct kl__grid__I3i32_V2__V3_E* kl_t2;
+    struct kl_7codegen_grid__I3i32_V2__V3_E* kl_t2;
     int32_t* kl_t3;
 #line 17 "codegen/multi_index.kl"
     kl_t2 = &( *kl_g_1 );
 #line 17 "codegen/multi_index.kl"
-    kl_t3 = kl__14operator_index__I3i32_V2__V3_E__S4gridI3i32_V2__V3_E_3u64_3u64( kl_t2, 1, 2 );
+    kl_t3 = kl_7codegen_14operator_index__I3i32_V2__V3_E__SQ7codegen4gridI3i32_V2__V3_E_3u64_3u64( kl_t2, 1, 2 );
 #line 17 "codegen/multi_index.kl"
     kl_t0 = ( *kl_t3 );
 #line 17 "codegen/multi_index.kl"
@@ -410,7 +410,7 @@ int main( int argc, char** argv )
 #line 19 "codegen/multi_index.kl"
     kl_t17 = ( struct kl__run__LQ7prelude3str__ref ) { ( struct kl_7prelude_str* ) kl_t7, kl_t3 };
 #line 19 "codegen/multi_index.kl"
-    kl_t0 = kl__4main__LQ7prelude3str( ( kl_t17 ).data, ( kl_t17 ).size );
+    kl_t0 = kl_7codegen_4main__LQ7prelude3str( ( kl_t17 ).data, ( kl_t17 ).size );
 #line 19 "codegen/multi_index.kl"
     kl_rt_free( kl_t7 );
 #line 19 "codegen/multi_index.kl"

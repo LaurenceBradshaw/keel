@@ -202,11 +202,11 @@ check_docs()
     keeldoc/test/run_tests.sh "${debug_bin}/keeldoc${exe}" "${debug_bin}/keelc${exe}" || return 1
 
     local out; out="$( mktemp -d )"
-    "${debug_bin}/keeldoc${exe}" --keelc "${debug_bin}/keelc${exe}" -o "$out" kl=keel_stl/src || { rm -rf "$out"; return 1; }
+    "${debug_bin}/keeldoc${exe}" --keelc "${debug_bin}/keelc${exe}" -o "$out" keel_stl/src || { rm -rf "$out"; return 1; }
 
     if ! diff -ru keel_stl/docs "$out"; then
         echo "keel_stl/docs is stale - regenerate it with:"
-        echo "    ${debug_bin#./}/keeldoc -o keel_stl/docs kl=keel_stl/src"
+        echo "    ${debug_bin#./}/keeldoc -o keel_stl/docs keel_stl/src"
         rm -rf "$out"
         return 1
     fi

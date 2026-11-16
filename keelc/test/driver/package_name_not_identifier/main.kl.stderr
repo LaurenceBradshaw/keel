@@ -1,1 +1,1 @@
-keelc: --package name 'a-b' is not an identifier
+keelc: --package driver/package_name_not_identifier/a-b: name 'a-b' is not an identifier; name the package in its packageinfo.kl, `@package( name );`

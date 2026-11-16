@@ -4075,10 +4075,10 @@ struct kl_7prelude_textual__vtable
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-int32_t kl__4main__( void );
-struct kl_2kl6string_string kl__5build__IQ2kl6string_Q7prelude3strE__MQ7prelude3str( struct kl_7prelude_str );
-struct kl_2kl6string_string kl__5build__IQ2kl6string_3u64E__M3u64( uint64_t );
-struct kl_2kl6string_string kl__5build__IQ2kl6string_3i64E__M3i64( int64_t );
+int32_t kl_11string_from_4main__( void );
+struct kl_2kl6string_string kl_11string_from_5build__IQ2kl6string_Q7prelude3strE__MQ7prelude3str( struct kl_7prelude_str );
+struct kl_2kl6string_string kl_11string_from_5build__IQ2kl6string_3u64E__M3u64( uint64_t );
+struct kl_2kl6string_string kl_11string_from_5build__IQ2kl6string_3i64E__M3i64( int64_t );
 void kl_2kl4list_8truncate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
 uint64_t kl_2kl4list_4size__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
 struct kl_2kl6string_string* kl_2kl4list_14operator_index__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
@@ -4098,7 +4098,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 10 "string_from/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_11string_from_4main__( void )
 {
     int32_t kl_t0;
     struct kl_7prelude_str kl_t1;
@@ -4203,7 +4203,7 @@ int32_t kl__4main__( void )
 #line 17 "string_from/main.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t20, kl_t21, 3 );
 #line 17 "string_from/main.kl"
-    kl_t23 = kl__5build__IQ2kl6string_Q7prelude3strE__MQ7prelude3str( kl_t19 );
+    kl_t23 = kl_11string_from_5build__IQ2kl6string_Q7prelude3strE__MQ7prelude3str( kl_t19 );
 #line 17 "string_from/main.kl"
     kl_t24 = &kl_t23;
 #line 17 "string_from/main.kl"
@@ -4238,7 +4238,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb4:
 #line 22 "string_from/main.kl"
-    kl_t37 = kl__5build__IQ2kl6string_3u64E__M3u64( 42 );
+    kl_t37 = kl_11string_from_5build__IQ2kl6string_3u64E__M3u64( 42 );
 #line 22 "string_from/main.kl"
     kl_t38 = &kl_t37;
 #line 22 "string_from/main.kl"
@@ -4273,7 +4273,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb6:
 #line 27 "string_from/main.kl"
-    kl_t51 = kl__5build__IQ2kl6string_3i64E__M3i64( -7 );
+    kl_t51 = kl_11string_from_5build__IQ2kl6string_3i64E__M3i64( -7 );
 #line 27 "string_from/main.kl"
     kl_t52 = &kl_t51;
 #line 27 "string_from/main.kl"
@@ -4314,7 +4314,7 @@ int32_t kl__4main__( void )
 }
 
 #line 5 "string_from/main.kl"
-struct kl_2kl6string_string kl__5build__IQ2kl6string_Q7prelude3strE__MQ7prelude3str( struct kl_7prelude_str kl_value_1 )
+struct kl_2kl6string_string kl_11string_from_5build__IQ2kl6string_Q7prelude3strE__MQ7prelude3str( struct kl_7prelude_str kl_value_1 )
 {
     struct kl_2kl6string_string kl_t0;
     struct kl_2kl6string_string kl_t2;
@@ -4338,7 +4338,7 @@ struct kl_2kl6string_string kl__5build__IQ2kl6string_Q7prelude3strE__MQ7prelude3
 }
 
 #line 5 "string_from/main.kl"
-struct kl_2kl6string_string kl__5build__IQ2kl6string_3u64E__M3u64( uint64_t kl_value_1 )
+struct kl_2kl6string_string kl_11string_from_5build__IQ2kl6string_3u64E__M3u64( uint64_t kl_value_1 )
 {
     struct kl_2kl6string_string kl_t0;
     struct kl_2kl6string_string kl_t2;
@@ -4362,7 +4362,7 @@ struct kl_2kl6string_string kl__5build__IQ2kl6string_3u64E__M3u64( uint64_t kl_v
 }
 
 #line 5 "string_from/main.kl"
-struct kl_2kl6string_string kl__5build__IQ2kl6string_3i64E__M3i64( int64_t kl_value_1 )
+struct kl_2kl6string_string kl_11string_from_5build__IQ2kl6string_3i64E__M3i64( int64_t kl_value_1 )
 {
     struct kl_2kl6string_string kl_t0;
     struct kl_2kl6string_string kl_t2;
@@ -4577,7 +4577,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 10 "string_from/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_11string_from_4main__(  );
 #line 10 "string_from/main.kl"
     return kl_t0;
 #line 10 "string_from/main.kl"

@@ -9049,8 +9049,8 @@ struct kl_7prelude_textual__vtable
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-struct kl_2kl6string_string kl__4next__RQ2kl4file( struct kl_2kl2os_file* );
-int32_t kl__4main__( void );
+struct kl_2kl6string_string kl_12os_read_line_4next__RQ2kl4file( struct kl_2kl2os_file* );
+int32_t kl_12os_read_line_4main__( void );
 void kl_2kl4list_8truncate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
 uint64_t kl_2kl4list_4size__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
 struct kl_2kl6string_string* kl_2kl4list_14operator_index__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
@@ -9082,7 +9082,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 7 "os_read_line/main.kl"
-struct kl_2kl6string_string kl__4next__RQ2kl4file( struct kl_2kl2os_file* kl_f_1 )
+struct kl_2kl6string_string kl_12os_read_line_4next__RQ2kl4file( struct kl_2kl2os_file* kl_f_1 )
 {
     struct kl_2kl6string_string kl_t0;
     struct kl_2kl6string_string kl_line_2;
@@ -9201,7 +9201,7 @@ struct kl_2kl6string_string kl__4next__RQ2kl4file( struct kl_2kl2os_file* kl_f_1
 }
 
 #line 24 "os_read_line/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_12os_read_line_4main__( void )
 {
     int32_t kl_t0;
     struct kl_7prelude_str kl_t1;
@@ -9348,7 +9348,7 @@ int32_t kl__4main__( void )
     kl_f_26 = kl_t25.kl_2ok_value;
     kl_t27 = &kl_f_26;
 #line 37 "os_read_line/main.kl"
-    kl_t28 = kl__4next__RQ2kl4file( kl_t27 );
+    kl_t28 = kl_12os_read_line_4next__RQ2kl4file( kl_t27 );
 #line 37 "os_read_line/main.kl"
     kl_t29 = &kl_t28;
 #line 37 "os_read_line/main.kl"
@@ -9399,7 +9399,7 @@ int32_t kl__4main__( void )
     bb6:
     kl_t38 = &kl_f_26;
 #line 41 "os_read_line/main.kl"
-    kl_t39 = kl__4next__RQ2kl4file( kl_t38 );
+    kl_t39 = kl_12os_read_line_4next__RQ2kl4file( kl_t38 );
 #line 41 "os_read_line/main.kl"
     kl_t40 = &kl_t39;
 #line 41 "os_read_line/main.kl"
@@ -9435,7 +9435,7 @@ int32_t kl__4main__( void )
     bb8:
     kl_t49 = &kl_f_26;
 #line 45 "os_read_line/main.kl"
-    kl_t50 = kl__4next__RQ2kl4file( kl_t49 );
+    kl_t50 = kl_12os_read_line_4next__RQ2kl4file( kl_t49 );
 #line 45 "os_read_line/main.kl"
     kl_t51 = &kl_t50;
 #line 45 "os_read_line/main.kl"
@@ -9471,7 +9471,7 @@ int32_t kl__4main__( void )
     bb10:
     kl_t60 = &kl_f_26;
 #line 49 "os_read_line/main.kl"
-    kl_t61 = kl__4next__RQ2kl4file( kl_t60 );
+    kl_t61 = kl_12os_read_line_4next__RQ2kl4file( kl_t60 );
 #line 49 "os_read_line/main.kl"
     kl_t62 = &kl_t61;
 #line 49 "os_read_line/main.kl"
@@ -9898,7 +9898,7 @@ int main( void )
 #line 24 "os_read_line/main.kl"
     kl_2kl2os_0build(  );
 #line 24 "os_read_line/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_12os_read_line_4main__(  );
 #line 24 "os_read_line/main.kl"
     kl_2kl2os_0drop(  );
 #line 24 "os_read_line/main.kl"

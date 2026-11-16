@@ -321,9 +321,9 @@ struct kl_7prelude_textual__vtable
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__2id__3i32( int32_t );
-int64_t kl__4wide__3i64( int64_t );
-int32_t kl__4main__( void );
+int32_t kl_7codegen_2id__3i32( int32_t );
+int64_t kl_7codegen_4wide__3i64( int64_t );
+int32_t kl_7codegen_4main__( void );
 void kl_1t7console_5print__3i64_7textual( int64_t, struct kl_7prelude_textual__ref );
 void kl_1t7console_5print__3u64_7textual( uint64_t, struct kl_7prelude_textual__ref );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
@@ -333,7 +333,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 5 "codegen/overflow_wrap.kl"
-int32_t kl__2id__3i32( int32_t kl_x_1 )
+int32_t kl_7codegen_2id__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
 #line 7 "codegen/overflow_wrap.kl"
@@ -343,7 +343,7 @@ int32_t kl__2id__3i32( int32_t kl_x_1 )
 }
 
 #line 10 "codegen/overflow_wrap.kl"
-int64_t kl__4wide__3i64( int64_t kl_x_1 )
+int64_t kl_7codegen_4wide__3i64( int64_t kl_x_1 )
 {
     int64_t kl_t0;
 #line 12 "codegen/overflow_wrap.kl"
@@ -353,7 +353,7 @@ int64_t kl__4wide__3i64( int64_t kl_x_1 )
 }
 
 #line 15 "codegen/overflow_wrap.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_max_1;
@@ -415,12 +415,12 @@ int32_t kl__4main__( void )
     struct kl_7prelude_str* kl_t68;
     struct kl_7prelude_textual__ref kl_t69;
 #line 17 "codegen/overflow_wrap.kl"
-    kl_t2 = kl__2id__3i32( 2147483647 );
+    kl_t2 = kl_7codegen_2id__3i32( 2147483647 );
 #line 17 "codegen/overflow_wrap.kl"
     kl_max_1 = kl_t2;
     kl_t4 = -2147483647 - 1;
 #line 18 "codegen/overflow_wrap.kl"
-    kl_t5 = kl__2id__3i32( kl_t4 );
+    kl_t5 = kl_7codegen_2id__3i32( kl_t4 );
 #line 18 "codegen/overflow_wrap.kl"
     kl_min_3 = kl_t5;
 #line 20 "codegen/overflow_wrap.kl"
@@ -439,7 +439,7 @@ int32_t kl__4main__( void )
     kl_t13 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t12, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 20 "codegen/overflow_wrap.kl"
     kl_1t7console_5print__3i64_7textual( kl_t7, kl_t13 );
-    kl_t15 = kl__2id__3i32( 0 );
+    kl_t15 = kl_7codegen_2id__3i32( 0 );
 #line 21 "codegen/overflow_wrap.kl"
     kl_t16 = ( uint32_t ) kl_t15;
 #line 21 "codegen/overflow_wrap.kl"
@@ -481,7 +481,7 @@ int32_t kl__4main__( void )
     kl_t34 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t33, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 22 "codegen/overflow_wrap.kl"
     kl_1t7console_5print__3i64_7textual( kl_t28, kl_t34 );
-    kl_t36 = kl__2id__3i32( 65536 );
+    kl_t36 = kl_7codegen_2id__3i32( 65536 );
 #line 23 "codegen/overflow_wrap.kl"
     kl_t37 = kl_t36 * 65536;
 #line 23 "codegen/overflow_wrap.kl"
@@ -500,9 +500,9 @@ int32_t kl__4main__( void )
     kl_1t7console_5print__3i64_7textual( kl_t38, kl_t44 );
     kl_t46 = -9223372036854775807 - 1;
 #line 24 "codegen/overflow_wrap.kl"
-    kl_t47 = kl__4wide__3i64( kl_t46 );
+    kl_t47 = kl_7codegen_4wide__3i64( kl_t46 );
 #line 24 "codegen/overflow_wrap.kl"
-    kl_t48 = kl__4wide__3i64( -1 );
+    kl_t48 = kl_7codegen_4wide__3i64( -1 );
 #line 24 "codegen/overflow_wrap.kl"
     kl_t49 = kl_t48 != 0;
 #line 24 "codegen/overflow_wrap.kl"
@@ -569,7 +569,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 15 "codegen/overflow_wrap.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 15 "codegen/overflow_wrap.kl"
     return kl_t0;
 #line 15 "codegen/overflow_wrap.kl"

@@ -3,25 +3,25 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-int32_t kl__N__G = 4;
-int32_t kl__LOW__G = -3;
-double kl__HALF__G = 0.5;
-double kl__DROP__G = -0.25;
-bool kl__ON__G = true;
-int32_t kl__TOP__G = 1;
-int32_t kl__plain__G = 3;
-int32_t kl__LIMIT__GS1C = 3;
+int32_t kl_3opt_N__G = 4;
+int32_t kl_3opt_LOW__G = -3;
+double kl_3opt_HALF__G = 0.5;
+double kl_3opt_DROP__G = -0.25;
+bool kl_3opt_ON__G = true;
+int32_t kl_3opt_TOP__G = 1;
+int32_t kl_3opt_plain__G = 3;
+int32_t kl_3opt_LIMIT__GSQ3opt1C = 3;
 
-int32_t kl__6scaled__3i32( int32_t );
-int32_t kl__7lowered__3i32( int32_t );
-double kl__6halved__3f64( double );
-int32_t kl__8switched__( void );
-int32_t kl__6topped__( void );
-int32_t kl__4kept__3i32( int32_t );
-int32_t kl__4main__( void );
+int32_t kl_3opt_6scaled__3i32( int32_t );
+int32_t kl_3opt_7lowered__3i32( int32_t );
+double kl_3opt_6halved__3f64( double );
+int32_t kl_3opt_8switched__( void );
+int32_t kl_3opt_6topped__( void );
+int32_t kl_3opt_4kept__3i32( int32_t );
+int32_t kl_3opt_4main__( void );
 
 #line 26 "opt/const_reads.kl"
-int32_t kl__6scaled__3i32( int32_t kl_x_1 )
+int32_t kl_3opt_6scaled__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
@@ -34,7 +34,7 @@ int32_t kl__6scaled__3i32( int32_t kl_x_1 )
 }
 
 #line 31 "opt/const_reads.kl"
-int32_t kl__7lowered__3i32( int32_t kl_x_1 )
+int32_t kl_3opt_7lowered__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
 #line 33 "opt/const_reads.kl"
@@ -44,7 +44,7 @@ int32_t kl__7lowered__3i32( int32_t kl_x_1 )
 }
 
 #line 36 "opt/const_reads.kl"
-double kl__6halved__3f64( double kl_x_1 )
+double kl_3opt_6halved__3f64( double kl_x_1 )
 {
     double kl_t0;
     double kl_t2;
@@ -57,7 +57,7 @@ double kl__6halved__3f64( double kl_x_1 )
 }
 
 #line 42 "opt/const_reads.kl"
-int32_t kl__8switched__( void )
+int32_t kl_3opt_8switched__( void )
 {
     int32_t kl_t0;
 #line 46 "opt/const_reads.kl"
@@ -68,7 +68,7 @@ int32_t kl__8switched__( void )
 }
 
 #line 51 "opt/const_reads.kl"
-int32_t kl__6topped__( void )
+int32_t kl_3opt_6topped__( void )
 {
     int32_t kl_t0;
 #line 58 "opt/const_reads.kl"
@@ -79,23 +79,23 @@ int32_t kl__6topped__( void )
 }
 
 #line 63 "opt/const_reads.kl"
-int32_t kl__4kept__3i32( int32_t kl_x_1 )
+int32_t kl_3opt_4kept__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
 #line 65 "opt/const_reads.kl"
-    kl_t0 = kl_x_1 + kl__plain__G;
+    kl_t0 = kl_x_1 + kl_3opt_plain__G;
 #line 65 "opt/const_reads.kl"
     return kl_t0;
 }
 
 #line 68 "opt/const_reads.kl"
-int32_t kl__4main__( void )
+int32_t kl_3opt_4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_t1;
     bool kl_t2;
 #line 65 "opt/const_reads.kl"
-    kl_t1 = 1 + kl__plain__G;
+    kl_t1 = 1 + kl_3opt_plain__G;
 #line 86 "opt/const_reads.kl"
     kl_t2 = kl_t1 != 4;
 #line 86 "opt/const_reads.kl"
@@ -115,7 +115,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 68 "opt/const_reads.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_3opt_4main__(  );
 #line 68 "opt/const_reads.kl"
     return kl_t0;
 #line 68 "opt/const_reads.kl"

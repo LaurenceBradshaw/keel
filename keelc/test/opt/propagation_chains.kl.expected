@@ -3,44 +3,44 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Point;
-struct kl__Line;
-struct kl__Box;
+struct kl_3opt_Point;
+struct kl_3opt_Line;
+struct kl_3opt_Box;
 
-struct kl__Point
+struct kl_3opt_Point
 {
     int32_t kl_x;
     int32_t kl_y;
 };
-_Static_assert( sizeof( struct kl__Point ) == 8 && _Alignof( struct kl__Point ) == 4 && offsetof( struct kl__Point, kl_x ) == 0 && offsetof( struct kl__Point, kl_y ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_3opt_Point ) == 8 && _Alignof( struct kl_3opt_Point ) == 4 && offsetof( struct kl_3opt_Point, kl_x ) == 0 && offsetof( struct kl_3opt_Point, kl_y ) == 4, "layout" );
 
-struct kl__Line
+struct kl_3opt_Line
 {
-    struct kl__Point kl_a;
-    struct kl__Point kl_b;
+    struct kl_3opt_Point kl_a;
+    struct kl_3opt_Point kl_b;
 };
-_Static_assert( sizeof( struct kl__Line ) == 16 && _Alignof( struct kl__Line ) == 4 && offsetof( struct kl__Line, kl_a ) == 0 && offsetof( struct kl__Line, kl_b ) == 8, "layout" );
+_Static_assert( sizeof( struct kl_3opt_Line ) == 16 && _Alignof( struct kl_3opt_Line ) == 4 && offsetof( struct kl_3opt_Line, kl_a ) == 0 && offsetof( struct kl_3opt_Line, kl_b ) == 8, "layout" );
 
-struct kl__Box
+struct kl_3opt_Box
 {
     int64_t kl_value;
 };
-_Static_assert( sizeof( struct kl__Box ) == 8 && _Alignof( struct kl__Box ) == 8 && offsetof( struct kl__Box, kl_value ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_3opt_Box ) == 8 && _Alignof( struct kl_3opt_Box ) == 8 && offsetof( struct kl_3opt_Box, kl_value ) == 0, "layout" );
 
-void kl__3Box__R3Box_3i64__ctor( struct kl__Box*, int64_t );
-void kl__3Box__dtor( struct kl__Box* );
-int64_t kl__4take__M3Box( struct kl__Box );
-struct kl__Box kl__4pass__M3Box( struct kl__Box );
-void kl__5touch__5Point_O3i32( struct kl__Point, int32_t* );
-int32_t kl__6looped__3i64( int64_t );
-int32_t kl__9forwarded__5Point( struct kl__Point );
-int32_t kl__7written__5Point( struct kl__Point );
-int32_t kl__6joined__5Point_4bool( struct kl__Point, bool );
-int32_t kl__6nested__4Line( struct kl__Line );
-int32_t kl__4main__( void );
+void kl_3opt_3Box__RQ3opt3Box_3i64__ctor( struct kl_3opt_Box*, int64_t );
+void kl_3opt_3Box__dtor( struct kl_3opt_Box* );
+int64_t kl_3opt_4take__MQ3opt3Box( struct kl_3opt_Box );
+struct kl_3opt_Box kl_3opt_4pass__MQ3opt3Box( struct kl_3opt_Box );
+void kl_3opt_5touch__Q3opt5Point_O3i32( struct kl_3opt_Point, int32_t* );
+int32_t kl_3opt_6looped__3i64( int64_t );
+int32_t kl_3opt_9forwarded__Q3opt5Point( struct kl_3opt_Point );
+int32_t kl_3opt_7written__Q3opt5Point( struct kl_3opt_Point );
+int32_t kl_3opt_6joined__Q3opt5Point_4bool( struct kl_3opt_Point, bool );
+int32_t kl_3opt_6nested__Q3opt4Line( struct kl_3opt_Line );
+int32_t kl_3opt_4main__( void );
 
 #line 20 "opt/propagation_chains.kl"
-void kl__3Box__R3Box_3i64__ctor( struct kl__Box* kl_this_1, int64_t kl_v_2 )
+void kl_3opt_3Box__RQ3opt3Box_3i64__ctor( struct kl_3opt_Box* kl_this_1, int64_t kl_v_2 )
 {
     ( *kl_this_1 ).kl_value = kl_v_2;
     return;
@@ -48,7 +48,7 @@ void kl__3Box__R3Box_3i64__ctor( struct kl__Box* kl_this_1, int64_t kl_v_2 )
 }
 
 #line 25 "opt/propagation_chains.kl"
-void kl__3Box__dtor( struct kl__Box* kl_this_1 )
+void kl_3opt_3Box__dtor( struct kl_3opt_Box* kl_this_1 )
 {
     ( void ) kl_this_1;
 #line 25 "opt/propagation_chains.kl"
@@ -57,7 +57,7 @@ void kl__3Box__dtor( struct kl__Box* kl_this_1 )
 }
 
 #line 30 "opt/propagation_chains.kl"
-int64_t kl__4take__M3Box( struct kl__Box kl_b_1 )
+int64_t kl_3opt_4take__MQ3opt3Box( struct kl_3opt_Box kl_b_1 )
 {
     int64_t kl_t0;
 #line 32 "opt/propagation_chains.kl"
@@ -67,9 +67,9 @@ int64_t kl__4take__M3Box( struct kl__Box kl_b_1 )
 }
 
 #line 35 "opt/propagation_chains.kl"
-struct kl__Box kl__4pass__M3Box( struct kl__Box kl_b_1 )
+struct kl_3opt_Box kl_3opt_4pass__MQ3opt3Box( struct kl_3opt_Box kl_b_1 )
 {
-    struct kl__Box kl_t0;
+    struct kl_3opt_Box kl_t0;
 #line 37 "opt/propagation_chains.kl"
     kl_t0 = kl_b_1;
 #line 37 "opt/propagation_chains.kl"
@@ -77,7 +77,7 @@ struct kl__Box kl__4pass__M3Box( struct kl__Box kl_b_1 )
 }
 
 #line 41 "opt/propagation_chains.kl"
-void kl__5touch__5Point_O3i32( struct kl__Point kl_p_1, int32_t* kl_r_2 )
+void kl_3opt_5touch__Q3opt5Point_O3i32( struct kl_3opt_Point kl_p_1, int32_t* kl_r_2 )
 {
     ( *kl_r_2 ) = kl_p_1.kl_y;
     return;
@@ -85,7 +85,7 @@ void kl__5touch__5Point_O3i32( struct kl__Point kl_p_1, int32_t* kl_r_2 )
 }
 
 #line 46 "opt/propagation_chains.kl"
-int32_t kl__6looped__3i64( int64_t kl_n_1 )
+int32_t kl_3opt_6looped__3i64( int64_t kl_n_1 )
 {
     int32_t kl_t0;
     int64_t kl_t_2;
@@ -128,7 +128,7 @@ int32_t kl__6looped__3i64( int64_t kl_n_1 )
 }
 
 #line 57 "opt/propagation_chains.kl"
-int32_t kl__9forwarded__5Point( struct kl__Point kl_p_1 )
+int32_t kl_3opt_9forwarded__Q3opt5Point( struct kl_3opt_Point kl_p_1 )
 {
     int32_t kl_t0;
     int32_t kl_r_2;
@@ -140,7 +140,7 @@ int32_t kl__9forwarded__5Point( struct kl__Point kl_p_1 )
     kl_r_2 = 0;
     kl_t3 = &kl_r_2;
 #line 61 "opt/propagation_chains.kl"
-    kl__5touch__5Point_O3i32( kl_p_1, kl_t3 );
+    kl_3opt_5touch__Q3opt5Point_O3i32( kl_p_1, kl_t3 );
     kl_t5 = kl_p_1.kl_x * kl_p_1.kl_x;
 #line 62 "opt/propagation_chains.kl"
     kl_t6 = kl_t5 + kl_r_2;
@@ -164,7 +164,7 @@ int32_t kl__9forwarded__5Point( struct kl__Point kl_p_1 )
 }
 
 #line 66 "opt/propagation_chains.kl"
-int32_t kl__7written__5Point( struct kl__Point kl_p_1 )
+int32_t kl_3opt_7written__Q3opt5Point( struct kl_3opt_Point kl_p_1 )
 {
     int32_t kl_t0;
     int32_t kl_a_2;
@@ -179,7 +179,7 @@ int32_t kl__7written__5Point( struct kl__Point kl_p_1 )
     kl_r_3 = 0;
     kl_t4 = &kl_r_3;
 #line 71 "opt/propagation_chains.kl"
-    kl__5touch__5Point_O3i32( kl_p_1, kl_t4 );
+    kl_3opt_5touch__Q3opt5Point_O3i32( kl_p_1, kl_t4 );
     kl_t6 = kl_a_2 * kl_a_2;
 #line 72 "opt/propagation_chains.kl"
     kl_t7 = kl_t6 + kl_r_3;
@@ -203,7 +203,7 @@ int32_t kl__7written__5Point( struct kl__Point kl_p_1 )
 }
 
 #line 76 "opt/propagation_chains.kl"
-int32_t kl__6joined__5Point_4bool( struct kl__Point kl_p_1, bool kl_c_2 )
+int32_t kl_3opt_6joined__Q3opt5Point_4bool( struct kl_3opt_Point kl_p_1, bool kl_c_2 )
 {
     int32_t kl_t0;
     int32_t kl_a_3;
@@ -228,7 +228,7 @@ int32_t kl__6joined__5Point_4bool( struct kl__Point kl_p_1, bool kl_c_2 )
     kl_r_4 = 0;
     kl_t5 = &kl_r_4;
 #line 88 "opt/propagation_chains.kl"
-    kl__5touch__5Point_O3i32( kl_p_1, kl_t5 );
+    kl_3opt_5touch__Q3opt5Point_O3i32( kl_p_1, kl_t5 );
     kl_t7 = kl_a_3 * kl_a_3;
 #line 89 "opt/propagation_chains.kl"
     kl_t8 = kl_t7 + kl_r_4;
@@ -252,7 +252,7 @@ int32_t kl__6joined__5Point_4bool( struct kl__Point kl_p_1, bool kl_c_2 )
 }
 
 #line 93 "opt/propagation_chains.kl"
-int32_t kl__6nested__4Line( struct kl__Line kl_l_1 )
+int32_t kl_3opt_6nested__Q3opt4Line( struct kl_3opt_Line kl_l_1 )
 {
     int32_t kl_t0;
     int32_t kl_r_2;
@@ -263,7 +263,7 @@ int32_t kl__6nested__4Line( struct kl__Line kl_l_1 )
     kl_r_2 = 0;
     kl_t3 = &kl_r_2;
 #line 97 "opt/propagation_chains.kl"
-    kl__5touch__5Point_O3i32( kl_l_1.kl_b, kl_t3 );
+    kl_3opt_5touch__Q3opt5Point_O3i32( kl_l_1.kl_b, kl_t3 );
     kl_t5 = kl_l_1.kl_b.kl_x + kl_r_2;
 #line 98 "opt/propagation_chains.kl"
     kl_t6 = kl_t5 == 7;
@@ -285,15 +285,15 @@ int32_t kl__6nested__4Line( struct kl__Line kl_l_1 )
 }
 
 #line 101 "opt/propagation_chains.kl"
-int32_t kl__4main__( void )
+int32_t kl_3opt_4main__( void )
 {
     int32_t kl_t0;
     bool kl_t1;
-    struct kl__Point kl_p_2;
+    struct kl_3opt_Point kl_p_2;
     bool kl_t3;
-    struct kl__Point kl_p_4;
+    struct kl_3opt_Point kl_p_4;
     bool kl_t5;
-    struct kl__Point kl_t6;
+    struct kl_3opt_Point kl_t6;
     bool kl_t7;
     int32_t kl_r_8;
     int32_t* kl_t9;
@@ -310,9 +310,9 @@ int32_t kl__4main__( void )
     int32_t kl_t23;
     int32_t kl_t24;
     bool kl_t25;
-    struct kl__Point kl_l_26;
+    struct kl_3opt_Point kl_l_26;
 #line 103 "opt/propagation_chains.kl"
-    kl_t0 = kl__6looped__3i64( 4 );
+    kl_t0 = kl_3opt_6looped__3i64( 4 );
     kl_t1 = kl_t0 == 0;
 #line 104 "opt/propagation_chains.kl"
     if ( kl_t1 ) goto bb1; else goto bb2;
@@ -324,7 +324,7 @@ int32_t kl__4main__( void )
     kl_r_20 = 0;
     kl_t21 = &kl_r_20;
 #line 61 "opt/propagation_chains.kl"
-    kl__5touch__5Point_O3i32( kl_p_2, kl_t21 );
+    kl_3opt_5touch__Q3opt5Point_O3i32( kl_p_2, kl_t21 );
     kl_t23 = kl_p_2.kl_x * kl_p_2.kl_x;
 #line 62 "opt/propagation_chains.kl"
     kl_t24 = kl_t23 + kl_r_20;
@@ -347,7 +347,7 @@ int32_t kl__4main__( void )
     kl_r_14 = 0;
     kl_t15 = &kl_r_14;
 #line 71 "opt/propagation_chains.kl"
-    kl__5touch__5Point_O3i32( kl_p_4, kl_t15 );
+    kl_3opt_5touch__Q3opt5Point_O3i32( kl_p_4, kl_t15 );
     kl_t17 = kl_a_13 * kl_a_13;
 #line 72 "opt/propagation_chains.kl"
     kl_t18 = kl_t17 + kl_r_14;
@@ -365,7 +365,7 @@ int32_t kl__4main__( void )
 #line 114 "opt/propagation_chains.kl"
     kl_t6.kl_y = 2;
 #line 114 "opt/propagation_chains.kl"
-    kl_t0 = kl__6joined__5Point_4bool( kl_t6, true );
+    kl_t0 = kl_3opt_6joined__Q3opt5Point_4bool( kl_t6, true );
 #line 112 "opt/propagation_chains.kl"
     goto bb6;
     bb6:
@@ -381,7 +381,7 @@ int32_t kl__4main__( void )
     kl_r_8 = 0;
     kl_t9 = &kl_r_8;
 #line 97 "opt/propagation_chains.kl"
-    kl__5touch__5Point_O3i32( kl_l_26, kl_t9 );
+    kl_3opt_5touch__Q3opt5Point_O3i32( kl_l_26, kl_t9 );
     kl_t11 = kl_l_26.kl_x + kl_r_8;
 #line 98 "opt/propagation_chains.kl"
     kl_t12 = kl_t11 == 7;
@@ -436,7 +436,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 101 "opt/propagation_chains.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_3opt_4main__(  );
 #line 101 "opt/propagation_chains.kl"
     return kl_t0;
 #line 101 "opt/propagation_chains.kl"

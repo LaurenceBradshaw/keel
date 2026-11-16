@@ -3,46 +3,46 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Box__I3f64E;
-struct kl__Box__I3i32E;
-struct kl__Outer__I3i32E;
-struct kl__Outer__I3f64E;
+struct kl_7codegen_Box__I3f64E;
+struct kl_7codegen_Box__I3i32E;
+struct kl_7codegen_Outer__I3i32E;
+struct kl_7codegen_Outer__I3f64E;
 
-struct kl__Box__I3f64E
+struct kl_7codegen_Box__I3f64E
 {
     double kl_v;
 };
-_Static_assert( sizeof( struct kl__Box__I3f64E ) == 8 && _Alignof( struct kl__Box__I3f64E ) == 8 && offsetof( struct kl__Box__I3f64E, kl_v ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Box__I3f64E ) == 8 && _Alignof( struct kl_7codegen_Box__I3f64E ) == 8 && offsetof( struct kl_7codegen_Box__I3f64E, kl_v ) == 0, "layout" );
 
-struct kl__Box__I3i32E
+struct kl_7codegen_Box__I3i32E
 {
     int32_t kl_v;
 };
-_Static_assert( sizeof( struct kl__Box__I3i32E ) == 4 && _Alignof( struct kl__Box__I3i32E ) == 4 && offsetof( struct kl__Box__I3i32E, kl_v ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Box__I3i32E ) == 4 && _Alignof( struct kl_7codegen_Box__I3i32E ) == 4 && offsetof( struct kl_7codegen_Box__I3i32E, kl_v ) == 0, "layout" );
 
-struct kl__Outer__I3i32E
+struct kl_7codegen_Outer__I3i32E
 {
-    struct kl__Box__I3i32E kl_inner;
+    struct kl_7codegen_Box__I3i32E kl_inner;
     int32_t kl_tag;
 };
-_Static_assert( sizeof( struct kl__Outer__I3i32E ) == 8 && _Alignof( struct kl__Outer__I3i32E ) == 4 && offsetof( struct kl__Outer__I3i32E, kl_inner ) == 0 && offsetof( struct kl__Outer__I3i32E, kl_tag ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Outer__I3i32E ) == 8 && _Alignof( struct kl_7codegen_Outer__I3i32E ) == 4 && offsetof( struct kl_7codegen_Outer__I3i32E, kl_inner ) == 0 && offsetof( struct kl_7codegen_Outer__I3i32E, kl_tag ) == 4, "layout" );
 
-struct kl__Outer__I3f64E
+struct kl_7codegen_Outer__I3f64E
 {
-    struct kl__Box__I3f64E kl_inner;
+    struct kl_7codegen_Box__I3f64E kl_inner;
     int32_t kl_tag;
 };
-_Static_assert( sizeof( struct kl__Outer__I3f64E ) == 16 && _Alignof( struct kl__Outer__I3f64E ) == 8 && offsetof( struct kl__Outer__I3f64E, kl_inner ) == 0 && offsetof( struct kl__Outer__I3f64E, kl_tag ) == 8, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Outer__I3f64E ) == 16 && _Alignof( struct kl_7codegen_Outer__I3f64E ) == 8 && offsetof( struct kl_7codegen_Outer__I3f64E, kl_inner ) == 0 && offsetof( struct kl_7codegen_Outer__I3f64E, kl_tag ) == 8, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-double kl__9unbox_f64__3BoxI3f64E( struct kl__Box__I3f64E );
-int32_t kl__4main__( void );
-struct kl__Box__I3i32E kl__4hold__I3i32E__3i32( int32_t );
-struct kl__Box__I3f64E kl__4hold__I3f64E__3f64( double );
+double kl_7codegen_9unbox_f64__Q7codegen3BoxI3f64E( struct kl_7codegen_Box__I3f64E );
+int32_t kl_7codegen_4main__( void );
+struct kl_7codegen_Box__I3i32E kl_7codegen_4hold__I3i32E__3i32( int32_t );
+struct kl_7codegen_Box__I3f64E kl_7codegen_4hold__I3f64E__3f64( double );
 
 #line 30 "codegen/generics_construction.kl"
-double kl__9unbox_f64__3BoxI3f64E( struct kl__Box__I3f64E kl_b_1 )
+double kl_7codegen_9unbox_f64__Q7codegen3BoxI3f64E( struct kl_7codegen_Box__I3f64E kl_b_1 )
 {
     double kl_t0;
 #line 32 "codegen/generics_construction.kl"
@@ -52,39 +52,39 @@ double kl__9unbox_f64__3BoxI3f64E( struct kl__Box__I3f64E kl_b_1 )
 }
 
 #line 35 "codegen/generics_construction.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__Box__I3i32E kl_a_1;
-    struct kl__Box__I3i32E kl_t2;
+    struct kl_7codegen_Box__I3i32E kl_a_1;
+    struct kl_7codegen_Box__I3i32E kl_t2;
     bool kl_t3;
-    struct kl__Box__I3i32E kl_named_4;
-    struct kl__Box__I3i32E kl_t5;
+    struct kl_7codegen_Box__I3i32E kl_named_4;
+    struct kl_7codegen_Box__I3i32E kl_t5;
     bool kl_t6;
-    struct kl__Box__I3f64E kl_wide_7;
-    struct kl__Box__I3f64E kl_t8;
+    struct kl_7codegen_Box__I3f64E kl_wide_7;
+    struct kl_7codegen_Box__I3f64E kl_t8;
     bool kl_t9;
     bool kl_t10;
-    struct kl__Box__I3f64E kl_frac_11;
-    struct kl__Box__I3f64E kl_t12;
+    struct kl_7codegen_Box__I3f64E kl_frac_11;
+    struct kl_7codegen_Box__I3f64E kl_t12;
     bool kl_t13;
     bool kl_t14;
-    struct kl__Box__I3f64E kl_t15;
+    struct kl_7codegen_Box__I3f64E kl_t15;
     double kl_t16;
     bool kl_t17;
-    struct kl__Outer__I3i32E kl_nested_18;
-    struct kl__Outer__I3i32E kl_t19;
-    struct kl__Box__I3i32E kl_t20;
+    struct kl_7codegen_Outer__I3i32E kl_nested_18;
+    struct kl_7codegen_Outer__I3i32E kl_t19;
+    struct kl_7codegen_Box__I3i32E kl_t20;
     bool kl_t21;
     bool kl_t22;
-    struct kl__Outer__I3f64E kl_wide_nest_23;
-    struct kl__Outer__I3f64E kl_t24;
-    struct kl__Box__I3f64E kl_t25;
+    struct kl_7codegen_Outer__I3f64E kl_wide_nest_23;
+    struct kl_7codegen_Outer__I3f64E kl_t24;
+    struct kl_7codegen_Box__I3f64E kl_t25;
     bool kl_t26;
-    struct kl__Box__I3i32E kl_held_27;
-    struct kl__Box__I3i32E kl_t28;
-    struct kl__Box__I3f64E kl_held_wide_29;
-    struct kl__Box__I3f64E kl_t30;
+    struct kl_7codegen_Box__I3i32E kl_held_27;
+    struct kl_7codegen_Box__I3i32E kl_t28;
+    struct kl_7codegen_Box__I3f64E kl_held_wide_29;
+    struct kl_7codegen_Box__I3f64E kl_t30;
     bool kl_t31;
     bool kl_t32;
     bool kl_t33;
@@ -168,7 +168,7 @@ int32_t kl__4main__( void )
 #line 81 "codegen/generics_construction.kl"
     kl_t15.kl_v = 3.0;
 #line 81 "codegen/generics_construction.kl"
-    kl_t16 = kl__9unbox_f64__3BoxI3f64E( kl_t15 );
+    kl_t16 = kl_7codegen_9unbox_f64__Q7codegen3BoxI3f64E( kl_t15 );
 #line 81 "codegen/generics_construction.kl"
     kl_t17 = kl_t16 != 3.0;
 #line 81 "codegen/generics_construction.kl"
@@ -222,10 +222,10 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb20:
 #line 109 "codegen/generics_construction.kl"
-    kl_t28 = kl__4hold__I3i32E__3i32( 5 );
+    kl_t28 = kl_7codegen_4hold__I3i32E__3i32( 5 );
 #line 109 "codegen/generics_construction.kl"
     kl_held_27 = kl_t28;
-    kl_t30 = kl__4hold__I3f64E__3f64( 2.5 );
+    kl_t30 = kl_7codegen_4hold__I3f64E__3f64( 2.5 );
 #line 110 "codegen/generics_construction.kl"
     kl_held_wide_29 = kl_t30;
 #line 112 "codegen/generics_construction.kl"
@@ -293,10 +293,10 @@ int32_t kl__4main__( void )
 }
 
 #line 25 "codegen/generics_construction.kl"
-struct kl__Box__I3i32E kl__4hold__I3i32E__3i32( int32_t kl_v_1 )
+struct kl_7codegen_Box__I3i32E kl_7codegen_4hold__I3i32E__3i32( int32_t kl_v_1 )
 {
-    struct kl__Box__I3i32E kl_t0;
-    struct kl__Box__I3i32E kl_t2;
+    struct kl_7codegen_Box__I3i32E kl_t0;
+    struct kl_7codegen_Box__I3i32E kl_t2;
 #line 27 "codegen/generics_construction.kl"
     kl_t2.kl_v = kl_v_1;
 #line 27 "codegen/generics_construction.kl"
@@ -306,10 +306,10 @@ struct kl__Box__I3i32E kl__4hold__I3i32E__3i32( int32_t kl_v_1 )
 }
 
 #line 25 "codegen/generics_construction.kl"
-struct kl__Box__I3f64E kl__4hold__I3f64E__3f64( double kl_v_1 )
+struct kl_7codegen_Box__I3f64E kl_7codegen_4hold__I3f64E__3f64( double kl_v_1 )
 {
-    struct kl__Box__I3f64E kl_t0;
-    struct kl__Box__I3f64E kl_t2;
+    struct kl_7codegen_Box__I3f64E kl_t0;
+    struct kl_7codegen_Box__I3f64E kl_t2;
 #line 27 "codegen/generics_construction.kl"
     kl_t2.kl_v = kl_v_1;
 #line 27 "codegen/generics_construction.kl"
@@ -322,7 +322,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 35 "codegen/generics_construction.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 35 "codegen/generics_construction.kl"
     return kl_t0;
 #line 35 "codegen/generics_construction.kl"

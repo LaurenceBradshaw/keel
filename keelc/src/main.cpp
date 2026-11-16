@@ -88,7 +88,7 @@ int main( int argc, char** argv )
         ( "declarations",    "With --diagnostics=json, also list every declaration with its signature and doc" )
         ( "with-prelude",    "With --declarations, list the prelude's declarations too" )
         ( "as-prelude",      "With --check, check the input as the prelude, in place of the one keelc carries" )
-        ( "package",         "A package and its directory, as name=<dir>; may be repeated", cxxopts::value<std::vector<std::string>>() )
+        ( "package",         "A package's folder, named by its packageinfo.kl or the folder; may be repeated", cxxopts::value<std::vector<std::string>>() )
         ( "W",               "Warnings: -W<name>, -Wno-<name>, -Werror, -Werror=<name>", cxxopts::value<std::vector<std::string>>() )
         ( "debug",           "Keep assert and overflow checks; without it an assert's condition is checked but never run" )
         ( "O",               "Optimisation level, -O0 to -O3: -O0 is the program as lowered; -O2 by default, -O1 under --debug", cxxopts::value<keel::u32>() )
@@ -102,7 +102,7 @@ int main( int argc, char** argv )
         ( "l,library",       "Link this C library, as -l does; may be repeated", cxxopts::value<std::vector<std::string>>() )
         ( "L,library-path",  "Search this directory for -l libraries; may be repeated", cxxopts::value<std::vector<std::string>>() )
         ( "print-prelude",   "Print the prelude every program sees, and exit" )
-        ( "print-config",    "Print this keelc's build id and package folders, and exit" )
+        ( "print-config",    "Print this keelc's build id and each package's name and folder, and exit" )
         ( "v,version",       "Print version information and exit" )
         ( "h,help",          "Print usage and exit" )
         ( "input",           "Source file",                        cxxopts::value<std::string>() )
@@ -275,41 +275,74 @@ int main( int argc, char** argv )
     {
         for( const std::string& spec : args["package"].as<std::vector<std::string>>() )
         {
-            const std::size_t equals = spec.find( '=' );
+            const std::filesystem::path      root     = spec;
+            const std::optional<std::string> declared = keel::declared_package_name( root );
+            const std::string                name     = declared.value_or( keel::folder_package_name( root ) );
 
-            if( equals == std::string::npos || equals == 0 || equals + 1 == spec.size() )
+            if( const std::size_t equals = spec.find( '=' ); equals != std::string::npos && !std::filesystem::exists( root ) )
             {
-                fmt::print( stderr, "keelc: --package takes name=<dir>, not '{}'\n", spec );
+                const std::string folder = spec.substr( equals + 1 );
+                const std::string named = keel::declared_package_name( folder ).value_or( keel::folder_package_name( folder ) );
+                fmt::print(
+                    stderr,
+                    "keelc: --package takes the package's folder, not '{}': write --package {}{}\n",
+                    spec,
+                    folder,
+                    named == spec.substr( 0, equals )
+                        ? ""
+                        : fmt::format( ", with `@package( {} );` in its packageinfo.kl", spec.substr( 0, equals ) )
+                );
                 return 2;
             }
 
-            const std::string name = spec.substr( 0, equals );
-
-            if( const std::optional<std::string> error = keel::package_name_error( name, interner ) )
+            if( !std::filesystem::is_directory( root ) )
             {
-                fmt::print( stderr, "keelc: --package {}\n", *error );
+                fmt::print( stderr, "keelc: --package takes a folder, and '{}' is not one\n", spec );
                 return 2;
             }
 
-            packages.push_back( keel::Package { .name = name, .root = spec.substr( equals + 1 ) } );
+            // A malformed declaration is the loader's to report, at its place in the file.
+            if( const std::optional<std::string> error = keel::package_name_error( name, interner ); error && !declared )
+            {
+                fmt::print(
+                    stderr,
+                    "keelc: --package {}: {}; name the package in its packageinfo.kl, `@package( name );`\n",
+                    spec,
+                    *error
+                );
+                return 2;
+            }
+
+            if( const auto same = std::ranges::find( packages, name, &keel::Package::name ); same != packages.end() )
+            {
+                fmt::print(
+                    stderr,
+                    "keelc: the packages in '{}' and '{}' are both named '{}'\n",
+                    same->root.generic_string(),
+                    spec,
+                    name
+                );
+                return 2;
+            }
+
+            packages.push_back( keel::Package { .name = name, .root = root } );
         }
     }
 
     // kl beside keelc unless --package names another.
-    auto kl = std::ranges::find( packages, std::string( "kl" ), &keel::Package::name );
-    if( kl == packages.end() && std::filesystem::is_directory( keel::library_folder() / "kl" ) )
+    if( std::ranges::find( packages, std::string( "kl" ), &keel::Package::name ) == packages.end() &&
+        std::filesystem::is_directory( keel::library_folder() / "kl" ) )
     {
         packages.push_back( keel::Package { .name = "kl", .root = keel::library_folder() / "kl" } );
-        kl = packages.end() - 1;
     }
 
-    // After --package, so the kl line shows the folder keelc would use.
+    // After --package, so each line shows the name and folder keelc would use, kl's last when implied.
     if( args.count( "print-config" ) )
     {
         fmt::print( "build {}\n", keel::build_id() );
-        if( kl != packages.end() )
+        for( const keel::Package& package : packages )
         {
-            fmt::print( "package kl {}\n", kl->root.generic_string() );
+            fmt::print( "package {} {}\n", package.name, package.root.generic_string() );
         }
         return 0;
     }

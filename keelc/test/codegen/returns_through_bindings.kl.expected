@@ -4034,7 +4034,7 @@ void kl_2kl6string_string__drop( void* kl_t1 )
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__P;
+struct kl_7codegen_P;
 struct kl_2kl6string_string;
 struct kl_7prelude_str;
 struct kl_2kl4list_list__IQ2kl6stringE;
@@ -4042,11 +4042,11 @@ struct kl_2kl8optional_optional__IQ2kl6stringE;
 struct kl_2kl4list_list__I3i32E;
 struct kl__A3_3i32;
 
-struct kl__P
+struct kl_7codegen_P
 {
     int32_t kl_x;
 };
-_Static_assert( sizeof( struct kl__P ) == 4 && _Alignof( struct kl__P ) == 4 && offsetof( struct kl__P, kl_x ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_P ) == 4 && _Alignof( struct kl_7codegen_P ) == 4 && offsetof( struct kl_7codegen_P, kl_x ) == 0, "layout" );
 
 struct kl_2kl6string_string
 {
@@ -4104,12 +4104,12 @@ void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-int32_t* kl__19through_a_ref_local__1P( struct kl__P* );
-int32_t* kl__28through_a_writable_ref_local__R1P( struct kl__P* );
-int32_t* kl__11first_above__Q2kl4listI3i32E_3i32_3i32( struct kl_2kl4list_list__I3i32E*, int32_t, int32_t* );
-int32_t* kl__7last_of__RA3_3i32_R3i32( struct kl__A3_3i32*, int32_t* );
-struct kl_2kl6string_string* kl__4held__Q2kl8optionalIQ2kl6stringE_Q2kl6string( struct kl_2kl8optional_optional__IQ2kl6stringE*, struct kl_2kl6string_string* );
-int32_t kl__4main__( void );
+int32_t* kl_7codegen_19through_a_ref_local__Q7codegen1P( struct kl_7codegen_P* );
+int32_t* kl_7codegen_28through_a_writable_ref_local__RQ7codegen1P( struct kl_7codegen_P* );
+int32_t* kl_7codegen_11first_above__Q2kl4listI3i32E_3i32_3i32( struct kl_2kl4list_list__I3i32E*, int32_t, int32_t* );
+int32_t* kl_7codegen_7last_of__RA3_3i32_R3i32( struct kl__A3_3i32*, int32_t* );
+struct kl_2kl6string_string* kl_7codegen_4held__Q2kl8optionalIQ2kl6stringE_Q2kl6string( struct kl_2kl8optional_optional__IQ2kl6stringE*, struct kl_2kl6string_string* );
+int32_t kl_7codegen_4main__( void );
 void kl_2kl4list_4list__I3i32E__RQ2kl4listI3i32E__ctor( struct kl_2kl4list_list__I3i32E* );
 void kl_2kl4list_4push__I3i32E__SQ2kl4listI3i32E_M3i32( struct kl_2kl4list_list__I3i32E*, int32_t );
 int32_t* kl_2kl4list_14operator_index__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list_list__I3i32E*, uint64_t );
@@ -4133,7 +4133,7 @@ void kl_2kl4list_4list__IQ2kl6stringE__dtor( struct kl_2kl4list_list__IQ2kl6stri
 void kl_2kl8optional_8optional__IQ2kl6stringE__dtor( struct kl_2kl8optional_optional__IQ2kl6stringE* );
 
 #line 12 "codegen/returns_through_bindings.kl"
-int32_t* kl__19through_a_ref_local__1P( struct kl__P* kl_a_1 )
+int32_t* kl_7codegen_19through_a_ref_local__Q7codegen1P( struct kl_7codegen_P* kl_a_1 )
 {
     int32_t* kl_t0;
     int32_t* kl_p_2;
@@ -4147,7 +4147,7 @@ int32_t* kl__19through_a_ref_local__1P( struct kl__P* kl_a_1 )
 }
 
 #line 19 "codegen/returns_through_bindings.kl"
-int32_t* kl__28through_a_writable_ref_local__R1P( struct kl__P* kl_p_1 )
+int32_t* kl_7codegen_28through_a_writable_ref_local__RQ7codegen1P( struct kl_7codegen_P* kl_p_1 )
 {
     int32_t* kl_t0;
     int32_t* kl_x_2;
@@ -4159,7 +4159,7 @@ int32_t* kl__28through_a_writable_ref_local__R1P( struct kl__P* kl_p_1 )
 }
 
 #line 25 "codegen/returns_through_bindings.kl"
-int32_t* kl__11first_above__Q2kl4listI3i32E_3i32_3i32( struct kl_2kl4list_list__I3i32E* kl_v_1, int32_t kl_floor_2, int32_t* kl_fallback_3 )
+int32_t* kl_7codegen_11first_above__Q2kl4listI3i32E_3i32_3i32( struct kl_2kl4list_list__I3i32E* kl_v_1, int32_t kl_floor_2, int32_t* kl_fallback_3 )
 {
     int32_t* kl_t0;
     struct kl_2kl4list_list__I3i32E* kl_t4;
@@ -4218,7 +4218,7 @@ int32_t* kl__11first_above__Q2kl4listI3i32E_3i32_3i32( struct kl_2kl4list_list__
 }
 
 #line 37 "codegen/returns_through_bindings.kl"
-int32_t* kl__7last_of__RA3_3i32_R3i32( struct kl__A3_3i32* kl_a_1, int32_t* kl_fallback_2 )
+int32_t* kl_7codegen_7last_of__RA3_3i32_R3i32( struct kl__A3_3i32* kl_a_1, int32_t* kl_fallback_2 )
 {
     int32_t* kl_t0;
     struct kl__A3_3i32* kl_t3;
@@ -4269,7 +4269,7 @@ int32_t* kl__7last_of__RA3_3i32_R3i32( struct kl__A3_3i32* kl_a_1, int32_t* kl_f
 }
 
 #line 49 "codegen/returns_through_bindings.kl"
-struct kl_2kl6string_string* kl__4held__Q2kl8optionalIQ2kl6stringE_Q2kl6string( struct kl_2kl8optional_optional__IQ2kl6stringE* kl_o_1, struct kl_2kl6string_string* kl_fallback_2 )
+struct kl_2kl6string_string* kl_7codegen_4held__Q2kl8optionalIQ2kl6stringE_Q2kl6string( struct kl_2kl8optional_optional__IQ2kl6stringE* kl_o_1, struct kl_2kl6string_string* kl_fallback_2 )
 {
     struct kl_2kl6string_string* kl_t0;
     bool kl_t3;
@@ -4292,19 +4292,19 @@ struct kl_2kl6string_string* kl__4held__Q2kl8optionalIQ2kl6stringE_Q2kl6string( 
 }
 
 #line 60 "codegen/returns_through_bindings.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__P kl_a_1;
-    struct kl__P kl_t2;
-    struct kl__P* kl_t3;
+    struct kl_7codegen_P kl_a_1;
+    struct kl_7codegen_P kl_t2;
+    struct kl_7codegen_P* kl_t3;
     int32_t* kl_t4;
     int32_t* kl_t5;
     int32_t* kl_t6;
     uint64_t kl_t7;
     uint64_t kl_t8;
     bool kl_t9;
-    struct kl__P* kl_t10;
+    struct kl_7codegen_P* kl_t10;
     int32_t* kl_t11;
     bool kl_t12;
     struct kl_2kl4list_list__I3i32E kl_v_13;
@@ -4390,7 +4390,7 @@ int32_t kl__4main__( void )
     kl_a_1 = kl_t2;
     kl_t3 = &kl_a_1;
 #line 63 "codegen/returns_through_bindings.kl"
-    kl_t4 = kl__19through_a_ref_local__1P( kl_t3 );
+    kl_t4 = kl_7codegen_19through_a_ref_local__Q7codegen1P( kl_t3 );
 #line 63 "codegen/returns_through_bindings.kl"
     kl_t5 = &( *kl_t4 );
 #line 63 "codegen/returns_through_bindings.kl"
@@ -4411,7 +4411,7 @@ int32_t kl__4main__( void )
 #line 68 "codegen/returns_through_bindings.kl"
     kl_t10 = &kl_a_1;
 #line 68 "codegen/returns_through_bindings.kl"
-    kl_t11 = kl__28through_a_writable_ref_local__R1P( kl_t10 );
+    kl_t11 = kl_7codegen_28through_a_writable_ref_local__RQ7codegen1P( kl_t10 );
 #line 68 "codegen/returns_through_bindings.kl"
     ( *kl_t11 ) = 7;
     kl_t12 = kl_a_1.kl_x != 7;
@@ -4440,7 +4440,7 @@ int32_t kl__4main__( void )
 #line 79 "codegen/returns_through_bindings.kl"
     kl_t25 = &kl_none_22;
 #line 79 "codegen/returns_through_bindings.kl"
-    kl_t26 = kl__11first_above__Q2kl4listI3i32E_3i32_3i32( kl_t24, 2, kl_t25 );
+    kl_t26 = kl_7codegen_11first_above__Q2kl4listI3i32E_3i32_3i32( kl_t24, 2, kl_t25 );
 #line 79 "codegen/returns_through_bindings.kl"
     kl_t27 = &( *kl_t26 );
 #line 79 "codegen/returns_through_bindings.kl"
@@ -4465,7 +4465,7 @@ int32_t kl__4main__( void )
 #line 79 "codegen/returns_through_bindings.kl"
     kl_t35 = &kl_none_22;
 #line 79 "codegen/returns_through_bindings.kl"
-    kl_t36 = kl__11first_above__Q2kl4listI3i32E_3i32_3i32( kl_t34, 20, kl_t35 );
+    kl_t36 = kl_7codegen_11first_above__Q2kl4listI3i32E_3i32_3i32( kl_t34, 20, kl_t35 );
 #line 79 "codegen/returns_through_bindings.kl"
     kl_t37 = &( *kl_t36 );
 #line 79 "codegen/returns_through_bindings.kl"
@@ -4509,7 +4509,7 @@ int32_t kl__4main__( void )
 #line 86 "codegen/returns_through_bindings.kl"
     kl_t49 = &kl_spare_47;
 #line 86 "codegen/returns_through_bindings.kl"
-    kl_t50 = kl__7last_of__RA3_3i32_R3i32( kl_t48, kl_t49 );
+    kl_t50 = kl_7codegen_7last_of__RA3_3i32_R3i32( kl_t48, kl_t49 );
 #line 86 "codegen/returns_through_bindings.kl"
     ( *kl_t50 ) = 30;
     kl_t51 = 2;
@@ -4577,7 +4577,7 @@ int32_t kl__4main__( void )
 #line 94 "codegen/returns_through_bindings.kl"
     kl_t68 = &kl_fallback_60;
 #line 94 "codegen/returns_through_bindings.kl"
-    kl_t69 = kl__4held__Q2kl8optionalIQ2kl6stringE_Q2kl6string( kl_t67, kl_t68 );
+    kl_t69 = kl_7codegen_4held__Q2kl8optionalIQ2kl6stringE_Q2kl6string( kl_t67, kl_t68 );
 #line 94 "codegen/returns_through_bindings.kl"
     kl_t70 = &( *kl_t69 );
 #line 94 "codegen/returns_through_bindings.kl"
@@ -4598,7 +4598,7 @@ int32_t kl__4main__( void )
 #line 94 "codegen/returns_through_bindings.kl"
     kl_t75 = &kl_fallback_60;
 #line 94 "codegen/returns_through_bindings.kl"
-    kl_t76 = kl__4held__Q2kl8optionalIQ2kl6stringE_Q2kl6string( kl_t74, kl_t75 );
+    kl_t76 = kl_7codegen_4held__Q2kl8optionalIQ2kl6stringE_Q2kl6string( kl_t74, kl_t75 );
 #line 94 "codegen/returns_through_bindings.kl"
     kl_t77 = &( *kl_t76 );
 #line 94 "codegen/returns_through_bindings.kl"
@@ -5149,7 +5149,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 60 "codegen/returns_through_bindings.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 60 "codegen/returns_through_bindings.kl"
     return kl_t0;
 #line 60 "codegen/returns_through_bindings.kl"

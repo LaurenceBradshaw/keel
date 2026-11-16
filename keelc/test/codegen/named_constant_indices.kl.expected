@@ -4089,15 +4089,15 @@ struct kl__A2_Q2kl6string
 };
 _Static_assert( sizeof( struct kl__A2_Q2kl6string ) == 48 && _Alignof( struct kl__A2_Q2kl6string ) == 8, "layout" );
 
-uint64_t kl__second__G = 1;
+uint64_t kl_7codegen_second__G = 1;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-void kl__12replace_both__RQ2kl6string_RQ2kl6string( struct kl_2kl6string_string*, struct kl_2kl6string_string* );
-void kl__4outs__OQ2kl6string_OQ2kl6string( struct kl_2kl6string_string*, struct kl_2kl6string_string* );
-uint64_t kl__14payload_beside__RA2_Q2kl8optionalIQ2kl6stringE( struct kl__A2_Q2kl8optionalIQ2kl6stringE* );
-int32_t kl__4main__( void );
+void kl_7codegen_12replace_both__RQ2kl6string_RQ2kl6string( struct kl_2kl6string_string*, struct kl_2kl6string_string* );
+void kl_7codegen_4outs__OQ2kl6string_OQ2kl6string( struct kl_2kl6string_string*, struct kl_2kl6string_string* );
+uint64_t kl_7codegen_14payload_beside__RA2_Q2kl8optionalIQ2kl6stringE( struct kl__A2_Q2kl8optionalIQ2kl6stringE* );
+int32_t kl_7codegen_4main__( void );
 void kl_2kl4list_8truncate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
 uint64_t kl_2kl4list_4size__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
 struct kl_2kl6string_string* kl_2kl4list_14operator_index__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
@@ -4113,7 +4113,7 @@ void kl_2kl4list_4list__IQ2kl6stringE__dtor( struct kl_2kl4list_list__IQ2kl6stri
 void kl_2kl8optional_8optional__IQ2kl6stringE__dtor( struct kl_2kl8optional_optional__IQ2kl6stringE* );
 
 #line 9 "codegen/named_constant_indices.kl"
-void kl__12replace_both__RQ2kl6string_RQ2kl6string( struct kl_2kl6string_string* kl_a_1, struct kl_2kl6string_string* kl_b_2 )
+void kl_7codegen_12replace_both__RQ2kl6string_RQ2kl6string( struct kl_2kl6string_string* kl_a_1, struct kl_2kl6string_string* kl_b_2 )
 {
     struct kl_7prelude_str kl_t3;
     struct kl_7prelude_str* kl_t4;
@@ -4173,7 +4173,7 @@ void kl__12replace_both__RQ2kl6string_RQ2kl6string( struct kl_2kl6string_string*
 }
 
 #line 15 "codegen/named_constant_indices.kl"
-void kl__4outs__OQ2kl6string_OQ2kl6string( struct kl_2kl6string_string* kl_a_1, struct kl_2kl6string_string* kl_b_2 )
+void kl_7codegen_4outs__OQ2kl6string_OQ2kl6string( struct kl_2kl6string_string* kl_a_1, struct kl_2kl6string_string* kl_b_2 )
 {
     struct kl_7prelude_str kl_t3;
     struct kl_7prelude_str* kl_t4;
@@ -4243,7 +4243,7 @@ void kl__4outs__OQ2kl6string_OQ2kl6string( struct kl_2kl6string_string* kl_a_1, 
 }
 
 #line 21 "codegen/named_constant_indices.kl"
-uint64_t kl__14payload_beside__RA2_Q2kl8optionalIQ2kl6stringE( struct kl__A2_Q2kl8optionalIQ2kl6stringE* kl_slots_1 )
+uint64_t kl_7codegen_14payload_beside__RA2_Q2kl8optionalIQ2kl6stringE( struct kl__A2_Q2kl8optionalIQ2kl6stringE* kl_slots_1 )
 {
     uint64_t kl_t0;
     uint64_t kl_zero_2;
@@ -4300,7 +4300,7 @@ uint64_t kl__14payload_beside__RA2_Q2kl8optionalIQ2kl6stringE( struct kl__A2_Q2k
 }
 
 #line 34 "codegen/named_constant_indices.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     uint64_t kl_one_1;
@@ -4444,7 +4444,7 @@ int32_t kl__4main__( void )
 #line 39 "codegen/named_constant_indices.kl"
     kl_t14 = &kl_texts_2.e[kl_t13];
 #line 39 "codegen/named_constant_indices.kl"
-    kl__12replace_both__RQ2kl6string_RQ2kl6string( kl_t12, kl_t14 );
+    kl_7codegen_12replace_both__RQ2kl6string_RQ2kl6string( kl_t12, kl_t14 );
     goto bb3;
     bb3:
 #line 40 "codegen/named_constant_indices.kl"
@@ -4488,7 +4488,7 @@ int32_t kl__4main__( void )
 #line 43 "codegen/named_constant_indices.kl"
     kl_t56 = true;
 #line 43 "codegen/named_constant_indices.kl"
-    kl__4outs__OQ2kl6string_OQ2kl6string( kl_t26, kl_t27 );
+    kl_7codegen_4outs__OQ2kl6string_OQ2kl6string( kl_t26, kl_t27 );
     goto bb8;
     bb7:
 #line 41 "codegen/named_constant_indices.kl"
@@ -4606,7 +4606,7 @@ int32_t kl__4main__( void )
 #line 51 "codegen/named_constant_indices.kl"
     kl_t53 = &kl_slots_37;
 #line 51 "codegen/named_constant_indices.kl"
-    kl_t54 = kl__14payload_beside__RA2_Q2kl8optionalIQ2kl6stringE( kl_t53 );
+    kl_t54 = kl_7codegen_14payload_beside__RA2_Q2kl8optionalIQ2kl6stringE( kl_t53 );
 #line 51 "codegen/named_constant_indices.kl"
     kl_t55 = kl_t54 == 4;
 #line 51 "codegen/named_constant_indices.kl"
@@ -4871,7 +4871,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 34 "codegen/named_constant_indices.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 34 "codegen/named_constant_indices.kl"
     return kl_t0;
 #line 34 "codegen/named_constant_indices.kl"

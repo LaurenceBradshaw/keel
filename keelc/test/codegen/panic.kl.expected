@@ -299,7 +299,7 @@ void kl_1t7console_6eprint__4bool_7textual( bool kl_value_1, struct kl_7prelude_
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Noisy;
+struct kl_7codegen_Noisy;
 struct kl_7prelude_str;
 
 struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
@@ -307,11 +307,11 @@ struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
 struct kl_7prelude_textual__vtable;
 struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
 
-struct kl__Noisy
+struct kl_7codegen_Noisy
 {
     int32_t kl_id;
 };
-_Static_assert( sizeof( struct kl__Noisy ) == 4 && _Alignof( struct kl__Noisy ) == 4 && offsetof( struct kl__Noisy, kl_id ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Noisy ) == 4 && _Alignof( struct kl_7codegen_Noisy ) == 4 && offsetof( struct kl_7codegen_Noisy, kl_id ) == 0, "layout" );
 
 struct kl_7prelude_str
 {
@@ -329,10 +329,10 @@ struct kl_7prelude_textual__vtable
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 _Noreturn void kl_rt_unreachable( void );
 
-void kl__5Noisy__R5Noisy_3i32__ctor( struct kl__Noisy*, int32_t );
-void kl__5Noisy__dtor( struct kl__Noisy* );
-_Noreturn void kl__4fail__Q7prelude3str( struct kl_7prelude_str );
-int32_t kl__4main__( void );
+void kl_7codegen_5Noisy__RQ7codegen5Noisy_3i32__ctor( struct kl_7codegen_Noisy*, int32_t );
+void kl_7codegen_5Noisy__dtor( struct kl_7codegen_Noisy* );
+_Noreturn void kl_7codegen_4fail__Q7prelude3str( struct kl_7prelude_str );
+int32_t kl_7codegen_4main__( void );
 void kl_1t7console_5print__7textual_7textual( struct kl_7prelude_textual__ref, struct kl_7prelude_textual__ref );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 void kl_7prelude_str__drop( void* );
@@ -341,7 +341,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 10 "codegen/panic.kl"
-void kl__5Noisy__R5Noisy_3i32__ctor( struct kl__Noisy* kl_this_1, int32_t kl_id_2 )
+void kl_7codegen_5Noisy__RQ7codegen5Noisy_3i32__ctor( struct kl_7codegen_Noisy* kl_this_1, int32_t kl_id_2 )
 {
     ( *kl_this_1 ).kl_id = kl_id_2;
     return;
@@ -349,7 +349,7 @@ void kl__5Noisy__R5Noisy_3i32__ctor( struct kl__Noisy* kl_this_1, int32_t kl_id_
 }
 
 #line 15 "codegen/panic.kl"
-void kl__5Noisy__dtor( struct kl__Noisy* kl_this_1 )
+void kl_7codegen_5Noisy__dtor( struct kl_7codegen_Noisy* kl_this_1 )
 {
     struct kl_7prelude_str kl_t2;
     struct kl_7prelude_str* kl_t3;
@@ -389,16 +389,16 @@ void kl__5Noisy__dtor( struct kl__Noisy* kl_this_1 )
 }
 
 #line 21 "codegen/panic.kl"
-_Noreturn void kl__4fail__Q7prelude3str( struct kl_7prelude_str kl_why_1 )
+_Noreturn void kl_7codegen_4fail__Q7prelude3str( struct kl_7prelude_str kl_why_1 )
 {
     kl_rt_panic_message( "codegen/panic.kl", 23, kl_why_1.kl_data, kl_why_1.kl_size );
 }
 
 #line 26 "codegen/panic.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
-    struct kl__Noisy kl_n_1;
-    struct kl__Noisy* kl_t2;
+    struct kl_7codegen_Noisy kl_n_1;
+    struct kl_7codegen_Noisy* kl_t2;
     struct kl_7prelude_str kl_t4;
     struct kl_7prelude_str* kl_t5;
     uint8_t* kl_t6;
@@ -415,7 +415,7 @@ int32_t kl__4main__( void )
 #line 28 "codegen/panic.kl"
     kl_t2 = &kl_n_1;
 #line 28 "codegen/panic.kl"
-    kl__5Noisy__R5Noisy_3i32__ctor( kl_t2, 1 );
+    kl_7codegen_5Noisy__RQ7codegen5Noisy_3i32__ctor( kl_t2, 1 );
 #line 30 "codegen/panic.kl"
     kl_t5 = &kl_t4;
 #line 30 "codegen/panic.kl"
@@ -444,7 +444,7 @@ int32_t kl__4main__( void )
 #line 31 "codegen/panic.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t18, kl_t19, 13 );
 #line 31 "codegen/panic.kl"
-    kl__4fail__Q7prelude3str( kl_t17 );
+    kl_7codegen_4fail__Q7prelude3str( kl_t17 );
 #line 31 "codegen/panic.kl"
     kl_rt_unreachable();
 }
@@ -453,7 +453,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 26 "codegen/panic.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 26 "codegen/panic.kl"
     return kl_t0;
 #line 26 "codegen/panic.kl"

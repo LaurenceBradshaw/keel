@@ -3,26 +3,26 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Point;
+struct kl_7codegen_Point;
 
-struct kl__Point
+struct kl_7codegen_Point
 {
     int32_t kl_x;
     int32_t kl_y;
 };
-_Static_assert( sizeof( struct kl__Point ) == 8 && _Alignof( struct kl__Point ) == 4 && offsetof( struct kl__Point, kl_x ) == 0 && offsetof( struct kl__Point, kl_y ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Point ) == 8 && _Alignof( struct kl_7codegen_Point ) == 4 && offsetof( struct kl_7codegen_Point, kl_x ) == 0 && offsetof( struct kl_7codegen_Point, kl_y ) == 4, "layout" );
 
-int32_t kl__scale__G = 10;
+int32_t kl_7codegen_scale__G = 10;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__7doubled__3i32( int32_t );
-int32_t kl__23through_a_const_pointer__3i32( int32_t );
-int32_t kl__23through_a_field_pointer__( void );
-int32_t kl__4main__( void );
+int32_t kl_7codegen_7doubled__3i32( int32_t );
+int32_t kl_7codegen_23through_a_const_pointer__3i32( int32_t );
+int32_t kl_7codegen_23through_a_field_pointer__( void );
+int32_t kl_7codegen_4main__( void );
 
 #line 13 "codegen/const_bindings.kl"
-int32_t kl__7doubled__3i32( int32_t kl_n_1 )
+int32_t kl_7codegen_7doubled__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -44,7 +44,7 @@ int32_t kl__7doubled__3i32( int32_t kl_n_1 )
 }
 
 #line 19 "codegen/const_bindings.kl"
-int32_t kl__23through_a_const_pointer__3i32( int32_t kl_seed_1 )
+int32_t kl_7codegen_23through_a_const_pointer__3i32( int32_t kl_seed_1 )
 {
     int32_t kl_t0;
     int32_t kl_v_2;
@@ -77,11 +77,11 @@ int32_t kl__23through_a_const_pointer__3i32( int32_t kl_seed_1 )
 }
 
 #line 31 "codegen/const_bindings.kl"
-int32_t kl__23through_a_field_pointer__( void )
+int32_t kl_7codegen_23through_a_field_pointer__( void )
 {
     int32_t kl_t0;
-    struct kl__Point kl_v_1;
-    struct kl__Point kl_t2;
+    struct kl_7codegen_Point kl_v_1;
+    struct kl_7codegen_Point kl_t2;
     int32_t* kl_r_3;
     bool kl_t4;
     int32_t kl_t5;
@@ -112,12 +112,12 @@ int32_t kl__23through_a_field_pointer__( void )
 }
 
 #line 42 "codegen/const_bindings.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_base_1;
-    struct kl__Point kl_p_2;
-    struct kl__Point kl_t3;
+    struct kl_7codegen_Point kl_p_2;
+    struct kl_7codegen_Point kl_t3;
     int32_t kl_total_4;
     int32_t kl_t5;
     bool kl_t6;
@@ -141,7 +141,7 @@ int32_t kl__4main__( void )
 #line 46 "codegen/const_bindings.kl"
     kl_p_2 = kl_t3;
 #line 48 "codegen/const_bindings.kl"
-    kl_t5 = kl__7doubled__3i32( kl_base_1 );
+    kl_t5 = kl_7codegen_7doubled__3i32( kl_base_1 );
 #line 48 "codegen/const_bindings.kl"
     kl_total_4 = kl_t5;
     kl_t6 = __builtin_add_overflow( kl_total_4, kl_p_2.kl_x, &( int32_t ) { 0 } );
@@ -176,7 +176,7 @@ int32_t kl__4main__( void )
     kl_t11 = kl_total_4 + 10;
 #line 50 "codegen/const_bindings.kl"
     kl_total_4 = kl_t11;
-    kl_t12 = kl__23through_a_const_pointer__3i32( 6 );
+    kl_t12 = kl_7codegen_23through_a_const_pointer__3i32( 6 );
 #line 51 "codegen/const_bindings.kl"
     kl_t13 = __builtin_add_overflow( kl_total_4, kl_t12, &( int32_t ) { 0 } );
 #line 51 "codegen/const_bindings.kl"
@@ -189,7 +189,7 @@ int32_t kl__4main__( void )
     kl_t14 = kl_total_4 + kl_t12;
 #line 51 "codegen/const_bindings.kl"
     kl_total_4 = kl_t14;
-    kl_t15 = kl__23through_a_field_pointer__(  );
+    kl_t15 = kl_7codegen_23through_a_field_pointer__(  );
 #line 52 "codegen/const_bindings.kl"
     kl_t16 = __builtin_add_overflow( kl_total_4, kl_t15, &( int32_t ) { 0 } );
 #line 52 "codegen/const_bindings.kl"
@@ -212,7 +212,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 42 "codegen/const_bindings.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 42 "codegen/const_bindings.kl"
     return kl_t0;
 #line 42 "codegen/const_bindings.kl"

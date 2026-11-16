@@ -4073,8 +4073,8 @@ _Static_assert( sizeof( struct kl__A3_Q2kl6string ) == 72 && _Alignof( struct kl
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-uint64_t kl__5total__LQ2kl6string( struct kl_2kl6string_string*, uint64_t );
-int32_t kl__4main__( void );
+uint64_t kl_12string_array_5total__LQ2kl6string( struct kl_2kl6string_string*, uint64_t );
+int32_t kl_12string_array_4main__( void );
 void kl_2kl4list_8truncate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
 uint64_t kl_2kl4list_4size__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
 struct kl_2kl6string_string* kl_2kl4list_14operator_index__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
@@ -4089,7 +4089,7 @@ void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*,
 void kl_2kl4list_4list__IQ2kl6stringE__dtor( struct kl_2kl4list_list__IQ2kl6stringE* );
 
 #line 6 "string_array/main.kl"
-uint64_t kl__5total__LQ2kl6string( struct kl_2kl6string_string* kl_words_1_data, uint64_t kl_words_1_size )
+uint64_t kl_12string_array_5total__LQ2kl6string( struct kl_2kl6string_string* kl_words_1_data, uint64_t kl_words_1_size )
 {
     uint64_t kl_t0;
 #line 6 "string_array/main.kl"
@@ -4165,7 +4165,7 @@ uint64_t kl__5total__LQ2kl6string( struct kl_2kl6string_string* kl_words_1_data,
 }
 
 #line 18 "string_array/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_12string_array_4main__( void )
 {
     int32_t kl_t0;
     struct kl__A3_Q2kl6string kl_words_1;
@@ -4349,7 +4349,7 @@ int32_t kl__4main__( void )
 #line 22 "string_array/main.kl"
     kl_t24 = ( struct kl__run__LQ2kl6string__ref ) { ( struct kl_2kl6string_string* ) kl_t23, 3 };
 #line 22 "string_array/main.kl"
-    kl_t25 = kl__5total__LQ2kl6string( ( kl_t24 ).data, ( kl_t24 ).size );
+    kl_t25 = kl_12string_array_5total__LQ2kl6string( ( kl_t24 ).data, ( kl_t24 ).size );
 #line 22 "string_array/main.kl"
     kl_t26 = kl_t25 != 11;
 #line 22 "string_array/main.kl"
@@ -4429,7 +4429,7 @@ int32_t kl__4main__( void )
 #line 29 "string_array/main.kl"
     kl_t47 = ( struct kl__run__LQ2kl6string__ref ) { ( struct kl_2kl6string_string* ) kl_t46, 3 };
 #line 29 "string_array/main.kl"
-    kl_t48 = kl__5total__LQ2kl6string( ( kl_t47 ).data, ( kl_t47 ).size );
+    kl_t48 = kl_12string_array_5total__LQ2kl6string( ( kl_t47 ).data, ( kl_t47 ).size );
 #line 29 "string_array/main.kl"
     kl_t49 = kl_t48 != 13;
 #line 29 "string_array/main.kl"
@@ -4751,7 +4751,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 18 "string_array/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_12string_array_4main__(  );
 #line 18 "string_array/main.kl"
     return kl_t0;
 #line 18 "string_array/main.kl"

@@ -1,0 +1,2 @@
+//! A name that is a keyword.
+@package( struct );

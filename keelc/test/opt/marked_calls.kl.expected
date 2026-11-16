@@ -3,13 +3,13 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-double kl__6halved__3f64( double );
-double kl__4sine__3f64( double );
-double kl__7shifted__3f64( double );
-int32_t kl__4main__( void );
+double kl_3opt_6halved__3f64( double );
+double kl_3opt_4sine__3f64( double );
+double kl_3opt_7shifted__3f64( double );
+int32_t kl_3opt_4main__( void );
 
 #line 5 "opt/marked_calls.kl"
-double kl__6halved__3f64( double kl_x_1 )
+double kl_3opt_6halved__3f64( double kl_x_1 )
 {
     double kl_t0;
 #line 7 "opt/marked_calls.kl"
@@ -19,7 +19,7 @@ double kl__6halved__3f64( double kl_x_1 )
 }
 
 #line 11 "opt/marked_calls.kl"
-double kl__4sine__3f64( double kl_x_1 )
+double kl_3opt_4sine__3f64( double kl_x_1 )
 {
     double kl_t0;
 #line 13 "opt/marked_calls.kl"
@@ -29,7 +29,7 @@ double kl__4sine__3f64( double kl_x_1 )
 }
 
 #line 17 "opt/marked_calls.kl"
-double kl__7shifted__3f64( double kl_x_1 )
+double kl_3opt_7shifted__3f64( double kl_x_1 )
 {
     double kl_t0;
 #line 19 "opt/marked_calls.kl"
@@ -39,7 +39,7 @@ double kl__7shifted__3f64( double kl_x_1 )
 }
 
 #line 22 "opt/marked_calls.kl"
-int32_t kl__4main__( void )
+int32_t kl_3opt_4main__( void )
 {
     int32_t kl_t0;
 #line 24 "opt/marked_calls.kl"
@@ -52,7 +52,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 22 "opt/marked_calls.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_3opt_4main__(  );
 #line 22 "opt/marked_calls.kl"
     return kl_t0;
 #line 22 "opt/marked_calls.kl"

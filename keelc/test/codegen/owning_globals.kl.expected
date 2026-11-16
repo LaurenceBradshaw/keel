@@ -9272,10 +9272,10 @@ bool kl_2kl7console_5input__RQ2kl6string( struct kl_2kl6string_string* kl_line_1
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Noisy;
-struct kl__Settings;
+struct kl_7codegen_Noisy;
+struct kl_7codegen_Settings;
 struct kl_2kl4list_list__I3i32E;
-struct kl__Bag;
+struct kl_7codegen_Bag;
 struct kl_2kl6string_string;
 struct kl_2kl2os_path;
 struct kl_2kl2os_process;
@@ -9293,18 +9293,18 @@ struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
 struct kl_7prelude_textual__vtable;
 struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
 
-struct kl__Noisy
+struct kl_7codegen_Noisy
 {
     int32_t kl_id;
 };
-_Static_assert( sizeof( struct kl__Noisy ) == 4 && _Alignof( struct kl__Noisy ) == 4 && offsetof( struct kl__Noisy, kl_id ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Noisy ) == 4 && _Alignof( struct kl_7codegen_Noisy ) == 4 && offsetof( struct kl_7codegen_Noisy, kl_id ) == 0, "layout" );
 
-struct kl__Settings
+struct kl_7codegen_Settings
 {
     int32_t kl_width;
     int32_t kl_height;
 };
-_Static_assert( sizeof( struct kl__Settings ) == 8 && _Alignof( struct kl__Settings ) == 4 && offsetof( struct kl__Settings, kl_width ) == 0 && offsetof( struct kl__Settings, kl_height ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Settings ) == 8 && _Alignof( struct kl_7codegen_Settings ) == 4 && offsetof( struct kl_7codegen_Settings, kl_width ) == 0 && offsetof( struct kl_7codegen_Settings, kl_height ) == 4, "layout" );
 
 struct kl_2kl4list_list__I3i32E
 {
@@ -9314,12 +9314,12 @@ struct kl_2kl4list_list__I3i32E
 };
 _Static_assert( sizeof( struct kl_2kl4list_list__I3i32E ) == 24 && _Alignof( struct kl_2kl4list_list__I3i32E ) == 8 && offsetof( struct kl_2kl4list_list__I3i32E, kl_data_ ) == 0 && offsetof( struct kl_2kl4list_list__I3i32E, kl_count_ ) == 8 && offsetof( struct kl_2kl4list_list__I3i32E, kl_cap_ ) == 16, "layout" );
 
-struct kl__Bag
+struct kl_7codegen_Bag
 {
     struct kl_2kl4list_list__I3i32E kl_items;
     int32_t kl_count;
 };
-_Static_assert( sizeof( struct kl__Bag ) == 32 && _Alignof( struct kl__Bag ) == 8 && offsetof( struct kl__Bag, kl_items ) == 0 && offsetof( struct kl__Bag, kl_count ) == 24, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Bag ) == 32 && _Alignof( struct kl_7codegen_Bag ) == 8 && offsetof( struct kl_7codegen_Bag, kl_items ) == 0 && offsetof( struct kl_7codegen_Bag, kl_count ) == 24, "layout" );
 
 struct kl_2kl6string_string
 {
@@ -9440,16 +9440,16 @@ struct kl_7prelude_textual__vtable
     struct kl__run__L2u8__ref ( *kl__7as_text__ )( void* );
 };
 
-struct kl_2kl4list_list__I3i32E kl__made__GS3Bag;
-struct kl__Noisy kl__first__G;
-struct kl_2kl4list_list__I3i32E kl__numbers__G;
-struct kl_2kl6string_string kl__greeting__G;
-struct kl__Settings kl__settings__G;
-int32_t kl__told__G;
-struct kl__Noisy kl__second__G;
-struct kl_2kl6string_string kl__motto__G;
-struct kl__Bag kl__bag__G;
-struct kl__Noisy kl__third__G;
+struct kl_2kl4list_list__I3i32E kl_7codegen_made__GSQ7codegen3Bag;
+struct kl_7codegen_Noisy kl_7codegen_first__G;
+struct kl_2kl4list_list__I3i32E kl_7codegen_numbers__G;
+struct kl_2kl6string_string kl_7codegen_greeting__G;
+struct kl_7codegen_Settings kl_7codegen_settings__G;
+int32_t kl_7codegen_told__G;
+struct kl_7codegen_Noisy kl_7codegen_second__G;
+struct kl_2kl6string_string kl_7codegen_motto__G;
+struct kl_7codegen_Bag kl_7codegen_bag__G;
+struct kl_7codegen_Noisy kl_7codegen_third__G;
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
@@ -9457,14 +9457,14 @@ void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-void kl__5Noisy__R5Noisy_3i32__ctor( struct kl__Noisy*, int32_t );
-void kl__5Noisy__dtor( struct kl__Noisy* );
-void kl__3Bag__R3Bag__ctor( struct kl__Bag* );
-int32_t kl__9announced__3i32( int32_t );
-void kl__5tally__( void );
-int32_t kl__4main__( void );
-void kl__0build( void );
-void kl__0drop( void );
+void kl_7codegen_5Noisy__RQ7codegen5Noisy_3i32__ctor( struct kl_7codegen_Noisy*, int32_t );
+void kl_7codegen_5Noisy__dtor( struct kl_7codegen_Noisy* );
+void kl_7codegen_3Bag__RQ7codegen3Bag__ctor( struct kl_7codegen_Bag* );
+int32_t kl_7codegen_9announced__3i32( int32_t );
+void kl_7codegen_5tally__( void );
+int32_t kl_7codegen_4main__( void );
+void kl_7codegen_0build( void );
+void kl_7codegen_0drop( void );
 void kl_2kl4list_4list__I3i32E__RQ2kl4listI3i32E__ctor( struct kl_2kl4list_list__I3i32E* );
 void kl_2kl4list_4push__I3i32E__SQ2kl4listI3i32E_M3i32( struct kl_2kl4list_list__I3i32E*, int32_t );
 uint64_t kl_2kl4list_4size__I3i32E__SQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* );
@@ -9506,7 +9506,7 @@ static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_
 static const struct kl_7prelude_textual__vtable kl_2kl6string_string__as_kl_7prelude_textual = { kl_2kl6string_string__drop, kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 11 "codegen/owning_globals.kl"
-void kl__5Noisy__R5Noisy_3i32__ctor( struct kl__Noisy* kl_this_1, int32_t kl_n_2 )
+void kl_7codegen_5Noisy__RQ7codegen5Noisy_3i32__ctor( struct kl_7codegen_Noisy* kl_this_1, int32_t kl_n_2 )
 {
     struct kl_7prelude_str kl_t3;
     struct kl_7prelude_str* kl_t4;
@@ -9565,7 +9565,7 @@ void kl__5Noisy__R5Noisy_3i32__ctor( struct kl__Noisy* kl_this_1, int32_t kl_n_2
 }
 
 #line 18 "codegen/owning_globals.kl"
-void kl__5Noisy__dtor( struct kl__Noisy* kl_this_1 )
+void kl_7codegen_5Noisy__dtor( struct kl_7codegen_Noisy* kl_this_1 )
 {
     struct kl_7prelude_str kl_t2;
     struct kl_7prelude_str* kl_t3;
@@ -9623,7 +9623,7 @@ void kl__5Noisy__dtor( struct kl__Noisy* kl_this_1 )
 }
 
 #line 38 "codegen/owning_globals.kl"
-void kl__3Bag__R3Bag__ctor( struct kl__Bag* kl_this_1 )
+void kl_7codegen_3Bag__RQ7codegen3Bag__ctor( struct kl_7codegen_Bag* kl_this_1 )
 {
     struct kl_2kl4list_list__I3i32E kl_t2;
     struct kl_2kl4list_list__I3i32E* kl_t3;
@@ -9653,7 +9653,7 @@ void kl__3Bag__R3Bag__ctor( struct kl__Bag* kl_this_1 )
 }
 
 #line 43 "codegen/owning_globals.kl"
-int32_t kl__9announced__3i32( int32_t kl_n_1 )
+int32_t kl_7codegen_9announced__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
     struct kl_7prelude_str kl_t2;
@@ -9713,14 +9713,14 @@ int32_t kl__9announced__3i32( int32_t kl_n_1 )
 }
 
 #line 60 "codegen/owning_globals.kl"
-void kl__5tally__( void )
+void kl_7codegen_5tally__( void )
 {
     bool kl_t1;
     int32_t kl_t2;
     struct kl_2kl4list_list__I3i32E* kl_t3;
     struct kl_2kl4list_list__I3i32E* kl_t5;
 #line 62 "codegen/owning_globals.kl"
-    kl_t1 = __builtin_add_overflow( kl__bag__G.kl_count, 1, &( int32_t ) { 0 } );
+    kl_t1 = __builtin_add_overflow( kl_7codegen_bag__G.kl_count, 1, &( int32_t ) { 0 } );
 #line 62 "codegen/owning_globals.kl"
     if ( kl_t1 ) goto bb1; else goto bb2;
     bb1:
@@ -9728,21 +9728,21 @@ void kl__5tally__( void )
     kl_rt_panic( "codegen/owning_globals.kl", 62, "arithmetic overflow: bag.count + 1" );
     bb2:
 #line 62 "codegen/owning_globals.kl"
-    kl_t2 = kl__bag__G.kl_count + 1;
+    kl_t2 = kl_7codegen_bag__G.kl_count + 1;
 #line 62 "codegen/owning_globals.kl"
-    kl__bag__G.kl_count = kl_t2;
-    kl_t3 = &kl__bag__G.kl_items;
+    kl_7codegen_bag__G.kl_count = kl_t2;
+    kl_t3 = &kl_7codegen_bag__G.kl_items;
 #line 63 "codegen/owning_globals.kl"
-    kl_2kl4list_4push__I3i32E__SQ2kl4listI3i32E_M3i32( kl_t3, kl__bag__G.kl_count );
-    kl_t5 = &kl__made__GS3Bag;
+    kl_2kl4list_4push__I3i32E__SQ2kl4listI3i32E_M3i32( kl_t3, kl_7codegen_bag__G.kl_count );
+    kl_t5 = &kl_7codegen_made__GSQ7codegen3Bag;
 #line 64 "codegen/owning_globals.kl"
-    kl_2kl4list_4push__I3i32E__SQ2kl4listI3i32E_M3i32( kl_t5, kl__bag__G.kl_count );
+    kl_2kl4list_4push__I3i32E__SQ2kl4listI3i32E_M3i32( kl_t5, kl_7codegen_bag__G.kl_count );
     return;
 #line 65 "codegen/owning_globals.kl"
 }
 
 #line 67 "codegen/owning_globals.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     struct kl_7prelude_str kl_t1;
@@ -9824,13 +9824,13 @@ int32_t kl__4main__( void )
 #line 69 "codegen/owning_globals.kl"
     kl_2kl7console_5print__7textual_7textual( kl_t6, kl_t12 );
 #line 71 "codegen/owning_globals.kl"
-    kl_t14 = &kl__numbers__G;
+    kl_t14 = &kl_7codegen_numbers__G;
 #line 71 "codegen/owning_globals.kl"
     kl_2kl4list_4push__I3i32E__SQ2kl4listI3i32E_M3i32( kl_t14, 4 );
-    kl_t16 = &kl__numbers__G;
+    kl_t16 = &kl_7codegen_numbers__G;
 #line 72 "codegen/owning_globals.kl"
     kl_2kl4list_4push__I3i32E__SQ2kl4listI3i32E_M3i32( kl_t16, 5 );
-    kl_t19 = &kl__numbers__G;
+    kl_t19 = &kl_7codegen_numbers__G;
 #line 73 "codegen/owning_globals.kl"
     kl_t20 = kl_2kl4list_4size__I3i32E__SQ2kl4listI3i32E( kl_t19 );
 #line 73 "codegen/owning_globals.kl"
@@ -9841,7 +9841,7 @@ int32_t kl__4main__( void )
     if ( kl_t18 ) goto bb2; else goto bb1;
     bb1:
 #line 73 "codegen/owning_globals.kl"
-    kl_t22 = &kl__numbers__G;
+    kl_t22 = &kl_7codegen_numbers__G;
 #line 73 "codegen/owning_globals.kl"
     kl_t23 = kl_2kl4list_14operator_index__I3i32E__SQ2kl4listI3i32E_3u64( kl_t22, 1 );
 #line 73 "codegen/owning_globals.kl"
@@ -9859,7 +9859,7 @@ int32_t kl__4main__( void )
 #line 73 "codegen/owning_globals.kl"
     return kl_t0;
     bb4:
-    kl_t25 = &kl__greeting__G;
+    kl_t25 = &kl_7codegen_greeting__G;
 #line 75 "codegen/owning_globals.kl"
     kl_t26 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t25, &kl_2kl6string_string__as_kl_7prelude_textual };
 #line 29 "<kl>/console.kl"
@@ -9874,7 +9874,7 @@ int32_t kl__4main__( void )
     kl_t32 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t31, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 75 "codegen/owning_globals.kl"
     kl_2kl7console_5print__7textual_7textual( kl_t26, kl_t32 );
-    kl_t34 = &kl__motto__G;
+    kl_t34 = &kl_7codegen_motto__G;
 #line 76 "codegen/owning_globals.kl"
     kl_t35 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t34, &kl_2kl6string_string__as_kl_7prelude_textual };
 #line 29 "<kl>/console.kl"
@@ -9889,14 +9889,14 @@ int32_t kl__4main__( void )
     kl_t41 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t40, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 76 "codegen/owning_globals.kl"
     kl_2kl7console_5print__7textual_7textual( kl_t35, kl_t41 );
-    kl_t45 = kl__settings__G.kl_width != 80;
+    kl_t45 = kl_7codegen_settings__G.kl_width != 80;
 #line 77 "codegen/owning_globals.kl"
     kl_t44 = kl_t45;
 #line 77 "codegen/owning_globals.kl"
     if ( kl_t44 ) goto bb6; else goto bb5;
     bb5:
 #line 77 "codegen/owning_globals.kl"
-    kl_t46 = kl__settings__G.kl_height != 24;
+    kl_t46 = kl_7codegen_settings__G.kl_height != 24;
 #line 77 "codegen/owning_globals.kl"
     kl_t44 = kl_t46;
 #line 77 "codegen/owning_globals.kl"
@@ -9908,7 +9908,7 @@ int32_t kl__4main__( void )
     if ( kl_t43 ) goto bb8; else goto bb7;
     bb7:
 #line 77 "codegen/owning_globals.kl"
-    kl_t47 = kl__told__G != 7;
+    kl_t47 = kl_7codegen_told__G != 7;
 #line 77 "codegen/owning_globals.kl"
     kl_t43 = kl_t47;
 #line 77 "codegen/owning_globals.kl"
@@ -9923,9 +9923,9 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb10:
 #line 80 "codegen/owning_globals.kl"
-    kl_count_48 = &kl__bag__G.kl_count;
-    kl__5tally__(  );
-    kl__5tally__(  );
+    kl_count_48 = &kl_7codegen_bag__G.kl_count;
+    kl_7codegen_5tally__(  );
+    kl_7codegen_5tally__(  );
     kl_t51 = ( *kl_count_48 ) != 2;
 #line 83 "codegen/owning_globals.kl"
     if ( kl_t51 ) goto bb11; else goto bb12;
@@ -9935,7 +9935,7 @@ int32_t kl__4main__( void )
 #line 83 "codegen/owning_globals.kl"
     return kl_t0;
     bb12:
-    kl_t52 = &kl__bag__G.kl_items;
+    kl_t52 = &kl_7codegen_bag__G.kl_items;
 #line 171 "<kl>/list.kl"
     kl_i_53 = 0;
 #line 171 "<kl>/list.kl"
@@ -9983,7 +9983,7 @@ int32_t kl__4main__( void )
     goto bb13;
     bb18:
 #line 90 "codegen/owning_globals.kl"
-    kl_t67 = &kl__made__GS3Bag;
+    kl_t67 = &kl_7codegen_made__GSQ7codegen3Bag;
 #line 90 "codegen/owning_globals.kl"
     kl_t68 = kl_2kl4list_4size__I3i32E__SQ2kl4listI3i32E( kl_t67 );
 #line 90 "codegen/owning_globals.kl"
@@ -10001,28 +10001,28 @@ int32_t kl__4main__( void )
     return kl_t0;
 }
 
-void kl__0build( void )
+void kl_7codegen_0build( void )
 {
     struct kl_2kl4list_list__I3i32E* kl_t1;
-    struct kl__Noisy* kl_t3;
+    struct kl_7codegen_Noisy* kl_t3;
     struct kl_2kl4list_list__I3i32E kl_t5;
     struct kl_2kl4list_list__I3i32E* kl_t6;
     struct kl_7prelude_str kl_t8;
     struct kl_7prelude_str* kl_t9;
     uint8_t* kl_t10;
     struct kl_2kl6string_string kl_t12;
-    struct kl__Settings kl_t13;
+    struct kl_7codegen_Settings kl_t13;
     int32_t kl_t14;
-    struct kl__Noisy* kl_t15;
+    struct kl_7codegen_Noisy* kl_t15;
     struct kl_2kl6string_string* kl_t17;
     struct kl_7prelude_str kl_t18;
     struct kl_7prelude_str* kl_t19;
     uint8_t* kl_t20;
     struct kl_7prelude_str* kl_t22;
     struct kl_7prelude_textual__ref kl_t23;
-    struct kl__Bag kl_t25;
-    struct kl__Bag* kl_t26;
-    struct kl__Noisy* kl_t28;
+    struct kl_7codegen_Bag kl_t25;
+    struct kl_7codegen_Bag* kl_t26;
+    struct kl_7codegen_Noisy* kl_t28;
     bool kl_t30;
     bool kl_t31;
     bool kl_t32;
@@ -10033,13 +10033,13 @@ void kl__0build( void )
 #line 36 "codegen/owning_globals.kl"
     kl_t32 = false;
 #line 36 "codegen/owning_globals.kl"
-    kl_t1 = &kl__made__GS3Bag;
+    kl_t1 = &kl_7codegen_made__GSQ7codegen3Bag;
 #line 36 "codegen/owning_globals.kl"
     kl_2kl4list_4list__I3i32E__RQ2kl4listI3i32E__ctor( kl_t1 );
 #line 50 "codegen/owning_globals.kl"
-    kl_t3 = &kl__first__G;
+    kl_t3 = &kl_7codegen_first__G;
 #line 50 "codegen/owning_globals.kl"
-    kl__5Noisy__R5Noisy_3i32__ctor( kl_t3, 1 );
+    kl_7codegen_5Noisy__RQ7codegen5Noisy_3i32__ctor( kl_t3, 1 );
     kl_t30 = false;
 #line 51 "codegen/owning_globals.kl"
     kl_t6 = &kl_t5;
@@ -10048,7 +10048,7 @@ void kl__0build( void )
 #line 51 "codegen/owning_globals.kl"
     kl_2kl4list_4list__I3i32E__RQ2kl4listI3i32E__ctor( kl_t6 );
 #line 51 "codegen/owning_globals.kl"
-    kl__numbers__G = kl_t5;
+    kl_7codegen_numbers__G = kl_t5;
 #line 51 "codegen/owning_globals.kl"
     kl_t30 = false;
 #line 51 "codegen/owning_globals.kl"
@@ -10065,7 +10065,7 @@ void kl__0build( void )
 #line 52 "codegen/owning_globals.kl"
     kl_t31 = true;
 #line 52 "codegen/owning_globals.kl"
-    kl__greeting__G = kl_t12;
+    kl_7codegen_greeting__G = kl_t12;
 #line 52 "codegen/owning_globals.kl"
     kl_t31 = false;
 #line 52 "codegen/owning_globals.kl"
@@ -10076,14 +10076,14 @@ void kl__0build( void )
 #line 53 "codegen/owning_globals.kl"
     kl_t13.kl_height = 24;
 #line 53 "codegen/owning_globals.kl"
-    kl__settings__G = kl_t13;
-    kl_t14 = kl__9announced__3i32( 7 );
+    kl_7codegen_settings__G = kl_t13;
+    kl_t14 = kl_7codegen_9announced__3i32( 7 );
 #line 54 "codegen/owning_globals.kl"
-    kl__told__G = kl_t14;
-    kl_t15 = &kl__second__G;
+    kl_7codegen_told__G = kl_t14;
+    kl_t15 = &kl_7codegen_second__G;
 #line 55 "codegen/owning_globals.kl"
-    kl__5Noisy__R5Noisy_3i32__ctor( kl_t15, 2 );
-    kl_t17 = &kl__motto__G;
+    kl_7codegen_5Noisy__RQ7codegen5Noisy_3i32__ctor( kl_t15, 2 );
+    kl_t17 = &kl_7codegen_motto__G;
 #line 56 "codegen/owning_globals.kl"
     kl_t19 = &kl_t18;
 #line 56 "codegen/owning_globals.kl"
@@ -10102,41 +10102,41 @@ void kl__0build( void )
 #line 57 "codegen/owning_globals.kl"
     kl_t32 = true;
 #line 57 "codegen/owning_globals.kl"
-    kl__3Bag__R3Bag__ctor( kl_t26 );
+    kl_7codegen_3Bag__RQ7codegen3Bag__ctor( kl_t26 );
 #line 57 "codegen/owning_globals.kl"
-    kl__bag__G = kl_t25;
+    kl_7codegen_bag__G = kl_t25;
 #line 57 "codegen/owning_globals.kl"
     kl_t32 = false;
 #line 57 "codegen/owning_globals.kl"
     if ( kl_t32 ) kl_2kl4list_4list__I3i32E__dtor( &kl_t25.kl_items );
 #line 57 "codegen/owning_globals.kl"
     kl_t32 = false;
-    kl_t28 = &kl__third__G;
+    kl_t28 = &kl_7codegen_third__G;
 #line 58 "codegen/owning_globals.kl"
-    kl__5Noisy__R5Noisy_3i32__ctor( kl_t28, 3 );
+    kl_7codegen_5Noisy__RQ7codegen5Noisy_3i32__ctor( kl_t28, 3 );
 #line 58 "codegen/owning_globals.kl"
     return;
 #line 58 "codegen/owning_globals.kl"
 }
 
-void kl__0drop( void )
+void kl_7codegen_0drop( void )
 {
 #line 58 "codegen/owning_globals.kl"
-    kl__5Noisy__dtor( &kl__third__G );
+    kl_7codegen_5Noisy__dtor( &kl_7codegen_third__G );
 #line 58 "codegen/owning_globals.kl"
-    kl_2kl4list_4list__I3i32E__dtor( &kl__bag__G.kl_items );
+    kl_2kl4list_4list__I3i32E__dtor( &kl_7codegen_bag__G.kl_items );
 #line 58 "codegen/owning_globals.kl"
-    kl_2kl6string_6string__dtor( &kl__motto__G );
+    kl_2kl6string_6string__dtor( &kl_7codegen_motto__G );
 #line 58 "codegen/owning_globals.kl"
-    kl__5Noisy__dtor( &kl__second__G );
+    kl_7codegen_5Noisy__dtor( &kl_7codegen_second__G );
 #line 58 "codegen/owning_globals.kl"
-    kl_2kl6string_6string__dtor( &kl__greeting__G );
+    kl_2kl6string_6string__dtor( &kl_7codegen_greeting__G );
 #line 58 "codegen/owning_globals.kl"
-    kl_2kl4list_4list__I3i32E__dtor( &kl__numbers__G );
+    kl_2kl4list_4list__I3i32E__dtor( &kl_7codegen_numbers__G );
 #line 58 "codegen/owning_globals.kl"
-    kl__5Noisy__dtor( &kl__first__G );
+    kl_7codegen_5Noisy__dtor( &kl_7codegen_first__G );
 #line 58 "codegen/owning_globals.kl"
-    kl_2kl4list_4list__I3i32E__dtor( &kl__made__GS3Bag );
+    kl_2kl4list_4list__I3i32E__dtor( &kl_7codegen_made__GSQ7codegen3Bag );
 #line 58 "codegen/owning_globals.kl"
     return;
 #line 58 "codegen/owning_globals.kl"
@@ -10839,11 +10839,11 @@ int main( void )
 #line 67 "codegen/owning_globals.kl"
     kl_2kl2os_0build(  );
 #line 67 "codegen/owning_globals.kl"
-    kl__0build(  );
+    kl_7codegen_0build(  );
 #line 67 "codegen/owning_globals.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 67 "codegen/owning_globals.kl"
-    kl__0drop(  );
+    kl_7codegen_0drop(  );
 #line 67 "codegen/owning_globals.kl"
     kl_2kl2os_0drop(  );
 #line 67 "codegen/owning_globals.kl"

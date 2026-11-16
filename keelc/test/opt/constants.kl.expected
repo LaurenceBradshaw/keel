@@ -3,20 +3,20 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-bool kl__3big__3i32( int32_t );
-int32_t kl__6either__3i32( int32_t );
-int64_t kl__5clamp__3i64( int64_t );
-int64_t kl__7clamped__3i64( int64_t );
-int32_t kl__6steady__3i32( int32_t );
-int64_t kl__7widened__( void );
-int32_t kl__7counted__3i32( int32_t );
-int32_t kl__9disagreed__4bool( bool );
-void kl__5store__3i32_O3i32( int32_t, int32_t* );
-int32_t kl__6passed__( void );
-int32_t kl__4main__( void );
+bool kl_3opt_3big__3i32( int32_t );
+int32_t kl_3opt_6either__3i32( int32_t );
+int64_t kl_3opt_5clamp__3i64( int64_t );
+int64_t kl_3opt_7clamped__3i64( int64_t );
+int32_t kl_3opt_6steady__3i32( int32_t );
+int64_t kl_3opt_7widened__( void );
+int32_t kl_3opt_7counted__3i32( int32_t );
+int32_t kl_3opt_9disagreed__4bool( bool );
+void kl_3opt_5store__3i32_O3i32( int32_t, int32_t* );
+int32_t kl_3opt_6passed__( void );
+int32_t kl_3opt_4main__( void );
 
 #line 6 "opt/constants.kl"
-bool kl__3big__3i32( int32_t kl_x_1 )
+bool kl_3opt_3big__3i32( int32_t kl_x_1 )
 {
     bool kl_t0;
 #line 8 "opt/constants.kl"
@@ -26,7 +26,7 @@ bool kl__3big__3i32( int32_t kl_x_1 )
 }
 
 #line 12 "opt/constants.kl"
-int32_t kl__6either__3i32( int32_t kl_n_1 )
+int32_t kl_3opt_6either__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
     ( void ) kl_n_1;
@@ -37,7 +37,7 @@ int32_t kl__6either__3i32( int32_t kl_n_1 )
 }
 
 #line 21 "opt/constants.kl"
-int64_t kl__5clamp__3i64( int64_t kl_x_1 )
+int64_t kl_3opt_5clamp__3i64( int64_t kl_x_1 )
 {
     int64_t kl_t0;
     bool kl_t2;
@@ -58,7 +58,7 @@ int64_t kl__5clamp__3i64( int64_t kl_x_1 )
 }
 
 #line 27 "opt/constants.kl"
-int64_t kl__7clamped__3i64( int64_t kl_t_1 )
+int64_t kl_3opt_7clamped__3i64( int64_t kl_t_1 )
 {
     int64_t kl_t0;
 #line 31 "opt/constants.kl"
@@ -68,7 +68,7 @@ int64_t kl__7clamped__3i64( int64_t kl_t_1 )
 }
 
 #line 35 "opt/constants.kl"
-int32_t kl__6steady__3i32( int32_t kl_n_1 )
+int32_t kl_3opt_6steady__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
     int32_t kl_i_2;
@@ -96,7 +96,7 @@ int32_t kl__6steady__3i32( int32_t kl_n_1 )
 }
 
 #line 51 "opt/constants.kl"
-int64_t kl__7widened__( void )
+int64_t kl_3opt_7widened__( void )
 {
     int64_t kl_t0;
 #line 55 "opt/constants.kl"
@@ -105,7 +105,7 @@ int64_t kl__7widened__( void )
 }
 
 #line 60 "opt/constants.kl"
-int32_t kl__7counted__3i32( int32_t kl_n_1 )
+int32_t kl_3opt_7counted__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
     int32_t kl_i_2;
@@ -131,7 +131,7 @@ int32_t kl__7counted__3i32( int32_t kl_n_1 )
 }
 
 #line 71 "opt/constants.kl"
-int32_t kl__9disagreed__4bool( bool kl_c_1 )
+int32_t kl_3opt_9disagreed__4bool( bool kl_c_1 )
 {
     int32_t kl_t0;
     int32_t kl_k_2;
@@ -150,7 +150,7 @@ int32_t kl__9disagreed__4bool( bool kl_c_1 )
 }
 
 #line 81 "opt/constants.kl"
-void kl__5store__3i32_O3i32( int32_t kl_v_1, int32_t* kl_into_2 )
+void kl_3opt_5store__3i32_O3i32( int32_t kl_v_1, int32_t* kl_into_2 )
 {
     ( *kl_into_2 ) = kl_v_1;
     return;
@@ -158,19 +158,19 @@ void kl__5store__3i32_O3i32( int32_t kl_v_1, int32_t* kl_into_2 )
 }
 
 #line 87 "opt/constants.kl"
-int32_t kl__6passed__( void )
+int32_t kl_3opt_6passed__( void )
 {
     int32_t kl_t0;
     int32_t* kl_t1;
     kl_t0 = 0;
     kl_t1 = &kl_t0;
 #line 92 "opt/constants.kl"
-    kl__5store__3i32_O3i32( -4, kl_t1 );
+    kl_3opt_5store__3i32_O3i32( -4, kl_t1 );
     return kl_t0;
 }
 
 #line 96 "opt/constants.kl"
-int32_t kl__4main__( void )
+int32_t kl_3opt_4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_t1;
@@ -195,7 +195,7 @@ int32_t kl__4main__( void )
     kl_t3 = 0;
     kl_t5 = &kl_t3;
 #line 92 "opt/constants.kl"
-    kl__5store__3i32_O3i32( -4, kl_t5 );
+    kl_3opt_5store__3i32_O3i32( -4, kl_t5 );
 #line 128 "opt/constants.kl"
     kl_t4 = kl_t3 != -4;
 #line 128 "opt/constants.kl"
@@ -230,7 +230,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 96 "opt/constants.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_3opt_4main__(  );
 #line 96 "opt/constants.kl"
     return kl_t0;
 #line 96 "opt/constants.kl"

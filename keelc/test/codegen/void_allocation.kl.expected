@@ -324,10 +324,10 @@ void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__7nothing__( void );
-int32_t kl__4main__( void );
-bool kl__10same_start__I4voidE__3u64( uint64_t );
-bool kl__10same_start__I3i32E__3u64( uint64_t );
+void kl_7codegen_7nothing__( void );
+int32_t kl_7codegen_4main__( void );
+bool kl_7codegen_10same_start__I4voidE__3u64( uint64_t );
+bool kl_7codegen_10same_start__I3i32E__3u64( uint64_t );
 void kl_1t7console_5print__4bool_7textual( bool, struct kl_7prelude_textual__ref );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 void kl_7prelude_str__drop( void* );
@@ -336,14 +336,14 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 5 "codegen/void_allocation.kl"
-void kl__7nothing__( void )
+void kl_7codegen_7nothing__( void )
 {
     return;
 #line 7 "codegen/void_allocation.kl"
 }
 
 #line 22 "codegen/void_allocation.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     bool kl_t1;
@@ -359,7 +359,7 @@ int32_t kl__4main__( void )
     struct kl_7prelude_str* kl_t14;
     struct kl_7prelude_textual__ref kl_t15;
 #line 24 "codegen/void_allocation.kl"
-    kl_t1 = kl__10same_start__I4voidE__3u64( 3 );
+    kl_t1 = kl_7codegen_10same_start__I4voidE__3u64( 3 );
 #line 63 "../test_lib/console.kl"
     kl_t3 = &kl_t2;
 #line 63 "../test_lib/console.kl"
@@ -372,7 +372,7 @@ int32_t kl__4main__( void )
     kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t6, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 24 "codegen/void_allocation.kl"
     kl_1t7console_5print__4bool_7textual( kl_t1, kl_t7 );
-    kl_t9 = kl__10same_start__I3i32E__3u64( 3 );
+    kl_t9 = kl_7codegen_10same_start__I3i32E__3u64( 3 );
 #line 63 "../test_lib/console.kl"
     kl_t11 = &kl_t10;
 #line 63 "../test_lib/console.kl"
@@ -391,7 +391,7 @@ int32_t kl__4main__( void )
 }
 
 #line 9 "codegen/void_allocation.kl"
-bool kl__10same_start__I4voidE__3u64( uint64_t kl_n_1 )
+bool kl_7codegen_10same_start__I4voidE__3u64( uint64_t kl_n_1 )
 {
     bool kl_t0;
     void* kl_one_2;
@@ -434,7 +434,7 @@ bool kl__10same_start__I4voidE__3u64( uint64_t kl_n_1 )
 }
 
 #line 9 "codegen/void_allocation.kl"
-bool kl__10same_start__I3i32E__3u64( uint64_t kl_n_1 )
+bool kl_7codegen_10same_start__I3i32E__3u64( uint64_t kl_n_1 )
 {
     bool kl_t0;
     int32_t* kl_one_2;
@@ -480,7 +480,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 22 "codegen/void_allocation.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 22 "codegen/void_allocation.kl"
     return kl_t0;
 #line 22 "codegen/void_allocation.kl"

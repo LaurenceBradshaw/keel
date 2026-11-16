@@ -3,22 +3,22 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Point;
+struct kl_7codegen_Point;
 
-struct kl__Point
+struct kl_7codegen_Point
 {
     int32_t kl_x;
     int32_t kl_y;
 };
-_Static_assert( sizeof( struct kl__Point ) == 8 && _Alignof( struct kl__Point ) == 4 && offsetof( struct kl__Point, kl_x ) == 0 && offsetof( struct kl__Point, kl_y ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Point ) == 8 && _Alignof( struct kl_7codegen_Point ) == 4 && offsetof( struct kl_7codegen_Point, kl_x ) == 0 && offsetof( struct kl_7codegen_Point, kl_y ) == 4, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__10bump_twice__R3i32( int32_t* );
-int32_t kl__4main__( void );
+void kl_7codegen_10bump_twice__R3i32( int32_t* );
+int32_t kl_7codegen_4main__( void );
 
 #line 12 "codegen/ref_bindings.kl"
-void kl__10bump_twice__R3i32( int32_t* kl_n_1 )
+void kl_7codegen_10bump_twice__R3i32( int32_t* kl_n_1 )
 {
     int32_t* kl_inner_2;
     bool kl_t3;
@@ -55,7 +55,7 @@ void kl__10bump_twice__R3i32( int32_t* kl_n_1 )
 }
 
 #line 20 "codegen/ref_bindings.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_a_1;
@@ -63,8 +63,8 @@ int32_t kl__4main__( void )
     bool kl_t3;
     int32_t kl_t4;
     int32_t* kl_t5;
-    struct kl__Point kl_p_7;
-    struct kl__Point kl_t8;
+    struct kl_7codegen_Point kl_p_7;
+    struct kl_7codegen_Point kl_t8;
     int32_t* kl_q_9;
     bool kl_t10;
     int32_t kl_t11;
@@ -94,7 +94,7 @@ int32_t kl__4main__( void )
 #line 28 "codegen/ref_bindings.kl"
     kl_t5 = &kl_a_1;
 #line 28 "codegen/ref_bindings.kl"
-    kl__10bump_twice__R3i32( kl_t5 );
+    kl_7codegen_10bump_twice__R3i32( kl_t5 );
 #line 30 "codegen/ref_bindings.kl"
     kl_t8.kl_x = 2;
 #line 30 "codegen/ref_bindings.kl"
@@ -153,7 +153,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 20 "codegen/ref_bindings.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 20 "codegen/ref_bindings.kl"
     return kl_t0;
 #line 20 "codegen/ref_bindings.kl"

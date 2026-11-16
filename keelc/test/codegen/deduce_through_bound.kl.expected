@@ -9273,7 +9273,7 @@ bool kl_2kl7console_5input__RQ2kl6string( struct kl_2kl6string_string* kl_line_1
 #include <stddef.h>
 
 struct kl__A3_3i32;
-struct kl__Bag;
+struct kl_7codegen_Bag;
 struct kl_2kl6string_string;
 struct kl_2kl2os_path;
 struct kl_2kl2os_process;
@@ -9300,11 +9300,11 @@ struct kl__A3_3i32
 };
 _Static_assert( sizeof( struct kl__A3_3i32 ) == 12 && _Alignof( struct kl__A3_3i32 ) == 4, "layout" );
 
-struct kl__Bag
+struct kl_7codegen_Bag
 {
     struct kl__A3_3i32 kl_v_;
 };
-_Static_assert( sizeof( struct kl__Bag ) == 12 && _Alignof( struct kl__Bag ) == 4 && offsetof( struct kl__Bag, kl_v_ ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Bag ) == 12 && _Alignof( struct kl_7codegen_Bag ) == 4 && offsetof( struct kl_7codegen_Bag, kl_v_ ) == 0, "layout" );
 
 struct kl_2kl6string_string
 {
@@ -9439,19 +9439,19 @@ void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-void kl__3Bag__R3Bag__ctor( struct kl__Bag* );
-uint64_t kl__4size__S3Bag( struct kl__Bag* );
-int32_t* kl__14operator_index__S3Bag_3u64( struct kl__Bag*, uint64_t );
-void kl__4swap__S3Bag_3u64_3u64( struct kl__Bag*, uint64_t, uint64_t );
-int32_t kl__4main__( void );
-bool kl__110lambda1481__( int32_t*, int32_t* );
+void kl_7codegen_3Bag__RQ7codegen3Bag__ctor( struct kl_7codegen_Bag* );
+uint64_t kl_7codegen_4size__SQ7codegen3Bag( struct kl_7codegen_Bag* );
+int32_t* kl_7codegen_14operator_index__SQ7codegen3Bag_3u64( struct kl_7codegen_Bag*, uint64_t );
+void kl_7codegen_4swap__SQ7codegen3Bag_3u64_3u64( struct kl_7codegen_Bag*, uint64_t, uint64_t );
+int32_t kl_7codegen_4main__( void );
+bool kl_7codegen_110lambda1481__( int32_t*, int32_t* );
 void kl_2kl4list_4list__I3i32E__RQ2kl4listI3i32E__ctor( struct kl_2kl4list_list__I3i32E* );
 void kl_2kl4list_4push__I3i32E__SQ2kl4listI3i32E_M3i32( struct kl_2kl4list_list__I3i32E*, int32_t );
-uint64_t kl__5count__IQ2kl4listI3i32E_3i32E__Q2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* );
-void kl__4flip__IA3_3i32_3i32E__RA3_3i32( struct kl__A3_3i32* );
-void kl__4flip__I3Bag_3i32E__R3Bag( struct kl__Bag* );
-void kl__10flip_twice__IA3_3i32_3i32E__RA3_3i32( struct kl__A3_3i32* );
-int32_t kl__4pick__IA3_3i32_3i32_Z20deduce_through_bound_1481_E__A3_3i32_Z20deduce_through_bound_1481_( struct kl__A3_3i32*, uint8_t* );
+uint64_t kl_7codegen_5count__IQ2kl4listI3i32E_3i32E__Q2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* );
+void kl_7codegen_4flip__IA3_3i32_3i32E__RA3_3i32( struct kl__A3_3i32* );
+void kl_7codegen_4flip__IQ7codegen3Bag_3i32E__RQ7codegen3Bag( struct kl_7codegen_Bag* );
+void kl_7codegen_10flip_twice__IA3_3i32_3i32E__RA3_3i32( struct kl__A3_3i32* );
+int32_t kl_7codegen_4pick__IA3_3i32_3i32_Z7codegen20deduce_through_bound_1481_E__A3_3i32_Z7codegen20deduce_through_bound_1481_( struct kl__A3_3i32*, uint8_t* );
 void kl_2kl4list_8truncate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
 uint64_t kl_2kl4list_4size__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
 struct kl_2kl6string_string* kl_2kl4list_14operator_index__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
@@ -9485,7 +9485,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 9 "codegen/deduce_through_bound.kl"
-void kl__3Bag__R3Bag__ctor( struct kl__Bag* kl_this_1 )
+void kl_7codegen_3Bag__RQ7codegen3Bag__ctor( struct kl_7codegen_Bag* kl_this_1 )
 {
     struct kl__A3_3i32 kl_t2;
     uint64_t kl_t3;
@@ -9514,7 +9514,7 @@ void kl__3Bag__R3Bag__ctor( struct kl__Bag* kl_this_1 )
 }
 
 #line 10 "codegen/deduce_through_bound.kl"
-uint64_t kl__4size__S3Bag( struct kl__Bag* kl_this_1 )
+uint64_t kl_7codegen_4size__SQ7codegen3Bag( struct kl_7codegen_Bag* kl_this_1 )
 {
     uint64_t kl_t0;
     ( void ) kl_this_1;
@@ -9526,7 +9526,7 @@ uint64_t kl__4size__S3Bag( struct kl__Bag* kl_this_1 )
 }
 
 #line 11 "codegen/deduce_through_bound.kl"
-int32_t* kl__14operator_index__S3Bag_3u64( struct kl__Bag* kl_this_1, uint64_t kl_index_2 )
+int32_t* kl_7codegen_14operator_index__SQ7codegen3Bag_3u64( struct kl_7codegen_Bag* kl_this_1, uint64_t kl_index_2 )
 {
     int32_t* kl_t0;
     uint64_t kl_t3;
@@ -9549,7 +9549,7 @@ int32_t* kl__14operator_index__S3Bag_3u64( struct kl__Bag* kl_this_1, uint64_t k
 }
 
 #line 12 "codegen/deduce_through_bound.kl"
-void kl__4swap__S3Bag_3u64_3u64( struct kl__Bag* kl_this_1, uint64_t kl_a_2, uint64_t kl_b_3 )
+void kl_7codegen_4swap__SQ7codegen3Bag_3u64_3u64( struct kl_7codegen_Bag* kl_this_1, uint64_t kl_a_2, uint64_t kl_b_3 )
 {
     uint64_t kl_t4;
     uint64_t kl_t5;
@@ -9613,7 +9613,7 @@ void kl__4swap__S3Bag_3u64_3u64( struct kl__Bag* kl_this_1, uint64_t kl_a_2, uin
 }
 
 #line 50 "codegen/deduce_through_bound.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     struct kl_2kl4list_list__I3i32E kl_l_1;
@@ -9640,10 +9640,10 @@ int32_t kl__4main__( void )
     uint8_t* kl_t28;
     struct kl_7prelude_str* kl_t30;
     struct kl_7prelude_textual__ref kl_t31;
-    struct kl__Bag kl_b_33;
-    struct kl__Bag* kl_t34;
-    struct kl__Bag* kl_t36;
-    struct kl__Bag* kl_t38;
+    struct kl_7codegen_Bag kl_b_33;
+    struct kl_7codegen_Bag* kl_t34;
+    struct kl_7codegen_Bag* kl_t36;
+    struct kl_7codegen_Bag* kl_t38;
     int32_t* kl_t39;
     int64_t kl_t40;
     struct kl_7prelude_str kl_t41;
@@ -9686,7 +9686,7 @@ int32_t kl__4main__( void )
     kl_2kl4list_4push__I3i32E__SQ2kl4listI3i32E_M3i32( kl_t6, 5 );
     kl_t8 = &kl_l_1;
 #line 55 "codegen/deduce_through_bound.kl"
-    kl_t9 = kl__5count__IQ2kl4listI3i32E_3i32E__Q2kl4listI3i32E( kl_t8 );
+    kl_t9 = kl_7codegen_5count__IQ2kl4listI3i32E_3i32E__Q2kl4listI3i32E( kl_t8 );
 #line 46 "<kl>/console.kl"
     kl_t11 = &kl_t10;
 #line 46 "<kl>/console.kl"
@@ -9714,7 +9714,7 @@ int32_t kl__4main__( void )
     kl_a_17 = kl_t18;
     kl_t22 = &kl_a_17;
 #line 57 "codegen/deduce_through_bound.kl"
-    kl__4flip__IA3_3i32_3i32E__RA3_3i32( kl_t22 );
+    kl_7codegen_4flip__IA3_3i32_3i32E__RA3_3i32( kl_t22 );
     kl_t24 = 0;
 #line 58 "codegen/deduce_through_bound.kl"
     kl_t25 = ( int64_t ) kl_a_17.e[kl_t24];
@@ -9732,13 +9732,13 @@ int32_t kl__4main__( void )
     kl_2kl7console_5print__3i64_7textual( kl_t25, kl_t31 );
     kl_t34 = &kl_b_33;
 #line 59 "codegen/deduce_through_bound.kl"
-    kl__3Bag__R3Bag__ctor( kl_t34 );
+    kl_7codegen_3Bag__RQ7codegen3Bag__ctor( kl_t34 );
     kl_t36 = &kl_b_33;
 #line 60 "codegen/deduce_through_bound.kl"
-    kl__4flip__I3Bag_3i32E__R3Bag( kl_t36 );
+    kl_7codegen_4flip__IQ7codegen3Bag_3i32E__RQ7codegen3Bag( kl_t36 );
     kl_t38 = &kl_b_33;
 #line 61 "codegen/deduce_through_bound.kl"
-    kl_t39 = kl__14operator_index__S3Bag_3u64( kl_t38, 0 );
+    kl_t39 = kl_7codegen_14operator_index__SQ7codegen3Bag_3u64( kl_t38, 0 );
 #line 61 "codegen/deduce_through_bound.kl"
     kl_t40 = ( int64_t ) ( *kl_t39 );
 #line 36 "<kl>/console.kl"
@@ -9755,7 +9755,7 @@ int32_t kl__4main__( void )
     kl_2kl7console_5print__3i64_7textual( kl_t40, kl_t46 );
     kl_t48 = &kl_a_17;
 #line 62 "codegen/deduce_through_bound.kl"
-    kl__10flip_twice__IA3_3i32_3i32E__RA3_3i32( kl_t48 );
+    kl_7codegen_10flip_twice__IA3_3i32_3i32E__RA3_3i32( kl_t48 );
     kl_t50 = 0;
 #line 63 "codegen/deduce_through_bound.kl"
     kl_t51 = ( int64_t ) kl_a_17.e[kl_t50];
@@ -9777,7 +9777,7 @@ int32_t kl__4main__( void )
 #line 64 "codegen/deduce_through_bound.kl"
     kl_t61 = &kl_t60;
 #line 64 "codegen/deduce_through_bound.kl"
-    kl_t62 = kl__4pick__IA3_3i32_3i32_Z20deduce_through_bound_1481_E__A3_3i32_Z20deduce_through_bound_1481_( kl_t59, kl_t61 );
+    kl_t62 = kl_7codegen_4pick__IA3_3i32_3i32_Z7codegen20deduce_through_bound_1481_E__A3_3i32_Z7codegen20deduce_through_bound_1481_( kl_t59, kl_t61 );
 #line 64 "codegen/deduce_through_bound.kl"
     kl_t63 = ( int64_t ) kl_t62;
 #line 36 "<kl>/console.kl"
@@ -9800,7 +9800,7 @@ int32_t kl__4main__( void )
 }
 
 #line 64 "codegen/deduce_through_bound.kl"
-bool kl__110lambda1481__( int32_t* kl_x_1, int32_t* kl_y_2 )
+bool kl_7codegen_110lambda1481__( int32_t* kl_x_1, int32_t* kl_y_2 )
 {
     bool kl_t0;
     bool kl_t3;
@@ -9852,7 +9852,7 @@ void kl_2kl4list_4push__I3i32E__SQ2kl4listI3i32E_M3i32( struct kl_2kl4list_list_
 }
 
 #line 16 "codegen/deduce_through_bound.kl"
-uint64_t kl__5count__IQ2kl4listI3i32E_3i32E__Q2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* kl_c_1 )
+uint64_t kl_7codegen_5count__IQ2kl4listI3i32E_3i32E__Q2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* kl_c_1 )
 {
     uint64_t kl_t0;
     uint64_t kl_n_2;
@@ -9916,7 +9916,7 @@ uint64_t kl__5count__IQ2kl4listI3i32E_3i32E__Q2kl4listI3i32E( struct kl_2kl4list
 }
 
 #line 26 "codegen/deduce_through_bound.kl"
-void kl__4flip__IA3_3i32_3i32E__RA3_3i32( struct kl__A3_3i32* kl_c_1 )
+void kl_7codegen_4flip__IA3_3i32_3i32E__RA3_3i32( struct kl__A3_3i32* kl_c_1 )
 {
     uint64_t kl_t2;
     uint64_t kl_t3;
@@ -9983,10 +9983,10 @@ void kl__4flip__IA3_3i32_3i32E__RA3_3i32( struct kl__A3_3i32* kl_c_1 )
 }
 
 #line 26 "codegen/deduce_through_bound.kl"
-void kl__4flip__I3Bag_3i32E__R3Bag( struct kl__Bag* kl_c_1 )
+void kl_7codegen_4flip__IQ7codegen3Bag_3i32E__RQ7codegen3Bag( struct kl_7codegen_Bag* kl_c_1 )
 {
-    struct kl__Bag* kl_t2;
-    struct kl__Bag* kl_t3;
+    struct kl_7codegen_Bag* kl_t2;
+    struct kl_7codegen_Bag* kl_t3;
     uint64_t kl_t4;
     bool kl_t5;
     uint64_t kl_t6;
@@ -9995,7 +9995,7 @@ void kl__4flip__I3Bag_3i32E__R3Bag( struct kl__Bag* kl_c_1 )
 #line 28 "codegen/deduce_through_bound.kl"
     kl_t3 = &( *kl_c_1 );
 #line 28 "codegen/deduce_through_bound.kl"
-    kl_t4 = kl__4size__S3Bag( kl_t3 );
+    kl_t4 = kl_7codegen_4size__SQ7codegen3Bag( kl_t3 );
 #line 28 "codegen/deduce_through_bound.kl"
     kl_t5 = __builtin_sub_overflow( kl_t4, 1, &( uint64_t ) { 0 } );
 #line 28 "codegen/deduce_through_bound.kl"
@@ -10007,29 +10007,29 @@ void kl__4flip__I3Bag_3i32E__R3Bag( struct kl__Bag* kl_c_1 )
 #line 28 "codegen/deduce_through_bound.kl"
     kl_t6 = kl_t4 - 1;
 #line 28 "codegen/deduce_through_bound.kl"
-    kl__4swap__S3Bag_3u64_3u64( kl_t2, 0, kl_t6 );
+    kl_7codegen_4swap__SQ7codegen3Bag_3u64_3u64( kl_t2, 0, kl_t6 );
     return;
 #line 29 "codegen/deduce_through_bound.kl"
 }
 
 #line 31 "codegen/deduce_through_bound.kl"
-void kl__10flip_twice__IA3_3i32_3i32E__RA3_3i32( struct kl__A3_3i32* kl_c_1 )
+void kl_7codegen_10flip_twice__IA3_3i32_3i32E__RA3_3i32( struct kl__A3_3i32* kl_c_1 )
 {
     struct kl__A3_3i32* kl_t2;
     struct kl__A3_3i32* kl_t4;
 #line 33 "codegen/deduce_through_bound.kl"
     kl_t2 = &( *kl_c_1 );
 #line 33 "codegen/deduce_through_bound.kl"
-    kl__4flip__IA3_3i32_3i32E__RA3_3i32( kl_t2 );
+    kl_7codegen_4flip__IA3_3i32_3i32E__RA3_3i32( kl_t2 );
     kl_t4 = &( *kl_c_1 );
 #line 34 "codegen/deduce_through_bound.kl"
-    kl__4flip__IA3_3i32_3i32E__RA3_3i32( kl_t4 );
+    kl_7codegen_4flip__IA3_3i32_3i32E__RA3_3i32( kl_t4 );
     return;
 #line 35 "codegen/deduce_through_bound.kl"
 }
 
 #line 37 "codegen/deduce_through_bound.kl"
-int32_t kl__4pick__IA3_3i32_3i32_Z20deduce_through_bound_1481_E__A3_3i32_Z20deduce_through_bound_1481_( struct kl__A3_3i32* kl_c_1, uint8_t* kl_better_2 )
+int32_t kl_7codegen_4pick__IA3_3i32_3i32_Z7codegen20deduce_through_bound_1481_E__A3_3i32_Z7codegen20deduce_through_bound_1481_( struct kl__A3_3i32* kl_c_1, uint8_t* kl_better_2 )
 {
     int32_t kl_t0;
     int32_t kl_best_3;
@@ -10075,7 +10075,7 @@ int32_t kl__4pick__IA3_3i32_3i32_Z20deduce_through_bound_1481_E__A3_3i32_Z20dedu
 #line 42 "codegen/deduce_through_bound.kl"
     kl_t10 = &kl_best_3;
 #line 42 "codegen/deduce_through_bound.kl"
-    kl_t11 = kl__110lambda1481__( kl_t9, kl_t10 );
+    kl_t11 = kl_7codegen_110lambda1481__( kl_t9, kl_t10 );
 #line 42 "codegen/deduce_through_bound.kl"
     if ( kl_t11 ) goto bb6; else goto bb9;
     bb5:
@@ -10769,7 +10769,7 @@ int main( void )
 #line 50 "codegen/deduce_through_bound.kl"
     kl_2kl2os_0build(  );
 #line 50 "codegen/deduce_through_bound.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 50 "codegen/deduce_through_bound.kl"
     kl_2kl2os_0drop(  );
 #line 50 "codegen/deduce_through_bound.kl"

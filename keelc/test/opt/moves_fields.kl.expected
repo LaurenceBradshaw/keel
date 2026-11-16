@@ -3,86 +3,86 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Box;
-struct kl__Point;
-struct kl__Line;
-struct kl__Shape;
+struct kl_3opt_Box;
+struct kl_3opt_Point;
+struct kl_3opt_Line;
+struct kl_3opt_Shape;
 
-struct kl__Box
+struct kl_3opt_Box
 {
     int32_t kl_value;
 };
-_Static_assert( sizeof( struct kl__Box ) == 4 && _Alignof( struct kl__Box ) == 4 && offsetof( struct kl__Box, kl_value ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_3opt_Box ) == 4 && _Alignof( struct kl_3opt_Box ) == 4 && offsetof( struct kl_3opt_Box, kl_value ) == 0, "layout" );
 
-struct kl__Point
+struct kl_3opt_Point
 {
     int32_t kl_x;
     int32_t kl_y;
 };
-_Static_assert( sizeof( struct kl__Point ) == 8 && _Alignof( struct kl__Point ) == 4 && offsetof( struct kl__Point, kl_x ) == 0 && offsetof( struct kl__Point, kl_y ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_3opt_Point ) == 8 && _Alignof( struct kl_3opt_Point ) == 4 && offsetof( struct kl_3opt_Point, kl_x ) == 0 && offsetof( struct kl_3opt_Point, kl_y ) == 4, "layout" );
 
-struct kl__Line
+struct kl_3opt_Line
 {
-    struct kl__Point kl_a;
-    struct kl__Point kl_b;
+    struct kl_3opt_Point kl_a;
+    struct kl_3opt_Point kl_b;
 };
-_Static_assert( sizeof( struct kl__Line ) == 16 && _Alignof( struct kl__Line ) == 4 && offsetof( struct kl__Line, kl_a ) == 0 && offsetof( struct kl__Line, kl_b ) == 8, "layout" );
+_Static_assert( sizeof( struct kl_3opt_Line ) == 16 && _Alignof( struct kl_3opt_Line ) == 4 && offsetof( struct kl_3opt_Line, kl_a ) == 0 && offsetof( struct kl_3opt_Line, kl_b ) == 8, "layout" );
 
-struct kl__Shape
+struct kl_3opt_Shape
 {
     int32_t tag;
     union
     {
         struct
         {
-            struct kl__Box kl_5boxed_b;
+            struct kl_3opt_Box kl_5boxed_b;
         };
         struct
         {
-            struct kl__Box kl_6paired_first;
-            struct kl__Box kl_6paired_second;
+            struct kl_3opt_Box kl_6paired_first;
+            struct kl_3opt_Box kl_6paired_second;
         };
     };
 };
-_Static_assert( sizeof( struct kl__Shape ) == 12 && _Alignof( struct kl__Shape ) == 4 && offsetof( struct kl__Shape, kl_5boxed_b ) == 4 && offsetof( struct kl__Shape, kl_6paired_first ) == 4 && offsetof( struct kl__Shape, kl_6paired_second ) == 8, "layout" );
+_Static_assert( sizeof( struct kl_3opt_Shape ) == 12 && _Alignof( struct kl_3opt_Shape ) == 4 && offsetof( struct kl_3opt_Shape, kl_5boxed_b ) == 4 && offsetof( struct kl_3opt_Shape, kl_6paired_first ) == 4 && offsetof( struct kl_3opt_Shape, kl_6paired_second ) == 8, "layout" );
 
-int32_t kl__live__G;
-int32_t kl__destroyed__G;
+int32_t kl_3opt_live__G;
+int32_t kl_3opt_destroyed__G;
 
-void kl__3Box__R3Box_3i32__ctor( struct kl__Box*, int32_t );
-void kl__3Box__dtor( struct kl__Box* );
-struct kl__Line kl__4line__3i32( int32_t );
-int32_t kl__8declared__3i32( int32_t );
-int32_t kl__8borrowed__3i32( int32_t );
-struct kl__Shape kl__7wrapped__3i32( int32_t );
-int32_t kl__6opened__M5Shape( struct kl__Shape );
-int32_t kl__4main__( void );
-void kl__5Shape__dtor( struct kl__Shape* );
+void kl_3opt_3Box__RQ3opt3Box_3i32__ctor( struct kl_3opt_Box*, int32_t );
+void kl_3opt_3Box__dtor( struct kl_3opt_Box* );
+struct kl_3opt_Line kl_3opt_4line__3i32( int32_t );
+int32_t kl_3opt_8declared__3i32( int32_t );
+int32_t kl_3opt_8borrowed__3i32( int32_t );
+struct kl_3opt_Shape kl_3opt_7wrapped__3i32( int32_t );
+int32_t kl_3opt_6opened__MQ3opt5Shape( struct kl_3opt_Shape );
+int32_t kl_3opt_4main__( void );
+void kl_3opt_5Shape__dtor( struct kl_3opt_Shape* );
 
 #line 10 "opt/moves_fields.kl"
-void kl__3Box__R3Box_3i32__ctor( struct kl__Box* kl_this_1, int32_t kl_v_2 )
+void kl_3opt_3Box__RQ3opt3Box_3i32__ctor( struct kl_3opt_Box* kl_this_1, int32_t kl_v_2 )
 {
     ( *kl_this_1 ).kl_value = kl_v_2;
-    kl__live__G = kl__live__G + 1;
+    kl_3opt_live__G = kl_3opt_live__G + 1;
     return;
 #line 14 "opt/moves_fields.kl"
 }
 
 #line 16 "opt/moves_fields.kl"
-void kl__3Box__dtor( struct kl__Box* kl_this_1 )
+void kl_3opt_3Box__dtor( struct kl_3opt_Box* kl_this_1 )
 {
     ( void ) kl_this_1;
 #line 18 "opt/moves_fields.kl"
-    kl__live__G = kl__live__G - 1;
-    kl__destroyed__G = kl__destroyed__G + 1;
+    kl_3opt_live__G = kl_3opt_live__G - 1;
+    kl_3opt_destroyed__G = kl_3opt_destroyed__G + 1;
     return;
 #line 20 "opt/moves_fields.kl"
 }
 
 #line 45 "opt/moves_fields.kl"
-struct kl__Line kl__4line__3i32( int32_t kl_v_1 )
+struct kl_3opt_Line kl_3opt_4line__3i32( int32_t kl_v_1 )
 {
-    struct kl__Line kl_t0;
+    struct kl_3opt_Line kl_t0;
 #line 47 "opt/moves_fields.kl"
     kl_t0.kl_a.kl_y = kl_v_1 * 2;
 #line 47 "opt/moves_fields.kl"
@@ -96,7 +96,7 @@ struct kl__Line kl__4line__3i32( int32_t kl_v_1 )
 }
 
 #line 51 "opt/moves_fields.kl"
-int32_t kl__8declared__3i32( int32_t kl_v_1 )
+int32_t kl_3opt_8declared__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
     kl_t0 = kl_v_1 + kl_v_1;
@@ -105,7 +105,7 @@ int32_t kl__8declared__3i32( int32_t kl_v_1 )
 }
 
 #line 58 "opt/moves_fields.kl"
-int32_t kl__8borrowed__3i32( int32_t kl_v_1 )
+int32_t kl_3opt_8borrowed__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
 #line 62 "opt/moves_fields.kl"
@@ -115,12 +115,12 @@ int32_t kl__8borrowed__3i32( int32_t kl_v_1 )
 }
 
 #line 66 "opt/moves_fields.kl"
-struct kl__Shape kl__7wrapped__3i32( int32_t kl_v_1 )
+struct kl_3opt_Shape kl_3opt_7wrapped__3i32( int32_t kl_v_1 )
 {
-    struct kl__Shape kl_t0;
+    struct kl_3opt_Shape kl_t0;
 #line 12 "opt/moves_fields.kl"
     kl_t0.kl_5boxed_b.kl_value = kl_v_1;
-    kl__live__G = kl__live__G + 1;
+    kl_3opt_live__G = kl_3opt_live__G + 1;
 #line 68 "opt/moves_fields.kl"
     kl_t0.tag = 0;
 #line 68 "opt/moves_fields.kl"
@@ -128,7 +128,7 @@ struct kl__Shape kl__7wrapped__3i32( int32_t kl_v_1 )
 }
 
 #line 72 "opt/moves_fields.kl"
-int32_t kl__6opened__M5Shape( struct kl__Shape kl_s_1 )
+int32_t kl_3opt_6opened__MQ3opt5Shape( struct kl_3opt_Shape kl_s_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -141,8 +141,8 @@ int32_t kl__6opened__M5Shape( struct kl__Shape kl_s_1 )
 #line 77 "opt/moves_fields.kl"
     kl_t0 = kl_s_1.kl_5boxed_b.kl_value;
 #line 18 "opt/moves_fields.kl"
-    kl__live__G = kl__live__G - 1;
-    kl__destroyed__G = kl__destroyed__G + 1;
+    kl_3opt_live__G = kl_3opt_live__G - 1;
+    kl_3opt_destroyed__G = kl_3opt_destroyed__G + 1;
 #line 77 "opt/moves_fields.kl"
     return kl_t0;
     bb2:
@@ -150,8 +150,8 @@ int32_t kl__6opened__M5Shape( struct kl__Shape kl_s_1 )
 #line 79 "opt/moves_fields.kl"
     kl_t0 = kl_t3 + kl_s_1.kl_6paired_second.kl_value;
 #line 18 "opt/moves_fields.kl"
-    kl__live__G = kl__live__G - 2;
-    kl__destroyed__G = kl__destroyed__G + 2;
+    kl_3opt_live__G = kl_3opt_live__G - 2;
+    kl_3opt_destroyed__G = kl_3opt_destroyed__G + 2;
 #line 79 "opt/moves_fields.kl"
     return kl_t0;
     bb3:
@@ -167,37 +167,37 @@ int32_t kl__6opened__M5Shape( struct kl__Shape kl_s_1 )
 }
 
 #line 85 "opt/moves_fields.kl"
-int32_t kl__4main__( void )
+int32_t kl_3opt_4main__( void )
 {
     int32_t kl_t0;
     bool kl_t1;
-    struct kl__Shape kl_t2;
+    struct kl_3opt_Shape kl_t2;
     int32_t kl_t3;
     bool kl_t4;
-    struct kl__Shape kl_t5;
+    struct kl_3opt_Shape kl_t5;
     int32_t kl_t6;
     bool kl_t7;
-    struct kl__Shape kl_t8;
+    struct kl_3opt_Shape kl_t8;
     int32_t kl_t9;
 #line 12 "opt/moves_fields.kl"
     kl_t2.kl_5boxed_b.kl_value = 6;
-    kl__live__G = kl__live__G + 1;
+    kl_3opt_live__G = kl_3opt_live__G + 1;
 #line 68 "opt/moves_fields.kl"
     kl_t2.tag = 0;
 #line 98 "opt/moves_fields.kl"
-    kl_t3 = kl__6opened__M5Shape( kl_t2 );
+    kl_t3 = kl_3opt_6opened__MQ3opt5Shape( kl_t2 );
 #line 98 "opt/moves_fields.kl"
     kl_t1 = kl_t3 != 6;
 #line 98 "opt/moves_fields.kl"
     if ( kl_t1 ) goto bb3; else goto bb1;
     bb1:
 #line 98 "opt/moves_fields.kl"
-    kl_t1 = kl__live__G != 0;
+    kl_t1 = kl_3opt_live__G != 0;
 #line 98 "opt/moves_fields.kl"
     if ( kl_t1 ) goto bb3; else goto bb2;
     bb2:
 #line 98 "opt/moves_fields.kl"
-    kl_t1 = kl__destroyed__G != 1;
+    kl_t1 = kl_3opt_destroyed__G != 1;
 #line 98 "opt/moves_fields.kl"
     goto bb3;
     bb3:
@@ -209,7 +209,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb5:
 #line 13 "opt/moves_fields.kl"
-    kl__live__G = kl__live__G + 2;
+    kl_3opt_live__G = kl_3opt_live__G + 2;
 #line 103 "opt/moves_fields.kl"
     kl_t5.tag = 1;
 #line 103 "opt/moves_fields.kl"
@@ -217,19 +217,19 @@ int32_t kl__4main__( void )
 #line 103 "opt/moves_fields.kl"
     kl_t5.kl_6paired_second.kl_value = 2;
 #line 103 "opt/moves_fields.kl"
-    kl_t6 = kl__6opened__M5Shape( kl_t5 );
+    kl_t6 = kl_3opt_6opened__MQ3opt5Shape( kl_t5 );
 #line 103 "opt/moves_fields.kl"
     kl_t4 = kl_t6 != 12;
 #line 103 "opt/moves_fields.kl"
     if ( kl_t4 ) goto bb8; else goto bb6;
     bb6:
 #line 103 "opt/moves_fields.kl"
-    kl_t4 = kl__live__G != 0;
+    kl_t4 = kl_3opt_live__G != 0;
 #line 103 "opt/moves_fields.kl"
     if ( kl_t4 ) goto bb8; else goto bb7;
     bb7:
 #line 103 "opt/moves_fields.kl"
-    kl_t4 = kl__destroyed__G != 3;
+    kl_t4 = kl_3opt_destroyed__G != 3;
 #line 103 "opt/moves_fields.kl"
     goto bb8;
     bb8:
@@ -243,7 +243,7 @@ int32_t kl__4main__( void )
 #line 108 "opt/moves_fields.kl"
     kl_t8.tag = 2;
 #line 108 "opt/moves_fields.kl"
-    kl_t9 = kl__6opened__M5Shape( kl_t8 );
+    kl_t9 = kl_3opt_6opened__MQ3opt5Shape( kl_t8 );
 #line 108 "opt/moves_fields.kl"
     kl_t7 = kl_t9 == 0;
 #line 108 "opt/moves_fields.kl"
@@ -263,18 +263,18 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb14:
 #line 108 "opt/moves_fields.kl"
-    kl_t7 = kl__live__G == 0;
+    kl_t7 = kl_3opt_live__G == 0;
 #line 108 "opt/moves_fields.kl"
     if ( kl_t7 ) goto bb15; else goto bb12;
     bb15:
 #line 108 "opt/moves_fields.kl"
-    kl_t7 = kl__destroyed__G == 3;
+    kl_t7 = kl_3opt_destroyed__G == 3;
 #line 108 "opt/moves_fields.kl"
     if ( kl_t7 ) goto bb11; else goto bb12;
 }
 
 #line 37 "opt/moves_fields.kl"
-void kl__5Shape__dtor( struct kl__Shape* kl_t1 )
+void kl_3opt_5Shape__dtor( struct kl_3opt_Shape* kl_t1 )
 {
     bool kl_t2;
     bool kl_t3;
@@ -292,13 +292,13 @@ void kl__5Shape__dtor( struct kl__Shape* kl_t1 )
     if ( kl_t3 ) goto bb3; else goto bb1;
     bb3:
 #line 18 "opt/moves_fields.kl"
-    kl__live__G = kl__live__G - 2;
-    kl__destroyed__G = kl__destroyed__G + 2;
+    kl_3opt_live__G = kl_3opt_live__G - 2;
+    kl_3opt_destroyed__G = kl_3opt_destroyed__G + 2;
     goto bb1;
     bb4:
 #line 18 "opt/moves_fields.kl"
-    kl__live__G = kl__live__G - 1;
-    kl__destroyed__G = kl__destroyed__G + 1;
+    kl_3opt_live__G = kl_3opt_live__G - 1;
+    kl_3opt_destroyed__G = kl_3opt_destroyed__G + 1;
     goto bb1;
 #line 42 "opt/moves_fields.kl"
 }
@@ -307,7 +307,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 85 "opt/moves_fields.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_3opt_4main__(  );
 #line 85 "opt/moves_fields.kl"
     return kl_t0;
 #line 85 "opt/moves_fields.kl"

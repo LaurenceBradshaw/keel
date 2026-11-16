@@ -8194,17 +8194,17 @@ void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-int32_t kl__4main__( void );
+int32_t kl_10walk_bound_4main__( void );
 void kl_2kl4list_4list__I3i32E__RQ2kl4listI3i32E__ctor( struct kl_2kl4list_list__I3i32E* );
 void kl_2kl4list_4push__I3i32E__SQ2kl4listI3i32E_M3i32( struct kl_2kl4list_list__I3i32E*, int32_t );
-int32_t kl__3sum__IQ2kl4listI3i32EE__Q2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* );
+int32_t kl_10walk_bound_3sum__IQ2kl4listI3i32EE__Q2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* );
 void kl_2kl3set_3set__I3i32E__RQ2kl3setI3i32E__ctor( struct kl_2kl3set_set__I3i32E* );
 bool kl_2kl3set_6insert__I3i32E__SQ2kl3setI3i32E_M3i32( struct kl_2kl3set_set__I3i32E*, int32_t );
-int32_t kl__3sum__IQ2kl3setI3i32EE__Q2kl3setI3i32E( struct kl_2kl3set_set__I3i32E* );
+int32_t kl_10walk_bound_3sum__IQ2kl3setI3i32EE__Q2kl3setI3i32E( struct kl_2kl3set_set__I3i32E* );
 void kl_2kl11ordered_set_11ordered_set__I3i32E__RQ2kl11ordered_setI3i32E__ctor( struct kl_2kl11ordered_set_ordered_set__I3i32E* );
 bool kl_2kl11ordered_set_6insert__I3i32E__SQ2kl11ordered_setI3i32E_M3i32( struct kl_2kl11ordered_set_ordered_set__I3i32E*, int32_t );
-int32_t kl__3sum__IQ2kl11ordered_setI3i32EE__Q2kl11ordered_setI3i32E( struct kl_2kl11ordered_set_ordered_set__I3i32E* );
-uint64_t kl__5bytes__IQ2kl4listIQ2kl6stringEE__Q2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
+int32_t kl_10walk_bound_3sum__IQ2kl11ordered_setI3i32EE__Q2kl11ordered_setI3i32E( struct kl_2kl11ordered_set_ordered_set__I3i32E* );
+uint64_t kl_10walk_bound_5bytes__IQ2kl4listIQ2kl6stringEE__Q2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
 void kl_2kl4list_8truncate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
 uint64_t kl_2kl4list_4size__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
 struct kl_2kl6string_string* kl_2kl4list_14operator_index__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
@@ -8274,7 +8274,7 @@ void kl_2kl4list_4push__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_MQ2kl6string( str
 void kl_2kl4list_4list__IQ2kl6stringE__dtor( struct kl_2kl4list_list__IQ2kl6stringE* );
 
 #line 33 "walk_bound/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_10walk_bound_4main__( void )
 {
     int32_t kl_t0;
     struct kl_2kl4list_list__I3i32E kl_l_1;
@@ -8339,7 +8339,7 @@ int32_t kl__4main__( void )
 #line 39 "walk_bound/main.kl"
     kl_t10 = &kl_l_1;
 #line 39 "walk_bound/main.kl"
-    kl_t11 = kl__3sum__IQ2kl4listI3i32EE__Q2kl4listI3i32E( kl_t10 );
+    kl_t11 = kl_10walk_bound_3sum__IQ2kl4listI3i32EE__Q2kl4listI3i32E( kl_t10 );
 #line 39 "walk_bound/main.kl"
     kl_t12 = kl_t11 == 6;
 #line 39 "walk_bound/main.kl"
@@ -8365,7 +8365,7 @@ int32_t kl__4main__( void )
 #line 45 "walk_bound/main.kl"
     kl_t22 = &kl_s_13;
 #line 45 "walk_bound/main.kl"
-    kl_t23 = kl__3sum__IQ2kl3setI3i32EE__Q2kl3setI3i32E( kl_t22 );
+    kl_t23 = kl_10walk_bound_3sum__IQ2kl3setI3i32EE__Q2kl3setI3i32E( kl_t22 );
 #line 45 "walk_bound/main.kl"
     kl_t24 = kl_t23 == 30;
 #line 45 "walk_bound/main.kl"
@@ -8388,7 +8388,7 @@ int32_t kl__4main__( void )
 #line 50 "walk_bound/main.kl"
     kl_t32 = &kl_o_25;
 #line 50 "walk_bound/main.kl"
-    kl_t33 = kl__3sum__IQ2kl11ordered_setI3i32EE__Q2kl11ordered_setI3i32E( kl_t32 );
+    kl_t33 = kl_10walk_bound_3sum__IQ2kl11ordered_setI3i32EE__Q2kl11ordered_setI3i32E( kl_t32 );
 #line 50 "walk_bound/main.kl"
     kl_t34 = kl_t33 == 12;
 #line 50 "walk_bound/main.kl"
@@ -8443,7 +8443,7 @@ int32_t kl__4main__( void )
 #line 55 "walk_bound/main.kl"
     kl_t52 = &kl_words_35;
 #line 55 "walk_bound/main.kl"
-    kl_t53 = kl__5bytes__IQ2kl4listIQ2kl6stringEE__Q2kl4listIQ2kl6stringE( kl_t52 );
+    kl_t53 = kl_10walk_bound_5bytes__IQ2kl4listIQ2kl6stringEE__Q2kl4listIQ2kl6stringE( kl_t52 );
 #line 55 "walk_bound/main.kl"
     kl_t54 = kl_t53 == 8;
 #line 55 "walk_bound/main.kl"
@@ -8509,7 +8509,7 @@ void kl_2kl4list_4push__I3i32E__SQ2kl4listI3i32E_M3i32( struct kl_2kl4list_list_
 }
 
 #line 9 "walk_bound/main.kl"
-int32_t kl__3sum__IQ2kl4listI3i32EE__Q2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* kl_c_1 )
+int32_t kl_10walk_bound_3sum__IQ2kl4listI3i32EE__Q2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* kl_c_1 )
 {
     int32_t kl_t0;
     int32_t kl_total_2;
@@ -8686,7 +8686,7 @@ bool kl_2kl3set_6insert__I3i32E__SQ2kl3setI3i32E_M3i32( struct kl_2kl3set_set__I
 }
 
 #line 9 "walk_bound/main.kl"
-int32_t kl__3sum__IQ2kl3setI3i32EE__Q2kl3setI3i32E( struct kl_2kl3set_set__I3i32E* kl_c_1 )
+int32_t kl_10walk_bound_3sum__IQ2kl3setI3i32EE__Q2kl3setI3i32E( struct kl_2kl3set_set__I3i32E* kl_c_1 )
 {
     int32_t kl_t0;
     int32_t kl_total_2;
@@ -8962,7 +8962,7 @@ bool kl_2kl11ordered_set_6insert__I3i32E__SQ2kl11ordered_setI3i32E_M3i32( struct
 }
 
 #line 9 "walk_bound/main.kl"
-int32_t kl__3sum__IQ2kl11ordered_setI3i32EE__Q2kl11ordered_setI3i32E( struct kl_2kl11ordered_set_ordered_set__I3i32E* kl_c_1 )
+int32_t kl_10walk_bound_3sum__IQ2kl11ordered_setI3i32EE__Q2kl11ordered_setI3i32E( struct kl_2kl11ordered_set_ordered_set__I3i32E* kl_c_1 )
 {
     int32_t kl_t0;
     int32_t kl_total_2;
@@ -9403,7 +9403,7 @@ int32_t kl__3sum__IQ2kl11ordered_setI3i32EE__Q2kl11ordered_setI3i32E( struct kl_
 }
 
 #line 21 "walk_bound/main.kl"
-uint64_t kl__5bytes__IQ2kl4listIQ2kl6stringEE__Q2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* kl_c_1 )
+uint64_t kl_10walk_bound_5bytes__IQ2kl4listIQ2kl6stringEE__Q2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* kl_c_1 )
 {
     uint64_t kl_t0;
     uint64_t kl_total_2;
@@ -10874,7 +10874,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 33 "walk_bound/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_10walk_bound_4main__(  );
 #line 33 "walk_bound/main.kl"
     return kl_t0;
 #line 33 "walk_bound/main.kl"

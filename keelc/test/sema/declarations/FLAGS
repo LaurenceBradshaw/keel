@@ -1,1 +1,1 @@
---check --diagnostics=json --declarations --package geo=sema/declarations/geo
+--check --diagnostics=json --declarations --package sema/declarations/geo

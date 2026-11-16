@@ -1,1 +1,1 @@
---debug -O0 --emit-c --package shapes=codegen/nested_packages/shapes
+--debug -O0 --emit-c --package codegen/nested_packages/shapes

@@ -22,7 +22,7 @@ cd "$( dirname "$0" )" || exit 1
 out="$( mktemp -d )"
 trap 'rm -rf "$out"' EXIT
 
-if ! "$keeldoc" --keelc "$keelc" -o "$out" geo=geo; then
+if ! "$keeldoc" --keelc "$keelc" -o "$out" geo; then
     echo "keeldoc failed on geo/"
     exit 1
 fi

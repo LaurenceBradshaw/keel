@@ -3,53 +3,53 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Point;
-struct kl__Buffer;
-struct kl__Owner;
-struct kl__Holder__I3i32E;
+struct kl_7codegen_Point;
+struct kl_7codegen_Buffer;
+struct kl_7codegen_Owner;
+struct kl_7codegen_Holder__I3i32E;
 
-struct kl__Point
+struct kl_7codegen_Point
 {
     int32_t kl_x;
     int32_t kl_y;
 };
-_Static_assert( sizeof( struct kl__Point ) == 8 && _Alignof( struct kl__Point ) == 4 && offsetof( struct kl__Point, kl_x ) == 0 && offsetof( struct kl__Point, kl_y ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Point ) == 8 && _Alignof( struct kl_7codegen_Point ) == 4 && offsetof( struct kl_7codegen_Point, kl_x ) == 0 && offsetof( struct kl_7codegen_Point, kl_y ) == 4, "layout" );
 
-struct kl__Buffer
+struct kl_7codegen_Buffer
 {
     uint64_t kl_size;
     uint64_t* kl_data;
 };
-_Static_assert( sizeof( struct kl__Buffer ) == 16 && _Alignof( struct kl__Buffer ) == 8 && offsetof( struct kl__Buffer, kl_size ) == 0 && offsetof( struct kl__Buffer, kl_data ) == 8, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Buffer ) == 16 && _Alignof( struct kl_7codegen_Buffer ) == 8 && offsetof( struct kl_7codegen_Buffer, kl_size ) == 0 && offsetof( struct kl_7codegen_Buffer, kl_data ) == 8, "layout" );
 
-struct kl__Owner
+struct kl_7codegen_Owner
 {
-    struct kl__Buffer kl_buffer;
+    struct kl_7codegen_Buffer kl_buffer;
     int32_t kl_tag;
 };
-_Static_assert( sizeof( struct kl__Owner ) == 24 && _Alignof( struct kl__Owner ) == 8 && offsetof( struct kl__Owner, kl_buffer ) == 0 && offsetof( struct kl__Owner, kl_tag ) == 16, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Owner ) == 24 && _Alignof( struct kl_7codegen_Owner ) == 8 && offsetof( struct kl_7codegen_Owner, kl_buffer ) == 0 && offsetof( struct kl_7codegen_Owner, kl_tag ) == 16, "layout" );
 
-struct kl__Holder__I3i32E
+struct kl_7codegen_Holder__I3i32E
 {
     int32_t kl_value;
 };
-_Static_assert( sizeof( struct kl__Holder__I3i32E ) == 4 && _Alignof( struct kl__Holder__I3i32E ) == 4 && offsetof( struct kl__Holder__I3i32E, kl_value ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Holder__I3i32E ) == 4 && _Alignof( struct kl_7codegen_Holder__I3i32E ) == 4 && offsetof( struct kl_7codegen_Holder__I3i32E, kl_value ) == 0, "layout" );
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__6Buffer__R6Buffer_3u64__ctor( struct kl__Buffer*, uint64_t );
-void kl__6Buffer__dtor( struct kl__Buffer* );
-void kl__4fill__S6Buffer_3u64( struct kl__Buffer*, uint64_t );
-uint64_t kl__3sum__S6Buffer( struct kl__Buffer* );
-void kl__5Owner__R5Owner_M6Buffer_4bool__ctor( struct kl__Owner*, struct kl__Buffer, bool );
-int32_t kl__4main__( void );
-void kl__6Holder__I3i32E__R6HolderI3i32E_3i32__ctor( struct kl__Holder__I3i32E*, int32_t );
+void kl_7codegen_6Buffer__RQ7codegen6Buffer_3u64__ctor( struct kl_7codegen_Buffer*, uint64_t );
+void kl_7codegen_6Buffer__dtor( struct kl_7codegen_Buffer* );
+void kl_7codegen_4fill__SQ7codegen6Buffer_3u64( struct kl_7codegen_Buffer*, uint64_t );
+uint64_t kl_7codegen_3sum__SQ7codegen6Buffer( struct kl_7codegen_Buffer* );
+void kl_7codegen_5Owner__RQ7codegen5Owner_MQ7codegen6Buffer_4bool__ctor( struct kl_7codegen_Owner*, struct kl_7codegen_Buffer, bool );
+int32_t kl_7codegen_4main__( void );
+void kl_7codegen_6Holder__I3i32E__RQ7codegen6HolderI3i32E_3i32__ctor( struct kl_7codegen_Holder__I3i32E*, int32_t );
 
 #line 16 "codegen/const_field.kl"
-void kl__6Buffer__R6Buffer_3u64__ctor( struct kl__Buffer* kl_this_1, uint64_t kl_n_2 )
+void kl_7codegen_6Buffer__RQ7codegen6Buffer_3u64__ctor( struct kl_7codegen_Buffer* kl_this_1, uint64_t kl_n_2 )
 {
     uint64_t* kl_t3;
 #line 18 "codegen/const_field.kl"
@@ -64,7 +64,7 @@ void kl__6Buffer__R6Buffer_3u64__ctor( struct kl__Buffer* kl_this_1, uint64_t kl
 }
 
 #line 25 "codegen/const_field.kl"
-void kl__6Buffer__dtor( struct kl__Buffer* kl_this_1 )
+void kl_7codegen_6Buffer__dtor( struct kl_7codegen_Buffer* kl_this_1 )
 {
 #line 29 "codegen/const_field.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data );
@@ -74,7 +74,7 @@ void kl__6Buffer__dtor( struct kl__Buffer* kl_this_1 )
 }
 
 #line 34 "codegen/const_field.kl"
-void kl__4fill__S6Buffer_3u64( struct kl__Buffer* kl_this_1, uint64_t kl_v_2 )
+void kl_7codegen_4fill__SQ7codegen6Buffer_3u64( struct kl_7codegen_Buffer* kl_this_1, uint64_t kl_v_2 )
 {
     uint64_t kl_i_3;
     bool kl_t4;
@@ -116,7 +116,7 @@ void kl__4fill__S6Buffer_3u64( struct kl__Buffer* kl_this_1, uint64_t kl_v_2 )
 }
 
 #line 45 "codegen/const_field.kl"
-uint64_t kl__3sum__S6Buffer( struct kl__Buffer* kl_this_1 )
+uint64_t kl_7codegen_3sum__SQ7codegen6Buffer( struct kl_7codegen_Buffer* kl_this_1 )
 {
     uint64_t kl_t0;
     uint64_t kl_total_2;
@@ -175,7 +175,7 @@ uint64_t kl__3sum__S6Buffer( struct kl__Buffer* kl_this_1 )
 }
 
 #line 65 "codegen/const_field.kl"
-void kl__5Owner__R5Owner_M6Buffer_4bool__ctor( struct kl__Owner* kl_this_1, struct kl__Buffer kl_b_2, bool kl_odd_3 )
+void kl_7codegen_5Owner__RQ7codegen5Owner_MQ7codegen6Buffer_4bool__ctor( struct kl_7codegen_Owner* kl_this_1, struct kl_7codegen_Buffer kl_b_2, bool kl_odd_3 )
 {
     bool kl_t4;
 #line 67 "codegen/const_field.kl"
@@ -196,7 +196,7 @@ void kl__5Owner__R5Owner_M6Buffer_4bool__ctor( struct kl__Owner* kl_this_1, stru
     goto bb3;
     bb3:
 #line 76 "codegen/const_field.kl"
-    if ( kl_t4 ) kl__6Buffer__dtor( &kl_b_2 );
+    if ( kl_t4 ) kl_7codegen_6Buffer__dtor( &kl_b_2 );
 #line 76 "codegen/const_field.kl"
     kl_t4 = false;
 #line 76 "codegen/const_field.kl"
@@ -205,42 +205,42 @@ void kl__5Owner__R5Owner_M6Buffer_4bool__ctor( struct kl__Owner* kl_this_1, stru
 }
 
 #line 89 "codegen/const_field.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__Point kl_p_1;
-    struct kl__Point kl_t2;
+    struct kl_7codegen_Point kl_p_1;
+    struct kl_7codegen_Point kl_t2;
     bool kl_t3;
     bool kl_t4;
     bool kl_t5;
-    struct kl__Point kl_t6;
+    struct kl_7codegen_Point kl_t6;
     bool kl_t7;
-    struct kl__Buffer kl_b_8;
-    struct kl__Buffer* kl_t9;
-    struct kl__Buffer* kl_t11;
+    struct kl_7codegen_Buffer kl_b_8;
+    struct kl_7codegen_Buffer* kl_t9;
+    struct kl_7codegen_Buffer* kl_t11;
     bool kl_t13;
     bool kl_t14;
-    struct kl__Buffer* kl_t15;
+    struct kl_7codegen_Buffer* kl_t15;
     uint64_t kl_t16;
     bool kl_t17;
-    struct kl__Buffer kl_c_18;
-    struct kl__Buffer* kl_t19;
-    struct kl__Buffer* kl_t21;
+    struct kl_7codegen_Buffer kl_c_18;
+    struct kl_7codegen_Buffer* kl_t19;
+    struct kl_7codegen_Buffer* kl_t21;
     bool kl_t23;
     bool kl_t24;
-    struct kl__Buffer* kl_t25;
+    struct kl_7codegen_Buffer* kl_t25;
     uint64_t kl_t26;
     bool kl_t27;
-    struct kl__Owner kl_o_28;
-    struct kl__Owner* kl_t29;
+    struct kl_7codegen_Owner kl_o_28;
+    struct kl_7codegen_Owner* kl_t29;
     bool kl_t31;
     bool kl_t32;
     bool kl_t33;
     int32_t* kl_tag_34;
     int32_t* kl_t35;
     bool kl_t36;
-    struct kl__Holder__I3i32E kl_h_37;
-    struct kl__Holder__I3i32E* kl_t38;
+    struct kl_7codegen_Holder__I3i32E kl_h_37;
+    struct kl_7codegen_Holder__I3i32E* kl_t38;
     bool kl_t40;
     bool kl_t41;
     bool kl_t42;
@@ -296,10 +296,10 @@ int32_t kl__4main__( void )
 #line 98 "codegen/const_field.kl"
     kl_t41 = true;
 #line 98 "codegen/const_field.kl"
-    kl__6Buffer__R6Buffer_3u64__ctor( kl_t9, 3 );
+    kl_7codegen_6Buffer__RQ7codegen6Buffer_3u64__ctor( kl_t9, 3 );
     kl_t11 = &kl_b_8;
 #line 99 "codegen/const_field.kl"
-    kl__4fill__S6Buffer_3u64( kl_t11, 7 );
+    kl_7codegen_4fill__SQ7codegen6Buffer_3u64( kl_t11, 7 );
     kl_t14 = kl_b_8.kl_size != 3;
 #line 100 "codegen/const_field.kl"
     kl_t13 = kl_t14;
@@ -309,7 +309,7 @@ int32_t kl__4main__( void )
 #line 100 "codegen/const_field.kl"
     kl_t15 = &kl_b_8;
 #line 100 "codegen/const_field.kl"
-    kl_t16 = kl__3sum__S6Buffer( kl_t15 );
+    kl_t16 = kl_7codegen_3sum__SQ7codegen6Buffer( kl_t15 );
 #line 100 "codegen/const_field.kl"
     kl_t17 = kl_t16 != 21;
 #line 100 "codegen/const_field.kl"
@@ -323,7 +323,7 @@ int32_t kl__4main__( void )
 #line 100 "codegen/const_field.kl"
     kl_t0 = 3;
 #line 100 "codegen/const_field.kl"
-    if ( kl_t41 ) kl__6Buffer__dtor( &kl_b_8 );
+    if ( kl_t41 ) kl_7codegen_6Buffer__dtor( &kl_b_8 );
 #line 100 "codegen/const_field.kl"
     kl_t41 = false;
 #line 100 "codegen/const_field.kl"
@@ -336,11 +336,11 @@ int32_t kl__4main__( void )
 #line 103 "codegen/const_field.kl"
     kl_t42 = true;
 #line 103 "codegen/const_field.kl"
-    kl__6Buffer__R6Buffer_3u64__ctor( kl_t19, 2 );
+    kl_7codegen_6Buffer__RQ7codegen6Buffer_3u64__ctor( kl_t19, 2 );
     kl_t21 = &kl_c_18;
 #line 104 "codegen/const_field.kl"
-    kl__4fill__S6Buffer_3u64( kl_t21, 1 );
-    if ( kl_t41 ) kl__6Buffer__dtor( &kl_b_8 );
+    kl_7codegen_4fill__SQ7codegen6Buffer_3u64( kl_t21, 1 );
+    if ( kl_t41 ) kl_7codegen_6Buffer__dtor( &kl_b_8 );
 #line 105 "codegen/const_field.kl"
     kl_b_8 = kl_c_18;
 #line 105 "codegen/const_field.kl"
@@ -356,7 +356,7 @@ int32_t kl__4main__( void )
 #line 106 "codegen/const_field.kl"
     kl_t25 = &kl_b_8;
 #line 106 "codegen/const_field.kl"
-    kl_t26 = kl__3sum__S6Buffer( kl_t25 );
+    kl_t26 = kl_7codegen_3sum__SQ7codegen6Buffer( kl_t25 );
 #line 106 "codegen/const_field.kl"
     kl_t27 = kl_t26 != 2;
 #line 106 "codegen/const_field.kl"
@@ -370,11 +370,11 @@ int32_t kl__4main__( void )
 #line 106 "codegen/const_field.kl"
     kl_t0 = 4;
 #line 106 "codegen/const_field.kl"
-    if ( kl_t42 ) kl__6Buffer__dtor( &kl_c_18 );
+    if ( kl_t42 ) kl_7codegen_6Buffer__dtor( &kl_c_18 );
 #line 106 "codegen/const_field.kl"
     kl_t42 = false;
 #line 106 "codegen/const_field.kl"
-    if ( kl_t41 ) kl__6Buffer__dtor( &kl_b_8 );
+    if ( kl_t41 ) kl_7codegen_6Buffer__dtor( &kl_b_8 );
 #line 106 "codegen/const_field.kl"
     kl_t41 = false;
 #line 106 "codegen/const_field.kl"
@@ -382,7 +382,7 @@ int32_t kl__4main__( void )
     bb14:
     kl_t29 = &kl_o_28;
 #line 108 "codegen/const_field.kl"
-    kl__5Owner__R5Owner_M6Buffer_4bool__ctor( kl_t29, kl_b_8, false );
+    kl_7codegen_5Owner__RQ7codegen5Owner_MQ7codegen6Buffer_4bool__ctor( kl_t29, kl_b_8, false );
 #line 108 "codegen/const_field.kl"
     kl_t41 = false;
     kl_t32 = kl_o_28.kl_tag != 2;
@@ -404,13 +404,13 @@ int32_t kl__4main__( void )
 #line 109 "codegen/const_field.kl"
     kl_t0 = 5;
 #line 109 "codegen/const_field.kl"
-    kl__6Buffer__dtor( &kl_o_28.kl_buffer );
+    kl_7codegen_6Buffer__dtor( &kl_o_28.kl_buffer );
 #line 109 "codegen/const_field.kl"
-    if ( kl_t42 ) kl__6Buffer__dtor( &kl_c_18 );
+    if ( kl_t42 ) kl_7codegen_6Buffer__dtor( &kl_c_18 );
 #line 109 "codegen/const_field.kl"
     kl_t42 = false;
 #line 109 "codegen/const_field.kl"
-    if ( kl_t41 ) kl__6Buffer__dtor( &kl_b_8 );
+    if ( kl_t41 ) kl_7codegen_6Buffer__dtor( &kl_b_8 );
 #line 109 "codegen/const_field.kl"
     kl_t41 = false;
 #line 109 "codegen/const_field.kl"
@@ -427,13 +427,13 @@ int32_t kl__4main__( void )
 #line 113 "codegen/const_field.kl"
     kl_t0 = 6;
 #line 113 "codegen/const_field.kl"
-    kl__6Buffer__dtor( &kl_o_28.kl_buffer );
+    kl_7codegen_6Buffer__dtor( &kl_o_28.kl_buffer );
 #line 113 "codegen/const_field.kl"
-    if ( kl_t42 ) kl__6Buffer__dtor( &kl_c_18 );
+    if ( kl_t42 ) kl_7codegen_6Buffer__dtor( &kl_c_18 );
 #line 113 "codegen/const_field.kl"
     kl_t42 = false;
 #line 113 "codegen/const_field.kl"
-    if ( kl_t41 ) kl__6Buffer__dtor( &kl_b_8 );
+    if ( kl_t41 ) kl_7codegen_6Buffer__dtor( &kl_b_8 );
 #line 113 "codegen/const_field.kl"
     kl_t41 = false;
 #line 113 "codegen/const_field.kl"
@@ -441,7 +441,7 @@ int32_t kl__4main__( void )
     bb20:
     kl_t38 = &kl_h_37;
 #line 115 "codegen/const_field.kl"
-    kl__6Holder__I3i32E__R6HolderI3i32E_3i32__ctor( kl_t38, 9 );
+    kl_7codegen_6Holder__I3i32E__RQ7codegen6HolderI3i32E_3i32__ctor( kl_t38, 9 );
     kl_t40 = kl_h_37.kl_value != 9;
 #line 116 "codegen/const_field.kl"
     if ( kl_t40 ) goto bb21; else goto bb22;
@@ -449,13 +449,13 @@ int32_t kl__4main__( void )
 #line 116 "codegen/const_field.kl"
     kl_t0 = 7;
 #line 116 "codegen/const_field.kl"
-    kl__6Buffer__dtor( &kl_o_28.kl_buffer );
+    kl_7codegen_6Buffer__dtor( &kl_o_28.kl_buffer );
 #line 116 "codegen/const_field.kl"
-    if ( kl_t42 ) kl__6Buffer__dtor( &kl_c_18 );
+    if ( kl_t42 ) kl_7codegen_6Buffer__dtor( &kl_c_18 );
 #line 116 "codegen/const_field.kl"
     kl_t42 = false;
 #line 116 "codegen/const_field.kl"
-    if ( kl_t41 ) kl__6Buffer__dtor( &kl_b_8 );
+    if ( kl_t41 ) kl_7codegen_6Buffer__dtor( &kl_b_8 );
 #line 116 "codegen/const_field.kl"
     kl_t41 = false;
 #line 116 "codegen/const_field.kl"
@@ -463,13 +463,13 @@ int32_t kl__4main__( void )
     bb22:
     kl_t0 = 0;
 #line 118 "codegen/const_field.kl"
-    kl__6Buffer__dtor( &kl_o_28.kl_buffer );
+    kl_7codegen_6Buffer__dtor( &kl_o_28.kl_buffer );
 #line 118 "codegen/const_field.kl"
-    if ( kl_t42 ) kl__6Buffer__dtor( &kl_c_18 );
+    if ( kl_t42 ) kl_7codegen_6Buffer__dtor( &kl_c_18 );
 #line 118 "codegen/const_field.kl"
     kl_t42 = false;
 #line 118 "codegen/const_field.kl"
-    if ( kl_t41 ) kl__6Buffer__dtor( &kl_b_8 );
+    if ( kl_t41 ) kl_7codegen_6Buffer__dtor( &kl_b_8 );
 #line 118 "codegen/const_field.kl"
     kl_t41 = false;
 #line 118 "codegen/const_field.kl"
@@ -477,7 +477,7 @@ int32_t kl__4main__( void )
 }
 
 #line 83 "codegen/const_field.kl"
-void kl__6Holder__I3i32E__R6HolderI3i32E_3i32__ctor( struct kl__Holder__I3i32E* kl_this_1, int32_t kl_v_2 )
+void kl_7codegen_6Holder__I3i32E__RQ7codegen6HolderI3i32E_3i32__ctor( struct kl_7codegen_Holder__I3i32E* kl_this_1, int32_t kl_v_2 )
 {
     ( *kl_this_1 ).kl_value = kl_v_2;
     return;
@@ -488,7 +488,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 89 "codegen/const_field.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 89 "codegen/const_field.kl"
     return kl_t0;
 #line 89 "codegen/const_field.kl"

@@ -3,15 +3,15 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-int32_t kl__count__G;
+int32_t kl_3opt_count__G;
 
-int32_t kl__5local__3i32( int32_t );
-int32_t kl__7counter__( void );
-int32_t kl__15written_between__3i32( int32_t );
-int32_t kl__4main__( void );
+int32_t kl_3opt_5local__3i32( int32_t );
+int32_t kl_3opt_7counter__( void );
+int32_t kl_3opt_15written_between__3i32( int32_t );
+int32_t kl_3opt_4main__( void );
 
 #line 7 "opt/cancelled.kl"
-int32_t kl__5local__3i32( int32_t kl_x_1 )
+int32_t kl_3opt_5local__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
     kl_t0 = kl_x_1;
@@ -20,15 +20,15 @@ int32_t kl__5local__3i32( int32_t kl_x_1 )
 }
 
 #line 14 "opt/cancelled.kl"
-int32_t kl__7counter__( void )
+int32_t kl_3opt_7counter__( void )
 {
     int32_t kl_t0;
-    kl_t0 = kl__count__G;
+    kl_t0 = kl_3opt_count__G;
     return kl_t0;
 }
 
 #line 22 "opt/cancelled.kl"
-int32_t kl__15written_between__3i32( int32_t kl_x_1 )
+int32_t kl_3opt_15written_between__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
 #line 26 "opt/cancelled.kl"
@@ -38,11 +38,11 @@ int32_t kl__15written_between__3i32( int32_t kl_x_1 )
 }
 
 #line 29 "opt/cancelled.kl"
-int32_t kl__4main__( void )
+int32_t kl_3opt_4main__( void )
 {
     int32_t kl_t0;
 #line 17 "opt/cancelled.kl"
-    kl__count__G = 5;
+    kl_3opt_count__G = 5;
 #line 45 "opt/cancelled.kl"
     kl_t0 = 0;
 #line 45 "opt/cancelled.kl"
@@ -53,7 +53,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 29 "opt/cancelled.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_3opt_4main__(  );
 #line 29 "opt/cancelled.kl"
     return kl_t0;
 #line 29 "opt/cancelled.kl"

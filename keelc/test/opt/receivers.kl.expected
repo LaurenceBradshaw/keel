@@ -3,26 +3,26 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Counter;
+struct kl_3opt_Counter;
 
 typedef int64_t ( *kl__fn__FE3i64 )( void );
 
-struct kl__Counter
+struct kl_3opt_Counter
 {
     int64_t kl_n;
 };
-_Static_assert( sizeof( struct kl__Counter ) == 8 && _Alignof( struct kl__Counter ) == 8 && offsetof( struct kl__Counter, kl_n ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_3opt_Counter ) == 8 && _Alignof( struct kl_3opt_Counter ) == 8 && offsetof( struct kl_3opt_Counter, kl_n ) == 0, "layout" );
 
-void kl__7Counter__R7Counter__ctor( struct kl__Counter* );
-void kl__5times__S7Counter_3i64( struct kl__Counter*, int64_t );
-int64_t kl__3get__S7Counter( struct kl__Counter* );
-int64_t kl__5seven__S7Counter( void );
-void kl__3all__S7Counter_R7Counter( struct kl__Counter*, struct kl__Counter* );
-int64_t kl__7call_it__FE3i64( kl__fn__FE3i64 );
-int32_t kl__4main__( void );
+void kl_3opt_7Counter__RQ3opt7Counter__ctor( struct kl_3opt_Counter* );
+void kl_3opt_5times__SQ3opt7Counter_3i64( struct kl_3opt_Counter*, int64_t );
+int64_t kl_3opt_3get__SQ3opt7Counter( struct kl_3opt_Counter* );
+int64_t kl_3opt_5seven__SQ3opt7Counter( void );
+void kl_3opt_3all__SQ3opt7Counter_RQ3opt7Counter( struct kl_3opt_Counter*, struct kl_3opt_Counter* );
+int64_t kl_3opt_7call_it__FE3i64( kl__fn__FE3i64 );
+int32_t kl_3opt_4main__( void );
 
 #line 9 "opt/receivers.kl"
-void kl__7Counter__R7Counter__ctor( struct kl__Counter* kl_this_1 )
+void kl_3opt_7Counter__RQ3opt7Counter__ctor( struct kl_3opt_Counter* kl_this_1 )
 {
 #line 9 "opt/receivers.kl"
     ( *kl_this_1 ).kl_n = 1;
@@ -32,7 +32,7 @@ void kl__7Counter__R7Counter__ctor( struct kl__Counter* kl_this_1 )
 }
 
 #line 10 "opt/receivers.kl"
-void kl__5times__S7Counter_3i64( struct kl__Counter* kl_this_1, int64_t kl_k_2 )
+void kl_3opt_5times__SQ3opt7Counter_3i64( struct kl_3opt_Counter* kl_this_1, int64_t kl_k_2 )
 {
     int64_t kl_t3;
 #line 10 "opt/receivers.kl"
@@ -45,7 +45,7 @@ void kl__5times__S7Counter_3i64( struct kl__Counter* kl_this_1, int64_t kl_k_2 )
 }
 
 #line 11 "opt/receivers.kl"
-int64_t kl__3get__S7Counter( struct kl__Counter* kl_this_1 )
+int64_t kl_3opt_3get__SQ3opt7Counter( struct kl_3opt_Counter* kl_this_1 )
 {
     int64_t kl_t0;
 #line 11 "opt/receivers.kl"
@@ -56,7 +56,7 @@ int64_t kl__3get__S7Counter( struct kl__Counter* kl_this_1 )
 }
 
 #line 12 "opt/receivers.kl"
-int64_t kl__5seven__S7Counter( void )
+int64_t kl_3opt_5seven__SQ3opt7Counter( void )
 {
     int64_t kl_t0;
 #line 12 "opt/receivers.kl"
@@ -67,10 +67,10 @@ int64_t kl__5seven__S7Counter( void )
 }
 
 #line 13 "opt/receivers.kl"
-void kl__3all__S7Counter_R7Counter( struct kl__Counter* kl_this_1, struct kl__Counter* kl_other_2 )
+void kl_3opt_3all__SQ3opt7Counter_RQ3opt7Counter( struct kl_3opt_Counter* kl_this_1, struct kl_3opt_Counter* kl_other_2 )
 {
-    struct kl__Counter* kl_this_3;
-    struct kl__Counter* kl_this_4;
+    struct kl_3opt_Counter* kl_this_3;
+    struct kl_3opt_Counter* kl_this_4;
     int64_t kl_t5;
     int64_t kl_t6;
     int64_t kl_t7;
@@ -101,7 +101,7 @@ void kl__3all__S7Counter_R7Counter( struct kl__Counter* kl_this_1, struct kl__Co
 }
 
 #line 22 "opt/receivers.kl"
-int64_t kl__7call_it__FE3i64( kl__fn__FE3i64 kl_f_1 )
+int64_t kl_3opt_7call_it__FE3i64( kl__fn__FE3i64 kl_f_1 )
 {
     int64_t kl_t0;
 #line 22 "opt/receivers.kl"
@@ -112,7 +112,7 @@ int64_t kl__7call_it__FE3i64( kl__fn__FE3i64 kl_f_1 )
 }
 
 #line 24 "opt/receivers.kl"
-int32_t kl__4main__( void )
+int32_t kl_3opt_4main__( void )
 {
     int32_t kl_t0;
 #line 60 "opt/receivers.kl"
@@ -125,7 +125,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 24 "opt/receivers.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_3opt_4main__(  );
 #line 24 "opt/receivers.kl"
     return kl_t0;
 #line 24 "opt/receivers.kl"

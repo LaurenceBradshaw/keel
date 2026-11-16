@@ -3,22 +3,22 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Acct;
+struct kl_7codegen_Acct;
 
-struct kl__Acct
+struct kl_7codegen_Acct
 {
     int32_t kl_n;
 };
-_Static_assert( sizeof( struct kl__Acct ) == 4 && _Alignof( struct kl__Acct ) == 4 && offsetof( struct kl__Acct, kl_n ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Acct ) == 4 && _Alignof( struct kl_7codegen_Acct ) == 4 && offsetof( struct kl_7codegen_Acct, kl_n ) == 0, "layout" );
 
-int32_t kl__4pick__S4Acct_3i32( struct kl__Acct*, int32_t );
-int32_t kl__4pick__S4Acct_3i64( struct kl__Acct*, int64_t );
-int32_t kl__6inside__S4Acct( struct kl__Acct* );
-void kl__4Acct__R4Acct__ctor( struct kl__Acct* );
-int32_t kl__4main__( void );
+int32_t kl_7codegen_4pick__SQ7codegen4Acct_3i32( struct kl_7codegen_Acct*, int32_t );
+int32_t kl_7codegen_4pick__SQ7codegen4Acct_3i64( struct kl_7codegen_Acct*, int64_t );
+int32_t kl_7codegen_6inside__SQ7codegen4Acct( struct kl_7codegen_Acct* );
+void kl_7codegen_4Acct__RQ7codegen4Acct__ctor( struct kl_7codegen_Acct* );
+int32_t kl_7codegen_4main__( void );
 
 #line 6 "codegen/private_method_overload.kl"
-int32_t kl__4pick__S4Acct_3i32( struct kl__Acct* kl_this_1, int32_t kl_t2 )
+int32_t kl_7codegen_4pick__SQ7codegen4Acct_3i32( struct kl_7codegen_Acct* kl_this_1, int32_t kl_t2 )
 {
     int32_t kl_t0;
     ( void ) kl_this_1;
@@ -31,7 +31,7 @@ int32_t kl__4pick__S4Acct_3i32( struct kl__Acct* kl_this_1, int32_t kl_t2 )
 }
 
 #line 7 "codegen/private_method_overload.kl"
-int32_t kl__4pick__S4Acct_3i64( struct kl__Acct* kl_this_1, int64_t kl_t2 )
+int32_t kl_7codegen_4pick__SQ7codegen4Acct_3i64( struct kl_7codegen_Acct* kl_this_1, int64_t kl_t2 )
 {
     int32_t kl_t0;
     ( void ) kl_this_1;
@@ -44,15 +44,15 @@ int32_t kl__4pick__S4Acct_3i64( struct kl__Acct* kl_this_1, int64_t kl_t2 )
 }
 
 #line 8 "codegen/private_method_overload.kl"
-int32_t kl__6inside__S4Acct( struct kl__Acct* kl_this_1 )
+int32_t kl_7codegen_6inside__SQ7codegen4Acct( struct kl_7codegen_Acct* kl_this_1 )
 {
     int32_t kl_t0;
-    struct kl__Acct* kl_t2;
+    struct kl_7codegen_Acct* kl_t2;
     int32_t kl_t3;
 #line 8 "codegen/private_method_overload.kl"
     kl_t2 = &( *kl_this_1 );
 #line 8 "codegen/private_method_overload.kl"
-    kl_t3 = kl__4pick__S4Acct_3i32( kl_t2, 1 );
+    kl_t3 = kl_7codegen_4pick__SQ7codegen4Acct_3i32( kl_t2, 1 );
 #line 8 "codegen/private_method_overload.kl"
     kl_t0 = kl_t3;
 #line 8 "codegen/private_method_overload.kl"
@@ -61,7 +61,7 @@ int32_t kl__6inside__S4Acct( struct kl__Acct* kl_this_1 )
 }
 
 #line 9 "codegen/private_method_overload.kl"
-void kl__4Acct__R4Acct__ctor( struct kl__Acct* kl_this_1 )
+void kl_7codegen_4Acct__RQ7codegen4Acct__ctor( struct kl_7codegen_Acct* kl_this_1 )
 {
 #line 9 "codegen/private_method_overload.kl"
     ( *kl_this_1 ).kl_n = 0;
@@ -71,27 +71,27 @@ void kl__4Acct__R4Acct__ctor( struct kl__Acct* kl_this_1 )
 }
 
 #line 12 "codegen/private_method_overload.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__Acct kl_a_1;
-    struct kl__Acct* kl_t2;
-    struct kl__Acct* kl_t4;
+    struct kl_7codegen_Acct kl_a_1;
+    struct kl_7codegen_Acct* kl_t2;
+    struct kl_7codegen_Acct* kl_t4;
     int64_t kl_t5;
     int32_t kl_t6;
     bool kl_t7;
-    struct kl__Acct* kl_t8;
+    struct kl_7codegen_Acct* kl_t8;
     int32_t kl_t9;
     bool kl_t10;
 #line 14 "codegen/private_method_overload.kl"
     kl_t2 = &kl_a_1;
 #line 14 "codegen/private_method_overload.kl"
-    kl__4Acct__R4Acct__ctor( kl_t2 );
+    kl_7codegen_4Acct__RQ7codegen4Acct__ctor( kl_t2 );
     kl_t4 = &kl_a_1;
 #line 15 "codegen/private_method_overload.kl"
     kl_t5 = ( int64_t ) 1;
 #line 15 "codegen/private_method_overload.kl"
-    kl_t6 = kl__4pick__S4Acct_3i64( kl_t4, kl_t5 );
+    kl_t6 = kl_7codegen_4pick__SQ7codegen4Acct_3i64( kl_t4, kl_t5 );
 #line 15 "codegen/private_method_overload.kl"
     kl_t7 = kl_t6 != 2;
 #line 15 "codegen/private_method_overload.kl"
@@ -105,7 +105,7 @@ int32_t kl__4main__( void )
 #line 16 "codegen/private_method_overload.kl"
     kl_t8 = &kl_a_1;
 #line 16 "codegen/private_method_overload.kl"
-    kl_t9 = kl__6inside__S4Acct( kl_t8 );
+    kl_t9 = kl_7codegen_6inside__SQ7codegen4Acct( kl_t8 );
 #line 16 "codegen/private_method_overload.kl"
     kl_t10 = kl_t9 != 1;
 #line 16 "codegen/private_method_overload.kl"
@@ -126,7 +126,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 12 "codegen/private_method_overload.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 12 "codegen/private_method_overload.kl"
     return kl_t0;
 #line 12 "codegen/private_method_overload.kl"

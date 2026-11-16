@@ -1,0 +1,9 @@
+// What packageinfo.kl may hold: comments and one `@package( name );`, in a package that is not nested.
+import hdr::a;
+import hdr::inner::b;
+
+@package( main );
+i32 main()
+{
+    return hdr::one() + hdr::inner::two();
+}

@@ -41,9 +41,9 @@ void kl_1t7console_6eprint__3i64_7textual( int64_t, struct kl_7prelude_textual__
 void kl_1t7console_6eprint__3u64_7textual( uint64_t, struct kl_7prelude_textual__ref );
 void kl_1t7console_6eprint__3f64_7textual( double, struct kl_7prelude_textual__ref );
 void kl_1t7console_6eprint__4bool_7textual( bool, struct kl_7prelude_textual__ref );
-int32_t kl__5seven__( void );
-int32_t kl__5twice__3i32( int32_t );
-int32_t kl__4bump__S7Counter_3i32( int32_t );
+int32_t kl_7codegen_5seven__( void );
+int32_t kl_7codegen_5twice__3i32( int32_t );
+int32_t kl_7codegen_4bump__SQ7codegen7Counter_3i32( int32_t );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 void kl_7prelude_str__drop( void* );
 struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__( void* );
@@ -332,27 +332,27 @@ struct kl_7prelude_textual__vtable
     struct kl__run__L2u8__ref ( *kl__7as_text__ )( void* );
 };
 
-extern int32_t kl__later__G;
-int32_t kl__5seven__( void );
-int32_t kl__5twice__3i32( int32_t );
-int32_t kl__4bump__S7Counter_3i32( int32_t );
-extern int32_t kl__total__GS7Counter;
-int32_t* kl__early__G = &kl__later__G;
-int32_t kl__later__G = 5;
-kl__fn__FE3i32 kl__fp__G = kl__5seven__;
-kl__fn__F3i32E3i32 kl__tw__G = kl__5twice__3i32;
-kl__fn__F3i32E3i32 kl__bumper__G = kl__4bump__S7Counter_3i32;
-struct kl__A2_P3i32 kl__both__G = { .e = { &kl__later__G, &kl__total__GS7Counter } };
-int32_t kl__total__GS7Counter = 0;
-int32_t* kl__at__GS7Counter = &kl__total__GS7Counter;
+extern int32_t kl_7codegen_later__G;
+int32_t kl_7codegen_5seven__( void );
+int32_t kl_7codegen_5twice__3i32( int32_t );
+int32_t kl_7codegen_4bump__SQ7codegen7Counter_3i32( int32_t );
+extern int32_t kl_7codegen_total__GSQ7codegen7Counter;
+int32_t* kl_7codegen_early__G = &kl_7codegen_later__G;
+int32_t kl_7codegen_later__G = 5;
+kl__fn__FE3i32 kl_7codegen_fp__G = kl_7codegen_5seven__;
+kl__fn__F3i32E3i32 kl_7codegen_tw__G = kl_7codegen_5twice__3i32;
+kl__fn__F3i32E3i32 kl_7codegen_bumper__G = kl_7codegen_4bump__SQ7codegen7Counter_3i32;
+struct kl__A2_P3i32 kl_7codegen_both__G = { .e = { &kl_7codegen_later__G, &kl_7codegen_total__GSQ7codegen7Counter } };
+int32_t kl_7codegen_total__GSQ7codegen7Counter = 0;
+int32_t* kl_7codegen_at__GSQ7codegen7Counter = &kl_7codegen_total__GSQ7codegen7Counter;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__5seven__( void );
-int32_t kl__5twice__3i32( int32_t );
-int32_t kl__5twice__3i32_3i32( int32_t, int32_t );
-int32_t kl__4bump__S7Counter_3i32( int32_t );
-int32_t kl__4main__( void );
+int32_t kl_7codegen_5seven__( void );
+int32_t kl_7codegen_5twice__3i32( int32_t );
+int32_t kl_7codegen_5twice__3i32_3i32( int32_t, int32_t );
+int32_t kl_7codegen_4bump__SQ7codegen7Counter_3i32( int32_t );
+int32_t kl_7codegen_4main__( void );
 void kl_1t7console_5print__3i64_7textual( int64_t, struct kl_7prelude_textual__ref );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 void kl_7prelude_str__drop( void* );
@@ -361,7 +361,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 9 "codegen/address_globals.kl"
-int32_t kl__5seven__( void )
+int32_t kl_7codegen_5seven__( void )
 {
     int32_t kl_t0;
 #line 11 "codegen/address_globals.kl"
@@ -371,7 +371,7 @@ int32_t kl__5seven__( void )
 }
 
 #line 14 "codegen/address_globals.kl"
-int32_t kl__5twice__3i32( int32_t kl_a_1 )
+int32_t kl_7codegen_5twice__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -393,7 +393,7 @@ int32_t kl__5twice__3i32( int32_t kl_a_1 )
 }
 
 #line 19 "codegen/address_globals.kl"
-int32_t kl__5twice__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
+int32_t kl_7codegen_5twice__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 {
     int32_t kl_t0;
     bool kl_t3;
@@ -415,13 +415,13 @@ int32_t kl__5twice__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 }
 
 #line 34 "codegen/address_globals.kl"
-int32_t kl__4bump__S7Counter_3i32( int32_t kl_by_1 )
+int32_t kl_7codegen_4bump__SQ7codegen7Counter_3i32( int32_t kl_by_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
     int32_t kl_t3;
 #line 36 "codegen/address_globals.kl"
-    kl_t2 = __builtin_add_overflow( kl__total__GS7Counter, kl_by_1, &( int32_t ) { 0 } );
+    kl_t2 = __builtin_add_overflow( kl_7codegen_total__GSQ7codegen7Counter, kl_by_1, &( int32_t ) { 0 } );
 #line 36 "codegen/address_globals.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -429,16 +429,16 @@ int32_t kl__4bump__S7Counter_3i32( int32_t kl_by_1 )
     kl_rt_panic( "codegen/address_globals.kl", 36, "arithmetic overflow: total + by" );
     bb2:
 #line 36 "codegen/address_globals.kl"
-    kl_t3 = kl__total__GS7Counter + kl_by_1;
+    kl_t3 = kl_7codegen_total__GSQ7codegen7Counter + kl_by_1;
 #line 36 "codegen/address_globals.kl"
-    kl__total__GS7Counter = kl_t3;
-    kl_t0 = kl__total__GS7Counter;
+    kl_7codegen_total__GSQ7codegen7Counter = kl_t3;
+    kl_t0 = kl_7codegen_total__GSQ7codegen7Counter;
 #line 37 "codegen/address_globals.kl"
     return kl_t0;
 }
 
 #line 43 "codegen/address_globals.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     int64_t kl_t1;
@@ -489,7 +489,7 @@ int32_t kl__4main__( void )
     struct kl_7prelude_textual__ref kl_t59;
     ( void ) kl_t35;
 #line 45 "codegen/address_globals.kl"
-    kl_t1 = ( int64_t ) ( *kl__early__G );
+    kl_t1 = ( int64_t ) ( *kl_7codegen_early__G );
 #line 31 "../test_lib/console.kl"
     kl_t3 = &kl_t2;
 #line 31 "../test_lib/console.kl"
@@ -502,8 +502,8 @@ int32_t kl__4main__( void )
     kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t6, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 45 "codegen/address_globals.kl"
     kl_1t7console_5print__3i64_7textual( kl_t1, kl_t7 );
-    ( *kl__early__G ) = 6;
-    kl_t9 = ( int64_t ) kl__later__G;
+    ( *kl_7codegen_early__G ) = 6;
+    kl_t9 = ( int64_t ) kl_7codegen_later__G;
 #line 31 "../test_lib/console.kl"
     kl_t11 = &kl_t10;
 #line 31 "../test_lib/console.kl"
@@ -516,7 +516,7 @@ int32_t kl__4main__( void )
     kl_t15 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t14, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 47 "codegen/address_globals.kl"
     kl_1t7console_5print__3i64_7textual( kl_t9, kl_t15 );
-    kl_t17 = kl__fp__G(  );
+    kl_t17 = kl_7codegen_fp__G(  );
 #line 48 "codegen/address_globals.kl"
     kl_t18 = ( int64_t ) kl_t17;
 #line 31 "../test_lib/console.kl"
@@ -531,7 +531,7 @@ int32_t kl__4main__( void )
     kl_t24 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t23, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 48 "codegen/address_globals.kl"
     kl_1t7console_5print__3i64_7textual( kl_t18, kl_t24 );
-    kl_t26 = kl__tw__G( 4 );
+    kl_t26 = kl_7codegen_tw__G( 4 );
 #line 49 "codegen/address_globals.kl"
     kl_t27 = ( int64_t ) kl_t26;
 #line 31 "../test_lib/console.kl"
@@ -548,7 +548,7 @@ int32_t kl__4main__( void )
     kl_1t7console_5print__3i64_7textual( kl_t27, kl_t33 );
     kl_t35 = 1;
 #line 50 "codegen/address_globals.kl"
-    kl_t36 = ( int64_t ) ( *kl__both__G.e[kl_t35] );
+    kl_t36 = ( int64_t ) ( *kl_7codegen_both__G.e[kl_t35] );
 #line 31 "../test_lib/console.kl"
     kl_t38 = &kl_t37;
 #line 31 "../test_lib/console.kl"
@@ -561,7 +561,7 @@ int32_t kl__4main__( void )
     kl_t42 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t41, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 50 "codegen/address_globals.kl"
     kl_1t7console_5print__3i64_7textual( kl_t36, kl_t42 );
-    kl_t44 = kl__bumper__G( 3 );
+    kl_t44 = kl_7codegen_bumper__G( 3 );
 #line 51 "codegen/address_globals.kl"
     kl_t45 = ( int64_t ) kl_t44;
 #line 31 "../test_lib/console.kl"
@@ -576,7 +576,7 @@ int32_t kl__4main__( void )
     kl_t51 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t50, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 51 "codegen/address_globals.kl"
     kl_1t7console_5print__3i64_7textual( kl_t45, kl_t51 );
-    kl_t53 = ( int64_t ) ( *kl__at__GS7Counter );
+    kl_t53 = ( int64_t ) ( *kl_7codegen_at__GSQ7codegen7Counter );
 #line 31 "../test_lib/console.kl"
     kl_t55 = &kl_t54;
 #line 31 "../test_lib/console.kl"
@@ -598,7 +598,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 43 "codegen/address_globals.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 43 "codegen/address_globals.kl"
     return kl_t0;
 #line 43 "codegen/address_globals.kl"

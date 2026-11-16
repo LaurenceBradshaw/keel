@@ -361,7 +361,7 @@ struct Built
     std::string                 rendered;
 };
 
-// `kl::clock` compiled as `-c kl/clock.kl --package kl=kl` would.
+// `kl::clock` compiled as `-c kl/clock.kl --package kl` would.
 Built build_clock( const Temp_dir& dir, bool debug )
 {
     const std::filesystem::path path = dir.write( "kl/clock.kl", k_clock );

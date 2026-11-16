@@ -3,21 +3,21 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Pair;
+struct kl_12pinned_loops_Pair;
 
-struct kl__Pair
+struct kl_12pinned_loops_Pair
 {
     int64_t kl_a;
     int64_t kl_b;
 };
-_Static_assert( sizeof( struct kl__Pair ) == 16 && _Alignof( struct kl__Pair ) == 8 && offsetof( struct kl__Pair, kl_a ) == 0 && offsetof( struct kl__Pair, kl_b ) == 8, "layout" );
+_Static_assert( sizeof( struct kl_12pinned_loops_Pair ) == 16 && _Alignof( struct kl_12pinned_loops_Pair ) == 8 && offsetof( struct kl_12pinned_loops_Pair, kl_a ) == 0 && offsetof( struct kl_12pinned_loops_Pair, kl_b ) == 8, "layout" );
 
-int64_t kl__6scaled__4Pair_3i64_3i64( struct kl__Pair*, int64_t, int64_t );
-int64_t kl__6thrice__3i64( int64_t );
-int32_t kl__4main__( void );
+int64_t kl_12pinned_loops_6scaled__Q12pinned_loops4Pair_3i64_3i64( struct kl_12pinned_loops_Pair*, int64_t, int64_t );
+int64_t kl_12pinned_loops_6thrice__3i64( int64_t );
+int32_t kl_12pinned_loops_4main__( void );
 
 #line 12 "opt/pinned_loops/main.kl"
-int64_t kl__6scaled__4Pair_3i64_3i64( struct kl__Pair* kl_p_1, int64_t kl_n_2, int64_t kl_k_3 )
+int64_t kl_12pinned_loops_6scaled__Q12pinned_loops4Pair_3i64_3i64( struct kl_12pinned_loops_Pair* kl_p_1, int64_t kl_n_2, int64_t kl_k_3 )
 {
     int64_t kl_t0;
     int64_t kl_t_4;
@@ -68,7 +68,7 @@ int64_t kl__6scaled__4Pair_3i64_3i64( struct kl__Pair* kl_p_1, int64_t kl_n_2, i
 }
 
 #line 24 "opt/pinned_loops/main.kl"
-int64_t kl__6thrice__3i64( int64_t kl_x_1 )
+int64_t kl_12pinned_loops_6thrice__3i64( int64_t kl_x_1 )
 {
     int64_t kl_t0;
     int64_t kl_t_2;
@@ -95,12 +95,12 @@ int64_t kl__6thrice__3i64( int64_t kl_x_1 )
 }
 
 #line 34 "opt/pinned_loops/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_12pinned_loops_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__Pair kl_p_1;
-    struct kl__Pair kl_t2;
-    struct kl__Pair* kl_t3;
+    struct kl_12pinned_loops_Pair kl_p_1;
+    struct kl_12pinned_loops_Pair kl_t2;
+    struct kl_12pinned_loops_Pair* kl_t3;
     int64_t kl_t4;
     bool kl_t5;
     int64_t kl_t6;
@@ -113,7 +113,7 @@ int32_t kl__4main__( void )
     kl_p_1 = kl_t2;
     kl_t3 = &kl_p_1;
 #line 37 "opt/pinned_loops/main.kl"
-    kl_t4 = kl__6scaled__4Pair_3i64_3i64( kl_t3, 3, 1 );
+    kl_t4 = kl_12pinned_loops_6scaled__Q12pinned_loops4Pair_3i64_3i64( kl_t3, 3, 1 );
 #line 37 "opt/pinned_loops/main.kl"
     kl_t5 = kl_t4 != 24;
 #line 37 "opt/pinned_loops/main.kl"
@@ -124,7 +124,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb2:
 #line 42 "opt/pinned_loops/main.kl"
-    kl_t6 = kl__6thrice__3i64( 5 );
+    kl_t6 = kl_12pinned_loops_6thrice__3i64( 5 );
 #line 42 "opt/pinned_loops/main.kl"
     kl_t7 = kl_t6 != 15;
 #line 42 "opt/pinned_loops/main.kl"
@@ -144,7 +144,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 34 "opt/pinned_loops/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_12pinned_loops_4main__(  );
 #line 34 "opt/pinned_loops/main.kl"
     return kl_t0;
 #line 34 "opt/pinned_loops/main.kl"

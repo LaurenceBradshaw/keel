@@ -5,10 +5,10 @@
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__4main__( void );
+int32_t kl_7codegen_4main__( void );
 
 #line 3 "codegen/control_flow.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_total_1;
@@ -111,7 +111,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 3 "codegen/control_flow.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 3 "codegen/control_flow.kl"
     return kl_t0;
 #line 3 "codegen/control_flow.kl"

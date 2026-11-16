@@ -9400,7 +9400,7 @@ _Static_assert( sizeof( struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_err
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-int32_t kl__4main__( void );
+int32_t kl_17console_long_line_4main__( void );
 void kl_2kl4list_8truncate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
 uint64_t kl_2kl4list_4size__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
 struct kl_2kl6string_string* kl_2kl4list_14operator_index__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
@@ -9425,7 +9425,7 @@ void kl_2kl4list_4list__IQ2kl6stringE__dtor( struct kl_2kl4list_list__IQ2kl6stri
 void kl_2kl4list_4list__IQ2kl4pathE__dtor( struct kl_2kl4list_list__IQ2kl4pathE* );
 
 #line 6 "console_long_line/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_17console_long_line_4main__( void )
 {
     int32_t kl_t0;
     struct kl_2kl6string_string kl_line_1;
@@ -9934,7 +9934,7 @@ int main( void )
 #line 6 "console_long_line/main.kl"
     kl_2kl2os_0build(  );
 #line 6 "console_long_line/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_17console_long_line_4main__(  );
 #line 6 "console_long_line/main.kl"
     kl_2kl2os_0drop(  );
 #line 6 "console_long_line/main.kl"

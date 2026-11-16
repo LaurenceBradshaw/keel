@@ -3,61 +3,61 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__tally;
-struct kl__held;
+struct kl_7codegen_tally;
+struct kl_7codegen_held;
 struct kl_7prelude_box__I4sinkI3i64EE;
-struct kl_7prelude_box__I4heldE;
-struct kl_7prelude_box__I5tallyE;
+struct kl_7prelude_box__IQ7codegen4heldE;
+struct kl_7prelude_box__IQ7codegen5tallyE;
 
-struct kl__sink__I3i64E__vtable;
-struct kl__sink__I3i64E__ref { void* self; const struct kl__sink__I3i64E__vtable* vtable; };
-struct kl__sink__I4boolE__vtable;
-struct kl__sink__I4boolE__ref { void* self; const struct kl__sink__I4boolE__vtable* vtable; };
+struct kl_7codegen_sink__I3i64E__vtable;
+struct kl_7codegen_sink__I3i64E__ref { void* self; const struct kl_7codegen_sink__I3i64E__vtable* vtable; };
+struct kl_7codegen_sink__I4boolE__vtable;
+struct kl_7codegen_sink__I4boolE__ref { void* self; const struct kl_7codegen_sink__I4boolE__vtable* vtable; };
 
 typedef void ( *kl__fn__FMP4voidMP3i64E4void )( void*, int64_t* );
 typedef void ( *kl__fn__FMP4voidMP4boolE4void )( void*, bool* );
 typedef uint64_t ( *kl__fn__FMP4voidE3u64 )( void* );
 
-struct kl__tally
+struct kl_7codegen_tally
 {
     int64_t kl_sum_;
     uint64_t kl_count_;
 };
-_Static_assert( sizeof( struct kl__tally ) == 16 && _Alignof( struct kl__tally ) == 8 && offsetof( struct kl__tally, kl_sum_ ) == 0 && offsetof( struct kl__tally, kl_count_ ) == 8, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_tally ) == 16 && _Alignof( struct kl_7codegen_tally ) == 8 && offsetof( struct kl_7codegen_tally, kl_sum_ ) == 0 && offsetof( struct kl_7codegen_tally, kl_count_ ) == 8, "layout" );
 
-struct kl__held
+struct kl_7codegen_held
 {
     int64_t* kl_slot_;
     uint64_t kl_count_;
 };
-_Static_assert( sizeof( struct kl__held ) == 16 && _Alignof( struct kl__held ) == 8 && offsetof( struct kl__held, kl_slot_ ) == 0 && offsetof( struct kl__held, kl_count_ ) == 8, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_held ) == 16 && _Alignof( struct kl_7codegen_held ) == 8 && offsetof( struct kl_7codegen_held, kl_slot_ ) == 0 && offsetof( struct kl_7codegen_held, kl_count_ ) == 8, "layout" );
 
 struct kl_7prelude_box__I4sinkI3i64EE
 {
-    struct kl__sink__I3i64E__ref kl_p_;
+    struct kl_7codegen_sink__I3i64E__ref kl_p_;
 };
 _Static_assert( sizeof( struct kl_7prelude_box__I4sinkI3i64EE ) == 16 && _Alignof( struct kl_7prelude_box__I4sinkI3i64EE ) == 8 && offsetof( struct kl_7prelude_box__I4sinkI3i64EE, kl_p_ ) == 0, "layout" );
 
-struct kl_7prelude_box__I4heldE
+struct kl_7prelude_box__IQ7codegen4heldE
 {
-    struct kl__held* kl_p_;
+    struct kl_7codegen_held* kl_p_;
 };
-_Static_assert( sizeof( struct kl_7prelude_box__I4heldE ) == 8 && _Alignof( struct kl_7prelude_box__I4heldE ) == 8 && offsetof( struct kl_7prelude_box__I4heldE, kl_p_ ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7prelude_box__IQ7codegen4heldE ) == 8 && _Alignof( struct kl_7prelude_box__IQ7codegen4heldE ) == 8 && offsetof( struct kl_7prelude_box__IQ7codegen4heldE, kl_p_ ) == 0, "layout" );
 
-struct kl_7prelude_box__I5tallyE
+struct kl_7prelude_box__IQ7codegen5tallyE
 {
-    struct kl__tally* kl_p_;
+    struct kl_7codegen_tally* kl_p_;
 };
-_Static_assert( sizeof( struct kl_7prelude_box__I5tallyE ) == 8 && _Alignof( struct kl_7prelude_box__I5tallyE ) == 8 && offsetof( struct kl_7prelude_box__I5tallyE, kl_p_ ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7prelude_box__IQ7codegen5tallyE ) == 8 && _Alignof( struct kl_7prelude_box__IQ7codegen5tallyE ) == 8 && offsetof( struct kl_7prelude_box__IQ7codegen5tallyE, kl_p_ ) == 0, "layout" );
 
-struct kl__sink__I3i64E__vtable
+struct kl_7codegen_sink__I3i64E__vtable
 {
     void ( *drop )( void* );
     void ( *kl__3put__1T )( void*, int64_t* );
     uint64_t ( *kl__5count__ )( void* );
 };
 
-struct kl__sink__I4boolE__vtable
+struct kl_7codegen_sink__I4boolE__vtable
 {
     void ( *drop )( void* );
     void ( *kl__3put__1T )( void*, bool* );
@@ -69,94 +69,94 @@ void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__5tally__R5tally__ctor( struct kl__tally* );
-void kl__3put__S5tally_3i64( struct kl__tally*, int64_t );
-void kl__3put__S5tally_4bool( struct kl__tally*, bool );
-uint64_t kl__5count__S5tally( struct kl__tally* );
-int64_t kl__3sum__S5tally( struct kl__tally* );
-void kl__4held__R4held__ctor( struct kl__held* );
-void kl__4held__dtor( struct kl__held* );
-void kl__3put__S4held_3i64( struct kl__held*, int64_t );
-uint64_t kl__5count__S4held( struct kl__held* );
-void kl__4feed__R4sinkI3i64E_3i64( struct kl__sink__I3i64E__ref, int64_t );
-void kl__4flag__P4sinkI4boolE( struct kl__sink__I4boolE__ref );
-uint64_t kl__7counted__4sinkI3i64E( struct kl__sink__I3i64E__ref );
-uint64_t kl__13counted_flags__4sinkI4boolE( struct kl__sink__I4boolE__ref );
-int32_t kl__4main__( void );
-void kl_7prelude_3box__I4heldE__RQ7prelude3boxI4heldE_M4held__ctor( struct kl_7prelude_box__I4heldE*, struct kl__held );
-struct kl__sink__I3i64E__ref kl_7prelude_3get__I4sinkI3i64EE__SQ7prelude3boxI4sinkI3i64EE( struct kl_7prelude_box__I4sinkI3i64EE* );
-void kl_7prelude_3box__I5tallyE__RQ7prelude3boxI5tallyE_M5tally__ctor( struct kl_7prelude_box__I5tallyE*, struct kl__tally );
+void kl_7codegen_5tally__RQ7codegen5tally__ctor( struct kl_7codegen_tally* );
+void kl_7codegen_3put__SQ7codegen5tally_3i64( struct kl_7codegen_tally*, int64_t );
+void kl_7codegen_3put__SQ7codegen5tally_4bool( struct kl_7codegen_tally*, bool );
+uint64_t kl_7codegen_5count__SQ7codegen5tally( struct kl_7codegen_tally* );
+int64_t kl_7codegen_3sum__SQ7codegen5tally( struct kl_7codegen_tally* );
+void kl_7codegen_4held__RQ7codegen4held__ctor( struct kl_7codegen_held* );
+void kl_7codegen_4held__dtor( struct kl_7codegen_held* );
+void kl_7codegen_3put__SQ7codegen4held_3i64( struct kl_7codegen_held*, int64_t );
+uint64_t kl_7codegen_5count__SQ7codegen4held( struct kl_7codegen_held* );
+void kl_7codegen_4feed__R4sinkI3i64E_3i64( struct kl_7codegen_sink__I3i64E__ref, int64_t );
+void kl_7codegen_4flag__P4sinkI4boolE( struct kl_7codegen_sink__I4boolE__ref );
+uint64_t kl_7codegen_7counted__4sinkI3i64E( struct kl_7codegen_sink__I3i64E__ref );
+uint64_t kl_7codegen_13counted_flags__4sinkI4boolE( struct kl_7codegen_sink__I4boolE__ref );
+int32_t kl_7codegen_4main__( void );
+void kl_7prelude_3box__IQ7codegen4heldE__RQ7prelude3boxIQ7codegen4heldE_MQ7codegen4held__ctor( struct kl_7prelude_box__IQ7codegen4heldE*, struct kl_7codegen_held );
+struct kl_7codegen_sink__I3i64E__ref kl_7prelude_3get__I4sinkI3i64EE__SQ7prelude3boxI4sinkI3i64EE( struct kl_7prelude_box__I4sinkI3i64EE* );
+void kl_7prelude_3box__IQ7codegen5tallyE__RQ7prelude3boxIQ7codegen5tallyE_MQ7codegen5tally__ctor( struct kl_7prelude_box__IQ7codegen5tallyE*, struct kl_7codegen_tally );
 void kl_7prelude_3box__I4sinkI3i64EE__dtor( struct kl_7prelude_box__I4sinkI3i64EE* );
-void kl_7prelude_3box__I4heldE__dtor( struct kl_7prelude_box__I4heldE* );
-void kl_7prelude_3box__I5tallyE__dtor( struct kl_7prelude_box__I5tallyE* );
-void kl__held__drop( void* );
-void kl__tally__drop( void* );
-void kl__tally__as_kl__sink__I3i64E__kl__3put__1T( void*, int64_t* );
-uint64_t kl__tally__as_kl__sink__I3i64E__kl__5count__( void* );
-void kl__tally__as_kl__sink__I4boolE__kl__3put__1T( void*, bool* );
-uint64_t kl__tally__as_kl__sink__I4boolE__kl__5count__( void* );
-void kl__held__as_kl__sink__I3i64E__kl__3put__1T( void*, int64_t* );
-uint64_t kl__held__as_kl__sink__I3i64E__kl__5count__( void* );
+void kl_7prelude_3box__IQ7codegen4heldE__dtor( struct kl_7prelude_box__IQ7codegen4heldE* );
+void kl_7prelude_3box__IQ7codegen5tallyE__dtor( struct kl_7prelude_box__IQ7codegen5tallyE* );
+void kl_7codegen_held__drop( void* );
+void kl_7codegen_tally__drop( void* );
+void kl_7codegen_tally__as_kl_7codegen_sink__I3i64E__kl__3put__1T( void*, int64_t* );
+uint64_t kl_7codegen_tally__as_kl_7codegen_sink__I3i64E__kl__5count__( void* );
+void kl_7codegen_tally__as_kl_7codegen_sink__I4boolE__kl__3put__1T( void*, bool* );
+uint64_t kl_7codegen_tally__as_kl_7codegen_sink__I4boolE__kl__5count__( void* );
+void kl_7codegen_held__as_kl_7codegen_sink__I3i64E__kl__3put__1T( void*, int64_t* );
+uint64_t kl_7codegen_held__as_kl_7codegen_sink__I3i64E__kl__5count__( void* );
 
-static const struct kl__sink__I3i64E__vtable kl__tally__as_kl__sink__I3i64E = { kl__tally__drop, kl__tally__as_kl__sink__I3i64E__kl__3put__1T, kl__tally__as_kl__sink__I3i64E__kl__5count__ };
+static const struct kl_7codegen_sink__I3i64E__vtable kl_7codegen_tally__as_kl_7codegen_sink__I3i64E = { kl_7codegen_tally__drop, kl_7codegen_tally__as_kl_7codegen_sink__I3i64E__kl__3put__1T, kl_7codegen_tally__as_kl_7codegen_sink__I3i64E__kl__5count__ };
 
-static const struct kl__sink__I4boolE__vtable kl__tally__as_kl__sink__I4boolE = { kl__tally__drop, kl__tally__as_kl__sink__I4boolE__kl__3put__1T, kl__tally__as_kl__sink__I4boolE__kl__5count__ };
+static const struct kl_7codegen_sink__I4boolE__vtable kl_7codegen_tally__as_kl_7codegen_sink__I4boolE = { kl_7codegen_tally__drop, kl_7codegen_tally__as_kl_7codegen_sink__I4boolE__kl__3put__1T, kl_7codegen_tally__as_kl_7codegen_sink__I4boolE__kl__5count__ };
 
-static const struct kl__sink__I3i64E__vtable kl__held__as_kl__sink__I3i64E = { kl__held__drop, kl__held__as_kl__sink__I3i64E__kl__3put__1T, kl__held__as_kl__sink__I3i64E__kl__5count__ };
+static const struct kl_7codegen_sink__I3i64E__vtable kl_7codegen_held__as_kl_7codegen_sink__I3i64E = { kl_7codegen_held__drop, kl_7codegen_held__as_kl_7codegen_sink__I3i64E__kl__3put__1T, kl_7codegen_held__as_kl_7codegen_sink__I3i64E__kl__5count__ };
 
-void kl__tally__as_kl__sink__I3i64E__kl__3put__1T( void* kl_t1, int64_t* kl_t2 )
+void kl_7codegen_tally__as_kl_7codegen_sink__I3i64E__kl__3put__1T( void* kl_t1, int64_t* kl_t2 )
 {
-    struct kl__tally* kl_t3;
-    kl_t3 = ( struct kl__tally* ) kl_t1;
-    kl__3put__S5tally_3i64( kl_t3, ( *kl_t2 ) );
+    struct kl_7codegen_tally* kl_t3;
+    kl_t3 = ( struct kl_7codegen_tally* ) kl_t1;
+    kl_7codegen_3put__SQ7codegen5tally_3i64( kl_t3, ( *kl_t2 ) );
     return;
 }
 
-uint64_t kl__tally__as_kl__sink__I3i64E__kl__5count__( void* kl_t1 )
+uint64_t kl_7codegen_tally__as_kl_7codegen_sink__I3i64E__kl__5count__( void* kl_t1 )
 {
     uint64_t kl_t0;
-    struct kl__tally* kl_t2;
-    kl_t2 = ( struct kl__tally* ) kl_t1;
-    kl_t0 = kl__5count__S5tally( kl_t2 );
+    struct kl_7codegen_tally* kl_t2;
+    kl_t2 = ( struct kl_7codegen_tally* ) kl_t1;
+    kl_t0 = kl_7codegen_5count__SQ7codegen5tally( kl_t2 );
     return kl_t0;
 }
 
-void kl__tally__as_kl__sink__I4boolE__kl__3put__1T( void* kl_t1, bool* kl_t2 )
+void kl_7codegen_tally__as_kl_7codegen_sink__I4boolE__kl__3put__1T( void* kl_t1, bool* kl_t2 )
 {
-    struct kl__tally* kl_t3;
-    kl_t3 = ( struct kl__tally* ) kl_t1;
-    kl__3put__S5tally_4bool( kl_t3, ( *kl_t2 ) );
+    struct kl_7codegen_tally* kl_t3;
+    kl_t3 = ( struct kl_7codegen_tally* ) kl_t1;
+    kl_7codegen_3put__SQ7codegen5tally_4bool( kl_t3, ( *kl_t2 ) );
     return;
 }
 
-uint64_t kl__tally__as_kl__sink__I4boolE__kl__5count__( void* kl_t1 )
+uint64_t kl_7codegen_tally__as_kl_7codegen_sink__I4boolE__kl__5count__( void* kl_t1 )
 {
     uint64_t kl_t0;
-    struct kl__tally* kl_t2;
-    kl_t2 = ( struct kl__tally* ) kl_t1;
-    kl_t0 = kl__5count__S5tally( kl_t2 );
+    struct kl_7codegen_tally* kl_t2;
+    kl_t2 = ( struct kl_7codegen_tally* ) kl_t1;
+    kl_t0 = kl_7codegen_5count__SQ7codegen5tally( kl_t2 );
     return kl_t0;
 }
 
-void kl__held__as_kl__sink__I3i64E__kl__3put__1T( void* kl_t1, int64_t* kl_t2 )
+void kl_7codegen_held__as_kl_7codegen_sink__I3i64E__kl__3put__1T( void* kl_t1, int64_t* kl_t2 )
 {
-    struct kl__held* kl_t3;
-    kl_t3 = ( struct kl__held* ) kl_t1;
-    kl__3put__S4held_3i64( kl_t3, ( *kl_t2 ) );
+    struct kl_7codegen_held* kl_t3;
+    kl_t3 = ( struct kl_7codegen_held* ) kl_t1;
+    kl_7codegen_3put__SQ7codegen4held_3i64( kl_t3, ( *kl_t2 ) );
     return;
 }
 
-uint64_t kl__held__as_kl__sink__I3i64E__kl__5count__( void* kl_t1 )
+uint64_t kl_7codegen_held__as_kl_7codegen_sink__I3i64E__kl__5count__( void* kl_t1 )
 {
     uint64_t kl_t0;
-    struct kl__held* kl_t2;
-    kl_t2 = ( struct kl__held* ) kl_t1;
-    kl_t0 = kl__5count__S4held( kl_t2 );
+    struct kl_7codegen_held* kl_t2;
+    kl_t2 = ( struct kl_7codegen_held* ) kl_t1;
+    kl_t0 = kl_7codegen_5count__SQ7codegen4held( kl_t2 );
     return kl_t0;
 }
 
 #line 16 "codegen/generic_interfaces_dynamic.kl"
-void kl__5tally__R5tally__ctor( struct kl__tally* kl_this_1 )
+void kl_7codegen_5tally__RQ7codegen5tally__ctor( struct kl_7codegen_tally* kl_this_1 )
 {
     ( *kl_this_1 ).kl_sum_ = 0;
     ( *kl_this_1 ).kl_count_ = 0;
@@ -165,7 +165,7 @@ void kl__5tally__R5tally__ctor( struct kl__tally* kl_this_1 )
 }
 
 #line 22 "codegen/generic_interfaces_dynamic.kl"
-void kl__3put__S5tally_3i64( struct kl__tally* kl_this_1, int64_t kl_value_2 )
+void kl_7codegen_3put__SQ7codegen5tally_3i64( struct kl_7codegen_tally* kl_this_1, int64_t kl_value_2 )
 {
     bool kl_t3;
     bool kl_t4;
@@ -193,7 +193,7 @@ void kl__3put__S5tally_3i64( struct kl__tally* kl_this_1, int64_t kl_value_2 )
 }
 
 #line 28 "codegen/generic_interfaces_dynamic.kl"
-void kl__3put__S5tally_4bool( struct kl__tally* kl_this_1, bool kl_t2 )
+void kl_7codegen_3put__SQ7codegen5tally_4bool( struct kl_7codegen_tally* kl_this_1, bool kl_t2 )
 {
     bool kl_t3;
     ( void ) kl_t2;
@@ -213,7 +213,7 @@ void kl__3put__S5tally_4bool( struct kl__tally* kl_this_1, bool kl_t2 )
 }
 
 #line 29 "codegen/generic_interfaces_dynamic.kl"
-uint64_t kl__5count__S5tally( struct kl__tally* kl_this_1 )
+uint64_t kl_7codegen_5count__SQ7codegen5tally( struct kl_7codegen_tally* kl_this_1 )
 {
     uint64_t kl_t0;
 #line 29 "codegen/generic_interfaces_dynamic.kl"
@@ -224,7 +224,7 @@ uint64_t kl__5count__S5tally( struct kl__tally* kl_this_1 )
 }
 
 #line 30 "codegen/generic_interfaces_dynamic.kl"
-int64_t kl__3sum__S5tally( struct kl__tally* kl_this_1 )
+int64_t kl_7codegen_3sum__SQ7codegen5tally( struct kl_7codegen_tally* kl_this_1 )
 {
     int64_t kl_t0;
 #line 30 "codegen/generic_interfaces_dynamic.kl"
@@ -235,7 +235,7 @@ int64_t kl__3sum__S5tally( struct kl__tally* kl_this_1 )
 }
 
 #line 39 "codegen/generic_interfaces_dynamic.kl"
-void kl__4held__R4held__ctor( struct kl__held* kl_this_1 )
+void kl_7codegen_4held__RQ7codegen4held__ctor( struct kl_7codegen_held* kl_this_1 )
 {
     int64_t* kl_t2;
     int64_t* kl_t3;
@@ -252,7 +252,7 @@ void kl__4held__R4held__ctor( struct kl__held* kl_this_1 )
 }
 
 #line 49 "codegen/generic_interfaces_dynamic.kl"
-void kl__4held__dtor( struct kl__held* kl_this_1 )
+void kl_7codegen_4held__dtor( struct kl_7codegen_held* kl_this_1 )
 {
 #line 53 "codegen/generic_interfaces_dynamic.kl"
     kl_rt_free( ( *kl_this_1 ).kl_slot_ );
@@ -262,7 +262,7 @@ void kl__4held__dtor( struct kl__held* kl_this_1 )
 }
 
 #line 57 "codegen/generic_interfaces_dynamic.kl"
-void kl__3put__S4held_3i64( struct kl__held* kl_this_1, int64_t kl_value_2 )
+void kl_7codegen_3put__SQ7codegen4held_3i64( struct kl_7codegen_held* kl_this_1, int64_t kl_value_2 )
 {
     int64_t* kl_t3;
     bool kl_t4;
@@ -294,7 +294,7 @@ void kl__3put__S4held_3i64( struct kl__held* kl_this_1, int64_t kl_value_2 )
 }
 
 #line 66 "codegen/generic_interfaces_dynamic.kl"
-uint64_t kl__5count__S4held( struct kl__held* kl_this_1 )
+uint64_t kl_7codegen_5count__SQ7codegen4held( struct kl_7codegen_held* kl_this_1 )
 {
     uint64_t kl_t0;
 #line 66 "codegen/generic_interfaces_dynamic.kl"
@@ -305,9 +305,9 @@ uint64_t kl__5count__S4held( struct kl__held* kl_this_1 )
 }
 
 #line 69 "codegen/generic_interfaces_dynamic.kl"
-void kl__4feed__R4sinkI3i64E_3i64( struct kl__sink__I3i64E__ref kl_s_1, int64_t kl_v_2 )
+void kl_7codegen_4feed__R4sinkI3i64E_3i64( struct kl_7codegen_sink__I3i64E__ref kl_s_1, int64_t kl_v_2 )
 {
-    struct kl__sink__I3i64E__ref kl_t3;
+    struct kl_7codegen_sink__I3i64E__ref kl_t3;
     int64_t* kl_t4;
     kl__fn__FMP4voidMP3i64E4void kl_t6;
     void* kl_t7;
@@ -327,7 +327,7 @@ void kl__4feed__R4sinkI3i64E_3i64( struct kl__sink__I3i64E__ref kl_s_1, int64_t 
 }
 
 #line 71 "codegen/generic_interfaces_dynamic.kl"
-void kl__4flag__P4sinkI4boolE( struct kl__sink__I4boolE__ref kl_s_1 )
+void kl_7codegen_4flag__P4sinkI4boolE( struct kl_7codegen_sink__I4boolE__ref kl_s_1 )
 {
     bool kl_t2;
     bool* kl_t3;
@@ -349,10 +349,10 @@ void kl__4flag__P4sinkI4boolE( struct kl__sink__I4boolE__ref kl_s_1 )
 }
 
 #line 73 "codegen/generic_interfaces_dynamic.kl"
-uint64_t kl__7counted__4sinkI3i64E( struct kl__sink__I3i64E__ref kl_s_1 )
+uint64_t kl_7codegen_7counted__4sinkI3i64E( struct kl_7codegen_sink__I3i64E__ref kl_s_1 )
 {
     uint64_t kl_t0;
-    struct kl__sink__I3i64E__ref kl_t2;
+    struct kl_7codegen_sink__I3i64E__ref kl_t2;
     uint64_t kl_t3;
     kl__fn__FMP4voidE3u64 kl_t4;
     void* kl_t5;
@@ -372,10 +372,10 @@ uint64_t kl__7counted__4sinkI3i64E( struct kl__sink__I3i64E__ref kl_s_1 )
 }
 
 #line 75 "codegen/generic_interfaces_dynamic.kl"
-uint64_t kl__13counted_flags__4sinkI4boolE( struct kl__sink__I4boolE__ref kl_s_1 )
+uint64_t kl_7codegen_13counted_flags__4sinkI4boolE( struct kl_7codegen_sink__I4boolE__ref kl_s_1 )
 {
     uint64_t kl_t0;
-    struct kl__sink__I4boolE__ref kl_t2;
+    struct kl_7codegen_sink__I4boolE__ref kl_t2;
     uint64_t kl_t3;
     kl__fn__FMP4voidE3u64 kl_t4;
     void* kl_t5;
@@ -395,75 +395,75 @@ uint64_t kl__13counted_flags__4sinkI4boolE( struct kl__sink__I4boolE__ref kl_s_1
 }
 
 #line 77 "codegen/generic_interfaces_dynamic.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__tally kl_t_1;
-    struct kl__tally* kl_t2;
-    struct kl__tally* kl_t4;
-    struct kl__sink__I3i64E__ref kl_t5;
-    struct kl__tally* kl_t7;
-    struct kl__sink__I4boolE__ref kl_t8;
-    struct kl__tally* kl_t10;
+    struct kl_7codegen_tally kl_t_1;
+    struct kl_7codegen_tally* kl_t2;
+    struct kl_7codegen_tally* kl_t4;
+    struct kl_7codegen_sink__I3i64E__ref kl_t5;
+    struct kl_7codegen_tally* kl_t7;
+    struct kl_7codegen_sink__I4boolE__ref kl_t8;
+    struct kl_7codegen_tally* kl_t10;
     int64_t kl_t11;
     bool kl_t12;
     bool kl_t13;
-    struct kl__tally* kl_t14;
-    struct kl__sink__I3i64E__ref kl_t15;
+    struct kl_7codegen_tally* kl_t14;
+    struct kl_7codegen_sink__I3i64E__ref kl_t15;
     uint64_t kl_t16;
     bool kl_t17;
-    struct kl__tally* kl_t18;
-    struct kl__sink__I4boolE__ref kl_t19;
+    struct kl_7codegen_tally* kl_t18;
+    struct kl_7codegen_sink__I4boolE__ref kl_t19;
     uint64_t kl_t20;
     bool kl_t21;
-    struct kl__sink__I3i64E__ref kl_as_int_22;
-    struct kl__tally* kl_t23;
-    struct kl__sink__I3i64E__ref kl_t24;
+    struct kl_7codegen_sink__I3i64E__ref kl_as_int_22;
+    struct kl_7codegen_tally* kl_t23;
+    struct kl_7codegen_sink__I3i64E__ref kl_t24;
     int64_t kl_t25;
     int64_t* kl_t26;
     bool kl_t28;
-    struct kl__tally* kl_t29;
+    struct kl_7codegen_tally* kl_t29;
     int64_t kl_t30;
     bool kl_t31;
-    struct kl__tally* kl_t32;
+    struct kl_7codegen_tally* kl_t32;
     uint64_t kl_t33;
     bool kl_t34;
     struct kl_7prelude_box__I4sinkI3i64EE kl_b_35;
-    struct kl_7prelude_box__I4heldE kl_t36;
-    struct kl_7prelude_box__I4heldE* kl_t37;
-    struct kl__held kl_t38;
-    struct kl__held* kl_t39;
-    struct kl_7prelude_box__I4heldE kl_t42;
-    struct kl__held* kl_t43;
+    struct kl_7prelude_box__IQ7codegen4heldE kl_t36;
+    struct kl_7prelude_box__IQ7codegen4heldE* kl_t37;
+    struct kl_7codegen_held kl_t38;
+    struct kl_7codegen_held* kl_t39;
+    struct kl_7prelude_box__IQ7codegen4heldE kl_t42;
+    struct kl_7codegen_held* kl_t43;
     struct kl_7prelude_box__I4sinkI3i64EE kl_t44;
     struct kl_7prelude_box__I4sinkI3i64EE* kl_t45;
-    struct kl__sink__I3i64E__ref kl_t46;
-    struct kl__sink__I3i64E__ref kl_t47;
+    struct kl_7codegen_sink__I3i64E__ref kl_t46;
+    struct kl_7codegen_sink__I3i64E__ref kl_t47;
     struct kl_7prelude_box__I4sinkI3i64EE* kl_t49;
-    struct kl__sink__I3i64E__ref kl_t50;
-    struct kl__sink__I3i64E__ref kl_t51;
+    struct kl_7codegen_sink__I3i64E__ref kl_t50;
+    struct kl_7codegen_sink__I3i64E__ref kl_t51;
     int64_t kl_t52;
     int64_t* kl_t53;
     struct kl_7prelude_box__I4sinkI3i64EE* kl_t55;
-    struct kl__sink__I3i64E__ref kl_t56;
-    struct kl__sink__I3i64E__ref kl_t57;
+    struct kl_7codegen_sink__I3i64E__ref kl_t56;
+    struct kl_7codegen_sink__I3i64E__ref kl_t57;
     uint64_t kl_t58;
     bool kl_t59;
-    struct kl_7prelude_box__I5tallyE kl_t60;
-    struct kl_7prelude_box__I5tallyE* kl_t61;
-    struct kl__tally kl_t62;
-    struct kl__tally* kl_t63;
-    struct kl_7prelude_box__I5tallyE kl_t66;
-    struct kl__tally* kl_t67;
+    struct kl_7prelude_box__IQ7codegen5tallyE kl_t60;
+    struct kl_7prelude_box__IQ7codegen5tallyE* kl_t61;
+    struct kl_7codegen_tally kl_t62;
+    struct kl_7codegen_tally* kl_t63;
+    struct kl_7prelude_box__IQ7codegen5tallyE kl_t66;
+    struct kl_7codegen_tally* kl_t67;
     struct kl_7prelude_box__I4sinkI3i64EE kl_t68;
     struct kl_7prelude_box__I4sinkI3i64EE* kl_t69;
-    struct kl__sink__I3i64E__ref kl_t70;
-    struct kl__sink__I3i64E__ref kl_t71;
+    struct kl_7codegen_sink__I3i64E__ref kl_t70;
+    struct kl_7codegen_sink__I3i64E__ref kl_t71;
     int64_t kl_t72;
     int64_t* kl_t73;
     struct kl_7prelude_box__I4sinkI3i64EE* kl_t75;
-    struct kl__sink__I3i64E__ref kl_t76;
-    struct kl__sink__I3i64E__ref kl_t77;
+    struct kl_7codegen_sink__I3i64E__ref kl_t76;
+    struct kl_7codegen_sink__I3i64E__ref kl_t77;
     uint64_t kl_t78;
     bool kl_t79;
     bool kl_t80;
@@ -491,20 +491,20 @@ int32_t kl__4main__( void )
 #line 79 "codegen/generic_interfaces_dynamic.kl"
     kl_t2 = &kl_t_1;
 #line 79 "codegen/generic_interfaces_dynamic.kl"
-    kl__5tally__R5tally__ctor( kl_t2 );
+    kl_7codegen_5tally__RQ7codegen5tally__ctor( kl_t2 );
     kl_t4 = &kl_t_1;
 #line 80 "codegen/generic_interfaces_dynamic.kl"
-    kl_t5 = ( struct kl__sink__I3i64E__ref ) { ( void* ) kl_t4, &kl__tally__as_kl__sink__I3i64E };
+    kl_t5 = ( struct kl_7codegen_sink__I3i64E__ref ) { ( void* ) kl_t4, &kl_7codegen_tally__as_kl_7codegen_sink__I3i64E };
 #line 80 "codegen/generic_interfaces_dynamic.kl"
-    kl__4feed__R4sinkI3i64E_3i64( kl_t5, 4 );
+    kl_7codegen_4feed__R4sinkI3i64E_3i64( kl_t5, 4 );
     kl_t7 = &kl_t_1;
 #line 81 "codegen/generic_interfaces_dynamic.kl"
-    kl_t8 = ( struct kl__sink__I4boolE__ref ) { ( void* ) kl_t7, &kl__tally__as_kl__sink__I4boolE };
+    kl_t8 = ( struct kl_7codegen_sink__I4boolE__ref ) { ( void* ) kl_t7, &kl_7codegen_tally__as_kl_7codegen_sink__I4boolE };
 #line 81 "codegen/generic_interfaces_dynamic.kl"
-    kl__4flag__P4sinkI4boolE( kl_t8 );
+    kl_7codegen_4flag__P4sinkI4boolE( kl_t8 );
     kl_t10 = &kl_t_1;
 #line 82 "codegen/generic_interfaces_dynamic.kl"
-    kl_t11 = kl__3sum__S5tally( kl_t10 );
+    kl_t11 = kl_7codegen_3sum__SQ7codegen5tally( kl_t10 );
 #line 82 "codegen/generic_interfaces_dynamic.kl"
     kl_t12 = kl_t11 != 4;
 #line 82 "codegen/generic_interfaces_dynamic.kl"
@@ -518,9 +518,9 @@ int32_t kl__4main__( void )
 #line 83 "codegen/generic_interfaces_dynamic.kl"
     kl_t14 = &kl_t_1;
 #line 83 "codegen/generic_interfaces_dynamic.kl"
-    kl_t15 = ( struct kl__sink__I3i64E__ref ) { ( void* ) kl_t14, &kl__tally__as_kl__sink__I3i64E };
+    kl_t15 = ( struct kl_7codegen_sink__I3i64E__ref ) { ( void* ) kl_t14, &kl_7codegen_tally__as_kl_7codegen_sink__I3i64E };
 #line 83 "codegen/generic_interfaces_dynamic.kl"
-    kl_t16 = kl__7counted__4sinkI3i64E( kl_t15 );
+    kl_t16 = kl_7codegen_7counted__4sinkI3i64E( kl_t15 );
 #line 83 "codegen/generic_interfaces_dynamic.kl"
     kl_t17 = kl_t16 != 2;
 #line 83 "codegen/generic_interfaces_dynamic.kl"
@@ -531,9 +531,9 @@ int32_t kl__4main__( void )
 #line 83 "codegen/generic_interfaces_dynamic.kl"
     kl_t18 = &kl_t_1;
 #line 83 "codegen/generic_interfaces_dynamic.kl"
-    kl_t19 = ( struct kl__sink__I4boolE__ref ) { ( void* ) kl_t18, &kl__tally__as_kl__sink__I4boolE };
+    kl_t19 = ( struct kl_7codegen_sink__I4boolE__ref ) { ( void* ) kl_t18, &kl_7codegen_tally__as_kl_7codegen_sink__I4boolE };
 #line 83 "codegen/generic_interfaces_dynamic.kl"
-    kl_t20 = kl__13counted_flags__4sinkI4boolE( kl_t19 );
+    kl_t20 = kl_7codegen_13counted_flags__4sinkI4boolE( kl_t19 );
 #line 83 "codegen/generic_interfaces_dynamic.kl"
     kl_t21 = kl_t20 != 2;
 #line 83 "codegen/generic_interfaces_dynamic.kl"
@@ -551,7 +551,7 @@ int32_t kl__4main__( void )
     bb6:
     kl_t23 = &kl_t_1;
 #line 85 "codegen/generic_interfaces_dynamic.kl"
-    kl_t24 = ( struct kl__sink__I3i64E__ref ) { ( void* ) kl_t23, &kl__tally__as_kl__sink__I3i64E };
+    kl_t24 = ( struct kl_7codegen_sink__I3i64E__ref ) { ( void* ) kl_t23, &kl_7codegen_tally__as_kl_7codegen_sink__I3i64E };
 #line 85 "codegen/generic_interfaces_dynamic.kl"
     kl_as_int_22 = kl_t24;
     kl_t25 = 6;
@@ -565,7 +565,7 @@ int32_t kl__4main__( void )
     kl_t84( kl_t85, kl_t26 );
     kl_t29 = &kl_t_1;
 #line 87 "codegen/generic_interfaces_dynamic.kl"
-    kl_t30 = kl__3sum__S5tally( kl_t29 );
+    kl_t30 = kl_7codegen_3sum__SQ7codegen5tally( kl_t29 );
 #line 87 "codegen/generic_interfaces_dynamic.kl"
     kl_t31 = kl_t30 != 10;
 #line 87 "codegen/generic_interfaces_dynamic.kl"
@@ -576,7 +576,7 @@ int32_t kl__4main__( void )
 #line 87 "codegen/generic_interfaces_dynamic.kl"
     kl_t32 = &kl_t_1;
 #line 87 "codegen/generic_interfaces_dynamic.kl"
-    kl_t33 = kl__5count__S5tally( kl_t32 );
+    kl_t33 = kl_7codegen_5count__SQ7codegen5tally( kl_t32 );
 #line 87 "codegen/generic_interfaces_dynamic.kl"
     kl_t34 = kl_t33 != 3;
 #line 87 "codegen/generic_interfaces_dynamic.kl"
@@ -606,9 +606,9 @@ int32_t kl__4main__( void )
 #line 89 "codegen/generic_interfaces_dynamic.kl"
     kl_t82 = true;
 #line 89 "codegen/generic_interfaces_dynamic.kl"
-    kl__4held__R4held__ctor( kl_t39 );
+    kl_7codegen_4held__RQ7codegen4held__ctor( kl_t39 );
 #line 89 "codegen/generic_interfaces_dynamic.kl"
-    kl_7prelude_3box__I4heldE__RQ7prelude3boxI4heldE_M4held__ctor( kl_t37, kl_t38 );
+    kl_7prelude_3box__IQ7codegen4heldE__RQ7prelude3boxIQ7codegen4heldE_MQ7codegen4held__ctor( kl_t37, kl_t38 );
 #line 89 "codegen/generic_interfaces_dynamic.kl"
     kl_t82 = false;
 #line 89 "codegen/generic_interfaces_dynamic.kl"
@@ -618,15 +618,15 @@ int32_t kl__4main__( void )
 #line 89 "codegen/generic_interfaces_dynamic.kl"
     kl_t43 = kl_t42.kl_p_;
 #line 89 "codegen/generic_interfaces_dynamic.kl"
-    kl_t44.kl_p_ = ( struct kl__sink__I3i64E__ref ) { ( void* ) kl_t43, &kl__held__as_kl__sink__I3i64E };
+    kl_t44.kl_p_ = ( struct kl_7codegen_sink__I3i64E__ref ) { ( void* ) kl_t43, &kl_7codegen_held__as_kl_7codegen_sink__I3i64E };
 #line 89 "codegen/generic_interfaces_dynamic.kl"
     kl_b_35 = kl_t44;
 #line 89 "codegen/generic_interfaces_dynamic.kl"
     kl_t80 = true;
 #line 89 "codegen/generic_interfaces_dynamic.kl"
-    if ( kl_t81 ) kl_7prelude_3box__I4heldE__dtor( &kl_t36 );
+    if ( kl_t81 ) kl_7prelude_3box__IQ7codegen4heldE__dtor( &kl_t36 );
 #line 89 "codegen/generic_interfaces_dynamic.kl"
-    if ( kl_t82 ) kl__4held__dtor( &kl_t38 );
+    if ( kl_t82 ) kl_7codegen_4held__dtor( &kl_t38 );
 #line 89 "codegen/generic_interfaces_dynamic.kl"
     kl_t82 = false;
 #line 89 "codegen/generic_interfaces_dynamic.kl"
@@ -637,7 +637,7 @@ int32_t kl__4main__( void )
 #line 90 "codegen/generic_interfaces_dynamic.kl"
     kl_t47 = kl_t46;
 #line 90 "codegen/generic_interfaces_dynamic.kl"
-    kl__4feed__R4sinkI3i64E_3i64( kl_t47, 5 );
+    kl_7codegen_4feed__R4sinkI3i64E_3i64( kl_t47, 5 );
     kl_t49 = &kl_b_35;
 #line 91 "codegen/generic_interfaces_dynamic.kl"
     kl_t50 = kl_7prelude_3get__I4sinkI3i64EE__SQ7prelude3boxI4sinkI3i64EE( kl_t49 );
@@ -686,9 +686,9 @@ int32_t kl__4main__( void )
 #line 94 "codegen/generic_interfaces_dynamic.kl"
     kl_t63 = &kl_t62;
 #line 94 "codegen/generic_interfaces_dynamic.kl"
-    kl__5tally__R5tally__ctor( kl_t63 );
+    kl_7codegen_5tally__RQ7codegen5tally__ctor( kl_t63 );
 #line 94 "codegen/generic_interfaces_dynamic.kl"
-    kl_7prelude_3box__I5tallyE__RQ7prelude3boxI5tallyE_M5tally__ctor( kl_t61, kl_t62 );
+    kl_7prelude_3box__IQ7codegen5tallyE__RQ7prelude3boxIQ7codegen5tallyE_MQ7codegen5tally__ctor( kl_t61, kl_t62 );
 #line 94 "codegen/generic_interfaces_dynamic.kl"
     kl_t66 = kl_t60;
 #line 94 "codegen/generic_interfaces_dynamic.kl"
@@ -696,7 +696,7 @@ int32_t kl__4main__( void )
 #line 94 "codegen/generic_interfaces_dynamic.kl"
     kl_t67 = kl_t66.kl_p_;
 #line 94 "codegen/generic_interfaces_dynamic.kl"
-    kl_t68.kl_p_ = ( struct kl__sink__I3i64E__ref ) { ( void* ) kl_t67, &kl__tally__as_kl__sink__I3i64E };
+    kl_t68.kl_p_ = ( struct kl_7codegen_sink__I3i64E__ref ) { ( void* ) kl_t67, &kl_7codegen_tally__as_kl_7codegen_sink__I3i64E };
 #line 94 "codegen/generic_interfaces_dynamic.kl"
     if ( kl_t80 ) kl_7prelude_3box__I4sinkI3i64EE__dtor( &kl_b_35 );
 #line 94 "codegen/generic_interfaces_dynamic.kl"
@@ -704,7 +704,7 @@ int32_t kl__4main__( void )
 #line 94 "codegen/generic_interfaces_dynamic.kl"
     kl_t80 = true;
 #line 94 "codegen/generic_interfaces_dynamic.kl"
-    if ( kl_t83 ) kl_7prelude_3box__I5tallyE__dtor( &kl_t60 );
+    if ( kl_t83 ) kl_7prelude_3box__IQ7codegen5tallyE__dtor( &kl_t60 );
 #line 94 "codegen/generic_interfaces_dynamic.kl"
     kl_t83 = false;
     kl_t69 = &kl_b_35;
@@ -757,15 +757,15 @@ int32_t kl__4main__( void )
 }
 
 #line 423 "<prelude>"
-void kl_7prelude_3box__I4heldE__RQ7prelude3boxI4heldE_M4held__ctor( struct kl_7prelude_box__I4heldE* kl_this_1, struct kl__held kl_value_2 )
+void kl_7prelude_3box__IQ7codegen4heldE__RQ7prelude3boxIQ7codegen4heldE_MQ7codegen4held__ctor( struct kl_7prelude_box__IQ7codegen4heldE* kl_this_1, struct kl_7codegen_held kl_value_2 )
 {
-    struct kl__held* kl_t3;
-    struct kl__held* kl_t4;
+    struct kl_7codegen_held* kl_t3;
+    struct kl_7codegen_held* kl_t4;
     bool kl_t5;
 #line 427 "<prelude>"
     kl_t5 = true;
 #line 427 "<prelude>"
-    kl_t3 = ( struct kl__held* ) kl_rt_alloc( 16, "<prelude>", 427, "out of memory: alloc<T>()" );
+    kl_t3 = ( struct kl_7codegen_held* ) kl_rt_alloc( 16, "<prelude>", 427, "out of memory: alloc<T>()" );
 #line 427 "<prelude>"
     ( *kl_this_1 ).kl_p_ = kl_t3;
     kl_t4 = ( *kl_this_1 ).kl_p_;
@@ -774,7 +774,7 @@ void kl_7prelude_3box__I4heldE__RQ7prelude3boxI4heldE_M4held__ctor( struct kl_7p
 #line 428 "<prelude>"
     kl_t5 = false;
 #line 430 "<prelude>"
-    if ( kl_t5 ) kl__4held__dtor( &kl_value_2 );
+    if ( kl_t5 ) kl_7codegen_4held__dtor( &kl_value_2 );
 #line 430 "<prelude>"
     kl_t5 = false;
 #line 430 "<prelude>"
@@ -783,9 +783,9 @@ void kl_7prelude_3box__I4heldE__RQ7prelude3boxI4heldE_M4held__ctor( struct kl_7p
 }
 
 #line 447 "<prelude>"
-struct kl__sink__I3i64E__ref kl_7prelude_3get__I4sinkI3i64EE__SQ7prelude3boxI4sinkI3i64EE( struct kl_7prelude_box__I4sinkI3i64EE* kl_this_1 )
+struct kl_7codegen_sink__I3i64E__ref kl_7prelude_3get__I4sinkI3i64EE__SQ7prelude3boxI4sinkI3i64EE( struct kl_7prelude_box__I4sinkI3i64EE* kl_this_1 )
 {
-    struct kl__sink__I3i64E__ref kl_t0;
+    struct kl_7codegen_sink__I3i64E__ref kl_t0;
 #line 449 "<prelude>"
     kl_t0 = ( *kl_this_1 ).kl_p_;
 #line 449 "<prelude>"
@@ -793,11 +793,11 @@ struct kl__sink__I3i64E__ref kl_7prelude_3get__I4sinkI3i64EE__SQ7prelude3boxI4si
 }
 
 #line 423 "<prelude>"
-void kl_7prelude_3box__I5tallyE__RQ7prelude3boxI5tallyE_M5tally__ctor( struct kl_7prelude_box__I5tallyE* kl_this_1, struct kl__tally kl_value_2 )
+void kl_7prelude_3box__IQ7codegen5tallyE__RQ7prelude3boxIQ7codegen5tallyE_MQ7codegen5tally__ctor( struct kl_7prelude_box__IQ7codegen5tallyE* kl_this_1, struct kl_7codegen_tally kl_value_2 )
 {
-    struct kl__tally* kl_t3;
-    struct kl__tally* kl_t4;
-    kl_t3 = ( struct kl__tally* ) kl_rt_alloc( 16, "<prelude>", 427, "out of memory: alloc<T>()" );
+    struct kl_7codegen_tally* kl_t3;
+    struct kl_7codegen_tally* kl_t4;
+    kl_t3 = ( struct kl_7codegen_tally* ) kl_rt_alloc( 16, "<prelude>", 427, "out of memory: alloc<T>()" );
 #line 427 "<prelude>"
     ( *kl_this_1 ).kl_p_ = kl_t3;
     kl_t4 = ( *kl_this_1 ).kl_p_;
@@ -812,9 +812,9 @@ void kl_7prelude_3box__I5tallyE__RQ7prelude3boxI5tallyE_M5tally__ctor( struct kl
 void kl_7prelude_3box__I4sinkI3i64EE__dtor( struct kl_7prelude_box__I4sinkI3i64EE* kl_this_1 )
 {
     bool kl_t2;
-    struct kl__sink__I3i64E__ref kl_t3;
+    struct kl_7codegen_sink__I3i64E__ref kl_t3;
 #line 434 "<prelude>"
-    kl_t2 = ( ( *kl_this_1 ).kl_p_ ).self == ( ( struct kl__sink__I3i64E__ref ) { NULL, NULL } ).self;
+    kl_t2 = ( ( *kl_this_1 ).kl_p_ ).self == ( ( struct kl_7codegen_sink__I3i64E__ref ) { NULL, NULL } ).self;
 #line 434 "<prelude>"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -831,10 +831,10 @@ void kl_7prelude_3box__I4sinkI3i64EE__dtor( struct kl_7prelude_box__I4sinkI3i64E
 }
 
 #line 432 "<prelude>"
-void kl_7prelude_3box__I4heldE__dtor( struct kl_7prelude_box__I4heldE* kl_this_1 )
+void kl_7prelude_3box__IQ7codegen4heldE__dtor( struct kl_7prelude_box__IQ7codegen4heldE* kl_this_1 )
 {
     bool kl_t2;
-    struct kl__held* kl_t3;
+    struct kl_7codegen_held* kl_t3;
 #line 434 "<prelude>"
     kl_t2 = ( *kl_this_1 ).kl_p_ == NULL;
 #line 434 "<prelude>"
@@ -845,7 +845,7 @@ void kl_7prelude_3box__I4heldE__dtor( struct kl_7prelude_box__I4heldE* kl_this_1
 #line 441 "<prelude>"
     kl_t3 = ( *kl_this_1 ).kl_p_;
 #line 441 "<prelude>"
-    kl__4held__dtor( &( *kl_t3 ) );
+    kl_7codegen_4held__dtor( &( *kl_t3 ) );
     kl_rt_free( ( *kl_this_1 ).kl_p_ );
 #line 444 "<prelude>"
     return;
@@ -853,7 +853,7 @@ void kl_7prelude_3box__I4heldE__dtor( struct kl_7prelude_box__I4heldE* kl_this_1
 }
 
 #line 432 "<prelude>"
-void kl_7prelude_3box__I5tallyE__dtor( struct kl_7prelude_box__I5tallyE* kl_this_1 )
+void kl_7prelude_3box__IQ7codegen5tallyE__dtor( struct kl_7prelude_box__IQ7codegen5tallyE* kl_this_1 )
 {
     bool kl_t2;
 #line 434 "<prelude>"
@@ -870,24 +870,24 @@ void kl_7prelude_3box__I5tallyE__dtor( struct kl_7prelude_box__I5tallyE* kl_this
 #line 444 "<prelude>"
 }
 
-void kl__held__drop( void* kl_t1 )
+void kl_7codegen_held__drop( void* kl_t1 )
 {
-    struct kl__held* kl_t2;
+    struct kl_7codegen_held* kl_t2;
 #line 34 "codegen/generic_interfaces_dynamic.kl"
-    kl_t2 = ( struct kl__held* ) kl_t1;
+    kl_t2 = ( struct kl_7codegen_held* ) kl_t1;
 #line 34 "codegen/generic_interfaces_dynamic.kl"
-    kl__4held__dtor( &( *kl_t2 ) );
+    kl_7codegen_4held__dtor( &( *kl_t2 ) );
 #line 34 "codegen/generic_interfaces_dynamic.kl"
     return;
 #line 34 "codegen/generic_interfaces_dynamic.kl"
 }
 
-void kl__tally__drop( void* kl_t1 )
+void kl_7codegen_tally__drop( void* kl_t1 )
 {
-    struct kl__tally* kl_t2;
+    struct kl_7codegen_tally* kl_t2;
     ( void ) kl_t2;
 #line 11 "codegen/generic_interfaces_dynamic.kl"
-    kl_t2 = ( struct kl__tally* ) kl_t1;
+    kl_t2 = ( struct kl_7codegen_tally* ) kl_t1;
 #line 11 "codegen/generic_interfaces_dynamic.kl"
     return;
 #line 11 "codegen/generic_interfaces_dynamic.kl"
@@ -897,7 +897,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 77 "codegen/generic_interfaces_dynamic.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 77 "codegen/generic_interfaces_dynamic.kl"
     return kl_t0;
 #line 77 "codegen/generic_interfaces_dynamic.kl"

@@ -9427,9 +9427,9 @@ struct kl_7prelude_textual__vtable
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-struct kl_2kl6string_string kl__9rearrange__RLQ2kl6string( struct kl_2kl6string_string*, uint64_t );
-int32_t kl__4bump__RL3i32( int32_t*, uint64_t );
-int32_t kl__4main__( void );
+struct kl_2kl6string_string kl_7codegen_9rearrange__RLQ2kl6string( struct kl_2kl6string_string*, uint64_t );
+int32_t kl_7codegen_4bump__RL3i32( int32_t*, uint64_t );
+int32_t kl_7codegen_4main__( void );
 void kl_2kl4list_8truncate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
 uint64_t kl_2kl4list_4size__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
 struct kl_2kl6string_string* kl_2kl4list_14operator_index__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
@@ -9460,7 +9460,7 @@ static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_
 static const struct kl_7prelude_textual__vtable kl_2kl6string_string__as_kl_7prelude_textual = { kl_2kl6string_string__drop, kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 5 "codegen/run_rearrange.kl"
-struct kl_2kl6string_string kl__9rearrange__RLQ2kl6string( struct kl_2kl6string_string* kl_names_1_data, uint64_t kl_names_1_size )
+struct kl_2kl6string_string kl_7codegen_9rearrange__RLQ2kl6string( struct kl_2kl6string_string* kl_names_1_data, uint64_t kl_names_1_size )
 {
     struct kl_2kl6string_string kl_t0;
 #line 5 "codegen/run_rearrange.kl"
@@ -9656,7 +9656,7 @@ struct kl_2kl6string_string kl__9rearrange__RLQ2kl6string( struct kl_2kl6string_
 }
 
 #line 14 "codegen/run_rearrange.kl"
-int32_t kl__4bump__RL3i32( int32_t* kl_numbers_1_data, uint64_t kl_numbers_1_size )
+int32_t kl_7codegen_4bump__RL3i32( int32_t* kl_numbers_1_data, uint64_t kl_numbers_1_size )
 {
     int32_t kl_t0;
 #line 14 "codegen/run_rearrange.kl"
@@ -9767,7 +9767,7 @@ int32_t kl__4bump__RL3i32( int32_t* kl_numbers_1_data, uint64_t kl_numbers_1_siz
 }
 
 #line 20 "codegen/run_rearrange.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     struct kl__A3_Q2kl6string kl_names_1;
@@ -9975,7 +9975,7 @@ int32_t kl__4main__( void )
 #line 23 "codegen/run_rearrange.kl"
     kl_t36 = ( struct kl__run__LQ2kl6string__ref ) { ( struct kl_2kl6string_string* ) kl_t35, 3 };
 #line 23 "codegen/run_rearrange.kl"
-    kl_t37 = kl__9rearrange__RLQ2kl6string( ( kl_t36 ).data, ( kl_t36 ).size );
+    kl_t37 = kl_7codegen_9rearrange__RLQ2kl6string( ( kl_t36 ).data, ( kl_t36 ).size );
 #line 23 "codegen/run_rearrange.kl"
     kl_t87 = true;
 #line 23 "codegen/run_rearrange.kl"
@@ -10060,7 +10060,7 @@ int32_t kl__4main__( void )
 #line 33 "codegen/run_rearrange.kl"
     kl_t70 = ( struct kl__run__L3i32__ref ) { ( int32_t* ) kl_t69, 4 };
 #line 33 "codegen/run_rearrange.kl"
-    kl_t71 = kl__4bump__RL3i32( ( kl_t70 ).data, ( kl_t70 ).size );
+    kl_t71 = kl_7codegen_4bump__RL3i32( ( kl_t70 ).data, ( kl_t70 ).size );
 #line 33 "codegen/run_rearrange.kl"
     kl_was_67 = kl_t71;
 #line 35 "codegen/run_rearrange.kl"
@@ -10540,7 +10540,7 @@ int main( void )
 #line 20 "codegen/run_rearrange.kl"
     kl_2kl2os_0build(  );
 #line 20 "codegen/run_rearrange.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 20 "codegen/run_rearrange.kl"
     kl_2kl2os_0drop(  );
 #line 20 "codegen/run_rearrange.kl"

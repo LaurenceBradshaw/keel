@@ -44,12 +44,12 @@
     // Every package a golden fixture or the editor sample names, so each checks clean in the editor.
     // Package names are unique across the fixtures for this reason: `kl` is only ever the library.
     "keel.packages": [
-        "kl=keel_stl/src",
-        "extra=editors/vscode/sample/extra",
-        "geo=keelc/test/codegen/sample_m8/geo",
-        "atlas=keelc/test/sema/packages/atlas",
-        "metric=keelc/test/sema/names/metric",
-        "plane=keelc/test/codegen/packages/plane",
-        "kinds=keelc/test/codegen/package_types/kinds"
+        "keel_stl/src",
+        "editors/vscode/sample/extra",
+        "keelc/test/codegen/sample_m8/geo",
+        "keelc/test/sema/packages/atlas",
+        "keelc/test/sema/names/metric",
+        "keelc/test/codegen/packages/plane",
+        "keelc/test/codegen/package_types/kinds"
     ]
 }

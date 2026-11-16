@@ -11,7 +11,7 @@ set -euo pipefail
 
 cd "$( dirname "$0" )/../.."
 
-CFLAGS=-g ./build/debug/bin/keelc --backend c --debug --package kl=keel_stl/src examples/debugging.kl -o build/examples/debugging_c
+CFLAGS=-g ./build/debug/bin/keelc --backend c --debug --package keel_stl/src examples/debugging.kl -o build/examples/debugging_c
 
 out="$( gdb -batch -nx -ex "source editors/gdb/keel_c.py" -ex "break debugging.kl:16" -ex "break debugging.kl:25" \
     -ex "break debugging.kl:39" -ex run -ex bt -ex continue -ex step -ex "bt 1" -ex continue -ex "bt full" \

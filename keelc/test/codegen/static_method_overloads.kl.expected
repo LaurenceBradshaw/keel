@@ -3,29 +3,29 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Number;
+struct kl_7codegen_Number;
 
-struct kl__Number
+struct kl_7codegen_Number
 {
     int32_t kl_x;
 };
-_Static_assert( sizeof( struct kl__Number ) == 4 && _Alignof( struct kl__Number ) == 4 && offsetof( struct kl__Number, kl_x ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Number ) == 4 && _Alignof( struct kl_7codegen_Number ) == 4 && offsetof( struct kl_7codegen_Number, kl_x ) == 0, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__4from__S6Number_3i64( int64_t );
-int32_t kl__4from__S6Number_3u64( uint64_t );
-int32_t kl__4from__S6Number_4bool( bool );
-int32_t kl__5mixed__S6Number_3i64( int64_t );
-int32_t kl__5mixed__S6Number_3u64( struct kl__Number*, uint64_t );
-int32_t kl__16bare_from_static__S6Number( void );
-int32_t kl__18bare_from_instance__S6Number( struct kl__Number* );
-int32_t kl__4main__( void );
-int32_t kl__4kind__I3i32E__S3BoxI3i32E_3i32( int32_t* );
-int32_t kl__4kind__I3i32E__S3BoxI3i32E_3i32_4bool( int32_t*, bool );
+int32_t kl_7codegen_4from__SQ7codegen6Number_3i64( int64_t );
+int32_t kl_7codegen_4from__SQ7codegen6Number_3u64( uint64_t );
+int32_t kl_7codegen_4from__SQ7codegen6Number_4bool( bool );
+int32_t kl_7codegen_5mixed__SQ7codegen6Number_3i64( int64_t );
+int32_t kl_7codegen_5mixed__SQ7codegen6Number_3u64( struct kl_7codegen_Number*, uint64_t );
+int32_t kl_7codegen_16bare_from_static__SQ7codegen6Number( void );
+int32_t kl_7codegen_18bare_from_instance__SQ7codegen6Number( struct kl_7codegen_Number* );
+int32_t kl_7codegen_4main__( void );
+int32_t kl_7codegen_4kind__I3i32E__SQ7codegen3BoxI3i32E_3i32( int32_t* );
+int32_t kl_7codegen_4kind__I3i32E__SQ7codegen3BoxI3i32E_3i32_4bool( int32_t*, bool );
 
 #line 9 "codegen/static_method_overloads.kl"
-int32_t kl__4from__S6Number_3i64( int64_t kl_t1 )
+int32_t kl_7codegen_4from__SQ7codegen6Number_3i64( int64_t kl_t1 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
@@ -36,7 +36,7 @@ int32_t kl__4from__S6Number_3i64( int64_t kl_t1 )
 }
 
 #line 14 "codegen/static_method_overloads.kl"
-int32_t kl__4from__S6Number_3u64( uint64_t kl_t1 )
+int32_t kl_7codegen_4from__SQ7codegen6Number_3u64( uint64_t kl_t1 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
@@ -47,7 +47,7 @@ int32_t kl__4from__S6Number_3u64( uint64_t kl_t1 )
 }
 
 #line 19 "codegen/static_method_overloads.kl"
-int32_t kl__4from__S6Number_4bool( bool kl_t1 )
+int32_t kl_7codegen_4from__SQ7codegen6Number_4bool( bool kl_t1 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
@@ -58,7 +58,7 @@ int32_t kl__4from__S6Number_4bool( bool kl_t1 )
 }
 
 #line 24 "codegen/static_method_overloads.kl"
-int32_t kl__5mixed__S6Number_3i64( int64_t kl_t1 )
+int32_t kl_7codegen_5mixed__SQ7codegen6Number_3i64( int64_t kl_t1 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
@@ -69,7 +69,7 @@ int32_t kl__5mixed__S6Number_3i64( int64_t kl_t1 )
 }
 
 #line 29 "codegen/static_method_overloads.kl"
-int32_t kl__5mixed__S6Number_3u64( struct kl__Number* kl_this_1, uint64_t kl_t2 )
+int32_t kl_7codegen_5mixed__SQ7codegen6Number_3u64( struct kl_7codegen_Number* kl_this_1, uint64_t kl_t2 )
 {
     int32_t kl_t0;
     ( void ) kl_t2;
@@ -80,14 +80,14 @@ int32_t kl__5mixed__S6Number_3u64( struct kl__Number* kl_this_1, uint64_t kl_t2 
 }
 
 #line 34 "codegen/static_method_overloads.kl"
-int32_t kl__16bare_from_static__S6Number( void )
+int32_t kl_7codegen_16bare_from_static__SQ7codegen6Number( void )
 {
     int32_t kl_t0;
     uint64_t kl_b_1;
     int32_t kl_t2;
 #line 36 "codegen/static_method_overloads.kl"
     kl_b_1 = 0;
-    kl_t2 = kl__4from__S6Number_3u64( kl_b_1 );
+    kl_t2 = kl_7codegen_4from__SQ7codegen6Number_3u64( kl_b_1 );
 #line 37 "codegen/static_method_overloads.kl"
     kl_t0 = kl_t2;
 #line 37 "codegen/static_method_overloads.kl"
@@ -95,7 +95,7 @@ int32_t kl__16bare_from_static__S6Number( void )
 }
 
 #line 40 "codegen/static_method_overloads.kl"
-int32_t kl__18bare_from_instance__S6Number( struct kl__Number* kl_this_1 )
+int32_t kl_7codegen_18bare_from_instance__SQ7codegen6Number( struct kl_7codegen_Number* kl_this_1 )
 {
     int32_t kl_t0;
     int64_t kl_a_2;
@@ -103,14 +103,14 @@ int32_t kl__18bare_from_instance__S6Number( struct kl__Number* kl_this_1 )
     int32_t kl_t4;
     bool kl_t5;
     int32_t kl_t6;
-    struct kl__Number* kl_t7;
+    struct kl_7codegen_Number* kl_t7;
     int32_t kl_t8;
     bool kl_t9;
     int32_t kl_t10;
 #line 42 "codegen/static_method_overloads.kl"
     kl_a_2 = 0;
     kl_b_3 = 0;
-    kl_t4 = kl__4from__S6Number_3i64( kl_a_2 );
+    kl_t4 = kl_7codegen_4from__SQ7codegen6Number_3i64( kl_a_2 );
 #line 44 "codegen/static_method_overloads.kl"
     kl_t5 = __builtin_mul_overflow( kl_t4, 10, &( int32_t ) { 0 } );
 #line 44 "codegen/static_method_overloads.kl"
@@ -124,7 +124,7 @@ int32_t kl__18bare_from_instance__S6Number( struct kl__Number* kl_this_1 )
 #line 44 "codegen/static_method_overloads.kl"
     kl_t7 = &( *kl_this_1 );
 #line 44 "codegen/static_method_overloads.kl"
-    kl_t8 = kl__5mixed__S6Number_3u64( kl_t7, kl_b_3 );
+    kl_t8 = kl_7codegen_5mixed__SQ7codegen6Number_3u64( kl_t7, kl_b_3 );
 #line 44 "codegen/static_method_overloads.kl"
     kl_t9 = __builtin_add_overflow( kl_t6, kl_t8, &( int32_t ) { 0 } );
 #line 44 "codegen/static_method_overloads.kl"
@@ -142,7 +142,7 @@ int32_t kl__18bare_from_instance__S6Number( struct kl__Number* kl_this_1 )
 }
 
 #line 64 "codegen/static_method_overloads.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     int64_t kl_a_1;
@@ -159,18 +159,18 @@ int32_t kl__4main__( void )
     int64_t kl_t12;
     int32_t kl_t13;
     bool kl_t14;
-    struct kl__Number kl_n_15;
-    struct kl__Number kl_t16;
+    struct kl_7codegen_Number kl_n_15;
+    struct kl_7codegen_Number kl_t16;
     bool kl_t17;
     int32_t kl_t18;
     bool kl_t19;
-    struct kl__Number* kl_t20;
+    struct kl_7codegen_Number* kl_t20;
     int32_t kl_t21;
     bool kl_t22;
     bool kl_t23;
     int32_t kl_t24;
     bool kl_t25;
-    struct kl__Number* kl_t26;
+    struct kl_7codegen_Number* kl_t26;
     int32_t kl_t27;
     bool kl_t28;
     bool kl_t29;
@@ -186,7 +186,7 @@ int32_t kl__4main__( void )
     kl_a_1 = 0;
     kl_b_2 = 0;
     kl_small_3 = 0;
-    kl_t6 = kl__4from__S6Number_3i64( kl_a_1 );
+    kl_t6 = kl_7codegen_4from__SQ7codegen6Number_3i64( kl_a_1 );
 #line 69 "codegen/static_method_overloads.kl"
     kl_t7 = kl_t6 != 1;
 #line 69 "codegen/static_method_overloads.kl"
@@ -195,7 +195,7 @@ int32_t kl__4main__( void )
     if ( kl_t5 ) goto bb2; else goto bb1;
     bb1:
 #line 69 "codegen/static_method_overloads.kl"
-    kl_t8 = kl__4from__S6Number_3u64( kl_b_2 );
+    kl_t8 = kl_7codegen_4from__SQ7codegen6Number_3u64( kl_b_2 );
 #line 69 "codegen/static_method_overloads.kl"
     kl_t9 = kl_t8 != 2;
 #line 69 "codegen/static_method_overloads.kl"
@@ -209,7 +209,7 @@ int32_t kl__4main__( void )
     if ( kl_t4 ) goto bb4; else goto bb3;
     bb3:
 #line 69 "codegen/static_method_overloads.kl"
-    kl_t10 = kl__4from__S6Number_4bool( true );
+    kl_t10 = kl_7codegen_4from__SQ7codegen6Number_4bool( true );
 #line 69 "codegen/static_method_overloads.kl"
     kl_t11 = kl_t10 != 3;
 #line 69 "codegen/static_method_overloads.kl"
@@ -227,7 +227,7 @@ int32_t kl__4main__( void )
 #line 75 "codegen/static_method_overloads.kl"
     kl_t12 = ( int64_t ) kl_small_3;
 #line 75 "codegen/static_method_overloads.kl"
-    kl_t13 = kl__4from__S6Number_3i64( kl_t12 );
+    kl_t13 = kl_7codegen_4from__SQ7codegen6Number_3i64( kl_t12 );
 #line 75 "codegen/static_method_overloads.kl"
     kl_t14 = kl_t13 != 1;
 #line 75 "codegen/static_method_overloads.kl"
@@ -241,7 +241,7 @@ int32_t kl__4main__( void )
     kl_t16.kl_x = 7;
 #line 80 "codegen/static_method_overloads.kl"
     kl_n_15 = kl_t16;
-    kl_t18 = kl__5mixed__S6Number_3i64( kl_a_1 );
+    kl_t18 = kl_7codegen_5mixed__SQ7codegen6Number_3i64( kl_a_1 );
 #line 81 "codegen/static_method_overloads.kl"
     kl_t19 = kl_t18 != 4;
 #line 81 "codegen/static_method_overloads.kl"
@@ -252,7 +252,7 @@ int32_t kl__4main__( void )
 #line 81 "codegen/static_method_overloads.kl"
     kl_t20 = &kl_n_15;
 #line 81 "codegen/static_method_overloads.kl"
-    kl_t21 = kl__5mixed__S6Number_3u64( kl_t20, kl_b_2 );
+    kl_t21 = kl_7codegen_5mixed__SQ7codegen6Number_3u64( kl_t20, kl_b_2 );
 #line 81 "codegen/static_method_overloads.kl"
     kl_t22 = kl_t21 != 7;
 #line 81 "codegen/static_method_overloads.kl"
@@ -268,7 +268,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb12:
 #line 86 "codegen/static_method_overloads.kl"
-    kl_t24 = kl__16bare_from_static__S6Number(  );
+    kl_t24 = kl_7codegen_16bare_from_static__SQ7codegen6Number(  );
 #line 86 "codegen/static_method_overloads.kl"
     kl_t25 = kl_t24 != 2;
 #line 86 "codegen/static_method_overloads.kl"
@@ -279,7 +279,7 @@ int32_t kl__4main__( void )
 #line 86 "codegen/static_method_overloads.kl"
     kl_t26 = &kl_n_15;
 #line 86 "codegen/static_method_overloads.kl"
-    kl_t27 = kl__18bare_from_instance__S6Number( kl_t26 );
+    kl_t27 = kl_7codegen_18bare_from_instance__SQ7codegen6Number( kl_t26 );
 #line 86 "codegen/static_method_overloads.kl"
     kl_t28 = kl_t27 != 17;
 #line 86 "codegen/static_method_overloads.kl"
@@ -299,7 +299,7 @@ int32_t kl__4main__( void )
 #line 91 "codegen/static_method_overloads.kl"
     kl_t31 = &kl_t30;
 #line 91 "codegen/static_method_overloads.kl"
-    kl_t32 = kl__4kind__I3i32E__S3BoxI3i32E_3i32( kl_t31 );
+    kl_t32 = kl_7codegen_4kind__I3i32E__SQ7codegen3BoxI3i32E_3i32( kl_t31 );
 #line 91 "codegen/static_method_overloads.kl"
     kl_t33 = kl_t32 != 1;
 #line 91 "codegen/static_method_overloads.kl"
@@ -312,7 +312,7 @@ int32_t kl__4main__( void )
 #line 91 "codegen/static_method_overloads.kl"
     kl_t35 = &kl_t34;
 #line 91 "codegen/static_method_overloads.kl"
-    kl_t36 = kl__4kind__I3i32E__S3BoxI3i32E_3i32_4bool( kl_t35, true );
+    kl_t36 = kl_7codegen_4kind__I3i32E__SQ7codegen3BoxI3i32E_3i32_4bool( kl_t35, true );
 #line 91 "codegen/static_method_overloads.kl"
     kl_t37 = kl_t36 != 2;
 #line 91 "codegen/static_method_overloads.kl"
@@ -334,7 +334,7 @@ int32_t kl__4main__( void )
 }
 
 #line 53 "codegen/static_method_overloads.kl"
-int32_t kl__4kind__I3i32E__S3BoxI3i32E_3i32( int32_t* kl_t1 )
+int32_t kl_7codegen_4kind__I3i32E__SQ7codegen3BoxI3i32E_3i32( int32_t* kl_t1 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
@@ -345,7 +345,7 @@ int32_t kl__4kind__I3i32E__S3BoxI3i32E_3i32( int32_t* kl_t1 )
 }
 
 #line 58 "codegen/static_method_overloads.kl"
-int32_t kl__4kind__I3i32E__S3BoxI3i32E_3i32_4bool( int32_t* kl_t1, bool kl_t2 )
+int32_t kl_7codegen_4kind__I3i32E__SQ7codegen3BoxI3i32E_3i32_4bool( int32_t* kl_t1, bool kl_t2 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
@@ -360,7 +360,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 64 "codegen/static_method_overloads.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 64 "codegen/static_method_overloads.kl"
     return kl_t0;
 #line 64 "codegen/static_method_overloads.kl"

@@ -1,1 +1,1 @@
---check --package kit=sema/bound_help_packages/kit
+--check --package sema/bound_help_packages/kit

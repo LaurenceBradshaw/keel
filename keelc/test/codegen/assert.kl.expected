@@ -3,25 +3,25 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Owner;
+struct kl_7codegen_Owner;
 
-struct kl__Owner
+struct kl_7codegen_Owner
 {
     int32_t* kl_p;
 };
-_Static_assert( sizeof( struct kl__Owner ) == 8 && _Alignof( struct kl__Owner ) == 8 && offsetof( struct kl__Owner, kl_p ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Owner ) == 8 && _Alignof( struct kl_7codegen_Owner ) == 8 && offsetof( struct kl_7codegen_Owner, kl_p ) == 0, "layout" );
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__5Owner__R5Owner__ctor( struct kl__Owner* );
-void kl__5Owner__dtor( struct kl__Owner* );
-int32_t kl__8positive__3i32( int32_t );
-int32_t kl__4main__( void );
+void kl_7codegen_5Owner__RQ7codegen5Owner__ctor( struct kl_7codegen_Owner* );
+void kl_7codegen_5Owner__dtor( struct kl_7codegen_Owner* );
+int32_t kl_7codegen_8positive__3i32( int32_t );
+int32_t kl_7codegen_4main__( void );
 
 #line 5 "codegen/assert.kl"
-void kl__5Owner__R5Owner__ctor( struct kl__Owner* kl_this_1 )
+void kl_7codegen_5Owner__RQ7codegen5Owner__ctor( struct kl_7codegen_Owner* kl_this_1 )
 {
     int32_t* kl_t2;
 #line 9 "codegen/assert.kl"
@@ -34,7 +34,7 @@ void kl__5Owner__R5Owner__ctor( struct kl__Owner* kl_this_1 )
 }
 
 #line 13 "codegen/assert.kl"
-void kl__5Owner__dtor( struct kl__Owner* kl_this_1 )
+void kl_7codegen_5Owner__dtor( struct kl_7codegen_Owner* kl_this_1 )
 {
 #line 17 "codegen/assert.kl"
     kl_rt_free( ( *kl_this_1 ).kl_p );
@@ -44,16 +44,16 @@ void kl__5Owner__dtor( struct kl__Owner* kl_this_1 )
 }
 
 #line 24 "codegen/assert.kl"
-int32_t kl__8positive__3i32( int32_t kl_x_1 )
+int32_t kl_7codegen_8positive__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
-    struct kl__Owner kl_o_2;
-    struct kl__Owner* kl_t3;
+    struct kl_7codegen_Owner kl_o_2;
+    struct kl_7codegen_Owner* kl_t3;
     bool kl_t5;
 #line 26 "codegen/assert.kl"
     kl_t3 = &kl_o_2;
 #line 26 "codegen/assert.kl"
-    kl__5Owner__R5Owner__ctor( kl_t3 );
+    kl_7codegen_5Owner__RQ7codegen5Owner__ctor( kl_t3 );
     goto bb1;
     bb1:
 #line 27 "codegen/assert.kl"
@@ -64,7 +64,7 @@ int32_t kl__8positive__3i32( int32_t kl_x_1 )
 #line 28 "codegen/assert.kl"
     kl_t0 = kl_x_1;
 #line 28 "codegen/assert.kl"
-    kl__5Owner__dtor( &kl_o_2 );
+    kl_7codegen_5Owner__dtor( &kl_o_2 );
 #line 28 "codegen/assert.kl"
     return kl_t0;
     bb3:
@@ -74,7 +74,7 @@ int32_t kl__8positive__3i32( int32_t kl_x_1 )
 }
 
 #line 31 "codegen/assert.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_t1;
@@ -92,7 +92,7 @@ int32_t kl__4main__( void )
     goto bb1;
     bb1:
 #line 33 "codegen/assert.kl"
-    kl_t1 = kl__8positive__3i32( 3 );
+    kl_t1 = kl_7codegen_8positive__3i32( 3 );
 #line 33 "codegen/assert.kl"
     kl_t2 = kl_t1 == 3;
 #line 33 "codegen/assert.kl"
@@ -167,7 +167,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 31 "codegen/assert.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 31 "codegen/assert.kl"
     return kl_t0;
 #line 31 "codegen/assert.kl"

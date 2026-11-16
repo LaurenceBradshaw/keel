@@ -4371,13 +4371,13 @@ struct kl_7prelude_textual__vtable
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-void kl__4bump__R3i32( int32_t* );
-void kl__4init__O3i32( int32_t* );
-void kl__4grow__RQ2kl6string( struct kl_2kl6string_string* );
-uint64_t kl__7size_of__Q2kl6string( struct kl_2kl6string_string* );
-void kl__4args__4bool_4bool( bool, bool );
-void kl__6locals__4bool( bool );
-int32_t kl__4main__( void );
+void kl_7codegen_4bump__R3i32( int32_t* );
+void kl_7codegen_4init__O3i32( int32_t* );
+void kl_7codegen_4grow__RQ2kl6string( struct kl_2kl6string_string* );
+uint64_t kl_7codegen_7size_of__Q2kl6string( struct kl_2kl6string_string* );
+void kl_7codegen_4args__4bool_4bool( bool, bool );
+void kl_7codegen_6locals__4bool( bool );
+int32_t kl_7codegen_4main__( void );
 void kl_2kl4list_8truncate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
 uint64_t kl_2kl4list_4size__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
 struct kl_2kl6string_string* kl_2kl4list_14operator_index__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
@@ -4397,7 +4397,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 7 "codegen/conditional_borrow.kl"
-void kl__4bump__R3i32( int32_t* kl_n_1 )
+void kl_7codegen_4bump__R3i32( int32_t* kl_n_1 )
 {
     bool kl_t2;
     int32_t kl_t3;
@@ -4419,7 +4419,7 @@ void kl__4bump__R3i32( int32_t* kl_n_1 )
 }
 
 #line 8 "codegen/conditional_borrow.kl"
-void kl__4init__O3i32( int32_t* kl_n_1 )
+void kl_7codegen_4init__O3i32( int32_t* kl_n_1 )
 {
 #line 8 "codegen/conditional_borrow.kl"
     ( *kl_n_1 ) = 7;
@@ -4429,7 +4429,7 @@ void kl__4init__O3i32( int32_t* kl_n_1 )
 }
 
 #line 9 "codegen/conditional_borrow.kl"
-void kl__4grow__RQ2kl6string( struct kl_2kl6string_string* kl_s_1 )
+void kl_7codegen_4grow__RQ2kl6string( struct kl_2kl6string_string* kl_s_1 )
 {
     struct kl_2kl6string_string* kl_t2;
     struct kl_7prelude_str kl_t3;
@@ -4457,7 +4457,7 @@ void kl__4grow__RQ2kl6string( struct kl_2kl6string_string* kl_s_1 )
 }
 
 #line 10 "codegen/conditional_borrow.kl"
-uint64_t kl__7size_of__Q2kl6string( struct kl_2kl6string_string* kl_s_1 )
+uint64_t kl_7codegen_7size_of__Q2kl6string( struct kl_2kl6string_string* kl_s_1 )
 {
     uint64_t kl_t0;
     struct kl_2kl6string_string* kl_t2;
@@ -4474,7 +4474,7 @@ uint64_t kl__7size_of__Q2kl6string( struct kl_2kl6string_string* kl_s_1 )
 }
 
 #line 12 "codegen/conditional_borrow.kl"
-void kl__4args__4bool_4bool( bool kl_c_1, bool kl_d_2 )
+void kl_7codegen_4args__4bool_4bool( bool kl_c_1, bool kl_d_2 )
 {
     int32_t kl_a_3;
     int32_t kl_b_4;
@@ -4539,7 +4539,7 @@ void kl__4args__4bool_4bool( bool kl_c_1, bool kl_d_2 )
     goto bb3;
     bb3:
 #line 17 "codegen/conditional_borrow.kl"
-    kl__4bump__R3i32( kl_t6 );
+    kl_7codegen_4bump__R3i32( kl_t6 );
     if ( kl_c_1 ) goto bb4; else goto bb5;
     bb4:
 #line 18 "codegen/conditional_borrow.kl"
@@ -4553,7 +4553,7 @@ void kl__4args__4bool_4bool( bool kl_c_1, bool kl_d_2 )
     if ( kl_d_2 ) goto bb7; else goto bb8;
     bb6:
 #line 18 "codegen/conditional_borrow.kl"
-    kl__4bump__R3i32( kl_t10 );
+    kl_7codegen_4bump__R3i32( kl_t10 );
     kl_t16 = ( int64_t ) kl_a_3;
 #line 31 "../test_lib/console.kl"
     kl_t18 = &kl_t17;
@@ -4630,7 +4630,7 @@ void kl__4args__4bool_4bool( bool kl_c_1, bool kl_d_2 )
     goto bb12;
     bb12:
 #line 24 "codegen/conditional_borrow.kl"
-    kl__4init__O3i32( kl_t42 );
+    kl_7codegen_4init__O3i32( kl_t42 );
     kl_x_40 = 0;
     kl_y_41 = 0;
     kl_t46 = __builtin_add_overflow( kl_x_40, kl_y_41, &( int32_t ) { 0 } );
@@ -4661,7 +4661,7 @@ void kl__4args__4bool_4bool( bool kl_c_1, bool kl_d_2 )
 }
 
 #line 30 "codegen/conditional_borrow.kl"
-void kl__6locals__4bool( bool kl_c_1 )
+void kl_7codegen_6locals__4bool( bool kl_c_1 )
 {
     int32_t kl_a_2;
     int32_t kl_b_3;
@@ -4744,7 +4744,7 @@ void kl__6locals__4bool( bool kl_c_1 )
     ( *kl_r_4 ) = 40;
     kl_t7 = &( *kl_r_4 );
 #line 36 "codegen/conditional_borrow.kl"
-    kl__4bump__R3i32( kl_t7 );
+    kl_7codegen_4bump__R3i32( kl_t7 );
     kl_t9 = ( int64_t ) kl_a_2;
 #line 31 "../test_lib/console.kl"
     kl_t11 = &kl_t10;
@@ -4825,7 +4825,7 @@ void kl__6locals__4bool( bool kl_c_1 )
 #line 43 "codegen/conditional_borrow.kl"
     kl_t40 = &( *kl_q_37 );
 #line 43 "codegen/conditional_borrow.kl"
-    kl_t41 = kl__7size_of__Q2kl6string( kl_t40 );
+    kl_t41 = kl_7codegen_7size_of__Q2kl6string( kl_t40 );
 #line 41 "../test_lib/console.kl"
     kl_t43 = &kl_t42;
 #line 41 "../test_lib/console.kl"
@@ -4855,7 +4855,7 @@ void kl__6locals__4bool( bool kl_c_1 )
     goto bb9;
     bb9:
 #line 44 "codegen/conditional_borrow.kl"
-    kl__4grow__RQ2kl6string( kl_t49 );
+    kl_7codegen_4grow__RQ2kl6string( kl_t49 );
     kl_t53 = &kl_s_25;
 #line 45 "codegen/conditional_borrow.kl"
     kl_t54 = kl_2kl6string_4size__SQ2kl6string( kl_t53 );
@@ -4894,15 +4894,15 @@ void kl__6locals__4bool( bool kl_c_1 )
 }
 
 #line 48 "codegen/conditional_borrow.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
 #line 50 "codegen/conditional_borrow.kl"
-    kl__4args__4bool_4bool( true, false );
-    kl__4args__4bool_4bool( false, true );
-    kl__4args__4bool_4bool( false, false );
-    kl__6locals__4bool( true );
-    kl__6locals__4bool( false );
+    kl_7codegen_4args__4bool_4bool( true, false );
+    kl_7codegen_4args__4bool_4bool( false, true );
+    kl_7codegen_4args__4bool_4bool( false, false );
+    kl_7codegen_6locals__4bool( true );
+    kl_7codegen_6locals__4bool( false );
     kl_t0 = 0;
 #line 55 "codegen/conditional_borrow.kl"
     return kl_t0;
@@ -5100,7 +5100,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 48 "codegen/conditional_borrow.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 48 "codegen/conditional_borrow.kl"
     return kl_t0;
 #line 48 "codegen/conditional_borrow.kl"

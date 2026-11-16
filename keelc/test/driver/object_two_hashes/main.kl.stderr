@@ -1,1 +1,1 @@
-keelc: 'outer.klo' was built against another `inner` than 'inner.klo'; build 'outer.klo' again
+keelc: 'outer.klo' was built against another `object_two_hashes::inner` than 'inner.klo'; build 'outer.klo' again

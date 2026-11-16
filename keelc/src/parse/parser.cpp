@@ -882,6 +882,12 @@ Parser::Directives Parser::parse_directives()
                 "`@trig_tan`"
             );
         }
+        else if( name == "package" )
+        {
+            recovery_.error_at(
+                span, "`@package` is written only in `packageinfo.kl`", "it names the package that folder holds"
+            );
+        }
         else
         {
             recovery_.error_at(

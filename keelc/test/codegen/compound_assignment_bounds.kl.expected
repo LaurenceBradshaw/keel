@@ -33,14 +33,14 @@ void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
-int32_t kl__5total__I3i32E__A3_3i32( struct kl__A3_3i32* );
-double kl__5total__I3f64E__A3_3f64( struct kl__A3_3f64* );
-uint8_t kl__4bits__I2u8E__2u8( uint8_t );
-float kl__6halved__I3f32E__3f32( float );
+int32_t kl_7codegen_4main__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
+int32_t kl_7codegen_5total__I3i32E__A3_3i32( struct kl__A3_3i32* );
+double kl_7codegen_5total__I3f64E__A3_3f64( struct kl__A3_3f64* );
+uint8_t kl_7codegen_4bits__I2u8E__2u8( uint8_t );
+float kl_7codegen_6halved__I3f32E__3f32( float );
 
 #line 34 "codegen/compound_assignment_bounds.kl"
-int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t kl_t1_size )
+int32_t kl_7codegen_4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t kl_t1_size )
 {
     int32_t kl_t0;
 #line 34 "codegen/compound_assignment_bounds.kl"
@@ -85,7 +85,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 #line 36 "codegen/compound_assignment_bounds.kl"
     kl_t6 = &kl_t2;
 #line 36 "codegen/compound_assignment_bounds.kl"
-    kl_t7 = kl__5total__I3i32E__A3_3i32( kl_t6 );
+    kl_t7 = kl_7codegen_5total__I3i32E__A3_3i32( kl_t6 );
 #line 36 "codegen/compound_assignment_bounds.kl"
     kl_t8 = kl_t7 != 5;
 #line 36 "codegen/compound_assignment_bounds.kl"
@@ -110,7 +110,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 #line 41 "codegen/compound_assignment_bounds.kl"
     kl_t13 = &kl_t9;
 #line 41 "codegen/compound_assignment_bounds.kl"
-    kl_t14 = kl__5total__I3f64E__A3_3f64( kl_t13 );
+    kl_t14 = kl_7codegen_5total__I3f64E__A3_3f64( kl_t13 );
 #line 41 "codegen/compound_assignment_bounds.kl"
     kl_t15 = kl_t14 != 0.5;
 #line 41 "codegen/compound_assignment_bounds.kl"
@@ -121,7 +121,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
     return kl_t0;
     bb4:
 #line 46 "codegen/compound_assignment_bounds.kl"
-    kl_t16 = kl__4bits__I2u8E__2u8( 13 );
+    kl_t16 = kl_7codegen_4bits__I2u8E__2u8( 13 );
 #line 46 "codegen/compound_assignment_bounds.kl"
     kl_t17 = kl_t16 != 12;
 #line 46 "codegen/compound_assignment_bounds.kl"
@@ -132,7 +132,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
     return kl_t0;
     bb6:
 #line 51 "codegen/compound_assignment_bounds.kl"
-    kl_t18 = kl__6halved__I3f32E__3f32( 3.0 );
+    kl_t18 = kl_7codegen_6halved__I3f32E__3f32( 3.0 );
 #line 51 "codegen/compound_assignment_bounds.kl"
     kl_t19 = kl_t18 != 2.5;
 #line 51 "codegen/compound_assignment_bounds.kl"
@@ -149,7 +149,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 }
 
 #line 3 "codegen/compound_assignment_bounds.kl"
-int32_t kl__5total__I3i32E__A3_3i32( struct kl__A3_3i32* kl_xs_1 )
+int32_t kl_7codegen_5total__I3i32E__A3_3i32( struct kl__A3_3i32* kl_xs_1 )
 {
     int32_t kl_t0;
     int32_t kl_s_2;
@@ -229,7 +229,7 @@ int32_t kl__5total__I3i32E__A3_3i32( struct kl__A3_3i32* kl_xs_1 )
 }
 
 #line 3 "codegen/compound_assignment_bounds.kl"
-double kl__5total__I3f64E__A3_3f64( struct kl__A3_3f64* kl_xs_1 )
+double kl_7codegen_5total__I3f64E__A3_3f64( struct kl__A3_3f64* kl_xs_1 )
 {
     double kl_t0;
     double kl_s_2;
@@ -282,7 +282,7 @@ double kl__5total__I3f64E__A3_3f64( struct kl__A3_3f64* kl_xs_1 )
 }
 
 #line 15 "codegen/compound_assignment_bounds.kl"
-uint8_t kl__4bits__I2u8E__2u8( uint8_t kl_a_1 )
+uint8_t kl_7codegen_4bits__I2u8E__2u8( uint8_t kl_a_1 )
 {
     uint8_t kl_t0;
     uint8_t kl_s_2;
@@ -299,7 +299,7 @@ uint8_t kl__4bits__I2u8E__2u8( uint8_t kl_a_1 )
 }
 
 #line 26 "codegen/compound_assignment_bounds.kl"
-float kl__6halved__I3f32E__3f32( float kl_a_1 )
+float kl_7codegen_6halved__I3f32E__3f32( float kl_a_1 )
 {
     float kl_t0;
     float kl_s_2;
@@ -400,7 +400,7 @@ int main( int argc, char** argv )
 #line 34 "codegen/compound_assignment_bounds.kl"
     kl_t17 = ( struct kl__run__LQ7prelude3str__ref ) { ( struct kl_7prelude_str* ) kl_t7, kl_t3 };
 #line 34 "codegen/compound_assignment_bounds.kl"
-    kl_t0 = kl__4main__LQ7prelude3str( ( kl_t17 ).data, ( kl_t17 ).size );
+    kl_t0 = kl_7codegen_4main__LQ7prelude3str( ( kl_t17 ).data, ( kl_t17 ).size );
 #line 34 "codegen/compound_assignment_bounds.kl"
     kl_rt_free( kl_t7 );
 #line 34 "codegen/compound_assignment_bounds.kl"

@@ -3,45 +3,45 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Holder;
-struct kl__Counter;
-struct kl__Box__I3i32E;
+struct kl_7codegen_Holder;
+struct kl_7codegen_Counter;
+struct kl_7codegen_Box__I3i32E;
 
 typedef int32_t ( *kl__fn__F3i32E3i32 )( int32_t );
 typedef void ( *kl__fn__FR3i32E4void )( int32_t* );
 typedef int32_t ( *kl__fn__FM3i32E3i32 )( int32_t );
 
-struct kl__Holder
+struct kl_7codegen_Holder
 {
     kl__fn__F3i32E3i32 kl_cb;
 };
-_Static_assert( sizeof( struct kl__Holder ) == 8 && _Alignof( struct kl__Holder ) == 8 && offsetof( struct kl__Holder, kl_cb ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Holder ) == 8 && _Alignof( struct kl_7codegen_Holder ) == 8 && offsetof( struct kl_7codegen_Holder, kl_cb ) == 0, "layout" );
 
-struct kl__Counter
+struct kl_7codegen_Counter
 {
     kl__fn__FR3i32E4void kl_step;
 };
-_Static_assert( sizeof( struct kl__Counter ) == 8 && _Alignof( struct kl__Counter ) == 8 && offsetof( struct kl__Counter, kl_step ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Counter ) == 8 && _Alignof( struct kl_7codegen_Counter ) == 8 && offsetof( struct kl_7codegen_Counter, kl_step ) == 0, "layout" );
 
-struct kl__Box__I3i32E
+struct kl_7codegen_Box__I3i32E
 {
     kl__fn__FM3i32E3i32 kl_f;
 };
-_Static_assert( sizeof( struct kl__Box__I3i32E ) == 8 && _Alignof( struct kl__Box__I3i32E ) == 8 && offsetof( struct kl__Box__I3i32E, kl_f ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Box__I3i32E ) == 8 && _Alignof( struct kl_7codegen_Box__I3i32E ) == 8 && offsetof( struct kl_7codegen_Box__I3i32E, kl_f ) == 0, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__5twice__3i32( int32_t );
-int32_t kl__6negate__3i32( int32_t );
-int32_t kl__11twice_moved__M3i32( int32_t );
-void kl__4bump__R3i32( int32_t* );
-int32_t kl__12through_this__S6Holder_3i32( struct kl__Holder*, int32_t );
-int32_t kl__4bare__S6Holder_3i32( struct kl__Holder*, int32_t );
-int32_t kl__4main__( void );
-int32_t kl__5apply__I3i32E__S3BoxI3i32E_M3i32( struct kl__Box__I3i32E*, int32_t );
+int32_t kl_7codegen_5twice__3i32( int32_t );
+int32_t kl_7codegen_6negate__3i32( int32_t );
+int32_t kl_7codegen_11twice_moved__M3i32( int32_t );
+void kl_7codegen_4bump__R3i32( int32_t* );
+int32_t kl_7codegen_12through_this__SQ7codegen6Holder_3i32( struct kl_7codegen_Holder*, int32_t );
+int32_t kl_7codegen_4bare__SQ7codegen6Holder_3i32( struct kl_7codegen_Holder*, int32_t );
+int32_t kl_7codegen_4main__( void );
+int32_t kl_7codegen_5apply__I3i32E__SQ7codegen3BoxI3i32E_M3i32( struct kl_7codegen_Box__I3i32E*, int32_t );
 
 #line 3 "codegen/function_pointer_field_call.kl"
-int32_t kl__5twice__3i32( int32_t kl_a_1 )
+int32_t kl_7codegen_5twice__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -63,7 +63,7 @@ int32_t kl__5twice__3i32( int32_t kl_a_1 )
 }
 
 #line 8 "codegen/function_pointer_field_call.kl"
-int32_t kl__6negate__3i32( int32_t kl_a_1 )
+int32_t kl_7codegen_6negate__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -85,7 +85,7 @@ int32_t kl__6negate__3i32( int32_t kl_a_1 )
 }
 
 #line 13 "codegen/function_pointer_field_call.kl"
-int32_t kl__11twice_moved__M3i32( int32_t kl_a_1 )
+int32_t kl_7codegen_11twice_moved__M3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -107,7 +107,7 @@ int32_t kl__11twice_moved__M3i32( int32_t kl_a_1 )
 }
 
 #line 18 "codegen/function_pointer_field_call.kl"
-void kl__4bump__R3i32( int32_t* kl_v_1 )
+void kl_7codegen_4bump__R3i32( int32_t* kl_v_1 )
 {
     bool kl_t2;
     int32_t kl_t3;
@@ -128,7 +128,7 @@ void kl__4bump__R3i32( int32_t* kl_v_1 )
 }
 
 #line 27 "codegen/function_pointer_field_call.kl"
-int32_t kl__12through_this__S6Holder_3i32( struct kl__Holder* kl_this_1, int32_t kl_v_2 )
+int32_t kl_7codegen_12through_this__SQ7codegen6Holder_3i32( struct kl_7codegen_Holder* kl_this_1, int32_t kl_v_2 )
 {
     int32_t kl_t0;
     int32_t kl_t3;
@@ -141,7 +141,7 @@ int32_t kl__12through_this__S6Holder_3i32( struct kl__Holder* kl_this_1, int32_t
 }
 
 #line 32 "codegen/function_pointer_field_call.kl"
-int32_t kl__4bare__S6Holder_3i32( struct kl__Holder* kl_this_1, int32_t kl_v_2 )
+int32_t kl_7codegen_4bare__SQ7codegen6Holder_3i32( struct kl_7codegen_Holder* kl_this_1, int32_t kl_v_2 )
 {
     int32_t kl_t0;
     int32_t kl_t3;
@@ -154,45 +154,45 @@ int32_t kl__4bare__S6Holder_3i32( struct kl__Holder* kl_this_1, int32_t kl_v_2 )
 }
 
 #line 53 "codegen/function_pointer_field_call.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__Holder kl_h_1;
-    struct kl__Holder kl_t2;
+    struct kl_7codegen_Holder kl_h_1;
+    struct kl_7codegen_Holder kl_t2;
     kl__fn__F3i32E3i32 kl_t3;
     int32_t kl_t4;
     bool kl_t5;
-    struct kl__Holder* kl_t6;
+    struct kl_7codegen_Holder* kl_t6;
     int32_t kl_t7;
     bool kl_t8;
-    struct kl__Holder* kl_t9;
+    struct kl_7codegen_Holder* kl_t9;
     int32_t kl_t10;
     bool kl_t11;
     kl__fn__F3i32E3i32 kl_t12;
     int32_t kl_t13;
     bool kl_t14;
-    struct kl__Holder* kl_p_15;
-    struct kl__Holder* kl_t16;
+    struct kl_7codegen_Holder* kl_p_15;
+    struct kl_7codegen_Holder* kl_t16;
     int32_t kl_t17;
     bool kl_t18;
-    struct kl__Box__I3i32E kl_b_19;
-    struct kl__Box__I3i32E kl_t20;
+    struct kl_7codegen_Box__I3i32E kl_b_19;
+    struct kl_7codegen_Box__I3i32E kl_t20;
     kl__fn__FM3i32E3i32 kl_t21;
     int32_t kl_two_22;
     int32_t kl_seven_23;
     int32_t kl_t24;
     bool kl_t25;
-    struct kl__Box__I3i32E* kl_t26;
+    struct kl_7codegen_Box__I3i32E* kl_t26;
     int32_t kl_t27;
     bool kl_t28;
-    struct kl__Counter kl_c_29;
-    struct kl__Counter kl_t30;
+    struct kl_7codegen_Counter kl_c_29;
+    struct kl_7codegen_Counter kl_t30;
     kl__fn__FR3i32E4void kl_t31;
     int32_t kl_n_32;
     int32_t* kl_t33;
     bool kl_t35;
 #line 55 "codegen/function_pointer_field_call.kl"
-    kl_t3 = kl__5twice__3i32;
+    kl_t3 = kl_7codegen_5twice__3i32;
 #line 55 "codegen/function_pointer_field_call.kl"
     kl_t2.kl_cb = kl_t3;
 #line 55 "codegen/function_pointer_field_call.kl"
@@ -212,7 +212,7 @@ int32_t kl__4main__( void )
 #line 58 "codegen/function_pointer_field_call.kl"
     kl_t6 = &kl_h_1;
 #line 58 "codegen/function_pointer_field_call.kl"
-    kl_t7 = kl__12through_this__S6Holder_3i32( kl_t6, 4 );
+    kl_t7 = kl_7codegen_12through_this__SQ7codegen6Holder_3i32( kl_t6, 4 );
 #line 58 "codegen/function_pointer_field_call.kl"
     kl_t8 = kl_t7 != 8;
 #line 58 "codegen/function_pointer_field_call.kl"
@@ -226,7 +226,7 @@ int32_t kl__4main__( void )
 #line 59 "codegen/function_pointer_field_call.kl"
     kl_t9 = &kl_h_1;
 #line 59 "codegen/function_pointer_field_call.kl"
-    kl_t10 = kl__4bare__S6Holder_3i32( kl_t9, 5 );
+    kl_t10 = kl_7codegen_4bare__SQ7codegen6Holder_3i32( kl_t9, 5 );
 #line 59 "codegen/function_pointer_field_call.kl"
     kl_t11 = kl_t10 != 10;
 #line 59 "codegen/function_pointer_field_call.kl"
@@ -238,7 +238,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb6:
 #line 62 "codegen/function_pointer_field_call.kl"
-    kl_t12 = kl__6negate__3i32;
+    kl_t12 = kl_7codegen_6negate__3i32;
 #line 62 "codegen/function_pointer_field_call.kl"
     kl_h_1.kl_cb = kl_t12;
     kl_t13 = kl_h_1.kl_cb( 3 );
@@ -267,7 +267,7 @@ int32_t kl__4main__( void )
 #line 67 "codegen/function_pointer_field_call.kl"
     return kl_t0;
     bb10:
-    kl_t21 = kl__11twice_moved__M3i32;
+    kl_t21 = kl_7codegen_11twice_moved__M3i32;
 #line 69 "codegen/function_pointer_field_call.kl"
     kl_t20.kl_f = kl_t21;
 #line 69 "codegen/function_pointer_field_call.kl"
@@ -288,7 +288,7 @@ int32_t kl__4main__( void )
 #line 73 "codegen/function_pointer_field_call.kl"
     kl_t26 = &kl_b_19;
 #line 73 "codegen/function_pointer_field_call.kl"
-    kl_t27 = kl__5apply__I3i32E__S3BoxI3i32E_M3i32( kl_t26, kl_seven_23 );
+    kl_t27 = kl_7codegen_5apply__I3i32E__SQ7codegen3BoxI3i32E_M3i32( kl_t26, kl_seven_23 );
 #line 73 "codegen/function_pointer_field_call.kl"
     kl_t28 = kl_t27 != 14;
 #line 73 "codegen/function_pointer_field_call.kl"
@@ -300,7 +300,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb14:
 #line 76 "codegen/function_pointer_field_call.kl"
-    kl_t31 = kl__4bump__R3i32;
+    kl_t31 = kl_7codegen_4bump__R3i32;
 #line 76 "codegen/function_pointer_field_call.kl"
     kl_t30.kl_step = kl_t31;
 #line 76 "codegen/function_pointer_field_call.kl"
@@ -324,7 +324,7 @@ int32_t kl__4main__( void )
 }
 
 #line 42 "codegen/function_pointer_field_call.kl"
-int32_t kl__5apply__I3i32E__S3BoxI3i32E_M3i32( struct kl__Box__I3i32E* kl_this_1, int32_t kl_v_2 )
+int32_t kl_7codegen_5apply__I3i32E__SQ7codegen3BoxI3i32E_M3i32( struct kl_7codegen_Box__I3i32E* kl_this_1, int32_t kl_v_2 )
 {
     int32_t kl_t0;
     int32_t kl_t3;
@@ -340,7 +340,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 53 "codegen/function_pointer_field_call.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 53 "codegen/function_pointer_field_call.kl"
     return kl_t0;
 #line 53 "codegen/function_pointer_field_call.kl"

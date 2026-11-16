@@ -3,38 +3,38 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Box;
-struct kl__Shape;
-struct kl_7prelude_result__I3Box_5FaultE;
-struct kl_7prelude_result__I3i32_5FaultE;
+struct kl_3opt_Box;
+struct kl_3opt_Shape;
+struct kl_7prelude_result__IQ3opt3Box_Q3opt5FaultE;
+struct kl_7prelude_result__I3i32_Q3opt5FaultE;
 
-struct kl__Box
+struct kl_3opt_Box
 {
     int32_t kl_value;
 };
-_Static_assert( sizeof( struct kl__Box ) == 4 && _Alignof( struct kl__Box ) == 4 && offsetof( struct kl__Box, kl_value ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_3opt_Box ) == 4 && _Alignof( struct kl_3opt_Box ) == 4 && offsetof( struct kl_3opt_Box, kl_value ) == 0, "layout" );
 
-struct kl__Shape
+struct kl_3opt_Shape
 {
     int32_t tag;
     union
     {
         struct
         {
-            struct kl__Box kl_5boxed_b;
+            struct kl_3opt_Box kl_5boxed_b;
         };
     };
 };
-_Static_assert( sizeof( struct kl__Shape ) == 8 && _Alignof( struct kl__Shape ) == 4 && offsetof( struct kl__Shape, kl_5boxed_b ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_3opt_Shape ) == 8 && _Alignof( struct kl_3opt_Shape ) == 4 && offsetof( struct kl_3opt_Shape, kl_5boxed_b ) == 4, "layout" );
 
-struct kl_7prelude_result__I3Box_5FaultE
+struct kl_7prelude_result__IQ3opt3Box_Q3opt5FaultE
 {
     int32_t tag;
     union
     {
         struct
         {
-            struct kl__Box kl_2ok_value;
+            struct kl_3opt_Box kl_2ok_value;
         };
         struct
         {
@@ -42,9 +42,9 @@ struct kl_7prelude_result__I3Box_5FaultE
         };
     };
 };
-_Static_assert( sizeof( struct kl_7prelude_result__I3Box_5FaultE ) == 8 && _Alignof( struct kl_7prelude_result__I3Box_5FaultE ) == 4 && offsetof( struct kl_7prelude_result__I3Box_5FaultE, kl_2ok_value ) == 4 && offsetof( struct kl_7prelude_result__I3Box_5FaultE, kl_3err_error ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_7prelude_result__IQ3opt3Box_Q3opt5FaultE ) == 8 && _Alignof( struct kl_7prelude_result__IQ3opt3Box_Q3opt5FaultE ) == 4 && offsetof( struct kl_7prelude_result__IQ3opt3Box_Q3opt5FaultE, kl_2ok_value ) == 4 && offsetof( struct kl_7prelude_result__IQ3opt3Box_Q3opt5FaultE, kl_3err_error ) == 4, "layout" );
 
-struct kl_7prelude_result__I3i32_5FaultE
+struct kl_7prelude_result__I3i32_Q3opt5FaultE
 {
     int32_t tag;
     union
@@ -59,43 +59,43 @@ struct kl_7prelude_result__I3i32_5FaultE
         };
     };
 };
-_Static_assert( sizeof( struct kl_7prelude_result__I3i32_5FaultE ) == 8 && _Alignof( struct kl_7prelude_result__I3i32_5FaultE ) == 4 && offsetof( struct kl_7prelude_result__I3i32_5FaultE, kl_2ok_value ) == 4 && offsetof( struct kl_7prelude_result__I3i32_5FaultE, kl_3err_error ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_7prelude_result__I3i32_Q3opt5FaultE ) == 8 && _Alignof( struct kl_7prelude_result__I3i32_Q3opt5FaultE ) == 4 && offsetof( struct kl_7prelude_result__I3i32_Q3opt5FaultE, kl_2ok_value ) == 4 && offsetof( struct kl_7prelude_result__I3i32_Q3opt5FaultE, kl_3err_error ) == 4, "layout" );
 
-int32_t kl__live__G;
-int32_t kl__destroyed__G;
+int32_t kl_3opt_live__G;
+int32_t kl_3opt_destroyed__G;
 
-void kl__3Box__R3Box_3i32__ctor( struct kl__Box*, int32_t );
-void kl__3Box__dtor( struct kl__Box* );
-int32_t kl__6opened__M5Shape( struct kl__Shape );
-int32_t kl__5local__4bool( bool );
-struct kl_7prelude_result__I3Box_5FaultE kl__5found__4bool( bool );
-struct kl_7prelude_result__I3i32_5FaultE kl__5tried__4bool( bool );
-int32_t kl__4main__( void );
-void kl__5Shape__dtor( struct kl__Shape* );
-void kl_7prelude_6result__I3Box_5FaultE__dtor( struct kl_7prelude_result__I3Box_5FaultE* );
+void kl_3opt_3Box__RQ3opt3Box_3i32__ctor( struct kl_3opt_Box*, int32_t );
+void kl_3opt_3Box__dtor( struct kl_3opt_Box* );
+int32_t kl_3opt_6opened__MQ3opt5Shape( struct kl_3opt_Shape );
+int32_t kl_3opt_5local__4bool( bool );
+struct kl_7prelude_result__IQ3opt3Box_Q3opt5FaultE kl_3opt_5found__4bool( bool );
+struct kl_7prelude_result__I3i32_Q3opt5FaultE kl_3opt_5tried__4bool( bool );
+int32_t kl_3opt_4main__( void );
+void kl_3opt_5Shape__dtor( struct kl_3opt_Shape* );
+void kl_7prelude_6result__IQ3opt3Box_Q3opt5FaultE__dtor( struct kl_7prelude_result__IQ3opt3Box_Q3opt5FaultE* );
 
 #line 10 "opt/moves_scrutinee.kl"
-void kl__3Box__R3Box_3i32__ctor( struct kl__Box* kl_this_1, int32_t kl_v_2 )
+void kl_3opt_3Box__RQ3opt3Box_3i32__ctor( struct kl_3opt_Box* kl_this_1, int32_t kl_v_2 )
 {
     ( *kl_this_1 ).kl_value = kl_v_2;
-    kl__live__G = kl__live__G + 1;
+    kl_3opt_live__G = kl_3opt_live__G + 1;
     return;
 #line 14 "opt/moves_scrutinee.kl"
 }
 
 #line 16 "opt/moves_scrutinee.kl"
-void kl__3Box__dtor( struct kl__Box* kl_this_1 )
+void kl_3opt_3Box__dtor( struct kl_3opt_Box* kl_this_1 )
 {
     ( void ) kl_this_1;
 #line 18 "opt/moves_scrutinee.kl"
-    kl__live__G = kl__live__G - 1;
-    kl__destroyed__G = kl__destroyed__G + 1;
+    kl_3opt_live__G = kl_3opt_live__G - 1;
+    kl_3opt_destroyed__G = kl_3opt_destroyed__G + 1;
     return;
 #line 20 "opt/moves_scrutinee.kl"
 }
 
 #line 38 "opt/moves_scrutinee.kl"
-int32_t kl__6opened__M5Shape( struct kl__Shape kl_s_1 )
+int32_t kl_3opt_6opened__MQ3opt5Shape( struct kl_3opt_Shape kl_s_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -106,8 +106,8 @@ int32_t kl__6opened__M5Shape( struct kl__Shape kl_s_1 )
 #line 43 "opt/moves_scrutinee.kl"
     kl_t0 = kl_s_1.kl_5boxed_b.kl_value;
 #line 18 "opt/moves_scrutinee.kl"
-    kl__live__G = kl__live__G - 1;
-    kl__destroyed__G = kl__destroyed__G + 1;
+    kl_3opt_live__G = kl_3opt_live__G - 1;
+    kl_3opt_destroyed__G = kl_3opt_destroyed__G + 1;
 #line 43 "opt/moves_scrutinee.kl"
     return kl_t0;
     bb2:
@@ -118,7 +118,7 @@ int32_t kl__6opened__M5Shape( struct kl__Shape kl_s_1 )
 }
 
 #line 50 "opt/moves_scrutinee.kl"
-int32_t kl__5local__4bool( bool kl_full_1 )
+int32_t kl_3opt_5local__4bool( bool kl_full_1 )
 {
     int32_t kl_t0;
 #line 52 "opt/moves_scrutinee.kl"
@@ -127,7 +127,7 @@ int32_t kl__5local__4bool( bool kl_full_1 )
 #line 56 "opt/moves_scrutinee.kl"
     kl_t0 = 8;
 #line 19 "opt/moves_scrutinee.kl"
-    kl__destroyed__G = kl__destroyed__G + 1;
+    kl_3opt_destroyed__G = kl_3opt_destroyed__G + 1;
 #line 56 "opt/moves_scrutinee.kl"
     return kl_t0;
     bb2:
@@ -138,15 +138,15 @@ int32_t kl__5local__4bool( bool kl_full_1 )
 }
 
 #line 62 "opt/moves_scrutinee.kl"
-struct kl_7prelude_result__I3Box_5FaultE kl__5found__4bool( bool kl_ok_1 )
+struct kl_7prelude_result__IQ3opt3Box_Q3opt5FaultE kl_3opt_5found__4bool( bool kl_ok_1 )
 {
-    struct kl_7prelude_result__I3Box_5FaultE kl_t0;
+    struct kl_7prelude_result__IQ3opt3Box_Q3opt5FaultE kl_t0;
 #line 64 "opt/moves_scrutinee.kl"
     if ( kl_ok_1 ) goto bb1; else goto bb2;
     bb1:
     kl_t0.kl_2ok_value.kl_value = 9;
 #line 13 "opt/moves_scrutinee.kl"
-    kl__live__G = kl__live__G + 1;
+    kl_3opt_live__G = kl_3opt_live__G + 1;
 #line 66 "opt/moves_scrutinee.kl"
     kl_t0.tag = 0;
 #line 66 "opt/moves_scrutinee.kl"
@@ -161,9 +161,9 @@ struct kl_7prelude_result__I3Box_5FaultE kl__5found__4bool( bool kl_ok_1 )
 }
 
 #line 72 "opt/moves_scrutinee.kl"
-struct kl_7prelude_result__I3i32_5FaultE kl__5tried__4bool( bool kl_ok_1 )
+struct kl_7prelude_result__I3i32_Q3opt5FaultE kl_3opt_5tried__4bool( bool kl_ok_1 )
 {
-    struct kl_7prelude_result__I3i32_5FaultE kl_t0;
+    struct kl_7prelude_result__I3i32_Q3opt5FaultE kl_t0;
 #line 64 "opt/moves_scrutinee.kl"
     if ( kl_ok_1 ) goto bb1; else goto bb2;
     bb1:
@@ -172,7 +172,7 @@ struct kl_7prelude_result__I3i32_5FaultE kl__5tried__4bool( bool kl_ok_1 )
 #line 75 "opt/moves_scrutinee.kl"
     kl_t0.kl_2ok_value = 9;
 #line 19 "opt/moves_scrutinee.kl"
-    kl__destroyed__G = kl__destroyed__G + 1;
+    kl_3opt_destroyed__G = kl_3opt_destroyed__G + 1;
 #line 75 "opt/moves_scrutinee.kl"
     return kl_t0;
     bb2:
@@ -186,11 +186,11 @@ struct kl_7prelude_result__I3i32_5FaultE kl__5tried__4bool( bool kl_ok_1 )
 }
 
 #line 78 "opt/moves_scrutinee.kl"
-int32_t kl__4main__( void )
+int32_t kl_3opt_4main__( void )
 {
     int32_t kl_t0;
     bool kl_t1;
-    struct kl__Shape kl_s_2;
+    struct kl_3opt_Shape kl_s_2;
     bool kl_t3;
     int32_t kl_t4;
     int32_t kl_t5;
@@ -201,10 +201,10 @@ int32_t kl__4main__( void )
 #line 80 "opt/moves_scrutinee.kl"
     kl_s_2.kl_5boxed_b.kl_value = 7;
 #line 18 "opt/moves_scrutinee.kl"
-    kl_t4 = kl__live__G;
-    kl_t5 = kl__destroyed__G + 1;
+    kl_t4 = kl_3opt_live__G;
+    kl_t5 = kl_3opt_destroyed__G + 1;
 #line 19 "opt/moves_scrutinee.kl"
-    kl__destroyed__G = kl_t5;
+    kl_3opt_destroyed__G = kl_t5;
 #line 80 "opt/moves_scrutinee.kl"
     kl_t1 = kl_s_2.kl_5boxed_b.kl_value != 7;
 #line 80 "opt/moves_scrutinee.kl"
@@ -228,10 +228,10 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb5:
 #line 18 "opt/moves_scrutinee.kl"
-    kl_t6 = kl__live__G;
-    kl_t7 = kl__destroyed__G + 1;
+    kl_t6 = kl_3opt_live__G;
+    kl_t7 = kl_3opt_destroyed__G + 1;
 #line 19 "opt/moves_scrutinee.kl"
-    kl__destroyed__G = kl_t7;
+    kl_3opt_destroyed__G = kl_t7;
 #line 85 "opt/moves_scrutinee.kl"
     kl_t3 = kl_t6 != 0;
 #line 85 "opt/moves_scrutinee.kl"
@@ -247,8 +247,8 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb8:
 #line 18 "opt/moves_scrutinee.kl"
-    kl__live__G = 0;
-    kl__destroyed__G = 3;
+    kl_3opt_live__G = 0;
+    kl_3opt_destroyed__G = 3;
 #line 110 "opt/moves_scrutinee.kl"
     kl_t0 = 0;
 #line 110 "opt/moves_scrutinee.kl"
@@ -256,7 +256,7 @@ int32_t kl__4main__( void )
 }
 
 #line 25 "opt/moves_scrutinee.kl"
-void kl__5Shape__dtor( struct kl__Shape* kl_t1 )
+void kl_3opt_5Shape__dtor( struct kl_3opt_Shape* kl_t1 )
 {
     bool kl_t2;
 #line 25 "opt/moves_scrutinee.kl"
@@ -268,14 +268,14 @@ void kl__5Shape__dtor( struct kl__Shape* kl_t1 )
     return;
     bb2:
 #line 18 "opt/moves_scrutinee.kl"
-    kl__live__G = kl__live__G - 1;
-    kl__destroyed__G = kl__destroyed__G + 1;
+    kl_3opt_live__G = kl_3opt_live__G - 1;
+    kl_3opt_destroyed__G = kl_3opt_destroyed__G + 1;
     goto bb1;
 #line 29 "opt/moves_scrutinee.kl"
 }
 
 #line 184 "<prelude>"
-void kl_7prelude_6result__I3Box_5FaultE__dtor( struct kl_7prelude_result__I3Box_5FaultE* kl_t1 )
+void kl_7prelude_6result__IQ3opt3Box_Q3opt5FaultE__dtor( struct kl_7prelude_result__IQ3opt3Box_Q3opt5FaultE* kl_t1 )
 {
     bool kl_t2;
 #line 184 "<prelude>"
@@ -287,8 +287,8 @@ void kl_7prelude_6result__I3Box_5FaultE__dtor( struct kl_7prelude_result__I3Box_
     return;
     bb2:
 #line 18 "opt/moves_scrutinee.kl"
-    kl__live__G = kl__live__G - 1;
-    kl__destroyed__G = kl__destroyed__G + 1;
+    kl_3opt_live__G = kl_3opt_live__G - 1;
+    kl_3opt_destroyed__G = kl_3opt_destroyed__G + 1;
     goto bb1;
 #line 190 "<prelude>"
 }
@@ -297,7 +297,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 78 "opt/moves_scrutinee.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_3opt_4main__(  );
 #line 78 "opt/moves_scrutinee.kl"
     return kl_t0;
 #line 78 "opt/moves_scrutinee.kl"

@@ -3,22 +3,22 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Counter;
+struct kl_7codegen_Counter;
 
-struct kl__Counter
+struct kl_7codegen_Counter
 {
     int32_t kl_n;
 };
-_Static_assert( sizeof( struct kl__Counter ) == 4 && _Alignof( struct kl__Counter ) == 4 && offsetof( struct kl__Counter, kl_n ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Counter ) == 4 && _Alignof( struct kl_7codegen_Counter ) == 4 && offsetof( struct kl_7codegen_Counter, kl_n ) == 0, "layout" );
 
-bool kl__4same__S7Counter_7Counter( struct kl__Counter*, struct kl__Counter* );
-bool kl__6equals__S7Counter_3i32( struct kl__Counter*, int32_t* );
-bool kl__24equals_through_a_sibling__S7Counter_3i32( struct kl__Counter*, int32_t* );
-void kl__4give__S7Counter_R3i32( struct kl__Counter*, int32_t* );
-int32_t kl__4main__( void );
+bool kl_7codegen_4same__SQ7codegen7Counter_Q7codegen7Counter( struct kl_7codegen_Counter*, struct kl_7codegen_Counter* );
+bool kl_7codegen_6equals__SQ7codegen7Counter_3i32( struct kl_7codegen_Counter*, int32_t* );
+bool kl_7codegen_24equals_through_a_sibling__SQ7codegen7Counter_3i32( struct kl_7codegen_Counter*, int32_t* );
+void kl_7codegen_4give__SQ7codegen7Counter_R3i32( struct kl_7codegen_Counter*, int32_t* );
+int32_t kl_7codegen_4main__( void );
 
 #line 7 "codegen/method_borrows.kl"
-bool kl__4same__S7Counter_7Counter( struct kl__Counter* kl_this_1, struct kl__Counter* kl_other_2 )
+bool kl_7codegen_4same__SQ7codegen7Counter_Q7codegen7Counter( struct kl_7codegen_Counter* kl_this_1, struct kl_7codegen_Counter* kl_other_2 )
 {
     bool kl_t0;
     bool kl_t3;
@@ -31,7 +31,7 @@ bool kl__4same__S7Counter_7Counter( struct kl__Counter* kl_this_1, struct kl__Co
 }
 
 #line 12 "codegen/method_borrows.kl"
-bool kl__6equals__S7Counter_3i32( struct kl__Counter* kl_this_1, int32_t* kl_value_2 )
+bool kl_7codegen_6equals__SQ7codegen7Counter_3i32( struct kl_7codegen_Counter* kl_this_1, int32_t* kl_value_2 )
 {
     bool kl_t0;
     bool kl_t3;
@@ -44,10 +44,10 @@ bool kl__6equals__S7Counter_3i32( struct kl__Counter* kl_this_1, int32_t* kl_val
 }
 
 #line 17 "codegen/method_borrows.kl"
-bool kl__24equals_through_a_sibling__S7Counter_3i32( struct kl__Counter* kl_this_1, int32_t* kl_value_2 )
+bool kl_7codegen_24equals_through_a_sibling__SQ7codegen7Counter_3i32( struct kl_7codegen_Counter* kl_this_1, int32_t* kl_value_2 )
 {
     bool kl_t0;
-    struct kl__Counter* kl_t3;
+    struct kl_7codegen_Counter* kl_t3;
     int32_t* kl_t4;
     bool kl_t5;
 #line 19 "codegen/method_borrows.kl"
@@ -55,7 +55,7 @@ bool kl__24equals_through_a_sibling__S7Counter_3i32( struct kl__Counter* kl_this
 #line 19 "codegen/method_borrows.kl"
     kl_t4 = &( *kl_value_2 );
 #line 19 "codegen/method_borrows.kl"
-    kl_t5 = kl__6equals__S7Counter_3i32( kl_t3, kl_t4 );
+    kl_t5 = kl_7codegen_6equals__SQ7codegen7Counter_3i32( kl_t3, kl_t4 );
 #line 19 "codegen/method_borrows.kl"
     kl_t0 = kl_t5;
 #line 19 "codegen/method_borrows.kl"
@@ -63,7 +63,7 @@ bool kl__24equals_through_a_sibling__S7Counter_3i32( struct kl__Counter* kl_this
 }
 
 #line 22 "codegen/method_borrows.kl"
-void kl__4give__S7Counter_R3i32( struct kl__Counter* kl_this_1, int32_t* kl_into_2 )
+void kl_7codegen_4give__SQ7codegen7Counter_R3i32( struct kl_7codegen_Counter* kl_this_1, int32_t* kl_into_2 )
 {
     ( *kl_into_2 ) = ( *kl_this_1 ).kl_n;
     return;
@@ -71,28 +71,28 @@ void kl__4give__S7Counter_R3i32( struct kl__Counter* kl_this_1, int32_t* kl_into
 }
 
 #line 28 "codegen/method_borrows.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__Counter kl_a_1;
-    struct kl__Counter kl_t2;
-    struct kl__Counter kl_b_3;
-    struct kl__Counter kl_t4;
+    struct kl_7codegen_Counter kl_a_1;
+    struct kl_7codegen_Counter kl_t2;
+    struct kl_7codegen_Counter kl_b_3;
+    struct kl_7codegen_Counter kl_t4;
     int32_t kl_three_5;
     int32_t kl_given_6;
-    struct kl__Counter* kl_t7;
-    struct kl__Counter* kl_t8;
+    struct kl_7codegen_Counter* kl_t7;
+    struct kl_7codegen_Counter* kl_t8;
     bool kl_t9;
     bool kl_t10;
-    struct kl__Counter* kl_t11;
+    struct kl_7codegen_Counter* kl_t11;
     int32_t* kl_t12;
     bool kl_t13;
     bool kl_t14;
-    struct kl__Counter* kl_t15;
+    struct kl_7codegen_Counter* kl_t15;
     int32_t* kl_t16;
     bool kl_t17;
     bool kl_t18;
-    struct kl__Counter* kl_t19;
+    struct kl_7codegen_Counter* kl_t19;
     int32_t* kl_t20;
     bool kl_t22;
 #line 30 "codegen/method_borrows.kl"
@@ -109,7 +109,7 @@ int32_t kl__4main__( void )
 #line 35 "codegen/method_borrows.kl"
     kl_t8 = &kl_b_3;
 #line 35 "codegen/method_borrows.kl"
-    kl_t9 = kl__4same__S7Counter_7Counter( kl_t7, kl_t8 );
+    kl_t9 = kl_7codegen_4same__SQ7codegen7Counter_Q7codegen7Counter( kl_t7, kl_t8 );
 #line 35 "codegen/method_borrows.kl"
     kl_t10 = !kl_t9;
 #line 35 "codegen/method_borrows.kl"
@@ -124,7 +124,7 @@ int32_t kl__4main__( void )
 #line 40 "codegen/method_borrows.kl"
     kl_t12 = &kl_three_5;
 #line 40 "codegen/method_borrows.kl"
-    kl_t13 = kl__6equals__S7Counter_3i32( kl_t11, kl_t12 );
+    kl_t13 = kl_7codegen_6equals__SQ7codegen7Counter_3i32( kl_t11, kl_t12 );
 #line 40 "codegen/method_borrows.kl"
     kl_t14 = !kl_t13;
 #line 40 "codegen/method_borrows.kl"
@@ -139,7 +139,7 @@ int32_t kl__4main__( void )
 #line 45 "codegen/method_borrows.kl"
     kl_t16 = &kl_three_5;
 #line 45 "codegen/method_borrows.kl"
-    kl_t17 = kl__24equals_through_a_sibling__S7Counter_3i32( kl_t15, kl_t16 );
+    kl_t17 = kl_7codegen_24equals_through_a_sibling__SQ7codegen7Counter_3i32( kl_t15, kl_t16 );
 #line 45 "codegen/method_borrows.kl"
     kl_t18 = !kl_t17;
 #line 45 "codegen/method_borrows.kl"
@@ -154,7 +154,7 @@ int32_t kl__4main__( void )
 #line 50 "codegen/method_borrows.kl"
     kl_t20 = &kl_given_6;
 #line 50 "codegen/method_borrows.kl"
-    kl__4give__S7Counter_R3i32( kl_t19, kl_t20 );
+    kl_7codegen_4give__SQ7codegen7Counter_R3i32( kl_t19, kl_t20 );
 #line 52 "codegen/method_borrows.kl"
     kl_t22 = kl_given_6 != 3;
 #line 52 "codegen/method_borrows.kl"
@@ -174,7 +174,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 28 "codegen/method_borrows.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 28 "codegen/method_borrows.kl"
     return kl_t0;
 #line 28 "codegen/method_borrows.kl"

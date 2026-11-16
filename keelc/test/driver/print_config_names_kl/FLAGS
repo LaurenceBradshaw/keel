@@ -1,1 +1,1 @@
---print-config --package kl=somewhere
+--print-config --package ../../keel_stl/src

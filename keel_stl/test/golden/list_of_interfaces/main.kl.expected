@@ -4034,24 +4034,24 @@ void kl_2kl6string_string__drop( void* kl_t1 )
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Square;
+struct kl_18list_of_interfaces_Square;
 struct kl_2kl6string_string;
-struct kl__Labelled;
+struct kl_18list_of_interfaces_Labelled;
 struct kl_7prelude_str;
 struct kl_2kl4list_list__IQ2kl6stringE;
 struct kl_2kl4list_list__IP5ShapeE;
 
-struct kl__Shape__vtable;
-struct kl__Shape__ref { void* self; const struct kl__Shape__vtable* vtable; };
+struct kl_18list_of_interfaces_Shape__vtable;
+struct kl_18list_of_interfaces_Shape__ref { void* self; const struct kl_18list_of_interfaces_Shape__vtable* vtable; };
 
 typedef double ( *kl__fn__FMP4voidE3f64 )( void* );
 typedef uint64_t ( *kl__fn__FMP4voidE3u64 )( void* );
 
-struct kl__Square
+struct kl_18list_of_interfaces_Square
 {
     double kl_side;
 };
-_Static_assert( sizeof( struct kl__Square ) == 8 && _Alignof( struct kl__Square ) == 8 && offsetof( struct kl__Square, kl_side ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_18list_of_interfaces_Square ) == 8 && _Alignof( struct kl_18list_of_interfaces_Square ) == 8 && offsetof( struct kl_18list_of_interfaces_Square, kl_side ) == 0, "layout" );
 
 struct kl_2kl6string_string
 {
@@ -4061,11 +4061,11 @@ struct kl_2kl6string_string
 };
 _Static_assert( sizeof( struct kl_2kl6string_string ) == 24 && _Alignof( struct kl_2kl6string_string ) == 8 && offsetof( struct kl_2kl6string_string, kl_data_ ) == 0 && offsetof( struct kl_2kl6string_string, kl_size_ ) == 8 && offsetof( struct kl_2kl6string_string, kl_cap_ ) == 16, "layout" );
 
-struct kl__Labelled
+struct kl_18list_of_interfaces_Labelled
 {
     struct kl_2kl6string_string kl_label;
 };
-_Static_assert( sizeof( struct kl__Labelled ) == 24 && _Alignof( struct kl__Labelled ) == 8 && offsetof( struct kl__Labelled, kl_label ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_18list_of_interfaces_Labelled ) == 24 && _Alignof( struct kl_18list_of_interfaces_Labelled ) == 8 && offsetof( struct kl_18list_of_interfaces_Labelled, kl_label ) == 0, "layout" );
 
 struct kl_7prelude_str
 {
@@ -4084,13 +4084,13 @@ _Static_assert( sizeof( struct kl_2kl4list_list__IQ2kl6stringE ) == 24 && _Align
 
 struct kl_2kl4list_list__IP5ShapeE
 {
-    struct kl__Shape__ref* kl_data_;
+    struct kl_18list_of_interfaces_Shape__ref* kl_data_;
     uint64_t kl_count_;
     uint64_t kl_cap_;
 };
 _Static_assert( sizeof( struct kl_2kl4list_list__IP5ShapeE ) == 24 && _Alignof( struct kl_2kl4list_list__IP5ShapeE ) == 8 && offsetof( struct kl_2kl4list_list__IP5ShapeE, kl_data_ ) == 0 && offsetof( struct kl_2kl4list_list__IP5ShapeE, kl_count_ ) == 8 && offsetof( struct kl_2kl4list_list__IP5ShapeE, kl_cap_ ) == 16, "layout" );
 
-struct kl__Shape__vtable
+struct kl_18list_of_interfaces_Shape__vtable
 {
     void ( *drop )( void* );
     double ( *kl__4area__ )( void* );
@@ -4103,16 +4103,16 @@ void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-double kl__4area__S6Square( struct kl__Square* );
-uint64_t kl__10label_size__S6Square( struct kl__Square* );
-void kl__8Labelled__R8Labelled_3u64__ctor( struct kl__Labelled*, uint64_t );
-double kl__4area__S8Labelled( struct kl__Labelled* );
-uint64_t kl__10label_size__S8Labelled( struct kl__Labelled* );
-int32_t kl__4main__( void );
+double kl_18list_of_interfaces_4area__SQ18list_of_interfaces6Square( struct kl_18list_of_interfaces_Square* );
+uint64_t kl_18list_of_interfaces_10label_size__SQ18list_of_interfaces6Square( struct kl_18list_of_interfaces_Square* );
+void kl_18list_of_interfaces_8Labelled__RQ18list_of_interfaces8Labelled_3u64__ctor( struct kl_18list_of_interfaces_Labelled*, uint64_t );
+double kl_18list_of_interfaces_4area__SQ18list_of_interfaces8Labelled( struct kl_18list_of_interfaces_Labelled* );
+uint64_t kl_18list_of_interfaces_10label_size__SQ18list_of_interfaces8Labelled( struct kl_18list_of_interfaces_Labelled* );
+int32_t kl_18list_of_interfaces_4main__( void );
 void kl_2kl4list_4list__IP5ShapeE__RQ2kl4listIP5ShapeE__ctor( struct kl_2kl4list_list__IP5ShapeE* );
-void kl_2kl4list_4push__IP5ShapeE__SQ2kl4listIP5ShapeE_MP5Shape( struct kl_2kl4list_list__IP5ShapeE*, struct kl__Shape__ref );
+void kl_2kl4list_4push__IP5ShapeE__SQ2kl4listIP5ShapeE_MP5Shape( struct kl_2kl4list_list__IP5ShapeE*, struct kl_18list_of_interfaces_Shape__ref );
 uint64_t kl_2kl4list_4size__IP5ShapeE__SQ2kl4listIP5ShapeE( struct kl_2kl4list_list__IP5ShapeE* );
-struct kl__Shape__ref* kl_2kl4list_14operator_index__IP5ShapeE__SQ2kl4listIP5ShapeE_3u64( struct kl_2kl4list_list__IP5ShapeE*, uint64_t );
+struct kl_18list_of_interfaces_Shape__ref* kl_2kl4list_14operator_index__IP5ShapeE__SQ2kl4listIP5ShapeE_3u64( struct kl_2kl4list_list__IP5ShapeE*, uint64_t );
 void kl_2kl4list_8truncate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
 uint64_t kl_2kl4list_4size__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
 struct kl_2kl6string_string* kl_2kl4list_14operator_index__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
@@ -4122,14 +4122,14 @@ void kl_2kl4list_8truncate__IP5ShapeE__SQ2kl4listIP5ShapeE_3u64( struct kl_2kl4l
 void kl_2kl4list_4swap__IP5ShapeE__SQ2kl4listIP5ShapeE_3u64_3u64( struct kl_2kl4list_list__IP5ShapeE*, uint64_t, uint64_t );
 void kl_2kl4list_20reallocate_if_needed__IP5ShapeE__SQ2kl4listIP5ShapeE( struct kl_2kl4list_list__IP5ShapeE* );
 void kl_2kl4list_10reallocate__IP5ShapeE__SQ2kl4listIP5ShapeE_3u64( struct kl_2kl4list_list__IP5ShapeE*, uint64_t );
-void kl__Labelled__drop( void* );
+void kl_18list_of_interfaces_Labelled__drop( void* );
 void kl_2kl4list_list__IQ2kl6stringE__drop( void* );
 void kl_2kl4list_list__IP5ShapeE__drop( void* );
-void kl__Square__drop( void* );
-double kl__Square__as_kl__Shape__kl__4area__( void* );
-uint64_t kl__Square__as_kl__Shape__kl__10label_size__( void* );
-double kl__Labelled__as_kl__Shape__kl__4area__( void* );
-uint64_t kl__Labelled__as_kl__Shape__kl__10label_size__( void* );
+void kl_18list_of_interfaces_Square__drop( void* );
+double kl_18list_of_interfaces_Square__as_kl_18list_of_interfaces_Shape__kl__4area__( void* );
+uint64_t kl_18list_of_interfaces_Square__as_kl_18list_of_interfaces_Shape__kl__10label_size__( void* );
+double kl_18list_of_interfaces_Labelled__as_kl_18list_of_interfaces_Shape__kl__4area__( void* );
+uint64_t kl_18list_of_interfaces_Labelled__as_kl_18list_of_interfaces_Shape__kl__10label_size__( void* );
 void kl_2kl6string_6string__RQ2kl6string__ctor( struct kl_2kl6string_string* );
 void kl_2kl6string_6string__dtor( struct kl_2kl6string_string* );
 uint64_t kl_2kl6string_4size__SQ2kl6string( struct kl_2kl6string_string* );
@@ -4137,48 +4137,48 @@ void kl_2kl6string_4push__SQ2kl6string_2u8( struct kl_2kl6string_string*, uint8_
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 void kl_2kl4list_4list__IQ2kl6stringE__dtor( struct kl_2kl4list_list__IQ2kl6stringE* );
 
-static const struct kl__Shape__vtable kl__Square__as_kl__Shape = { kl__Square__drop, kl__Square__as_kl__Shape__kl__4area__, kl__Square__as_kl__Shape__kl__10label_size__ };
+static const struct kl_18list_of_interfaces_Shape__vtable kl_18list_of_interfaces_Square__as_kl_18list_of_interfaces_Shape = { kl_18list_of_interfaces_Square__drop, kl_18list_of_interfaces_Square__as_kl_18list_of_interfaces_Shape__kl__4area__, kl_18list_of_interfaces_Square__as_kl_18list_of_interfaces_Shape__kl__10label_size__ };
 
-static const struct kl__Shape__vtable kl__Labelled__as_kl__Shape = { kl__Labelled__drop, kl__Labelled__as_kl__Shape__kl__4area__, kl__Labelled__as_kl__Shape__kl__10label_size__ };
+static const struct kl_18list_of_interfaces_Shape__vtable kl_18list_of_interfaces_Labelled__as_kl_18list_of_interfaces_Shape = { kl_18list_of_interfaces_Labelled__drop, kl_18list_of_interfaces_Labelled__as_kl_18list_of_interfaces_Shape__kl__4area__, kl_18list_of_interfaces_Labelled__as_kl_18list_of_interfaces_Shape__kl__10label_size__ };
 
-double kl__Square__as_kl__Shape__kl__4area__( void* kl_t1 )
+double kl_18list_of_interfaces_Square__as_kl_18list_of_interfaces_Shape__kl__4area__( void* kl_t1 )
 {
     double kl_t0;
-    struct kl__Square* kl_t2;
-    kl_t2 = ( struct kl__Square* ) kl_t1;
-    kl_t0 = kl__4area__S6Square( kl_t2 );
+    struct kl_18list_of_interfaces_Square* kl_t2;
+    kl_t2 = ( struct kl_18list_of_interfaces_Square* ) kl_t1;
+    kl_t0 = kl_18list_of_interfaces_4area__SQ18list_of_interfaces6Square( kl_t2 );
     return kl_t0;
 }
 
-uint64_t kl__Square__as_kl__Shape__kl__10label_size__( void* kl_t1 )
+uint64_t kl_18list_of_interfaces_Square__as_kl_18list_of_interfaces_Shape__kl__10label_size__( void* kl_t1 )
 {
     uint64_t kl_t0;
-    struct kl__Square* kl_t2;
-    kl_t2 = ( struct kl__Square* ) kl_t1;
-    kl_t0 = kl__10label_size__S6Square( kl_t2 );
+    struct kl_18list_of_interfaces_Square* kl_t2;
+    kl_t2 = ( struct kl_18list_of_interfaces_Square* ) kl_t1;
+    kl_t0 = kl_18list_of_interfaces_10label_size__SQ18list_of_interfaces6Square( kl_t2 );
     return kl_t0;
 }
 
-double kl__Labelled__as_kl__Shape__kl__4area__( void* kl_t1 )
+double kl_18list_of_interfaces_Labelled__as_kl_18list_of_interfaces_Shape__kl__4area__( void* kl_t1 )
 {
     double kl_t0;
-    struct kl__Labelled* kl_t2;
-    kl_t2 = ( struct kl__Labelled* ) kl_t1;
-    kl_t0 = kl__4area__S8Labelled( kl_t2 );
+    struct kl_18list_of_interfaces_Labelled* kl_t2;
+    kl_t2 = ( struct kl_18list_of_interfaces_Labelled* ) kl_t1;
+    kl_t0 = kl_18list_of_interfaces_4area__SQ18list_of_interfaces8Labelled( kl_t2 );
     return kl_t0;
 }
 
-uint64_t kl__Labelled__as_kl__Shape__kl__10label_size__( void* kl_t1 )
+uint64_t kl_18list_of_interfaces_Labelled__as_kl_18list_of_interfaces_Shape__kl__10label_size__( void* kl_t1 )
 {
     uint64_t kl_t0;
-    struct kl__Labelled* kl_t2;
-    kl_t2 = ( struct kl__Labelled* ) kl_t1;
-    kl_t0 = kl__10label_size__S8Labelled( kl_t2 );
+    struct kl_18list_of_interfaces_Labelled* kl_t2;
+    kl_t2 = ( struct kl_18list_of_interfaces_Labelled* ) kl_t1;
+    kl_t0 = kl_18list_of_interfaces_10label_size__SQ18list_of_interfaces8Labelled( kl_t2 );
     return kl_t0;
 }
 
 #line 17 "list_of_interfaces/main.kl"
-double kl__4area__S6Square( struct kl__Square* kl_this_1 )
+double kl_18list_of_interfaces_4area__SQ18list_of_interfaces6Square( struct kl_18list_of_interfaces_Square* kl_this_1 )
 {
     double kl_t0;
     double kl_t2;
@@ -4192,7 +4192,7 @@ double kl__4area__S6Square( struct kl__Square* kl_this_1 )
 }
 
 #line 18 "list_of_interfaces/main.kl"
-uint64_t kl__10label_size__S6Square( struct kl__Square* kl_this_1 )
+uint64_t kl_18list_of_interfaces_10label_size__SQ18list_of_interfaces6Square( struct kl_18list_of_interfaces_Square* kl_this_1 )
 {
     uint64_t kl_t0;
     ( void ) kl_this_1;
@@ -4204,7 +4204,7 @@ uint64_t kl__10label_size__S6Square( struct kl__Square* kl_this_1 )
 }
 
 #line 25 "list_of_interfaces/main.kl"
-void kl__8Labelled__R8Labelled_3u64__ctor( struct kl__Labelled* kl_this_1, uint64_t kl_n_2 )
+void kl_18list_of_interfaces_8Labelled__RQ18list_of_interfaces8Labelled_3u64__ctor( struct kl_18list_of_interfaces_Labelled* kl_this_1, uint64_t kl_n_2 )
 {
     struct kl_2kl6string_string kl_t3;
     struct kl_2kl6string_string* kl_t4;
@@ -4265,7 +4265,7 @@ void kl__8Labelled__R8Labelled_3u64__ctor( struct kl__Labelled* kl_this_1, uint6
 }
 
 #line 34 "list_of_interfaces/main.kl"
-double kl__4area__S8Labelled( struct kl__Labelled* kl_this_1 )
+double kl_18list_of_interfaces_4area__SQ18list_of_interfaces8Labelled( struct kl_18list_of_interfaces_Labelled* kl_this_1 )
 {
     double kl_t0;
     ( void ) kl_this_1;
@@ -4277,7 +4277,7 @@ double kl__4area__S8Labelled( struct kl__Labelled* kl_this_1 )
 }
 
 #line 35 "list_of_interfaces/main.kl"
-uint64_t kl__10label_size__S8Labelled( struct kl__Labelled* kl_this_1 )
+uint64_t kl_18list_of_interfaces_10label_size__SQ18list_of_interfaces8Labelled( struct kl_18list_of_interfaces_Labelled* kl_this_1 )
 {
     uint64_t kl_t0;
     struct kl_2kl6string_string* kl_t2;
@@ -4294,24 +4294,24 @@ uint64_t kl__10label_size__S8Labelled( struct kl__Labelled* kl_this_1 )
 }
 
 #line 38 "list_of_interfaces/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_18list_of_interfaces_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__Square kl_a_1;
-    struct kl__Square kl_t2;
-    struct kl__Labelled kl_b_3;
-    struct kl__Labelled* kl_t4;
+    struct kl_18list_of_interfaces_Square kl_a_1;
+    struct kl_18list_of_interfaces_Square kl_t2;
+    struct kl_18list_of_interfaces_Labelled kl_b_3;
+    struct kl_18list_of_interfaces_Labelled* kl_t4;
     struct kl_2kl4list_list__IP5ShapeE kl_shapes_6;
     struct kl_2kl4list_list__IP5ShapeE* kl_t7;
     struct kl_2kl4list_list__IP5ShapeE* kl_t9;
-    struct kl__Square* kl_t10;
-    struct kl__Shape__ref kl_t11;
+    struct kl_18list_of_interfaces_Square* kl_t10;
+    struct kl_18list_of_interfaces_Shape__ref kl_t11;
     struct kl_2kl4list_list__IP5ShapeE* kl_t13;
-    struct kl__Labelled* kl_t14;
-    struct kl__Shape__ref kl_t15;
+    struct kl_18list_of_interfaces_Labelled* kl_t14;
+    struct kl_18list_of_interfaces_Shape__ref kl_t15;
     struct kl_2kl4list_list__IP5ShapeE* kl_t17;
-    struct kl__Square* kl_t18;
-    struct kl__Shape__ref kl_t19;
+    struct kl_18list_of_interfaces_Square* kl_t18;
+    struct kl_18list_of_interfaces_Shape__ref kl_t19;
     double kl_total_21;
     uint64_t kl_sizes_22;
     uint64_t kl_i_23;
@@ -4319,11 +4319,11 @@ int32_t kl__4main__( void )
     uint64_t kl_t25;
     bool kl_t26;
     struct kl_2kl4list_list__IP5ShapeE* kl_t27;
-    struct kl__Shape__ref* kl_t28;
+    struct kl_18list_of_interfaces_Shape__ref* kl_t28;
     double kl_t29;
     double kl_t30;
     struct kl_2kl4list_list__IP5ShapeE* kl_t31;
-    struct kl__Shape__ref* kl_t32;
+    struct kl_18list_of_interfaces_Shape__ref* kl_t32;
     uint64_t kl_t33;
     bool kl_t34;
     uint64_t kl_t35;
@@ -4340,7 +4340,7 @@ int32_t kl__4main__( void )
     kl_a_1 = kl_t2;
     kl_t4 = &kl_b_3;
 #line 41 "list_of_interfaces/main.kl"
-    kl__8Labelled__R8Labelled_3u64__ctor( kl_t4, 5 );
+    kl_18list_of_interfaces_8Labelled__RQ18list_of_interfaces8Labelled_3u64__ctor( kl_t4, 5 );
 #line 43 "list_of_interfaces/main.kl"
     kl_t7 = &kl_shapes_6;
 #line 43 "list_of_interfaces/main.kl"
@@ -4349,21 +4349,21 @@ int32_t kl__4main__( void )
 #line 44 "list_of_interfaces/main.kl"
     kl_t10 = &kl_a_1;
 #line 44 "list_of_interfaces/main.kl"
-    kl_t11 = ( struct kl__Shape__ref ) { ( void* ) kl_t10, &kl__Square__as_kl__Shape };
+    kl_t11 = ( struct kl_18list_of_interfaces_Shape__ref ) { ( void* ) kl_t10, &kl_18list_of_interfaces_Square__as_kl_18list_of_interfaces_Shape };
 #line 44 "list_of_interfaces/main.kl"
     kl_2kl4list_4push__IP5ShapeE__SQ2kl4listIP5ShapeE_MP5Shape( kl_t9, kl_t11 );
     kl_t13 = &kl_shapes_6;
 #line 45 "list_of_interfaces/main.kl"
     kl_t14 = &kl_b_3;
 #line 45 "list_of_interfaces/main.kl"
-    kl_t15 = ( struct kl__Shape__ref ) { ( void* ) kl_t14, &kl__Labelled__as_kl__Shape };
+    kl_t15 = ( struct kl_18list_of_interfaces_Shape__ref ) { ( void* ) kl_t14, &kl_18list_of_interfaces_Labelled__as_kl_18list_of_interfaces_Shape };
 #line 45 "list_of_interfaces/main.kl"
     kl_2kl4list_4push__IP5ShapeE__SQ2kl4listIP5ShapeE_MP5Shape( kl_t13, kl_t15 );
     kl_t17 = &kl_shapes_6;
 #line 46 "list_of_interfaces/main.kl"
     kl_t18 = &kl_a_1;
 #line 46 "list_of_interfaces/main.kl"
-    kl_t19 = ( struct kl__Shape__ref ) { ( void* ) kl_t18, &kl__Square__as_kl__Shape };
+    kl_t19 = ( struct kl_18list_of_interfaces_Shape__ref ) { ( void* ) kl_t18, &kl_18list_of_interfaces_Square__as_kl_18list_of_interfaces_Shape };
 #line 46 "list_of_interfaces/main.kl"
     kl_2kl4list_4push__IP5ShapeE__SQ2kl4listIP5ShapeE_MP5Shape( kl_t17, kl_t19 );
 #line 48 "list_of_interfaces/main.kl"
@@ -4481,10 +4481,10 @@ void kl_2kl4list_4list__IP5ShapeE__RQ2kl4listIP5ShapeE__ctor( struct kl_2kl4list
 }
 
 #line 213 "../../src/list.kl"
-void kl_2kl4list_4push__IP5ShapeE__SQ2kl4listIP5ShapeE_MP5Shape( struct kl_2kl4list_list__IP5ShapeE* kl_this_1, struct kl__Shape__ref kl_value_2 )
+void kl_2kl4list_4push__IP5ShapeE__SQ2kl4listIP5ShapeE_MP5Shape( struct kl_2kl4list_list__IP5ShapeE* kl_this_1, struct kl_18list_of_interfaces_Shape__ref kl_value_2 )
 {
     struct kl_2kl4list_list__IP5ShapeE* kl_t3;
-    struct kl__Shape__ref* kl_t5;
+    struct kl_18list_of_interfaces_Shape__ref* kl_t5;
     bool kl_t6;
 #line 215 "../../src/list.kl"
     kl_t3 = &( *kl_this_1 );
@@ -4519,14 +4519,14 @@ uint64_t kl_2kl4list_4size__IP5ShapeE__SQ2kl4listIP5ShapeE( struct kl_2kl4list_l
 }
 
 #line 154 "../../src/list.kl"
-struct kl__Shape__ref* kl_2kl4list_14operator_index__IP5ShapeE__SQ2kl4listIP5ShapeE_3u64( struct kl_2kl4list_list__IP5ShapeE* kl_this_1, uint64_t kl_index_2 )
+struct kl_18list_of_interfaces_Shape__ref* kl_2kl4list_14operator_index__IP5ShapeE__SQ2kl4listIP5ShapeE_3u64( struct kl_2kl4list_list__IP5ShapeE* kl_this_1, uint64_t kl_index_2 )
 {
-    struct kl__Shape__ref* kl_t0;
+    struct kl_18list_of_interfaces_Shape__ref* kl_t0;
     bool kl_t3;
     struct kl_7prelude_str kl_t4;
     struct kl_7prelude_str* kl_t5;
     uint8_t* kl_t6;
-    struct kl__Shape__ref* kl_t8;
+    struct kl_18list_of_interfaces_Shape__ref* kl_t8;
 #line 156 "../../src/list.kl"
     kl_t3 = kl_index_2 >= ( *kl_this_1 ).kl_count_;
 #line 156 "../../src/list.kl"
@@ -4748,7 +4748,7 @@ void kl_2kl4list_4list__IP5ShapeE__dtor( struct kl_2kl4list_list__IP5ShapeE* kl_
 void kl_2kl4list_8truncate__IP5ShapeE__SQ2kl4listIP5ShapeE_3u64( struct kl_2kl4list_list__IP5ShapeE* kl_this_1, uint64_t kl_n_2 )
 {
     bool kl_t3;
-    struct kl__Shape__ref* kl_t4;
+    struct kl_18list_of_interfaces_Shape__ref* kl_t4;
     bool kl_t5;
     uint64_t kl_t6;
     ( void ) kl_t4;
@@ -4788,11 +4788,11 @@ void kl_2kl4list_4swap__IP5ShapeE__SQ2kl4listIP5ShapeE_3u64_3u64( struct kl_2kl4
     struct kl_7prelude_str* kl_t8;
     uint8_t* kl_t9;
     bool kl_t11;
-    struct kl__Shape__ref kl_temp_12;
-    struct kl__Shape__ref* kl_t13;
-    struct kl__Shape__ref* kl_t14;
-    struct kl__Shape__ref* kl_t15;
-    struct kl__Shape__ref* kl_t16;
+    struct kl_18list_of_interfaces_Shape__ref kl_temp_12;
+    struct kl_18list_of_interfaces_Shape__ref* kl_t13;
+    struct kl_18list_of_interfaces_Shape__ref* kl_t14;
+    struct kl_18list_of_interfaces_Shape__ref* kl_t15;
+    struct kl_18list_of_interfaces_Shape__ref* kl_t16;
 #line 409 "../../src/list.kl"
     kl_t5 = kl_a_2 >= ( *kl_this_1 ).kl_count_;
 #line 409 "../../src/list.kl"
@@ -4893,16 +4893,16 @@ void kl_2kl4list_20reallocate_if_needed__IP5ShapeE__SQ2kl4listIP5ShapeE( struct 
 #line 444 "../../src/list.kl"
 void kl_2kl4list_10reallocate__IP5ShapeE__SQ2kl4listIP5ShapeE_3u64( struct kl_2kl4list_list__IP5ShapeE* kl_this_1, uint64_t kl_n_2 )
 {
-    struct kl__Shape__ref* kl_new_data_3;
-    struct kl__Shape__ref* kl_t4;
+    struct kl_18list_of_interfaces_Shape__ref* kl_new_data_3;
+    struct kl_18list_of_interfaces_Shape__ref* kl_t4;
     bool kl_t5;
     uint64_t kl_i_6;
     bool kl_t7;
-    struct kl__Shape__ref* kl_t8;
-    struct kl__Shape__ref* kl_t9;
+    struct kl_18list_of_interfaces_Shape__ref* kl_t8;
+    struct kl_18list_of_interfaces_Shape__ref* kl_t9;
     bool kl_t10;
 #line 449 "../../src/list.kl"
-    kl_t4 = ( struct kl__Shape__ref* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 16, "../../src/list.kl", 449, "out of memory: alloc<T>( n )" );
+    kl_t4 = ( struct kl_18list_of_interfaces_Shape__ref* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 16, "../../src/list.kl", 449, "out of memory: alloc<T>( n )" );
 #line 449 "../../src/list.kl"
     kl_new_data_3 = kl_t4;
 #line 452 "../../src/list.kl"
@@ -4952,11 +4952,11 @@ void kl_2kl4list_10reallocate__IP5ShapeE__SQ2kl4listIP5ShapeE_3u64( struct kl_2k
 #line 471 "../../src/list.kl"
 }
 
-void kl__Labelled__drop( void* kl_t1 )
+void kl_18list_of_interfaces_Labelled__drop( void* kl_t1 )
 {
-    struct kl__Labelled* kl_t2;
+    struct kl_18list_of_interfaces_Labelled* kl_t2;
 #line 21 "list_of_interfaces/main.kl"
-    kl_t2 = ( struct kl__Labelled* ) kl_t1;
+    kl_t2 = ( struct kl_18list_of_interfaces_Labelled* ) kl_t1;
 #line 21 "list_of_interfaces/main.kl"
     kl_2kl6string_6string__dtor( &( *kl_t2 ).kl_label );
 #line 21 "list_of_interfaces/main.kl"
@@ -4988,12 +4988,12 @@ void kl_2kl4list_list__IP5ShapeE__drop( void* kl_t1 )
 #line 11 "../../src/list.kl"
 }
 
-void kl__Square__drop( void* kl_t1 )
+void kl_18list_of_interfaces_Square__drop( void* kl_t1 )
 {
-    struct kl__Square* kl_t2;
+    struct kl_18list_of_interfaces_Square* kl_t2;
     ( void ) kl_t2;
 #line 13 "list_of_interfaces/main.kl"
-    kl_t2 = ( struct kl__Square* ) kl_t1;
+    kl_t2 = ( struct kl_18list_of_interfaces_Square* ) kl_t1;
 #line 13 "list_of_interfaces/main.kl"
     return;
 #line 13 "list_of_interfaces/main.kl"
@@ -5003,7 +5003,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 38 "list_of_interfaces/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_18list_of_interfaces_4main__(  );
 #line 38 "list_of_interfaces/main.kl"
     return kl_t0;
 #line 38 "list_of_interfaces/main.kl"

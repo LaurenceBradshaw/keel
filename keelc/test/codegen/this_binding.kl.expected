@@ -299,25 +299,25 @@ void kl_1t7console_6eprint__4bool_7textual( bool kl_value_1, struct kl_7prelude_
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__C;
+struct kl_7codegen_C;
 struct kl_7prelude_str;
 
 struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
 
-struct kl__A__vtable;
-struct kl__A__ref { void* self; const struct kl__A__vtable* vtable; };
-struct kl__adder__vtable;
-struct kl__adder__ref { void* self; const struct kl__adder__vtable* vtable; };
+struct kl_7codegen_A__vtable;
+struct kl_7codegen_A__ref { void* self; const struct kl_7codegen_A__vtable* vtable; };
+struct kl_7codegen_adder__vtable;
+struct kl_7codegen_adder__ref { void* self; const struct kl_7codegen_adder__vtable* vtable; };
 struct kl_7prelude_textual__vtable;
 struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
 
 typedef int32_t ( *kl__fn__FMP4voidE3i32 )( void* );
 
-struct kl__C
+struct kl_7codegen_C
 {
     int32_t kl_k;
 };
-_Static_assert( sizeof( struct kl__C ) == 4 && _Alignof( struct kl__C ) == 4 && offsetof( struct kl__C, kl_k ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_C ) == 4 && _Alignof( struct kl_7codegen_C ) == 4 && offsetof( struct kl_7codegen_C, kl_k ) == 0, "layout" );
 
 struct kl_7prelude_str
 {
@@ -326,13 +326,13 @@ struct kl_7prelude_str
 };
 _Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
-struct kl__A__vtable
+struct kl_7codegen_A__vtable
 {
     void ( *drop )( void* );
     int32_t ( *kl__3foo__ )( void* );
 };
 
-struct kl__adder__vtable
+struct kl_7codegen_adder__vtable
 {
     void ( *drop )( void* );
     int32_t ( *kl__6to_int__ )( void* );
@@ -347,60 +347,60 @@ struct kl_7prelude_textual__vtable
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__1C__R1C__ctor( struct kl__C* );
-int32_t kl__3foo__S1C( struct kl__C* );
-int32_t kl__3own__S1C( struct kl__C* );
-int32_t kl__4as_a__S1C( struct kl__C* );
-void kl__4bump__S1C( struct kl__C* );
-int32_t kl__6to_int__S3i32C5adder( int32_t* );
-int32_t kl__4plus__S3i32C5adder_3i32( int32_t*, int32_t );
-int32_t kl__4main__( void );
-int32_t kl__3sum__I3i32E__3i32( int32_t* );
-void kl__C__drop( void* );
-int32_t kl__C__as_kl__A__kl__3foo__( void* );
+void kl_7codegen_1C__RQ7codegen1C__ctor( struct kl_7codegen_C* );
+int32_t kl_7codegen_3foo__SQ7codegen1C( struct kl_7codegen_C* );
+int32_t kl_7codegen_3own__SQ7codegen1C( struct kl_7codegen_C* );
+int32_t kl_7codegen_4as_a__SQ7codegen1C( struct kl_7codegen_C* );
+void kl_7codegen_4bump__SQ7codegen1C( struct kl_7codegen_C* );
+int32_t kl_7codegen_6to_int__S3i32C5adder( int32_t* );
+int32_t kl_7codegen_4plus__S3i32C5adder_3i32( int32_t*, int32_t );
+int32_t kl_7codegen_4main__( void );
+int32_t kl_7codegen_3sum__I3i32E__3i32( int32_t* );
+void kl_7codegen_C__drop( void* );
+int32_t kl_7codegen_C__as_kl_7codegen_A__kl__3foo__( void* );
 void kl__i32__drop( void* );
-int32_t kl__i32__as_kl__adder__kl__6to_int__( void* );
-int32_t kl__i32__as_kl__adder__kl__4plus__3i32( void*, int32_t );
+int32_t kl__i32__as_kl_7codegen_adder__kl__6to_int__( void* );
+int32_t kl__i32__as_kl_7codegen_adder__kl__4plus__3i32( void*, int32_t );
 void kl_1t7console_5print__3i64_7textual( int64_t, struct kl_7prelude_textual__ref );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 void kl_7prelude_str__drop( void* );
 struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__( void* );
 
-static const struct kl__A__vtable kl__C__as_kl__A = { kl__C__drop, kl__C__as_kl__A__kl__3foo__ };
+static const struct kl_7codegen_A__vtable kl_7codegen_C__as_kl_7codegen_A = { kl_7codegen_C__drop, kl_7codegen_C__as_kl_7codegen_A__kl__3foo__ };
 
-static const struct kl__adder__vtable kl__i32__as_kl__adder = { kl__i32__drop, kl__i32__as_kl__adder__kl__6to_int__, kl__i32__as_kl__adder__kl__4plus__3i32 };
+static const struct kl_7codegen_adder__vtable kl__i32__as_kl_7codegen_adder = { kl__i32__drop, kl__i32__as_kl_7codegen_adder__kl__6to_int__, kl__i32__as_kl_7codegen_adder__kl__4plus__3i32 };
 
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
-int32_t kl__C__as_kl__A__kl__3foo__( void* kl_t1 )
+int32_t kl_7codegen_C__as_kl_7codegen_A__kl__3foo__( void* kl_t1 )
 {
     int32_t kl_t0;
-    struct kl__C* kl_t2;
-    kl_t2 = ( struct kl__C* ) kl_t1;
-    kl_t0 = kl__3foo__S1C( kl_t2 );
+    struct kl_7codegen_C* kl_t2;
+    kl_t2 = ( struct kl_7codegen_C* ) kl_t1;
+    kl_t0 = kl_7codegen_3foo__SQ7codegen1C( kl_t2 );
     return kl_t0;
 }
 
-int32_t kl__i32__as_kl__adder__kl__6to_int__( void* kl_t1 )
+int32_t kl__i32__as_kl_7codegen_adder__kl__6to_int__( void* kl_t1 )
 {
     int32_t kl_t0;
     int32_t* kl_t2;
     kl_t2 = ( int32_t* ) kl_t1;
-    kl_t0 = kl__6to_int__S3i32C5adder( kl_t2 );
+    kl_t0 = kl_7codegen_6to_int__S3i32C5adder( kl_t2 );
     return kl_t0;
 }
 
-int32_t kl__i32__as_kl__adder__kl__4plus__3i32( void* kl_t1, int32_t kl_t2 )
+int32_t kl__i32__as_kl_7codegen_adder__kl__4plus__3i32( void* kl_t1, int32_t kl_t2 )
 {
     int32_t kl_t0;
     int32_t* kl_t3;
     kl_t3 = ( int32_t* ) kl_t1;
-    kl_t0 = kl__4plus__S3i32C5adder_3i32( kl_t3, kl_t2 );
+    kl_t0 = kl_7codegen_4plus__S3i32C5adder_3i32( kl_t3, kl_t2 );
     return kl_t0;
 }
 
 #line 10 "codegen/this_binding.kl"
-void kl__1C__R1C__ctor( struct kl__C* kl_this_1 )
+void kl_7codegen_1C__RQ7codegen1C__ctor( struct kl_7codegen_C* kl_this_1 )
 {
 #line 10 "codegen/this_binding.kl"
     ( *kl_this_1 ).kl_k = 1;
@@ -410,7 +410,7 @@ void kl__1C__R1C__ctor( struct kl__C* kl_this_1 )
 }
 
 #line 11 "codegen/this_binding.kl"
-int32_t kl__3foo__S1C( struct kl__C* kl_this_1 )
+int32_t kl_7codegen_3foo__SQ7codegen1C( struct kl_7codegen_C* kl_this_1 )
 {
     int32_t kl_t0;
 #line 11 "codegen/this_binding.kl"
@@ -421,10 +421,10 @@ int32_t kl__3foo__S1C( struct kl__C* kl_this_1 )
 }
 
 #line 12 "codegen/this_binding.kl"
-int32_t kl__3own__S1C( struct kl__C* kl_this_1 )
+int32_t kl_7codegen_3own__SQ7codegen1C( struct kl_7codegen_C* kl_this_1 )
 {
     int32_t kl_t0;
-    struct kl__C* kl_me_2;
+    struct kl_7codegen_C* kl_me_2;
     bool kl_t3;
     int32_t kl_t4;
 #line 12 "codegen/this_binding.kl"
@@ -447,12 +447,12 @@ int32_t kl__3own__S1C( struct kl__C* kl_this_1 )
 }
 
 #line 13 "codegen/this_binding.kl"
-int32_t kl__4as_a__S1C( struct kl__C* kl_this_1 )
+int32_t kl_7codegen_4as_a__SQ7codegen1C( struct kl_7codegen_C* kl_this_1 )
 {
     int32_t kl_t0;
-    struct kl__A__ref kl_me_2;
-    struct kl__C* kl_t3;
-    struct kl__A__ref kl_t4;
+    struct kl_7codegen_A__ref kl_me_2;
+    struct kl_7codegen_C* kl_t3;
+    struct kl_7codegen_A__ref kl_t4;
     int32_t kl_t5;
     bool kl_t6;
     int32_t kl_t7;
@@ -461,7 +461,7 @@ int32_t kl__4as_a__S1C( struct kl__C* kl_this_1 )
 #line 13 "codegen/this_binding.kl"
     kl_t3 = &( *kl_this_1 );
 #line 13 "codegen/this_binding.kl"
-    kl_me_2 = ( struct kl__A__ref ) { ( void* ) kl_t3, &kl__C__as_kl__A };
+    kl_me_2 = ( struct kl_7codegen_A__ref ) { ( void* ) kl_t3, &kl_7codegen_C__as_kl_7codegen_A };
 #line 13 "codegen/this_binding.kl"
     kl_t4 = kl_me_2;
 #line 13 "codegen/this_binding.kl"
@@ -488,9 +488,9 @@ int32_t kl__4as_a__S1C( struct kl__C* kl_this_1 )
 }
 
 #line 14 "codegen/this_binding.kl"
-void kl__4bump__S1C( struct kl__C* kl_this_1 )
+void kl_7codegen_4bump__SQ7codegen1C( struct kl_7codegen_C* kl_this_1 )
 {
-    struct kl__C* kl_me_2;
+    struct kl_7codegen_C* kl_me_2;
     bool kl_t3;
     int32_t kl_t4;
 #line 14 "codegen/this_binding.kl"
@@ -513,7 +513,7 @@ void kl__4bump__S1C( struct kl__C* kl_this_1 )
 }
 
 #line 21 "codegen/this_binding.kl"
-int32_t kl__6to_int__S3i32C5adder( int32_t* kl_this_1 )
+int32_t kl_7codegen_6to_int__S3i32C5adder( int32_t* kl_this_1 )
 {
     int32_t kl_t0;
 #line 21 "codegen/this_binding.kl"
@@ -524,12 +524,12 @@ int32_t kl__6to_int__S3i32C5adder( int32_t* kl_this_1 )
 }
 
 #line 22 "codegen/this_binding.kl"
-int32_t kl__4plus__S3i32C5adder_3i32( int32_t* kl_this_1, int32_t kl_n_2 )
+int32_t kl_7codegen_4plus__S3i32C5adder_3i32( int32_t* kl_this_1, int32_t kl_n_2 )
 {
     int32_t kl_t0;
-    struct kl__adder__ref kl_me_3;
+    struct kl_7codegen_adder__ref kl_me_3;
     int32_t* kl_t4;
-    struct kl__adder__ref kl_t5;
+    struct kl_7codegen_adder__ref kl_t5;
     int32_t kl_t6;
     bool kl_t7;
     int32_t kl_t8;
@@ -538,7 +538,7 @@ int32_t kl__4plus__S3i32C5adder_3i32( int32_t* kl_this_1, int32_t kl_n_2 )
 #line 22 "codegen/this_binding.kl"
     kl_t4 = &( *kl_this_1 );
 #line 22 "codegen/this_binding.kl"
-    kl_me_3 = ( struct kl__adder__ref ) { ( void* ) kl_t4, &kl__i32__as_kl__adder };
+    kl_me_3 = ( struct kl_7codegen_adder__ref ) { ( void* ) kl_t4, &kl__i32__as_kl_7codegen_adder };
 #line 22 "codegen/this_binding.kl"
     kl_t5 = kl_me_3;
 #line 22 "codegen/this_binding.kl"
@@ -565,12 +565,12 @@ int32_t kl__4plus__S3i32C5adder_3i32( int32_t* kl_this_1, int32_t kl_n_2 )
 }
 
 #line 27 "codegen/this_binding.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__C kl_c_1;
-    struct kl__C* kl_t2;
-    struct kl__C* kl_t4;
+    struct kl_7codegen_C kl_c_1;
+    struct kl_7codegen_C* kl_t2;
+    struct kl_7codegen_C* kl_t4;
     int32_t kl_t5;
     int64_t kl_t6;
     struct kl_7prelude_str kl_t7;
@@ -578,7 +578,7 @@ int32_t kl__4main__( void )
     uint8_t* kl_t9;
     struct kl_7prelude_str* kl_t11;
     struct kl_7prelude_textual__ref kl_t12;
-    struct kl__C* kl_t14;
+    struct kl_7codegen_C* kl_t14;
     int32_t kl_t15;
     int64_t kl_t16;
     struct kl_7prelude_str kl_t17;
@@ -586,7 +586,7 @@ int32_t kl__4main__( void )
     uint8_t* kl_t19;
     struct kl_7prelude_str* kl_t21;
     struct kl_7prelude_textual__ref kl_t22;
-    struct kl__C* kl_t24;
+    struct kl_7codegen_C* kl_t24;
     int64_t kl_t26;
     struct kl_7prelude_str kl_t27;
     struct kl_7prelude_str* kl_t28;
@@ -605,10 +605,10 @@ int32_t kl__4main__( void )
 #line 29 "codegen/this_binding.kl"
     kl_t2 = &kl_c_1;
 #line 29 "codegen/this_binding.kl"
-    kl__1C__R1C__ctor( kl_t2 );
+    kl_7codegen_1C__RQ7codegen1C__ctor( kl_t2 );
     kl_t4 = &kl_c_1;
 #line 30 "codegen/this_binding.kl"
-    kl_t5 = kl__3own__S1C( kl_t4 );
+    kl_t5 = kl_7codegen_3own__SQ7codegen1C( kl_t4 );
 #line 30 "codegen/this_binding.kl"
     kl_t6 = ( int64_t ) kl_t5;
     kl_t8 = &kl_t7;
@@ -624,7 +624,7 @@ int32_t kl__4main__( void )
     kl_1t7console_5print__3i64_7textual( kl_t6, kl_t12 );
     kl_t14 = &kl_c_1;
 #line 31 "codegen/this_binding.kl"
-    kl_t15 = kl__4as_a__S1C( kl_t14 );
+    kl_t15 = kl_7codegen_4as_a__SQ7codegen1C( kl_t14 );
 #line 31 "codegen/this_binding.kl"
     kl_t16 = ( int64_t ) kl_t15;
 #line 31 "../test_lib/console.kl"
@@ -641,7 +641,7 @@ int32_t kl__4main__( void )
     kl_1t7console_5print__3i64_7textual( kl_t16, kl_t22 );
     kl_t24 = &kl_c_1;
 #line 32 "codegen/this_binding.kl"
-    kl__4bump__S1C( kl_t24 );
+    kl_7codegen_4bump__SQ7codegen1C( kl_t24 );
     kl_t26 = ( int64_t ) kl_c_1.kl_k;
 #line 31 "../test_lib/console.kl"
     kl_t28 = &kl_t27;
@@ -659,7 +659,7 @@ int32_t kl__4main__( void )
 #line 34 "codegen/this_binding.kl"
     kl_t35 = &kl_t34;
 #line 34 "codegen/this_binding.kl"
-    kl_t36 = kl__3sum__I3i32E__3i32( kl_t35 );
+    kl_t36 = kl_7codegen_3sum__I3i32E__3i32( kl_t35 );
 #line 34 "codegen/this_binding.kl"
     kl_t37 = ( int64_t ) kl_t36;
 #line 31 "../test_lib/console.kl"
@@ -680,7 +680,7 @@ int32_t kl__4main__( void )
 }
 
 #line 25 "codegen/this_binding.kl"
-int32_t kl__3sum__I3i32E__3i32( int32_t* kl_t_1 )
+int32_t kl_7codegen_3sum__I3i32E__3i32( int32_t* kl_t_1 )
 {
     int32_t kl_t0;
     int32_t* kl_t2;
@@ -688,7 +688,7 @@ int32_t kl__3sum__I3i32E__3i32( int32_t* kl_t_1 )
 #line 25 "codegen/this_binding.kl"
     kl_t2 = &( *kl_t_1 );
 #line 25 "codegen/this_binding.kl"
-    kl_t3 = kl__4plus__S3i32C5adder_3i32( kl_t2, 100 );
+    kl_t3 = kl_7codegen_4plus__S3i32C5adder_3i32( kl_t2, 100 );
 #line 25 "codegen/this_binding.kl"
     kl_t0 = kl_t3;
 #line 25 "codegen/this_binding.kl"
@@ -696,12 +696,12 @@ int32_t kl__3sum__I3i32E__3i32( int32_t* kl_t_1 )
 #line 25 "codegen/this_binding.kl"
 }
 
-void kl__C__drop( void* kl_t1 )
+void kl_7codegen_C__drop( void* kl_t1 )
 {
-    struct kl__C* kl_t2;
+    struct kl_7codegen_C* kl_t2;
     ( void ) kl_t2;
 #line 7 "codegen/this_binding.kl"
-    kl_t2 = ( struct kl__C* ) kl_t1;
+    kl_t2 = ( struct kl_7codegen_C* ) kl_t1;
 #line 7 "codegen/this_binding.kl"
     return;
 #line 7 "codegen/this_binding.kl"
@@ -722,7 +722,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 27 "codegen/this_binding.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 27 "codegen/this_binding.kl"
     return kl_t0;
 #line 27 "codegen/this_binding.kl"

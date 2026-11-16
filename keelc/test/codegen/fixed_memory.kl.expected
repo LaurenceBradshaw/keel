@@ -9273,7 +9273,7 @@ bool kl_2kl7console_5input__RQ2kl6string( struct kl_2kl6string_string* kl_line_1
 #include <stddef.h>
 
 struct kl__A3_3i32;
-struct kl__Bag;
+struct kl_7codegen_Bag;
 struct kl_2kl6string_string;
 struct kl_2kl2os_path;
 struct kl_2kl2os_process;
@@ -9297,11 +9297,11 @@ struct kl__A3_3i32
 };
 _Static_assert( sizeof( struct kl__A3_3i32 ) == 12 && _Alignof( struct kl__A3_3i32 ) == 4, "layout" );
 
-struct kl__Bag
+struct kl_7codegen_Bag
 {
     struct kl__A3_3i32 kl_v_;
 };
-_Static_assert( sizeof( struct kl__Bag ) == 12 && _Alignof( struct kl__Bag ) == 4 && offsetof( struct kl__Bag, kl_v_ ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Bag ) == 12 && _Alignof( struct kl_7codegen_Bag ) == 4 && offsetof( struct kl_7codegen_Bag, kl_v_ ) == 0, "layout" );
 
 struct kl_2kl6string_string
 {
@@ -9425,13 +9425,13 @@ struct kl_7prelude_textual__vtable
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-void kl__3Bag__R3Bag__ctor( struct kl__Bag* );
-uint64_t kl__4size__S3Bag( struct kl__Bag* );
-int32_t* kl__14operator_index__S3Bag_3u64( struct kl__Bag*, uint64_t );
-void kl__4swap__S3Bag_3u64_3u64( struct kl__Bag*, uint64_t, uint64_t );
-int32_t kl__4main__( void );
-void kl__4flip__IA3_3i32_3i32E__RA3_3i32( struct kl__A3_3i32* );
-void kl__4flip__I3Bag_3i32E__R3Bag( struct kl__Bag* );
+void kl_7codegen_3Bag__RQ7codegen3Bag__ctor( struct kl_7codegen_Bag* );
+uint64_t kl_7codegen_4size__SQ7codegen3Bag( struct kl_7codegen_Bag* );
+int32_t* kl_7codegen_14operator_index__SQ7codegen3Bag_3u64( struct kl_7codegen_Bag*, uint64_t );
+void kl_7codegen_4swap__SQ7codegen3Bag_3u64_3u64( struct kl_7codegen_Bag*, uint64_t, uint64_t );
+int32_t kl_7codegen_4main__( void );
+void kl_7codegen_4flip__IA3_3i32_3i32E__RA3_3i32( struct kl__A3_3i32* );
+void kl_7codegen_4flip__IQ7codegen3Bag_3i32E__RQ7codegen3Bag( struct kl_7codegen_Bag* );
 void kl_2kl4list_8truncate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
 uint64_t kl_2kl4list_4size__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
 struct kl_2kl6string_string* kl_2kl4list_14operator_index__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
@@ -9456,7 +9456,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 7 "codegen/fixed_memory.kl"
-void kl__3Bag__R3Bag__ctor( struct kl__Bag* kl_this_1 )
+void kl_7codegen_3Bag__RQ7codegen3Bag__ctor( struct kl_7codegen_Bag* kl_this_1 )
 {
     struct kl__A3_3i32 kl_t2;
     uint64_t kl_t3;
@@ -9485,7 +9485,7 @@ void kl__3Bag__R3Bag__ctor( struct kl__Bag* kl_this_1 )
 }
 
 #line 8 "codegen/fixed_memory.kl"
-uint64_t kl__4size__S3Bag( struct kl__Bag* kl_this_1 )
+uint64_t kl_7codegen_4size__SQ7codegen3Bag( struct kl_7codegen_Bag* kl_this_1 )
 {
     uint64_t kl_t0;
     ( void ) kl_this_1;
@@ -9497,7 +9497,7 @@ uint64_t kl__4size__S3Bag( struct kl__Bag* kl_this_1 )
 }
 
 #line 9 "codegen/fixed_memory.kl"
-int32_t* kl__14operator_index__S3Bag_3u64( struct kl__Bag* kl_this_1, uint64_t kl_index_2 )
+int32_t* kl_7codegen_14operator_index__SQ7codegen3Bag_3u64( struct kl_7codegen_Bag* kl_this_1, uint64_t kl_index_2 )
 {
     int32_t* kl_t0;
     uint64_t kl_t3;
@@ -9520,7 +9520,7 @@ int32_t* kl__14operator_index__S3Bag_3u64( struct kl__Bag* kl_this_1, uint64_t k
 }
 
 #line 10 "codegen/fixed_memory.kl"
-void kl__4swap__S3Bag_3u64_3u64( struct kl__Bag* kl_this_1, uint64_t kl_a_2, uint64_t kl_b_3 )
+void kl_7codegen_4swap__SQ7codegen3Bag_3u64_3u64( struct kl_7codegen_Bag* kl_this_1, uint64_t kl_a_2, uint64_t kl_b_3 )
 {
     uint64_t kl_t4;
     uint64_t kl_t5;
@@ -9584,7 +9584,7 @@ void kl__4swap__S3Bag_3u64_3u64( struct kl__Bag* kl_this_1, uint64_t kl_a_2, uin
 }
 
 #line 19 "codegen/fixed_memory.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     struct kl__A3_3i32 kl_a_1;
@@ -9607,10 +9607,10 @@ int32_t kl__4main__( void )
     uint8_t* kl_t21;
     struct kl_7prelude_str* kl_t23;
     struct kl_7prelude_textual__ref kl_t24;
-    struct kl__Bag kl_b_26;
-    struct kl__Bag* kl_t27;
-    struct kl__Bag* kl_t29;
-    struct kl__Bag* kl_t31;
+    struct kl_7codegen_Bag kl_b_26;
+    struct kl_7codegen_Bag* kl_t27;
+    struct kl_7codegen_Bag* kl_t29;
+    struct kl_7codegen_Bag* kl_t31;
     int32_t* kl_t32;
     int64_t kl_t33;
     struct kl_7prelude_str kl_t34;
@@ -9618,7 +9618,7 @@ int32_t kl__4main__( void )
     uint8_t* kl_t36;
     struct kl_7prelude_str* kl_t38;
     struct kl_7prelude_textual__ref kl_t39;
-    struct kl__Bag* kl_t41;
+    struct kl_7codegen_Bag* kl_t41;
     int32_t* kl_t42;
     int64_t kl_t43;
     struct kl_7prelude_str kl_t44;
@@ -9647,7 +9647,7 @@ int32_t kl__4main__( void )
     kl_a_1 = kl_t2;
     kl_t6 = &kl_a_1;
 #line 22 "codegen/fixed_memory.kl"
-    kl__4flip__IA3_3i32_3i32E__RA3_3i32( kl_t6 );
+    kl_7codegen_4flip__IA3_3i32_3i32E__RA3_3i32( kl_t6 );
     kl_t8 = 0;
 #line 23 "codegen/fixed_memory.kl"
     kl_t9 = ( int64_t ) kl_a_1.e[kl_t8];
@@ -9681,13 +9681,13 @@ int32_t kl__4main__( void )
 #line 26 "codegen/fixed_memory.kl"
     kl_t27 = &kl_b_26;
 #line 26 "codegen/fixed_memory.kl"
-    kl__3Bag__R3Bag__ctor( kl_t27 );
+    kl_7codegen_3Bag__RQ7codegen3Bag__ctor( kl_t27 );
     kl_t29 = &kl_b_26;
 #line 27 "codegen/fixed_memory.kl"
-    kl__4flip__I3Bag_3i32E__R3Bag( kl_t29 );
+    kl_7codegen_4flip__IQ7codegen3Bag_3i32E__RQ7codegen3Bag( kl_t29 );
     kl_t31 = &kl_b_26;
 #line 28 "codegen/fixed_memory.kl"
-    kl_t32 = kl__14operator_index__S3Bag_3u64( kl_t31, 0 );
+    kl_t32 = kl_7codegen_14operator_index__SQ7codegen3Bag_3u64( kl_t31, 0 );
 #line 28 "codegen/fixed_memory.kl"
     kl_t33 = ( int64_t ) ( *kl_t32 );
 #line 36 "<kl>/console.kl"
@@ -9704,7 +9704,7 @@ int32_t kl__4main__( void )
     kl_2kl7console_5print__3i64_7textual( kl_t33, kl_t39 );
     kl_t41 = &kl_b_26;
 #line 29 "codegen/fixed_memory.kl"
-    kl_t42 = kl__14operator_index__S3Bag_3u64( kl_t41, 2 );
+    kl_t42 = kl_7codegen_14operator_index__SQ7codegen3Bag_3u64( kl_t41, 2 );
 #line 29 "codegen/fixed_memory.kl"
     kl_t43 = ( int64_t ) ( *kl_t42 );
 #line 36 "<kl>/console.kl"
@@ -9725,7 +9725,7 @@ int32_t kl__4main__( void )
 }
 
 #line 14 "codegen/fixed_memory.kl"
-void kl__4flip__IA3_3i32_3i32E__RA3_3i32( struct kl__A3_3i32* kl_c_1 )
+void kl_7codegen_4flip__IA3_3i32_3i32E__RA3_3i32( struct kl__A3_3i32* kl_c_1 )
 {
     uint64_t kl_t2;
     uint64_t kl_t3;
@@ -9792,10 +9792,10 @@ void kl__4flip__IA3_3i32_3i32E__RA3_3i32( struct kl__A3_3i32* kl_c_1 )
 }
 
 #line 14 "codegen/fixed_memory.kl"
-void kl__4flip__I3Bag_3i32E__R3Bag( struct kl__Bag* kl_c_1 )
+void kl_7codegen_4flip__IQ7codegen3Bag_3i32E__RQ7codegen3Bag( struct kl_7codegen_Bag* kl_c_1 )
 {
-    struct kl__Bag* kl_t2;
-    struct kl__Bag* kl_t3;
+    struct kl_7codegen_Bag* kl_t2;
+    struct kl_7codegen_Bag* kl_t3;
     uint64_t kl_t4;
     bool kl_t5;
     uint64_t kl_t6;
@@ -9804,7 +9804,7 @@ void kl__4flip__I3Bag_3i32E__R3Bag( struct kl__Bag* kl_c_1 )
 #line 16 "codegen/fixed_memory.kl"
     kl_t3 = &( *kl_c_1 );
 #line 16 "codegen/fixed_memory.kl"
-    kl_t4 = kl__4size__S3Bag( kl_t3 );
+    kl_t4 = kl_7codegen_4size__SQ7codegen3Bag( kl_t3 );
 #line 16 "codegen/fixed_memory.kl"
     kl_t5 = __builtin_sub_overflow( kl_t4, 1, &( uint64_t ) { 0 } );
 #line 16 "codegen/fixed_memory.kl"
@@ -9816,7 +9816,7 @@ void kl__4flip__I3Bag_3i32E__R3Bag( struct kl__Bag* kl_c_1 )
 #line 16 "codegen/fixed_memory.kl"
     kl_t6 = kl_t4 - 1;
 #line 16 "codegen/fixed_memory.kl"
-    kl__4swap__S3Bag_3u64_3u64( kl_t2, 0, kl_t6 );
+    kl_7codegen_4swap__SQ7codegen3Bag_3u64_3u64( kl_t2, 0, kl_t6 );
     return;
 #line 17 "codegen/fixed_memory.kl"
 }
@@ -10200,7 +10200,7 @@ int main( void )
 #line 19 "codegen/fixed_memory.kl"
     kl_2kl2os_0build(  );
 #line 19 "codegen/fixed_memory.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 19 "codegen/fixed_memory.kl"
     kl_2kl2os_0drop(  );
 #line 19 "codegen/fixed_memory.kl"

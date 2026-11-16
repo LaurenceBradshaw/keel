@@ -301,7 +301,7 @@ void kl_1t7console_6eprint__4bool_7textual( bool kl_value_1, struct kl_7prelude_
 
 struct kl_7prelude_str;
 struct kl__A6_3i32;
-struct kl__Grid__I3i32_V2__V3_E;
+struct kl_7codegen_Grid__I3i32_V2__V3_E;
 struct kl__A3_3i32;
 struct kl__A4_3i32;
 struct kl__A5_3i32;
@@ -324,11 +324,11 @@ struct kl__A6_3i32
 };
 _Static_assert( sizeof( struct kl__A6_3i32 ) == 24 && _Alignof( struct kl__A6_3i32 ) == 4, "layout" );
 
-struct kl__Grid__I3i32_V2__V3_E
+struct kl_7codegen_Grid__I3i32_V2__V3_E
 {
     struct kl__A6_3i32 kl_cells;
 };
-_Static_assert( sizeof( struct kl__Grid__I3i32_V2__V3_E ) == 24 && _Alignof( struct kl__Grid__I3i32_V2__V3_E ) == 4 && offsetof( struct kl__Grid__I3i32_V2__V3_E, kl_cells ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Grid__I3i32_V2__V3_E ) == 24 && _Alignof( struct kl_7codegen_Grid__I3i32_V2__V3_E ) == 4 && offsetof( struct kl_7codegen_Grid__I3i32_V2__V3_E, kl_cells ) == 0, "layout" );
 
 struct kl__A3_3i32
 {
@@ -354,17 +354,17 @@ struct kl_7prelude_textual__vtable
     struct kl__run__L2u8__ref ( *kl__7as_text__ )( void* );
 };
 
-uint64_t kl__Four__G = 4;
+uint64_t kl_7codegen_Four__G = 4;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__4main__( void );
-uint64_t kl__5total__IV3_E__A3_3i32( struct kl__A3_3i32* );
-uint64_t kl__5total__IV4_E__A4_3i32( struct kl__A4_3i32* );
-uint64_t kl__9forwarded__IV3_E__A3_3i32( struct kl__A3_3i32* );
-uint64_t kl__6filled__IV5_E__3i32( int32_t );
-uint64_t kl__4area__IV2__V3_E__4GridI3i32_V2__V3_E( struct kl__Grid__I3i32_V2__V3_E* );
-uint64_t kl__5total__IV5_E__A5_3i32( struct kl__A5_3i32* );
+int32_t kl_7codegen_4main__( void );
+uint64_t kl_7codegen_5total__IV3_E__A3_3i32( struct kl__A3_3i32* );
+uint64_t kl_7codegen_5total__IV4_E__A4_3i32( struct kl__A4_3i32* );
+uint64_t kl_7codegen_9forwarded__IV3_E__A3_3i32( struct kl__A3_3i32* );
+uint64_t kl_7codegen_6filled__IV5_E__3i32( int32_t );
+uint64_t kl_7codegen_4area__IV2__V3_E__Q7codegen4GridI3i32_V2__V3_E( struct kl_7codegen_Grid__I3i32_V2__V3_E* );
+uint64_t kl_7codegen_5total__IV5_E__A5_3i32( struct kl__A5_3i32* );
 void kl_1t7console_5print__3u64_7textual( uint64_t, struct kl_7prelude_textual__ref );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 void kl_7prelude_str__drop( void* );
@@ -373,7 +373,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 38 "codegen/size_params.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     struct kl__A3_3i32 kl_three_1;
@@ -414,12 +414,12 @@ int32_t kl__4main__( void )
     uint8_t* kl_t42;
     struct kl_7prelude_str* kl_t44;
     struct kl_7prelude_textual__ref kl_t45;
-    struct kl__Grid__I3i32_V2__V3_E kl_g_47;
-    struct kl__Grid__I3i32_V2__V3_E kl_t48;
+    struct kl_7codegen_Grid__I3i32_V2__V3_E kl_g_47;
+    struct kl_7codegen_Grid__I3i32_V2__V3_E kl_t48;
     struct kl__A6_3i32 kl_t49;
     uint64_t kl_t50;
     bool kl_t51;
-    struct kl__Grid__I3i32_V2__V3_E* kl_t52;
+    struct kl_7codegen_Grid__I3i32_V2__V3_E* kl_t52;
     uint64_t kl_t53;
     struct kl_7prelude_str kl_t54;
     struct kl_7prelude_str* kl_t55;
@@ -476,7 +476,7 @@ int32_t kl__4main__( void )
 #line 43 "codegen/size_params.kl"
     kl_t12 = &kl_three_1;
 #line 43 "codegen/size_params.kl"
-    kl_t13 = kl__5total__IV3_E__A3_3i32( kl_t12 );
+    kl_t13 = kl_7codegen_5total__IV3_E__A3_3i32( kl_t12 );
 #line 41 "../test_lib/console.kl"
     kl_t15 = &kl_t14;
 #line 41 "../test_lib/console.kl"
@@ -491,7 +491,7 @@ int32_t kl__4main__( void )
     kl_1t7console_5print__3u64_7textual( kl_t13, kl_t19 );
     kl_t21 = &kl_four_6;
 #line 44 "codegen/size_params.kl"
-    kl_t22 = kl__5total__IV4_E__A4_3i32( kl_t21 );
+    kl_t22 = kl_7codegen_5total__IV4_E__A4_3i32( kl_t21 );
 #line 41 "../test_lib/console.kl"
     kl_t24 = &kl_t23;
 #line 41 "../test_lib/console.kl"
@@ -506,7 +506,7 @@ int32_t kl__4main__( void )
     kl_1t7console_5print__3u64_7textual( kl_t22, kl_t28 );
     kl_t30 = &kl_three_1;
 #line 45 "codegen/size_params.kl"
-    kl_t31 = kl__9forwarded__IV3_E__A3_3i32( kl_t30 );
+    kl_t31 = kl_7codegen_9forwarded__IV3_E__A3_3i32( kl_t30 );
 #line 41 "../test_lib/console.kl"
     kl_t33 = &kl_t32;
 #line 41 "../test_lib/console.kl"
@@ -519,7 +519,7 @@ int32_t kl__4main__( void )
     kl_t37 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t36, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 45 "codegen/size_params.kl"
     kl_1t7console_5print__3u64_7textual( kl_t31, kl_t37 );
-    kl_t39 = kl__6filled__IV5_E__3i32( 2 );
+    kl_t39 = kl_7codegen_6filled__IV5_E__3i32( 2 );
 #line 41 "../test_lib/console.kl"
     kl_t41 = &kl_t40;
 #line 41 "../test_lib/console.kl"
@@ -552,7 +552,7 @@ int32_t kl__4main__( void )
     kl_g_47 = kl_t48;
     kl_t52 = &kl_g_47;
 #line 49 "codegen/size_params.kl"
-    kl_t53 = kl__4area__IV2__V3_E__4GridI3i32_V2__V3_E( kl_t52 );
+    kl_t53 = kl_7codegen_4area__IV2__V3_E__Q7codegen4GridI3i32_V2__V3_E( kl_t52 );
 #line 41 "../test_lib/console.kl"
     kl_t55 = &kl_t54;
 #line 41 "../test_lib/console.kl"
@@ -594,7 +594,7 @@ int32_t kl__4main__( void )
 }
 
 #line 7 "codegen/size_params.kl"
-uint64_t kl__5total__IV3_E__A3_3i32( struct kl__A3_3i32* kl_a_1 )
+uint64_t kl_7codegen_5total__IV3_E__A3_3i32( struct kl__A3_3i32* kl_a_1 )
 {
     uint64_t kl_t0;
     uint64_t kl_sum_2;
@@ -675,7 +675,7 @@ uint64_t kl__5total__IV3_E__A3_3i32( struct kl__A3_3i32* kl_a_1 )
 }
 
 #line 7 "codegen/size_params.kl"
-uint64_t kl__5total__IV4_E__A4_3i32( struct kl__A4_3i32* kl_a_1 )
+uint64_t kl_7codegen_5total__IV4_E__A4_3i32( struct kl__A4_3i32* kl_a_1 )
 {
     uint64_t kl_t0;
     uint64_t kl_sum_2;
@@ -756,7 +756,7 @@ uint64_t kl__5total__IV4_E__A4_3i32( struct kl__A4_3i32* kl_a_1 )
 }
 
 #line 17 "codegen/size_params.kl"
-uint64_t kl__9forwarded__IV3_E__A3_3i32( struct kl__A3_3i32* kl_a_1 )
+uint64_t kl_7codegen_9forwarded__IV3_E__A3_3i32( struct kl__A3_3i32* kl_a_1 )
 {
     uint64_t kl_t0;
     struct kl__A3_3i32* kl_t2;
@@ -764,7 +764,7 @@ uint64_t kl__9forwarded__IV3_E__A3_3i32( struct kl__A3_3i32* kl_a_1 )
 #line 19 "codegen/size_params.kl"
     kl_t2 = &( *kl_a_1 );
 #line 19 "codegen/size_params.kl"
-    kl_t3 = kl__5total__IV3_E__A3_3i32( kl_t2 );
+    kl_t3 = kl_7codegen_5total__IV3_E__A3_3i32( kl_t2 );
 #line 19 "codegen/size_params.kl"
     kl_t0 = kl_t3;
 #line 19 "codegen/size_params.kl"
@@ -772,7 +772,7 @@ uint64_t kl__9forwarded__IV3_E__A3_3i32( struct kl__A3_3i32* kl_a_1 )
 }
 
 #line 22 "codegen/size_params.kl"
-uint64_t kl__6filled__IV5_E__3i32( int32_t kl_x_1 )
+uint64_t kl_7codegen_6filled__IV5_E__3i32( int32_t kl_x_1 )
 {
     uint64_t kl_t0;
     struct kl__A5_3i32 kl_b_2;
@@ -799,7 +799,7 @@ uint64_t kl__6filled__IV5_E__3i32( int32_t kl_x_1 )
     kl_b_2 = kl_t3;
     kl_t6 = &kl_b_2;
 #line 25 "codegen/size_params.kl"
-    kl_t7 = kl__5total__IV5_E__A5_3i32( kl_t6 );
+    kl_t7 = kl_7codegen_5total__IV5_E__A5_3i32( kl_t6 );
 #line 25 "codegen/size_params.kl"
     kl_t0 = kl_t7;
 #line 25 "codegen/size_params.kl"
@@ -807,7 +807,7 @@ uint64_t kl__6filled__IV5_E__3i32( int32_t kl_x_1 )
 }
 
 #line 33 "codegen/size_params.kl"
-uint64_t kl__4area__IV2__V3_E__4GridI3i32_V2__V3_E( struct kl__Grid__I3i32_V2__V3_E* kl_g_1 )
+uint64_t kl_7codegen_4area__IV2__V3_E__Q7codegen4GridI3i32_V2__V3_E( struct kl_7codegen_Grid__I3i32_V2__V3_E* kl_g_1 )
 {
     uint64_t kl_t0;
     ( void ) kl_g_1;
@@ -818,7 +818,7 @@ uint64_t kl__4area__IV2__V3_E__4GridI3i32_V2__V3_E( struct kl__Grid__I3i32_V2__V
 }
 
 #line 7 "codegen/size_params.kl"
-uint64_t kl__5total__IV5_E__A5_3i32( struct kl__A5_3i32* kl_a_1 )
+uint64_t kl_7codegen_5total__IV5_E__A5_3i32( struct kl__A5_3i32* kl_a_1 )
 {
     uint64_t kl_t0;
     uint64_t kl_sum_2;
@@ -902,7 +902,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 38 "codegen/size_params.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 38 "codegen/size_params.kl"
     return kl_t0;
 #line 38 "codegen/size_params.kl"

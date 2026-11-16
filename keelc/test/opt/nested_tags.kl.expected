@@ -3,51 +3,51 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__D;
-struct kl__E;
-struct kl__O;
+struct kl_3opt_D;
+struct kl_3opt_E;
+struct kl_3opt_O;
 
-struct kl__D
+struct kl_3opt_D
 {
     int32_t kl_v;
 };
-_Static_assert( sizeof( struct kl__D ) == 4 && _Alignof( struct kl__D ) == 4 && offsetof( struct kl__D, kl_v ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_3opt_D ) == 4 && _Alignof( struct kl_3opt_D ) == 4 && offsetof( struct kl_3opt_D, kl_v ) == 0, "layout" );
 
-struct kl__E
+struct kl_3opt_E
 {
     int32_t tag;
     union
     {
         struct
         {
-            struct kl__D kl_4full_d;
+            struct kl_3opt_D kl_4full_d;
         };
     };
 };
-_Static_assert( sizeof( struct kl__E ) == 8 && _Alignof( struct kl__E ) == 4 && offsetof( struct kl__E, kl_4full_d ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_3opt_E ) == 8 && _Alignof( struct kl_3opt_E ) == 4 && offsetof( struct kl_3opt_E, kl_4full_d ) == 4, "layout" );
 
-struct kl__O
+struct kl_3opt_O
 {
     int32_t tag;
     union
     {
         struct
         {
-            struct kl__E kl_4some_e;
+            struct kl_3opt_E kl_4some_e;
         };
     };
 };
-_Static_assert( sizeof( struct kl__O ) == 12 && _Alignof( struct kl__O ) == 4 && offsetof( struct kl__O, kl_4some_e ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_3opt_O ) == 12 && _Alignof( struct kl_3opt_O ) == 4 && offsetof( struct kl_3opt_O, kl_4some_e ) == 4, "layout" );
 
-void kl__1D__R1D_3i32__ctor( struct kl__D*, int32_t );
-void kl__1D__dtor( struct kl__D* );
-int32_t kl__4pick__3i32( int32_t );
-int32_t kl__4main__( void );
-void kl__1E__dtor( struct kl__E* );
-void kl__1O__dtor( struct kl__O* );
+void kl_3opt_1D__RQ3opt1D_3i32__ctor( struct kl_3opt_D*, int32_t );
+void kl_3opt_1D__dtor( struct kl_3opt_D* );
+int32_t kl_3opt_4pick__3i32( int32_t );
+int32_t kl_3opt_4main__( void );
+void kl_3opt_1E__dtor( struct kl_3opt_E* );
+void kl_3opt_1O__dtor( struct kl_3opt_O* );
 
 #line 7 "opt/nested_tags.kl"
-void kl__1D__R1D_3i32__ctor( struct kl__D* kl_this_1, int32_t kl_x_2 )
+void kl_3opt_1D__RQ3opt1D_3i32__ctor( struct kl_3opt_D* kl_this_1, int32_t kl_x_2 )
 {
 #line 7 "opt/nested_tags.kl"
     ( *kl_this_1 ).kl_v = kl_x_2;
@@ -57,7 +57,7 @@ void kl__1D__R1D_3i32__ctor( struct kl__D* kl_this_1, int32_t kl_x_2 )
 }
 
 #line 8 "opt/nested_tags.kl"
-void kl__1D__dtor( struct kl__D* kl_this_1 )
+void kl_3opt_1D__dtor( struct kl_3opt_D* kl_this_1 )
 {
 #line 8 "opt/nested_tags.kl"
     ( *kl_this_1 ).kl_v = 0;
@@ -67,7 +67,7 @@ void kl__1D__dtor( struct kl__D* kl_this_1 )
 }
 
 #line 15 "opt/nested_tags.kl"
-int32_t kl__4pick__3i32( int32_t kl_x_1 )
+int32_t kl_3opt_4pick__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
 #line 25 "opt/nested_tags.kl"
@@ -78,7 +78,7 @@ int32_t kl__4pick__3i32( int32_t kl_x_1 )
 }
 
 #line 34 "opt/nested_tags.kl"
-int32_t kl__4main__( void )
+int32_t kl_3opt_4main__( void )
 {
     int32_t kl_t0;
     kl_t0 = 0;
@@ -87,7 +87,7 @@ int32_t kl__4main__( void )
 }
 
 #line 11 "opt/nested_tags.kl"
-void kl__1E__dtor( struct kl__E* kl_t1 )
+void kl_3opt_1E__dtor( struct kl_3opt_E* kl_t1 )
 {
     bool kl_t2;
 #line 11 "opt/nested_tags.kl"
@@ -106,7 +106,7 @@ void kl__1E__dtor( struct kl__E* kl_t1 )
 }
 
 #line 13 "opt/nested_tags.kl"
-void kl__1O__dtor( struct kl__O* kl_t1 )
+void kl_3opt_1O__dtor( struct kl_3opt_O* kl_t1 )
 {
     bool kl_t2;
     bool kl_t3;
@@ -134,7 +134,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 34 "opt/nested_tags.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_3opt_4main__(  );
 #line 34 "opt/nested_tags.kl"
     return kl_t0;
 #line 34 "opt/nested_tags.kl"

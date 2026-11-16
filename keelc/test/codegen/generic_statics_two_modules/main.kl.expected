@@ -9,19 +9,19 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-__attribute__((weak)) int32_t kl_7counter_total__GS7CounterI3i32E = 0;
+__attribute__((weak)) int32_t kl_27generic_statics_two_modules7counter_total__GSQ27generic_statics_two_modules7CounterI3i32E = 0;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl_1a_6bump_a__( void );
+void kl_27generic_statics_two_modules1a_6bump_a__( void );
 
 #line 3 "codegen/generic_statics_two_modules/a.kl"
-void kl_1a_6bump_a__( void )
+void kl_27generic_statics_two_modules1a_6bump_a__( void )
 {
     bool kl_t1;
     int32_t kl_t2;
 #line 5 "codegen/generic_statics_two_modules/a.kl"
-    kl_t1 = __builtin_add_overflow( kl_7counter_total__GS7CounterI3i32E, 1, &( int32_t ) { 0 } );
+    kl_t1 = __builtin_add_overflow( kl_27generic_statics_two_modules7counter_total__GSQ27generic_statics_two_modules7CounterI3i32E, 1, &( int32_t ) { 0 } );
 #line 5 "codegen/generic_statics_two_modules/a.kl"
     if ( kl_t1 ) goto bb1; else goto bb2;
     bb1:
@@ -29,9 +29,9 @@ void kl_1a_6bump_a__( void )
     kl_rt_panic( "codegen/generic_statics_two_modules/a.kl", 5, "arithmetic overflow: Counter<i32>::total + 1" );
     bb2:
 #line 5 "codegen/generic_statics_two_modules/a.kl"
-    kl_t2 = kl_7counter_total__GS7CounterI3i32E + 1;
+    kl_t2 = kl_27generic_statics_two_modules7counter_total__GSQ27generic_statics_two_modules7CounterI3i32E + 1;
 #line 5 "codegen/generic_statics_two_modules/a.kl"
-    kl_7counter_total__GS7CounterI3i32E = kl_t2;
+    kl_27generic_statics_two_modules7counter_total__GSQ27generic_statics_two_modules7CounterI3i32E = kl_t2;
     return;
 #line 6 "codegen/generic_statics_two_modules/a.kl"
 }
@@ -41,19 +41,19 @@ void kl_1a_6bump_a__( void )
 #include <stdbool.h>
 #include <stddef.h>
 
-__attribute__((weak)) int32_t kl_7counter_total__GS7CounterI3i32E = 0;
+__attribute__((weak)) int32_t kl_27generic_statics_two_modules7counter_total__GSQ27generic_statics_two_modules7CounterI3i32E = 0;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl_1b_6bump_b__( void );
+void kl_27generic_statics_two_modules1b_6bump_b__( void );
 
 #line 3 "codegen/generic_statics_two_modules/b.kl"
-void kl_1b_6bump_b__( void )
+void kl_27generic_statics_two_modules1b_6bump_b__( void )
 {
     bool kl_t1;
     int32_t kl_t2;
 #line 5 "codegen/generic_statics_two_modules/b.kl"
-    kl_t1 = __builtin_add_overflow( kl_7counter_total__GS7CounterI3i32E, 1, &( int32_t ) { 0 } );
+    kl_t1 = __builtin_add_overflow( kl_27generic_statics_two_modules7counter_total__GSQ27generic_statics_two_modules7CounterI3i32E, 1, &( int32_t ) { 0 } );
 #line 5 "codegen/generic_statics_two_modules/b.kl"
     if ( kl_t1 ) goto bb1; else goto bb2;
     bb1:
@@ -61,9 +61,9 @@ void kl_1b_6bump_b__( void )
     kl_rt_panic( "codegen/generic_statics_two_modules/b.kl", 5, "arithmetic overflow: Counter<i32>::total + 1" );
     bb2:
 #line 5 "codegen/generic_statics_two_modules/b.kl"
-    kl_t2 = kl_7counter_total__GS7CounterI3i32E + 1;
+    kl_t2 = kl_27generic_statics_two_modules7counter_total__GSQ27generic_statics_two_modules7CounterI3i32E + 1;
 #line 5 "codegen/generic_statics_two_modules/b.kl"
-    kl_7counter_total__GS7CounterI3i32E = kl_t2;
+    kl_27generic_statics_two_modules7counter_total__GSQ27generic_statics_two_modules7CounterI3i32E = kl_t2;
     return;
 #line 6 "codegen/generic_statics_two_modules/b.kl"
 }
@@ -73,22 +73,22 @@ void kl_1b_6bump_b__( void )
 #include <stdbool.h>
 #include <stddef.h>
 
-__attribute__((weak)) int32_t kl_7counter_total__GS7CounterI3i32E = 0;
+__attribute__((weak)) int32_t kl_27generic_statics_two_modules7counter_total__GSQ27generic_statics_two_modules7CounterI3i32E = 0;
 
-int32_t kl__4main__( void );
-void kl_1b_6bump_b__( void );
-void kl_1a_6bump_a__( void );
+int32_t kl_27generic_statics_two_modules_4main__( void );
+void kl_27generic_statics_two_modules1b_6bump_b__( void );
+void kl_27generic_statics_two_modules1a_6bump_a__( void );
 
 #line 7 "codegen/generic_statics_two_modules/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_27generic_statics_two_modules_4main__( void )
 {
     int32_t kl_t0;
     bool kl_t3;
 #line 9 "codegen/generic_statics_two_modules/main.kl"
-    kl_1a_6bump_a__(  );
-    kl_1b_6bump_b__(  );
+    kl_27generic_statics_two_modules1a_6bump_a__(  );
+    kl_27generic_statics_two_modules1b_6bump_b__(  );
 #line 12 "codegen/generic_statics_two_modules/main.kl"
-    kl_t3 = kl_7counter_total__GS7CounterI3i32E != 2;
+    kl_t3 = kl_27generic_statics_two_modules7counter_total__GSQ27generic_statics_two_modules7CounterI3i32E != 2;
 #line 12 "codegen/generic_statics_two_modules/main.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -106,7 +106,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 7 "codegen/generic_statics_two_modules/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_27generic_statics_two_modules_4main__(  );
 #line 7 "codegen/generic_statics_two_modules/main.kl"
     return kl_t0;
 #line 7 "codegen/generic_statics_two_modules/main.kl"

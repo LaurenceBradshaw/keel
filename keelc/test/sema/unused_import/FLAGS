@@ -1,1 +1,1 @@
---check --package kit=sema/unused_import/kit
+--check --package sema/unused_import/kit

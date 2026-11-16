@@ -9273,7 +9273,7 @@ bool kl_2kl7console_5input__RQ2kl6string( struct kl_2kl6string_string* kl_line_1
 #include <stddef.h>
 
 struct kl_2kl6string_string;
-struct kl__Settings;
+struct kl_7codegen_Settings;
 struct kl_2kl2os_path;
 struct kl_2kl2os_process;
 struct kl_2kl2os_captured;
@@ -9298,7 +9298,7 @@ struct kl_2kl6string_string
 };
 _Static_assert( sizeof( struct kl_2kl6string_string ) == 24 && _Alignof( struct kl_2kl6string_string ) == 8 && offsetof( struct kl_2kl6string_string, kl_data_ ) == 0 && offsetof( struct kl_2kl6string_string, kl_size_ ) == 8 && offsetof( struct kl_2kl6string_string, kl_cap_ ) == 16, "layout" );
 
-struct kl__Settings
+struct kl_7codegen_Settings
 {
     int32_t kl_unset;
     int32_t kl_always;
@@ -9307,7 +9307,7 @@ struct kl__Settings
     int32_t kl_early;
     int32_t kl_sum;
 };
-_Static_assert( sizeof( struct kl__Settings ) == 48 && _Alignof( struct kl__Settings ) == 8 && offsetof( struct kl__Settings, kl_unset ) == 0 && offsetof( struct kl__Settings, kl_always ) == 4 && offsetof( struct kl__Settings, kl_label ) == 8 && offsetof( struct kl__Settings, kl_fixed ) == 32 && offsetof( struct kl__Settings, kl_early ) == 36 && offsetof( struct kl__Settings, kl_sum ) == 40, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Settings ) == 48 && _Alignof( struct kl_7codegen_Settings ) == 8 && offsetof( struct kl_7codegen_Settings, kl_unset ) == 0 && offsetof( struct kl_7codegen_Settings, kl_always ) == 4 && offsetof( struct kl_7codegen_Settings, kl_label ) == 8 && offsetof( struct kl_7codegen_Settings, kl_fixed ) == 32 && offsetof( struct kl_7codegen_Settings, kl_early ) == 36 && offsetof( struct kl_7codegen_Settings, kl_sum ) == 40, "layout" );
 
 struct kl_2kl2os_path
 {
@@ -9423,11 +9423,11 @@ struct kl_7prelude_textual__vtable
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-int32_t kl__4tick__3i32( int32_t );
-void kl__8Settings__R8Settings_4bool__ctor( struct kl__Settings*, bool );
-int32_t kl__5total__S8Settings( struct kl__Settings* );
-void kl__4show__S8Settings( struct kl__Settings* );
-int32_t kl__4main__( void );
+int32_t kl_7codegen_4tick__3i32( int32_t );
+void kl_7codegen_8Settings__RQ7codegen8Settings_4bool__ctor( struct kl_7codegen_Settings*, bool );
+int32_t kl_7codegen_5total__SQ7codegen8Settings( struct kl_7codegen_Settings* );
+void kl_7codegen_4show__SQ7codegen8Settings( struct kl_7codegen_Settings* );
+int32_t kl_7codegen_4main__( void );
 void kl_2kl4list_8truncate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
 uint64_t kl_2kl4list_4size__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
 struct kl_2kl6string_string* kl_2kl4list_14operator_index__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
@@ -9458,7 +9458,7 @@ static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_
 static const struct kl_7prelude_textual__vtable kl_2kl6string_string__as_kl_7prelude_textual = { kl_2kl6string_string__drop, kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 5 "codegen/constructor_defaults.kl"
-int32_t kl__4tick__3i32( int32_t kl_n_1 )
+int32_t kl_7codegen_4tick__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
     int64_t kl_t2;
@@ -9487,7 +9487,7 @@ int32_t kl__4tick__3i32( int32_t kl_n_1 )
 }
 
 #line 20 "codegen/constructor_defaults.kl"
-void kl__8Settings__R8Settings_4bool__ctor( struct kl__Settings* kl_this_1, bool kl_named_2 )
+void kl_7codegen_8Settings__RQ7codegen8Settings_4bool__ctor( struct kl_7codegen_Settings* kl_this_1, bool kl_named_2 )
 {
     struct kl_2kl6string_string kl_t3;
     struct kl_2kl6string_string* kl_t4;
@@ -9601,7 +9601,7 @@ void kl__8Settings__R8Settings_4bool__ctor( struct kl__Settings* kl_this_1, bool
 }
 
 #line 33 "codegen/constructor_defaults.kl"
-int32_t kl__5total__S8Settings( struct kl__Settings* kl_this_1 )
+int32_t kl_7codegen_5total__SQ7codegen8Settings( struct kl_7codegen_Settings* kl_this_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -9659,7 +9659,7 @@ int32_t kl__5total__S8Settings( struct kl__Settings* kl_this_1 )
 }
 
 #line 38 "codegen/constructor_defaults.kl"
-void kl__4show__S8Settings( struct kl__Settings* kl_this_1 )
+void kl_7codegen_4show__SQ7codegen8Settings( struct kl_7codegen_Settings* kl_this_1 )
 {
     struct kl_2kl6string_string* kl_t2;
     struct kl_7prelude_textual__ref kl_t3;
@@ -9689,41 +9689,41 @@ void kl__4show__S8Settings( struct kl__Settings* kl_this_1 )
 }
 
 #line 44 "codegen/constructor_defaults.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__Settings kl_a_1;
-    struct kl__Settings* kl_t2;
-    struct kl__Settings kl_b_4;
-    struct kl__Settings* kl_t5;
-    struct kl__Settings* kl_t7;
-    struct kl__Settings* kl_t9;
+    struct kl_7codegen_Settings kl_a_1;
+    struct kl_7codegen_Settings* kl_t2;
+    struct kl_7codegen_Settings kl_b_4;
+    struct kl_7codegen_Settings* kl_t5;
+    struct kl_7codegen_Settings* kl_t7;
+    struct kl_7codegen_Settings* kl_t9;
     int32_t kl_t11;
     bool kl_t12;
-    struct kl__Settings* kl_t13;
+    struct kl_7codegen_Settings* kl_t13;
     int32_t kl_t14;
     bool kl_t15;
-    struct kl__Settings* kl_t16;
+    struct kl_7codegen_Settings* kl_t16;
     int32_t kl_t17;
     bool kl_t18;
 #line 46 "codegen/constructor_defaults.kl"
     kl_t2 = &kl_a_1;
 #line 46 "codegen/constructor_defaults.kl"
-    kl__8Settings__R8Settings_4bool__ctor( kl_t2, true );
+    kl_7codegen_8Settings__RQ7codegen8Settings_4bool__ctor( kl_t2, true );
     kl_t5 = &kl_b_4;
 #line 47 "codegen/constructor_defaults.kl"
-    kl__8Settings__R8Settings_4bool__ctor( kl_t5, false );
+    kl_7codegen_8Settings__RQ7codegen8Settings_4bool__ctor( kl_t5, false );
 #line 49 "codegen/constructor_defaults.kl"
     kl_t7 = &kl_a_1;
 #line 49 "codegen/constructor_defaults.kl"
-    kl__4show__S8Settings( kl_t7 );
+    kl_7codegen_4show__SQ7codegen8Settings( kl_t7 );
     kl_t9 = &kl_b_4;
 #line 50 "codegen/constructor_defaults.kl"
-    kl__4show__S8Settings( kl_t9 );
+    kl_7codegen_4show__SQ7codegen8Settings( kl_t9 );
 #line 52 "codegen/constructor_defaults.kl"
     kl_t13 = &kl_a_1;
 #line 52 "codegen/constructor_defaults.kl"
-    kl_t14 = kl__5total__S8Settings( kl_t13 );
+    kl_t14 = kl_7codegen_5total__SQ7codegen8Settings( kl_t13 );
 #line 52 "codegen/constructor_defaults.kl"
     kl_t15 = kl_t14 == 24;
 #line 52 "codegen/constructor_defaults.kl"
@@ -9753,7 +9753,7 @@ int32_t kl__4main__( void )
 #line 52 "codegen/constructor_defaults.kl"
     kl_t16 = &kl_b_4;
 #line 52 "codegen/constructor_defaults.kl"
-    kl_t17 = kl__5total__S8Settings( kl_t16 );
+    kl_t17 = kl_7codegen_5total__SQ7codegen8Settings( kl_t16 );
 #line 52 "codegen/constructor_defaults.kl"
     kl_t18 = kl_t17 == 24;
 #line 52 "codegen/constructor_defaults.kl"
@@ -10144,7 +10144,7 @@ int main( void )
 #line 44 "codegen/constructor_defaults.kl"
     kl_2kl2os_0build(  );
 #line 44 "codegen/constructor_defaults.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 44 "codegen/constructor_defaults.kl"
     kl_2kl2os_0drop(  );
 #line 44 "codegen/constructor_defaults.kl"

@@ -4,7 +4,7 @@
 #include <stddef.h>
 
 struct kl_7prelude_str;
-struct kl__grid__IV2__V2_E;
+struct kl_7codegen_grid__IV2__V2_E;
 struct kl__A2_3i32;
 struct kl__A3_3i32;
 struct kl__A2_3f64;
@@ -20,11 +20,11 @@ struct kl_7prelude_str
 };
 _Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
-struct kl__grid__IV2__V2_E
+struct kl_7codegen_grid__IV2__V2_E
 {
     int32_t kl_shape;
 };
-_Static_assert( sizeof( struct kl__grid__IV2__V2_E ) == 4 && _Alignof( struct kl__grid__IV2__V2_E ) == 4 && offsetof( struct kl__grid__IV2__V2_E, kl_shape ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_grid__IV2__V2_E ) == 4 && _Alignof( struct kl_7codegen_grid__IV2__V2_E ) == 4 && offsetof( struct kl_7codegen_grid__IV2__V2_E, kl_shape ) == 0, "layout" );
 
 struct kl__A2_3i32
 {
@@ -60,18 +60,18 @@ void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 
-int32_t kl__5count__A2_3i32( struct kl__A2_3i32 );
-int32_t kl__5count__A3_3i32( struct kl__A3_3i32 );
-int32_t kl__6family__A2_3f64( struct kl__A2_3f64 );
-int32_t kl__6family__A2_3i32( struct kl__A2_3i32 );
-int32_t kl__7nesting__A2_A2_3i32( struct kl__A2_A2_3i32 );
-int32_t kl__7nesting__A4_3i32( struct kl__A4_3i32 );
-int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
-void kl__4grid__IV2__V2_E__R4gridIV2__V2_E_A4_3i32__ctor( struct kl__grid__IV2__V2_E*, struct kl__A4_3i32 );
-void kl__4grid__IV2__V2_E__R4gridIV2__V2_E_A2_A2_3i32__ctor( struct kl__grid__IV2__V2_E*, struct kl__A2_A2_3i32 );
+int32_t kl_7codegen_5count__A2_3i32( struct kl__A2_3i32 );
+int32_t kl_7codegen_5count__A3_3i32( struct kl__A3_3i32 );
+int32_t kl_7codegen_6family__A2_3f64( struct kl__A2_3f64 );
+int32_t kl_7codegen_6family__A2_3i32( struct kl__A2_3i32 );
+int32_t kl_7codegen_7nesting__A2_A2_3i32( struct kl__A2_A2_3i32 );
+int32_t kl_7codegen_7nesting__A4_3i32( struct kl__A4_3i32 );
+int32_t kl_7codegen_4main__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
+void kl_7codegen_4grid__IV2__V2_E__RQ7codegen4gridIV2__V2_E_A4_3i32__ctor( struct kl_7codegen_grid__IV2__V2_E*, struct kl__A4_3i32 );
+void kl_7codegen_4grid__IV2__V2_E__RQ7codegen4gridIV2__V2_E_A2_A2_3i32__ctor( struct kl_7codegen_grid__IV2__V2_E*, struct kl__A2_A2_3i32 );
 
 #line 3 "codegen/literal_shape_overloads.kl"
-int32_t kl__5count__A2_3i32( struct kl__A2_3i32 kl_t1 )
+int32_t kl_7codegen_5count__A2_3i32( struct kl__A2_3i32 kl_t1 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
@@ -83,7 +83,7 @@ int32_t kl__5count__A2_3i32( struct kl__A2_3i32 kl_t1 )
 }
 
 #line 4 "codegen/literal_shape_overloads.kl"
-int32_t kl__5count__A3_3i32( struct kl__A3_3i32 kl_t1 )
+int32_t kl_7codegen_5count__A3_3i32( struct kl__A3_3i32 kl_t1 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
@@ -95,7 +95,7 @@ int32_t kl__5count__A3_3i32( struct kl__A3_3i32 kl_t1 )
 }
 
 #line 6 "codegen/literal_shape_overloads.kl"
-int32_t kl__6family__A2_3f64( struct kl__A2_3f64 kl_t1 )
+int32_t kl_7codegen_6family__A2_3f64( struct kl__A2_3f64 kl_t1 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
@@ -107,7 +107,7 @@ int32_t kl__6family__A2_3f64( struct kl__A2_3f64 kl_t1 )
 }
 
 #line 7 "codegen/literal_shape_overloads.kl"
-int32_t kl__6family__A2_3i32( struct kl__A2_3i32 kl_t1 )
+int32_t kl_7codegen_6family__A2_3i32( struct kl__A2_3i32 kl_t1 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
@@ -119,7 +119,7 @@ int32_t kl__6family__A2_3i32( struct kl__A2_3i32 kl_t1 )
 }
 
 #line 9 "codegen/literal_shape_overloads.kl"
-int32_t kl__7nesting__A2_A2_3i32( struct kl__A2_A2_3i32 kl_t1 )
+int32_t kl_7codegen_7nesting__A2_A2_3i32( struct kl__A2_A2_3i32 kl_t1 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
@@ -131,7 +131,7 @@ int32_t kl__7nesting__A2_A2_3i32( struct kl__A2_A2_3i32 kl_t1 )
 }
 
 #line 10 "codegen/literal_shape_overloads.kl"
-int32_t kl__7nesting__A4_3i32( struct kl__A4_3i32 kl_t1 )
+int32_t kl_7codegen_7nesting__A4_3i32( struct kl__A4_3i32 kl_t1 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
@@ -143,7 +143,7 @@ int32_t kl__7nesting__A4_3i32( struct kl__A4_3i32 kl_t1 )
 }
 
 #line 20 "codegen/literal_shape_overloads.kl"
-int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t kl_t1_size )
+int32_t kl_7codegen_4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t kl_t1_size )
 {
     int32_t kl_t0;
 #line 20 "codegen/literal_shape_overloads.kl"
@@ -192,15 +192,15 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
     uint64_t kl_t43;
     int32_t kl_t44;
     bool kl_t45;
-    struct kl__grid__IV2__V2_E kl_flat_46;
-    struct kl__grid__IV2__V2_E* kl_t47;
+    struct kl_7codegen_grid__IV2__V2_E kl_flat_46;
+    struct kl_7codegen_grid__IV2__V2_E* kl_t47;
     struct kl__A4_3i32 kl_t48;
     uint64_t kl_t49;
     uint64_t kl_t50;
     uint64_t kl_t51;
     uint64_t kl_t52;
-    struct kl__grid__IV2__V2_E kl_rows_54;
-    struct kl__grid__IV2__V2_E* kl_t55;
+    struct kl_7codegen_grid__IV2__V2_E kl_rows_54;
+    struct kl_7codegen_grid__IV2__V2_E* kl_t55;
     struct kl__A2_A2_3i32 kl_t56;
     struct kl__A2_3i32 kl_t57;
     uint64_t kl_t58;
@@ -253,7 +253,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 #line 22 "codegen/literal_shape_overloads.kl"
     kl_t2.e[kl_t4] = 2;
 #line 22 "codegen/literal_shape_overloads.kl"
-    kl_t5 = kl__5count__A2_3i32( kl_t2 );
+    kl_t5 = kl_7codegen_5count__A2_3i32( kl_t2 );
 #line 22 "codegen/literal_shape_overloads.kl"
     kl_t6 = kl_t5 != 2;
 #line 22 "codegen/literal_shape_overloads.kl"
@@ -277,7 +277,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 #line 23 "codegen/literal_shape_overloads.kl"
     kl_t7.e[kl_t10] = 3;
 #line 23 "codegen/literal_shape_overloads.kl"
-    kl_t11 = kl__5count__A3_3i32( kl_t7 );
+    kl_t11 = kl_7codegen_5count__A3_3i32( kl_t7 );
 #line 23 "codegen/literal_shape_overloads.kl"
     kl_t12 = kl_t11 != 3;
 #line 23 "codegen/literal_shape_overloads.kl"
@@ -297,7 +297,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 #line 24 "codegen/literal_shape_overloads.kl"
     kl_t13.e[kl_t15] = 2.0;
 #line 24 "codegen/literal_shape_overloads.kl"
-    kl_t16 = kl__6family__A2_3f64( kl_t13 );
+    kl_t16 = kl_7codegen_6family__A2_3f64( kl_t13 );
 #line 24 "codegen/literal_shape_overloads.kl"
     kl_t17 = kl_t16 != 1;
 #line 24 "codegen/literal_shape_overloads.kl"
@@ -317,7 +317,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 #line 25 "codegen/literal_shape_overloads.kl"
     kl_t18.e[kl_t20] = 2;
 #line 25 "codegen/literal_shape_overloads.kl"
-    kl_t21 = kl__6family__A2_3i32( kl_t18 );
+    kl_t21 = kl_7codegen_6family__A2_3i32( kl_t18 );
 #line 25 "codegen/literal_shape_overloads.kl"
     kl_t22 = kl_t21 != 2;
 #line 25 "codegen/literal_shape_overloads.kl"
@@ -337,7 +337,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 #line 26 "codegen/literal_shape_overloads.kl"
     kl_t23.e[kl_t25] = 2.5;
 #line 26 "codegen/literal_shape_overloads.kl"
-    kl_t26 = kl__6family__A2_3f64( kl_t23 );
+    kl_t26 = kl_7codegen_6family__A2_3f64( kl_t23 );
 #line 26 "codegen/literal_shape_overloads.kl"
     kl_t27 = kl_t26 != 1;
 #line 26 "codegen/literal_shape_overloads.kl"
@@ -373,7 +373,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 #line 27 "codegen/literal_shape_overloads.kl"
     kl_t28.e[kl_t36] = kl_t32;
 #line 27 "codegen/literal_shape_overloads.kl"
-    kl_t37 = kl__7nesting__A2_A2_3i32( kl_t28 );
+    kl_t37 = kl_7codegen_7nesting__A2_A2_3i32( kl_t28 );
 #line 27 "codegen/literal_shape_overloads.kl"
     kl_t38 = kl_t37 != 1;
 #line 27 "codegen/literal_shape_overloads.kl"
@@ -401,7 +401,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 #line 28 "codegen/literal_shape_overloads.kl"
     kl_t39.e[kl_t43] = 4;
 #line 28 "codegen/literal_shape_overloads.kl"
-    kl_t44 = kl__7nesting__A4_3i32( kl_t39 );
+    kl_t44 = kl_7codegen_7nesting__A4_3i32( kl_t39 );
 #line 28 "codegen/literal_shape_overloads.kl"
     kl_t45 = kl_t44 != 2;
 #line 28 "codegen/literal_shape_overloads.kl"
@@ -430,7 +430,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 #line 30 "codegen/literal_shape_overloads.kl"
     kl_t48.e[kl_t52] = 4;
 #line 30 "codegen/literal_shape_overloads.kl"
-    kl__4grid__IV2__V2_E__R4gridIV2__V2_E_A4_3i32__ctor( kl_t47, kl_t48 );
+    kl_7codegen_4grid__IV2__V2_E__RQ7codegen4gridIV2__V2_E_A4_3i32__ctor( kl_t47, kl_t48 );
     kl_t55 = &kl_rows_54;
 #line 31 "codegen/literal_shape_overloads.kl"
     kl_t58 = 0;
@@ -457,7 +457,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 #line 31 "codegen/literal_shape_overloads.kl"
     kl_t56.e[kl_t64] = kl_t60;
 #line 31 "codegen/literal_shape_overloads.kl"
-    kl__4grid__IV2__V2_E__R4gridIV2__V2_E_A2_A2_3i32__ctor( kl_t55, kl_t56 );
+    kl_7codegen_4grid__IV2__V2_E__RQ7codegen4gridIV2__V2_E_A2_A2_3i32__ctor( kl_t55, kl_t56 );
     kl_t66 = kl_flat_46.kl_shape != 1;
 #line 32 "codegen/literal_shape_overloads.kl"
     if ( kl_t66 ) goto bb15; else goto bb16;
@@ -483,7 +483,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, uint64_t 
 }
 
 #line 16 "codegen/literal_shape_overloads.kl"
-void kl__4grid__IV2__V2_E__R4gridIV2__V2_E_A4_3i32__ctor( struct kl__grid__IV2__V2_E* kl_this_1, struct kl__A4_3i32 kl_t2 )
+void kl_7codegen_4grid__IV2__V2_E__RQ7codegen4gridIV2__V2_E_A4_3i32__ctor( struct kl_7codegen_grid__IV2__V2_E* kl_this_1, struct kl__A4_3i32 kl_t2 )
 {
     ( void ) kl_t2;
 #line 16 "codegen/literal_shape_overloads.kl"
@@ -494,7 +494,7 @@ void kl__4grid__IV2__V2_E__R4gridIV2__V2_E_A4_3i32__ctor( struct kl__grid__IV2__
 }
 
 #line 17 "codegen/literal_shape_overloads.kl"
-void kl__4grid__IV2__V2_E__R4gridIV2__V2_E_A2_A2_3i32__ctor( struct kl__grid__IV2__V2_E* kl_this_1, struct kl__A2_A2_3i32 kl_t2 )
+void kl_7codegen_4grid__IV2__V2_E__RQ7codegen4gridIV2__V2_E_A2_A2_3i32__ctor( struct kl_7codegen_grid__IV2__V2_E* kl_this_1, struct kl__A2_A2_3i32 kl_t2 )
 {
     ( void ) kl_t2;
 #line 17 "codegen/literal_shape_overloads.kl"
@@ -592,7 +592,7 @@ int main( int argc, char** argv )
 #line 20 "codegen/literal_shape_overloads.kl"
     kl_t17 = ( struct kl__run__LQ7prelude3str__ref ) { ( struct kl_7prelude_str* ) kl_t7, kl_t3 };
 #line 20 "codegen/literal_shape_overloads.kl"
-    kl_t0 = kl__4main__LQ7prelude3str( ( kl_t17 ).data, ( kl_t17 ).size );
+    kl_t0 = kl_7codegen_4main__LQ7prelude3str( ( kl_t17 ).data, ( kl_t17 ).size );
 #line 20 "codegen/literal_shape_overloads.kl"
     kl_rt_free( kl_t7 );
 #line 20 "codegen/literal_shape_overloads.kl"

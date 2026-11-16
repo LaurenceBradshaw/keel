@@ -1,0 +1,5 @@
+// Two `--package` folders that give one name are refused, naming both folders.
+i32 main()
+{
+    return 0;
+}

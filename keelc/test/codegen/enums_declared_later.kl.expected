@@ -3,10 +3,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Wrap__I6ColourE;
-struct kl__Shape;
+struct kl_7codegen_Wrap__IQ7codegen6ColourE;
+struct kl_7codegen_Shape;
 
-struct kl__Wrap__I6ColourE
+struct kl_7codegen_Wrap__IQ7codegen6ColourE
 {
     int32_t tag;
     union
@@ -17,9 +17,9 @@ struct kl__Wrap__I6ColourE
         };
     };
 };
-_Static_assert( sizeof( struct kl__Wrap__I6ColourE ) == 8 && _Alignof( struct kl__Wrap__I6ColourE ) == 4 && offsetof( struct kl__Wrap__I6ColourE, kl_4Held_v ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Wrap__IQ7codegen6ColourE ) == 8 && _Alignof( struct kl_7codegen_Wrap__IQ7codegen6ColourE ) == 4 && offsetof( struct kl_7codegen_Wrap__IQ7codegen6ColourE, kl_4Held_v ) == 4, "layout" );
 
-struct kl__Shape
+struct kl_7codegen_Shape
 {
     int32_t tag;
     union
@@ -30,28 +30,28 @@ struct kl__Shape
         };
         struct
         {
-            struct kl__Wrap__I6ColourE kl_7Wrapped_w;
+            struct kl_7codegen_Wrap__IQ7codegen6ColourE kl_7Wrapped_w;
         };
     };
 };
-_Static_assert( sizeof( struct kl__Shape ) == 12 && _Alignof( struct kl__Shape ) == 4 && offsetof( struct kl__Shape, kl_6Filled_c ) == 4 && offsetof( struct kl__Shape, kl_7Wrapped_w ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Shape ) == 12 && _Alignof( struct kl_7codegen_Shape ) == 4 && offsetof( struct kl_7codegen_Shape, kl_6Filled_c ) == 4 && offsetof( struct kl_7codegen_Shape, kl_7Wrapped_w ) == 4, "layout" );
 
-int32_t kl__4main__( void );
+int32_t kl_7codegen_4main__( void );
 
 #line 21 "codegen/enums_declared_later.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__Shape kl_a_1;
-    struct kl__Shape kl_t2;
-    struct kl__Shape kl_b_3;
-    struct kl__Shape kl_t4;
-    struct kl__Wrap__I6ColourE kl_t5;
+    struct kl_7codegen_Shape kl_a_1;
+    struct kl_7codegen_Shape kl_t2;
+    struct kl_7codegen_Shape kl_b_3;
+    struct kl_7codegen_Shape kl_t4;
+    struct kl_7codegen_Wrap__IQ7codegen6ColourE kl_t5;
     bool kl_t6;
     int32_t kl_c_7;
     bool kl_t8;
     bool kl_t9;
-    struct kl__Wrap__I6ColourE kl_w_10;
+    struct kl_7codegen_Wrap__IQ7codegen6ColourE kl_w_10;
     int32_t kl_v_11;
     bool kl_t12;
 #line 23 "codegen/enums_declared_later.kl"
@@ -125,7 +125,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 21 "codegen/enums_declared_later.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 21 "codegen/enums_declared_later.kl"
     return kl_t0;
 #line 21 "codegen/enums_declared_later.kl"

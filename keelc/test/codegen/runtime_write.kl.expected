@@ -17,12 +17,12 @@ void kl_rt_write_i64( int32_t, int64_t );
 void kl_rt_write_u64( int32_t, uint64_t );
 void kl_rt_write_f64( int32_t, double );
 
-void kl__4line__3i32( int32_t );
-int32_t kl__4main__( void );
+void kl_7codegen_4line__3i32( int32_t );
+int32_t kl_7codegen_4main__( void );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 
 #line 8 "codegen/runtime_write.kl"
-void kl__4line__3i32( int32_t kl_stream_1 )
+void kl_7codegen_4line__3i32( int32_t kl_stream_1 )
 {
     struct kl_7prelude_str kl_t2;
     struct kl_7prelude_str* kl_t3;
@@ -50,7 +50,7 @@ void kl__4line__3i32( int32_t kl_stream_1 )
 }
 
 #line 16 "codegen/runtime_write.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     double kl_zero_1;
@@ -123,7 +123,7 @@ int32_t kl__4main__( void )
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t25, kl_t26, 3 );
 #line 24 "codegen/runtime_write.kl"
     kl_rt_write( 1, kl_t20.kl_data, kl_t24.kl_size );
-    kl__4line__3i32( 1 );
+    kl_7codegen_4line__3i32( 1 );
 #line 28 "codegen/runtime_write.kl"
     kl_t31 = &kl_t30;
 #line 28 "codegen/runtime_write.kl"
@@ -132,60 +132,60 @@ int32_t kl__4main__( void )
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t31, kl_t32, 3 );
 #line 28 "codegen/runtime_write.kl"
     kl_rt_write( 1, kl_t30.kl_data, 2 );
-    kl__4line__3i32( 1 );
+    kl_7codegen_4line__3i32( 1 );
 #line 31 "codegen/runtime_write.kl"
     kl_rt_write_i64( 1, 0 );
-    kl__4line__3i32( 1 );
+    kl_7codegen_4line__3i32( 1 );
     kl_rt_write_i64( 1, -42 );
-    kl__4line__3i32( 1 );
+    kl_7codegen_4line__3i32( 1 );
     kl_rt_write_i64( 1, 9223372036854775807 );
-    kl__4line__3i32( 1 );
+    kl_7codegen_4line__3i32( 1 );
     kl_t42 = -9223372036854775807 - 1;
 #line 37 "codegen/runtime_write.kl"
     kl_rt_write_i64( 1, kl_t42 );
-    kl__4line__3i32( 1 );
+    kl_7codegen_4line__3i32( 1 );
 #line 40 "codegen/runtime_write.kl"
     kl_rt_write_u64( 1, 18446744073709551615ull );
-    kl__4line__3i32( 1 );
+    kl_7codegen_4line__3i32( 1 );
 #line 44 "codegen/runtime_write.kl"
     kl_rt_write_f64( 1, 0.1 );
-    kl__4line__3i32( 1 );
+    kl_7codegen_4line__3i32( 1 );
     kl_t49 = 0.1 + 0.2;
 #line 46 "codegen/runtime_write.kl"
     kl_rt_write_f64( 1, kl_t49 );
-    kl__4line__3i32( 1 );
+    kl_7codegen_4line__3i32( 1 );
     kl_t52 = 1.0 / 3.0;
 #line 48 "codegen/runtime_write.kl"
     kl_rt_write_f64( 1, kl_t52 );
-    kl__4line__3i32( 1 );
+    kl_7codegen_4line__3i32( 1 );
     kl_rt_write_f64( 1, 3.0 );
-    kl__4line__3i32( 1 );
+    kl_7codegen_4line__3i32( 1 );
     kl_rt_write_f64( 1, -0.0 );
-    kl__4line__3i32( 1 );
+    kl_7codegen_4line__3i32( 1 );
     kl_rt_write_f64( 1, 1234567.0 );
-    kl__4line__3i32( 1 );
+    kl_7codegen_4line__3i32( 1 );
     kl_rt_write_f64( 1, 1e+20 );
-    kl__4line__3i32( 1 );
+    kl_7codegen_4line__3i32( 1 );
     kl_rt_write_f64( 1, 1e-07 );
-    kl__4line__3i32( 1 );
+    kl_7codegen_4line__3i32( 1 );
     kl_t65 = 1.0 / kl_zero_1;
 #line 60 "codegen/runtime_write.kl"
     kl_rt_write_f64( 1, kl_t65 );
-    kl__4line__3i32( 1 );
+    kl_7codegen_4line__3i32( 1 );
     kl_t68 = -1.0 / kl_zero_1;
 #line 62 "codegen/runtime_write.kl"
     kl_rt_write_f64( 1, kl_t68 );
-    kl__4line__3i32( 1 );
+    kl_7codegen_4line__3i32( 1 );
 #line 66 "codegen/runtime_write.kl"
     kl_t71 = kl_zero_1 / kl_zero_1;
 #line 66 "codegen/runtime_write.kl"
     kl_rt_write_f64( 1, kl_t71 );
-    kl__4line__3i32( 1 );
+    kl_7codegen_4line__3i32( 1 );
 #line 69 "codegen/runtime_write.kl"
     kl_rt_write_i64( 2, -7 );
-    kl__4line__3i32( 2 );
+    kl_7codegen_4line__3i32( 2 );
     kl_rt_write_f64( 1, 2.5 );
-    kl__4line__3i32( 1 );
+    kl_7codegen_4line__3i32( 1 );
 #line 75 "codegen/runtime_write.kl"
     kl_t0 = 0;
 #line 75 "codegen/runtime_write.kl"
@@ -196,7 +196,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 16 "codegen/runtime_write.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 16 "codegen/runtime_write.kl"
     return kl_t0;
 #line 16 "codegen/runtime_write.kl"

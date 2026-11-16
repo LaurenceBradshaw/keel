@@ -1729,7 +1729,14 @@ void Overloads::check_top_level_pair( Node_id first, Node_id second )
             const std::string_view separator = i == 0 ? "" : i + 1 == clashing.size() ? " and " : ", ";
             const File_id          file      = ast_.span( clashing[i] ).file;
             modules += fmt::format(
-                "{}`{}`", separator, qualified( interner_, resolution_.package_of( file ), reporter_.module_name( file ) )
+                "{}`{}`",
+                separator,
+                qualified(
+                    interner_,
+                    resolution_.package_of( file ) == resolution_.program_package() ? Symbol_id {}
+                                                                                    : resolution_.package_of( file ),
+                    reporter_.module_name( file )
+                )
             );
             places += fmt::format( "{}{}", separator, reporter_.position( ast_.name_span( clashing[i] ) ) );
         }

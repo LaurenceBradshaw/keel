@@ -3,45 +3,45 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Box__I3i32E;
-struct kl__Box__I3f64E;
+struct kl_7codegen_Box__I3i32E;
+struct kl_7codegen_Box__I3f64E;
 
-struct kl__Box__I3i32E
+struct kl_7codegen_Box__I3i32E
 {
     int32_t kl_v;
 };
-_Static_assert( sizeof( struct kl__Box__I3i32E ) == 4 && _Alignof( struct kl__Box__I3i32E ) == 4 && offsetof( struct kl__Box__I3i32E, kl_v ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Box__I3i32E ) == 4 && _Alignof( struct kl_7codegen_Box__I3i32E ) == 4 && offsetof( struct kl_7codegen_Box__I3i32E, kl_v ) == 0, "layout" );
 
-struct kl__Box__I3f64E
+struct kl_7codegen_Box__I3f64E
 {
     double kl_v;
 };
-_Static_assert( sizeof( struct kl__Box__I3f64E ) == 8 && _Alignof( struct kl__Box__I3f64E ) == 8 && offsetof( struct kl__Box__I3f64E, kl_v ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Box__I3f64E ) == 8 && _Alignof( struct kl_7codegen_Box__I3f64E ) == 8 && offsetof( struct kl_7codegen_Box__I3f64E, kl_v ) == 0, "layout" );
 
-__attribute__((weak)) int32_t kl__start__GS3BoxI3f64E = 7;
-__attribute__((weak)) int32_t kl__start__GS3BoxI3i32E = 7;
-__attribute__((weak)) int32_t kl__made__GS3BoxI3i32E = 0;
-__attribute__((weak)) int32_t kl__made__GS3BoxI3f64E = 0;
+__attribute__((weak)) int32_t kl_7codegen_start__GSQ7codegen3BoxI3f64E = 7;
+__attribute__((weak)) int32_t kl_7codegen_start__GSQ7codegen3BoxI3i32E = 7;
+__attribute__((weak)) int32_t kl_7codegen_made__GSQ7codegen3BoxI3i32E = 0;
+__attribute__((weak)) int32_t kl_7codegen_made__GSQ7codegen3BoxI3f64E = 0;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__4main__( void );
-void kl__3Box__I3i32E__R3BoxI3i32E_3i32__ctor( struct kl__Box__I3i32E*, int32_t );
-void kl__3Box__I3f64E__R3BoxI3f64E_3f64__ctor( struct kl__Box__I3f64E*, double );
-int32_t kl__5count__I3i32E__S3BoxI3i32E( void );
-int32_t kl__5count__I3f64E__S3BoxI3f64E( void );
-void kl__5reset__I3i32E__S3BoxI3i32E( struct kl__Box__I3i32E* );
+int32_t kl_7codegen_4main__( void );
+void kl_7codegen_3Box__I3i32E__RQ7codegen3BoxI3i32E_3i32__ctor( struct kl_7codegen_Box__I3i32E*, int32_t );
+void kl_7codegen_3Box__I3f64E__RQ7codegen3BoxI3f64E_3f64__ctor( struct kl_7codegen_Box__I3f64E*, double );
+int32_t kl_7codegen_5count__I3i32E__SQ7codegen3BoxI3i32E( void );
+int32_t kl_7codegen_5count__I3f64E__SQ7codegen3BoxI3f64E( void );
+void kl_7codegen_5reset__I3i32E__SQ7codegen3BoxI3i32E( struct kl_7codegen_Box__I3i32E* );
 
 #line 29 "codegen/static_fields_generic.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__Box__I3i32E kl_a_1;
-    struct kl__Box__I3i32E* kl_t2;
-    struct kl__Box__I3i32E kl_b_4;
-    struct kl__Box__I3i32E* kl_t5;
-    struct kl__Box__I3f64E kl_c_7;
-    struct kl__Box__I3f64E* kl_t8;
+    struct kl_7codegen_Box__I3i32E kl_a_1;
+    struct kl_7codegen_Box__I3i32E* kl_t2;
+    struct kl_7codegen_Box__I3i32E kl_b_4;
+    struct kl_7codegen_Box__I3i32E* kl_t5;
+    struct kl_7codegen_Box__I3f64E kl_c_7;
+    struct kl_7codegen_Box__I3f64E* kl_t8;
     bool kl_t10;
     bool kl_t11;
     int32_t kl_t12;
@@ -49,7 +49,7 @@ int32_t kl__4main__( void )
     int32_t kl_t14;
     bool kl_t15;
     bool kl_t16;
-    struct kl__Box__I3i32E* kl_t17;
+    struct kl_7codegen_Box__I3i32E* kl_t17;
     bool kl_t19;
     int32_t kl_t20;
     bool kl_t21;
@@ -66,15 +66,15 @@ int32_t kl__4main__( void )
 #line 31 "codegen/static_fields_generic.kl"
     kl_t2 = &kl_a_1;
 #line 31 "codegen/static_fields_generic.kl"
-    kl__3Box__I3i32E__R3BoxI3i32E_3i32__ctor( kl_t2, 1 );
+    kl_7codegen_3Box__I3i32E__RQ7codegen3BoxI3i32E_3i32__ctor( kl_t2, 1 );
     kl_t5 = &kl_b_4;
 #line 32 "codegen/static_fields_generic.kl"
-    kl__3Box__I3i32E__R3BoxI3i32E_3i32__ctor( kl_t5, 2 );
+    kl_7codegen_3Box__I3i32E__RQ7codegen3BoxI3i32E_3i32__ctor( kl_t5, 2 );
     kl_t8 = &kl_c_7;
 #line 33 "codegen/static_fields_generic.kl"
-    kl__3Box__I3f64E__R3BoxI3f64E_3f64__ctor( kl_t8, 3.0 );
+    kl_7codegen_3Box__I3f64E__RQ7codegen3BoxI3f64E_3f64__ctor( kl_t8, 3.0 );
 #line 35 "codegen/static_fields_generic.kl"
-    kl_t12 = kl__5count__I3i32E__S3BoxI3i32E(  );
+    kl_t12 = kl_7codegen_5count__I3i32E__SQ7codegen3BoxI3i32E(  );
 #line 35 "codegen/static_fields_generic.kl"
     kl_t13 = kl_t12 != 2;
 #line 35 "codegen/static_fields_generic.kl"
@@ -83,7 +83,7 @@ int32_t kl__4main__( void )
     if ( kl_t11 ) goto bb2; else goto bb1;
     bb1:
 #line 35 "codegen/static_fields_generic.kl"
-    kl_t14 = kl__5count__I3f64E__S3BoxI3f64E(  );
+    kl_t14 = kl_7codegen_5count__I3f64E__SQ7codegen3BoxI3f64E(  );
 #line 35 "codegen/static_fields_generic.kl"
     kl_t15 = kl_t14 != 1;
 #line 35 "codegen/static_fields_generic.kl"
@@ -113,9 +113,9 @@ int32_t kl__4main__( void )
 #line 40 "codegen/static_fields_generic.kl"
     kl_t17 = &kl_a_1;
 #line 40 "codegen/static_fields_generic.kl"
-    kl__5reset__I3i32E__S3BoxI3i32E( kl_t17 );
+    kl_7codegen_5reset__I3i32E__SQ7codegen3BoxI3i32E( kl_t17 );
 #line 42 "codegen/static_fields_generic.kl"
-    kl_t20 = kl__5count__I3i32E__S3BoxI3i32E(  );
+    kl_t20 = kl_7codegen_5count__I3i32E__SQ7codegen3BoxI3i32E(  );
 #line 42 "codegen/static_fields_generic.kl"
     kl_t21 = kl_t20 != 0;
 #line 42 "codegen/static_fields_generic.kl"
@@ -124,7 +124,7 @@ int32_t kl__4main__( void )
     if ( kl_t19 ) goto bb8; else goto bb7;
     bb7:
 #line 42 "codegen/static_fields_generic.kl"
-    kl_t22 = kl__5count__I3f64E__S3BoxI3f64E(  );
+    kl_t22 = kl_7codegen_5count__I3f64E__SQ7codegen3BoxI3f64E(  );
 #line 42 "codegen/static_fields_generic.kl"
     kl_t23 = kl_t22 != 1;
 #line 42 "codegen/static_fields_generic.kl"
@@ -140,7 +140,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb10:
 #line 47 "codegen/static_fields_generic.kl"
-    kl_t25 = &kl__start__GS3BoxI3f64E;
+    kl_t25 = &kl_7codegen_start__GSQ7codegen3BoxI3f64E;
 #line 47 "codegen/static_fields_generic.kl"
     kl_at_24 = kl_t25;
 #line 49 "codegen/static_fields_generic.kl"
@@ -156,7 +156,7 @@ int32_t kl__4main__( void )
 #line 49 "codegen/static_fields_generic.kl"
     ( *kl_at_24 ) = kl_t27;
 #line 51 "codegen/static_fields_generic.kl"
-    kl_t28 = kl__start__GS3BoxI3i32E != 7;
+    kl_t28 = kl_7codegen_start__GSQ7codegen3BoxI3i32E != 7;
 #line 51 "codegen/static_fields_generic.kl"
     if ( kl_t28 ) goto bb13; else goto bb14;
     bb13:
@@ -165,9 +165,9 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb14:
 #line 56 "codegen/static_fields_generic.kl"
-    kl_t29 = kl__5count__I3f64E__S3BoxI3f64E(  );
+    kl_t29 = kl_7codegen_5count__I3f64E__SQ7codegen3BoxI3f64E(  );
 #line 56 "codegen/static_fields_generic.kl"
-    kl_t30 = __builtin_add_overflow( kl__start__GS3BoxI3f64E, kl_t29, &( int32_t ) { 0 } );
+    kl_t30 = __builtin_add_overflow( kl_7codegen_start__GSQ7codegen3BoxI3f64E, kl_t29, &( int32_t ) { 0 } );
 #line 56 "codegen/static_fields_generic.kl"
     if ( kl_t30 ) goto bb15; else goto bb16;
     bb15:
@@ -175,7 +175,7 @@ int32_t kl__4main__( void )
     kl_rt_panic( "codegen/static_fields_generic.kl", 56, "arithmetic overflow: Box<f64>::start + Box<f64>::count()" );
     bb16:
 #line 56 "codegen/static_fields_generic.kl"
-    kl_t31 = kl__start__GS3BoxI3f64E + kl_t29;
+    kl_t31 = kl_7codegen_start__GSQ7codegen3BoxI3f64E + kl_t29;
 #line 56 "codegen/static_fields_generic.kl"
     kl_t0 = kl_t31;
 #line 56 "codegen/static_fields_generic.kl"
@@ -183,13 +183,13 @@ int32_t kl__4main__( void )
 }
 
 #line 11 "codegen/static_fields_generic.kl"
-void kl__3Box__I3i32E__R3BoxI3i32E_3i32__ctor( struct kl__Box__I3i32E* kl_this_1, int32_t kl_value_2 )
+void kl_7codegen_3Box__I3i32E__RQ7codegen3BoxI3i32E_3i32__ctor( struct kl_7codegen_Box__I3i32E* kl_this_1, int32_t kl_value_2 )
 {
     bool kl_t3;
     int32_t kl_t4;
 #line 13 "codegen/static_fields_generic.kl"
     ( *kl_this_1 ).kl_v = kl_value_2;
-    kl_t3 = __builtin_add_overflow( kl__made__GS3BoxI3i32E, 1, &( int32_t ) { 0 } );
+    kl_t3 = __builtin_add_overflow( kl_7codegen_made__GSQ7codegen3BoxI3i32E, 1, &( int32_t ) { 0 } );
 #line 14 "codegen/static_fields_generic.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -197,21 +197,21 @@ void kl__3Box__I3i32E__R3BoxI3i32E_3i32__ctor( struct kl__Box__I3i32E* kl_this_1
     kl_rt_panic( "codegen/static_fields_generic.kl", 14, "arithmetic overflow: made + 1" );
     bb2:
 #line 14 "codegen/static_fields_generic.kl"
-    kl_t4 = kl__made__GS3BoxI3i32E + 1;
+    kl_t4 = kl_7codegen_made__GSQ7codegen3BoxI3i32E + 1;
 #line 14 "codegen/static_fields_generic.kl"
-    kl__made__GS3BoxI3i32E = kl_t4;
+    kl_7codegen_made__GSQ7codegen3BoxI3i32E = kl_t4;
     return;
 #line 15 "codegen/static_fields_generic.kl"
 }
 
 #line 11 "codegen/static_fields_generic.kl"
-void kl__3Box__I3f64E__R3BoxI3f64E_3f64__ctor( struct kl__Box__I3f64E* kl_this_1, double kl_value_2 )
+void kl_7codegen_3Box__I3f64E__RQ7codegen3BoxI3f64E_3f64__ctor( struct kl_7codegen_Box__I3f64E* kl_this_1, double kl_value_2 )
 {
     bool kl_t3;
     int32_t kl_t4;
 #line 13 "codegen/static_fields_generic.kl"
     ( *kl_this_1 ).kl_v = kl_value_2;
-    kl_t3 = __builtin_add_overflow( kl__made__GS3BoxI3f64E, 1, &( int32_t ) { 0 } );
+    kl_t3 = __builtin_add_overflow( kl_7codegen_made__GSQ7codegen3BoxI3f64E, 1, &( int32_t ) { 0 } );
 #line 14 "codegen/static_fields_generic.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -219,39 +219,39 @@ void kl__3Box__I3f64E__R3BoxI3f64E_3f64__ctor( struct kl__Box__I3f64E* kl_this_1
     kl_rt_panic( "codegen/static_fields_generic.kl", 14, "arithmetic overflow: made + 1" );
     bb2:
 #line 14 "codegen/static_fields_generic.kl"
-    kl_t4 = kl__made__GS3BoxI3f64E + 1;
+    kl_t4 = kl_7codegen_made__GSQ7codegen3BoxI3f64E + 1;
 #line 14 "codegen/static_fields_generic.kl"
-    kl__made__GS3BoxI3f64E = kl_t4;
+    kl_7codegen_made__GSQ7codegen3BoxI3f64E = kl_t4;
     return;
 #line 15 "codegen/static_fields_generic.kl"
 }
 
 #line 17 "codegen/static_fields_generic.kl"
-int32_t kl__5count__I3i32E__S3BoxI3i32E( void )
+int32_t kl_7codegen_5count__I3i32E__SQ7codegen3BoxI3i32E( void )
 {
     int32_t kl_t0;
 #line 19 "codegen/static_fields_generic.kl"
-    kl_t0 = kl__made__GS3BoxI3i32E;
+    kl_t0 = kl_7codegen_made__GSQ7codegen3BoxI3i32E;
 #line 19 "codegen/static_fields_generic.kl"
     return kl_t0;
 }
 
 #line 17 "codegen/static_fields_generic.kl"
-int32_t kl__5count__I3f64E__S3BoxI3f64E( void )
+int32_t kl_7codegen_5count__I3f64E__SQ7codegen3BoxI3f64E( void )
 {
     int32_t kl_t0;
 #line 19 "codegen/static_fields_generic.kl"
-    kl_t0 = kl__made__GS3BoxI3f64E;
+    kl_t0 = kl_7codegen_made__GSQ7codegen3BoxI3f64E;
 #line 19 "codegen/static_fields_generic.kl"
     return kl_t0;
 }
 
 #line 23 "codegen/static_fields_generic.kl"
-void kl__5reset__I3i32E__S3BoxI3i32E( struct kl__Box__I3i32E* kl_this_1 )
+void kl_7codegen_5reset__I3i32E__SQ7codegen3BoxI3i32E( struct kl_7codegen_Box__I3i32E* kl_this_1 )
 {
     ( void ) kl_this_1;
 #line 25 "codegen/static_fields_generic.kl"
-    kl__made__GS3BoxI3i32E = 0;
+    kl_7codegen_made__GSQ7codegen3BoxI3i32E = 0;
     return;
 #line 26 "codegen/static_fields_generic.kl"
 }
@@ -260,7 +260,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 29 "codegen/static_fields_generic.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 29 "codegen/static_fields_generic.kl"
     return kl_t0;
 #line 29 "codegen/static_fields_generic.kl"

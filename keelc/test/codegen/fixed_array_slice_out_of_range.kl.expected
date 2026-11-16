@@ -329,8 +329,8 @@ struct kl_7prelude_textual__vtable
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__3sum__L3i32( int32_t*, uint64_t );
-int32_t kl__4main__( void );
+int32_t kl_7codegen_3sum__L3i32( int32_t*, uint64_t );
+int32_t kl_7codegen_4main__( void );
 void kl_1t7console_5print__7textual_7textual( struct kl_7prelude_textual__ref, struct kl_7prelude_textual__ref );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 void kl_7prelude_str__drop( void* );
@@ -339,7 +339,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 4 "codegen/fixed_array_slice_out_of_range.kl"
-int32_t kl__3sum__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
+int32_t kl_7codegen_3sum__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
 {
     int32_t kl_t0;
 #line 4 "codegen/fixed_array_slice_out_of_range.kl"
@@ -375,7 +375,7 @@ int32_t kl__3sum__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
 }
 
 #line 9 "codegen/fixed_array_slice_out_of_range.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     struct kl__A2_3i32 kl_numbers_1;
@@ -466,7 +466,7 @@ int32_t kl__4main__( void )
 #line 15 "codegen/fixed_array_slice_out_of_range.kl"
     kl_t27 = kl_t26;
 #line 15 "codegen/fixed_array_slice_out_of_range.kl"
-    kl_t28 = kl__3sum__L3i32( ( kl_t27 ).data, ( kl_t27 ).size );
+    kl_t28 = kl_7codegen_3sum__L3i32( ( kl_t27 ).data, ( kl_t27 ).size );
 #line 15 "codegen/fixed_array_slice_out_of_range.kl"
     kl_t0 = kl_t28;
 #line 15 "codegen/fixed_array_slice_out_of_range.kl"
@@ -477,7 +477,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 9 "codegen/fixed_array_slice_out_of_range.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 9 "codegen/fixed_array_slice_out_of_range.kl"
     return kl_t0;
 #line 9 "codegen/fixed_array_slice_out_of_range.kl"

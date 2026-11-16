@@ -3,48 +3,48 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__version;
-struct kl__name;
-struct kl__pair__I3i32E;
+struct kl_7codegen_version;
+struct kl_7codegen_name;
+struct kl_7codegen_pair__I3i32E;
 
-struct kl__version
+struct kl_7codegen_version
 {
     int32_t kl_major;
     int32_t kl_minor;
 };
-_Static_assert( sizeof( struct kl__version ) == 8 && _Alignof( struct kl__version ) == 4 && offsetof( struct kl__version, kl_major ) == 0 && offsetof( struct kl__version, kl_minor ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_version ) == 8 && _Alignof( struct kl_7codegen_version ) == 4 && offsetof( struct kl_7codegen_version, kl_major ) == 0 && offsetof( struct kl_7codegen_version, kl_minor ) == 4, "layout" );
 
-struct kl__name
+struct kl_7codegen_name
 {
     uint8_t kl_first;
 };
-_Static_assert( sizeof( struct kl__name ) == 1 && _Alignof( struct kl__name ) == 1 && offsetof( struct kl__name, kl_first ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_name ) == 1 && _Alignof( struct kl_7codegen_name ) == 1 && offsetof( struct kl_7codegen_name, kl_first ) == 0, "layout" );
 
-struct kl__pair__I3i32E
+struct kl_7codegen_pair__I3i32E
 {
     int32_t kl_left;
     int32_t kl_right;
 };
-_Static_assert( sizeof( struct kl__pair__I3i32E ) == 8 && _Alignof( struct kl__pair__I3i32E ) == 4 && offsetof( struct kl__pair__I3i32E, kl_left ) == 0 && offsetof( struct kl__pair__I3i32E, kl_right ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_pair__I3i32E ) == 8 && _Alignof( struct kl_7codegen_pair__I3i32E ) == 4 && offsetof( struct kl_7codegen_pair__I3i32E, kl_left ) == 0 && offsetof( struct kl_7codegen_pair__I3i32E, kl_right ) == 4, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__16operator_compare__S7version_7version( struct kl__version*, struct kl__version* );
-void kl__4name__R4name_2u8__ctor( struct kl__name*, uint8_t );
-int32_t kl__16operator_compare__S4name_4name( struct kl__name*, struct kl__name* );
-int32_t kl__4rank__Q7prelude8ordering( int32_t );
-bool kl__6before__4name_4name( struct kl__name*, struct kl__name* );
-int32_t kl__4main__( void );
-void kl__4pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( struct kl__pair__I3i32E*, int32_t, int32_t );
-int32_t kl__16operator_compare__I3i32E__S4pairI3i32E_4pairI3i32E( struct kl__pair__I3i32E*, struct kl__pair__I3i32E* );
-int32_t kl__7compare__I3i32E__3i32_3i32( int32_t*, int32_t* );
-int32_t kl__7compare__I3f64E__3f64_3f64( double*, double* );
+int32_t kl_7codegen_16operator_compare__SQ7codegen7version_Q7codegen7version( struct kl_7codegen_version*, struct kl_7codegen_version* );
+void kl_7codegen_4name__RQ7codegen4name_2u8__ctor( struct kl_7codegen_name*, uint8_t );
+int32_t kl_7codegen_16operator_compare__SQ7codegen4name_Q7codegen4name( struct kl_7codegen_name*, struct kl_7codegen_name* );
+int32_t kl_7codegen_4rank__Q7prelude8ordering( int32_t );
+bool kl_7codegen_6before__Q7codegen4name_Q7codegen4name( struct kl_7codegen_name*, struct kl_7codegen_name* );
+int32_t kl_7codegen_4main__( void );
+void kl_7codegen_4pair__I3i32E__RQ7codegen4pairI3i32E_3i32_3i32__ctor( struct kl_7codegen_pair__I3i32E*, int32_t, int32_t );
+int32_t kl_7codegen_16operator_compare__I3i32E__SQ7codegen4pairI3i32E_Q7codegen4pairI3i32E( struct kl_7codegen_pair__I3i32E*, struct kl_7codegen_pair__I3i32E* );
+int32_t kl_7codegen_7compare__I3i32E__3i32_3i32( int32_t*, int32_t* );
+int32_t kl_7codegen_7compare__I3f64E__3f64_3f64( double*, double* );
 bool kl_cmp_lt_i64_u64( int64_t, uint64_t );
 bool kl_cmp_eq_i64_u64( int64_t, uint64_t );
 bool kl_cmp_gt_i64_u64( int64_t, uint64_t );
 
 #line 9 "codegen/operator_compare.kl"
-int32_t kl__16operator_compare__S7version_7version( struct kl__version* kl_this_1, struct kl__version* kl_other_2 )
+int32_t kl_7codegen_16operator_compare__SQ7codegen7version_Q7codegen7version( struct kl_7codegen_version* kl_this_1, struct kl_7codegen_version* kl_other_2 )
 {
     int32_t kl_t0;
     int32_t kl_first_3;
@@ -123,7 +123,7 @@ int32_t kl__16operator_compare__S7version_7version( struct kl__version* kl_this_
 }
 
 #line 24 "codegen/operator_compare.kl"
-void kl__4name__R4name_2u8__ctor( struct kl__name* kl_this_1, uint8_t kl_c_2 )
+void kl_7codegen_4name__RQ7codegen4name_2u8__ctor( struct kl_7codegen_name* kl_this_1, uint8_t kl_c_2 )
 {
     ( *kl_this_1 ).kl_first = kl_c_2;
     return;
@@ -131,7 +131,7 @@ void kl__4name__R4name_2u8__ctor( struct kl__name* kl_this_1, uint8_t kl_c_2 )
 }
 
 #line 29 "codegen/operator_compare.kl"
-int32_t kl__16operator_compare__S4name_4name( struct kl__name* kl_this_1, struct kl__name* kl_other_2 )
+int32_t kl_7codegen_16operator_compare__SQ7codegen4name_Q7codegen4name( struct kl_7codegen_name* kl_this_1, struct kl_7codegen_name* kl_other_2 )
 {
     int32_t kl_t0;
     int32_t kl_t3;
@@ -169,7 +169,7 @@ int32_t kl__16operator_compare__S4name_4name( struct kl__name* kl_this_1, struct
 }
 
 #line 66 "codegen/operator_compare.kl"
-int32_t kl__4rank__Q7prelude8ordering( int32_t kl_o_1 )
+int32_t kl_7codegen_4rank__Q7prelude8ordering( int32_t kl_o_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -202,11 +202,11 @@ int32_t kl__4rank__Q7prelude8ordering( int32_t kl_o_1 )
 }
 
 #line 79 "codegen/operator_compare.kl"
-bool kl__6before__4name_4name( struct kl__name* kl_a_1, struct kl__name* kl_b_2 )
+bool kl_7codegen_6before__Q7codegen4name_Q7codegen4name( struct kl_7codegen_name* kl_a_1, struct kl_7codegen_name* kl_b_2 )
 {
     bool kl_t0;
-    struct kl__name* kl_t3;
-    struct kl__name* kl_t4;
+    struct kl_7codegen_name* kl_t3;
+    struct kl_7codegen_name* kl_t4;
     int32_t kl_t5;
     bool kl_t6;
 #line 81 "codegen/operator_compare.kl"
@@ -214,7 +214,7 @@ bool kl__6before__4name_4name( struct kl__name* kl_a_1, struct kl__name* kl_b_2 
 #line 81 "codegen/operator_compare.kl"
     kl_t4 = &( *kl_b_2 );
 #line 81 "codegen/operator_compare.kl"
-    kl_t5 = kl__16operator_compare__S4name_4name( kl_t3, kl_t4 );
+    kl_t5 = kl_7codegen_16operator_compare__SQ7codegen4name_Q7codegen4name( kl_t3, kl_t4 );
 #line 81 "codegen/operator_compare.kl"
     kl_t6 = kl_t5 == 0;
 #line 81 "codegen/operator_compare.kl"
@@ -224,7 +224,7 @@ bool kl__6before__4name_4name( struct kl__name* kl_a_1, struct kl__name* kl_b_2 
 }
 
 #line 84 "codegen/operator_compare.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_small_1;
@@ -273,22 +273,22 @@ int32_t kl__4main__( void )
     bool kl_t44;
     bool kl_t45;
     bool kl_t46;
-    struct kl__version kl_a_47;
-    struct kl__version kl_t48;
-    struct kl__version kl_b_49;
-    struct kl__version kl_t50;
+    struct kl_7codegen_version kl_a_47;
+    struct kl_7codegen_version kl_t48;
+    struct kl_7codegen_version kl_b_49;
+    struct kl_7codegen_version kl_t50;
     bool kl_t51;
     bool kl_t52;
-    struct kl__version* kl_t53;
-    struct kl__version* kl_t54;
+    struct kl_7codegen_version* kl_t53;
+    struct kl_7codegen_version* kl_t54;
     int32_t kl_t55;
     bool kl_t56;
-    struct kl__version* kl_t57;
-    struct kl__version* kl_t58;
+    struct kl_7codegen_version* kl_t57;
+    struct kl_7codegen_version* kl_t58;
     int32_t kl_t59;
     bool kl_t60;
-    struct kl__version* kl_t61;
-    struct kl__version* kl_t62;
+    struct kl_7codegen_version* kl_t61;
+    struct kl_7codegen_version* kl_t62;
     int32_t kl_t63;
     bool kl_t64;
     bool kl_t65;
@@ -297,80 +297,80 @@ int32_t kl__4main__( void )
     bool kl_t68;
     bool kl_t69;
     bool kl_t70;
-    struct kl__version* kl_t71;
-    struct kl__version* kl_t72;
+    struct kl_7codegen_version* kl_t71;
+    struct kl_7codegen_version* kl_t72;
     int32_t kl_t73;
     bool kl_t74;
     bool kl_t75;
-    struct kl__version* kl_t76;
-    struct kl__version* kl_t77;
+    struct kl_7codegen_version* kl_t76;
+    struct kl_7codegen_version* kl_t77;
     int32_t kl_t78;
     bool kl_t79;
     bool kl_t80;
-    struct kl__version* kl_t81;
-    struct kl__version* kl_t82;
+    struct kl_7codegen_version* kl_t81;
+    struct kl_7codegen_version* kl_t82;
     int32_t kl_t83;
     bool kl_t84;
-    struct kl__version* kl_t85;
-    struct kl__version* kl_t86;
+    struct kl_7codegen_version* kl_t85;
+    struct kl_7codegen_version* kl_t86;
     int32_t kl_t87;
     bool kl_t88;
-    struct kl__version* kl_t89;
-    struct kl__version* kl_t90;
+    struct kl_7codegen_version* kl_t89;
+    struct kl_7codegen_version* kl_t90;
     int32_t kl_t91;
     bool kl_t92;
     bool kl_t93;
-    struct kl__version* kl_t94;
-    struct kl__version* kl_t95;
+    struct kl_7codegen_version* kl_t94;
+    struct kl_7codegen_version* kl_t95;
     int32_t kl_t96;
     bool kl_t97;
     bool kl_t98;
-    struct kl__version* kl_t99;
-    struct kl__version* kl_t100;
+    struct kl_7codegen_version* kl_t99;
+    struct kl_7codegen_version* kl_t100;
     int32_t kl_t101;
     bool kl_t102;
-    struct kl__name kl_n_103;
-    struct kl__name* kl_t104;
+    struct kl_7codegen_name kl_n_103;
+    struct kl_7codegen_name* kl_t104;
     bool kl_t106;
     bool kl_t107;
-    struct kl__name* kl_t108;
-    struct kl__name kl_t109;
-    struct kl__name* kl_t110;
-    struct kl__name* kl_t112;
+    struct kl_7codegen_name* kl_t108;
+    struct kl_7codegen_name kl_t109;
+    struct kl_7codegen_name* kl_t110;
+    struct kl_7codegen_name* kl_t112;
     bool kl_t113;
     bool kl_t114;
-    struct kl__name* kl_t115;
-    struct kl__name kl_t116;
-    struct kl__name* kl_t117;
-    struct kl__name* kl_t119;
+    struct kl_7codegen_name* kl_t115;
+    struct kl_7codegen_name kl_t116;
+    struct kl_7codegen_name* kl_t117;
+    struct kl_7codegen_name* kl_t119;
     bool kl_t120;
-    struct kl__name* kl_t121;
-    struct kl__name kl_t122;
-    struct kl__name* kl_t123;
-    struct kl__name* kl_t125;
+    struct kl_7codegen_name* kl_t121;
+    struct kl_7codegen_name kl_t122;
+    struct kl_7codegen_name* kl_t123;
+    struct kl_7codegen_name* kl_t125;
     int32_t kl_t126;
     bool kl_t127;
     bool kl_t128;
-    struct kl__pair__I3i32E kl_p_129;
-    struct kl__pair__I3i32E* kl_t130;
+    struct kl_7codegen_pair__I3i32E kl_p_129;
+    struct kl_7codegen_pair__I3i32E* kl_t130;
     bool kl_t132;
     bool kl_t133;
-    struct kl__pair__I3i32E* kl_t134;
-    struct kl__pair__I3i32E kl_t135;
-    struct kl__pair__I3i32E* kl_t136;
-    struct kl__pair__I3i32E* kl_t138;
+    struct kl_7codegen_pair__I3i32E* kl_t134;
+    struct kl_7codegen_pair__I3i32E kl_t135;
+    struct kl_7codegen_pair__I3i32E* kl_t136;
+    struct kl_7codegen_pair__I3i32E* kl_t138;
     int32_t kl_t139;
     bool kl_t140;
-    struct kl__pair__I3i32E* kl_t141;
-    struct kl__pair__I3i32E kl_t142;
-    struct kl__pair__I3i32E* kl_t143;
-    struct kl__pair__I3i32E* kl_t145;
+    struct kl_7codegen_pair__I3i32E* kl_t141;
+    struct kl_7codegen_pair__I3i32E kl_t142;
+    struct kl_7codegen_pair__I3i32E* kl_t143;
+    struct kl_7codegen_pair__I3i32E* kl_t145;
     int32_t kl_t146;
     bool kl_t147;
-    struct kl__pair__I3i32E* kl_t148;
-    struct kl__pair__I3i32E kl_t149;
-    struct kl__pair__I3i32E* kl_t150;
-    struct kl__pair__I3i32E* kl_t152;
+    struct kl_7codegen_pair__I3i32E* kl_t148;
+    struct kl_7codegen_pair__I3i32E kl_t149;
+    struct kl_7codegen_pair__I3i32E* kl_t150;
+    struct kl_7codegen_pair__I3i32E* kl_t152;
     int32_t kl_t153;
     bool kl_t154;
     bool kl_t155;
@@ -419,7 +419,7 @@ int32_t kl__4main__( void )
     goto bb5;
     bb5:
 #line 91 "codegen/operator_compare.kl"
-    kl_t11 = kl__4rank__Q7prelude8ordering( kl_t8 );
+    kl_t11 = kl_7codegen_4rank__Q7prelude8ordering( kl_t8 );
 #line 91 "codegen/operator_compare.kl"
     kl_t12 = 0 - 1;
 #line 91 "codegen/operator_compare.kl"
@@ -460,7 +460,7 @@ int32_t kl__4main__( void )
     goto bb12;
     bb12:
 #line 91 "codegen/operator_compare.kl"
-    kl_t17 = kl__4rank__Q7prelude8ordering( kl_t14 );
+    kl_t17 = kl_7codegen_4rank__Q7prelude8ordering( kl_t14 );
 #line 91 "codegen/operator_compare.kl"
     kl_t18 = kl_t17 != 0;
 #line 91 "codegen/operator_compare.kl"
@@ -497,7 +497,7 @@ int32_t kl__4main__( void )
     goto bb19;
     bb19:
 #line 91 "codegen/operator_compare.kl"
-    kl_t22 = kl__4rank__Q7prelude8ordering( kl_t19 );
+    kl_t22 = kl_7codegen_4rank__Q7prelude8ordering( kl_t19 );
 #line 91 "codegen/operator_compare.kl"
     kl_t23 = kl_t22 != 1;
 #line 91 "codegen/operator_compare.kl"
@@ -692,7 +692,7 @@ int32_t kl__4main__( void )
 #line 109 "codegen/operator_compare.kl"
     kl_t54 = &kl_b_49;
 #line 109 "codegen/operator_compare.kl"
-    kl_t55 = kl__16operator_compare__S7version_7version( kl_t53, kl_t54 );
+    kl_t55 = kl_7codegen_16operator_compare__SQ7codegen7version_Q7codegen7version( kl_t53, kl_t54 );
 #line 109 "codegen/operator_compare.kl"
     kl_t56 = kl_t55 != 0;
 #line 109 "codegen/operator_compare.kl"
@@ -705,7 +705,7 @@ int32_t kl__4main__( void )
 #line 109 "codegen/operator_compare.kl"
     kl_t58 = &kl_a_47;
 #line 109 "codegen/operator_compare.kl"
-    kl_t59 = kl__16operator_compare__S7version_7version( kl_t57, kl_t58 );
+    kl_t59 = kl_7codegen_16operator_compare__SQ7codegen7version_Q7codegen7version( kl_t57, kl_t58 );
 #line 109 "codegen/operator_compare.kl"
     kl_t60 = kl_t59 != 2;
 #line 109 "codegen/operator_compare.kl"
@@ -723,7 +723,7 @@ int32_t kl__4main__( void )
 #line 109 "codegen/operator_compare.kl"
     kl_t62 = &kl_a_47;
 #line 109 "codegen/operator_compare.kl"
-    kl_t63 = kl__16operator_compare__S7version_7version( kl_t61, kl_t62 );
+    kl_t63 = kl_7codegen_16operator_compare__SQ7codegen7version_Q7codegen7version( kl_t61, kl_t62 );
 #line 109 "codegen/operator_compare.kl"
     kl_t64 = kl_t63 != 1;
 #line 109 "codegen/operator_compare.kl"
@@ -743,7 +743,7 @@ int32_t kl__4main__( void )
 #line 114 "codegen/operator_compare.kl"
     kl_t72 = &kl_b_49;
 #line 114 "codegen/operator_compare.kl"
-    kl_t73 = kl__16operator_compare__S7version_7version( kl_t71, kl_t72 );
+    kl_t73 = kl_7codegen_16operator_compare__SQ7codegen7version_Q7codegen7version( kl_t71, kl_t72 );
 #line 114 "codegen/operator_compare.kl"
     kl_t74 = kl_t73 == 0;
 #line 114 "codegen/operator_compare.kl"
@@ -758,7 +758,7 @@ int32_t kl__4main__( void )
 #line 114 "codegen/operator_compare.kl"
     kl_t77 = &kl_b_49;
 #line 114 "codegen/operator_compare.kl"
-    kl_t78 = kl__16operator_compare__S7version_7version( kl_t76, kl_t77 );
+    kl_t78 = kl_7codegen_16operator_compare__SQ7codegen7version_Q7codegen7version( kl_t76, kl_t77 );
 #line 114 "codegen/operator_compare.kl"
     kl_t79 = kl_t78 != 2;
 #line 114 "codegen/operator_compare.kl"
@@ -778,7 +778,7 @@ int32_t kl__4main__( void )
 #line 114 "codegen/operator_compare.kl"
     kl_t82 = &kl_b_49;
 #line 114 "codegen/operator_compare.kl"
-    kl_t83 = kl__16operator_compare__S7version_7version( kl_t81, kl_t82 );
+    kl_t83 = kl_7codegen_16operator_compare__SQ7codegen7version_Q7codegen7version( kl_t81, kl_t82 );
 #line 114 "codegen/operator_compare.kl"
     kl_t84 = kl_t83 == 2;
 #line 114 "codegen/operator_compare.kl"
@@ -796,7 +796,7 @@ int32_t kl__4main__( void )
 #line 114 "codegen/operator_compare.kl"
     kl_t86 = &kl_b_49;
 #line 114 "codegen/operator_compare.kl"
-    kl_t87 = kl__16operator_compare__S7version_7version( kl_t85, kl_t86 );
+    kl_t87 = kl_7codegen_16operator_compare__SQ7codegen7version_Q7codegen7version( kl_t85, kl_t86 );
 #line 114 "codegen/operator_compare.kl"
     kl_t88 = kl_t87 != 0;
 #line 114 "codegen/operator_compare.kl"
@@ -814,7 +814,7 @@ int32_t kl__4main__( void )
 #line 114 "codegen/operator_compare.kl"
     kl_t90 = &kl_a_47;
 #line 114 "codegen/operator_compare.kl"
-    kl_t91 = kl__16operator_compare__S7version_7version( kl_t89, kl_t90 );
+    kl_t91 = kl_7codegen_16operator_compare__SQ7codegen7version_Q7codegen7version( kl_t89, kl_t90 );
 #line 114 "codegen/operator_compare.kl"
     kl_t92 = kl_t91 != 2;
 #line 114 "codegen/operator_compare.kl"
@@ -834,7 +834,7 @@ int32_t kl__4main__( void )
 #line 114 "codegen/operator_compare.kl"
     kl_t95 = &kl_a_47;
 #line 114 "codegen/operator_compare.kl"
-    kl_t96 = kl__16operator_compare__S7version_7version( kl_t94, kl_t95 );
+    kl_t96 = kl_7codegen_16operator_compare__SQ7codegen7version_Q7codegen7version( kl_t94, kl_t95 );
 #line 114 "codegen/operator_compare.kl"
     kl_t97 = kl_t96 != 0;
 #line 114 "codegen/operator_compare.kl"
@@ -854,7 +854,7 @@ int32_t kl__4main__( void )
 #line 114 "codegen/operator_compare.kl"
     kl_t100 = &kl_a_47;
 #line 114 "codegen/operator_compare.kl"
-    kl_t101 = kl__16operator_compare__S7version_7version( kl_t99, kl_t100 );
+    kl_t101 = kl_7codegen_16operator_compare__SQ7codegen7version_Q7codegen7version( kl_t99, kl_t100 );
 #line 114 "codegen/operator_compare.kl"
     kl_t102 = kl_t101 == 0;
 #line 114 "codegen/operator_compare.kl"
@@ -872,17 +872,17 @@ int32_t kl__4main__( void )
 #line 119 "codegen/operator_compare.kl"
     kl_t104 = &kl_n_103;
 #line 119 "codegen/operator_compare.kl"
-    kl__4name__R4name_2u8__ctor( kl_t104, 65 );
+    kl_7codegen_4name__RQ7codegen4name_2u8__ctor( kl_t104, 65 );
 #line 121 "codegen/operator_compare.kl"
     kl_t108 = &kl_n_103;
 #line 121 "codegen/operator_compare.kl"
     kl_t110 = &kl_t109;
 #line 121 "codegen/operator_compare.kl"
-    kl__4name__R4name_2u8__ctor( kl_t110, 66 );
+    kl_7codegen_4name__RQ7codegen4name_2u8__ctor( kl_t110, 66 );
 #line 121 "codegen/operator_compare.kl"
     kl_t112 = &kl_t109;
 #line 121 "codegen/operator_compare.kl"
-    kl_t113 = kl__6before__4name_4name( kl_t108, kl_t112 );
+    kl_t113 = kl_7codegen_6before__Q7codegen4name_Q7codegen4name( kl_t108, kl_t112 );
 #line 121 "codegen/operator_compare.kl"
     kl_t114 = !kl_t113;
 #line 121 "codegen/operator_compare.kl"
@@ -895,11 +895,11 @@ int32_t kl__4main__( void )
 #line 121 "codegen/operator_compare.kl"
     kl_t117 = &kl_t116;
 #line 121 "codegen/operator_compare.kl"
-    kl__4name__R4name_2u8__ctor( kl_t117, 65 );
+    kl_7codegen_4name__RQ7codegen4name_2u8__ctor( kl_t117, 65 );
 #line 121 "codegen/operator_compare.kl"
     kl_t119 = &kl_t116;
 #line 121 "codegen/operator_compare.kl"
-    kl_t120 = kl__6before__4name_4name( kl_t115, kl_t119 );
+    kl_t120 = kl_7codegen_6before__Q7codegen4name_Q7codegen4name( kl_t115, kl_t119 );
 #line 121 "codegen/operator_compare.kl"
     kl_t107 = kl_t120;
 #line 121 "codegen/operator_compare.kl"
@@ -915,11 +915,11 @@ int32_t kl__4main__( void )
 #line 121 "codegen/operator_compare.kl"
     kl_t123 = &kl_t122;
 #line 121 "codegen/operator_compare.kl"
-    kl__4name__R4name_2u8__ctor( kl_t123, 64 );
+    kl_7codegen_4name__RQ7codegen4name_2u8__ctor( kl_t123, 64 );
 #line 121 "codegen/operator_compare.kl"
     kl_t125 = &kl_t122;
 #line 121 "codegen/operator_compare.kl"
-    kl_t126 = kl__16operator_compare__S4name_4name( kl_t121, kl_t125 );
+    kl_t126 = kl_7codegen_16operator_compare__SQ7codegen4name_Q7codegen4name( kl_t121, kl_t125 );
 #line 121 "codegen/operator_compare.kl"
     kl_t127 = kl_t126 == 2;
 #line 121 "codegen/operator_compare.kl"
@@ -939,17 +939,17 @@ int32_t kl__4main__( void )
 #line 126 "codegen/operator_compare.kl"
     kl_t130 = &kl_p_129;
 #line 126 "codegen/operator_compare.kl"
-    kl__4pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( kl_t130, 1, 2 );
+    kl_7codegen_4pair__I3i32E__RQ7codegen4pairI3i32E_3i32_3i32__ctor( kl_t130, 1, 2 );
 #line 128 "codegen/operator_compare.kl"
     kl_t134 = &kl_p_129;
 #line 128 "codegen/operator_compare.kl"
     kl_t136 = &kl_t135;
 #line 128 "codegen/operator_compare.kl"
-    kl__4pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( kl_t136, 1, 3 );
+    kl_7codegen_4pair__I3i32E__RQ7codegen4pairI3i32E_3i32_3i32__ctor( kl_t136, 1, 3 );
 #line 128 "codegen/operator_compare.kl"
     kl_t138 = &kl_t135;
 #line 128 "codegen/operator_compare.kl"
-    kl_t139 = kl__16operator_compare__I3i32E__S4pairI3i32E_4pairI3i32E( kl_t134, kl_t138 );
+    kl_t139 = kl_7codegen_16operator_compare__I3i32E__SQ7codegen4pairI3i32E_Q7codegen4pairI3i32E( kl_t134, kl_t138 );
 #line 128 "codegen/operator_compare.kl"
     kl_t140 = kl_t139 != 0;
 #line 128 "codegen/operator_compare.kl"
@@ -962,11 +962,11 @@ int32_t kl__4main__( void )
 #line 128 "codegen/operator_compare.kl"
     kl_t143 = &kl_t142;
 #line 128 "codegen/operator_compare.kl"
-    kl__4pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( kl_t143, 0, 9 );
+    kl_7codegen_4pair__I3i32E__RQ7codegen4pairI3i32E_3i32_3i32__ctor( kl_t143, 0, 9 );
 #line 128 "codegen/operator_compare.kl"
     kl_t145 = &kl_t142;
 #line 128 "codegen/operator_compare.kl"
-    kl_t146 = kl__16operator_compare__I3i32E__S4pairI3i32E_4pairI3i32E( kl_t141, kl_t145 );
+    kl_t146 = kl_7codegen_16operator_compare__I3i32E__SQ7codegen4pairI3i32E_Q7codegen4pairI3i32E( kl_t141, kl_t145 );
 #line 128 "codegen/operator_compare.kl"
     kl_t147 = kl_t146 == 0;
 #line 128 "codegen/operator_compare.kl"
@@ -984,11 +984,11 @@ int32_t kl__4main__( void )
 #line 128 "codegen/operator_compare.kl"
     kl_t150 = &kl_t149;
 #line 128 "codegen/operator_compare.kl"
-    kl__4pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( kl_t150, 1, 2 );
+    kl_7codegen_4pair__I3i32E__RQ7codegen4pairI3i32E_3i32_3i32__ctor( kl_t150, 1, 2 );
 #line 128 "codegen/operator_compare.kl"
     kl_t152 = &kl_t149;
 #line 128 "codegen/operator_compare.kl"
-    kl_t153 = kl__16operator_compare__I3i32E__S4pairI3i32E_4pairI3i32E( kl_t148, kl_t152 );
+    kl_t153 = kl_7codegen_16operator_compare__I3i32E__SQ7codegen4pairI3i32E_Q7codegen4pairI3i32E( kl_t148, kl_t152 );
 #line 128 "codegen/operator_compare.kl"
     kl_t154 = kl_t153 != 1;
 #line 128 "codegen/operator_compare.kl"
@@ -1012,7 +1012,7 @@ int32_t kl__4main__( void )
 #line 133 "codegen/operator_compare.kl"
     kl_t159 = &kl_t158;
 #line 133 "codegen/operator_compare.kl"
-    kl_t160 = kl__7compare__I3i32E__3i32_3i32( kl_t157, kl_t159 );
+    kl_t160 = kl_7codegen_7compare__I3i32E__3i32_3i32( kl_t157, kl_t159 );
 #line 133 "codegen/operator_compare.kl"
     kl_t161 = kl_t160 != 2;
 #line 133 "codegen/operator_compare.kl"
@@ -1029,7 +1029,7 @@ int32_t kl__4main__( void )
 #line 133 "codegen/operator_compare.kl"
     kl_t165 = &kl_t164;
 #line 133 "codegen/operator_compare.kl"
-    kl_t166 = kl__7compare__I3f64E__3f64_3f64( kl_t163, kl_t165 );
+    kl_t166 = kl_7codegen_7compare__I3f64E__3f64_3f64( kl_t163, kl_t165 );
 #line 133 "codegen/operator_compare.kl"
     kl_t167 = kl_t166 != 0;
 #line 133 "codegen/operator_compare.kl"
@@ -1051,7 +1051,7 @@ int32_t kl__4main__( void )
 }
 
 #line 39 "codegen/operator_compare.kl"
-void kl__4pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( struct kl__pair__I3i32E* kl_this_1, int32_t kl_a_2, int32_t kl_b_3 )
+void kl_7codegen_4pair__I3i32E__RQ7codegen4pairI3i32E_3i32_3i32__ctor( struct kl_7codegen_pair__I3i32E* kl_this_1, int32_t kl_a_2, int32_t kl_b_3 )
 {
     ( *kl_this_1 ).kl_left = kl_a_2;
     ( *kl_this_1 ).kl_right = kl_b_3;
@@ -1060,7 +1060,7 @@ void kl__4pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( struct kl__pair__I3i32E* k
 }
 
 #line 45 "codegen/operator_compare.kl"
-int32_t kl__16operator_compare__I3i32E__S4pairI3i32E_4pairI3i32E( struct kl__pair__I3i32E* kl_this_1, struct kl__pair__I3i32E* kl_other_2 )
+int32_t kl_7codegen_16operator_compare__I3i32E__SQ7codegen4pairI3i32E_Q7codegen4pairI3i32E( struct kl_7codegen_pair__I3i32E* kl_this_1, struct kl_7codegen_pair__I3i32E* kl_other_2 )
 {
     int32_t kl_t0;
     int32_t kl_first_3;
@@ -1139,7 +1139,7 @@ int32_t kl__16operator_compare__I3i32E__S4pairI3i32E_4pairI3i32E( struct kl__pai
 }
 
 #line 61 "codegen/operator_compare.kl"
-int32_t kl__7compare__I3i32E__3i32_3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
+int32_t kl_7codegen_7compare__I3i32E__3i32_3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
 {
     int32_t kl_t0;
     int32_t kl_t3;
@@ -1177,7 +1177,7 @@ int32_t kl__7compare__I3i32E__3i32_3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
 }
 
 #line 61 "codegen/operator_compare.kl"
-int32_t kl__7compare__I3f64E__3f64_3f64( double* kl_a_1, double* kl_b_2 )
+int32_t kl_7codegen_7compare__I3f64E__3f64_3f64( double* kl_a_1, double* kl_b_2 )
 {
     int32_t kl_t0;
     bool kl_t3;
@@ -1305,7 +1305,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 84 "codegen/operator_compare.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 84 "codegen/operator_compare.kl"
     return kl_t0;
 #line 84 "codegen/operator_compare.kl"

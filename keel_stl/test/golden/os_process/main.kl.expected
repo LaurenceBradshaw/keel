@@ -9500,10 +9500,10 @@ _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint6
 
 int32_t kl_rt_process_start( uint8_t*, uint64_t, uint64_t, int64_t*, int32_t* );
 
-int32_t kl__7os_code__Q2kl8os_error( struct kl_2kl2os_os_error );
-int32_t kl__4code__Q7prelude6resultI3i32_Q2kl10file_errorE( struct kl_7prelude_result__I3i32_Q2kl10file_errorE );
-bool kl__7written__Q7prelude6resultI4void_Q2kl10file_errorE( struct kl_7prelude_result__I4void_Q2kl10file_errorE );
-int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
+int32_t kl_10os_process_7os_code__Q2kl8os_error( struct kl_2kl2os_os_error );
+int32_t kl_10os_process_4code__Q7prelude6resultI3i32_Q2kl10file_errorE( struct kl_7prelude_result__I3i32_Q2kl10file_errorE );
+bool kl_10os_process_7written__Q7prelude6resultI4void_Q2kl10file_errorE( struct kl_7prelude_result__I4void_Q2kl10file_errorE );
+int32_t kl_10os_process_4main__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
 struct kl__run__LQ2kl6string__ref kl_2kl4list_6as_run__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
 struct kl_7prelude_result__I3i32_Q2kl10file_errorE kl_2kl2os_3run__IQ2kl6stringE__7textual_LQ2kl6string( struct kl_7prelude_textual__ref, struct kl_2kl6string_string*, uint64_t );
 struct kl_7prelude_result__I3i32_Q2kl10file_errorE kl_2kl2os_3run__IQ7prelude3strE__7textual_LQ7prelude3str( struct kl_7prelude_textual__ref, struct kl_7prelude_str*, uint64_t );
@@ -9553,7 +9553,7 @@ static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_
 static const struct kl_7prelude_textual__vtable kl_2kl6string_string__as_kl_7prelude_textual = { kl_2kl6string_string__drop, kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 10 "os_process/main.kl"
-int32_t kl__7os_code__Q2kl8os_error( struct kl_2kl2os_os_error kl_e_1 )
+int32_t kl_10os_process_7os_code__Q2kl8os_error( struct kl_2kl2os_os_error kl_e_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -9588,7 +9588,7 @@ int32_t kl__7os_code__Q2kl8os_error( struct kl_2kl2os_os_error kl_e_1 )
 }
 
 #line 23 "os_process/main.kl"
-int32_t kl__4code__Q7prelude6resultI3i32_Q2kl10file_errorE( struct kl_7prelude_result__I3i32_Q2kl10file_errorE kl_r_1 )
+int32_t kl_10os_process_4code__Q7prelude6resultI3i32_Q2kl10file_errorE( struct kl_7prelude_result__I3i32_Q2kl10file_errorE kl_r_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -9622,7 +9622,7 @@ int32_t kl__4code__Q7prelude6resultI3i32_Q2kl10file_errorE( struct kl_7prelude_r
     bb4:
 #line 34 "os_process/main.kl"
     kl_inner_6 = kl_e_4.kl_2os_error;
-    kl_t7 = kl__7os_code__Q2kl8os_error( kl_inner_6 );
+    kl_t7 = kl_10os_process_7os_code__Q2kl8os_error( kl_inner_6 );
 #line 35 "os_process/main.kl"
     kl_t0 = kl_t7;
 #line 35 "os_process/main.kl"
@@ -9640,7 +9640,7 @@ int32_t kl__4code__Q7prelude6resultI3i32_Q2kl10file_errorE( struct kl_7prelude_r
 }
 
 #line 42 "os_process/main.kl"
-bool kl__7written__Q7prelude6resultI4void_Q2kl10file_errorE( struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_r_1 )
+bool kl_10os_process_7written__Q7prelude6resultI4void_Q2kl10file_errorE( struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_r_1 )
 {
     bool kl_t0;
     bool kl_t2;
@@ -9665,7 +9665,7 @@ bool kl__7written__Q7prelude6resultI4void_Q2kl10file_errorE( struct kl_7prelude_
 }
 
 #line 53 "os_process/main.kl"
-int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_args_1_data, uint64_t kl_args_1_size )
+int32_t kl_10os_process_4main__LQ7prelude3str( struct kl_7prelude_str* kl_args_1_data, uint64_t kl_args_1_size )
 {
     int32_t kl_t0;
 #line 53 "os_process/main.kl"
@@ -9973,7 +9973,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_args_1_data, uint6
 #line 55 "os_process/main.kl"
     kl_t15 = kl_2kl2os_10write_file__7textual_7textual( kl_t8, kl_t14 );
 #line 55 "os_process/main.kl"
-    kl_t16 = kl__7written__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t15 );
+    kl_t16 = kl_10os_process_7written__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t15 );
 #line 55 "os_process/main.kl"
     kl_t17 = !kl_t16;
 #line 55 "os_process/main.kl"
@@ -10046,7 +10046,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_args_1_data, uint6
 #line 64 "os_process/main.kl"
     kl_t37 = kl_2kl2os_10write_file__7textual_7textual( kl_t34, kl_t36 );
 #line 64 "os_process/main.kl"
-    kl_t38 = kl__7written__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t37 );
+    kl_t38 = kl_10os_process_7written__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t37 );
 #line 64 "os_process/main.kl"
     kl_t39 = !kl_t38;
 #line 64 "os_process/main.kl"
@@ -10184,7 +10184,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_args_1_data, uint6
 #line 78 "os_process/main.kl"
     kl_t88 = kl_2kl2os_3run__IQ2kl6stringE__7textual_LQ2kl6string( kl_t84, ( kl_t87 ).data, ( kl_t87 ).size );
 #line 78 "os_process/main.kl"
-    kl_t89 = kl__4code__Q7prelude6resultI3i32_Q2kl10file_errorE( kl_t88 );
+    kl_t89 = kl_10os_process_4code__Q7prelude6resultI3i32_Q2kl10file_errorE( kl_t88 );
 #line 78 "os_process/main.kl"
     kl_t90 = kl_t89 != 0;
 #line 78 "os_process/main.kl"
@@ -10229,7 +10229,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_args_1_data, uint6
 #line 83 "os_process/main.kl"
     kl_t104 = kl_2kl2os_10write_file__7textual_7textual( kl_t97, kl_t103 );
 #line 83 "os_process/main.kl"
-    kl_t105 = kl__7written__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t104 );
+    kl_t105 = kl_10os_process_7written__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t104 );
 #line 83 "os_process/main.kl"
     kl_t106 = !kl_t105;
 #line 83 "os_process/main.kl"
@@ -10260,7 +10260,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_args_1_data, uint6
 #line 88 "os_process/main.kl"
     kl_t116 = kl_2kl2os_3run__IQ2kl6stringE__7textual_LQ2kl6string( kl_t112, ( kl_t115 ).data, ( kl_t115 ).size );
 #line 88 "os_process/main.kl"
-    kl_t117 = kl__4code__Q7prelude6resultI3i32_Q2kl10file_errorE( kl_t116 );
+    kl_t117 = kl_10os_process_4code__Q7prelude6resultI3i32_Q2kl10file_errorE( kl_t116 );
 #line 88 "os_process/main.kl"
     kl_t118 = kl_t117 != 1;
 #line 88 "os_process/main.kl"
@@ -10295,7 +10295,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_args_1_data, uint6
 #line 95 "os_process/main.kl"
     kl_t132 = kl_2kl2os_3run__IQ2kl6stringE__7textual_LQ2kl6string( kl_t130, ( kl_t131 ).data, ( kl_t131 ).size );
 #line 95 "os_process/main.kl"
-    kl_t133 = kl__4code__Q7prelude6resultI3i32_Q2kl10file_errorE( kl_t132 );
+    kl_t133 = kl_10os_process_4code__Q7prelude6resultI3i32_Q2kl10file_errorE( kl_t132 );
 #line 95 "os_process/main.kl"
     kl_t134 = kl_t133 != 1;
 #line 95 "os_process/main.kl"
@@ -10324,7 +10324,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_args_1_data, uint6
 #line 100 "os_process/main.kl"
     kl_t142 = kl_2kl2os_3run__IQ2kl6stringE__7textual_LQ2kl6string( kl_t140, ( kl_t141 ).data, ( kl_t141 ).size );
 #line 100 "os_process/main.kl"
-    kl_t143 = kl__4code__Q7prelude6resultI3i32_Q2kl10file_errorE( kl_t142 );
+    kl_t143 = kl_10os_process_4code__Q7prelude6resultI3i32_Q2kl10file_errorE( kl_t142 );
 #line 100 "os_process/main.kl"
     kl_t144 = kl_t143 != -1;
 #line 100 "os_process/main.kl"
@@ -10368,7 +10368,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_args_1_data, uint6
 #line 107 "os_process/main.kl"
     kl_t161 = kl_2kl2os_3run__IQ7prelude3strE__7textual_LQ7prelude3str( kl_t157, ( kl_t160 ).data, ( kl_t160 ).size );
 #line 107 "os_process/main.kl"
-    kl_t162 = kl__4code__Q7prelude6resultI3i32_Q2kl10file_errorE( kl_t161 );
+    kl_t162 = kl_10os_process_4code__Q7prelude6resultI3i32_Q2kl10file_errorE( kl_t161 );
 #line 107 "os_process/main.kl"
     kl_t163 = kl_t162 != -22;
 #line 107 "os_process/main.kl"
@@ -10698,7 +10698,7 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_args_1_data, uint6
 #line 153 "os_process/main.kl"
     kl_t253 = kl_2kl2os_3run__IQ7prelude3strE__7textual_LQ7prelude3str( kl_t249, ( kl_t252 ).data, ( kl_t252 ).size );
 #line 153 "os_process/main.kl"
-    kl_t254 = kl__4code__Q7prelude6resultI3i32_Q2kl10file_errorE( kl_t253 );
+    kl_t254 = kl_10os_process_4code__Q7prelude6resultI3i32_Q2kl10file_errorE( kl_t253 );
 #line 153 "os_process/main.kl"
     kl_t255 = kl_t254 != 0;
 #line 153 "os_process/main.kl"
@@ -11946,7 +11946,7 @@ int main( int argc, char** argv )
 #line 53 "os_process/main.kl"
     kl_t18 = ( struct kl__run__LQ7prelude3str__ref ) { ( struct kl_7prelude_str* ) kl_t7, kl_t3 };
 #line 53 "os_process/main.kl"
-    kl_t0 = kl__4main__LQ7prelude3str( ( kl_t18 ).data, ( kl_t18 ).size );
+    kl_t0 = kl_10os_process_4main__LQ7prelude3str( ( kl_t18 ).data, ( kl_t18 ).size );
 #line 53 "os_process/main.kl"
     kl_2kl2os_0drop(  );
 #line 53 "os_process/main.kl"

@@ -4064,8 +4064,8 @@ _Static_assert( sizeof( struct kl_2kl4list_list__IQ2kl6stringE ) == 24 && _Align
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-struct kl_2kl6string_string* kl__4bare__Q2kl6string( struct kl_2kl6string_string* );
-int32_t kl__4main__( void );
+struct kl_2kl6string_string* kl_7codegen_4bare__Q2kl6string( struct kl_2kl6string_string* );
+int32_t kl_7codegen_4main__( void );
 void kl_2kl4list_8truncate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
 uint64_t kl_2kl4list_4size__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
 struct kl_2kl6string_string* kl_2kl4list_14operator_index__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
@@ -4078,7 +4078,7 @@ void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*,
 void kl_2kl4list_4list__IQ2kl6stringE__dtor( struct kl_2kl4list_list__IQ2kl6stringE* );
 
 #line 5 "codegen/bare_owning_return.kl"
-struct kl_2kl6string_string* kl__4bare__Q2kl6string( struct kl_2kl6string_string* kl_s_1 )
+struct kl_2kl6string_string* kl_7codegen_4bare__Q2kl6string( struct kl_2kl6string_string* kl_s_1 )
 {
     struct kl_2kl6string_string* kl_t0;
 #line 7 "codegen/bare_owning_return.kl"
@@ -4088,7 +4088,7 @@ struct kl_2kl6string_string* kl__4bare__Q2kl6string( struct kl_2kl6string_string
 }
 
 #line 10 "codegen/bare_owning_return.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     struct kl_2kl6string_string kl_a_1;
@@ -4128,7 +4128,7 @@ int32_t kl__4main__( void )
     kl_t16 = false;
     kl_t8 = &kl_a_1;
 #line 13 "codegen/bare_owning_return.kl"
-    kl_t9 = kl__4bare__Q2kl6string( kl_t8 );
+    kl_t9 = kl_7codegen_4bare__Q2kl6string( kl_t8 );
 #line 13 "codegen/bare_owning_return.kl"
     kl_r_7 = &( *kl_t9 );
     goto bb1;
@@ -4358,7 +4358,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 10 "codegen/bare_owning_return.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 10 "codegen/bare_owning_return.kl"
     return kl_t0;
 #line 10 "codegen/bare_owning_return.kl"

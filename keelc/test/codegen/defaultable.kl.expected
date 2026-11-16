@@ -9272,8 +9272,8 @@ bool kl_2kl7console_5input__RQ2kl6string( struct kl_2kl6string_string* kl_line_1
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Origin;
-struct kl__Counter;
+struct kl_7codegen_Origin;
+struct kl_7codegen_Counter;
 struct kl_2kl6string_string;
 struct kl_2kl2os_path;
 struct kl_2kl2os_process;
@@ -9285,26 +9285,26 @@ struct kl_2kl4list_list__IQ2kl6stringE;
 struct kl_7prelude_result__IQ2kl7process_Q2kl10file_errorE;
 struct kl_2kl4list_list__IQ2kl4pathE;
 struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE;
-struct kl__Slot__I2u8E;
-struct kl__Holder__I3i64E;
+struct kl_7codegen_Slot__I2u8E;
+struct kl_7codegen_Holder__I3i64E;
 
 struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
 
 struct kl_7prelude_textual__vtable;
 struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
 
-struct kl__Origin
+struct kl_7codegen_Origin
 {
     int32_t kl_x;
     int32_t kl_y;
 };
-_Static_assert( sizeof( struct kl__Origin ) == 8 && _Alignof( struct kl__Origin ) == 4 && offsetof( struct kl__Origin, kl_x ) == 0 && offsetof( struct kl__Origin, kl_y ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Origin ) == 8 && _Alignof( struct kl_7codegen_Origin ) == 4 && offsetof( struct kl_7codegen_Origin, kl_x ) == 0 && offsetof( struct kl_7codegen_Origin, kl_y ) == 4, "layout" );
 
-struct kl__Counter
+struct kl_7codegen_Counter
 {
     int32_t kl_n;
 };
-_Static_assert( sizeof( struct kl__Counter ) == 4 && _Alignof( struct kl__Counter ) == 4 && offsetof( struct kl__Counter, kl_n ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Counter ) == 4 && _Alignof( struct kl_7codegen_Counter ) == 4 && offsetof( struct kl_7codegen_Counter, kl_n ) == 0, "layout" );
 
 struct kl_2kl6string_string
 {
@@ -9419,18 +9419,18 @@ struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE
 };
 _Static_assert( sizeof( struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE ) == 40 && _Alignof( struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE ) == 8 && offsetof( struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE, kl_2ok_value ) == 8 && offsetof( struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE, kl_3err_error ) == 8, "layout" );
 
-struct kl__Slot__I2u8E
+struct kl_7codegen_Slot__I2u8E
 {
     uint8_t* kl_at;
     int32_t kl_size;
 };
-_Static_assert( sizeof( struct kl__Slot__I2u8E ) == 16 && _Alignof( struct kl__Slot__I2u8E ) == 8 && offsetof( struct kl__Slot__I2u8E, kl_at ) == 0 && offsetof( struct kl__Slot__I2u8E, kl_size ) == 8, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Slot__I2u8E ) == 16 && _Alignof( struct kl_7codegen_Slot__I2u8E ) == 8 && offsetof( struct kl_7codegen_Slot__I2u8E, kl_at ) == 0 && offsetof( struct kl_7codegen_Slot__I2u8E, kl_size ) == 8, "layout" );
 
-struct kl__Holder__I3i64E
+struct kl_7codegen_Holder__I3i64E
 {
     int64_t kl_held;
 };
-_Static_assert( sizeof( struct kl__Holder__I3i64E ) == 8 && _Alignof( struct kl__Holder__I3i64E ) == 8 && offsetof( struct kl__Holder__I3i64E, kl_held ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Holder__I3i64E ) == 8 && _Alignof( struct kl_7codegen_Holder__I3i64E ) == 8 && offsetof( struct kl_7codegen_Holder__I3i64E, kl_held ) == 0, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -9441,28 +9441,28 @@ struct kl_7prelude_textual__vtable
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-int32_t kl__3get__S7Counter( struct kl__Counter* );
-void kl__7Counter__R7Counter__ctor( struct kl__Counter* );
-int32_t kl__4main__( void );
-int32_t kl__4zero__I3i32E__( void );
-bool kl__4zero__I4boolE__( void );
-double kl__4zero__I3f64E__( void );
-int32_t* kl__4zero__IP3i32E__( void );
-struct kl__Origin kl__4zero__I6OriginE__( void );
-struct kl__Counter kl__4zero__I7CounterE__( void );
-struct kl__Slot__I2u8E kl__4zero__I4SlotI2u8EE__( void );
-struct kl_2kl6string_string kl__4zero__IQ2kl6stringE__( void );
-void kl__6Holder__I3i64E__R6HolderI3i64E__ctor( struct kl__Holder__I3i64E* );
-int32_t kl__3get__I2u8E__S4SlotI2u8E( struct kl__Slot__I2u8E* );
-int64_t kl__3get__I3i64E__S6HolderI3i64E( struct kl__Holder__I3i64E* );
-int32_t kl__7doubled__I3i32E__( void );
+int32_t kl_7codegen_3get__SQ7codegen7Counter( struct kl_7codegen_Counter* );
+void kl_7codegen_7Counter__RQ7codegen7Counter__ctor( struct kl_7codegen_Counter* );
+int32_t kl_7codegen_4main__( void );
+int32_t kl_7codegen_4zero__I3i32E__( void );
+bool kl_7codegen_4zero__I4boolE__( void );
+double kl_7codegen_4zero__I3f64E__( void );
+int32_t* kl_7codegen_4zero__IP3i32E__( void );
+struct kl_7codegen_Origin kl_7codegen_4zero__IQ7codegen6OriginE__( void );
+struct kl_7codegen_Counter kl_7codegen_4zero__IQ7codegen7CounterE__( void );
+struct kl_7codegen_Slot__I2u8E kl_7codegen_4zero__IQ7codegen4SlotI2u8EE__( void );
+struct kl_2kl6string_string kl_7codegen_4zero__IQ2kl6stringE__( void );
+void kl_7codegen_6Holder__I3i64E__RQ7codegen6HolderI3i64E__ctor( struct kl_7codegen_Holder__I3i64E* );
+int32_t kl_7codegen_3get__I2u8E__SQ7codegen4SlotI2u8E( struct kl_7codegen_Slot__I2u8E* );
+int64_t kl_7codegen_3get__I3i64E__SQ7codegen6HolderI3i64E( struct kl_7codegen_Holder__I3i64E* );
+int32_t kl_7codegen_7doubled__I3i32E__( void );
 void kl_2kl4list_8truncate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
 uint64_t kl_2kl4list_4size__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
 struct kl_2kl6string_string* kl_2kl4list_14operator_index__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
 void kl_2kl4list_4swap__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t, uint64_t );
 void kl_2kl4list_8truncate__IQ2kl4pathE__SQ2kl4listIQ2kl4pathE_3u64( struct kl_2kl4list_list__IQ2kl4pathE*, uint64_t );
 void kl_2kl4list_4swap__IQ2kl4pathE__SQ2kl4listIQ2kl4pathE_3u64_3u64( struct kl_2kl4list_list__IQ2kl4pathE*, uint64_t, uint64_t );
-void kl__4Slot__I2u8E__R4SlotI2u8E__ctor( struct kl__Slot__I2u8E* );
+void kl_7codegen_4Slot__I2u8E__RQ7codegen4SlotI2u8E__ctor( struct kl_7codegen_Slot__I2u8E* );
 void kl_7prelude_6result__IQ2kl7process_Q2kl10file_errorE__dtor( struct kl_7prelude_result__IQ2kl7process_Q2kl10file_errorE* );
 void kl_7prelude_6result__IQ2kl8captured_Q2kl10file_errorE__dtor( struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE* );
 void kl_2kl4list_list__IQ2kl6stringE__drop( void* );
@@ -9483,7 +9483,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 27 "codegen/defaultable.kl"
-int32_t kl__3get__S7Counter( struct kl__Counter* kl_this_1 )
+int32_t kl_7codegen_3get__SQ7codegen7Counter( struct kl_7codegen_Counter* kl_this_1 )
 {
     int32_t kl_t0;
 #line 29 "codegen/defaultable.kl"
@@ -9493,7 +9493,7 @@ int32_t kl__3get__S7Counter( struct kl__Counter* kl_this_1 )
 }
 
 #line 23 "codegen/defaultable.kl"
-void kl__7Counter__R7Counter__ctor( struct kl__Counter* kl_this_1 )
+void kl_7codegen_7Counter__RQ7codegen7Counter__ctor( struct kl_7codegen_Counter* kl_this_1 )
 {
     ( *kl_this_1 ).kl_n = 5;
 #line 23 "codegen/defaultable.kl"
@@ -9502,7 +9502,7 @@ void kl__7Counter__R7Counter__ctor( struct kl__Counter* kl_this_1 )
 }
 
 #line 55 "codegen/defaultable.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_a_1;
@@ -9513,16 +9513,16 @@ int32_t kl__4main__( void )
     double kl_t6;
     int32_t* kl_p_7;
     int32_t* kl_t8;
-    struct kl__Origin kl_o_9;
-    struct kl__Origin kl_t10;
-    struct kl__Counter kl_c_11;
-    struct kl__Counter kl_t12;
-    struct kl__Slot__I2u8E kl_s_13;
-    struct kl__Slot__I2u8E kl_t14;
+    struct kl_7codegen_Origin kl_o_9;
+    struct kl_7codegen_Origin kl_t10;
+    struct kl_7codegen_Counter kl_c_11;
+    struct kl_7codegen_Counter kl_t12;
+    struct kl_7codegen_Slot__I2u8E kl_s_13;
+    struct kl_7codegen_Slot__I2u8E kl_t14;
     struct kl_2kl6string_string kl_t_15;
     struct kl_2kl6string_string kl_t16;
-    struct kl__Holder__I3i64E kl_h_17;
-    struct kl__Holder__I3i64E* kl_t18;
+    struct kl_7codegen_Holder__I3i64E kl_h_17;
+    struct kl_7codegen_Holder__I3i64E* kl_t18;
     struct kl_2kl6string_string* kl_t20;
     uint64_t kl_t21;
     struct kl_7prelude_str kl_t22;
@@ -9542,13 +9542,13 @@ int32_t kl__4main__( void )
     bool kl_t38;
     bool kl_t39;
     bool kl_t40;
-    struct kl__Counter* kl_t41;
+    struct kl_7codegen_Counter* kl_t41;
     int32_t kl_t42;
     bool kl_t43;
-    struct kl__Slot__I2u8E* kl_t44;
+    struct kl_7codegen_Slot__I2u8E* kl_t44;
     int32_t kl_t45;
     bool kl_t46;
-    struct kl__Holder__I3i64E* kl_t47;
+    struct kl_7codegen_Holder__I3i64E* kl_t47;
     int64_t kl_t48;
     bool kl_t49;
     int32_t kl_t50;
@@ -9557,28 +9557,28 @@ int32_t kl__4main__( void )
 #line 57 "codegen/defaultable.kl"
     kl_t52 = false;
 #line 57 "codegen/defaultable.kl"
-    kl_t2 = kl__4zero__I3i32E__(  );
+    kl_t2 = kl_7codegen_4zero__I3i32E__(  );
 #line 57 "codegen/defaultable.kl"
     kl_a_1 = kl_t2;
-    kl_t4 = kl__4zero__I4boolE__(  );
+    kl_t4 = kl_7codegen_4zero__I4boolE__(  );
 #line 58 "codegen/defaultable.kl"
     kl_b_3 = kl_t4;
-    kl_t6 = kl__4zero__I3f64E__(  );
+    kl_t6 = kl_7codegen_4zero__I3f64E__(  );
 #line 59 "codegen/defaultable.kl"
     kl_f_5 = kl_t6;
-    kl_t8 = kl__4zero__IP3i32E__(  );
+    kl_t8 = kl_7codegen_4zero__IP3i32E__(  );
 #line 60 "codegen/defaultable.kl"
     kl_p_7 = kl_t8;
-    kl_t10 = kl__4zero__I6OriginE__(  );
+    kl_t10 = kl_7codegen_4zero__IQ7codegen6OriginE__(  );
 #line 61 "codegen/defaultable.kl"
     kl_o_9 = kl_t10;
-    kl_t12 = kl__4zero__I7CounterE__(  );
+    kl_t12 = kl_7codegen_4zero__IQ7codegen7CounterE__(  );
 #line 62 "codegen/defaultable.kl"
     kl_c_11 = kl_t12;
-    kl_t14 = kl__4zero__I4SlotI2u8EE__(  );
+    kl_t14 = kl_7codegen_4zero__IQ7codegen4SlotI2u8EE__(  );
 #line 63 "codegen/defaultable.kl"
     kl_s_13 = kl_t14;
-    kl_t16 = kl__4zero__IQ2kl6stringE__(  );
+    kl_t16 = kl_7codegen_4zero__IQ2kl6stringE__(  );
 #line 64 "codegen/defaultable.kl"
     kl_t52 = true;
 #line 64 "codegen/defaultable.kl"
@@ -9591,7 +9591,7 @@ int32_t kl__4main__( void )
     kl_t52 = false;
     kl_t18 = &kl_h_17;
 #line 65 "codegen/defaultable.kl"
-    kl__6Holder__I3i64E__R6HolderI3i64E__ctor( kl_t18 );
+    kl_7codegen_6Holder__I3i64E__RQ7codegen6HolderI3i64E__ctor( kl_t18 );
 #line 67 "codegen/defaultable.kl"
     kl_t20 = &kl_t_15;
 #line 67 "codegen/defaultable.kl"
@@ -9664,7 +9664,7 @@ int32_t kl__4main__( void )
 #line 69 "codegen/defaultable.kl"
     kl_t41 = &kl_c_11;
 #line 69 "codegen/defaultable.kl"
-    kl_t42 = kl__3get__S7Counter( kl_t41 );
+    kl_t42 = kl_7codegen_3get__SQ7codegen7Counter( kl_t41 );
 #line 69 "codegen/defaultable.kl"
     kl_t43 = kl_t42 != 5;
 #line 69 "codegen/defaultable.kl"
@@ -9680,7 +9680,7 @@ int32_t kl__4main__( void )
 #line 69 "codegen/defaultable.kl"
     kl_t44 = &kl_s_13;
 #line 69 "codegen/defaultable.kl"
-    kl_t45 = kl__3get__I2u8E__S4SlotI2u8E( kl_t44 );
+    kl_t45 = kl_7codegen_3get__I2u8E__SQ7codegen4SlotI2u8E( kl_t44 );
 #line 69 "codegen/defaultable.kl"
     kl_t46 = kl_t45 != 3;
 #line 69 "codegen/defaultable.kl"
@@ -9696,7 +9696,7 @@ int32_t kl__4main__( void )
 #line 69 "codegen/defaultable.kl"
     kl_t47 = &kl_h_17;
 #line 69 "codegen/defaultable.kl"
-    kl_t48 = kl__3get__I3i64E__S6HolderI3i64E( kl_t47 );
+    kl_t48 = kl_7codegen_3get__I3i64E__SQ7codegen6HolderI3i64E( kl_t47 );
 #line 69 "codegen/defaultable.kl"
     kl_t49 = kl_t48 != 0;
 #line 69 "codegen/defaultable.kl"
@@ -9710,7 +9710,7 @@ int32_t kl__4main__( void )
     if ( kl_t29 ) goto bb16; else goto bb15;
     bb15:
 #line 70 "codegen/defaultable.kl"
-    kl_t50 = kl__7doubled__I3i32E__(  );
+    kl_t50 = kl_7codegen_7doubled__I3i32E__(  );
 #line 70 "codegen/defaultable.kl"
     kl_t51 = kl_t50 != 0;
 #line 69 "codegen/defaultable.kl"
@@ -9737,7 +9737,7 @@ int32_t kl__4main__( void )
 }
 
 #line 5 "codegen/defaultable.kl"
-int32_t kl__4zero__I3i32E__( void )
+int32_t kl_7codegen_4zero__I3i32E__( void )
 {
     int32_t kl_t0;
 #line 7 "codegen/defaultable.kl"
@@ -9747,7 +9747,7 @@ int32_t kl__4zero__I3i32E__( void )
 }
 
 #line 5 "codegen/defaultable.kl"
-bool kl__4zero__I4boolE__( void )
+bool kl_7codegen_4zero__I4boolE__( void )
 {
     bool kl_t0;
 #line 7 "codegen/defaultable.kl"
@@ -9757,7 +9757,7 @@ bool kl__4zero__I4boolE__( void )
 }
 
 #line 5 "codegen/defaultable.kl"
-double kl__4zero__I3f64E__( void )
+double kl_7codegen_4zero__I3f64E__( void )
 {
     double kl_t0;
 #line 7 "codegen/defaultable.kl"
@@ -9767,7 +9767,7 @@ double kl__4zero__I3f64E__( void )
 }
 
 #line 5 "codegen/defaultable.kl"
-int32_t* kl__4zero__IP3i32E__( void )
+int32_t* kl_7codegen_4zero__IP3i32E__( void )
 {
     int32_t* kl_t0;
 #line 7 "codegen/defaultable.kl"
@@ -9777,10 +9777,10 @@ int32_t* kl__4zero__IP3i32E__( void )
 }
 
 #line 5 "codegen/defaultable.kl"
-struct kl__Origin kl__4zero__I6OriginE__( void )
+struct kl_7codegen_Origin kl_7codegen_4zero__IQ7codegen6OriginE__( void )
 {
-    struct kl__Origin kl_t0;
-    struct kl__Origin kl_t1;
+    struct kl_7codegen_Origin kl_t0;
+    struct kl_7codegen_Origin kl_t1;
 #line 7 "codegen/defaultable.kl"
     kl_t1.kl_x = 1;
 #line 7 "codegen/defaultable.kl"
@@ -9792,15 +9792,15 @@ struct kl__Origin kl__4zero__I6OriginE__( void )
 }
 
 #line 5 "codegen/defaultable.kl"
-struct kl__Counter kl__4zero__I7CounterE__( void )
+struct kl_7codegen_Counter kl_7codegen_4zero__IQ7codegen7CounterE__( void )
 {
-    struct kl__Counter kl_t0;
-    struct kl__Counter kl_t1;
-    struct kl__Counter* kl_t2;
+    struct kl_7codegen_Counter kl_t0;
+    struct kl_7codegen_Counter kl_t1;
+    struct kl_7codegen_Counter* kl_t2;
 #line 7 "codegen/defaultable.kl"
     kl_t2 = &kl_t1;
 #line 7 "codegen/defaultable.kl"
-    kl__7Counter__R7Counter__ctor( kl_t2 );
+    kl_7codegen_7Counter__RQ7codegen7Counter__ctor( kl_t2 );
 #line 7 "codegen/defaultable.kl"
     kl_t0 = kl_t1;
 #line 7 "codegen/defaultable.kl"
@@ -9808,15 +9808,15 @@ struct kl__Counter kl__4zero__I7CounterE__( void )
 }
 
 #line 5 "codegen/defaultable.kl"
-struct kl__Slot__I2u8E kl__4zero__I4SlotI2u8EE__( void )
+struct kl_7codegen_Slot__I2u8E kl_7codegen_4zero__IQ7codegen4SlotI2u8EE__( void )
 {
-    struct kl__Slot__I2u8E kl_t0;
-    struct kl__Slot__I2u8E kl_t1;
-    struct kl__Slot__I2u8E* kl_t2;
+    struct kl_7codegen_Slot__I2u8E kl_t0;
+    struct kl_7codegen_Slot__I2u8E kl_t1;
+    struct kl_7codegen_Slot__I2u8E* kl_t2;
 #line 7 "codegen/defaultable.kl"
     kl_t2 = &kl_t1;
 #line 7 "codegen/defaultable.kl"
-    kl__4Slot__I2u8E__R4SlotI2u8E__ctor( kl_t2 );
+    kl_7codegen_4Slot__I2u8E__RQ7codegen4SlotI2u8E__ctor( kl_t2 );
 #line 7 "codegen/defaultable.kl"
     kl_t0 = kl_t1;
 #line 7 "codegen/defaultable.kl"
@@ -9824,7 +9824,7 @@ struct kl__Slot__I2u8E kl__4zero__I4SlotI2u8EE__( void )
 }
 
 #line 5 "codegen/defaultable.kl"
-struct kl_2kl6string_string kl__4zero__IQ2kl6stringE__( void )
+struct kl_2kl6string_string kl_7codegen_4zero__IQ2kl6stringE__( void )
 {
     struct kl_2kl6string_string kl_t0;
     struct kl_2kl6string_string kl_t1;
@@ -9853,7 +9853,7 @@ struct kl_2kl6string_string kl__4zero__IQ2kl6stringE__( void )
 }
 
 #line 45 "codegen/defaultable.kl"
-void kl__6Holder__I3i64E__R6HolderI3i64E__ctor( struct kl__Holder__I3i64E* kl_this_1 )
+void kl_7codegen_6Holder__I3i64E__RQ7codegen6HolderI3i64E__ctor( struct kl_7codegen_Holder__I3i64E* kl_this_1 )
 {
     ( *kl_this_1 ).kl_held = 0;
 #line 45 "codegen/defaultable.kl"
@@ -9862,7 +9862,7 @@ void kl__6Holder__I3i64E__R6HolderI3i64E__ctor( struct kl__Holder__I3i64E* kl_th
 }
 
 #line 38 "codegen/defaultable.kl"
-int32_t kl__3get__I2u8E__S4SlotI2u8E( struct kl__Slot__I2u8E* kl_this_1 )
+int32_t kl_7codegen_3get__I2u8E__SQ7codegen4SlotI2u8E( struct kl_7codegen_Slot__I2u8E* kl_this_1 )
 {
     int32_t kl_t0;
 #line 40 "codegen/defaultable.kl"
@@ -9872,7 +9872,7 @@ int32_t kl__3get__I2u8E__S4SlotI2u8E( struct kl__Slot__I2u8E* kl_this_1 )
 }
 
 #line 49 "codegen/defaultable.kl"
-int64_t kl__3get__I3i64E__S6HolderI3i64E( struct kl__Holder__I3i64E* kl_this_1 )
+int64_t kl_7codegen_3get__I3i64E__SQ7codegen6HolderI3i64E( struct kl_7codegen_Holder__I3i64E* kl_this_1 )
 {
     int64_t kl_t0;
 #line 51 "codegen/defaultable.kl"
@@ -9882,7 +9882,7 @@ int64_t kl__3get__I3i64E__S6HolderI3i64E( struct kl__Holder__I3i64E* kl_this_1 )
 }
 
 #line 11 "codegen/defaultable.kl"
-int32_t kl__7doubled__I3i32E__( void )
+int32_t kl_7codegen_7doubled__I3i32E__( void )
 {
     int32_t kl_t0;
     int32_t kl_a_1;
@@ -10217,7 +10217,7 @@ void kl_2kl4list_4swap__IQ2kl4pathE__SQ2kl4listIQ2kl4pathE_3u64_3u64( struct kl_
 }
 
 #line 33 "codegen/defaultable.kl"
-void kl__4Slot__I2u8E__R4SlotI2u8E__ctor( struct kl__Slot__I2u8E* kl_this_1 )
+void kl_7codegen_4Slot__I2u8E__RQ7codegen4SlotI2u8E__ctor( struct kl_7codegen_Slot__I2u8E* kl_this_1 )
 {
     ( *kl_this_1 ).kl_at = NULL;
     ( *kl_this_1 ).kl_size = 3;
@@ -10294,7 +10294,7 @@ int main( void )
 #line 55 "codegen/defaultable.kl"
     kl_2kl2os_0build(  );
 #line 55 "codegen/defaultable.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 55 "codegen/defaultable.kl"
     kl_2kl2os_0drop(  );
 #line 55 "codegen/defaultable.kl"

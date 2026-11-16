@@ -308,7 +308,7 @@ struct kl_7prelude_str
 };
 _Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
-struct kl_7prelude_str kl_5words_NAME__G = { .kl_data = ( uint8_t* ) "words", .kl_size = 5 };
+struct kl_7prelude_str kl_11str_globals5words_NAME__G = { .kl_data = ( uint8_t* ) "words", .kl_size = 5 };
 
 
 // codegen/str_globals/main.kl
@@ -336,16 +336,16 @@ struct kl_7prelude_textual__vtable
     struct kl__run__L2u8__ref ( *kl__7as_text__ )( void* );
 };
 
-struct kl_7prelude_str kl__GREETING__G = { .kl_data = ( uint8_t* ) "hello", .kl_size = 5 };
-struct kl_7prelude_str kl__copied__G = { .kl_data = ( uint8_t* ) "hello", .kl_size = 5 };
-struct kl_7prelude_str kl__escaped__G = { .kl_data = ( uint8_t* ) "a\011b\012", .kl_size = 4 };
-struct kl_7prelude_str kl__empty__G = { .kl_data = ( uint8_t* ) "", .kl_size = 0 };
-struct kl_7prelude_str kl__theirs__G = { .kl_data = ( uint8_t* ) "words", .kl_size = 5 };
-struct kl_7prelude_str kl__first__GS5Names = { .kl_data = ( uint8_t* ) "ada", .kl_size = 3 };
-__attribute__((weak)) struct kl_7prelude_str kl_5words_label__GS6TaggedI2u8E = { .kl_data = ( uint8_t* ) "tag", .kl_size = 3 };
-__attribute__((weak)) struct kl_7prelude_str kl_5words_label__GS6TaggedI3i32E = { .kl_data = ( uint8_t* ) "tag", .kl_size = 3 };
+struct kl_7prelude_str kl_11str_globals_GREETING__G = { .kl_data = ( uint8_t* ) "hello", .kl_size = 5 };
+struct kl_7prelude_str kl_11str_globals_copied__G = { .kl_data = ( uint8_t* ) "hello", .kl_size = 5 };
+struct kl_7prelude_str kl_11str_globals_escaped__G = { .kl_data = ( uint8_t* ) "a\011b\012", .kl_size = 4 };
+struct kl_7prelude_str kl_11str_globals_empty__G = { .kl_data = ( uint8_t* ) "", .kl_size = 0 };
+struct kl_7prelude_str kl_11str_globals_theirs__G = { .kl_data = ( uint8_t* ) "words", .kl_size = 5 };
+struct kl_7prelude_str kl_11str_globals_first__GSQ11str_globals5Names = { .kl_data = ( uint8_t* ) "ada", .kl_size = 3 };
+__attribute__((weak)) struct kl_7prelude_str kl_11str_globals5words_label__GSQ11str_globals6TaggedI2u8E = { .kl_data = ( uint8_t* ) "tag", .kl_size = 3 };
+__attribute__((weak)) struct kl_7prelude_str kl_11str_globals5words_label__GSQ11str_globals6TaggedI3i32E = { .kl_data = ( uint8_t* ) "tag", .kl_size = 3 };
 
-int32_t kl__4main__( void );
+int32_t kl_11str_globals_4main__( void );
 void kl_1t7console_5print__7textual_7textual( struct kl_7prelude_textual__ref, struct kl_7prelude_textual__ref );
 void kl_1t7console_5print__3u64_7textual( uint64_t, struct kl_7prelude_textual__ref );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
@@ -355,7 +355,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 19 "codegen/str_globals/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_11str_globals_4main__( void )
 {
     int32_t kl_t0;
     struct kl_7prelude_str* kl_t1;
@@ -424,7 +424,7 @@ int32_t kl__4main__( void )
     struct kl_7prelude_str* kl_t83;
     struct kl_7prelude_textual__ref kl_t84;
 #line 21 "codegen/str_globals/main.kl"
-    kl_t1 = &kl__GREETING__G;
+    kl_t1 = &kl_11str_globals_GREETING__G;
 #line 21 "codegen/str_globals/main.kl"
     kl_t2 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t1, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 24 "../test_lib/console.kl"
@@ -439,7 +439,7 @@ int32_t kl__4main__( void )
     kl_t8 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t7, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 21 "codegen/str_globals/main.kl"
     kl_1t7console_5print__7textual_7textual( kl_t2, kl_t8 );
-    kl_t10 = &kl__copied__G;
+    kl_t10 = &kl_11str_globals_copied__G;
 #line 22 "codegen/str_globals/main.kl"
     kl_t11 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t10, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 24 "../test_lib/console.kl"
@@ -465,7 +465,7 @@ int32_t kl__4main__( void )
 #line 41 "../test_lib/console.kl"
     kl_t24 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t23, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 23 "codegen/str_globals/main.kl"
-    kl_1t7console_5print__3u64_7textual( kl__escaped__G.kl_size, kl_t24 );
+    kl_1t7console_5print__3u64_7textual( kl_11str_globals_escaped__G.kl_size, kl_t24 );
 #line 41 "../test_lib/console.kl"
     kl_t27 = &kl_t26;
 #line 41 "../test_lib/console.kl"
@@ -477,8 +477,8 @@ int32_t kl__4main__( void )
 #line 41 "../test_lib/console.kl"
     kl_t31 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t30, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 24 "codegen/str_globals/main.kl"
-    kl_1t7console_5print__3u64_7textual( kl__empty__G.kl_size, kl_t31 );
-    kl_t33 = &kl__theirs__G;
+    kl_1t7console_5print__3u64_7textual( kl_11str_globals_empty__G.kl_size, kl_t31 );
+    kl_t33 = &kl_11str_globals_theirs__G;
 #line 25 "codegen/str_globals/main.kl"
     kl_t34 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t33, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 24 "../test_lib/console.kl"
@@ -492,7 +492,7 @@ int32_t kl__4main__( void )
 #line 24 "../test_lib/console.kl"
     kl_t40 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t39, &kl_7prelude_str__as_kl_7prelude_textual };
     kl_1t7console_5print__7textual_7textual( kl_t34, kl_t40 );
-    kl_t42 = &kl__first__GS5Names;
+    kl_t42 = &kl_11str_globals_first__GSQ11str_globals5Names;
 #line 26 "codegen/str_globals/main.kl"
     kl_t43 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t42, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 24 "../test_lib/console.kl"
@@ -514,8 +514,8 @@ int32_t kl__4main__( void )
 #line 28 "codegen/str_globals/main.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t52, kl_t53, 7 );
 #line 28 "codegen/str_globals/main.kl"
-    kl__copied__G = kl_t51;
-    kl_t55 = &kl__copied__G;
+    kl_11str_globals_copied__G = kl_t51;
+    kl_t55 = &kl_11str_globals_copied__G;
 #line 29 "codegen/str_globals/main.kl"
     kl_t56 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t55, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 24 "../test_lib/console.kl"
@@ -537,8 +537,8 @@ int32_t kl__4main__( void )
 #line 31 "codegen/str_globals/main.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t65, kl_t66, 5 );
 #line 31 "codegen/str_globals/main.kl"
-    kl_5words_label__GS6TaggedI2u8E = kl_t64;
-    kl_t68 = &kl_5words_label__GS6TaggedI2u8E;
+    kl_11str_globals5words_label__GSQ11str_globals6TaggedI2u8E = kl_t64;
+    kl_t68 = &kl_11str_globals5words_label__GSQ11str_globals6TaggedI2u8E;
 #line 32 "codegen/str_globals/main.kl"
     kl_t69 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t68, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 24 "../test_lib/console.kl"
@@ -553,7 +553,7 @@ int32_t kl__4main__( void )
     kl_t75 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t74, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 32 "codegen/str_globals/main.kl"
     kl_1t7console_5print__7textual_7textual( kl_t69, kl_t75 );
-    kl_t77 = &kl_5words_label__GS6TaggedI3i32E;
+    kl_t77 = &kl_11str_globals5words_label__GSQ11str_globals6TaggedI3i32E;
 #line 33 "codegen/str_globals/main.kl"
     kl_t78 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t77, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 24 "../test_lib/console.kl"
@@ -577,7 +577,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 19 "codegen/str_globals/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_11str_globals_4main__(  );
 #line 19 "codegen/str_globals/main.kl"
     return kl_t0;
 #line 19 "codegen/str_globals/main.kl"

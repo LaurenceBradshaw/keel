@@ -1,0 +1,2 @@
+//! The program, named as the package in lib/ is.
+@package( util );

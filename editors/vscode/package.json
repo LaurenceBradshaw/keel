@@ -185,7 +185,7 @@
                         "type": "string"
                     },
                     "default": [],
-                    "description": "Packages to pass to keelc, each as name=<dir>, with dir relative to the workspace folder."
+                    "description": "Package folders to pass to keelc, each relative to the workspace folder; each is named by its packageinfo.kl or its folder."
                 }
             }
         }

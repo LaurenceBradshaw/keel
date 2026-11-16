@@ -3,11 +3,11 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-int32_t kl__8classify__3f64( double );
-int32_t kl__4main__( void );
+int32_t kl_3opt_8classify__3f64( double );
+int32_t kl_3opt_4main__( void );
 
 #line 3 "opt/repeated_float_tests.kl"
-int32_t kl__8classify__3f64( double kl_x_1 )
+int32_t kl_3opt_8classify__3f64( double kl_x_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -36,7 +36,7 @@ int32_t kl__8classify__3f64( double kl_x_1 )
 }
 
 #line 17 "opt/repeated_float_tests.kl"
-int32_t kl__4main__( void )
+int32_t kl_3opt_4main__( void )
 {
     int32_t kl_t0;
 #line 23 "opt/repeated_float_tests.kl"
@@ -49,7 +49,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 17 "opt/repeated_float_tests.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_3opt_4main__(  );
 #line 17 "opt/repeated_float_tests.kl"
     return kl_t0;
 #line 17 "opt/repeated_float_tests.kl"

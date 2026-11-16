@@ -3,37 +3,37 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__vec;
-struct kl__scale;
-struct kl__tally;
-struct kl__counter;
+struct kl_7codegen_vec;
+struct kl_7codegen_scale;
+struct kl_7codegen_tally;
+struct kl_7codegen_counter;
 struct kl_7prelude_str;
-struct kl__pair__I3i32E;
+struct kl_7codegen_pair__I3i32E;
 
-struct kl__vec
+struct kl_7codegen_vec
 {
     double kl_x;
     double kl_y;
 };
-_Static_assert( sizeof( struct kl__vec ) == 16 && _Alignof( struct kl__vec ) == 8 && offsetof( struct kl__vec, kl_x ) == 0 && offsetof( struct kl__vec, kl_y ) == 8, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_vec ) == 16 && _Alignof( struct kl_7codegen_vec ) == 8 && offsetof( struct kl_7codegen_vec, kl_x ) == 0 && offsetof( struct kl_7codegen_vec, kl_y ) == 8, "layout" );
 
-struct kl__scale
+struct kl_7codegen_scale
 {
     double kl_by;
 };
-_Static_assert( sizeof( struct kl__scale ) == 8 && _Alignof( struct kl__scale ) == 8 && offsetof( struct kl__scale, kl_by ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_scale ) == 8 && _Alignof( struct kl_7codegen_scale ) == 8 && offsetof( struct kl_7codegen_scale, kl_by ) == 0, "layout" );
 
-struct kl__tally
+struct kl_7codegen_tally
 {
     int32_t kl_n;
 };
-_Static_assert( sizeof( struct kl__tally ) == 4 && _Alignof( struct kl__tally ) == 4 && offsetof( struct kl__tally, kl_n ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_tally ) == 4 && _Alignof( struct kl_7codegen_tally ) == 4 && offsetof( struct kl_7codegen_tally, kl_n ) == 0, "layout" );
 
-struct kl__counter
+struct kl_7codegen_counter
 {
     double kl_v_;
 };
-_Static_assert( sizeof( struct kl__counter ) == 8 && _Alignof( struct kl__counter ) == 8 && offsetof( struct kl__counter, kl_v_ ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_counter ) == 8 && _Alignof( struct kl_7codegen_counter ) == 8 && offsetof( struct kl_7codegen_counter, kl_v_ ) == 0, "layout" );
 
 struct kl_7prelude_str
 {
@@ -42,35 +42,35 @@ struct kl_7prelude_str
 };
 _Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
-struct kl__pair__I3i32E
+struct kl_7codegen_pair__I3i32E
 {
     int32_t kl_a;
     int32_t kl_b;
 };
-_Static_assert( sizeof( struct kl__pair__I3i32E ) == 8 && _Alignof( struct kl__pair__I3i32E ) == 4 && offsetof( struct kl__pair__I3i32E, kl_a ) == 0 && offsetof( struct kl__pair__I3i32E, kl_b ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_pair__I3i32E ) == 8 && _Alignof( struct kl_7codegen_pair__I3i32E ) == 4 && offsetof( struct kl_7codegen_pair__I3i32E, kl_a ) == 0 && offsetof( struct kl_7codegen_pair__I3i32E, kl_b ) == 4, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-struct kl__vec kl__12operator_mul__S3vec_3f64( struct kl__vec*, double );
-double kl__12operator_mul__S3vec_3vec( struct kl__vec*, struct kl__vec* );
-struct kl__vec kl__12operator_mul__S3vec_3i64( struct kl__vec*, int64_t );
-struct kl__vec kl__12operator_mul__S3vec_3f64_3vec( double, struct kl__vec );
-void kl__19operator_mul_assign__S3vec_3f64( struct kl__vec*, double );
-struct kl__vec kl__12operator_mul__S5scale_3vec_5scale( struct kl__vec*, struct kl__scale );
-int32_t kl__12operator_mul__S5tally_Q7prelude3str_5tally( struct kl_7prelude_str, struct kl__tally );
-void kl__7counter__R7counter_3f64__ctor( struct kl__counter*, double );
-double kl__12operator_sub__S7counter_3f64( struct kl__counter*, double );
-double kl__12operator_sub__S7counter_3i64( struct kl__counter*, int64_t );
-double kl__6inside__S7counter( struct kl__counter* );
-int32_t kl__4main__( void );
-struct kl__pair__I3i32E kl__12operator_add__I3i32E__S4pairI3i32E_3i32_4pairI3i32E( int32_t, struct kl__pair__I3i32E );
+struct kl_7codegen_vec kl_7codegen_12operator_mul__SQ7codegen3vec_3f64( struct kl_7codegen_vec*, double );
+double kl_7codegen_12operator_mul__SQ7codegen3vec_Q7codegen3vec( struct kl_7codegen_vec*, struct kl_7codegen_vec* );
+struct kl_7codegen_vec kl_7codegen_12operator_mul__SQ7codegen3vec_3i64( struct kl_7codegen_vec*, int64_t );
+struct kl_7codegen_vec kl_7codegen_12operator_mul__SQ7codegen3vec_3f64_Q7codegen3vec( double, struct kl_7codegen_vec );
+void kl_7codegen_19operator_mul_assign__SQ7codegen3vec_3f64( struct kl_7codegen_vec*, double );
+struct kl_7codegen_vec kl_7codegen_12operator_mul__SQ7codegen5scale_Q7codegen3vec_Q7codegen5scale( struct kl_7codegen_vec*, struct kl_7codegen_scale );
+int32_t kl_7codegen_12operator_mul__SQ7codegen5tally_Q7prelude3str_Q7codegen5tally( struct kl_7prelude_str, struct kl_7codegen_tally );
+void kl_7codegen_7counter__RQ7codegen7counter_3f64__ctor( struct kl_7codegen_counter*, double );
+double kl_7codegen_12operator_sub__SQ7codegen7counter_3f64( struct kl_7codegen_counter*, double );
+double kl_7codegen_12operator_sub__SQ7codegen7counter_3i64( struct kl_7codegen_counter*, int64_t );
+double kl_7codegen_6inside__SQ7codegen7counter( struct kl_7codegen_counter* );
+int32_t kl_7codegen_4main__( void );
+struct kl_7codegen_pair__I3i32E kl_7codegen_12operator_add__I3i32E__SQ7codegen4pairI3i32E_3i32_Q7codegen4pairI3i32E( int32_t, struct kl_7codegen_pair__I3i32E );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 
 #line 11 "codegen/operator_overloads.kl"
-struct kl__vec kl__12operator_mul__S3vec_3f64( struct kl__vec* kl_this_1, double kl_by_2 )
+struct kl_7codegen_vec kl_7codegen_12operator_mul__SQ7codegen3vec_3f64( struct kl_7codegen_vec* kl_this_1, double kl_by_2 )
 {
-    struct kl__vec kl_t0;
-    struct kl__vec kl_t3;
+    struct kl_7codegen_vec kl_t0;
+    struct kl_7codegen_vec kl_t3;
     double kl_t4;
     double kl_t5;
 #line 11 "codegen/operator_overloads.kl"
@@ -89,7 +89,7 @@ struct kl__vec kl__12operator_mul__S3vec_3f64( struct kl__vec* kl_this_1, double
 }
 
 #line 12 "codegen/operator_overloads.kl"
-double kl__12operator_mul__S3vec_3vec( struct kl__vec* kl_this_1, struct kl__vec* kl_other_2 )
+double kl_7codegen_12operator_mul__SQ7codegen3vec_Q7codegen3vec( struct kl_7codegen_vec* kl_this_1, struct kl_7codegen_vec* kl_other_2 )
 {
     double kl_t0;
     double kl_t3;
@@ -109,10 +109,10 @@ double kl__12operator_mul__S3vec_3vec( struct kl__vec* kl_this_1, struct kl__vec
 }
 
 #line 13 "codegen/operator_overloads.kl"
-struct kl__vec kl__12operator_mul__S3vec_3i64( struct kl__vec* kl_this_1, int64_t kl_by_2 )
+struct kl_7codegen_vec kl_7codegen_12operator_mul__SQ7codegen3vec_3i64( struct kl_7codegen_vec* kl_this_1, int64_t kl_by_2 )
 {
-    struct kl__vec kl_t0;
-    struct kl__vec kl_t3;
+    struct kl_7codegen_vec kl_t0;
+    struct kl_7codegen_vec kl_t3;
     double kl_t4;
     bool kl_t5;
     int64_t kl_t6;
@@ -149,10 +149,10 @@ struct kl__vec kl__12operator_mul__S3vec_3i64( struct kl__vec* kl_this_1, int64_
 }
 
 #line 14 "codegen/operator_overloads.kl"
-struct kl__vec kl__12operator_mul__S3vec_3f64_3vec( double kl_by_1, struct kl__vec kl_v_2 )
+struct kl_7codegen_vec kl_7codegen_12operator_mul__SQ7codegen3vec_3f64_Q7codegen3vec( double kl_by_1, struct kl_7codegen_vec kl_v_2 )
 {
-    struct kl__vec kl_t0;
-    struct kl__vec kl_t3;
+    struct kl_7codegen_vec kl_t0;
+    struct kl_7codegen_vec kl_t3;
     double kl_t4;
     double kl_t5;
 #line 14 "codegen/operator_overloads.kl"
@@ -171,7 +171,7 @@ struct kl__vec kl__12operator_mul__S3vec_3f64_3vec( double kl_by_1, struct kl__v
 }
 
 #line 16 "codegen/operator_overloads.kl"
-void kl__19operator_mul_assign__S3vec_3f64( struct kl__vec* kl_this_1, double kl_by_2 )
+void kl_7codegen_19operator_mul_assign__SQ7codegen3vec_3f64( struct kl_7codegen_vec* kl_this_1, double kl_by_2 )
 {
     ( *kl_this_1 ).kl_x = ( *kl_this_1 ).kl_x * kl_by_2;
     ( *kl_this_1 ).kl_y = ( *kl_this_1 ).kl_y * kl_by_2;
@@ -180,10 +180,10 @@ void kl__19operator_mul_assign__S3vec_3f64( struct kl__vec* kl_this_1, double kl
 }
 
 #line 28 "codegen/operator_overloads.kl"
-struct kl__vec kl__12operator_mul__S5scale_3vec_5scale( struct kl__vec* kl_v_1, struct kl__scale kl_s_2 )
+struct kl_7codegen_vec kl_7codegen_12operator_mul__SQ7codegen5scale_Q7codegen3vec_Q7codegen5scale( struct kl_7codegen_vec* kl_v_1, struct kl_7codegen_scale kl_s_2 )
 {
-    struct kl__vec kl_t0;
-    struct kl__vec kl_t3;
+    struct kl_7codegen_vec kl_t0;
+    struct kl_7codegen_vec kl_t3;
     double kl_t4;
     double kl_t5;
 #line 28 "codegen/operator_overloads.kl"
@@ -202,7 +202,7 @@ struct kl__vec kl__12operator_mul__S5scale_3vec_5scale( struct kl__vec* kl_v_1, 
 }
 
 #line 43 "codegen/operator_overloads.kl"
-int32_t kl__12operator_mul__S5tally_Q7prelude3str_5tally( struct kl_7prelude_str kl_s_1, struct kl__tally kl_t_2 )
+int32_t kl_7codegen_12operator_mul__SQ7codegen5tally_Q7prelude3str_Q7codegen5tally( struct kl_7prelude_str kl_s_1, struct kl_7codegen_tally kl_t_2 )
 {
     int32_t kl_t0;
     int32_t kl_t3;
@@ -246,7 +246,7 @@ int32_t kl__12operator_mul__S5tally_Q7prelude3str_5tally( struct kl_7prelude_str
 }
 
 #line 48 "codegen/operator_overloads.kl"
-void kl__7counter__R7counter_3f64__ctor( struct kl__counter* kl_this_1, double kl_v_2 )
+void kl_7codegen_7counter__RQ7codegen7counter_3f64__ctor( struct kl_7codegen_counter* kl_this_1, double kl_v_2 )
 {
 #line 48 "codegen/operator_overloads.kl"
     ( *kl_this_1 ).kl_v_ = kl_v_2;
@@ -256,7 +256,7 @@ void kl__7counter__R7counter_3f64__ctor( struct kl__counter* kl_this_1, double k
 }
 
 #line 50 "codegen/operator_overloads.kl"
-double kl__12operator_sub__S7counter_3f64( struct kl__counter* kl_this_1, double kl_by_2 )
+double kl_7codegen_12operator_sub__SQ7codegen7counter_3f64( struct kl_7codegen_counter* kl_this_1, double kl_by_2 )
 {
     double kl_t0;
     double kl_t3;
@@ -270,7 +270,7 @@ double kl__12operator_sub__S7counter_3f64( struct kl__counter* kl_this_1, double
 }
 
 #line 51 "codegen/operator_overloads.kl"
-double kl__12operator_sub__S7counter_3i64( struct kl__counter* kl_this_1, int64_t kl_t2 )
+double kl_7codegen_12operator_sub__SQ7codegen7counter_3i64( struct kl_7codegen_counter* kl_this_1, int64_t kl_t2 )
 {
     double kl_t0;
     ( void ) kl_this_1;
@@ -283,15 +283,15 @@ double kl__12operator_sub__S7counter_3i64( struct kl__counter* kl_this_1, int64_
 }
 
 #line 53 "codegen/operator_overloads.kl"
-double kl__6inside__S7counter( struct kl__counter* kl_this_1 )
+double kl_7codegen_6inside__SQ7codegen7counter( struct kl_7codegen_counter* kl_this_1 )
 {
     double kl_t0;
-    struct kl__counter* kl_t2;
+    struct kl_7codegen_counter* kl_t2;
     double kl_t3;
 #line 53 "codegen/operator_overloads.kl"
     kl_t2 = &( *kl_this_1 );
 #line 53 "codegen/operator_overloads.kl"
-    kl_t3 = kl__12operator_sub__S7counter_3i64( kl_t2, 4 );
+    kl_t3 = kl_7codegen_12operator_sub__SQ7codegen7counter_3i64( kl_t2, 4 );
 #line 53 "codegen/operator_overloads.kl"
     kl_t0 = kl_t3;
 #line 53 "codegen/operator_overloads.kl"
@@ -300,78 +300,78 @@ double kl__6inside__S7counter( struct kl__counter* kl_this_1 )
 }
 
 #line 58 "codegen/operator_overloads.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__vec kl_v_1;
-    struct kl__vec kl_t2;
-    struct kl__vec kl_w_3;
-    struct kl__vec* kl_t4;
-    struct kl__vec kl_t5;
+    struct kl_7codegen_vec kl_v_1;
+    struct kl_7codegen_vec kl_t2;
+    struct kl_7codegen_vec kl_w_3;
+    struct kl_7codegen_vec* kl_t4;
+    struct kl_7codegen_vec kl_t5;
     bool kl_t6;
     bool kl_t7;
     bool kl_t8;
-    struct kl__vec* kl_t9;
-    struct kl__vec* kl_t10;
+    struct kl_7codegen_vec* kl_t9;
+    struct kl_7codegen_vec* kl_t10;
     double kl_t11;
     bool kl_t12;
-    struct kl__vec kl_t_13;
-    struct kl__vec* kl_t14;
-    struct kl__vec kl_t15;
+    struct kl_7codegen_vec kl_t_13;
+    struct kl_7codegen_vec* kl_t14;
+    struct kl_7codegen_vec kl_t15;
     bool kl_t16;
     bool kl_t17;
     bool kl_t18;
     int32_t kl_k_19;
-    struct kl__vec kl_u_20;
-    struct kl__vec* kl_t21;
+    struct kl_7codegen_vec kl_u_20;
+    struct kl_7codegen_vec* kl_t21;
     int64_t kl_t22;
-    struct kl__vec kl_t23;
+    struct kl_7codegen_vec kl_t23;
     bool kl_t24;
     bool kl_t25;
     bool kl_t26;
-    struct kl__vec kl_r_27;
-    struct kl__vec kl_t28;
+    struct kl_7codegen_vec kl_r_27;
+    struct kl_7codegen_vec kl_t28;
     bool kl_t29;
     double kl_f_30;
-    struct kl__vec kl_s_31;
-    struct kl__vec kl_t32;
-    struct kl__vec* kl_t33;
-    struct kl__vec kl_t34;
+    struct kl_7codegen_vec kl_s_31;
+    struct kl_7codegen_vec kl_t32;
+    struct kl_7codegen_vec* kl_t33;
+    struct kl_7codegen_vec kl_t34;
     bool kl_t35;
-    struct kl__vec kl_q_36;
-    struct kl__vec* kl_t37;
-    struct kl__scale kl_t38;
-    struct kl__vec kl_t39;
+    struct kl_7codegen_vec kl_q_36;
+    struct kl_7codegen_vec* kl_t37;
+    struct kl_7codegen_scale kl_t38;
+    struct kl_7codegen_vec kl_t39;
     bool kl_t40;
-    struct kl__pair__I3i32E kl_p_41;
-    struct kl__pair__I3i32E kl_t42;
-    struct kl__pair__I3i32E kl_t43;
+    struct kl_7codegen_pair__I3i32E kl_p_41;
+    struct kl_7codegen_pair__I3i32E kl_t42;
+    struct kl_7codegen_pair__I3i32E kl_t43;
     bool kl_t44;
     bool kl_t45;
     bool kl_t46;
-    struct kl__vec* kl_t47;
+    struct kl_7codegen_vec* kl_t47;
     bool kl_t49;
-    struct kl__vec* kl_t50;
+    struct kl_7codegen_vec* kl_t50;
     bool kl_t52;
     int64_t kl_two_53;
-    struct kl__vec* kl_t54;
-    struct kl__vec kl_t55;
+    struct kl_7codegen_vec* kl_t54;
+    struct kl_7codegen_vec kl_t55;
     bool kl_t56;
     bool kl_t57;
     bool kl_t58;
     struct kl_7prelude_str kl_t59;
     struct kl_7prelude_str* kl_t60;
     uint8_t* kl_t61;
-    struct kl__tally kl_t63;
+    struct kl_7codegen_tally kl_t63;
     int32_t kl_t64;
     bool kl_t65;
-    struct kl__counter kl_c_66;
-    struct kl__counter* kl_t67;
+    struct kl_7codegen_counter kl_c_66;
+    struct kl_7codegen_counter* kl_t67;
     bool kl_t69;
-    struct kl__counter* kl_t70;
+    struct kl_7codegen_counter* kl_t70;
     double kl_t71;
     bool kl_t72;
-    struct kl__counter* kl_t73;
+    struct kl_7codegen_counter* kl_t73;
     double kl_t74;
     bool kl_t75;
 #line 60 "codegen/operator_overloads.kl"
@@ -383,7 +383,7 @@ int32_t kl__4main__( void )
 #line 62 "codegen/operator_overloads.kl"
     kl_t4 = &kl_v_1;
 #line 62 "codegen/operator_overloads.kl"
-    kl_t5 = kl__12operator_mul__S3vec_3f64( kl_t4, 2.0 );
+    kl_t5 = kl_7codegen_12operator_mul__SQ7codegen3vec_3f64( kl_t4, 2.0 );
 #line 62 "codegen/operator_overloads.kl"
     kl_w_3 = kl_t5;
     kl_t7 = kl_w_3.kl_x != 2.0;
@@ -411,7 +411,7 @@ int32_t kl__4main__( void )
 #line 65 "codegen/operator_overloads.kl"
     kl_t10 = &kl_w_3;
 #line 65 "codegen/operator_overloads.kl"
-    kl_t11 = kl__12operator_mul__S3vec_3vec( kl_t9, kl_t10 );
+    kl_t11 = kl_7codegen_12operator_mul__SQ7codegen3vec_Q7codegen3vec( kl_t9, kl_t10 );
 #line 65 "codegen/operator_overloads.kl"
     kl_t12 = kl_t11 != 10.0;
 #line 65 "codegen/operator_overloads.kl"
@@ -425,7 +425,7 @@ int32_t kl__4main__( void )
 #line 68 "codegen/operator_overloads.kl"
     kl_t14 = &kl_v_1;
 #line 68 "codegen/operator_overloads.kl"
-    kl_t15 = kl__12operator_mul__S3vec_3i64( kl_t14, 3 );
+    kl_t15 = kl_7codegen_12operator_mul__SQ7codegen3vec_3i64( kl_t14, 3 );
 #line 68 "codegen/operator_overloads.kl"
     kl_t_13 = kl_t15;
     kl_t17 = kl_t_13.kl_x != 3.0;
@@ -455,7 +455,7 @@ int32_t kl__4main__( void )
 #line 71 "codegen/operator_overloads.kl"
     kl_t22 = ( int64_t ) kl_k_19;
 #line 71 "codegen/operator_overloads.kl"
-    kl_t23 = kl__12operator_mul__S3vec_3i64( kl_t21, kl_t22 );
+    kl_t23 = kl_7codegen_12operator_mul__SQ7codegen3vec_3i64( kl_t21, kl_t22 );
 #line 71 "codegen/operator_overloads.kl"
     kl_u_20 = kl_t23;
     kl_t25 = kl_u_20.kl_x != 5.0;
@@ -479,7 +479,7 @@ int32_t kl__4main__( void )
 #line 72 "codegen/operator_overloads.kl"
     return kl_t0;
     bb14:
-    kl_t28 = kl__12operator_mul__S3vec_3f64_3vec( 2.0, kl_v_1 );
+    kl_t28 = kl_7codegen_12operator_mul__SQ7codegen3vec_3f64_Q7codegen3vec( 2.0, kl_v_1 );
 #line 74 "codegen/operator_overloads.kl"
     kl_r_27 = kl_t28;
     kl_t29 = kl_r_27.kl_y != 4.0;
@@ -493,11 +493,11 @@ int32_t kl__4main__( void )
     bb16:
 #line 76 "codegen/operator_overloads.kl"
     kl_f_30 = 3.0;
-    kl_t32 = kl__12operator_mul__S3vec_3f64_3vec( kl_f_30, kl_v_1 );
+    kl_t32 = kl_7codegen_12operator_mul__SQ7codegen3vec_3f64_Q7codegen3vec( kl_f_30, kl_v_1 );
 #line 77 "codegen/operator_overloads.kl"
     kl_t33 = &kl_t32;
 #line 77 "codegen/operator_overloads.kl"
-    kl_t34 = kl__12operator_mul__S3vec_3f64( kl_t33, 2.0 );
+    kl_t34 = kl_7codegen_12operator_mul__SQ7codegen3vec_3f64( kl_t33, 2.0 );
 #line 77 "codegen/operator_overloads.kl"
     kl_s_31 = kl_t34;
     kl_t35 = kl_s_31.kl_y != 12.0;
@@ -513,7 +513,7 @@ int32_t kl__4main__( void )
 #line 80 "codegen/operator_overloads.kl"
     kl_t38.kl_by = 10.0;
 #line 80 "codegen/operator_overloads.kl"
-    kl_t39 = kl__12operator_mul__S5scale_3vec_5scale( kl_t37, kl_t38 );
+    kl_t39 = kl_7codegen_12operator_mul__SQ7codegen5scale_Q7codegen3vec_Q7codegen5scale( kl_t37, kl_t38 );
 #line 80 "codegen/operator_overloads.kl"
     kl_q_36 = kl_t39;
     kl_t40 = kl_q_36.kl_y != 20.0;
@@ -529,7 +529,7 @@ int32_t kl__4main__( void )
 #line 83 "codegen/operator_overloads.kl"
     kl_t42.kl_b = 2;
 #line 83 "codegen/operator_overloads.kl"
-    kl_t43 = kl__12operator_add__I3i32E__S4pairI3i32E_3i32_4pairI3i32E( 10, kl_t42 );
+    kl_t43 = kl_7codegen_12operator_add__I3i32E__SQ7codegen4pairI3i32E_3i32_Q7codegen4pairI3i32E( 10, kl_t42 );
 #line 83 "codegen/operator_overloads.kl"
     kl_p_41 = kl_t43;
     kl_t45 = kl_p_41.kl_a != 11;
@@ -556,7 +556,7 @@ int32_t kl__4main__( void )
 #line 88 "codegen/operator_overloads.kl"
     kl_t47 = &kl_v_1;
 #line 88 "codegen/operator_overloads.kl"
-    kl__19operator_mul_assign__S3vec_3f64( kl_t47, 2.0 );
+    kl_7codegen_19operator_mul_assign__SQ7codegen3vec_3f64( kl_t47, 2.0 );
     kl_t49 = kl_v_1.kl_y != 4.0;
 #line 89 "codegen/operator_overloads.kl"
     if ( kl_t49 ) goto bb25; else goto bb26;
@@ -569,7 +569,7 @@ int32_t kl__4main__( void )
 #line 90 "codegen/operator_overloads.kl"
     kl_t50 = &kl_v_1;
 #line 90 "codegen/operator_overloads.kl"
-    kl__19operator_mul_assign__S3vec_3f64( kl_t50, 2.0 );
+    kl_7codegen_19operator_mul_assign__SQ7codegen3vec_3f64( kl_t50, 2.0 );
     kl_t52 = kl_v_1.kl_y != 8.0;
 #line 91 "codegen/operator_overloads.kl"
     if ( kl_t52 ) goto bb27; else goto bb28;
@@ -583,7 +583,7 @@ int32_t kl__4main__( void )
     kl_two_53 = 2;
     kl_t54 = &kl_v_1;
 #line 93 "codegen/operator_overloads.kl"
-    kl_t55 = kl__12operator_mul__S3vec_3i64( kl_t54, kl_two_53 );
+    kl_t55 = kl_7codegen_12operator_mul__SQ7codegen3vec_3i64( kl_t54, kl_two_53 );
 #line 93 "codegen/operator_overloads.kl"
     kl_v_1 = kl_t55;
     kl_t57 = kl_v_1.kl_x != 8.0;
@@ -616,7 +616,7 @@ int32_t kl__4main__( void )
 #line 97 "codegen/operator_overloads.kl"
     kl_t63.kl_n = 0;
 #line 97 "codegen/operator_overloads.kl"
-    kl_t64 = kl__12operator_mul__S5tally_Q7prelude3str_5tally( kl_t59, kl_t63 );
+    kl_t64 = kl_7codegen_12operator_mul__SQ7codegen5tally_Q7prelude3str_Q7codegen5tally( kl_t59, kl_t63 );
 #line 97 "codegen/operator_overloads.kl"
     kl_t65 = kl_t64 != 3;
 #line 97 "codegen/operator_overloads.kl"
@@ -630,10 +630,10 @@ int32_t kl__4main__( void )
 #line 100 "codegen/operator_overloads.kl"
     kl_t67 = &kl_c_66;
 #line 100 "codegen/operator_overloads.kl"
-    kl__7counter__R7counter_3f64__ctor( kl_t67, 10.0 );
+    kl_7codegen_7counter__RQ7codegen7counter_3f64__ctor( kl_t67, 10.0 );
     kl_t70 = &kl_c_66;
 #line 101 "codegen/operator_overloads.kl"
-    kl_t71 = kl__12operator_sub__S7counter_3f64( kl_t70, 4.0 );
+    kl_t71 = kl_7codegen_12operator_sub__SQ7codegen7counter_3f64( kl_t70, 4.0 );
 #line 101 "codegen/operator_overloads.kl"
     kl_t72 = kl_t71 != 6.0;
 #line 101 "codegen/operator_overloads.kl"
@@ -644,7 +644,7 @@ int32_t kl__4main__( void )
 #line 101 "codegen/operator_overloads.kl"
     kl_t73 = &kl_c_66;
 #line 101 "codegen/operator_overloads.kl"
-    kl_t74 = kl__6inside__S7counter( kl_t73 );
+    kl_t74 = kl_7codegen_6inside__SQ7codegen7counter( kl_t73 );
 #line 101 "codegen/operator_overloads.kl"
     kl_t75 = kl_t74 != 1.0;
 #line 101 "codegen/operator_overloads.kl"
@@ -666,10 +666,10 @@ int32_t kl__4main__( void )
 }
 
 #line 36 "codegen/operator_overloads.kl"
-struct kl__pair__I3i32E kl__12operator_add__I3i32E__S4pairI3i32E_3i32_4pairI3i32E( int32_t kl_k_1, struct kl__pair__I3i32E kl_p_2 )
+struct kl_7codegen_pair__I3i32E kl_7codegen_12operator_add__I3i32E__SQ7codegen4pairI3i32E_3i32_Q7codegen4pairI3i32E( int32_t kl_k_1, struct kl_7codegen_pair__I3i32E kl_p_2 )
 {
-    struct kl__pair__I3i32E kl_t0;
-    struct kl__pair__I3i32E kl_t3;
+    struct kl_7codegen_pair__I3i32E kl_t0;
+    struct kl_7codegen_pair__I3i32E kl_t3;
     bool kl_t4;
     int32_t kl_t5;
     bool kl_t6;
@@ -709,7 +709,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 58 "codegen/operator_overloads.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 58 "codegen/operator_overloads.kl"
     return kl_t0;
 #line 58 "codegen/operator_overloads.kl"

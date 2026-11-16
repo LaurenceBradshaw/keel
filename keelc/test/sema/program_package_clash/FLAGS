@@ -1,1 +1,1 @@
---check --package util=sema/nested_packages/shapes
+--check --package sema/program_package_clash/lib

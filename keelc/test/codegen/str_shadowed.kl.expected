@@ -3,14 +3,14 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__str;
+struct kl_7codegen_str;
 struct kl_7prelude_str;
 
-struct kl__str
+struct kl_7codegen_str
 {
     int32_t kl_n;
 };
-_Static_assert( sizeof( struct kl__str ) == 4 && _Alignof( struct kl__str ) == 4 && offsetof( struct kl__str, kl_n ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_str ) == 4 && _Alignof( struct kl_7codegen_str ) == 4 && offsetof( struct kl_7codegen_str, kl_n ) == 0, "layout" );
 
 struct kl_7prelude_str
 {
@@ -19,12 +19,12 @@ struct kl_7prelude_str
 };
 _Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
-void kl__3str__R3str__ctor( struct kl__str* );
-int32_t kl__4main__( void );
+void kl_7codegen_3str__RQ7codegen3str__ctor( struct kl_7codegen_str* );
+int32_t kl_7codegen_4main__( void );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 
 #line 6 "codegen/str_shadowed.kl"
-void kl__3str__R3str__ctor( struct kl__str* kl_this_1 )
+void kl_7codegen_3str__RQ7codegen3str__ctor( struct kl_7codegen_str* kl_this_1 )
 {
     ( *kl_this_1 ).kl_n = 7;
     return;
@@ -32,11 +32,11 @@ void kl__3str__R3str__ctor( struct kl__str* kl_this_1 )
 }
 
 #line 12 "codegen/str_shadowed.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__str kl_mine_1;
-    struct kl__str* kl_t2;
+    struct kl_7codegen_str kl_mine_1;
+    struct kl_7codegen_str* kl_t2;
     struct kl_7prelude_str kl_literal_4;
     struct kl_7prelude_str kl_t5;
     struct kl_7prelude_str* kl_t6;
@@ -46,7 +46,7 @@ int32_t kl__4main__( void )
 #line 14 "codegen/str_shadowed.kl"
     kl_t2 = &kl_mine_1;
 #line 14 "codegen/str_shadowed.kl"
-    kl__3str__R3str__ctor( kl_t2 );
+    kl_7codegen_3str__RQ7codegen3str__ctor( kl_t2 );
     kl_t6 = &kl_t5;
 #line 15 "codegen/str_shadowed.kl"
     kl_t7 = ( uint8_t* ) "abc";
@@ -82,7 +82,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 12 "codegen/str_shadowed.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 12 "codegen/str_shadowed.kl"
     return kl_t0;
 #line 12 "codegen/str_shadowed.kl"

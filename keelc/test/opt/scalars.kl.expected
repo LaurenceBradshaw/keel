@@ -3,61 +3,61 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Point;
-struct kl__Box;
-struct kl__Held;
-struct kl__Logged;
+struct kl_3opt_Point;
+struct kl_3opt_Box;
+struct kl_3opt_Held;
+struct kl_3opt_Logged;
 
-struct kl__Point
+struct kl_3opt_Point
 {
     int32_t kl_x;
     int32_t kl_y;
 };
-_Static_assert( sizeof( struct kl__Point ) == 8 && _Alignof( struct kl__Point ) == 4 && offsetof( struct kl__Point, kl_x ) == 0 && offsetof( struct kl__Point, kl_y ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_3opt_Point ) == 8 && _Alignof( struct kl_3opt_Point ) == 4 && offsetof( struct kl_3opt_Point, kl_x ) == 0 && offsetof( struct kl_3opt_Point, kl_y ) == 4, "layout" );
 
-struct kl__Box
+struct kl_3opt_Box
 {
     int32_t kl_value;
 };
-_Static_assert( sizeof( struct kl__Box ) == 4 && _Alignof( struct kl__Box ) == 4 && offsetof( struct kl__Box, kl_value ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_3opt_Box ) == 4 && _Alignof( struct kl_3opt_Box ) == 4 && offsetof( struct kl_3opt_Box, kl_value ) == 0, "layout" );
 
-struct kl__Held
+struct kl_3opt_Held
 {
-    struct kl__Box kl_box;
+    struct kl_3opt_Box kl_box;
     int32_t kl_n;
 };
-_Static_assert( sizeof( struct kl__Held ) == 8 && _Alignof( struct kl__Held ) == 4 && offsetof( struct kl__Held, kl_box ) == 0 && offsetof( struct kl__Held, kl_n ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_3opt_Held ) == 8 && _Alignof( struct kl_3opt_Held ) == 4 && offsetof( struct kl_3opt_Held, kl_box ) == 0 && offsetof( struct kl_3opt_Held, kl_n ) == 4, "layout" );
 
-struct kl__Logged
+struct kl_3opt_Logged
 {
     int32_t kl_value;
 };
-_Static_assert( sizeof( struct kl__Logged ) == 4 && _Alignof( struct kl__Logged ) == 4 && offsetof( struct kl__Logged, kl_value ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_3opt_Logged ) == 4 && _Alignof( struct kl_3opt_Logged ) == 4 && offsetof( struct kl_3opt_Logged, kl_value ) == 0, "layout" );
 
-int32_t kl__closed__G;
+int32_t kl_3opt_closed__G;
 
-void kl__3Box__R3Box_3i32__ctor( struct kl__Box*, int32_t );
-void kl__4Held__R4Held_3i32__ctor( struct kl__Held*, int32_t );
-void kl__6Logged__R6Logged_3i32__ctor( struct kl__Logged*, int32_t );
-void kl__6Logged__dtor( struct kl__Logged* );
-int32_t kl__5mixed__3i32_3i32( int32_t, int32_t );
-int32_t kl__3sum__5Point( struct kl__Point );
-int32_t kl__6spread__5Point( struct kl__Point );
-int32_t kl__5first__5Point( struct kl__Point* );
-int32_t kl__11constructed__( void );
-int32_t kl__7literal__3i32( int32_t );
-int32_t kl__6nested__( void );
-int32_t kl__6passed__3i32( int32_t );
-int32_t kl__8argument__3i32( int32_t );
-int32_t kl__8borrowed__3i32( int32_t );
-int32_t kl__6copied__3i32( int32_t );
-int32_t kl__6opened__3i32( int32_t );
-int32_t kl__9parameter__5Point( struct kl__Point );
-int32_t kl__7dropped__( void );
-int32_t kl__4main__( void );
+void kl_3opt_3Box__RQ3opt3Box_3i32__ctor( struct kl_3opt_Box*, int32_t );
+void kl_3opt_4Held__RQ3opt4Held_3i32__ctor( struct kl_3opt_Held*, int32_t );
+void kl_3opt_6Logged__RQ3opt6Logged_3i32__ctor( struct kl_3opt_Logged*, int32_t );
+void kl_3opt_6Logged__dtor( struct kl_3opt_Logged* );
+int32_t kl_3opt_5mixed__3i32_3i32( int32_t, int32_t );
+int32_t kl_3opt_3sum__Q3opt5Point( struct kl_3opt_Point );
+int32_t kl_3opt_6spread__Q3opt5Point( struct kl_3opt_Point );
+int32_t kl_3opt_5first__Q3opt5Point( struct kl_3opt_Point* );
+int32_t kl_3opt_11constructed__( void );
+int32_t kl_3opt_7literal__3i32( int32_t );
+int32_t kl_3opt_6nested__( void );
+int32_t kl_3opt_6passed__3i32( int32_t );
+int32_t kl_3opt_8argument__3i32( int32_t );
+int32_t kl_3opt_8borrowed__3i32( int32_t );
+int32_t kl_3opt_6copied__3i32( int32_t );
+int32_t kl_3opt_6opened__3i32( int32_t );
+int32_t kl_3opt_9parameter__Q3opt5Point( struct kl_3opt_Point );
+int32_t kl_3opt_7dropped__( void );
+int32_t kl_3opt_4main__( void );
 
 #line 20 "opt/scalars.kl"
-void kl__3Box__R3Box_3i32__ctor( struct kl__Box* kl_this_1, int32_t kl_v_2 )
+void kl_3opt_3Box__RQ3opt3Box_3i32__ctor( struct kl_3opt_Box* kl_this_1, int32_t kl_v_2 )
 {
     ( *kl_this_1 ).kl_value = kl_v_2;
     return;
@@ -65,7 +65,7 @@ void kl__3Box__R3Box_3i32__ctor( struct kl__Box* kl_this_1, int32_t kl_v_2 )
 }
 
 #line 31 "opt/scalars.kl"
-void kl__4Held__R4Held_3i32__ctor( struct kl__Held* kl_this_1, int32_t kl_v_2 )
+void kl_3opt_4Held__RQ3opt4Held_3i32__ctor( struct kl_3opt_Held* kl_this_1, int32_t kl_v_2 )
 {
     int32_t kl_t3;
 #line 33 "opt/scalars.kl"
@@ -78,7 +78,7 @@ void kl__4Held__R4Held_3i32__ctor( struct kl__Held* kl_this_1, int32_t kl_v_2 )
 }
 
 #line 46 "opt/scalars.kl"
-void kl__6Logged__R6Logged_3i32__ctor( struct kl__Logged* kl_this_1, int32_t kl_v_2 )
+void kl_3opt_6Logged__RQ3opt6Logged_3i32__ctor( struct kl_3opt_Logged* kl_this_1, int32_t kl_v_2 )
 {
     ( *kl_this_1 ).kl_value = kl_v_2;
     return;
@@ -86,7 +86,7 @@ void kl__6Logged__R6Logged_3i32__ctor( struct kl__Logged* kl_this_1, int32_t kl_
 }
 
 #line 51 "opt/scalars.kl"
-void kl__6Logged__dtor( struct kl__Logged* kl_this_1 )
+void kl_3opt_6Logged__dtor( struct kl_3opt_Logged* kl_this_1 )
 {
     int32_t kl_t2;
     int32_t kl_t3;
@@ -94,23 +94,23 @@ void kl__6Logged__dtor( struct kl__Logged* kl_this_1 )
     int32_t kl_t5;
     int32_t kl_t6;
 #line 53 "opt/scalars.kl"
-    kl_t2 = kl__5mixed__3i32_3i32( ( *kl_this_1 ).kl_value, 1 );
+    kl_t2 = kl_3opt_5mixed__3i32_3i32( ( *kl_this_1 ).kl_value, 1 );
 #line 53 "opt/scalars.kl"
-    kl_t3 = kl__5mixed__3i32_3i32( ( *kl_this_1 ).kl_value, 2 );
+    kl_t3 = kl_3opt_5mixed__3i32_3i32( ( *kl_this_1 ).kl_value, 2 );
 #line 53 "opt/scalars.kl"
     kl_t4 = kl_t2 + kl_t3;
 #line 53 "opt/scalars.kl"
-    kl_t5 = kl__5mixed__3i32_3i32( ( *kl_this_1 ).kl_value, 3 );
+    kl_t5 = kl_3opt_5mixed__3i32_3i32( ( *kl_this_1 ).kl_value, 3 );
 #line 53 "opt/scalars.kl"
     kl_t6 = kl_t4 + kl_t5;
 #line 53 "opt/scalars.kl"
-    kl__closed__G = kl_t6;
+    kl_3opt_closed__G = kl_t6;
     return;
 #line 54 "opt/scalars.kl"
 }
 
 #line 59 "opt/scalars.kl"
-int32_t kl__5mixed__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
+int32_t kl_3opt_5mixed__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 {
     int32_t kl_t0;
     int32_t kl_c_3;
@@ -159,7 +159,7 @@ int32_t kl__5mixed__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 }
 
 #line 70 "opt/scalars.kl"
-int32_t kl__3sum__5Point( struct kl__Point kl_p_1 )
+int32_t kl_3opt_3sum__Q3opt5Point( struct kl_3opt_Point kl_p_1 )
 {
     int32_t kl_t0;
 #line 72 "opt/scalars.kl"
@@ -169,7 +169,7 @@ int32_t kl__3sum__5Point( struct kl__Point kl_p_1 )
 }
 
 #line 76 "opt/scalars.kl"
-int32_t kl__6spread__5Point( struct kl__Point kl_p_1 )
+int32_t kl_3opt_6spread__Q3opt5Point( struct kl_3opt_Point kl_p_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
@@ -177,13 +177,13 @@ int32_t kl__6spread__5Point( struct kl__Point kl_p_1 )
     int32_t kl_t4;
     int32_t kl_t5;
 #line 78 "opt/scalars.kl"
-    kl_t2 = kl__5mixed__3i32_3i32( kl_p_1.kl_x, 1 );
+    kl_t2 = kl_3opt_5mixed__3i32_3i32( kl_p_1.kl_x, 1 );
 #line 78 "opt/scalars.kl"
-    kl_t3 = kl__5mixed__3i32_3i32( kl_p_1.kl_y, 2 );
+    kl_t3 = kl_3opt_5mixed__3i32_3i32( kl_p_1.kl_y, 2 );
 #line 78 "opt/scalars.kl"
     kl_t4 = kl_t2 + kl_t3;
 #line 78 "opt/scalars.kl"
-    kl_t5 = kl__5mixed__3i32_3i32( kl_p_1.kl_x, 3 );
+    kl_t5 = kl_3opt_5mixed__3i32_3i32( kl_p_1.kl_x, 3 );
 #line 78 "opt/scalars.kl"
     kl_t0 = kl_t4 + kl_t5;
 #line 78 "opt/scalars.kl"
@@ -191,7 +191,7 @@ int32_t kl__6spread__5Point( struct kl__Point kl_p_1 )
 }
 
 #line 81 "opt/scalars.kl"
-int32_t kl__5first__5Point( struct kl__Point* kl_p_1 )
+int32_t kl_3opt_5first__Q3opt5Point( struct kl_3opt_Point* kl_p_1 )
 {
     int32_t kl_t0;
 #line 83 "opt/scalars.kl"
@@ -201,7 +201,7 @@ int32_t kl__5first__5Point( struct kl__Point* kl_p_1 )
 }
 
 #line 87 "opt/scalars.kl"
-int32_t kl__11constructed__( void )
+int32_t kl_3opt_11constructed__( void )
 {
     int32_t kl_t0;
     kl_t0 = 0;
@@ -210,7 +210,7 @@ int32_t kl__11constructed__( void )
 }
 
 #line 94 "opt/scalars.kl"
-int32_t kl__7literal__3i32( int32_t kl_a_1 )
+int32_t kl_3opt_7literal__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
@@ -240,7 +240,7 @@ int32_t kl__7literal__3i32( int32_t kl_a_1 )
 }
 
 #line 102 "opt/scalars.kl"
-int32_t kl__6nested__( void )
+int32_t kl_3opt_6nested__( void )
 {
     int32_t kl_t0;
     kl_t0 = 0;
@@ -249,10 +249,10 @@ int32_t kl__6nested__( void )
 }
 
 #line 108 "opt/scalars.kl"
-int32_t kl__6passed__3i32( int32_t kl_a_1 )
+int32_t kl_3opt_6passed__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
-    struct kl__Point kl_p_2;
+    struct kl_3opt_Point kl_p_2;
     int32_t kl_t3;
     int32_t kl_t4;
     int32_t kl_t5;
@@ -264,15 +264,15 @@ int32_t kl__6passed__3i32( int32_t kl_a_1 )
     kl_p_2.kl_x = kl_a_1;
 #line 110 "opt/scalars.kl"
     kl_p_2.kl_y = 1;
-    kl_t3 = kl__6spread__5Point( kl_p_2 );
+    kl_t3 = kl_3opt_6spread__Q3opt5Point( kl_p_2 );
 #line 111 "opt/scalars.kl"
-    kl_t4 = kl__5mixed__3i32_3i32( kl_a_1, 1 );
+    kl_t4 = kl_3opt_5mixed__3i32_3i32( kl_a_1, 1 );
 #line 111 "opt/scalars.kl"
-    kl_t5 = kl__5mixed__3i32_3i32( 1, 2 );
+    kl_t5 = kl_3opt_5mixed__3i32_3i32( 1, 2 );
 #line 111 "opt/scalars.kl"
     kl_t6 = kl_t4 + kl_t5;
 #line 111 "opt/scalars.kl"
-    kl_t7 = kl__5mixed__3i32_3i32( kl_a_1, 3 );
+    kl_t7 = kl_3opt_5mixed__3i32_3i32( kl_a_1, 3 );
 #line 111 "opt/scalars.kl"
     kl_t8 = kl_t6 + kl_t7;
 #line 111 "opt/scalars.kl"
@@ -295,7 +295,7 @@ int32_t kl__6passed__3i32( int32_t kl_a_1 )
 }
 
 #line 115 "opt/scalars.kl"
-int32_t kl__8argument__3i32( int32_t kl_a_1 )
+int32_t kl_3opt_8argument__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
@@ -325,7 +325,7 @@ int32_t kl__8argument__3i32( int32_t kl_a_1 )
 }
 
 #line 121 "opt/scalars.kl"
-int32_t kl__8borrowed__3i32( int32_t kl_a_1 )
+int32_t kl_3opt_8borrowed__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     ( void ) kl_a_1;
@@ -336,7 +336,7 @@ int32_t kl__8borrowed__3i32( int32_t kl_a_1 )
 }
 
 #line 128 "opt/scalars.kl"
-int32_t kl__6copied__3i32( int32_t kl_a_1 )
+int32_t kl_3opt_6copied__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
@@ -366,7 +366,7 @@ int32_t kl__6copied__3i32( int32_t kl_a_1 )
 }
 
 #line 136 "opt/scalars.kl"
-int32_t kl__6opened__3i32( int32_t kl_a_1 )
+int32_t kl_3opt_6opened__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
@@ -396,7 +396,7 @@ int32_t kl__6opened__3i32( int32_t kl_a_1 )
 }
 
 #line 148 "opt/scalars.kl"
-int32_t kl__9parameter__5Point( struct kl__Point kl_p_1 )
+int32_t kl_3opt_9parameter__Q3opt5Point( struct kl_3opt_Point kl_p_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
@@ -425,10 +425,10 @@ int32_t kl__9parameter__5Point( struct kl__Point kl_p_1 )
 }
 
 #line 154 "opt/scalars.kl"
-int32_t kl__7dropped__( void )
+int32_t kl_3opt_7dropped__( void )
 {
     int32_t kl_t0;
-    struct kl__Logged kl_l_1;
+    struct kl_3opt_Logged kl_l_1;
     bool kl_t2;
     int32_t kl_t3;
     int32_t kl_t4;
@@ -444,23 +444,23 @@ int32_t kl__7dropped__( void )
     bb1:
     kl_t0 = 9;
 #line 160 "opt/scalars.kl"
-    kl__6Logged__dtor( &kl_l_1 );
+    kl_3opt_6Logged__dtor( &kl_l_1 );
 #line 160 "opt/scalars.kl"
     return kl_t0;
     bb2:
-    kl__6Logged__dtor( &kl_l_1 );
+    kl_3opt_6Logged__dtor( &kl_l_1 );
 #line 164 "opt/scalars.kl"
-    kl_t3 = kl__5mixed__3i32_3i32( 2, 1 );
+    kl_t3 = kl_3opt_5mixed__3i32_3i32( 2, 1 );
 #line 164 "opt/scalars.kl"
-    kl_t4 = kl__5mixed__3i32_3i32( 2, 2 );
+    kl_t4 = kl_3opt_5mixed__3i32_3i32( 2, 2 );
 #line 164 "opt/scalars.kl"
     kl_t5 = kl_t3 + kl_t4;
 #line 164 "opt/scalars.kl"
-    kl_t6 = kl__5mixed__3i32_3i32( 2, 3 );
+    kl_t6 = kl_3opt_5mixed__3i32_3i32( 2, 3 );
 #line 164 "opt/scalars.kl"
     kl_t7 = kl_t5 + kl_t6;
 #line 164 "opt/scalars.kl"
-    kl_t8 = kl__closed__G == kl_t7;
+    kl_t8 = kl_3opt_closed__G == kl_t7;
 #line 164 "opt/scalars.kl"
     if ( kl_t8 ) goto bb3; else goto bb4;
     bb3:
@@ -479,19 +479,19 @@ int32_t kl__7dropped__( void )
 }
 
 #line 167 "opt/scalars.kl"
-int32_t kl__4main__( void )
+int32_t kl_3opt_4main__( void )
 {
     int32_t kl_t0;
     bool kl_t1;
 #line 180 "opt/scalars.kl"
-    kl_t0 = kl__6passed__3i32( 5 );
+    kl_t0 = kl_3opt_6passed__3i32( 5 );
 #line 182 "opt/scalars.kl"
     kl_t1 = kl_t0 == 0;
 #line 182 "opt/scalars.kl"
     if ( kl_t1 ) goto bb1; else goto bb2;
     bb1:
 #line 204 "opt/scalars.kl"
-    kl_t0 = kl__7dropped__(  );
+    kl_t0 = kl_3opt_7dropped__(  );
 #line 202 "opt/scalars.kl"
     goto bb2;
     bb2:
@@ -503,7 +503,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 167 "opt/scalars.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_3opt_4main__(  );
 #line 167 "opt/scalars.kl"
     return kl_t0;
 #line 167 "opt/scalars.kl"

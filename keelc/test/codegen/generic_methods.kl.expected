@@ -3,69 +3,69 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Plain;
-struct kl__Buffer;
-struct kl__Holder;
-struct kl__Box__I3i32E;
+struct kl_7codegen_Plain;
+struct kl_7codegen_Buffer;
+struct kl_7codegen_Holder;
+struct kl_7codegen_Box__I3i32E;
 
 typedef int64_t ( *kl__fn__FK3i32E3i64 )( int32_t* );
 typedef bool ( *kl__fn__FK3i32E4bool )( int32_t* );
 typedef int64_t ( *kl__fn__FK3i64E3i64 )( int64_t* );
 
-struct kl__Plain
+struct kl_7codegen_Plain
 {
     int32_t kl_n;
 };
-_Static_assert( sizeof( struct kl__Plain ) == 4 && _Alignof( struct kl__Plain ) == 4 && offsetof( struct kl__Plain, kl_n ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Plain ) == 4 && _Alignof( struct kl_7codegen_Plain ) == 4 && offsetof( struct kl_7codegen_Plain, kl_n ) == 0, "layout" );
 
-struct kl__Buffer
+struct kl_7codegen_Buffer
 {
     uint8_t* kl_bytes;
     uint64_t kl_size;
 };
-_Static_assert( sizeof( struct kl__Buffer ) == 16 && _Alignof( struct kl__Buffer ) == 8 && offsetof( struct kl__Buffer, kl_bytes ) == 0 && offsetof( struct kl__Buffer, kl_size ) == 8, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Buffer ) == 16 && _Alignof( struct kl_7codegen_Buffer ) == 8 && offsetof( struct kl_7codegen_Buffer, kl_bytes ) == 0 && offsetof( struct kl_7codegen_Buffer, kl_size ) == 8, "layout" );
 
-struct kl__Holder
+struct kl_7codegen_Holder
 {
     int32_t kl_tag;
 };
-_Static_assert( sizeof( struct kl__Holder ) == 4 && _Alignof( struct kl__Holder ) == 4 && offsetof( struct kl__Holder, kl_tag ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Holder ) == 4 && _Alignof( struct kl_7codegen_Holder ) == 4 && offsetof( struct kl_7codegen_Holder, kl_tag ) == 0, "layout" );
 
-struct kl__Box__I3i32E
+struct kl_7codegen_Box__I3i32E
 {
     int32_t kl_value;
 };
-_Static_assert( sizeof( struct kl__Box__I3i32E ) == 4 && _Alignof( struct kl__Box__I3i32E ) == 4 && offsetof( struct kl__Box__I3i32E, kl_value ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Box__I3i32E ) == 4 && _Alignof( struct kl_7codegen_Box__I3i32E ) == 4 && offsetof( struct kl_7codegen_Box__I3i32E, kl_value ) == 0, "layout" );
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int64_t kl__7widened__S5Plain( struct kl__Plain* );
-void kl__6Buffer__R6Buffer_3u64__ctor( struct kl__Buffer*, uint64_t );
-void kl__6Buffer__dtor( struct kl__Buffer* );
-uint64_t kl__6length__S6Buffer( struct kl__Buffer* );
-int64_t kl__5widen__3i32( int32_t* );
-bool kl__8positive__3i32( int32_t* );
-int64_t kl__9double_it__3i64( int64_t* );
-int32_t kl__4main__( void );
-int64_t kl__2as__I3i64E__S5Plain_3i64( struct kl__Plain*, int64_t );
-void kl__3Box__I3i32E__R3BoxI3i32E_3i32__ctor( struct kl__Box__I3i32E*, int32_t );
-int64_t kl__3map__I3i32_3i64E__S3BoxI3i32E_FK3i32E3i64( struct kl__Box__I3i32E*, kl__fn__FK3i32E3i64 );
-bool kl__3map__I3i32_4boolE__S3BoxI3i32E_FK3i32E4bool( struct kl__Box__I3i32E*, kl__fn__FK3i32E4bool );
-int64_t kl__9map_twice__I3i32_3i64E__S3BoxI3i32E_FK3i32E3i64_FK3i64E3i64( struct kl__Box__I3i32E*, kl__fn__FK3i32E3i64, kl__fn__FK3i64E3i64 );
-int32_t kl__4make__I3i32_3i32E__S3BoxI3i32E_3i32( int32_t );
-bool kl__2as__I4boolE__S5Plain_4bool( struct kl__Plain*, bool );
-int32_t kl__2as__I3i32E__S5Plain_3i32( struct kl__Plain*, int32_t );
-struct kl__Buffer kl__4pass__I6BufferE__S6Holder_M6Buffer( struct kl__Holder*, struct kl__Buffer );
+int64_t kl_7codegen_7widened__SQ7codegen5Plain( struct kl_7codegen_Plain* );
+void kl_7codegen_6Buffer__RQ7codegen6Buffer_3u64__ctor( struct kl_7codegen_Buffer*, uint64_t );
+void kl_7codegen_6Buffer__dtor( struct kl_7codegen_Buffer* );
+uint64_t kl_7codegen_6length__SQ7codegen6Buffer( struct kl_7codegen_Buffer* );
+int64_t kl_7codegen_5widen__3i32( int32_t* );
+bool kl_7codegen_8positive__3i32( int32_t* );
+int64_t kl_7codegen_9double_it__3i64( int64_t* );
+int32_t kl_7codegen_4main__( void );
+int64_t kl_7codegen_2as__I3i64E__SQ7codegen5Plain_3i64( struct kl_7codegen_Plain*, int64_t );
+void kl_7codegen_3Box__I3i32E__RQ7codegen3BoxI3i32E_3i32__ctor( struct kl_7codegen_Box__I3i32E*, int32_t );
+int64_t kl_7codegen_3map__I3i32_3i64E__SQ7codegen3BoxI3i32E_FK3i32E3i64( struct kl_7codegen_Box__I3i32E*, kl__fn__FK3i32E3i64 );
+bool kl_7codegen_3map__I3i32_4boolE__SQ7codegen3BoxI3i32E_FK3i32E4bool( struct kl_7codegen_Box__I3i32E*, kl__fn__FK3i32E4bool );
+int64_t kl_7codegen_9map_twice__I3i32_3i64E__SQ7codegen3BoxI3i32E_FK3i32E3i64_FK3i64E3i64( struct kl_7codegen_Box__I3i32E*, kl__fn__FK3i32E3i64, kl__fn__FK3i64E3i64 );
+int32_t kl_7codegen_4make__I3i32_3i32E__SQ7codegen3BoxI3i32E_3i32( int32_t );
+bool kl_7codegen_2as__I4boolE__SQ7codegen5Plain_4bool( struct kl_7codegen_Plain*, bool );
+int32_t kl_7codegen_2as__I3i32E__SQ7codegen5Plain_3i32( struct kl_7codegen_Plain*, int32_t );
+struct kl_7codegen_Buffer kl_7codegen_4pass__IQ7codegen6BufferE__SQ7codegen6Holder_MQ7codegen6Buffer( struct kl_7codegen_Holder*, struct kl_7codegen_Buffer );
 
 #line 32 "codegen/generic_methods.kl"
-int64_t kl__7widened__S5Plain( struct kl__Plain* kl_this_1 )
+int64_t kl_7codegen_7widened__SQ7codegen5Plain( struct kl_7codegen_Plain* kl_this_1 )
 {
     int64_t kl_t0;
     int64_t kl_x_2;
-    struct kl__Plain* kl_t3;
+    struct kl_7codegen_Plain* kl_t3;
     int64_t kl_t4;
     int64_t kl_t5;
     bool kl_t6;
@@ -73,7 +73,7 @@ int64_t kl__7widened__S5Plain( struct kl__Plain* kl_this_1 )
 #line 34 "codegen/generic_methods.kl"
     kl_t3 = &( *kl_this_1 );
 #line 34 "codegen/generic_methods.kl"
-    kl_t4 = kl__2as__I3i64E__S5Plain_3i64( kl_t3, 5 );
+    kl_t4 = kl_7codegen_2as__I3i64E__SQ7codegen5Plain_3i64( kl_t3, 5 );
 #line 34 "codegen/generic_methods.kl"
     kl_x_2 = kl_t4;
     kl_t5 = ( int64_t ) ( *kl_this_1 ).kl_n;
@@ -94,7 +94,7 @@ int64_t kl__7widened__S5Plain( struct kl__Plain* kl_this_1 )
 }
 
 #line 45 "codegen/generic_methods.kl"
-void kl__6Buffer__R6Buffer_3u64__ctor( struct kl__Buffer* kl_this_1, uint64_t kl_n_2 )
+void kl_7codegen_6Buffer__RQ7codegen6Buffer_3u64__ctor( struct kl_7codegen_Buffer* kl_this_1, uint64_t kl_n_2 )
 {
     uint8_t* kl_t3;
 #line 47 "codegen/generic_methods.kl"
@@ -107,7 +107,7 @@ void kl__6Buffer__R6Buffer_3u64__ctor( struct kl__Buffer* kl_this_1, uint64_t kl
 }
 
 #line 51 "codegen/generic_methods.kl"
-void kl__6Buffer__dtor( struct kl__Buffer* kl_this_1 )
+void kl_7codegen_6Buffer__dtor( struct kl_7codegen_Buffer* kl_this_1 )
 {
     kl_rt_free( ( *kl_this_1 ).kl_bytes );
     return;
@@ -115,7 +115,7 @@ void kl__6Buffer__dtor( struct kl__Buffer* kl_this_1 )
 }
 
 #line 56 "codegen/generic_methods.kl"
-uint64_t kl__6length__S6Buffer( struct kl__Buffer* kl_this_1 )
+uint64_t kl_7codegen_6length__SQ7codegen6Buffer( struct kl_7codegen_Buffer* kl_this_1 )
 {
     uint64_t kl_t0;
 #line 56 "codegen/generic_methods.kl"
@@ -126,7 +126,7 @@ uint64_t kl__6length__S6Buffer( struct kl__Buffer* kl_this_1 )
 }
 
 #line 66 "codegen/generic_methods.kl"
-int64_t kl__5widen__3i32( int32_t* kl_x_1 )
+int64_t kl_7codegen_5widen__3i32( int32_t* kl_x_1 )
 {
     int64_t kl_t0;
     int64_t kl_t2;
@@ -140,7 +140,7 @@ int64_t kl__5widen__3i32( int32_t* kl_x_1 )
 }
 
 #line 67 "codegen/generic_methods.kl"
-bool kl__8positive__3i32( int32_t* kl_x_1 )
+bool kl_7codegen_8positive__3i32( int32_t* kl_x_1 )
 {
     bool kl_t0;
     bool kl_t2;
@@ -154,7 +154,7 @@ bool kl__8positive__3i32( int32_t* kl_x_1 )
 }
 
 #line 68 "codegen/generic_methods.kl"
-int64_t kl__9double_it__3i64( int64_t* kl_x_1 )
+int64_t kl_7codegen_9double_it__3i64( int64_t* kl_x_1 )
 {
     int64_t kl_t0;
     bool kl_t2;
@@ -177,20 +177,20 @@ int64_t kl__9double_it__3i64( int64_t* kl_x_1 )
 }
 
 #line 70 "codegen/generic_methods.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__Box__I3i32E kl_b_1;
-    struct kl__Box__I3i32E* kl_t2;
-    struct kl__Box__I3i32E* kl_t4;
+    struct kl_7codegen_Box__I3i32E kl_b_1;
+    struct kl_7codegen_Box__I3i32E* kl_t2;
+    struct kl_7codegen_Box__I3i32E* kl_t4;
     kl__fn__FK3i32E3i64 kl_t5;
     int64_t kl_t6;
     bool kl_t7;
-    struct kl__Box__I3i32E* kl_t8;
+    struct kl_7codegen_Box__I3i32E* kl_t8;
     kl__fn__FK3i32E4bool kl_t9;
     bool kl_t10;
     bool kl_t11;
-    struct kl__Box__I3i32E* kl_t12;
+    struct kl_7codegen_Box__I3i32E* kl_t12;
     kl__fn__FK3i32E3i64 kl_t13;
     kl__fn__FK3i64E3i64 kl_t14;
     int64_t kl_t15;
@@ -200,26 +200,26 @@ int32_t kl__4main__( void )
     int32_t kl_made_19;
     int32_t kl_t20;
     bool kl_t21;
-    struct kl__Plain kl_p_22;
-    struct kl__Plain kl_t23;
-    struct kl__Plain* kl_t24;
+    struct kl_7codegen_Plain kl_p_22;
+    struct kl_7codegen_Plain kl_t23;
+    struct kl_7codegen_Plain* kl_t24;
     bool kl_t25;
     bool kl_t26;
     int32_t kl_read_27;
-    struct kl__Plain* kl_t28;
+    struct kl_7codegen_Plain* kl_t28;
     int32_t kl_t29;
     bool kl_t30;
-    struct kl__Plain* kl_t31;
+    struct kl_7codegen_Plain* kl_t31;
     int64_t kl_t32;
     bool kl_t33;
-    struct kl__Holder kl_h_34;
-    struct kl__Holder kl_t35;
-    struct kl__Buffer kl_kept_36;
-    struct kl__Holder* kl_t37;
-    struct kl__Buffer kl_t38;
-    struct kl__Buffer* kl_t39;
-    struct kl__Buffer kl_t41;
-    struct kl__Buffer* kl_t42;
+    struct kl_7codegen_Holder kl_h_34;
+    struct kl_7codegen_Holder kl_t35;
+    struct kl_7codegen_Buffer kl_kept_36;
+    struct kl_7codegen_Holder* kl_t37;
+    struct kl_7codegen_Buffer kl_t38;
+    struct kl_7codegen_Buffer* kl_t39;
+    struct kl_7codegen_Buffer kl_t41;
+    struct kl_7codegen_Buffer* kl_t42;
     uint64_t kl_t43;
     bool kl_t44;
     bool kl_t45;
@@ -231,13 +231,13 @@ int32_t kl__4main__( void )
 #line 72 "codegen/generic_methods.kl"
     kl_t2 = &kl_b_1;
 #line 72 "codegen/generic_methods.kl"
-    kl__3Box__I3i32E__R3BoxI3i32E_3i32__ctor( kl_t2, 7 );
+    kl_7codegen_3Box__I3i32E__RQ7codegen3BoxI3i32E_3i32__ctor( kl_t2, 7 );
 #line 74 "codegen/generic_methods.kl"
     kl_t4 = &kl_b_1;
 #line 74 "codegen/generic_methods.kl"
-    kl_t5 = kl__5widen__3i32;
+    kl_t5 = kl_7codegen_5widen__3i32;
 #line 74 "codegen/generic_methods.kl"
-    kl_t6 = kl__3map__I3i32_3i64E__S3BoxI3i32E_FK3i32E3i64( kl_t4, kl_t5 );
+    kl_t6 = kl_7codegen_3map__I3i32_3i64E__SQ7codegen3BoxI3i32E_FK3i32E3i64( kl_t4, kl_t5 );
 #line 74 "codegen/generic_methods.kl"
     kl_t7 = kl_t6 != 7;
 #line 74 "codegen/generic_methods.kl"
@@ -251,9 +251,9 @@ int32_t kl__4main__( void )
 #line 75 "codegen/generic_methods.kl"
     kl_t8 = &kl_b_1;
 #line 75 "codegen/generic_methods.kl"
-    kl_t9 = kl__8positive__3i32;
+    kl_t9 = kl_7codegen_8positive__3i32;
 #line 75 "codegen/generic_methods.kl"
-    kl_t10 = kl__3map__I3i32_4boolE__S3BoxI3i32E_FK3i32E4bool( kl_t8, kl_t9 );
+    kl_t10 = kl_7codegen_3map__I3i32_4boolE__SQ7codegen3BoxI3i32E_FK3i32E4bool( kl_t8, kl_t9 );
 #line 75 "codegen/generic_methods.kl"
     kl_t11 = !kl_t10;
 #line 75 "codegen/generic_methods.kl"
@@ -267,11 +267,11 @@ int32_t kl__4main__( void )
 #line 76 "codegen/generic_methods.kl"
     kl_t12 = &kl_b_1;
 #line 76 "codegen/generic_methods.kl"
-    kl_t13 = kl__5widen__3i32;
+    kl_t13 = kl_7codegen_5widen__3i32;
 #line 76 "codegen/generic_methods.kl"
-    kl_t14 = kl__9double_it__3i64;
+    kl_t14 = kl_7codegen_9double_it__3i64;
 #line 76 "codegen/generic_methods.kl"
-    kl_t15 = kl__9map_twice__I3i32_3i64E__S3BoxI3i32E_FK3i32E3i64_FK3i64E3i64( kl_t12, kl_t13, kl_t14 );
+    kl_t15 = kl_7codegen_9map_twice__I3i32_3i64E__SQ7codegen3BoxI3i32E_FK3i32E3i64_FK3i64E3i64( kl_t12, kl_t13, kl_t14 );
 #line 76 "codegen/generic_methods.kl"
     kl_t16 = kl_t15 != 14;
 #line 76 "codegen/generic_methods.kl"
@@ -282,7 +282,7 @@ int32_t kl__4main__( void )
 #line 76 "codegen/generic_methods.kl"
     return kl_t0;
     bb6:
-    kl_t17 = kl__4make__I3i32_3i32E__S3BoxI3i32E_3i32( 3 );
+    kl_t17 = kl_7codegen_4make__I3i32_3i32E__SQ7codegen3BoxI3i32E_3i32( 3 );
 #line 78 "codegen/generic_methods.kl"
     kl_t18 = kl_t17 != 3;
 #line 78 "codegen/generic_methods.kl"
@@ -294,7 +294,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb8:
 #line 81 "codegen/generic_methods.kl"
-    kl_t20 = kl__4make__I3i32_3i32E__S3BoxI3i32E_3i32( 4 );
+    kl_t20 = kl_7codegen_4make__I3i32_3i32E__SQ7codegen3BoxI3i32E_3i32( 4 );
 #line 81 "codegen/generic_methods.kl"
     kl_made_19 = kl_t20;
     kl_t21 = kl_made_19 != 4;
@@ -311,7 +311,7 @@ int32_t kl__4main__( void )
     kl_p_22 = kl_t23;
     kl_t24 = &kl_p_22;
 #line 85 "codegen/generic_methods.kl"
-    kl_t25 = kl__2as__I4boolE__S5Plain_4bool( kl_t24, true );
+    kl_t25 = kl_7codegen_2as__I4boolE__SQ7codegen5Plain_4bool( kl_t24, true );
 #line 85 "codegen/generic_methods.kl"
     kl_t26 = kl_t25 != true;
 #line 85 "codegen/generic_methods.kl"
@@ -324,7 +324,7 @@ int32_t kl__4main__( void )
     bb12:
     kl_t28 = &kl_p_22;
 #line 87 "codegen/generic_methods.kl"
-    kl_t29 = kl__2as__I3i32E__S5Plain_3i32( kl_t28, 8 );
+    kl_t29 = kl_7codegen_2as__I3i32E__SQ7codegen5Plain_3i32( kl_t28, 8 );
 #line 87 "codegen/generic_methods.kl"
     kl_read_27 = kl_t29;
     kl_t30 = kl_read_27 != 8;
@@ -338,7 +338,7 @@ int32_t kl__4main__( void )
     bb14:
     kl_t31 = &kl_p_22;
 #line 90 "codegen/generic_methods.kl"
-    kl_t32 = kl__7widened__S5Plain( kl_t31 );
+    kl_t32 = kl_7codegen_7widened__SQ7codegen5Plain( kl_t31 );
 #line 90 "codegen/generic_methods.kl"
     kl_t33 = kl_t32 != 6;
 #line 90 "codegen/generic_methods.kl"
@@ -360,9 +360,9 @@ int32_t kl__4main__( void )
 #line 93 "codegen/generic_methods.kl"
     kl_t45 = true;
 #line 93 "codegen/generic_methods.kl"
-    kl__6Buffer__R6Buffer_3u64__ctor( kl_t39, 16 );
+    kl_7codegen_6Buffer__RQ7codegen6Buffer_3u64__ctor( kl_t39, 16 );
 #line 93 "codegen/generic_methods.kl"
-    kl_t41 = kl__4pass__I6BufferE__S6Holder_M6Buffer( kl_t37, kl_t38 );
+    kl_t41 = kl_7codegen_4pass__IQ7codegen6BufferE__SQ7codegen6Holder_MQ7codegen6Buffer( kl_t37, kl_t38 );
 #line 93 "codegen/generic_methods.kl"
     kl_t45 = false;
 #line 93 "codegen/generic_methods.kl"
@@ -372,16 +372,16 @@ int32_t kl__4main__( void )
 #line 93 "codegen/generic_methods.kl"
     kl_t46 = false;
 #line 93 "codegen/generic_methods.kl"
-    if ( kl_t46 ) kl__6Buffer__dtor( &kl_t41 );
+    if ( kl_t46 ) kl_7codegen_6Buffer__dtor( &kl_t41 );
 #line 93 "codegen/generic_methods.kl"
-    if ( kl_t45 ) kl__6Buffer__dtor( &kl_t38 );
+    if ( kl_t45 ) kl_7codegen_6Buffer__dtor( &kl_t38 );
 #line 93 "codegen/generic_methods.kl"
     kl_t45 = false;
 #line 93 "codegen/generic_methods.kl"
     kl_t46 = false;
     kl_t42 = &kl_kept_36;
 #line 94 "codegen/generic_methods.kl"
-    kl_t43 = kl__6length__S6Buffer( kl_t42 );
+    kl_t43 = kl_7codegen_6length__SQ7codegen6Buffer( kl_t42 );
 #line 94 "codegen/generic_methods.kl"
     kl_t44 = kl_t43 != 16;
 #line 94 "codegen/generic_methods.kl"
@@ -390,19 +390,19 @@ int32_t kl__4main__( void )
 #line 94 "codegen/generic_methods.kl"
     kl_t0 = 9;
 #line 94 "codegen/generic_methods.kl"
-    kl__6Buffer__dtor( &kl_kept_36 );
+    kl_7codegen_6Buffer__dtor( &kl_kept_36 );
 #line 94 "codegen/generic_methods.kl"
     return kl_t0;
     bb18:
     kl_t0 = 0;
 #line 96 "codegen/generic_methods.kl"
-    kl__6Buffer__dtor( &kl_kept_36 );
+    kl_7codegen_6Buffer__dtor( &kl_kept_36 );
 #line 96 "codegen/generic_methods.kl"
     return kl_t0;
 }
 
 #line 29 "codegen/generic_methods.kl"
-int64_t kl__2as__I3i64E__S5Plain_3i64( struct kl__Plain* kl_this_1, int64_t kl_u_2 )
+int64_t kl_7codegen_2as__I3i64E__SQ7codegen5Plain_3i64( struct kl_7codegen_Plain* kl_this_1, int64_t kl_u_2 )
 {
     int64_t kl_t0;
     ( void ) kl_this_1;
@@ -414,7 +414,7 @@ int64_t kl__2as__I3i64E__S5Plain_3i64( struct kl__Plain* kl_this_1, int64_t kl_u
 }
 
 #line 9 "codegen/generic_methods.kl"
-void kl__3Box__I3i32E__R3BoxI3i32E_3i32__ctor( struct kl__Box__I3i32E* kl_this_1, int32_t kl_v_2 )
+void kl_7codegen_3Box__I3i32E__RQ7codegen3BoxI3i32E_3i32__ctor( struct kl_7codegen_Box__I3i32E* kl_this_1, int32_t kl_v_2 )
 {
 #line 9 "codegen/generic_methods.kl"
     ( *kl_this_1 ).kl_value = kl_v_2;
@@ -424,7 +424,7 @@ void kl__3Box__I3i32E__R3BoxI3i32E_3i32__ctor( struct kl__Box__I3i32E* kl_this_1
 }
 
 #line 11 "codegen/generic_methods.kl"
-int64_t kl__3map__I3i32_3i64E__S3BoxI3i32E_FK3i32E3i64( struct kl__Box__I3i32E* kl_this_1, kl__fn__FK3i32E3i64 kl_f_2 )
+int64_t kl_7codegen_3map__I3i32_3i64E__SQ7codegen3BoxI3i32E_FK3i32E3i64( struct kl_7codegen_Box__I3i32E* kl_this_1, kl__fn__FK3i32E3i64 kl_f_2 )
 {
     int64_t kl_t0;
     int32_t* kl_t3;
@@ -441,7 +441,7 @@ int64_t kl__3map__I3i32_3i64E__S3BoxI3i32E_FK3i32E3i64( struct kl__Box__I3i32E* 
 }
 
 #line 11 "codegen/generic_methods.kl"
-bool kl__3map__I3i32_4boolE__S3BoxI3i32E_FK3i32E4bool( struct kl__Box__I3i32E* kl_this_1, kl__fn__FK3i32E4bool kl_f_2 )
+bool kl_7codegen_3map__I3i32_4boolE__SQ7codegen3BoxI3i32E_FK3i32E4bool( struct kl_7codegen_Box__I3i32E* kl_this_1, kl__fn__FK3i32E4bool kl_f_2 )
 {
     bool kl_t0;
     int32_t* kl_t3;
@@ -458,18 +458,18 @@ bool kl__3map__I3i32_4boolE__S3BoxI3i32E_FK3i32E4bool( struct kl__Box__I3i32E* k
 }
 
 #line 14 "codegen/generic_methods.kl"
-int64_t kl__9map_twice__I3i32_3i64E__S3BoxI3i32E_FK3i32E3i64_FK3i64E3i64( struct kl__Box__I3i32E* kl_this_1, kl__fn__FK3i32E3i64 kl_f_2, kl__fn__FK3i64E3i64 kl_g_3 )
+int64_t kl_7codegen_9map_twice__I3i32_3i64E__SQ7codegen3BoxI3i32E_FK3i32E3i64_FK3i64E3i64( struct kl_7codegen_Box__I3i32E* kl_this_1, kl__fn__FK3i32E3i64 kl_f_2, kl__fn__FK3i64E3i64 kl_g_3 )
 {
     int64_t kl_t0;
     int64_t kl_once_4;
-    struct kl__Box__I3i32E* kl_t5;
+    struct kl_7codegen_Box__I3i32E* kl_t5;
     int64_t kl_t6;
     int64_t* kl_t7;
     int64_t kl_t8;
 #line 17 "codegen/generic_methods.kl"
     kl_t5 = &( *kl_this_1 );
 #line 17 "codegen/generic_methods.kl"
-    kl_t6 = kl__3map__I3i32_3i64E__S3BoxI3i32E_FK3i32E3i64( kl_t5, kl_f_2 );
+    kl_t6 = kl_7codegen_3map__I3i32_3i64E__SQ7codegen3BoxI3i32E_FK3i32E3i64( kl_t5, kl_f_2 );
 #line 17 "codegen/generic_methods.kl"
     kl_once_4 = kl_t6;
     kl_t7 = &kl_once_4;
@@ -482,7 +482,7 @@ int64_t kl__9map_twice__I3i32_3i64E__S3BoxI3i32E_FK3i32E3i64_FK3i64E3i64( struct
 }
 
 #line 21 "codegen/generic_methods.kl"
-int32_t kl__4make__I3i32_3i32E__S3BoxI3i32E_3i32( int32_t kl_u_1 )
+int32_t kl_7codegen_4make__I3i32_3i32E__SQ7codegen3BoxI3i32E_3i32( int32_t kl_u_1 )
 {
     int32_t kl_t0;
 #line 21 "codegen/generic_methods.kl"
@@ -493,7 +493,7 @@ int32_t kl__4make__I3i32_3i32E__S3BoxI3i32E_3i32( int32_t kl_u_1 )
 }
 
 #line 29 "codegen/generic_methods.kl"
-bool kl__2as__I4boolE__S5Plain_4bool( struct kl__Plain* kl_this_1, bool kl_u_2 )
+bool kl_7codegen_2as__I4boolE__SQ7codegen5Plain_4bool( struct kl_7codegen_Plain* kl_this_1, bool kl_u_2 )
 {
     bool kl_t0;
     ( void ) kl_this_1;
@@ -505,7 +505,7 @@ bool kl__2as__I4boolE__S5Plain_4bool( struct kl__Plain* kl_this_1, bool kl_u_2 )
 }
 
 #line 29 "codegen/generic_methods.kl"
-int32_t kl__2as__I3i32E__S5Plain_3i32( struct kl__Plain* kl_this_1, int32_t kl_u_2 )
+int32_t kl_7codegen_2as__I3i32E__SQ7codegen5Plain_3i32( struct kl_7codegen_Plain* kl_this_1, int32_t kl_u_2 )
 {
     int32_t kl_t0;
     ( void ) kl_this_1;
@@ -517,9 +517,9 @@ int32_t kl__2as__I3i32E__S5Plain_3i32( struct kl__Plain* kl_this_1, int32_t kl_u
 }
 
 #line 63 "codegen/generic_methods.kl"
-struct kl__Buffer kl__4pass__I6BufferE__S6Holder_M6Buffer( struct kl__Holder* kl_this_1, struct kl__Buffer kl_u_2 )
+struct kl_7codegen_Buffer kl_7codegen_4pass__IQ7codegen6BufferE__SQ7codegen6Holder_MQ7codegen6Buffer( struct kl_7codegen_Holder* kl_this_1, struct kl_7codegen_Buffer kl_u_2 )
 {
-    struct kl__Buffer kl_t0;
+    struct kl_7codegen_Buffer kl_t0;
     bool kl_t3;
     ( void ) kl_this_1;
 #line 63 "codegen/generic_methods.kl"
@@ -529,7 +529,7 @@ struct kl__Buffer kl__4pass__I6BufferE__S6Holder_M6Buffer( struct kl__Holder* kl
 #line 63 "codegen/generic_methods.kl"
     kl_t3 = false;
 #line 63 "codegen/generic_methods.kl"
-    if ( kl_t3 ) kl__6Buffer__dtor( &kl_u_2 );
+    if ( kl_t3 ) kl_7codegen_6Buffer__dtor( &kl_u_2 );
 #line 63 "codegen/generic_methods.kl"
     kl_t3 = false;
 #line 63 "codegen/generic_methods.kl"
@@ -541,7 +541,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 70 "codegen/generic_methods.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 70 "codegen/generic_methods.kl"
     return kl_t0;
 #line 70 "codegen/generic_methods.kl"

@@ -1,7 +1,7 @@
-error: the module `both` and the package `both` share a name
+error: the module `app::both` and the package `app::both` share a name
  --> sema/program_module_and_folder/main.kl:2:1
   |
-2 | import both::inner;
-  | ^^^^^^^^^^^^^^^^^^^ rename one of them
+2 | import app::both::inner;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^ rename one of them
 
 1 error generated

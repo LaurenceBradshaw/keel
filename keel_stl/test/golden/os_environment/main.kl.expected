@@ -9001,8 +9001,8 @@ struct kl_7prelude_textual__vtable
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-bool kl__3set__Q2kl8optionalIQ2kl6stringE( struct kl_2kl8optional_optional__IQ2kl6stringE* );
-int32_t kl__4main__( void );
+bool kl_14os_environment_3set__Q2kl8optionalIQ2kl6stringE( struct kl_2kl8optional_optional__IQ2kl6stringE* );
+int32_t kl_14os_environment_4main__( void );
 void kl_2kl4list_8truncate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
 uint64_t kl_2kl4list_4size__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
 struct kl_2kl6string_string* kl_2kl4list_14operator_index__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
@@ -9028,7 +9028,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 6 "os_environment/main.kl"
-bool kl__3set__Q2kl8optionalIQ2kl6stringE( struct kl_2kl8optional_optional__IQ2kl6stringE* kl_v_1 )
+bool kl_14os_environment_3set__Q2kl8optionalIQ2kl6stringE( struct kl_2kl8optional_optional__IQ2kl6stringE* kl_v_1 )
 {
     bool kl_t0;
     bool kl_t2;
@@ -9052,7 +9052,7 @@ bool kl__3set__Q2kl8optionalIQ2kl6stringE( struct kl_2kl8optional_optional__IQ2k
 }
 
 #line 17 "os_environment/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_14os_environment_4main__( void )
 {
     int32_t kl_t0;
     struct kl_7prelude_str kl_t1;
@@ -9111,7 +9111,7 @@ int32_t kl__4main__( void )
 #line 19 "os_environment/main.kl"
     kl_t8 = &kl_t7;
 #line 19 "os_environment/main.kl"
-    kl_t9 = kl__3set__Q2kl8optionalIQ2kl6stringE( kl_t8 );
+    kl_t9 = kl_14os_environment_3set__Q2kl8optionalIQ2kl6stringE( kl_t8 );
 #line 19 "os_environment/main.kl"
     kl_t10 = !kl_t9;
 #line 19 "os_environment/main.kl"
@@ -9138,7 +9138,7 @@ int32_t kl__4main__( void )
 #line 24 "os_environment/main.kl"
     kl_t20 = &kl_t19;
 #line 24 "os_environment/main.kl"
-    kl_t21 = kl__3set__Q2kl8optionalIQ2kl6stringE( kl_t20 );
+    kl_t21 = kl_14os_environment_3set__Q2kl8optionalIQ2kl6stringE( kl_t20 );
 #line 24 "os_environment/main.kl"
     kl_t12 = kl_t21;
 #line 24 "os_environment/main.kl"
@@ -9161,7 +9161,7 @@ int32_t kl__4main__( void )
 #line 24 "os_environment/main.kl"
     kl_t29 = &kl_t28;
 #line 24 "os_environment/main.kl"
-    kl_t30 = kl__3set__Q2kl8optionalIQ2kl6stringE( kl_t29 );
+    kl_t30 = kl_14os_environment_3set__Q2kl8optionalIQ2kl6stringE( kl_t29 );
 #line 24 "os_environment/main.kl"
     kl_t12 = kl_t30;
 #line 24 "os_environment/main.kl"
@@ -9189,7 +9189,7 @@ int32_t kl__4main__( void )
 #line 25 "os_environment/main.kl"
     kl_t38 = &kl_t37;
 #line 25 "os_environment/main.kl"
-    kl_t39 = kl__3set__Q2kl8optionalIQ2kl6stringE( kl_t38 );
+    kl_t39 = kl_14os_environment_3set__Q2kl8optionalIQ2kl6stringE( kl_t38 );
 #line 24 "os_environment/main.kl"
     kl_t11 = kl_t39;
 #line 24 "os_environment/main.kl"
@@ -9598,7 +9598,7 @@ int main( void )
 #line 17 "os_environment/main.kl"
     kl_2kl2os_0build(  );
 #line 17 "os_environment/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_14os_environment_4main__(  );
 #line 17 "os_environment/main.kl"
     kl_2kl2os_0drop(  );
 #line 17 "os_environment/main.kl"

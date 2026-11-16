@@ -13,13 +13,13 @@ _Static_assert( sizeof( struct kl__A2_3f64 ) == 16 && _Alignof( struct kl__A2_3f
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-double kl__6energy__A2_3f64( struct kl__A2_3f64* );
-int32_t kl__4main__( void );
-double kl__6scaled__IV2_E__3f64( double );
-double kl__6scaled__IV3_E__3f64( double );
+double kl_4opt3_6energy__A2_3f64( struct kl__A2_3f64* );
+int32_t kl_4opt3_4main__( void );
+double kl_4opt3_6scaled__IV2_E__3f64( double );
+double kl_4opt3_6scaled__IV3_E__3f64( double );
 
 #line 5 "opt3/not_a_map.kl"
-double kl__6energy__A2_3f64( struct kl__A2_3f64* kl_x_1 )
+double kl_4opt3_6energy__A2_3f64( struct kl__A2_3f64* kl_x_1 )
 {
     double kl_t0;
     uint64_t kl_t2;
@@ -51,7 +51,7 @@ double kl__6energy__A2_3f64( struct kl__A2_3f64* kl_x_1 )
 }
 
 #line 16 "opt3/not_a_map.kl"
-int32_t kl__4main__( void )
+int32_t kl_4opt3_4main__( void )
 {
     int32_t kl_t0;
     double kl_t1;
@@ -129,7 +129,7 @@ int32_t kl__4main__( void )
 }
 
 #line 11 "opt3/not_a_map.kl"
-double kl__6scaled__IV2_E__3f64( double kl_x_1 )
+double kl_4opt3_6scaled__IV2_E__3f64( double kl_x_1 )
 {
     double kl_t0;
     double kl_t2;
@@ -163,7 +163,7 @@ double kl__6scaled__IV2_E__3f64( double kl_x_1 )
 }
 
 #line 11 "opt3/not_a_map.kl"
-double kl__6scaled__IV3_E__3f64( double kl_x_1 )
+double kl_4opt3_6scaled__IV3_E__3f64( double kl_x_1 )
 {
     double kl_t0;
     double kl_t2;
@@ -200,7 +200,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 16 "opt3/not_a_map.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_4opt3_4main__(  );
 #line 16 "opt3/not_a_map.kl"
     return kl_t0;
 #line 16 "opt3/not_a_map.kl"

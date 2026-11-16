@@ -4064,11 +4064,11 @@ _Static_assert( sizeof( struct kl_2kl4list_list__IQ2kl6stringE ) == 24 && _Align
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-int32_t* kl__6either__4bool_3i32_3i32( bool, int32_t*, int32_t* );
-int32_t* kl__15either_writable__4bool_R3i32_R3i32( bool, int32_t*, int32_t* );
-int32_t* kl__6nested__3i32_3i32_3i32_3i32( int32_t, int32_t*, int32_t*, int32_t* );
-struct kl_2kl6string_string* kl__6longer__Q2kl6string_Q2kl6string( struct kl_2kl6string_string*, struct kl_2kl6string_string* );
-int32_t kl__4main__( void );
+int32_t* kl_7codegen_6either__4bool_3i32_3i32( bool, int32_t*, int32_t* );
+int32_t* kl_7codegen_15either_writable__4bool_R3i32_R3i32( bool, int32_t*, int32_t* );
+int32_t* kl_7codegen_6nested__3i32_3i32_3i32_3i32( int32_t, int32_t*, int32_t*, int32_t* );
+struct kl_2kl6string_string* kl_7codegen_6longer__Q2kl6string_Q2kl6string( struct kl_2kl6string_string*, struct kl_2kl6string_string* );
+int32_t kl_7codegen_4main__( void );
 void kl_2kl4list_8truncate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
 uint64_t kl_2kl4list_4size__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
 struct kl_2kl6string_string* kl_2kl4list_14operator_index__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
@@ -4081,7 +4081,7 @@ void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*,
 void kl_2kl4list_4list__IQ2kl6stringE__dtor( struct kl_2kl4list_list__IQ2kl6stringE* );
 
 #line 5 "codegen/returns_a_conditional.kl"
-int32_t* kl__6either__4bool_3i32_3i32( bool kl_first_1, int32_t* kl_a_2, int32_t* kl_b_3 )
+int32_t* kl_7codegen_6either__4bool_3i32_3i32( bool kl_first_1, int32_t* kl_a_2, int32_t* kl_b_3 )
 {
     int32_t* kl_t0;
     int32_t* kl_t4;
@@ -4111,7 +4111,7 @@ int32_t* kl__6either__4bool_3i32_3i32( bool kl_first_1, int32_t* kl_a_2, int32_t
 }
 
 #line 10 "codegen/returns_a_conditional.kl"
-int32_t* kl__15either_writable__4bool_R3i32_R3i32( bool kl_first_1, int32_t* kl_a_2, int32_t* kl_b_3 )
+int32_t* kl_7codegen_15either_writable__4bool_R3i32_R3i32( bool kl_first_1, int32_t* kl_a_2, int32_t* kl_b_3 )
 {
     int32_t* kl_t0;
     int32_t* kl_t4;
@@ -4141,7 +4141,7 @@ int32_t* kl__15either_writable__4bool_R3i32_R3i32( bool kl_first_1, int32_t* kl_
 }
 
 #line 15 "codegen/returns_a_conditional.kl"
-int32_t* kl__6nested__3i32_3i32_3i32_3i32( int32_t kl_which_1, int32_t* kl_a_2, int32_t* kl_b_3, int32_t* kl_c_4 )
+int32_t* kl_7codegen_6nested__3i32_3i32_3i32_3i32( int32_t kl_which_1, int32_t* kl_a_2, int32_t* kl_b_3, int32_t* kl_c_4 )
 {
     int32_t* kl_t0;
     int32_t* kl_t5;
@@ -4194,7 +4194,7 @@ int32_t* kl__6nested__3i32_3i32_3i32_3i32( int32_t kl_which_1, int32_t* kl_a_2, 
 }
 
 #line 20 "codegen/returns_a_conditional.kl"
-struct kl_2kl6string_string* kl__6longer__Q2kl6string_Q2kl6string( struct kl_2kl6string_string* kl_a_1, struct kl_2kl6string_string* kl_b_2 )
+struct kl_2kl6string_string* kl_7codegen_6longer__Q2kl6string_Q2kl6string( struct kl_2kl6string_string* kl_a_1, struct kl_2kl6string_string* kl_b_2 )
 {
     struct kl_2kl6string_string* kl_t0;
     struct kl_2kl6string_string* kl_t3;
@@ -4239,7 +4239,7 @@ struct kl_2kl6string_string* kl__6longer__Q2kl6string_Q2kl6string( struct kl_2kl
 }
 
 #line 25 "codegen/returns_a_conditional.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_x_1;
@@ -4330,7 +4330,7 @@ int32_t kl__4main__( void )
 #line 31 "codegen/returns_a_conditional.kl"
     kl_t6 = &kl_y_2;
 #line 31 "codegen/returns_a_conditional.kl"
-    kl_t7 = kl__6either__4bool_3i32_3i32( true, kl_t5, kl_t6 );
+    kl_t7 = kl_7codegen_6either__4bool_3i32_3i32( true, kl_t5, kl_t6 );
 #line 31 "codegen/returns_a_conditional.kl"
     kl_t8 = &( *kl_t7 );
 #line 31 "codegen/returns_a_conditional.kl"
@@ -4351,7 +4351,7 @@ int32_t kl__4main__( void )
 #line 31 "codegen/returns_a_conditional.kl"
     kl_t14 = &kl_y_2;
 #line 31 "codegen/returns_a_conditional.kl"
-    kl_t15 = kl__6either__4bool_3i32_3i32( false, kl_t13, kl_t14 );
+    kl_t15 = kl_7codegen_6either__4bool_3i32_3i32( false, kl_t13, kl_t14 );
 #line 31 "codegen/returns_a_conditional.kl"
     kl_t16 = &( *kl_t15 );
 #line 31 "codegen/returns_a_conditional.kl"
@@ -4379,7 +4379,7 @@ int32_t kl__4main__( void )
 #line 36 "codegen/returns_a_conditional.kl"
     kl_t22 = &kl_y_2;
 #line 36 "codegen/returns_a_conditional.kl"
-    kl_t23 = kl__15either_writable__4bool_R3i32_R3i32( false, kl_t21, kl_t22 );
+    kl_t23 = kl_7codegen_15either_writable__4bool_R3i32_R3i32( false, kl_t21, kl_t22 );
 #line 36 "codegen/returns_a_conditional.kl"
     ( *kl_t23 ) = 7;
     kl_t25 = kl_x_1 != 1;
@@ -4409,7 +4409,7 @@ int32_t kl__4main__( void )
 #line 42 "codegen/returns_a_conditional.kl"
     kl_t31 = &kl_z_3;
 #line 42 "codegen/returns_a_conditional.kl"
-    kl_t32 = kl__6nested__3i32_3i32_3i32_3i32( 0, kl_t29, kl_t30, kl_t31 );
+    kl_t32 = kl_7codegen_6nested__3i32_3i32_3i32_3i32( 0, kl_t29, kl_t30, kl_t31 );
 #line 42 "codegen/returns_a_conditional.kl"
     kl_t33 = &( *kl_t32 );
 #line 42 "codegen/returns_a_conditional.kl"
@@ -4432,7 +4432,7 @@ int32_t kl__4main__( void )
 #line 42 "codegen/returns_a_conditional.kl"
     kl_t40 = &kl_z_3;
 #line 42 "codegen/returns_a_conditional.kl"
-    kl_t41 = kl__6nested__3i32_3i32_3i32_3i32( 1, kl_t38, kl_t39, kl_t40 );
+    kl_t41 = kl_7codegen_6nested__3i32_3i32_3i32_3i32( 1, kl_t38, kl_t39, kl_t40 );
 #line 42 "codegen/returns_a_conditional.kl"
     kl_t42 = &( *kl_t41 );
 #line 42 "codegen/returns_a_conditional.kl"
@@ -4460,7 +4460,7 @@ int32_t kl__4main__( void )
 #line 42 "codegen/returns_a_conditional.kl"
     kl_t49 = &kl_z_3;
 #line 42 "codegen/returns_a_conditional.kl"
-    kl_t50 = kl__6nested__3i32_3i32_3i32_3i32( 2, kl_t47, kl_t48, kl_t49 );
+    kl_t50 = kl_7codegen_6nested__3i32_3i32_3i32_3i32( 2, kl_t47, kl_t48, kl_t49 );
 #line 42 "codegen/returns_a_conditional.kl"
     kl_t51 = &( *kl_t50 );
 #line 42 "codegen/returns_a_conditional.kl"
@@ -4522,7 +4522,7 @@ int32_t kl__4main__( void )
 #line 49 "codegen/returns_a_conditional.kl"
     kl_t69 = &kl_t_62;
 #line 49 "codegen/returns_a_conditional.kl"
-    kl_t70 = kl__6longer__Q2kl6string_Q2kl6string( kl_t68, kl_t69 );
+    kl_t70 = kl_7codegen_6longer__Q2kl6string_Q2kl6string( kl_t68, kl_t69 );
 #line 49 "codegen/returns_a_conditional.kl"
     kl_t71 = &( *kl_t70 );
 #line 49 "codegen/returns_a_conditional.kl"
@@ -4746,7 +4746,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 25 "codegen/returns_a_conditional.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 25 "codegen/returns_a_conditional.kl"
     return kl_t0;
 #line 25 "codegen/returns_a_conditional.kl"

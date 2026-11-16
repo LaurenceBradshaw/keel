@@ -1,7 +1,7 @@
-error: the folder `util` and the package `util` share a name
- --> sema/program_package_clash/main.kl:2:1
+error: the program and the package in `sema/program_package_clash/lib` are both named `util`
+ --> sema/program_package_clash/main.kl:1:1
   |
-2 | import util::x;
-  | ^^^^^^^^^^^^^^^ rename the folder
+1 | // A program may not take a `--package`'s name: this one declares `util`, as the package in lib/ does.
+  | ^ give the program another name in its folder's `packageinfo.kl`, `@package( name );`
 
 1 error generated

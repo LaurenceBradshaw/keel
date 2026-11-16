@@ -1,0 +1,2 @@
+//! The program, named so its subfolders are `app::...`.
+@package( app );

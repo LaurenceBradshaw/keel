@@ -21,23 +21,23 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl_2kl4list_list__I4TreeE;
-struct kl__Tree;
+struct kl_2kl4list_list__IQ9deep_tree4TreeE;
+struct kl_9deep_tree_Tree;
 struct kl_7prelude_str;
 
-struct kl_2kl4list_list__I4TreeE
+struct kl_2kl4list_list__IQ9deep_tree4TreeE
 {
-    struct kl__Tree* kl_data_;
+    struct kl_9deep_tree_Tree* kl_data_;
     uint64_t kl_count_;
     uint64_t kl_cap_;
 };
-_Static_assert( sizeof( struct kl_2kl4list_list__I4TreeE ) == 24 && _Alignof( struct kl_2kl4list_list__I4TreeE ) == 8 && offsetof( struct kl_2kl4list_list__I4TreeE, kl_data_ ) == 0 && offsetof( struct kl_2kl4list_list__I4TreeE, kl_count_ ) == 8 && offsetof( struct kl_2kl4list_list__I4TreeE, kl_cap_ ) == 16, "layout" );
+_Static_assert( sizeof( struct kl_2kl4list_list__IQ9deep_tree4TreeE ) == 24 && _Alignof( struct kl_2kl4list_list__IQ9deep_tree4TreeE ) == 8 && offsetof( struct kl_2kl4list_list__IQ9deep_tree4TreeE, kl_data_ ) == 0 && offsetof( struct kl_2kl4list_list__IQ9deep_tree4TreeE, kl_count_ ) == 8 && offsetof( struct kl_2kl4list_list__IQ9deep_tree4TreeE, kl_cap_ ) == 16, "layout" );
 
-struct kl__Tree
+struct kl_9deep_tree_Tree
 {
-    struct kl_2kl4list_list__I4TreeE kl_children;
+    struct kl_2kl4list_list__IQ9deep_tree4TreeE kl_children;
 };
-_Static_assert( sizeof( struct kl__Tree ) == 24 && _Alignof( struct kl__Tree ) == 8 && offsetof( struct kl__Tree, kl_children ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_9deep_tree_Tree ) == 24 && _Alignof( struct kl_9deep_tree_Tree ) == 8 && offsetof( struct kl_9deep_tree_Tree, kl_children ) == 0, "layout" );
 
 struct kl_7prelude_str
 {
@@ -54,25 +54,25 @@ _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint6
 extern _Thread_local uintptr_t kl_rt_stack_low;
 void kl_rt_deeper( void ( * )( void* ), void* );
 
-void kl__4Tree__R4Tree__ctor( struct kl__Tree* );
-int32_t kl__4main__( void );
-void kl_2kl4list_4list__I4TreeE__RQ2kl4listI4TreeE__ctor( struct kl_2kl4list_list__I4TreeE* );
-void kl_2kl4list_4push__I4TreeE__SQ2kl4listI4TreeE_M4Tree( struct kl_2kl4list_list__I4TreeE*, struct kl__Tree );
-struct kl__Tree* kl_2kl4list_14operator_index__I4TreeE__SQ2kl4listI4TreeE_3u64( struct kl_2kl4list_list__I4TreeE*, uint64_t );
-void kl_2kl4list_4list__I4TreeE__dtor( struct kl_2kl4list_list__I4TreeE* );
-void kl_2kl4list_8truncate__I4TreeE__SQ2kl4listI4TreeE_3u64( struct kl_2kl4list_list__I4TreeE*, uint64_t );
-uint64_t kl_2kl4list_4size__I4TreeE__SQ2kl4listI4TreeE( struct kl_2kl4list_list__I4TreeE* );
-void kl_2kl4list_4swap__I4TreeE__SQ2kl4listI4TreeE_3u64_3u64( struct kl_2kl4list_list__I4TreeE*, uint64_t, uint64_t );
-void kl_2kl4list_20reallocate_if_needed__I4TreeE__SQ2kl4listI4TreeE( struct kl_2kl4list_list__I4TreeE* );
-void kl_2kl4list_10reallocate__I4TreeE__SQ2kl4listI4TreeE_3u64( struct kl_2kl4list_list__I4TreeE*, uint64_t );
-void kl_2kl4list_list__I4TreeE__drop( void* );
+void kl_9deep_tree_4Tree__RQ9deep_tree4Tree__ctor( struct kl_9deep_tree_Tree* );
+int32_t kl_9deep_tree_4main__( void );
+void kl_2kl4list_4list__IQ9deep_tree4TreeE__RQ2kl4listIQ9deep_tree4TreeE__ctor( struct kl_2kl4list_list__IQ9deep_tree4TreeE* );
+void kl_2kl4list_4push__IQ9deep_tree4TreeE__SQ2kl4listIQ9deep_tree4TreeE_MQ9deep_tree4Tree( struct kl_2kl4list_list__IQ9deep_tree4TreeE*, struct kl_9deep_tree_Tree );
+struct kl_9deep_tree_Tree* kl_2kl4list_14operator_index__IQ9deep_tree4TreeE__SQ2kl4listIQ9deep_tree4TreeE_3u64( struct kl_2kl4list_list__IQ9deep_tree4TreeE*, uint64_t );
+void kl_2kl4list_4list__IQ9deep_tree4TreeE__dtor( struct kl_2kl4list_list__IQ9deep_tree4TreeE* );
+void kl_2kl4list_8truncate__IQ9deep_tree4TreeE__SQ2kl4listIQ9deep_tree4TreeE_3u64( struct kl_2kl4list_list__IQ9deep_tree4TreeE*, uint64_t );
+uint64_t kl_2kl4list_4size__IQ9deep_tree4TreeE__SQ2kl4listIQ9deep_tree4TreeE( struct kl_2kl4list_list__IQ9deep_tree4TreeE* );
+void kl_2kl4list_4swap__IQ9deep_tree4TreeE__SQ2kl4listIQ9deep_tree4TreeE_3u64_3u64( struct kl_2kl4list_list__IQ9deep_tree4TreeE*, uint64_t, uint64_t );
+void kl_2kl4list_20reallocate_if_needed__IQ9deep_tree4TreeE__SQ2kl4listIQ9deep_tree4TreeE( struct kl_2kl4list_list__IQ9deep_tree4TreeE* );
+void kl_2kl4list_10reallocate__IQ9deep_tree4TreeE__SQ2kl4listIQ9deep_tree4TreeE_3u64( struct kl_2kl4list_list__IQ9deep_tree4TreeE*, uint64_t );
+void kl_2kl4list_list__IQ9deep_tree4TreeE__drop( void* );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 
 #line 9 "deep_tree/main.kl"
-void kl__4Tree__R4Tree__ctor( struct kl__Tree* kl_this_1 )
+void kl_9deep_tree_4Tree__RQ9deep_tree4Tree__ctor( struct kl_9deep_tree_Tree* kl_this_1 )
 {
-    struct kl_2kl4list_list__I4TreeE kl_t2;
-    struct kl_2kl4list_list__I4TreeE* kl_t3;
+    struct kl_2kl4list_list__IQ9deep_tree4TreeE kl_t2;
+    struct kl_2kl4list_list__IQ9deep_tree4TreeE* kl_t3;
     bool kl_t5;
 #line 9 "deep_tree/main.kl"
     kl_t5 = false;
@@ -83,13 +83,13 @@ void kl__4Tree__R4Tree__ctor( struct kl__Tree* kl_this_1 )
 #line 9 "deep_tree/main.kl"
     kl_t5 = true;
 #line 9 "deep_tree/main.kl"
-    kl_2kl4list_4list__I4TreeE__RQ2kl4listI4TreeE__ctor( kl_t3 );
+    kl_2kl4list_4list__IQ9deep_tree4TreeE__RQ2kl4listIQ9deep_tree4TreeE__ctor( kl_t3 );
 #line 9 "deep_tree/main.kl"
     ( *kl_this_1 ).kl_children = kl_t2;
 #line 9 "deep_tree/main.kl"
     kl_t5 = false;
 #line 9 "deep_tree/main.kl"
-    if ( kl_t5 ) kl_2kl4list_4list__I4TreeE__dtor( &kl_t2 );
+    if ( kl_t5 ) kl_2kl4list_4list__IQ9deep_tree4TreeE__dtor( &kl_t2 );
 #line 9 "deep_tree/main.kl"
     kl_t5 = false;
 #line 9 "deep_tree/main.kl"
@@ -98,21 +98,21 @@ void kl__4Tree__R4Tree__ctor( struct kl__Tree* kl_this_1 )
 }
 
 #line 12 "deep_tree/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_9deep_tree_4main__( void )
 {
     int32_t kl_t0;
-    struct kl__Tree kl_root_1;
-    struct kl__Tree* kl_t2;
-    struct kl__Tree* kl_at_4;
-    struct kl__Tree* kl_t5;
+    struct kl_9deep_tree_Tree kl_root_1;
+    struct kl_9deep_tree_Tree* kl_t2;
+    struct kl_9deep_tree_Tree* kl_at_4;
+    struct kl_9deep_tree_Tree* kl_t5;
     int64_t kl_i_6;
     bool kl_t7;
-    struct kl_2kl4list_list__I4TreeE* kl_t8;
-    struct kl__Tree kl_t9;
-    struct kl__Tree* kl_t10;
-    struct kl_2kl4list_list__I4TreeE* kl_t13;
-    struct kl__Tree* kl_t14;
-    struct kl__Tree* kl_t15;
+    struct kl_2kl4list_list__IQ9deep_tree4TreeE* kl_t8;
+    struct kl_9deep_tree_Tree kl_t9;
+    struct kl_9deep_tree_Tree* kl_t10;
+    struct kl_2kl4list_list__IQ9deep_tree4TreeE* kl_t13;
+    struct kl_9deep_tree_Tree* kl_t14;
+    struct kl_9deep_tree_Tree* kl_t15;
     bool kl_t16;
     int64_t kl_t17;
     bool kl_t18;
@@ -121,7 +121,7 @@ int32_t kl__4main__( void )
 #line 14 "deep_tree/main.kl"
     kl_t2 = &kl_root_1;
 #line 14 "deep_tree/main.kl"
-    kl__4Tree__R4Tree__ctor( kl_t2 );
+    kl_9deep_tree_4Tree__RQ9deep_tree4Tree__ctor( kl_t2 );
     kl_t5 = &kl_root_1;
 #line 15 "deep_tree/main.kl"
     kl_at_4 = kl_t5;
@@ -142,18 +142,18 @@ int32_t kl__4main__( void )
 #line 18 "deep_tree/main.kl"
     kl_t18 = true;
 #line 18 "deep_tree/main.kl"
-    kl__4Tree__R4Tree__ctor( kl_t10 );
+    kl_9deep_tree_4Tree__RQ9deep_tree4Tree__ctor( kl_t10 );
 #line 18 "deep_tree/main.kl"
-    kl_2kl4list_4push__I4TreeE__SQ2kl4listI4TreeE_M4Tree( kl_t8, kl_t9 );
+    kl_2kl4list_4push__IQ9deep_tree4TreeE__SQ2kl4listIQ9deep_tree4TreeE_MQ9deep_tree4Tree( kl_t8, kl_t9 );
 #line 18 "deep_tree/main.kl"
     kl_t18 = false;
 #line 18 "deep_tree/main.kl"
-    if ( kl_t18 ) kl_2kl4list_4list__I4TreeE__dtor( &kl_t9.kl_children );
+    if ( kl_t18 ) kl_2kl4list_4list__IQ9deep_tree4TreeE__dtor( &kl_t9.kl_children );
 #line 18 "deep_tree/main.kl"
     kl_t18 = false;
     kl_t13 = &( *kl_at_4 ).kl_children;
 #line 19 "deep_tree/main.kl"
-    kl_t14 = kl_2kl4list_14operator_index__I4TreeE__SQ2kl4listI4TreeE_3u64( kl_t13, 0 );
+    kl_t14 = kl_2kl4list_14operator_index__IQ9deep_tree4TreeE__SQ2kl4listIQ9deep_tree4TreeE_3u64( kl_t13, 0 );
 #line 19 "deep_tree/main.kl"
     kl_t15 = &( *kl_t14 );
 #line 19 "deep_tree/main.kl"
@@ -164,7 +164,7 @@ int32_t kl__4main__( void )
 #line 21 "deep_tree/main.kl"
     kl_t0 = 0;
 #line 21 "deep_tree/main.kl"
-    kl_2kl4list_4list__I4TreeE__dtor( &kl_root_1.kl_children );
+    kl_2kl4list_4list__IQ9deep_tree4TreeE__dtor( &kl_root_1.kl_children );
 #line 21 "deep_tree/main.kl"
     return kl_t0;
     bb4:
@@ -186,7 +186,7 @@ int32_t kl__4main__( void )
 }
 
 #line 16 "../../src/list.kl"
-void kl_2kl4list_4list__I4TreeE__RQ2kl4listI4TreeE__ctor( struct kl_2kl4list_list__I4TreeE* kl_this_1 )
+void kl_2kl4list_4list__IQ9deep_tree4TreeE__RQ2kl4listIQ9deep_tree4TreeE__ctor( struct kl_2kl4list_list__IQ9deep_tree4TreeE* kl_this_1 )
 {
     ( *kl_this_1 ).kl_data_ = NULL;
     ( *kl_this_1 ).kl_count_ = 0;
@@ -196,10 +196,10 @@ void kl_2kl4list_4list__I4TreeE__RQ2kl4listI4TreeE__ctor( struct kl_2kl4list_lis
 }
 
 #line 213 "../../src/list.kl"
-void kl_2kl4list_4push__I4TreeE__SQ2kl4listI4TreeE_M4Tree( struct kl_2kl4list_list__I4TreeE* kl_this_1, struct kl__Tree kl_value_2 )
+void kl_2kl4list_4push__IQ9deep_tree4TreeE__SQ2kl4listIQ9deep_tree4TreeE_MQ9deep_tree4Tree( struct kl_2kl4list_list__IQ9deep_tree4TreeE* kl_this_1, struct kl_9deep_tree_Tree kl_value_2 )
 {
-    struct kl_2kl4list_list__I4TreeE* kl_t3;
-    struct kl__Tree* kl_t5;
+    struct kl_2kl4list_list__IQ9deep_tree4TreeE* kl_t3;
+    struct kl_9deep_tree_Tree* kl_t5;
     bool kl_t6;
     bool kl_t7;
 #line 215 "../../src/list.kl"
@@ -207,7 +207,7 @@ void kl_2kl4list_4push__I4TreeE__SQ2kl4listI4TreeE_M4Tree( struct kl_2kl4list_li
 #line 215 "../../src/list.kl"
     kl_t3 = &( *kl_this_1 );
 #line 215 "../../src/list.kl"
-    kl_2kl4list_20reallocate_if_needed__I4TreeE__SQ2kl4listI4TreeE( kl_t3 );
+    kl_2kl4list_20reallocate_if_needed__IQ9deep_tree4TreeE__SQ2kl4listIQ9deep_tree4TreeE( kl_t3 );
 #line 219 "../../src/list.kl"
     kl_t5 = ( *kl_this_1 ).kl_data_ + ( *kl_this_1 ).kl_count_;
 #line 219 "../../src/list.kl"
@@ -224,7 +224,7 @@ void kl_2kl4list_4push__I4TreeE__SQ2kl4listI4TreeE_M4Tree( struct kl_2kl4list_li
     bb2:
 #line 221 "../../src/list.kl"
     ( *kl_this_1 ).kl_count_ = ( *kl_this_1 ).kl_count_ + 1;
-    if ( kl_t7 ) kl_2kl4list_4list__I4TreeE__dtor( &kl_value_2.kl_children );
+    if ( kl_t7 ) kl_2kl4list_4list__IQ9deep_tree4TreeE__dtor( &kl_value_2.kl_children );
 #line 222 "../../src/list.kl"
     kl_t7 = false;
 #line 222 "../../src/list.kl"
@@ -233,14 +233,14 @@ void kl_2kl4list_4push__I4TreeE__SQ2kl4listI4TreeE_M4Tree( struct kl_2kl4list_li
 }
 
 #line 154 "../../src/list.kl"
-struct kl__Tree* kl_2kl4list_14operator_index__I4TreeE__SQ2kl4listI4TreeE_3u64( struct kl_2kl4list_list__I4TreeE* kl_this_1, uint64_t kl_index_2 )
+struct kl_9deep_tree_Tree* kl_2kl4list_14operator_index__IQ9deep_tree4TreeE__SQ2kl4listIQ9deep_tree4TreeE_3u64( struct kl_2kl4list_list__IQ9deep_tree4TreeE* kl_this_1, uint64_t kl_index_2 )
 {
-    struct kl__Tree* kl_t0;
+    struct kl_9deep_tree_Tree* kl_t0;
     bool kl_t3;
     struct kl_7prelude_str kl_t4;
     struct kl_7prelude_str* kl_t5;
     uint8_t* kl_t6;
-    struct kl__Tree* kl_t8;
+    struct kl_9deep_tree_Tree* kl_t8;
 #line 156 "../../src/list.kl"
     kl_t3 = kl_index_2 >= ( *kl_this_1 ).kl_count_;
 #line 156 "../../src/list.kl"
@@ -264,17 +264,17 @@ struct kl__Tree* kl_2kl4list_14operator_index__I4TreeE__SQ2kl4listI4TreeE_3u64( 
 }
 
 #line 38 "../../src/list.kl"
-void kl_2kl4list_4list__I4TreeE__dtor( struct kl_2kl4list_list__I4TreeE* kl_this_1 )
+void kl_2kl4list_4list__IQ9deep_tree4TreeE__dtor( struct kl_2kl4list_list__IQ9deep_tree4TreeE* kl_this_1 )
 {
     bool kl_t2;
-    struct kl__Tree* kl_t3;
+    struct kl_9deep_tree_Tree* kl_t3;
     uint64_t kl_t4;
     uint64_t kl_t5;
     bool kl_t6;
-    struct kl__Tree* kl_t7;
+    struct kl_9deep_tree_Tree* kl_t7;
     if( ( uintptr_t ) __builtin_frame_address( 0 ) < kl_rt_stack_low )
     {
-        kl_rt_deeper( ( void ( * )( void* ) ) ( void ( * )( void ) ) kl_2kl4list_4list__I4TreeE__dtor, kl_this_1 );
+        kl_rt_deeper( ( void ( * )( void* ) ) ( void ( * )( void ) ) kl_2kl4list_4list__IQ9deep_tree4TreeE__dtor, kl_this_1 );
         return;
     }
 #line 40 "../../src/list.kl"
@@ -299,7 +299,7 @@ void kl_2kl4list_4list__I4TreeE__dtor( struct kl_2kl4list_list__I4TreeE* kl_this
 #line 44 "../../src/list.kl"
     kl_t7 = kl_t3 + kl_t5;
 #line 44 "../../src/list.kl"
-    kl_2kl4list_4list__I4TreeE__dtor( &( *kl_t7 ).kl_children );
+    kl_2kl4list_4list__IQ9deep_tree4TreeE__dtor( &( *kl_t7 ).kl_children );
 #line 44 "../../src/list.kl"
     kl_t5 = kl_t5 + 1;
 #line 44 "../../src/list.kl"
@@ -316,17 +316,17 @@ void kl_2kl4list_4list__I4TreeE__dtor( struct kl_2kl4list_list__I4TreeE* kl_this
 }
 
 #line 355 "../../src/list.kl"
-void kl_2kl4list_8truncate__I4TreeE__SQ2kl4listI4TreeE_3u64( struct kl_2kl4list_list__I4TreeE* kl_this_1, uint64_t kl_n_2 )
+void kl_2kl4list_8truncate__IQ9deep_tree4TreeE__SQ2kl4listIQ9deep_tree4TreeE_3u64( struct kl_2kl4list_list__IQ9deep_tree4TreeE* kl_this_1, uint64_t kl_n_2 )
 {
     bool kl_t3;
-    struct kl__Tree* kl_t4;
+    struct kl_9deep_tree_Tree* kl_t4;
     bool kl_t5;
     uint64_t kl_t6;
-    struct kl__Tree* kl_t7;
+    struct kl_9deep_tree_Tree* kl_t7;
     uint64_t kl_t8;
     uint64_t kl_t9;
     bool kl_t10;
-    struct kl__Tree* kl_t11;
+    struct kl_9deep_tree_Tree* kl_t11;
 #line 357 "../../src/list.kl"
     kl_t3 = kl_n_2 >= ( *kl_this_1 ).kl_count_;
 #line 357 "../../src/list.kl"
@@ -363,7 +363,7 @@ void kl_2kl4list_8truncate__I4TreeE__SQ2kl4listI4TreeE_3u64( struct kl_2kl4list_
 #line 364 "../../src/list.kl"
     kl_t11 = kl_t7 + kl_t9;
 #line 364 "../../src/list.kl"
-    kl_2kl4list_4list__I4TreeE__dtor( &( *kl_t11 ).kl_children );
+    kl_2kl4list_4list__IQ9deep_tree4TreeE__dtor( &( *kl_t11 ).kl_children );
 #line 364 "../../src/list.kl"
     kl_t9 = kl_t9 + 1;
 #line 364 "../../src/list.kl"
@@ -376,7 +376,7 @@ void kl_2kl4list_8truncate__I4TreeE__SQ2kl4listI4TreeE_3u64( struct kl_2kl4list_
 }
 
 #line 53 "../../src/list.kl"
-uint64_t kl_2kl4list_4size__I4TreeE__SQ2kl4listI4TreeE( struct kl_2kl4list_list__I4TreeE* kl_this_1 )
+uint64_t kl_2kl4list_4size__IQ9deep_tree4TreeE__SQ2kl4listIQ9deep_tree4TreeE( struct kl_2kl4list_list__IQ9deep_tree4TreeE* kl_this_1 )
 {
     uint64_t kl_t0;
 #line 55 "../../src/list.kl"
@@ -386,7 +386,7 @@ uint64_t kl_2kl4list_4size__I4TreeE__SQ2kl4listI4TreeE( struct kl_2kl4list_list_
 }
 
 #line 407 "../../src/list.kl"
-void kl_2kl4list_4swap__I4TreeE__SQ2kl4listI4TreeE_3u64_3u64( struct kl_2kl4list_list__I4TreeE* kl_this_1, uint64_t kl_a_2, uint64_t kl_b_3 )
+void kl_2kl4list_4swap__IQ9deep_tree4TreeE__SQ2kl4listIQ9deep_tree4TreeE_3u64_3u64( struct kl_2kl4list_list__IQ9deep_tree4TreeE* kl_this_1, uint64_t kl_a_2, uint64_t kl_b_3 )
 {
     bool kl_t4;
     bool kl_t5;
@@ -395,11 +395,11 @@ void kl_2kl4list_4swap__I4TreeE__SQ2kl4listI4TreeE_3u64_3u64( struct kl_2kl4list
     struct kl_7prelude_str* kl_t8;
     uint8_t* kl_t9;
     bool kl_t11;
-    struct kl__Tree kl_temp_12;
-    struct kl__Tree* kl_t13;
-    struct kl__Tree* kl_t14;
-    struct kl__Tree* kl_t15;
-    struct kl__Tree* kl_t16;
+    struct kl_9deep_tree_Tree kl_temp_12;
+    struct kl_9deep_tree_Tree* kl_t13;
+    struct kl_9deep_tree_Tree* kl_t14;
+    struct kl_9deep_tree_Tree* kl_t15;
+    struct kl_9deep_tree_Tree* kl_t16;
     bool kl_t17;
 #line 409 "../../src/list.kl"
     kl_t17 = false;
@@ -453,7 +453,7 @@ void kl_2kl4list_4swap__I4TreeE__SQ2kl4listI4TreeE_3u64_3u64( struct kl_2kl4list
     ( *kl_t16 ) = kl_temp_12;
 #line 423 "../../src/list.kl"
     kl_t17 = false;
-    if ( kl_t17 ) kl_2kl4list_4list__I4TreeE__dtor( &kl_temp_12.kl_children );
+    if ( kl_t17 ) kl_2kl4list_4list__IQ9deep_tree4TreeE__dtor( &kl_temp_12.kl_children );
 #line 424 "../../src/list.kl"
     kl_t17 = false;
     return;
@@ -461,10 +461,10 @@ void kl_2kl4list_4swap__I4TreeE__SQ2kl4listI4TreeE_3u64_3u64( struct kl_2kl4list
 }
 
 #line 474 "../../src/list.kl"
-void kl_2kl4list_20reallocate_if_needed__I4TreeE__SQ2kl4listI4TreeE( struct kl_2kl4list_list__I4TreeE* kl_this_1 )
+void kl_2kl4list_20reallocate_if_needed__IQ9deep_tree4TreeE__SQ2kl4listIQ9deep_tree4TreeE( struct kl_2kl4list_list__IQ9deep_tree4TreeE* kl_this_1 )
 {
     bool kl_t2;
-    struct kl_2kl4list_list__I4TreeE* kl_t3;
+    struct kl_2kl4list_list__IQ9deep_tree4TreeE* kl_t3;
     uint64_t kl_t4;
     bool kl_t5;
     bool kl_t6;
@@ -491,7 +491,7 @@ void kl_2kl4list_20reallocate_if_needed__I4TreeE__SQ2kl4listI4TreeE( struct kl_2
     goto bb4;
     bb4:
 #line 478 "../../src/list.kl"
-    kl_2kl4list_10reallocate__I4TreeE__SQ2kl4listI4TreeE_3u64( kl_t3, kl_t4 );
+    kl_2kl4list_10reallocate__IQ9deep_tree4TreeE__SQ2kl4listIQ9deep_tree4TreeE_3u64( kl_t3, kl_t4 );
 #line 476 "../../src/list.kl"
     goto bb7;
     bb5:
@@ -509,18 +509,18 @@ void kl_2kl4list_20reallocate_if_needed__I4TreeE__SQ2kl4listI4TreeE( struct kl_2
 }
 
 #line 444 "../../src/list.kl"
-void kl_2kl4list_10reallocate__I4TreeE__SQ2kl4listI4TreeE_3u64( struct kl_2kl4list_list__I4TreeE* kl_this_1, uint64_t kl_n_2 )
+void kl_2kl4list_10reallocate__IQ9deep_tree4TreeE__SQ2kl4listIQ9deep_tree4TreeE_3u64( struct kl_2kl4list_list__IQ9deep_tree4TreeE* kl_this_1, uint64_t kl_n_2 )
 {
-    struct kl__Tree* kl_new_data_3;
-    struct kl__Tree* kl_t4;
+    struct kl_9deep_tree_Tree* kl_new_data_3;
+    struct kl_9deep_tree_Tree* kl_t4;
     bool kl_t5;
     uint64_t kl_i_6;
     bool kl_t7;
-    struct kl__Tree* kl_t8;
-    struct kl__Tree* kl_t9;
+    struct kl_9deep_tree_Tree* kl_t8;
+    struct kl_9deep_tree_Tree* kl_t9;
     bool kl_t10;
 #line 449 "../../src/list.kl"
-    kl_t4 = ( struct kl__Tree* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 24, "../../src/list.kl", 449, "out of memory: alloc<T>( n )" );
+    kl_t4 = ( struct kl_9deep_tree_Tree* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 24, "../../src/list.kl", 449, "out of memory: alloc<T>( n )" );
 #line 449 "../../src/list.kl"
     kl_new_data_3 = kl_t4;
 #line 452 "../../src/list.kl"
@@ -570,13 +570,13 @@ void kl_2kl4list_10reallocate__I4TreeE__SQ2kl4listI4TreeE_3u64( struct kl_2kl4li
 #line 471 "../../src/list.kl"
 }
 
-void kl_2kl4list_list__I4TreeE__drop( void* kl_t1 )
+void kl_2kl4list_list__IQ9deep_tree4TreeE__drop( void* kl_t1 )
 {
-    struct kl_2kl4list_list__I4TreeE* kl_t2;
+    struct kl_2kl4list_list__IQ9deep_tree4TreeE* kl_t2;
 #line 11 "../../src/list.kl"
-    kl_t2 = ( struct kl_2kl4list_list__I4TreeE* ) kl_t1;
+    kl_t2 = ( struct kl_2kl4list_list__IQ9deep_tree4TreeE* ) kl_t1;
 #line 11 "../../src/list.kl"
-    kl_2kl4list_4list__I4TreeE__dtor( &( *kl_t2 ) );
+    kl_2kl4list_4list__IQ9deep_tree4TreeE__dtor( &( *kl_t2 ) );
 #line 11 "../../src/list.kl"
     return;
 #line 11 "../../src/list.kl"
@@ -586,7 +586,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 12 "deep_tree/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_9deep_tree_4main__(  );
 #line 12 "deep_tree/main.kl"
     return kl_t0;
 #line 12 "deep_tree/main.kl"

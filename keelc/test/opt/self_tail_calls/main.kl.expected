@@ -3,28 +3,28 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Box;
+struct kl_15self_tail_calls_Box;
 
-struct kl__Box
+struct kl_15self_tail_calls_Box
 {
     int64_t kl_value;
 };
-_Static_assert( sizeof( struct kl__Box ) == 8 && _Alignof( struct kl__Box ) == 8 && offsetof( struct kl__Box, kl_value ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_15self_tail_calls_Box ) == 8 && _Alignof( struct kl_15self_tail_calls_Box ) == 8 && offsetof( struct kl_15self_tail_calls_Box, kl_value ) == 0, "layout" );
 
-int64_t kl__dropped__G;
-int64_t kl__ticks__G;
+int64_t kl_15self_tail_calls_dropped__G;
+int64_t kl_15self_tail_calls_ticks__G;
 
-void kl__3Box__R3Box_3i64__ctor( struct kl__Box*, int64_t );
-void kl__3Box__dtor( struct kl__Box* );
-int64_t kl__3acc__3i64_3i64( int64_t, int64_t );
-void kl__4tick__3i64( int64_t );
-int64_t kl__4last__M3Box_3i64( struct kl__Box, int64_t );
-int64_t kl__4kept__M3Box_3i64( struct kl__Box, int64_t );
-int64_t kl__7pointed__3i64_P3i64( int64_t, int64_t* );
-int32_t kl__4main__( void );
+void kl_15self_tail_calls_3Box__RQ15self_tail_calls3Box_3i64__ctor( struct kl_15self_tail_calls_Box*, int64_t );
+void kl_15self_tail_calls_3Box__dtor( struct kl_15self_tail_calls_Box* );
+int64_t kl_15self_tail_calls_3acc__3i64_3i64( int64_t, int64_t );
+void kl_15self_tail_calls_4tick__3i64( int64_t );
+int64_t kl_15self_tail_calls_4last__MQ15self_tail_calls3Box_3i64( struct kl_15self_tail_calls_Box, int64_t );
+int64_t kl_15self_tail_calls_4kept__MQ15self_tail_calls3Box_3i64( struct kl_15self_tail_calls_Box, int64_t );
+int64_t kl_15self_tail_calls_7pointed__3i64_P3i64( int64_t, int64_t* );
+int32_t kl_15self_tail_calls_4main__( void );
 
 #line 10 "opt/self_tail_calls/main.kl"
-void kl__3Box__R3Box_3i64__ctor( struct kl__Box* kl_this_1, int64_t kl_v_2 )
+void kl_15self_tail_calls_3Box__RQ15self_tail_calls3Box_3i64__ctor( struct kl_15self_tail_calls_Box* kl_this_1, int64_t kl_v_2 )
 {
     ( *kl_this_1 ).kl_value = kl_v_2;
     return;
@@ -32,17 +32,17 @@ void kl__3Box__R3Box_3i64__ctor( struct kl__Box* kl_this_1, int64_t kl_v_2 )
 }
 
 #line 15 "opt/self_tail_calls/main.kl"
-void kl__3Box__dtor( struct kl__Box* kl_this_1 )
+void kl_15self_tail_calls_3Box__dtor( struct kl_15self_tail_calls_Box* kl_this_1 )
 {
     ( void ) kl_this_1;
 #line 17 "opt/self_tail_calls/main.kl"
-    kl__dropped__G = kl__dropped__G + 1;
+    kl_15self_tail_calls_dropped__G = kl_15self_tail_calls_dropped__G + 1;
     return;
 #line 18 "opt/self_tail_calls/main.kl"
 }
 
 #line 23 "opt/self_tail_calls/main.kl"
-int64_t kl__3acc__3i64_3i64( int64_t kl_n_1, int64_t kl_total_2 )
+int64_t kl_15self_tail_calls_3acc__3i64_3i64( int64_t kl_n_1, int64_t kl_total_2 )
 {
     int64_t kl_t0;
     bool kl_t3;
@@ -70,7 +70,7 @@ int64_t kl__3acc__3i64_3i64( int64_t kl_n_1, int64_t kl_total_2 )
 }
 
 #line 34 "opt/self_tail_calls/main.kl"
-void kl__4tick__3i64( int64_t kl_n_1 )
+void kl_15self_tail_calls_4tick__3i64( int64_t kl_n_1 )
 {
     bool kl_t2;
 #line 36 "opt/self_tail_calls/main.kl"
@@ -81,7 +81,7 @@ void kl__4tick__3i64( int64_t kl_n_1 )
     return;
     bb2:
 #line 41 "opt/self_tail_calls/main.kl"
-    kl__ticks__G = kl__ticks__G + 1;
+    kl_15self_tail_calls_ticks__G = kl_15self_tail_calls_ticks__G + 1;
     kl_n_1 = kl_n_1 - 1;
 #line 36 "opt/self_tail_calls/main.kl"
     kl_t2 = kl_n_1 == 0;
@@ -91,7 +91,7 @@ void kl__4tick__3i64( int64_t kl_n_1 )
 }
 
 #line 46 "opt/self_tail_calls/main.kl"
-int64_t kl__4last__M3Box_3i64( struct kl__Box kl_b_1, int64_t kl_n_2 )
+int64_t kl_15self_tail_calls_4last__MQ15self_tail_calls3Box_3i64( struct kl_15self_tail_calls_Box kl_b_1, int64_t kl_n_2 )
 {
     int64_t kl_t0;
     bool kl_t3;
@@ -102,7 +102,7 @@ int64_t kl__4last__M3Box_3i64( struct kl__Box kl_b_1, int64_t kl_n_2 )
     bb1:
     kl_t0 = kl_b_1.kl_value;
 #line 17 "opt/self_tail_calls/main.kl"
-    kl__dropped__G = kl__dropped__G + 1;
+    kl_15self_tail_calls_dropped__G = kl_15self_tail_calls_dropped__G + 1;
 #line 50 "opt/self_tail_calls/main.kl"
     return kl_t0;
     bb2:
@@ -116,11 +116,11 @@ int64_t kl__4last__M3Box_3i64( struct kl__Box kl_b_1, int64_t kl_n_2 )
 }
 
 #line 57 "opt/self_tail_calls/main.kl"
-int64_t kl__4kept__M3Box_3i64( struct kl__Box kl_b_1, int64_t kl_n_2 )
+int64_t kl_15self_tail_calls_4kept__MQ15self_tail_calls3Box_3i64( struct kl_15self_tail_calls_Box kl_b_1, int64_t kl_n_2 )
 {
     int64_t kl_t0;
     bool kl_t3;
-    struct kl__Box kl_t4;
+    struct kl_15self_tail_calls_Box kl_t4;
     int64_t kl_t5;
 #line 59 "opt/self_tail_calls/main.kl"
     kl_t3 = kl_n_2 == 0;
@@ -129,7 +129,7 @@ int64_t kl__4kept__M3Box_3i64( struct kl__Box kl_b_1, int64_t kl_n_2 )
     bb1:
     kl_t0 = kl_b_1.kl_value;
 #line 17 "opt/self_tail_calls/main.kl"
-    kl__dropped__G = kl__dropped__G + 1;
+    kl_15self_tail_calls_dropped__G = kl_15self_tail_calls_dropped__G + 1;
 #line 61 "opt/self_tail_calls/main.kl"
     return kl_t0;
     bb2:
@@ -138,15 +138,15 @@ int64_t kl__4kept__M3Box_3i64( struct kl__Box kl_b_1, int64_t kl_n_2 )
 #line 64 "opt/self_tail_calls/main.kl"
     kl_t5 = kl_n_2 - 1;
 #line 64 "opt/self_tail_calls/main.kl"
-    kl_t0 = kl__4kept__M3Box_3i64( kl_t4, kl_t5 );
+    kl_t0 = kl_15self_tail_calls_4kept__MQ15self_tail_calls3Box_3i64( kl_t4, kl_t5 );
 #line 17 "opt/self_tail_calls/main.kl"
-    kl__dropped__G = kl__dropped__G + 1;
+    kl_15self_tail_calls_dropped__G = kl_15self_tail_calls_dropped__G + 1;
 #line 64 "opt/self_tail_calls/main.kl"
     return kl_t0;
 }
 
 #line 68 "opt/self_tail_calls/main.kl"
-int64_t kl__7pointed__3i64_P3i64( int64_t kl_n_1, int64_t* kl_p_2 )
+int64_t kl_15self_tail_calls_7pointed__3i64_P3i64( int64_t kl_n_1, int64_t* kl_p_2 )
 {
     int64_t kl_t0;
     bool kl_t3;
@@ -168,13 +168,13 @@ int64_t kl__7pointed__3i64_P3i64( int64_t kl_n_1, int64_t* kl_p_2 )
 #line 76 "opt/self_tail_calls/main.kl"
     kl_t6 = &kl_x_4;
 #line 76 "opt/self_tail_calls/main.kl"
-    kl_t0 = kl__7pointed__3i64_P3i64( kl_t5, kl_t6 );
+    kl_t0 = kl_15self_tail_calls_7pointed__3i64_P3i64( kl_t5, kl_t6 );
 #line 76 "opt/self_tail_calls/main.kl"
     return kl_t0;
 }
 
 #line 79 "opt/self_tail_calls/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_15self_tail_calls_4main__( void )
 {
     int32_t kl_t0;
     int64_t kl_t1;
@@ -188,11 +188,11 @@ int32_t kl__4main__( void )
     bool kl_t9;
     int64_t kl_x_10;
     int64_t* kl_t11;
-    struct kl__Box kl_t12;
-    struct kl__Box kl_b_13;
+    struct kl_15self_tail_calls_Box kl_t12;
+    struct kl_15self_tail_calls_Box kl_b_13;
     int64_t kl_t15;
 #line 30 "opt/self_tail_calls/main.kl"
-    kl_t1 = kl__3acc__3i64_3i64( 9999999, 10000000 );
+    kl_t1 = kl_15self_tail_calls_3acc__3i64_3i64( 9999999, 10000000 );
 #line 81 "opt/self_tail_calls/main.kl"
     kl_t2 = kl_t1 != 50000005000000;
 #line 81 "opt/self_tail_calls/main.kl"
@@ -203,10 +203,10 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb2:
 #line 41 "opt/self_tail_calls/main.kl"
-    kl__ticks__G = kl__ticks__G + 1;
-    kl__4tick__3i64( 9999999 );
+    kl_15self_tail_calls_ticks__G = kl_15self_tail_calls_ticks__G + 1;
+    kl_15self_tail_calls_4tick__3i64( 9999999 );
 #line 87 "opt/self_tail_calls/main.kl"
-    kl_t3 = kl__ticks__G != 10000000;
+    kl_t3 = kl_15self_tail_calls_ticks__G != 10000000;
 #line 87 "opt/self_tail_calls/main.kl"
     if ( kl_t3 ) goto bb3; else goto bb4;
     bb3:
@@ -217,14 +217,14 @@ int32_t kl__4main__( void )
 #line 92 "opt/self_tail_calls/main.kl"
     kl_b_13.kl_value = 7;
 #line 53 "opt/self_tail_calls/main.kl"
-    kl_t5 = kl__4last__M3Box_3i64( kl_b_13, 9999999 );
+    kl_t5 = kl_15self_tail_calls_4last__MQ15self_tail_calls3Box_3i64( kl_b_13, 9999999 );
 #line 92 "opt/self_tail_calls/main.kl"
     kl_t4 = kl_t5 != 7;
 #line 92 "opt/self_tail_calls/main.kl"
     if ( kl_t4 ) goto bb6; else goto bb5;
     bb5:
 #line 92 "opt/self_tail_calls/main.kl"
-    kl_t4 = kl__dropped__G != 1;
+    kl_t4 = kl_15self_tail_calls_dropped__G != 1;
 #line 92 "opt/self_tail_calls/main.kl"
     if ( kl_t4 ) goto bb6; else goto bb7;
     bb6:
@@ -235,11 +235,11 @@ int32_t kl__4main__( void )
 #line 12 "opt/self_tail_calls/main.kl"
     kl_t12.kl_value = 3;
 #line 64 "opt/self_tail_calls/main.kl"
-    kl_t7 = kl__4kept__M3Box_3i64( kl_t12, 2 );
+    kl_t7 = kl_15self_tail_calls_4kept__MQ15self_tail_calls3Box_3i64( kl_t12, 2 );
 #line 17 "opt/self_tail_calls/main.kl"
-    kl_t15 = kl__dropped__G + 1;
+    kl_t15 = kl_15self_tail_calls_dropped__G + 1;
 #line 17 "opt/self_tail_calls/main.kl"
-    kl__dropped__G = kl_t15;
+    kl_15self_tail_calls_dropped__G = kl_t15;
 #line 97 "opt/self_tail_calls/main.kl"
     kl_t6 = kl_t7 != 1;
 #line 97 "opt/self_tail_calls/main.kl"
@@ -258,7 +258,7 @@ int32_t kl__4main__( void )
     kl_x_10 = 3;
     kl_t11 = &kl_x_10;
 #line 76 "opt/self_tail_calls/main.kl"
-    kl_t8 = kl__7pointed__3i64_P3i64( 2, kl_t11 );
+    kl_t8 = kl_15self_tail_calls_7pointed__3i64_P3i64( 2, kl_t11 );
 #line 103 "opt/self_tail_calls/main.kl"
     kl_t9 = kl_t8 != 1;
 #line 103 "opt/self_tail_calls/main.kl"
@@ -278,7 +278,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 79 "opt/self_tail_calls/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_15self_tail_calls_4main__(  );
 #line 79 "opt/self_tail_calls/main.kl"
     return kl_t0;
 #line 79 "opt/self_tail_calls/main.kl"

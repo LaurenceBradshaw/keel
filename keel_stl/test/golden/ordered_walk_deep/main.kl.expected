@@ -2730,7 +2730,7 @@ void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__4main__( void );
+int32_t kl_17ordered_walk_deep_4main__( void );
 void kl_2kl11ordered_set_11ordered_set__I3i32E__RQ2kl11ordered_setI3i32E__ctor( struct kl_2kl11ordered_set_ordered_set__I3i32E* );
 bool kl_2kl11ordered_set_6insert__I3i32E__SQ2kl11ordered_setI3i32E_M3i32( struct kl_2kl11ordered_set_ordered_set__I3i32E*, int32_t );
 bool kl_2kl11ordered_set_6remove__I3i32E__SQ2kl11ordered_setI3i32E_3i32( struct kl_2kl11ordered_set_ordered_set__I3i32E*, int32_t* );
@@ -2778,7 +2778,7 @@ struct kl_2kl15ordered_control_key_moves kl_2kl15ordered_control_7thicken__SQ2kl
 struct kl_2kl15ordered_control_key_run kl_2kl15ordered_control_16remove_from_leaf__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl15ordered_control_ordered_control*, uint64_t, uint64_t );
 
 #line 6 "ordered_walk_deep/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_17ordered_walk_deep_4main__( void )
 {
     int32_t kl_t0;
     struct kl_2kl11ordered_set_ordered_set__I3i32E kl_empty_1;
@@ -7615,7 +7615,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 6 "ordered_walk_deep/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_17ordered_walk_deep_4main__(  );
 #line 6 "ordered_walk_deep/main.kl"
     return kl_t0;
 #line 6 "ordered_walk_deep/main.kl"

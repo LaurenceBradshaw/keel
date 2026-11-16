@@ -9272,7 +9272,7 @@ bool kl_2kl7console_5input__RQ2kl6string( struct kl_2kl6string_string* kl_line_1
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl_1b_Noisy;
+struct kl_12global_order1b_Noisy;
 struct kl_7prelude_str;
 
 struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
@@ -9280,11 +9280,11 @@ struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
 struct kl_7prelude_textual__vtable;
 struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
 
-struct kl_1b_Noisy
+struct kl_12global_order1b_Noisy
 {
     int32_t kl_id;
 };
-_Static_assert( sizeof( struct kl_1b_Noisy ) == 4 && _Alignof( struct kl_1b_Noisy ) == 4 && offsetof( struct kl_1b_Noisy, kl_id ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_12global_order1b_Noisy ) == 4 && _Alignof( struct kl_12global_order1b_Noisy ) == 4 && offsetof( struct kl_12global_order1b_Noisy, kl_id ) == 0, "layout" );
 
 struct kl_7prelude_str
 {
@@ -9299,12 +9299,12 @@ struct kl_7prelude_textual__vtable
     struct kl__run__L2u8__ref ( *kl__7as_text__ )( void* );
 };
 
-struct kl_1b_Noisy kl_1b_deepest__G;
+struct kl_12global_order1b_Noisy kl_12global_order1b_deepest__G;
 
-void kl_1b_5Noisy__R5Noisy_3i32__ctor( struct kl_1b_Noisy*, int32_t );
-void kl_1b_5Noisy__dtor( struct kl_1b_Noisy* );
-void kl_1b_0build( void );
-void kl_1b_0drop( void );
+void kl_12global_order1b_5Noisy__RQ12global_order5Noisy_3i32__ctor( struct kl_12global_order1b_Noisy*, int32_t );
+void kl_12global_order1b_5Noisy__dtor( struct kl_12global_order1b_Noisy* );
+void kl_12global_order1b_0build( void );
+void kl_12global_order1b_0drop( void );
 void kl_2kl7console_5print__7textual_7textual( struct kl_7prelude_textual__ref, struct kl_7prelude_textual__ref );
 void kl_2kl7console_5print__3i64_7textual( int64_t, struct kl_7prelude_textual__ref );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
@@ -9314,7 +9314,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 8 "codegen/global_order/b.kl"
-void kl_1b_5Noisy__R5Noisy_3i32__ctor( struct kl_1b_Noisy* kl_this_1, int32_t kl_n_2 )
+void kl_12global_order1b_5Noisy__RQ12global_order5Noisy_3i32__ctor( struct kl_12global_order1b_Noisy* kl_this_1, int32_t kl_n_2 )
 {
     struct kl_7prelude_str kl_t3;
     struct kl_7prelude_str* kl_t4;
@@ -9373,7 +9373,7 @@ void kl_1b_5Noisy__R5Noisy_3i32__ctor( struct kl_1b_Noisy* kl_this_1, int32_t kl
 }
 
 #line 15 "codegen/global_order/b.kl"
-void kl_1b_5Noisy__dtor( struct kl_1b_Noisy* kl_this_1 )
+void kl_12global_order1b_5Noisy__dtor( struct kl_12global_order1b_Noisy* kl_this_1 )
 {
     struct kl_7prelude_str kl_t2;
     struct kl_7prelude_str* kl_t3;
@@ -9430,22 +9430,22 @@ void kl_1b_5Noisy__dtor( struct kl_1b_Noisy* kl_this_1 )
 #line 19 "codegen/global_order/b.kl"
 }
 
-void kl_1b_0build( void )
+void kl_12global_order1b_0build( void )
 {
-    struct kl_1b_Noisy* kl_t1;
+    struct kl_12global_order1b_Noisy* kl_t1;
 #line 22 "codegen/global_order/b.kl"
-    kl_t1 = &kl_1b_deepest__G;
+    kl_t1 = &kl_12global_order1b_deepest__G;
 #line 22 "codegen/global_order/b.kl"
-    kl_1b_5Noisy__R5Noisy_3i32__ctor( kl_t1, 1 );
+    kl_12global_order1b_5Noisy__RQ12global_order5Noisy_3i32__ctor( kl_t1, 1 );
 #line 22 "codegen/global_order/b.kl"
     return;
 #line 22 "codegen/global_order/b.kl"
 }
 
-void kl_1b_0drop( void )
+void kl_12global_order1b_0drop( void )
 {
 #line 22 "codegen/global_order/b.kl"
-    kl_1b_5Noisy__dtor( &kl_1b_deepest__G );
+    kl_12global_order1b_5Noisy__dtor( &kl_12global_order1b_deepest__G );
 #line 22 "codegen/global_order/b.kl"
     return;
 #line 22 "codegen/global_order/b.kl"
@@ -9456,24 +9456,24 @@ void kl_1b_0drop( void )
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl_1b_Noisy;
+struct kl_12global_order1b_Noisy;
 
-struct kl_1b_Noisy
+struct kl_12global_order1b_Noisy
 {
     int32_t kl_id;
 };
-_Static_assert( sizeof( struct kl_1b_Noisy ) == 4 && _Alignof( struct kl_1b_Noisy ) == 4 && offsetof( struct kl_1b_Noisy, kl_id ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_12global_order1b_Noisy ) == 4 && _Alignof( struct kl_12global_order1b_Noisy ) == 4 && offsetof( struct kl_12global_order1b_Noisy, kl_id ) == 0, "layout" );
 
-struct kl_1b_Noisy kl_1a_middle__G;
+struct kl_12global_order1b_Noisy kl_12global_order1a_middle__G;
 
-int32_t kl_1a_5level__( void );
-void kl_1a_0build( void );
-void kl_1a_0drop( void );
-void kl_1b_5Noisy__R5Noisy_3i32__ctor( struct kl_1b_Noisy*, int32_t );
-void kl_1b_5Noisy__dtor( struct kl_1b_Noisy* );
+int32_t kl_12global_order1a_5level__( void );
+void kl_12global_order1a_0build( void );
+void kl_12global_order1a_0drop( void );
+void kl_12global_order1b_5Noisy__RQ12global_order5Noisy_3i32__ctor( struct kl_12global_order1b_Noisy*, int32_t );
+void kl_12global_order1b_5Noisy__dtor( struct kl_12global_order1b_Noisy* );
 
 #line 5 "codegen/global_order/a.kl"
-int32_t kl_1a_5level__( void )
+int32_t kl_12global_order1a_5level__( void )
 {
     int32_t kl_t0;
 #line 7 "codegen/global_order/a.kl"
@@ -9482,22 +9482,22 @@ int32_t kl_1a_5level__( void )
     return kl_t0;
 }
 
-void kl_1a_0build( void )
+void kl_12global_order1a_0build( void )
 {
-    struct kl_1b_Noisy* kl_t1;
+    struct kl_12global_order1b_Noisy* kl_t1;
 #line 3 "codegen/global_order/a.kl"
-    kl_t1 = &kl_1a_middle__G;
+    kl_t1 = &kl_12global_order1a_middle__G;
 #line 3 "codegen/global_order/a.kl"
-    kl_1b_5Noisy__R5Noisy_3i32__ctor( kl_t1, 2 );
+    kl_12global_order1b_5Noisy__RQ12global_order5Noisy_3i32__ctor( kl_t1, 2 );
 #line 3 "codegen/global_order/a.kl"
     return;
 #line 3 "codegen/global_order/a.kl"
 }
 
-void kl_1a_0drop( void )
+void kl_12global_order1a_0drop( void )
 {
 #line 3 "codegen/global_order/a.kl"
-    kl_1b_5Noisy__dtor( &kl_1a_middle__G );
+    kl_12global_order1b_5Noisy__dtor( &kl_12global_order1a_middle__G );
 #line 3 "codegen/global_order/a.kl"
     return;
 #line 3 "codegen/global_order/a.kl"
@@ -9508,7 +9508,7 @@ void kl_1a_0drop( void )
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl_1b_Noisy;
+struct kl_12global_order1b_Noisy;
 struct kl_2kl6string_string;
 struct kl_2kl2os_path;
 struct kl_2kl2os_process;
@@ -9526,11 +9526,11 @@ struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
 struct kl_7prelude_textual__vtable;
 struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
 
-struct kl_1b_Noisy
+struct kl_12global_order1b_Noisy
 {
     int32_t kl_id;
 };
-_Static_assert( sizeof( struct kl_1b_Noisy ) == 4 && _Alignof( struct kl_1b_Noisy ) == 4 && offsetof( struct kl_1b_Noisy, kl_id ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_12global_order1b_Noisy ) == 4 && _Alignof( struct kl_12global_order1b_Noisy ) == 4 && offsetof( struct kl_12global_order1b_Noisy, kl_id ) == 0, "layout" );
 
 struct kl_2kl6string_string
 {
@@ -9651,14 +9651,14 @@ struct kl_7prelude_textual__vtable
     struct kl__run__L2u8__ref ( *kl__7as_text__ )( void* );
 };
 
-struct kl_1b_Noisy kl__outer__G;
+struct kl_12global_order1b_Noisy kl_12global_order_outer__G;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-int32_t kl__4main__( void );
-void kl__0build( void );
-void kl__0drop( void );
+int32_t kl_12global_order_4main__( void );
+void kl_12global_order_0build( void );
+void kl_12global_order_0drop( void );
 void kl_2kl4list_8truncate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
 uint64_t kl_2kl4list_4size__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
 struct kl_2kl6string_string* kl_2kl4list_14operator_index__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
@@ -9669,17 +9669,17 @@ void kl_7prelude_6result__IQ2kl7process_Q2kl10file_errorE__dtor( struct kl_7prel
 void kl_7prelude_6result__IQ2kl8captured_Q2kl10file_errorE__dtor( struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE* );
 void kl_2kl4list_list__IQ2kl6stringE__drop( void* );
 void kl_2kl4list_list__IQ2kl4pathE__drop( void* );
-void kl_1b_5Noisy__R5Noisy_3i32__ctor( struct kl_1b_Noisy*, int32_t );
-void kl_1b_5Noisy__dtor( struct kl_1b_Noisy* );
-int32_t kl_1a_5level__( void );
+void kl_12global_order1b_5Noisy__RQ12global_order5Noisy_3i32__ctor( struct kl_12global_order1b_Noisy*, int32_t );
+void kl_12global_order1b_5Noisy__dtor( struct kl_12global_order1b_Noisy* );
+int32_t kl_12global_order1a_5level__( void );
 void kl_2kl7console_5print__7textual_7textual( struct kl_7prelude_textual__ref, struct kl_7prelude_textual__ref );
 void kl_2kl6string_6string__dtor( struct kl_2kl6string_string* );
 void kl_2kl2os_7process__dtor( struct kl_2kl2os_process* );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
-void kl_1b_0build( void );
-void kl_1b_0drop( void );
-void kl_1a_0build( void );
-void kl_1a_0drop( void );
+void kl_12global_order1b_0build( void );
+void kl_12global_order1b_0drop( void );
+void kl_12global_order1a_0build( void );
+void kl_12global_order1a_0drop( void );
 void kl_2kl2os_0build( void );
 void kl_2kl2os_0drop( void );
 void kl_2kl4list_4list__IQ2kl6stringE__dtor( struct kl_2kl4list_list__IQ2kl6stringE* );
@@ -9690,7 +9690,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 8 "codegen/global_order/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_12global_order_4main__( void )
 {
     int32_t kl_t0;
     struct kl_7prelude_str kl_t1;
@@ -9728,7 +9728,7 @@ int32_t kl__4main__( void )
     kl_t12 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t11, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 10 "codegen/global_order/main.kl"
     kl_2kl7console_5print__7textual_7textual( kl_t6, kl_t12 );
-    kl_t15 = kl_1a_5level__(  );
+    kl_t15 = kl_12global_order1a_5level__(  );
 #line 11 "codegen/global_order/main.kl"
     kl_t16 = kl_t15 == 2;
 #line 11 "codegen/global_order/main.kl"
@@ -9750,22 +9750,22 @@ int32_t kl__4main__( void )
     return kl_t0;
 }
 
-void kl__0build( void )
+void kl_12global_order_0build( void )
 {
-    struct kl_1b_Noisy* kl_t1;
+    struct kl_12global_order1b_Noisy* kl_t1;
 #line 6 "codegen/global_order/main.kl"
-    kl_t1 = &kl__outer__G;
+    kl_t1 = &kl_12global_order_outer__G;
 #line 6 "codegen/global_order/main.kl"
-    kl_1b_5Noisy__R5Noisy_3i32__ctor( kl_t1, 3 );
+    kl_12global_order1b_5Noisy__RQ12global_order5Noisy_3i32__ctor( kl_t1, 3 );
 #line 6 "codegen/global_order/main.kl"
     return;
 #line 6 "codegen/global_order/main.kl"
 }
 
-void kl__0drop( void )
+void kl_12global_order_0drop( void )
 {
 #line 6 "codegen/global_order/main.kl"
-    kl_1b_5Noisy__dtor( &kl__outer__G );
+    kl_12global_order1b_5Noisy__dtor( &kl_12global_order_outer__G );
 #line 6 "codegen/global_order/main.kl"
     return;
 #line 6 "codegen/global_order/main.kl"
@@ -10150,19 +10150,19 @@ int main( void )
 #line 8 "codegen/global_order/main.kl"
     kl_2kl2os_0build(  );
 #line 8 "codegen/global_order/main.kl"
-    kl_1b_0build(  );
+    kl_12global_order1b_0build(  );
 #line 8 "codegen/global_order/main.kl"
-    kl_1a_0build(  );
+    kl_12global_order1a_0build(  );
 #line 8 "codegen/global_order/main.kl"
-    kl__0build(  );
+    kl_12global_order_0build(  );
 #line 8 "codegen/global_order/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_12global_order_4main__(  );
 #line 8 "codegen/global_order/main.kl"
-    kl__0drop(  );
+    kl_12global_order_0drop(  );
 #line 8 "codegen/global_order/main.kl"
-    kl_1a_0drop(  );
+    kl_12global_order1a_0drop(  );
 #line 8 "codegen/global_order/main.kl"
-    kl_1b_0drop(  );
+    kl_12global_order1b_0drop(  );
 #line 8 "codegen/global_order/main.kl"
     kl_2kl2os_0drop(  );
 #line 8 "codegen/global_order/main.kl"

@@ -6787,7 +6787,7 @@ void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-int32_t kl__4main__( void );
+int32_t kl_16ordered_map_walk_4main__( void );
 void kl_2kl11ordered_map_11ordered_map__I3i32_Q2kl6stringE__RQ2kl11ordered_mapI3i32_Q2kl6stringE__ctor( struct kl_2kl11ordered_map_ordered_map__I3i32_Q2kl6stringE* );
 struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl11ordered_map_6insert__I3i32_Q2kl6stringE__SQ2kl11ordered_mapI3i32_Q2kl6stringE_M3i32_MQ2kl6string( struct kl_2kl11ordered_map_ordered_map__I3i32_Q2kl6stringE*, int32_t, struct kl_2kl6string_string );
 struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl11ordered_map_6remove__I3i32_Q2kl6stringE__SQ2kl11ordered_mapI3i32_Q2kl6stringE_3i32( struct kl_2kl11ordered_map_ordered_map__I3i32_Q2kl6stringE*, int32_t* );
@@ -6851,7 +6851,7 @@ struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text_
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 7 "ordered_map_walk/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_16ordered_map_walk_4main__( void )
 {
     int32_t kl_t0;
     struct kl_2kl11ordered_map_ordered_map__I3i32_Q2kl6stringE kl_m_1;
@@ -11613,7 +11613,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 7 "ordered_map_walk/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_16ordered_map_walk_4main__(  );
 #line 7 "ordered_map_walk/main.kl"
     return kl_t0;
 #line 7 "ordered_map_walk/main.kl"

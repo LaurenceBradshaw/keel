@@ -3,21 +3,21 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl_5shape_Point;
+struct kl_7modules5shape_Point;
 
-struct kl_5shape_Point
+struct kl_7modules5shape_Point
 {
     int32_t kl_x;
     int32_t kl_y;
 };
-_Static_assert( sizeof( struct kl_5shape_Point ) == 8 && _Alignof( struct kl_5shape_Point ) == 4 && offsetof( struct kl_5shape_Point, kl_x ) == 0 && offsetof( struct kl_5shape_Point, kl_y ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_7modules5shape_Point ) == 8 && _Alignof( struct kl_7modules5shape_Point ) == 4 && offsetof( struct kl_7modules5shape_Point, kl_x ) == 0 && offsetof( struct kl_7modules5shape_Point, kl_y ) == 4, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl_5shape_4area__5Point( struct kl_5shape_Point );
+int32_t kl_7modules5shape_4area__Q7modules5Point( struct kl_7modules5shape_Point );
 
 #line 8 "codegen/modules/shape.kl"
-int32_t kl_5shape_4area__5Point( struct kl_5shape_Point kl_p_1 )
+int32_t kl_7modules5shape_4area__Q7modules5Point( struct kl_7modules5shape_Point kl_p_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -43,15 +43,15 @@ int32_t kl_5shape_4area__5Point( struct kl_5shape_Point kl_p_1 )
 #include <stdbool.h>
 #include <stddef.h>
 
-int32_t kl_5tally_count__G = 0;
+int32_t kl_7modules5tally_count__G = 0;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl_5tally_5twice__3i32( int32_t );
-int32_t kl_5tally_4bump__3i32( int32_t );
+int32_t kl_7modules5tally_5twice__3i32( int32_t );
+int32_t kl_7modules5tally_4bump__3i32( int32_t );
 
 #line 4 "codegen/modules/tally.kl"
-int32_t kl_5tally_5twice__3i32( int32_t kl_v_1 )
+int32_t kl_7modules5tally_5twice__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -73,16 +73,16 @@ int32_t kl_5tally_5twice__3i32( int32_t kl_v_1 )
 }
 
 #line 9 "codegen/modules/tally.kl"
-int32_t kl_5tally_4bump__3i32( int32_t kl_by_1 )
+int32_t kl_7modules5tally_4bump__3i32( int32_t kl_by_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
     bool kl_t3;
     int32_t kl_t4;
 #line 11 "codegen/modules/tally.kl"
-    kl_t2 = kl_5tally_5twice__3i32( kl_by_1 );
+    kl_t2 = kl_7modules5tally_5twice__3i32( kl_by_1 );
 #line 11 "codegen/modules/tally.kl"
-    kl_t3 = __builtin_add_overflow( kl_5tally_count__G, kl_t2, &( int32_t ) { 0 } );
+    kl_t3 = __builtin_add_overflow( kl_7modules5tally_count__G, kl_t2, &( int32_t ) { 0 } );
 #line 11 "codegen/modules/tally.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -90,10 +90,10 @@ int32_t kl_5tally_4bump__3i32( int32_t kl_by_1 )
     kl_rt_panic( "codegen/modules/tally.kl", 11, "arithmetic overflow: count + twice( by )" );
     bb2:
 #line 11 "codegen/modules/tally.kl"
-    kl_t4 = kl_5tally_count__G + kl_t2;
+    kl_t4 = kl_7modules5tally_count__G + kl_t2;
 #line 11 "codegen/modules/tally.kl"
-    kl_5tally_count__G = kl_t4;
-    kl_t0 = kl_5tally_count__G;
+    kl_7modules5tally_count__G = kl_t4;
+    kl_t0 = kl_7modules5tally_count__G;
 #line 12 "codegen/modules/tally.kl"
     return kl_t0;
 }
@@ -103,27 +103,27 @@ int32_t kl_5tally_4bump__3i32( int32_t kl_by_1 )
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl_5shape_Point;
+struct kl_7modules5shape_Point;
 
-struct kl_5shape_Point
+struct kl_7modules5shape_Point
 {
     int32_t kl_x;
     int32_t kl_y;
 };
-_Static_assert( sizeof( struct kl_5shape_Point ) == 8 && _Alignof( struct kl_5shape_Point ) == 4 && offsetof( struct kl_5shape_Point, kl_x ) == 0 && offsetof( struct kl_5shape_Point, kl_y ) == 4, "layout" );
+_Static_assert( sizeof( struct kl_7modules5shape_Point ) == 8 && _Alignof( struct kl_7modules5shape_Point ) == 4 && offsetof( struct kl_7modules5shape_Point, kl_x ) == 0 && offsetof( struct kl_7modules5shape_Point, kl_y ) == 4, "layout" );
 
-extern int32_t kl_5tally_count__G;
+extern int32_t kl_7modules5tally_count__G;
 
-int32_t kl__4main__( void );
-int32_t kl_5tally_4bump__3i32( int32_t );
-int32_t kl_5shape_4area__5Point( struct kl_5shape_Point );
+int32_t kl_7modules_4main__( void );
+int32_t kl_7modules5tally_4bump__3i32( int32_t );
+int32_t kl_7modules5shape_4area__Q7modules5Point( struct kl_7modules5shape_Point );
 
 #line 6 "codegen/modules/main.kl"
-int32_t kl__4main__( void )
+int32_t kl_7modules_4main__( void )
 {
     int32_t kl_t0;
-    struct kl_5shape_Point kl_p_1;
-    struct kl_5shape_Point kl_t2;
+    struct kl_7modules5shape_Point kl_p_1;
+    struct kl_7modules5shape_Point kl_t2;
     int32_t kl_t3;
     bool kl_t4;
     int32_t kl_t5;
@@ -137,7 +137,7 @@ int32_t kl__4main__( void )
     kl_t2.kl_y = 4;
 #line 8 "codegen/modules/main.kl"
     kl_p_1 = kl_t2;
-    kl_t3 = kl_5shape_4area__5Point( kl_p_1 );
+    kl_t3 = kl_7modules5shape_4area__Q7modules5Point( kl_p_1 );
 #line 9 "codegen/modules/main.kl"
     kl_t4 = kl_t3 != 12;
 #line 9 "codegen/modules/main.kl"
@@ -148,7 +148,7 @@ int32_t kl__4main__( void )
 #line 9 "codegen/modules/main.kl"
     return kl_t0;
     bb2:
-    kl_t5 = kl_5tally_4bump__3i32( 1 );
+    kl_t5 = kl_7modules5tally_4bump__3i32( 1 );
 #line 11 "codegen/modules/main.kl"
     kl_t6 = kl_t5 != 2;
 #line 11 "codegen/modules/main.kl"
@@ -160,7 +160,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb4:
 #line 12 "codegen/modules/main.kl"
-    kl_t7 = kl_5tally_4bump__3i32( 2 );
+    kl_t7 = kl_7modules5tally_4bump__3i32( 2 );
 #line 12 "codegen/modules/main.kl"
     kl_t8 = kl_t7 != 6;
 #line 12 "codegen/modules/main.kl"
@@ -172,7 +172,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb6:
 #line 13 "codegen/modules/main.kl"
-    kl_t9 = kl_5tally_count__G != 6;
+    kl_t9 = kl_7modules5tally_count__G != 6;
 #line 13 "codegen/modules/main.kl"
     if ( kl_t9 ) goto bb7; else goto bb8;
     bb7:
@@ -190,7 +190,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 6 "codegen/modules/main.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7modules_4main__(  );
 #line 6 "codegen/modules/main.kl"
     return kl_t0;
 #line 6 "codegen/modules/main.kl"

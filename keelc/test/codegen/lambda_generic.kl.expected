@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Z14lambda_generic_620_I3i64E;
+struct kl__Z7codegen14lambda_generic_620_I3i64E;
 
 typedef bool ( *kl__fn__F3i323i32E4bool )( int32_t, int32_t );
 typedef bool ( *kl__fn__F3f643f64E4bool )( double, double );
@@ -11,32 +11,32 @@ typedef int32_t ( *kl__fn__F3i32E3i32 )( int32_t );
 typedef bool ( *kl__fn__F4boolE4bool )( bool );
 typedef int64_t ( *kl__fn__F3i64E3i64 )( int64_t );
 
-struct kl__Z14lambda_generic_620_I3i64E
+struct kl__Z7codegen14lambda_generic_620_I3i64E
 {
     int64_t kl_by;
 };
-_Static_assert( sizeof( struct kl__Z14lambda_generic_620_I3i64E ) == 8 && _Alignof( struct kl__Z14lambda_generic_620_I3i64E ) == 8 && offsetof( struct kl__Z14lambda_generic_620_I3i64E, kl_by ) == 0, "layout" );
+_Static_assert( sizeof( struct kl__Z7codegen14lambda_generic_620_I3i64E ) == 8 && _Alignof( struct kl__Z7codegen14lambda_generic_620_I3i64E ) == 8 && offsetof( struct kl__Z7codegen14lambda_generic_620_I3i64E, kl_by ) == 0, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__4main__( void );
-bool kl__100lambda972__( double, double );
-bool kl__100lambda843__( int32_t, int32_t );
-int32_t kl__7through__I3i32E__3i32( int32_t );
-int32_t kl__100lambda223__I3i32E__( int32_t );
-bool kl__7through__I4boolE__4bool( bool );
-bool kl__100lambda223__I4boolE__( bool );
-int32_t kl__5least__I3i32_Z14lambda_generic_843_E__3i32_3i32_Z14lambda_generic_843_( int32_t, int32_t, uint8_t* );
-double kl__5least__I3f64_Z14lambda_generic_972_E__3f64_3f64_Z14lambda_generic_972_( double, double, uint8_t* );
-int32_t kl__4both__I3i32E__3i32( int32_t );
-int64_t kl__6scaled__I3i64E__3i64_3i64( int64_t, int64_t );
-int64_t kl__100lambda620__I3i64E__( struct kl__Z14lambda_generic_620_I3i64E*, int64_t );
-int32_t kl__4same__I3i32E__3i32( int32_t );
-int32_t kl__4onto__I3i32_Z14lambda_generic_540_I3i32EE__3i32_Z14lambda_generic_540_I3i32E( int32_t, uint8_t* );
-int64_t kl__4onto__I3i64_Z14lambda_generic_620_I3i64EE__3i64_Z14lambda_generic_620_I3i64E( int64_t, struct kl__Z14lambda_generic_620_I3i64E* );
+int32_t kl_7codegen_4main__( void );
+bool kl_7codegen_100lambda972__( double, double );
+bool kl_7codegen_100lambda843__( int32_t, int32_t );
+int32_t kl_7codegen_7through__I3i32E__3i32( int32_t );
+int32_t kl_7codegen_100lambda223__I3i32E__( int32_t );
+bool kl_7codegen_7through__I4boolE__4bool( bool );
+bool kl_7codegen_100lambda223__I4boolE__( bool );
+int32_t kl_7codegen_5least__I3i32_Z7codegen14lambda_generic_843_E__3i32_3i32_Z7codegen14lambda_generic_843_( int32_t, int32_t, uint8_t* );
+double kl_7codegen_5least__I3f64_Z7codegen14lambda_generic_972_E__3f64_3f64_Z7codegen14lambda_generic_972_( double, double, uint8_t* );
+int32_t kl_7codegen_4both__I3i32E__3i32( int32_t );
+int64_t kl_7codegen_6scaled__I3i64E__3i64_3i64( int64_t, int64_t );
+int64_t kl_7codegen_100lambda620__I3i64E__( struct kl__Z7codegen14lambda_generic_620_I3i64E*, int64_t );
+int32_t kl_7codegen_4same__I3i32E__3i32( int32_t );
+int32_t kl_7codegen_4onto__I3i32_Z7codegen14lambda_generic_540_I3i32EE__3i32_Z7codegen14lambda_generic_540_I3i32E( int32_t, uint8_t* );
+int64_t kl_7codegen_4onto__I3i64_Z7codegen14lambda_generic_620_I3i64EE__3i64_Z7codegen14lambda_generic_620_I3i64E( int64_t, struct kl__Z7codegen14lambda_generic_620_I3i64E* );
 
 #line 23 "codegen/lambda_generic.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_t1;
@@ -60,7 +60,7 @@ int32_t kl__4main__( void )
     int64_t kl_t19;
     bool kl_t20;
 #line 25 "codegen/lambda_generic.kl"
-    kl_t1 = kl__7through__I3i32E__3i32( 7 );
+    kl_t1 = kl_7codegen_7through__I3i32E__3i32( 7 );
 #line 25 "codegen/lambda_generic.kl"
     kl_t2 = kl_t1 != 7;
 #line 25 "codegen/lambda_generic.kl"
@@ -72,7 +72,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb2:
 #line 26 "codegen/lambda_generic.kl"
-    kl_t3 = kl__7through__I4boolE__4bool( true );
+    kl_t3 = kl_7codegen_7through__I4boolE__4bool( true );
 #line 26 "codegen/lambda_generic.kl"
     kl_t4 = kl_t3 != true;
 #line 26 "codegen/lambda_generic.kl"
@@ -90,7 +90,7 @@ int32_t kl__4main__( void )
 #line 29 "codegen/lambda_generic.kl"
     kl_t8 = &kl_t7;
 #line 29 "codegen/lambda_generic.kl"
-    kl_t9 = kl__5least__I3i32_Z14lambda_generic_843_E__3i32_3i32_Z14lambda_generic_843_( kl_five_5, kl_three_6, kl_t8 );
+    kl_t9 = kl_7codegen_5least__I3i32_Z7codegen14lambda_generic_843_E__3i32_3i32_Z7codegen14lambda_generic_843_( kl_five_5, kl_three_6, kl_t8 );
 #line 29 "codegen/lambda_generic.kl"
     kl_t10 = kl_t9 != 3;
 #line 29 "codegen/lambda_generic.kl"
@@ -108,7 +108,7 @@ int32_t kl__4main__( void )
 #line 32 "codegen/lambda_generic.kl"
     kl_t14 = &kl_t13;
 #line 32 "codegen/lambda_generic.kl"
-    kl_t15 = kl__5least__I3f64_Z14lambda_generic_972_E__3f64_3f64_Z14lambda_generic_972_( kl_big_11, kl_small_12, kl_t14 );
+    kl_t15 = kl_7codegen_5least__I3f64_Z7codegen14lambda_generic_972_E__3f64_3f64_Z7codegen14lambda_generic_972_( kl_big_11, kl_small_12, kl_t14 );
 #line 32 "codegen/lambda_generic.kl"
     kl_t16 = kl_t15 != 2.5;
 #line 32 "codegen/lambda_generic.kl"
@@ -120,7 +120,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb8:
 #line 33 "codegen/lambda_generic.kl"
-    kl_t17 = kl__4both__I3i32E__3i32( 9 );
+    kl_t17 = kl_7codegen_4both__I3i32E__3i32( 9 );
 #line 33 "codegen/lambda_generic.kl"
     kl_t18 = kl_t17 != 9;
 #line 33 "codegen/lambda_generic.kl"
@@ -132,7 +132,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb10:
 #line 34 "codegen/lambda_generic.kl"
-    kl_t19 = kl__6scaled__I3i64E__3i64_3i64( 4, 5 );
+    kl_t19 = kl_7codegen_6scaled__I3i64E__3i64_3i64( 4, 5 );
 #line 34 "codegen/lambda_generic.kl"
     kl_t20 = kl_t19 != 20;
 #line 34 "codegen/lambda_generic.kl"
@@ -149,7 +149,7 @@ int32_t kl__4main__( void )
 }
 
 #line 32 "codegen/lambda_generic.kl"
-bool kl__100lambda972__( double kl_x_1, double kl_y_2 )
+bool kl_7codegen_100lambda972__( double kl_x_1, double kl_y_2 )
 {
     bool kl_t0;
     bool kl_t3;
@@ -163,7 +163,7 @@ bool kl__100lambda972__( double kl_x_1, double kl_y_2 )
 }
 
 #line 29 "codegen/lambda_generic.kl"
-bool kl__100lambda843__( int32_t kl_x_1, int32_t kl_y_2 )
+bool kl_7codegen_100lambda843__( int32_t kl_x_1, int32_t kl_y_2 )
 {
     bool kl_t0;
     bool kl_t3;
@@ -177,14 +177,14 @@ bool kl__100lambda843__( int32_t kl_x_1, int32_t kl_y_2 )
 }
 
 #line 4 "codegen/lambda_generic.kl"
-int32_t kl__7through__I3i32E__3i32( int32_t kl_x_1 )
+int32_t kl_7codegen_7through__I3i32E__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
     kl__fn__F3i32E3i32 kl_id_2;
     kl__fn__F3i32E3i32 kl_t3;
     int32_t kl_t4;
 #line 6 "codegen/lambda_generic.kl"
-    kl_t3 = kl__100lambda223__I3i32E__;
+    kl_t3 = kl_7codegen_100lambda223__I3i32E__;
 #line 6 "codegen/lambda_generic.kl"
     kl_id_2 = kl_t3;
     kl_t4 = kl_id_2( kl_x_1 );
@@ -195,7 +195,7 @@ int32_t kl__7through__I3i32E__3i32( int32_t kl_x_1 )
 }
 
 #line 6 "codegen/lambda_generic.kl"
-int32_t kl__100lambda223__I3i32E__( int32_t kl_y_1 )
+int32_t kl_7codegen_100lambda223__I3i32E__( int32_t kl_y_1 )
 {
     int32_t kl_t0;
 #line 6 "codegen/lambda_generic.kl"
@@ -206,14 +206,14 @@ int32_t kl__100lambda223__I3i32E__( int32_t kl_y_1 )
 }
 
 #line 4 "codegen/lambda_generic.kl"
-bool kl__7through__I4boolE__4bool( bool kl_x_1 )
+bool kl_7codegen_7through__I4boolE__4bool( bool kl_x_1 )
 {
     bool kl_t0;
     kl__fn__F4boolE4bool kl_id_2;
     kl__fn__F4boolE4bool kl_t3;
     bool kl_t4;
 #line 6 "codegen/lambda_generic.kl"
-    kl_t3 = kl__100lambda223__I4boolE__;
+    kl_t3 = kl_7codegen_100lambda223__I4boolE__;
 #line 6 "codegen/lambda_generic.kl"
     kl_id_2 = kl_t3;
     kl_t4 = kl_id_2( kl_x_1 );
@@ -224,7 +224,7 @@ bool kl__7through__I4boolE__4bool( bool kl_x_1 )
 }
 
 #line 6 "codegen/lambda_generic.kl"
-bool kl__100lambda223__I4boolE__( bool kl_y_1 )
+bool kl_7codegen_100lambda223__I4boolE__( bool kl_y_1 )
 {
     bool kl_t0;
 #line 6 "codegen/lambda_generic.kl"
@@ -235,14 +235,14 @@ bool kl__100lambda223__I4boolE__( bool kl_y_1 )
 }
 
 #line 10 "codegen/lambda_generic.kl"
-int32_t kl__5least__I3i32_Z14lambda_generic_843_E__3i32_3i32_Z14lambda_generic_843_( int32_t kl_a_1, int32_t kl_b_2, uint8_t* kl_less_3 )
+int32_t kl_7codegen_5least__I3i32_Z7codegen14lambda_generic_843_E__3i32_3i32_Z7codegen14lambda_generic_843_( int32_t kl_a_1, int32_t kl_b_2, uint8_t* kl_less_3 )
 {
     int32_t kl_t0;
     int32_t kl_t4;
     bool kl_t5;
     ( void ) kl_less_3;
 #line 12 "codegen/lambda_generic.kl"
-    kl_t5 = kl__100lambda843__( kl_b_2, kl_a_1 );
+    kl_t5 = kl_7codegen_100lambda843__( kl_b_2, kl_a_1 );
 #line 12 "codegen/lambda_generic.kl"
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
@@ -263,14 +263,14 @@ int32_t kl__5least__I3i32_Z14lambda_generic_843_E__3i32_3i32_Z14lambda_generic_8
 }
 
 #line 10 "codegen/lambda_generic.kl"
-double kl__5least__I3f64_Z14lambda_generic_972_E__3f64_3f64_Z14lambda_generic_972_( double kl_a_1, double kl_b_2, uint8_t* kl_less_3 )
+double kl_7codegen_5least__I3f64_Z7codegen14lambda_generic_972_E__3f64_3f64_Z7codegen14lambda_generic_972_( double kl_a_1, double kl_b_2, uint8_t* kl_less_3 )
 {
     double kl_t0;
     double kl_t4;
     bool kl_t5;
     ( void ) kl_less_3;
 #line 12 "codegen/lambda_generic.kl"
-    kl_t5 = kl__100lambda972__( kl_b_2, kl_a_1 );
+    kl_t5 = kl_7codegen_100lambda972__( kl_b_2, kl_a_1 );
 #line 12 "codegen/lambda_generic.kl"
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
@@ -291,7 +291,7 @@ double kl__5least__I3f64_Z14lambda_generic_972_E__3f64_3f64_Z14lambda_generic_97
 }
 
 #line 16 "codegen/lambda_generic.kl"
-int32_t kl__4both__I3i32E__3i32( int32_t kl_x_1 )
+int32_t kl_7codegen_4both__I3i32E__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
     uint8_t kl_t2;
@@ -302,7 +302,7 @@ int32_t kl__4both__I3i32E__3i32( int32_t kl_x_1 )
 #line 16 "codegen/lambda_generic.kl"
     kl_t3 = &kl_t2;
 #line 16 "codegen/lambda_generic.kl"
-    kl_t4 = kl__4onto__I3i32_Z14lambda_generic_540_I3i32EE__3i32_Z14lambda_generic_540_I3i32E( kl_x_1, kl_t3 );
+    kl_t4 = kl_7codegen_4onto__I3i32_Z7codegen14lambda_generic_540_I3i32EE__3i32_Z7codegen14lambda_generic_540_I3i32E( kl_x_1, kl_t3 );
 #line 16 "codegen/lambda_generic.kl"
     kl_t0 = kl_t4;
 #line 16 "codegen/lambda_generic.kl"
@@ -311,18 +311,18 @@ int32_t kl__4both__I3i32E__3i32( int32_t kl_x_1 )
 }
 
 #line 18 "codegen/lambda_generic.kl"
-int64_t kl__6scaled__I3i64E__3i64_3i64( int64_t kl_x_1, int64_t kl_by_2 )
+int64_t kl_7codegen_6scaled__I3i64E__3i64_3i64( int64_t kl_x_1, int64_t kl_by_2 )
 {
     int64_t kl_t0;
-    struct kl__Z14lambda_generic_620_I3i64E kl_t3;
-    struct kl__Z14lambda_generic_620_I3i64E* kl_t4;
+    struct kl__Z7codegen14lambda_generic_620_I3i64E kl_t3;
+    struct kl__Z7codegen14lambda_generic_620_I3i64E* kl_t4;
     int64_t kl_t5;
 #line 20 "codegen/lambda_generic.kl"
     kl_t3.kl_by = kl_by_2;
 #line 20 "codegen/lambda_generic.kl"
     kl_t4 = &kl_t3;
 #line 20 "codegen/lambda_generic.kl"
-    kl_t5 = kl__4onto__I3i64_Z14lambda_generic_620_I3i64EE__3i64_Z14lambda_generic_620_I3i64E( kl_x_1, kl_t4 );
+    kl_t5 = kl_7codegen_4onto__I3i64_Z7codegen14lambda_generic_620_I3i64EE__3i64_Z7codegen14lambda_generic_620_I3i64E( kl_x_1, kl_t4 );
 #line 20 "codegen/lambda_generic.kl"
     kl_t0 = kl_t5;
 #line 20 "codegen/lambda_generic.kl"
@@ -330,7 +330,7 @@ int64_t kl__6scaled__I3i64E__3i64_3i64( int64_t kl_x_1, int64_t kl_by_2 )
 }
 
 #line 20 "codegen/lambda_generic.kl"
-int64_t kl__100lambda620__I3i64E__( struct kl__Z14lambda_generic_620_I3i64E* kl_t1, int64_t kl_y_2 )
+int64_t kl_7codegen_100lambda620__I3i64E__( struct kl__Z7codegen14lambda_generic_620_I3i64E* kl_t1, int64_t kl_y_2 )
 {
     int64_t kl_t0;
     int64_t kl_t3;
@@ -356,7 +356,7 @@ int64_t kl__100lambda620__I3i64E__( struct kl__Z14lambda_generic_620_I3i64E* kl_
 }
 
 #line 2 "codegen/lambda_generic.kl"
-int32_t kl__4same__I3i32E__3i32( int32_t kl_x_1 )
+int32_t kl_7codegen_4same__I3i32E__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
 #line 2 "codegen/lambda_generic.kl"
@@ -367,13 +367,13 @@ int32_t kl__4same__I3i32E__3i32( int32_t kl_x_1 )
 }
 
 #line 15 "codegen/lambda_generic.kl"
-int32_t kl__4onto__I3i32_Z14lambda_generic_540_I3i32EE__3i32_Z14lambda_generic_540_I3i32E( int32_t kl_x_1, uint8_t* kl_f_2 )
+int32_t kl_7codegen_4onto__I3i32_Z7codegen14lambda_generic_540_I3i32EE__3i32_Z7codegen14lambda_generic_540_I3i32E( int32_t kl_x_1, uint8_t* kl_f_2 )
 {
     int32_t kl_t0;
     int32_t kl_t3;
     ( void ) kl_f_2;
 #line 15 "codegen/lambda_generic.kl"
-    kl_t3 = kl__4same__I3i32E__3i32( kl_x_1 );
+    kl_t3 = kl_7codegen_4same__I3i32E__3i32( kl_x_1 );
 #line 15 "codegen/lambda_generic.kl"
     kl_t0 = kl_t3;
 #line 15 "codegen/lambda_generic.kl"
@@ -382,15 +382,15 @@ int32_t kl__4onto__I3i32_Z14lambda_generic_540_I3i32EE__3i32_Z14lambda_generic_5
 }
 
 #line 15 "codegen/lambda_generic.kl"
-int64_t kl__4onto__I3i64_Z14lambda_generic_620_I3i64EE__3i64_Z14lambda_generic_620_I3i64E( int64_t kl_x_1, struct kl__Z14lambda_generic_620_I3i64E* kl_f_2 )
+int64_t kl_7codegen_4onto__I3i64_Z7codegen14lambda_generic_620_I3i64EE__3i64_Z7codegen14lambda_generic_620_I3i64E( int64_t kl_x_1, struct kl__Z7codegen14lambda_generic_620_I3i64E* kl_f_2 )
 {
     int64_t kl_t0;
-    struct kl__Z14lambda_generic_620_I3i64E* kl_t3;
+    struct kl__Z7codegen14lambda_generic_620_I3i64E* kl_t3;
     int64_t kl_t4;
 #line 15 "codegen/lambda_generic.kl"
     kl_t3 = &( *kl_f_2 );
 #line 15 "codegen/lambda_generic.kl"
-    kl_t4 = kl__100lambda620__I3i64E__( kl_t3, kl_x_1 );
+    kl_t4 = kl_7codegen_100lambda620__I3i64E__( kl_t3, kl_x_1 );
 #line 15 "codegen/lambda_generic.kl"
     kl_t0 = kl_t4;
 #line 15 "codegen/lambda_generic.kl"
@@ -402,7 +402,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 23 "codegen/lambda_generic.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 23 "codegen/lambda_generic.kl"
     return kl_t0;
 #line 23 "codegen/lambda_generic.kl"

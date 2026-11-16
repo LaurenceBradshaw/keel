@@ -3,32 +3,32 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Owned;
+struct kl_7codegen_Owned;
 
-struct kl__Owned
+struct kl_7codegen_Owned
 {
     uint64_t kl_id;
 };
-_Static_assert( sizeof( struct kl__Owned ) == 8 && _Alignof( struct kl__Owned ) == 8 && offsetof( struct kl__Owned, kl_id ) == 0, "layout" );
+_Static_assert( sizeof( struct kl_7codegen_Owned ) == 8 && _Alignof( struct kl_7codegen_Owned ) == 8 && offsetof( struct kl_7codegen_Owned, kl_id ) == 0, "layout" );
 
-int32_t kl__live__G;
+int32_t kl_7codegen_live__G;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__7release__( void );
-void kl__5Owned__R5Owned_3u64__ctor( struct kl__Owned*, uint64_t );
-void kl__5Owned__dtor( struct kl__Owned* );
-void kl__7consume__M5Owned( struct kl__Owned );
-int32_t kl__3run__3i32( int32_t );
-int32_t kl__4main__( void );
+void kl_7codegen_7release__( void );
+void kl_7codegen_5Owned__RQ7codegen5Owned_3u64__ctor( struct kl_7codegen_Owned*, uint64_t );
+void kl_7codegen_5Owned__dtor( struct kl_7codegen_Owned* );
+void kl_7codegen_7consume__MQ7codegen5Owned( struct kl_7codegen_Owned );
+int32_t kl_7codegen_3run__3i32( int32_t );
+int32_t kl_7codegen_4main__( void );
 
 #line 7 "codegen/drop_flags.kl"
-void kl__7release__( void )
+void kl_7codegen_7release__( void )
 {
     bool kl_t1;
     int32_t kl_t2;
 #line 9 "codegen/drop_flags.kl"
-    kl_t1 = __builtin_sub_overflow( kl__live__G, 1, &( int32_t ) { 0 } );
+    kl_t1 = __builtin_sub_overflow( kl_7codegen_live__G, 1, &( int32_t ) { 0 } );
 #line 9 "codegen/drop_flags.kl"
     if ( kl_t1 ) goto bb1; else goto bb2;
     bb1:
@@ -36,21 +36,21 @@ void kl__7release__( void )
     kl_rt_panic( "codegen/drop_flags.kl", 9, "arithmetic overflow: live - 1" );
     bb2:
 #line 9 "codegen/drop_flags.kl"
-    kl_t2 = kl__live__G - 1;
+    kl_t2 = kl_7codegen_live__G - 1;
 #line 9 "codegen/drop_flags.kl"
-    kl__live__G = kl_t2;
+    kl_7codegen_live__G = kl_t2;
     return;
 #line 10 "codegen/drop_flags.kl"
 }
 
 #line 16 "codegen/drop_flags.kl"
-void kl__5Owned__R5Owned_3u64__ctor( struct kl__Owned* kl_this_1, uint64_t kl_n_2 )
+void kl_7codegen_5Owned__RQ7codegen5Owned_3u64__ctor( struct kl_7codegen_Owned* kl_this_1, uint64_t kl_n_2 )
 {
     bool kl_t3;
     int32_t kl_t4;
 #line 18 "codegen/drop_flags.kl"
     ( *kl_this_1 ).kl_id = kl_n_2;
-    kl_t3 = __builtin_add_overflow( kl__live__G, 1, &( int32_t ) { 0 } );
+    kl_t3 = __builtin_add_overflow( kl_7codegen_live__G, 1, &( int32_t ) { 0 } );
 #line 19 "codegen/drop_flags.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -58,38 +58,38 @@ void kl__5Owned__R5Owned_3u64__ctor( struct kl__Owned* kl_this_1, uint64_t kl_n_
     kl_rt_panic( "codegen/drop_flags.kl", 19, "arithmetic overflow: live + 1" );
     bb2:
 #line 19 "codegen/drop_flags.kl"
-    kl_t4 = kl__live__G + 1;
+    kl_t4 = kl_7codegen_live__G + 1;
 #line 19 "codegen/drop_flags.kl"
-    kl__live__G = kl_t4;
+    kl_7codegen_live__G = kl_t4;
     return;
 #line 20 "codegen/drop_flags.kl"
 }
 
 #line 22 "codegen/drop_flags.kl"
-void kl__5Owned__dtor( struct kl__Owned* kl_this_1 )
+void kl_7codegen_5Owned__dtor( struct kl_7codegen_Owned* kl_this_1 )
 {
     ( void ) kl_this_1;
 #line 24 "codegen/drop_flags.kl"
-    kl__7release__(  );
+    kl_7codegen_7release__(  );
     return;
 #line 25 "codegen/drop_flags.kl"
 }
 
 #line 30 "codegen/drop_flags.kl"
-void kl__7consume__M5Owned( struct kl__Owned kl_t1 )
+void kl_7codegen_7consume__MQ7codegen5Owned( struct kl_7codegen_Owned kl_t1 )
 {
-    kl__5Owned__dtor( &kl_t1 );
+    kl_7codegen_5Owned__dtor( &kl_t1 );
 #line 32 "codegen/drop_flags.kl"
     return;
 #line 32 "codegen/drop_flags.kl"
 }
 
 #line 35 "codegen/drop_flags.kl"
-int32_t kl__3run__3i32( int32_t kl_c_1 )
+int32_t kl_7codegen_3run__3i32( int32_t kl_c_1 )
 {
     int32_t kl_t0;
-    struct kl__Owned kl_o_2;
-    struct kl__Owned* kl_t3;
+    struct kl_7codegen_Owned kl_o_2;
+    struct kl_7codegen_Owned* kl_t3;
     bool kl_t5;
     bool kl_t7;
 #line 37 "codegen/drop_flags.kl"
@@ -101,13 +101,13 @@ int32_t kl__3run__3i32( int32_t kl_c_1 )
 #line 37 "codegen/drop_flags.kl"
     kl_t7 = true;
 #line 37 "codegen/drop_flags.kl"
-    kl__5Owned__R5Owned_3u64__ctor( kl_t3, 1 );
+    kl_7codegen_5Owned__RQ7codegen5Owned_3u64__ctor( kl_t3, 1 );
 #line 39 "codegen/drop_flags.kl"
     kl_t5 = kl_c_1 == 0;
 #line 39 "codegen/drop_flags.kl"
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
-    kl__7consume__M5Owned( kl_o_2 );
+    kl_7codegen_7consume__MQ7codegen5Owned( kl_o_2 );
 #line 41 "codegen/drop_flags.kl"
     kl_t7 = false;
 #line 39 "codegen/drop_flags.kl"
@@ -116,7 +116,7 @@ int32_t kl__3run__3i32( int32_t kl_c_1 )
 #line 44 "codegen/drop_flags.kl"
     kl_t0 = 0;
 #line 44 "codegen/drop_flags.kl"
-    if ( kl_t7 ) kl__5Owned__dtor( &kl_o_2 );
+    if ( kl_t7 ) kl_7codegen_5Owned__dtor( &kl_o_2 );
 #line 44 "codegen/drop_flags.kl"
     kl_t7 = false;
 #line 44 "codegen/drop_flags.kl"
@@ -124,7 +124,7 @@ int32_t kl__3run__3i32( int32_t kl_c_1 )
 }
 
 #line 47 "codegen/drop_flags.kl"
-int32_t kl__4main__( void )
+int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_after_kept_2;
@@ -134,11 +134,11 @@ int32_t kl__4main__( void )
     bool kl_t7;
     int32_t kl_t8;
 #line 51 "codegen/drop_flags.kl"
-    kl__3run__3i32( 1 );
-    kl_after_kept_2 = kl__live__G;
+    kl_7codegen_3run__3i32( 1 );
+    kl_after_kept_2 = kl_7codegen_live__G;
 #line 56 "codegen/drop_flags.kl"
-    kl__3run__3i32( 0 );
-    kl_after_moved_4 = kl__live__G;
+    kl_7codegen_3run__3i32( 0 );
+    kl_after_moved_4 = kl_7codegen_live__G;
 #line 60 "codegen/drop_flags.kl"
     kl_t5 = __builtin_mul_overflow( kl_after_kept_2, 10, &( int32_t ) { 0 } );
 #line 60 "codegen/drop_flags.kl"
@@ -169,7 +169,7 @@ int main( void )
 {
     int32_t kl_t0;
 #line 47 "codegen/drop_flags.kl"
-    kl_t0 = kl__4main__(  );
+    kl_t0 = kl_7codegen_4main__(  );
 #line 47 "codegen/drop_flags.kl"
     return kl_t0;
 #line 47 "codegen/drop_flags.kl"
