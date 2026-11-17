@@ -106,7 +106,7 @@ hides which of our own transformations are worth writing.
 **The `-O` level is two knobs rather than one.** LLVM's command-line `-O` conflates the mid-level IR
 pipeline with the codegen optimisation level; the API keeps them apart, and so should we.
 
-- **Mid-level pipeline: the two vectorisers at `-O3`, else empty.** At `-O3`, LLVM's loop vectoriser
+- **Mid-level pipeline: the two vectorisers from `-O2`, else empty.** From `-O2`, LLVM's loop vectoriser
   then its SLP vectoriser, and no other IR pass; at every level, the handful that are about legality
   rather than speed: `AlwaysInliner` if `alwaysinline` is ever emitted, `AtomicExpand`,
   `PreISelIntrinsicLowering`.
@@ -124,9 +124,12 @@ Keel's own LICM and strength reduction do the part that does not depend on the t
 benchmark also runs with `-disable-lsr` to show it.
 
 **Three boundary cases.** **Auto-vectorisation is LLVM's**, because the transformation depends on
-the target's vector width, which KIR cannot know. At `-O3` the object writer runs the loop vectoriser
+the target's vector width, which KIR cannot know. From `-O2` the object writer runs the loop vectoriser
 then the SLP vectoriser before codegen, costed by the target machine, with none of the clean-up
-passes LLVM's own pipeline runs beside them; below `-O3` nothing is vectorised. SLP's threshold is 1,
+passes LLVM's own pipeline runs beside them; below `-O2` nothing is vectorised. They need none of
+`-O3`'s loop copies: on the numpy benchmark `-O2`'s KIR vectorised runs as fast as `-O3`'s, for 8%
+more code where `-O3` adds 42%. Interleaving stays on, as without it a matrix product is 43% slower
+for 0.6% less code. SLP's threshold is 1,
 not LLVM's 0, so a tree it prices as saving only one unit stays scalar: those are the trees its cost
 model gets wrong, as when wide loads cannot take their value from a narrower store just before them.
 `--llvm-option=-slp-threshold=N` sets it back. **What general
@@ -371,8 +374,9 @@ it, since circuits are KIR.
 - **`-O1`: debuggable.** Within one function; every named local keeps its stores and every statement
   steps in source order. Only work in temporaries goes.
 - **`-O2`: the default.** Anything that pays on all code without trading size for speed beyond a
-  small fixed budget. It crosses functions, and merges and splits locals.
-- **`-O3`: size for speed.** A pass whose gain depends on the program and which grows code to get it.
+  small fixed budget. It crosses functions, merges and splits locals, and vectorises.
+- **`-O3`: size and build time for speed.** A pass whose gain depends on the program and which grows
+  code to get it, and the slow solve of `@real_arithmetic` functions, the one pass with a cache.
 
 **A new pass lands at `-O3`** and moves to its level once the benchmark shows its gain, which
 re-records that level's goldens; a pass that shows none is taken out.
@@ -403,7 +407,7 @@ function's `-O1` code depends on nothing outside it.
 | `version_loops` | `-O3` | Landing. A second copy of a loop, under a budget of 200 statements, and a check before it (below). |
 | `reduce_inductions` | `-O2` | Its gain is removing the index, which `-O1` pins; it would only add a second live variable. |
 | `unroll_loops` | `-O2`, `-O3` | `-O2` only where the copies, less each one's step and test, are no bigger than the loop; `-O3` trades size for speed within 200 statements, and unrolls a longer innermost loop by 4 or 2. |
-| `eliminate_common` | `-O3` | Landing, per the rule above. In each round, before `propagate_values`: a pure computation every path to it already made, into a local still holding it, copies that local. Exact repeats only, so no float is reassociated; a read through a pointer, of a global or of an addressed local is forgotten at a call, a drop or a store through a pointer, as Keel has no TBAA. A call of a pure function (below) is such a computation, keyed by its callee and its arguments, each a copy or a constant. `i = i + 1` is left as the loop passes' step. `thread_jumps` then decides a branch on a local written once below an edge that branched on it, so a repeated division's zero and `-1` tests and their join go. |
+| `eliminate_common` | `-O2` | Pays on all code and adds none: each repeat becomes a copy. In each round, before `propagate_values`: a pure computation every path to it already made, into a local still holding it, copies that local. Exact repeats only, so no float is reassociated; a read through a pointer, of a global or of an addressed local is forgotten at a call, a drop or a store through a pointer, as Keel has no TBAA. A call of a pure function (below) is such a computation, keyed by its callee and its arguments, each a copy or a constant. `i = i + 1` is left as the loop passes' step. `thread_jumps` then decides a branch on a local written once below an edge that branched on it, or written more than once where a path with one way in, which nothing on it writes, leads up from the edge, so a repeated division's zero and `-1` tests and their join go. |
 | `solve_linear_maps` | `-O3` | Landing. On an `@real_arithmetic` function, after the rounds and before the loop passes, a body that computes a linear map becomes the cheapest circuit the solve finds, or the cache holds (D86). A cold solve took up to 1.85 s (an 8-point DCT); a cached one costs about what `-O2` does. `-O2` never reads the cache, so a build at one level makes the same program whatever the cache holds. |
 
 **Order and added functions** (`ir/group_order`): each group of `callees_first` is optimised once,
@@ -425,8 +429,8 @@ panicked.
 **Loop passes** run once per function after the rounds, from `-O1`, each at its level in the
 table: rotation, read forwarding, a round, then LICM, versioning, induction variables, unrolling and another
 round, as LICM needs the checks the first round folds gone, and unrolling last lets that round fold
-each copy's index. The first round runs only when rotation or forwarding changed something, and at
-`-O3` always, as a repeat `eliminate_common` finds is threaded only by a third round. The last runs
+each copy's index. The first round runs only when rotation or forwarding changed something, and from
+`-O2` always, as a repeat `eliminate_common` finds is threaded only by a third round. The last runs
 only when induction variables or unrolling changed something; otherwise only the empty blocks
 normalising added and a hoist went through are merged, as the round found nothing more. A loop has one preheader, one latch and exits only it enters. LICM
 hoists a read through a reference only when no store in the loop can reach it, a call, a drop or a

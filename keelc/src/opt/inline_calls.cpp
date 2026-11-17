@@ -668,7 +668,12 @@ struct Inlined : Compiled
         : Compiled(
               std::string( source ) + std::string( k_types ),
               Stage::Elaborated,
-              Build { .level = 2, .inlining = weights, .rounds = rounds }
+              Build {
+                  .level    = 2,
+                  .inlining = weights,
+                  .loops    = rounds < 2 ? std::nullopt : std::optional( Loop_weights {} ),
+                  .rounds   = rounds
+              }
           )
     {
     }

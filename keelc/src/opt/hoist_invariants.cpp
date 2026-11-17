@@ -971,11 +971,22 @@ TEST_CASE( "hoist_invariants_keeps_a_read_a_call_follows", "[opt][hoist_invarian
     REQUIRE( f.reads_through() == 1 );
 }
 
-// A test of two parts is not rotated, so the body may not run, and `p.a` stays in it.
+// `c` is never written, so after its first test the loop's test is one part, and rotates: `p.a` is read
+// once, on the path where both parts let the body run.
 TEST_CASE( "hoist_invariants_keeps_a_read_an_unrotated_loop_may_skip", "[opt][hoist_invariants]" )
 {
     const Hoisted f( "i64 f( const ref Pair p, i64 n, bool c ) { i64 t = 0; for( i64 i = 0; i < n && c; i += 1 ) { t += p.a; } "
                      "return t; }\n" );
+    REQUIRE( f.reads_through() == 0 );
+}
+
+// A test of two parts that both change is not rotated, so the body may not run, and `p.a` stays in it.
+TEST_CASE( "hoist_invariants_keeps_a_read_a_two_part_test_may_skip", "[opt][hoist_invariants]" )
+{
+    const Hoisted f(
+        "i64 f( const ref Pair p, i64 n, i64 m ) { i64 t = 0; for( i64 i = 0; i < n && i != m; i += 1 ) { t += p.a; } "
+        "return t; }\n"
+    );
     REQUIRE( f.reads_through() == 1 );
 }
 

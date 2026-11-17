@@ -51,7 +51,8 @@ struct Build
     // `ref` forwarding; a test of an addressed local turns it off to keep the address.
     bool forwarding = true;
 
-    // How often the passes after drop elaboration run; a test of what one round keeps sets 1.
+    // How often the passes after drop elaboration run; a test of what one round keeps sets 1, or none 0, and drops
+    // `loops`, whose round would be a second.
     u32 rounds = 2;
 
     // Coalescing again after the rounds; a test of what the first coalescing keeps turns it off.

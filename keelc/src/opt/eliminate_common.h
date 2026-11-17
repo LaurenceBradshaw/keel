@@ -8,7 +8,7 @@
 
 namespace keel
 {
-// In -O3's loop phase: a pure computation every path to it already made, into a local that still
+// In each round from -O2: a pure computation every path to it already made, into a local that still
 // holds it, copies that local. Exact repeats only, so a float is never reassociated; a read through
 // a pointer, of a global or of an addressed local is forgotten at `clobbers`. A call of a pure
 // function is one, keyed by its callee and its arguments. Whether it changed anything.

@@ -2474,7 +2474,7 @@ void vectorise( llvm::Module& module, llvm::TargetMachine& machine )
 }
 
 // x86-64, COFF or ELF by the module's triple, at the machine passes of its level; of LLVM's IR passes only the
-// vectorisers, at -O3 (§2.2). None at -O0 and at a debug -O1, so each line keeps its code and every store.
+// vectorisers, from -O2 (§2.2). None at -O0 and at a debug -O1, so each line keeps its code and every store.
 std::string write_object( llvm::Module& module, const std::filesystem::path& object, bool debug, u32 level )
 {
     std::string                                error;
@@ -2483,7 +2483,7 @@ std::string write_object( llvm::Module& module, const std::filesystem::path& obj
     {
         return "internal error: no x86-64 target in this keelc: " + error;
     }
-    if( level >= 3 )
+    if( level >= 2 )
     {
         vectorise( module, *machine );
     }

@@ -11,7 +11,7 @@
 
 namespace keel
 {
-// In -O3's loop phase, on normalised loops, for `i` a local whose one write in the loop is `i = i + s`,
+// In -O2's loop phase, on normalised loops, for `i` a local whose one write in the loop is `i = i + s`,
 // `s` invariant: each `i * c`, `c` invariant and not a power of two, becomes a copy of a new local set
 // in the preheader and stepped beside `i`. The other forms (`i + c`, `i - c`, `p + i`, `i * 2^k`) are
 // stepped too only when `i` then goes: read by nothing but its step and the latch's `i < n`, and the

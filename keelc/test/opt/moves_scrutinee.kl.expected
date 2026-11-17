@@ -190,62 +190,42 @@ int32_t kl_3opt_4main__( void )
 {
     int32_t kl_t0;
     bool kl_t1;
-    struct kl_3opt_Shape kl_s_2;
-    bool kl_t3;
+    bool kl_t2;
+    int32_t kl_t3;
     int32_t kl_t4;
     int32_t kl_t5;
-    int32_t kl_t6;
-    int32_t kl_t7;
-#line 80 "opt/moves_scrutinee.kl"
-    kl_s_2.tag = 0;
-#line 80 "opt/moves_scrutinee.kl"
-    kl_s_2.kl_5boxed_b.kl_value = 7;
 #line 18 "opt/moves_scrutinee.kl"
-    kl_t4 = kl_3opt_live__G;
-    kl_t5 = kl_3opt_destroyed__G + 1;
+    kl_t3 = kl_3opt_live__G;
+    kl_t4 = kl_3opt_destroyed__G + 1;
 #line 19 "opt/moves_scrutinee.kl"
-    kl_3opt_destroyed__G = kl_t5;
+    kl_3opt_destroyed__G = kl_t4;
 #line 80 "opt/moves_scrutinee.kl"
-    kl_t1 = kl_s_2.kl_5boxed_b.kl_value != 7;
+    kl_t1 = kl_t3 != 0;
 #line 80 "opt/moves_scrutinee.kl"
-    if ( kl_t1 ) goto bb3; else goto bb1;
+    if ( kl_t1 ) goto bb2; else goto bb1;
     bb1:
 #line 80 "opt/moves_scrutinee.kl"
-    kl_t1 = kl_t4 != 0;
+    kl_t1 = kl_t4 != 1;
 #line 80 "opt/moves_scrutinee.kl"
-    if ( kl_t1 ) goto bb3; else goto bb2;
+    if ( kl_t1 ) goto bb2; else goto bb3;
     bb2:
-#line 80 "opt/moves_scrutinee.kl"
-    kl_t1 = kl_t5 != 1;
-#line 80 "opt/moves_scrutinee.kl"
-    goto bb3;
-    bb3:
-#line 80 "opt/moves_scrutinee.kl"
-    if ( kl_t1 ) goto bb4; else goto bb5;
-    bb4:
     kl_t0 = 1;
 #line 82 "opt/moves_scrutinee.kl"
     return kl_t0;
-    bb5:
-#line 18 "opt/moves_scrutinee.kl"
-    kl_t6 = kl_3opt_live__G;
-    kl_t7 = kl_3opt_destroyed__G + 1;
+    bb3:
 #line 19 "opt/moves_scrutinee.kl"
-    kl_3opt_destroyed__G = kl_t7;
+    kl_t5 = kl_t4 + 1;
+#line 19 "opt/moves_scrutinee.kl"
+    kl_3opt_destroyed__G = kl_t5;
 #line 85 "opt/moves_scrutinee.kl"
-    kl_t3 = kl_t6 != 0;
+    kl_t2 = kl_t5 != 2;
 #line 85 "opt/moves_scrutinee.kl"
-    if ( kl_t3 ) goto bb7; else goto bb6;
-    bb6:
-#line 85 "opt/moves_scrutinee.kl"
-    kl_t3 = kl_t7 != 2;
-#line 85 "opt/moves_scrutinee.kl"
-    if ( kl_t3 ) goto bb7; else goto bb8;
-    bb7:
+    if ( kl_t2 ) goto bb4; else goto bb5;
+    bb4:
     kl_t0 = 2;
 #line 87 "opt/moves_scrutinee.kl"
     return kl_t0;
-    bb8:
+    bb5:
 #line 18 "opt/moves_scrutinee.kl"
     kl_3opt_live__G = 0;
     kl_3opt_destroyed__G = 3;

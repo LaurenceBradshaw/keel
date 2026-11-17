@@ -124,6 +124,7 @@ int64_t kl_18hoisted_invariants_9unrotated__Q2kl4listI3i64E_4bool( struct kl_2kl
     uint64_t kl_t5;
     int64_t* kl_t6;
     int64_t* kl_t7;
+    int64_t* kl_t8;
 #line 37 "opt/hoisted_invariants/main.kl"
     kl_t0 = 0;
     kl_i_3 = 0;
@@ -135,13 +136,13 @@ int64_t kl_18hoisted_invariants_9unrotated__Q2kl4listI3i64E_4bool( struct kl_2kl
     if ( kl_t4 ) goto bb1; else goto bb2;
     bb1:
 #line 38 "opt/hoisted_invariants/main.kl"
-    if ( kl_go_2 ) goto bb3; else goto bb2;
+    if ( kl_go_2 ) goto bb4; else goto bb2;
     bb2:
 #line 42 "opt/hoisted_invariants/main.kl"
     return kl_t0;
     bb3:
 #line 233 "<kl>/list.kl"
-    kl_t7 = ( *kl_xs_1 ).kl_data_ + kl_i_3;
+    kl_t7 = kl_t8 + kl_i_3;
 #line 233 "<kl>/list.kl"
     kl_t6 = &( *kl_t7 );
 #line 40 "opt/hoisted_invariants/main.kl"
@@ -151,7 +152,12 @@ int64_t kl_18hoisted_invariants_9unrotated__Q2kl4listI3i64E_4bool( struct kl_2kl
 #line 38 "opt/hoisted_invariants/main.kl"
     kl_t4 = kl_i_3 < kl_t5;
 #line 38 "opt/hoisted_invariants/main.kl"
-    if ( kl_t4 ) goto bb1; else goto bb2;
+    if ( kl_t4 ) goto bb3; else goto bb2;
+    bb4:
+#line 233 "<kl>/list.kl"
+    kl_t8 = ( *kl_xs_1 ).kl_data_;
+#line 38 "opt/hoisted_invariants/main.kl"
+    goto bb3;
 #line 43 "opt/hoisted_invariants/main.kl"
 }
 

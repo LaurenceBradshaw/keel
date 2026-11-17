@@ -11,26 +11,17 @@ int32_t kl_3opt_8classify__3f64( double kl_x_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
-    bool kl_t3;
 #line 5 "opt/repeated_float_tests.kl"
     kl_t0 = 0;
     kl_t2 = kl_x_1 < 3.0;
 #line 6 "opt/repeated_float_tests.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
-    kl_t0 = 1;
-#line 6 "opt/repeated_float_tests.kl"
+#line 12 "opt/repeated_float_tests.kl"
+    kl_t0 = 3;
+#line 10 "opt/repeated_float_tests.kl"
     goto bb2;
     bb2:
-#line 10 "opt/repeated_float_tests.kl"
-    kl_t3 = kl_x_1 < 3.0;
-#line 10 "opt/repeated_float_tests.kl"
-    if ( kl_t3 ) goto bb3; else goto bb4;
-    bb3:
-    kl_t0 = kl_t0 + 2;
-#line 10 "opt/repeated_float_tests.kl"
-    goto bb4;
-    bb4:
 #line 14 "opt/repeated_float_tests.kl"
     return kl_t0;
 }

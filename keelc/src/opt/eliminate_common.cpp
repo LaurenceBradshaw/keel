@@ -375,7 +375,7 @@ std::size_t calls_of( std::string_view g, std::string_view f = "i64 f( i64 a ) {
 TEST_CASE( "eliminate_common_divides_a_repeated_division_once", "[opt][eliminate_common]" )
 {
     REQUIRE( Eliminated( "i32 f( i32 a, i32 b ) { return a / b + a / b; }\n" ).divisions() == 1 );
-    REQUIRE( Eliminated( "i32 f( i32 a, i32 b ) { return a / b + a / b; }\n", 2 ).divisions() == 2 );
+    REQUIRE( Eliminated( "i32 f( i32 a, i32 b ) { return a / b + a / b; }\n", 1 ).divisions() == 2 );
 }
 
 // `a` changes between them.

@@ -90,15 +90,14 @@ int32_t kl_3opt_4main__( void )
     int64_t* kl_t20;
     struct kl_3opt_Buf* kl_t21;
     int64_t kl_aliased_23;
-    int64_t* kl_t24;
-    int64_t kl_t25;
-    int64_t* kl_t26;
+    int64_t kl_t24;
+    int64_t* kl_t25;
+    int64_t kl_t26;
     int64_t kl_t27;
-    int64_t kl_t28;
-    int64_t* kl_t29;
-    int64_t kl_t30;
-    int64_t* kl_t31;
-    bool kl_t33;
+    int64_t* kl_t28;
+    int64_t kl_t29;
+    int64_t* kl_t30;
+    bool kl_t32;
 #line 27 "opt/versioned_loops.kl"
     kl_xs_1.kl_data = NULL;
 #line 27 "opt/versioned_loops.kl"
@@ -165,28 +164,26 @@ int32_t kl_3opt_4main__( void )
     ( *kl_t21 ).kl_last = 5;
     kl_3opt_5moved__RQ3opt3Buf_Q3opt3Buf( kl_t21, kl_t21 );
 #line 67 "opt/versioned_loops.kl"
-    kl_t24 = kl_m_17 + 1;
+    kl_t24 = ( *kl_t20 ) * 1000;
 #line 67 "opt/versioned_loops.kl"
-    kl_t25 = ( *kl_t24 ) * 1000;
+    kl_t25 = kl_m_17 + 2;
 #line 67 "opt/versioned_loops.kl"
-    kl_t26 = kl_m_17 + 2;
+    kl_t26 = ( *kl_t25 ) * 100;
 #line 67 "opt/versioned_loops.kl"
-    kl_t27 = ( *kl_t26 ) * 100;
+    kl_t27 = kl_t24 + kl_t26;
 #line 67 "opt/versioned_loops.kl"
-    kl_t28 = kl_t25 + kl_t27;
+    kl_t28 = kl_m_17 + 3;
 #line 67 "opt/versioned_loops.kl"
-    kl_t29 = kl_m_17 + 3;
+    kl_t29 = kl_t27 + ( *kl_t28 );
 #line 67 "opt/versioned_loops.kl"
-    kl_t30 = kl_t28 + ( *kl_t29 );
+    kl_t30 = kl_m_17 + 4;
 #line 67 "opt/versioned_loops.kl"
-    kl_t31 = kl_m_17 + 4;
-#line 67 "opt/versioned_loops.kl"
-    kl_aliased_23 = kl_t30 + ( *kl_t31 );
+    kl_aliased_23 = kl_t29 + ( *kl_t30 );
     kl_rt_free( kl_m_17 );
 #line 70 "opt/versioned_loops.kl"
-    kl_t33 = kl_aliased_23 != 4672;
+    kl_t32 = kl_aliased_23 != 4672;
 #line 70 "opt/versioned_loops.kl"
-    if ( kl_t33 ) goto bb3; else goto bb4;
+    if ( kl_t32 ) goto bb3; else goto bb4;
     bb3:
     kl_t0 = 2;
 #line 72 "opt/versioned_loops.kl"

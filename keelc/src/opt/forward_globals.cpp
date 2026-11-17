@@ -751,7 +751,9 @@ TEST_CASE( "forward_globals_keeps_a_write_a_join_reads", "[opt][globals]" )
 // round, as the next finds `x = 7` gone.
 TEST_CASE( "forward_globals_keeps_a_sum_whose_source_changed", "[opt][globals]" )
 {
-    const Forwarded p( "i32 f( i32 x ) { i32 t = x + 3; x = 7; return t - 3 + x; }\n", Build { .level = 2, .rounds = 1 } );
+    const Forwarded p(
+        "i32 f( i32 x ) { i32 t = x + 3; x = 7; return t - 3 + x; }\n", Build { .level = 2, .loops = std::nullopt, .rounds = 1 }
+    );
     REQUIRE( p.clean() );
     REQUIRE( verify( p.first() ).empty() );
     REQUIRE( p.count( Rvalue_kind::Binary, Token_kind::Plus ) == 2 );

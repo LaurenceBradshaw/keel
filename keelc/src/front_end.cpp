@@ -265,7 +265,7 @@ Front_end run_front_end(
             verified( function, "shadow_tags" );
         }
         // Before propagation, which forwards the copies it leaves.
-        if( build.level >= 3 && eliminate_common( function, literals, purity ) )
+        if( build.level >= 2 && eliminate_common( function, literals, purity ) )
         {
             verified( function, "eliminate_common" );
         }
@@ -506,8 +506,8 @@ Front_end run_front_end(
                         verified( current(), "forward_reads" );
                         shaped = true;
                     }
-                    // At -O3 always: a repeat eliminate_common finds is threaded only by a third round.
-                    if( shaped || build.level >= 3 )
+                    // From -O2 always: a repeat eliminate_common finds is threaded only by a third round.
+                    if( shaped || build.level >= 2 )
                     {
                         optimise_round( current() );
                     }

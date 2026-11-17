@@ -884,8 +884,8 @@ constexpr std::string_view k_types = "class Box { public i32 v; public Box( i32 
                                      "Outer outer() { return Outer(); }\n"
                                      "i32 main() { return 0; }\n";
 
-// Optimised and elaborated, as a release build emits it, but coalesced once unless `recoalescing`. The
-// function under test is always the first.
+// Optimised and elaborated, as a release build emits it, but coalesced once unless `recoalescing`, and with no
+// loop phase without `loop_phase` or with fewer than 2 rounds. The function under test is always the first.
 struct Optimised : Compiled
 {
     explicit Optimised(
@@ -893,12 +893,20 @@ struct Optimised : Compiled
         std::optional<Inline_weights> inlining     = Inline_weights {},
         bool                          splitting    = true,
         u32                           rounds       = 2,
-        bool                          recoalescing = false
+        bool                          recoalescing = false,
+        bool                          loop_phase   = true
     )
         : Compiled(
               std::string( source ) + std::string( k_types ),
               Stage::Elaborated,
-              Build { .level = 2, .inlining = inlining, .splitting = splitting, .rounds = rounds, .recoalescing = recoalescing }
+              Build {
+                  .level        = 2,
+                  .inlining     = inlining,
+                  .loops        = rounds < 2 || !loop_phase ? std::nullopt : std::optional( Loop_weights {} ),
+                  .splitting    = splitting,
+                  .rounds       = rounds,
+                  .recoalescing = recoalescing
+              }
           )
     {
     }
@@ -1306,7 +1314,8 @@ TEST_CASE( "coalesce_moves_leaves_no_self_copy", "[opt][coalesce]" )
     );
 }
 
-// The inlined `s` comes alive only after the call has filled `_t`, so `_t` keeps the value.
+// The inlined `s` comes alive only after the call has filled `_t`, so `_t` keeps the value. No loop phase,
+// whose round folds the call away.
 TEST_CASE( "coalesce_moves_keeps_a_call_result_where_it_lies", "[opt][coalesce]" )
 {
     const Optimised p(
@@ -1317,7 +1326,8 @@ TEST_CASE( "coalesce_moves_keeps_a_call_result_where_it_lies", "[opt][coalesce]"
         Inline_weights {},
         true,
         2,
-        true
+        true,
+        false
     );
     REQUIRE( p.clean() );
     REQUIRE( p.well_formed() );

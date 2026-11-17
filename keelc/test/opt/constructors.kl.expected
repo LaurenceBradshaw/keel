@@ -467,13 +467,13 @@ int32_t kl_3opt_4main__( void )
     bb9:
 #line 77 "opt/constructors.kl"
     kl_t0 = 1;
-#line 143 "opt/constructors.kl"
-    goto bb2;
+#line 147 "opt/constructors.kl"
+    goto bb4;
     bb10:
 #line 81 "opt/constructors.kl"
     kl_t0 = 1;
-#line 143 "opt/constructors.kl"
-    goto bb2;
+#line 147 "opt/constructors.kl"
+    goto bb4;
     bb11:
 #line 19 "opt/constructors.kl"
     kl_t8 = kl_3opt_live__G;

@@ -451,7 +451,8 @@ bool repeat_tests( Function& func, const Local_set& addressed, const Literal_poo
 
 // A local written once, below an edge a branch on it took, whose write is above that branch: the
 // edge decides it, wherever the paths between join. `eliminate_common` leaves `a / b + a / b`'s
-// second zero and `-1` tests this way, each after the first division's join. A branch on it there
+// second zero and `-1` tests this way, each after the first division's join. A local written more
+// than once is decided only up a path with one way in, which nothing on it writes. A branch on it there
 // becomes a goto, and an edge into a block that only branches on it goes past that block. Each
 // change only skips empty blocks, so every fact this pass found still holds after it.
 bool decide_once( Function& func, const Local_set& addressed )
@@ -494,8 +495,35 @@ bool decide_once( Function& func, const Local_set& addressed )
             return std::nullopt;
         }
         const Local_id local = condition.place.local;
-        if( writes[local.v] != 1 || addressed[local.v] )
+        if( addressed[local.v] )
         {
+            return std::nullopt;
+        }
+        // Written more than once: only up a path with one way in, which nothing on it writes.
+        if( writes[local.v] != 1 )
+        {
+            const auto writes_it = [&]( Block_id b )
+            {
+                return std::ranges::any_of(
+                    func.statements_of( func.blocks[b] ),
+                    [&]( const Statement& s )
+                    {
+                        return ( s.kind == Statement_kind::Assign || s.kind == Statement_kind::Drop ) && !s.place.is_global() &&
+                               s.place.local == local;
+                    }
+                );
+            };
+            Block_id on = at;
+            for( u32 steps = 0; steps < func.blocks.size() && on.v != 0 && counts[on.v] == 1 && !writes_it( on );
+                 ++steps, on = from[on.v] )
+            {
+                const Terminator& up = func.blocks[from[on.v]].terminator;
+                if( up.kind == Terminator_kind::Branch && whole_local( up.condition ) && up.condition.place.local == local &&
+                    up.targets[0] != up.targets[1] )
+                {
+                    return up.targets[0] == on ? 0 : 1;
+                }
+            }
             return std::nullopt;
         }
         for( Block_id on = at; on.v != 0; on = dominators.idom[on.v] )
@@ -937,6 +965,32 @@ TEST_CASE( "thread_jumps_keeps_a_test_of_a_rewritten_operand", "[opt][threading]
     g.run();
 
     REQUIRE( g.func.blocks[Block_id { 2 }].terminator.kind == Terminator_kind::Branch );
+}
+
+// `_0` is written twice, but bb4's only way in is bb2's false edge, after bb2's write: `moves_fields`'
+// drop after a switch's last test. `_1` is rewritten, so bb2's test is its own and bb4 does more than branch.
+TEST_CASE( "thread_jumps_decides_a_flag_written_twice_on_the_only_path", "[opt][threading]" )
+{
+    Graph g;
+    Draft write = g.unknown();
+    write.place = Place { .local = Local_id { 1 } };
+    g.build( {
+        { { g.test() }, g.branch( 0, 1, 2 ) },
+        { {}, done() },
+        { { write, g.test() }, g.branch( 0, 3, 4 ) },
+        { {}, done() },
+        { { write }, g.branch( 0, 5, 6 ) },
+        { {}, done() },
+        { {}, done() },
+    } );
+    g.run();
+
+    u32 branches = 0;
+    for( const Block_id b : g.func.blocks.ids() )
+    {
+        branches += g.func.blocks[b].terminator.kind == Terminator_kind::Branch ? 1 : 0;
+    }
+    REQUIRE( branches == 2 );
 }
 
 // `otherwise_drops`: only `empty` reaches `default:`, so its drop of `s` tests nothing.
