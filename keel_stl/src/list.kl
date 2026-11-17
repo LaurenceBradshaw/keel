@@ -36,6 +36,75 @@ class list<T> implements iterable<T>, dynamic_memory<T>
         return result;
     }
 
+    /// `n` copies of `x`.
+    public static list<T> filled( u64 n, T x ) where T : copyable
+    {
+        list<T> result = list<T>::with_capacity( n );
+        unsafe
+        {
+            for( u64 i : 0..n )
+            {
+                result.data_[i] = x;
+            }
+        }
+        result.count_ = n;
+        return result;
+    }
+
+    /// A copy of each element of `a`, in order.
+    public static list<T> of( const ref T[] a ) where T : copyable
+    {
+        list<T> result = list<T>::with_capacity( a.size );
+        unsafe
+        {
+            for( u64 i : 0..a.size )
+            {
+                result.data_[i] = a[i];
+            }
+        }
+        result.count_ = a.size;
+        return result;
+    }
+
+    /// `op( a[i] )` for each element of `a`, in order.
+    public static list<T> mapped<U, F>( const ref U[] a, F op ) where F : fn( U ) -> T
+    {
+        list<T> result = list<T>::with_capacity( a.size );
+        unsafe
+        {
+            for( u64 i : 0..a.size )
+            {
+                result.data_[i] = op( a[i] );
+            }
+        }
+        result.count_ = a.size;
+        return result;
+    }
+
+    /// `op( a[i], b[i] )` for each pair of elements, in order.
+    ///
+    /// ### Panics
+    ///
+    /// If `a` and `b` differ in size.
+    public static list<T> zipped<F>( const ref T[] a, const ref T[] b, F op ) where F : fn( T, T ) -> T
+    {
+        if( a.size != b.size )
+        {
+            panic( "the sizes differ" );
+        }
+
+        list<T> result = list<T>::with_capacity( a.size );
+        unsafe
+        {
+            for( u64 i : 0..a.size )
+            {
+                result.data_[i] = op( a[i], b[i] );
+            }
+        }
+        result.count_ = a.size;
+        return result;
+    }
+
     ~list()
     {
         if( data_ != nullptr )

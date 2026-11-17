@@ -39,6 +39,32 @@ amortised constant time. Dropping the list drops every element.</p>
 <p>An empty list with room for <code>capacity</code> elements before it reallocates.</p>
 </div>
 </div>
+<div class="group" id="list.filled">
+<pre class="signature"><a class="anchor" href="#list.filled" aria-label="Link to filled">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#list">list</a>&lt;T&gt; <span class="fn">filled</span>( <a class="prim" href="prelude.html#u64">u64</a> n, T x ) <span class="kw">where</span> T : copyable</code></pre>
+<div class="doc">
+<p><code>n</code> copies of <code>x</code>.</p>
+</div>
+</div>
+<div class="group" id="list.of">
+<pre class="signature"><a class="anchor" href="#list.of" aria-label="Link to of">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#list">list</a>&lt;T&gt; <span class="fn">of</span>( <span class="kw">const</span> <span class="kw">ref</span> T[] a ) <span class="kw">where</span> T : copyable</code></pre>
+<div class="doc">
+<p>A copy of each element of <code>a</code>, in order.</p>
+</div>
+</div>
+<div class="group" id="list.mapped">
+<pre class="signature"><a class="anchor" href="#list.mapped" aria-label="Link to mapped">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#list">list</a>&lt;T&gt; <span class="fn">mapped</span>&lt;U, F&gt;( <span class="kw">const</span> <span class="kw">ref</span> U[] a, F op ) <span class="kw">where</span> F : <span class="kw">fn</span>( U ) -&gt; T</code></pre>
+<div class="doc">
+<p><code>op( a[i] )</code> for each element of <code>a</code>, in order.</p>
+</div>
+</div>
+<div class="group" id="list.zipped">
+<pre class="signature"><a class="anchor" href="#list.zipped" aria-label="Link to zipped">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#list">list</a>&lt;T&gt; <span class="fn">zipped</span>&lt;F&gt;( <span class="kw">const</span> <span class="kw">ref</span> T[] a, <span class="kw">const</span> <span class="kw">ref</span> T[] b, F op ) <span class="kw">where</span> F : <span class="kw">fn</span>( T, T ) -&gt; T</code></pre>
+<div class="doc">
+<p><code>op( a[i], b[i] )</code> for each pair of elements, in order.</p>
+<h4>Panics</h4>
+<p>If <code>a</code> and <code>b</code> differ in size.</p>
+</div>
+</div>
 <div class="group" id="list.~list">
 <pre class="signature"><a class="anchor" href="#list.~list" aria-label="Link to ~list">#</a><code><span class="type">~list</span>()</code></pre>
 </div>

@@ -416,6 +416,7 @@ private void broadcasting( ref kl::test::context c )
     c.check( a * col == kl::ndarray<i32>( [ 0, 100, 200, 600, 800, 1000 ], 2, 3 ) );
     c.check( col - row == kl::ndarray<i32>( [ 90, 80, 70, 190, 180, 170 ], 2, 3 ) );
     c.check( a + kl::ndarray<i32>::filled( 1 ) == a + 1 );
+    c.check( a.map( col, fn[]( i32 x, i32 y ) { return kl::max( x, y / 40 ); } ) == kl::ndarray<i32>( [ 2, 2, 2, 5, 5, 5 ], 2, 3 ) );
     c.check( ( a % kl::ndarray<i32>( [ 2 ] ) ).sum() == 3 );
 
     // A stretch inside the shape: (2, 1, 2) and (3, 1) give (2, 3, 2).

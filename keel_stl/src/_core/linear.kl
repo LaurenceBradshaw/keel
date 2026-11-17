@@ -427,6 +427,43 @@ void zip_strided_into<T, F>( ref T[] dest, const ref T[] a, const ref u64[] shap
     }
 }
 
+/// `dest[i] = op( x, y )`, `dest` row-major over `shape`, `x` read from `a` at `a_strides` and `y`
+/// from `b` at `b_strides`, as `gather` reads them.
+///
+/// ### Panics
+///
+/// If either stride list differs from `shape` in length, `dest` does not hold `shape`, or a read
+/// falls outside `a` or `b`.
+void zip_strided<T, F>( ref T[] dest, const ref T[] a, const ref u64[] a_strides, const ref T[] b, const ref u64[] b_strides, const ref u64[] shape, F op ) where T : copyable, where F : fn( T, T ) -> T
+{
+    if( strided_count( shape, a_strides ) != dest.size || strided_count( shape, b_strides ) != dest.size )
+    {
+        panic( "the shapes differ" );
+    }
+    if( dest.size == 0 )
+    {
+        return;
+    }
+    if( shape.size == 0 )
+    {
+        dest[0] = op( a[0], b[0] );
+        return;
+    }
+
+    u64 inner = shape[shape.size - 1];
+    u64 sa    = a_strides[shape.size - 1];
+    u64 sb    = b_strides[shape.size - 1];
+    for( u64 row : 0..dest.size / inner )
+    {
+        u64 ba = strided_base( row, shape, a_strides );
+        u64 bb = strided_base( row, shape, b_strides );
+        for( u64 j : 0..inner )
+        {
+            dest[row * inner + j] = op( a[ba + j * sa], b[bb + j * sb] );
+        }
+    }
+}
+
 private T magnitude<T>( T x ) where T : floating
 {
     return x < 0 ? -x : x;

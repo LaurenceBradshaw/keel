@@ -1,0 +1,27 @@
+// `kl::list`'s bulk builders fill every slot in one allocation, empty ones included.
+import kl::list;
+import kl::test::context;
+
+private void builds_at_full_size( ref kl::test::context c )
+{
+    kl::list<i32> f = kl::list<i32>::filled( 3, 7 );
+    c.check_eq( f.size(), 3 );
+    c.check_eq( f.capacity(), 3 );
+    c.check_eq( f[0] + f[1] + f[2], 21 );
+
+    i32[3]        a = [ 4, 5, 6 ];
+    kl::list<i32> o = kl::list<i32>::of( a );
+    c.check_eq( o.size(), 3 );
+    c.check_eq( o[0] * 100 + o[1] * 10 + o[2], 456 );
+    o.push( 1 );
+    c.check_eq( o[3], 1 );
+
+    kl::list<f64> m = kl::list<f64>::mapped( a, fn[]( i32 x ) { return cast<f64>( x ) / 2.0; } );
+    c.check_eq( m[2], 3.0 );
+    kl::list<i32> z = kl::list<i32>::zipped( a, f.as_run(), fn[]( i32 x, i32 y ) { return x * y; } );
+    c.check_eq( z[0] + z[1] + z[2], 105 );
+    c.expect_panic( "the sizes differ", fn[]() { _ = kl::list<i32>::zipped( kl::list<i32>::filled( 2, 0 ).as_run(), kl::list<i32>::filled( 3, 0 ).as_run(), fn[]( i32 x, i32 y ) { return x + y; } ); } );
+
+    c.check( kl::list<f64>::filled( 0, 1.0 ).is_empty() );
+    c.check( kl::list<i32>::of( f.as_run()[0..0] ).is_empty() );
+}

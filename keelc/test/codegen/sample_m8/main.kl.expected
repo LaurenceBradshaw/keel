@@ -3705,41 +3705,41 @@ void kl_2kl4list_4list__IQ2kl6stringE__RQ2kl4listIQ2kl6stringE__ctor( struct kl_
 #line 22 "../../keel_stl/src/list.kl"
 }
 
-#line 214 "../../keel_stl/src/list.kl"
+#line 283 "../../keel_stl/src/list.kl"
 void kl_2kl4list_4push__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_MQ2kl6string( struct kl_2kl4list_list__IQ2kl6stringE* kl_this_1, struct kl_2kl6string_string kl_value_2 )
 {
     struct kl_2kl4list_list__IQ2kl6stringE* kl_t3;
     struct kl_2kl6string_string* kl_t5;
     bool kl_t6;
     bool kl_t7;
-#line 216 "../../keel_stl/src/list.kl"
+#line 285 "../../keel_stl/src/list.kl"
     kl_t7 = true;
-#line 216 "../../keel_stl/src/list.kl"
+#line 285 "../../keel_stl/src/list.kl"
     kl_t3 = &( *kl_this_1 );
-#line 216 "../../keel_stl/src/list.kl"
+#line 285 "../../keel_stl/src/list.kl"
     kl_2kl4list_20reallocate_if_needed__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( kl_t3 );
-#line 220 "../../keel_stl/src/list.kl"
+#line 289 "../../keel_stl/src/list.kl"
     kl_t5 = ( *kl_this_1 ).kl_data_ + ( *kl_this_1 ).kl_count_;
-#line 220 "../../keel_stl/src/list.kl"
+#line 289 "../../keel_stl/src/list.kl"
     ( *kl_t5 ) = kl_value_2;
-#line 220 "../../keel_stl/src/list.kl"
+#line 289 "../../keel_stl/src/list.kl"
     kl_t7 = false;
-#line 222 "../../keel_stl/src/list.kl"
+#line 291 "../../keel_stl/src/list.kl"
     kl_t6 = __builtin_add_overflow( ( *kl_this_1 ).kl_count_, 1, &( uint64_t ) { 0 } );
-#line 222 "../../keel_stl/src/list.kl"
+#line 291 "../../keel_stl/src/list.kl"
     if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
-#line 222 "../../keel_stl/src/list.kl"
-    kl_rt_panic( "../../keel_stl/src/list.kl", 222, "arithmetic overflow: count_ += 1;" );
+#line 291 "../../keel_stl/src/list.kl"
+    kl_rt_panic( "../../keel_stl/src/list.kl", 291, "arithmetic overflow: count_ += 1;" );
     bb2:
-#line 222 "../../keel_stl/src/list.kl"
+#line 291 "../../keel_stl/src/list.kl"
     ( *kl_this_1 ).kl_count_ = ( *kl_this_1 ).kl_count_ + 1;
     if ( kl_t7 ) kl_2kl6string_6string__dtor( &kl_value_2 );
-#line 223 "../../keel_stl/src/list.kl"
+#line 292 "../../keel_stl/src/list.kl"
     kl_t7 = false;
-#line 223 "../../keel_stl/src/list.kl"
+#line 292 "../../keel_stl/src/list.kl"
     return;
-#line 223 "../../keel_stl/src/list.kl"
+#line 292 "../../keel_stl/src/list.kl"
 }
 
 #line 7 "../../keel_stl/src/_core/compare.kl"
@@ -3841,7 +3841,7 @@ bool kl_2kl5_core7compare_5equal__I2u8E__L2u8_L2u8( uint8_t* kl_a_1_data, uint64
 #line 23 "../../keel_stl/src/_core/compare.kl"
 }
 
-#line 39 "../../keel_stl/src/list.kl"
+#line 108 "../../keel_stl/src/list.kl"
 void kl_2kl4list_4list__IQ2kl6stringE__dtor( struct kl_2kl4list_list__IQ2kl6stringE* kl_this_1 )
 {
     bool kl_t2;
@@ -3850,45 +3850,45 @@ void kl_2kl4list_4list__IQ2kl6stringE__dtor( struct kl_2kl4list_list__IQ2kl6stri
     uint64_t kl_t5;
     bool kl_t6;
     struct kl_2kl6string_string* kl_t7;
-#line 41 "../../keel_stl/src/list.kl"
+#line 110 "../../keel_stl/src/list.kl"
     kl_t2 = ( *kl_this_1 ).kl_data_ != NULL;
-#line 41 "../../keel_stl/src/list.kl"
+#line 110 "../../keel_stl/src/list.kl"
     if ( kl_t2 ) goto bb1; else goto bb5;
     bb1:
-#line 45 "../../keel_stl/src/list.kl"
+#line 114 "../../keel_stl/src/list.kl"
     kl_t3 = ( *kl_this_1 ).kl_data_;
-#line 45 "../../keel_stl/src/list.kl"
+#line 114 "../../keel_stl/src/list.kl"
     kl_t4 = ( *kl_this_1 ).kl_count_;
-#line 45 "../../keel_stl/src/list.kl"
+#line 114 "../../keel_stl/src/list.kl"
     kl_t5 = 0;
-#line 45 "../../keel_stl/src/list.kl"
+#line 114 "../../keel_stl/src/list.kl"
     goto bb2;
     bb2:
-#line 45 "../../keel_stl/src/list.kl"
+#line 114 "../../keel_stl/src/list.kl"
     kl_t6 = kl_t5 < kl_t4;
-#line 45 "../../keel_stl/src/list.kl"
+#line 114 "../../keel_stl/src/list.kl"
     if ( kl_t6 ) goto bb3; else goto bb4;
     bb3:
-#line 45 "../../keel_stl/src/list.kl"
+#line 114 "../../keel_stl/src/list.kl"
     kl_t7 = kl_t3 + kl_t5;
-#line 45 "../../keel_stl/src/list.kl"
+#line 114 "../../keel_stl/src/list.kl"
     kl_2kl6string_6string__dtor( &( *kl_t7 ) );
-#line 45 "../../keel_stl/src/list.kl"
+#line 114 "../../keel_stl/src/list.kl"
     kl_t5 = kl_t5 + 1;
-#line 45 "../../keel_stl/src/list.kl"
+#line 114 "../../keel_stl/src/list.kl"
     goto bb2;
     bb4:
-#line 46 "../../keel_stl/src/list.kl"
+#line 115 "../../keel_stl/src/list.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data_ );
-#line 41 "../../keel_stl/src/list.kl"
+#line 110 "../../keel_stl/src/list.kl"
     goto bb5;
     bb5:
-#line 49 "../../keel_stl/src/list.kl"
+#line 118 "../../keel_stl/src/list.kl"
     return;
-#line 49 "../../keel_stl/src/list.kl"
+#line 118 "../../keel_stl/src/list.kl"
 }
 
-#line 475 "../../keel_stl/src/list.kl"
+#line 544 "../../keel_stl/src/list.kl"
 void kl_2kl4list_20reallocate_if_needed__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* kl_this_1 )
 {
     bool kl_t2;
@@ -3897,46 +3897,46 @@ void kl_2kl4list_20reallocate_if_needed__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE(
     bool kl_t5;
     bool kl_t6;
     uint64_t kl_t7;
-#line 477 "../../keel_stl/src/list.kl"
+#line 546 "../../keel_stl/src/list.kl"
     kl_t2 = ( *kl_this_1 ).kl_count_ == ( *kl_this_1 ).kl_cap_;
-#line 477 "../../keel_stl/src/list.kl"
+#line 546 "../../keel_stl/src/list.kl"
     if ( kl_t2 ) goto bb1; else goto bb7;
     bb1:
     kl_t3 = &( *kl_this_1 );
-#line 479 "../../keel_stl/src/list.kl"
+#line 548 "../../keel_stl/src/list.kl"
     kl_t5 = ( *kl_this_1 ).kl_cap_ > 0;
-#line 479 "../../keel_stl/src/list.kl"
+#line 548 "../../keel_stl/src/list.kl"
     if ( kl_t5 ) goto bb2; else goto bb3;
     bb2:
-#line 479 "../../keel_stl/src/list.kl"
+#line 548 "../../keel_stl/src/list.kl"
     kl_t6 = __builtin_mul_overflow( ( *kl_this_1 ).kl_cap_, 2, &( uint64_t ) { 0 } );
-#line 479 "../../keel_stl/src/list.kl"
+#line 548 "../../keel_stl/src/list.kl"
     if ( kl_t6 ) goto bb5; else goto bb6;
     bb3:
-#line 479 "../../keel_stl/src/list.kl"
+#line 548 "../../keel_stl/src/list.kl"
     kl_t4 = 1;
-#line 479 "../../keel_stl/src/list.kl"
+#line 548 "../../keel_stl/src/list.kl"
     goto bb4;
     bb4:
-#line 479 "../../keel_stl/src/list.kl"
+#line 548 "../../keel_stl/src/list.kl"
     kl_2kl4list_10reallocate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( kl_t3, kl_t4 );
-#line 477 "../../keel_stl/src/list.kl"
+#line 546 "../../keel_stl/src/list.kl"
     goto bb7;
     bb5:
-    kl_rt_panic( "../../keel_stl/src/list.kl", 479, "arithmetic overflow: cap_ * 2" );
+    kl_rt_panic( "../../keel_stl/src/list.kl", 548, "arithmetic overflow: cap_ * 2" );
     bb6:
-#line 479 "../../keel_stl/src/list.kl"
+#line 548 "../../keel_stl/src/list.kl"
     kl_t7 = ( *kl_this_1 ).kl_cap_ * 2;
-#line 479 "../../keel_stl/src/list.kl"
+#line 548 "../../keel_stl/src/list.kl"
     kl_t4 = kl_t7;
-#line 479 "../../keel_stl/src/list.kl"
+#line 548 "../../keel_stl/src/list.kl"
     goto bb4;
     bb7:
     return;
-#line 481 "../../keel_stl/src/list.kl"
+#line 550 "../../keel_stl/src/list.kl"
 }
 
-#line 445 "../../keel_stl/src/list.kl"
+#line 514 "../../keel_stl/src/list.kl"
 void kl_2kl4list_10reallocate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE* kl_this_1, uint64_t kl_n_2 )
 {
     struct kl_2kl6string_string* kl_new_data_3;
@@ -3947,55 +3947,55 @@ void kl_2kl4list_10reallocate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( stru
     struct kl_2kl6string_string* kl_t8;
     struct kl_2kl6string_string* kl_t9;
     bool kl_t10;
-#line 450 "../../keel_stl/src/list.kl"
-    kl_t4 = ( struct kl_2kl6string_string* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 24, "../../keel_stl/src/list.kl", 450, "out of memory: alloc<T>( n )" );
-#line 450 "../../keel_stl/src/list.kl"
+#line 519 "../../keel_stl/src/list.kl"
+    kl_t4 = ( struct kl_2kl6string_string* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 24, "../../keel_stl/src/list.kl", 519, "out of memory: alloc<T>( n )" );
+#line 519 "../../keel_stl/src/list.kl"
     kl_new_data_3 = kl_t4;
-#line 453 "../../keel_stl/src/list.kl"
+#line 522 "../../keel_stl/src/list.kl"
     kl_t5 = ( *kl_this_1 ).kl_data_ != NULL;
-#line 453 "../../keel_stl/src/list.kl"
+#line 522 "../../keel_stl/src/list.kl"
     if ( kl_t5 ) goto bb1; else goto bb8;
     bb1:
     kl_i_6 = 0;
-#line 455 "../../keel_stl/src/list.kl"
+#line 524 "../../keel_stl/src/list.kl"
     goto bb2;
     bb2:
-#line 455 "../../keel_stl/src/list.kl"
+#line 524 "../../keel_stl/src/list.kl"
     kl_t7 = kl_i_6 < ( *kl_this_1 ).kl_count_;
-#line 455 "../../keel_stl/src/list.kl"
+#line 524 "../../keel_stl/src/list.kl"
     if ( kl_t7 ) goto bb3; else goto bb4;
     bb3:
-#line 459 "../../keel_stl/src/list.kl"
+#line 528 "../../keel_stl/src/list.kl"
     kl_t8 = kl_new_data_3 + kl_i_6;
-#line 459 "../../keel_stl/src/list.kl"
+#line 528 "../../keel_stl/src/list.kl"
     kl_t9 = ( *kl_this_1 ).kl_data_ + kl_i_6;
-#line 459 "../../keel_stl/src/list.kl"
+#line 528 "../../keel_stl/src/list.kl"
     ( *kl_t8 ) = ( *kl_t9 );
-#line 455 "../../keel_stl/src/list.kl"
+#line 524 "../../keel_stl/src/list.kl"
     goto bb5;
     bb4:
-#line 466 "../../keel_stl/src/list.kl"
+#line 535 "../../keel_stl/src/list.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data_ );
-#line 453 "../../keel_stl/src/list.kl"
+#line 522 "../../keel_stl/src/list.kl"
     goto bb8;
     bb5:
     kl_t10 = __builtin_add_overflow( kl_i_6, 1, &( uint64_t ) { 0 } );
-#line 455 "../../keel_stl/src/list.kl"
+#line 524 "../../keel_stl/src/list.kl"
     if ( kl_t10 ) goto bb6; else goto bb7;
     bb6:
-#line 455 "../../keel_stl/src/list.kl"
-    kl_rt_panic( "../../keel_stl/src/list.kl", 455, "arithmetic overflow: i++" );
+#line 524 "../../keel_stl/src/list.kl"
+    kl_rt_panic( "../../keel_stl/src/list.kl", 524, "arithmetic overflow: i++" );
     bb7:
-#line 455 "../../keel_stl/src/list.kl"
+#line 524 "../../keel_stl/src/list.kl"
     kl_i_6 = kl_i_6 + 1;
-#line 455 "../../keel_stl/src/list.kl"
+#line 524 "../../keel_stl/src/list.kl"
     goto bb2;
     bb8:
-#line 470 "../../keel_stl/src/list.kl"
+#line 539 "../../keel_stl/src/list.kl"
     ( *kl_this_1 ).kl_data_ = kl_new_data_3;
     ( *kl_this_1 ).kl_cap_ = kl_n_2;
     return;
-#line 472 "../../keel_stl/src/list.kl"
+#line 541 "../../keel_stl/src/list.kl"
 }
 
 #line 5 "../../keel_stl/src/optional.kl"
@@ -5565,44 +5565,44 @@ void kl_2kl4list_4list__IQ9sample_m86TicketE__RQ2kl4listIQ9sample_m86TicketE__ct
 #line 22 "../../keel_stl/src/list.kl"
 }
 
-#line 214 "../../keel_stl/src/list.kl"
+#line 283 "../../keel_stl/src/list.kl"
 void kl_2kl4list_4push__IQ9sample_m86TicketE__SQ2kl4listIQ9sample_m86TicketE_MQ9sample_m86Ticket( struct kl_2kl4list_list__IQ9sample_m86TicketE* kl_this_1, struct kl_9sample_m8_Ticket kl_value_2 )
 {
     struct kl_2kl4list_list__IQ9sample_m86TicketE* kl_t3;
     struct kl_9sample_m8_Ticket* kl_t5;
     bool kl_t6;
     bool kl_t7;
-#line 216 "../../keel_stl/src/list.kl"
+#line 285 "../../keel_stl/src/list.kl"
     kl_t7 = true;
-#line 216 "../../keel_stl/src/list.kl"
+#line 285 "../../keel_stl/src/list.kl"
     kl_t3 = &( *kl_this_1 );
-#line 216 "../../keel_stl/src/list.kl"
+#line 285 "../../keel_stl/src/list.kl"
     kl_2kl4list_20reallocate_if_needed__IQ9sample_m86TicketE__SQ2kl4listIQ9sample_m86TicketE( kl_t3 );
-#line 220 "../../keel_stl/src/list.kl"
+#line 289 "../../keel_stl/src/list.kl"
     kl_t5 = ( *kl_this_1 ).kl_data_ + ( *kl_this_1 ).kl_count_;
-#line 220 "../../keel_stl/src/list.kl"
+#line 289 "../../keel_stl/src/list.kl"
     ( *kl_t5 ) = kl_value_2;
-#line 220 "../../keel_stl/src/list.kl"
+#line 289 "../../keel_stl/src/list.kl"
     kl_t7 = false;
-#line 222 "../../keel_stl/src/list.kl"
+#line 291 "../../keel_stl/src/list.kl"
     kl_t6 = __builtin_add_overflow( ( *kl_this_1 ).kl_count_, 1, &( uint64_t ) { 0 } );
-#line 222 "../../keel_stl/src/list.kl"
+#line 291 "../../keel_stl/src/list.kl"
     if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
-#line 222 "../../keel_stl/src/list.kl"
-    kl_rt_panic( "../../keel_stl/src/list.kl", 222, "arithmetic overflow: count_ += 1;" );
+#line 291 "../../keel_stl/src/list.kl"
+    kl_rt_panic( "../../keel_stl/src/list.kl", 291, "arithmetic overflow: count_ += 1;" );
     bb2:
-#line 222 "../../keel_stl/src/list.kl"
+#line 291 "../../keel_stl/src/list.kl"
     ( *kl_this_1 ).kl_count_ = ( *kl_this_1 ).kl_count_ + 1;
     if ( kl_t7 ) kl_9sample_m8_6Ticket__dtor( &kl_value_2 );
-#line 223 "../../keel_stl/src/list.kl"
+#line 292 "../../keel_stl/src/list.kl"
     kl_t7 = false;
-#line 223 "../../keel_stl/src/list.kl"
+#line 292 "../../keel_stl/src/list.kl"
     return;
-#line 223 "../../keel_stl/src/list.kl"
+#line 292 "../../keel_stl/src/list.kl"
 }
 
-#line 276 "../../keel_stl/src/list.kl"
+#line 345 "../../keel_stl/src/list.kl"
 struct kl_9sample_m8_Ticket kl_2kl4list_3pop__IQ9sample_m86TicketE__SQ2kl4listIQ9sample_m86TicketE( struct kl_2kl4list_list__IQ9sample_m86TicketE* kl_this_1 )
 {
     struct kl_9sample_m8_Ticket kl_t0;
@@ -5612,38 +5612,38 @@ struct kl_9sample_m8_Ticket kl_2kl4list_3pop__IQ9sample_m86TicketE__SQ2kl4listIQ
     uint8_t* kl_t5;
     bool kl_t7;
     struct kl_9sample_m8_Ticket* kl_t8;
-#line 278 "../../keel_stl/src/list.kl"
+#line 347 "../../keel_stl/src/list.kl"
     kl_t2 = ( *kl_this_1 ).kl_count_ == 0;
-#line 278 "../../keel_stl/src/list.kl"
+#line 347 "../../keel_stl/src/list.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
     kl_t4 = &kl_t3;
-#line 280 "../../keel_stl/src/list.kl"
+#line 349 "../../keel_stl/src/list.kl"
     kl_t5 = ( uint8_t* ) "the list is empty";
-#line 280 "../../keel_stl/src/list.kl"
+#line 349 "../../keel_stl/src/list.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 17 );
-#line 280 "../../keel_stl/src/list.kl"
-    kl_rt_panic_message( "../../keel_stl/src/list.kl", 280, kl_t3.kl_data, kl_t3.kl_size );
+#line 349 "../../keel_stl/src/list.kl"
+    kl_rt_panic_message( "../../keel_stl/src/list.kl", 349, kl_t3.kl_data, kl_t3.kl_size );
     bb2:
     kl_t7 = __builtin_sub_overflow( ( *kl_this_1 ).kl_count_, 1, &( uint64_t ) { 0 } );
-#line 282 "../../keel_stl/src/list.kl"
+#line 351 "../../keel_stl/src/list.kl"
     if ( kl_t7 ) goto bb3; else goto bb4;
     bb3:
-#line 282 "../../keel_stl/src/list.kl"
-    kl_rt_panic( "../../keel_stl/src/list.kl", 282, "arithmetic overflow: count_ -= 1;" );
+#line 351 "../../keel_stl/src/list.kl"
+    kl_rt_panic( "../../keel_stl/src/list.kl", 351, "arithmetic overflow: count_ -= 1;" );
     bb4:
-#line 282 "../../keel_stl/src/list.kl"
+#line 351 "../../keel_stl/src/list.kl"
     ( *kl_this_1 ).kl_count_ = ( *kl_this_1 ).kl_count_ - 1;
-#line 285 "../../keel_stl/src/list.kl"
+#line 354 "../../keel_stl/src/list.kl"
     kl_t8 = ( *kl_this_1 ).kl_data_ + ( *kl_this_1 ).kl_count_;
-#line 285 "../../keel_stl/src/list.kl"
+#line 354 "../../keel_stl/src/list.kl"
     kl_t0 = ( *kl_t8 );
-#line 285 "../../keel_stl/src/list.kl"
+#line 354 "../../keel_stl/src/list.kl"
     return kl_t0;
-#line 287 "../../keel_stl/src/list.kl"
+#line 356 "../../keel_stl/src/list.kl"
 }
 
-#line 306 "../../keel_stl/src/list.kl"
+#line 375 "../../keel_stl/src/list.kl"
 struct kl_9sample_m8_Ticket kl_2kl4list_6remove__IQ9sample_m86TicketE__SQ2kl4listIQ9sample_m86TicketE_3u64( struct kl_2kl4list_list__IQ9sample_m86TicketE* kl_this_1, uint64_t kl_index_2 )
 {
     struct kl_9sample_m8_Ticket kl_t0;
@@ -5664,103 +5664,103 @@ struct kl_9sample_m8_Ticket kl_2kl4list_6remove__IQ9sample_m86TicketE__SQ2kl4lis
     bool kl_t18;
     bool kl_t19;
     bool kl_t20;
-#line 308 "../../keel_stl/src/list.kl"
+#line 377 "../../keel_stl/src/list.kl"
     kl_t20 = false;
-#line 308 "../../keel_stl/src/list.kl"
+#line 377 "../../keel_stl/src/list.kl"
     kl_t3 = kl_index_2 >= ( *kl_this_1 ).kl_count_;
-#line 308 "../../keel_stl/src/list.kl"
+#line 377 "../../keel_stl/src/list.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
     kl_t5 = &kl_t4;
-#line 310 "../../keel_stl/src/list.kl"
+#line 379 "../../keel_stl/src/list.kl"
     kl_t6 = ( uint8_t* ) "index out of range";
-#line 310 "../../keel_stl/src/list.kl"
+#line 379 "../../keel_stl/src/list.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 18 );
-#line 310 "../../keel_stl/src/list.kl"
-    kl_rt_panic_message( "../../keel_stl/src/list.kl", 310, kl_t4.kl_data, kl_t4.kl_size );
+#line 379 "../../keel_stl/src/list.kl"
+    kl_rt_panic_message( "../../keel_stl/src/list.kl", 379, kl_t4.kl_data, kl_t4.kl_size );
     bb2:
-#line 315 "../../keel_stl/src/list.kl"
+#line 384 "../../keel_stl/src/list.kl"
     kl_t20 = false;
-#line 315 "../../keel_stl/src/list.kl"
+#line 384 "../../keel_stl/src/list.kl"
     kl_t9 = ( *kl_this_1 ).kl_data_ + kl_index_2;
-#line 315 "../../keel_stl/src/list.kl"
+#line 384 "../../keel_stl/src/list.kl"
     kl_result_8 = ( *kl_t9 );
-#line 315 "../../keel_stl/src/list.kl"
+#line 384 "../../keel_stl/src/list.kl"
     kl_t20 = true;
-#line 317 "../../keel_stl/src/list.kl"
+#line 386 "../../keel_stl/src/list.kl"
     kl_i_10 = kl_index_2;
-#line 317 "../../keel_stl/src/list.kl"
+#line 386 "../../keel_stl/src/list.kl"
     goto bb3;
     bb3:
-#line 317 "../../keel_stl/src/list.kl"
+#line 386 "../../keel_stl/src/list.kl"
     kl_t11 = __builtin_sub_overflow( ( *kl_this_1 ).kl_count_, 1, &( uint64_t ) { 0 } );
-#line 317 "../../keel_stl/src/list.kl"
+#line 386 "../../keel_stl/src/list.kl"
     if ( kl_t11 ) goto bb5; else goto bb6;
     bb4:
     kl_t14 = ( *kl_this_1 ).kl_data_ + kl_i_10;
-#line 319 "../../keel_stl/src/list.kl"
+#line 388 "../../keel_stl/src/list.kl"
     kl_t15 = __builtin_add_overflow( kl_i_10, 1, &( uint64_t ) { 0 } );
-#line 319 "../../keel_stl/src/list.kl"
+#line 388 "../../keel_stl/src/list.kl"
     if ( kl_t15 ) goto bb8; else goto bb9;
     bb5:
-#line 317 "../../keel_stl/src/list.kl"
-    kl_rt_panic( "../../keel_stl/src/list.kl", 317, "arithmetic overflow: count_ - 1" );
+#line 386 "../../keel_stl/src/list.kl"
+    kl_rt_panic( "../../keel_stl/src/list.kl", 386, "arithmetic overflow: count_ - 1" );
     bb6:
-#line 317 "../../keel_stl/src/list.kl"
+#line 386 "../../keel_stl/src/list.kl"
     kl_t12 = ( *kl_this_1 ).kl_count_ - 1;
-#line 317 "../../keel_stl/src/list.kl"
+#line 386 "../../keel_stl/src/list.kl"
     kl_t13 = kl_i_10 < kl_t12;
-#line 317 "../../keel_stl/src/list.kl"
+#line 386 "../../keel_stl/src/list.kl"
     if ( kl_t13 ) goto bb4; else goto bb7;
     bb7:
-#line 322 "../../keel_stl/src/list.kl"
+#line 391 "../../keel_stl/src/list.kl"
     kl_t19 = __builtin_sub_overflow( ( *kl_this_1 ).kl_count_, 1, &( uint64_t ) { 0 } );
-#line 322 "../../keel_stl/src/list.kl"
+#line 391 "../../keel_stl/src/list.kl"
     if ( kl_t19 ) goto bb13; else goto bb14;
     bb8:
-#line 319 "../../keel_stl/src/list.kl"
-    kl_rt_panic( "../../keel_stl/src/list.kl", 319, "arithmetic overflow: i + 1" );
+#line 388 "../../keel_stl/src/list.kl"
+    kl_rt_panic( "../../keel_stl/src/list.kl", 388, "arithmetic overflow: i + 1" );
     bb9:
-#line 319 "../../keel_stl/src/list.kl"
+#line 388 "../../keel_stl/src/list.kl"
     kl_t16 = kl_i_10 + 1;
-#line 319 "../../keel_stl/src/list.kl"
+#line 388 "../../keel_stl/src/list.kl"
     kl_t17 = ( *kl_this_1 ).kl_data_ + kl_t16;
-#line 319 "../../keel_stl/src/list.kl"
+#line 388 "../../keel_stl/src/list.kl"
     ( *kl_t14 ) = ( *kl_t17 );
-#line 317 "../../keel_stl/src/list.kl"
+#line 386 "../../keel_stl/src/list.kl"
     goto bb10;
     bb10:
-#line 317 "../../keel_stl/src/list.kl"
+#line 386 "../../keel_stl/src/list.kl"
     kl_t18 = __builtin_add_overflow( kl_i_10, 1, &( uint64_t ) { 0 } );
-#line 317 "../../keel_stl/src/list.kl"
+#line 386 "../../keel_stl/src/list.kl"
     if ( kl_t18 ) goto bb11; else goto bb12;
     bb11:
-#line 317 "../../keel_stl/src/list.kl"
-    kl_rt_panic( "../../keel_stl/src/list.kl", 317, "arithmetic overflow: i++" );
+#line 386 "../../keel_stl/src/list.kl"
+    kl_rt_panic( "../../keel_stl/src/list.kl", 386, "arithmetic overflow: i++" );
     bb12:
-#line 317 "../../keel_stl/src/list.kl"
+#line 386 "../../keel_stl/src/list.kl"
     kl_i_10 = kl_i_10 + 1;
-#line 317 "../../keel_stl/src/list.kl"
+#line 386 "../../keel_stl/src/list.kl"
     goto bb3;
     bb13:
-#line 322 "../../keel_stl/src/list.kl"
-    kl_rt_panic( "../../keel_stl/src/list.kl", 322, "arithmetic overflow: count_ -= 1;" );
+#line 391 "../../keel_stl/src/list.kl"
+    kl_rt_panic( "../../keel_stl/src/list.kl", 391, "arithmetic overflow: count_ -= 1;" );
     bb14:
-#line 322 "../../keel_stl/src/list.kl"
+#line 391 "../../keel_stl/src/list.kl"
     ( *kl_this_1 ).kl_count_ = ( *kl_this_1 ).kl_count_ - 1;
     kl_t0 = kl_result_8;
-#line 323 "../../keel_stl/src/list.kl"
+#line 392 "../../keel_stl/src/list.kl"
     kl_t20 = false;
-#line 323 "../../keel_stl/src/list.kl"
+#line 392 "../../keel_stl/src/list.kl"
     if ( kl_t20 ) kl_9sample_m8_6Ticket__dtor( &kl_result_8 );
-#line 323 "../../keel_stl/src/list.kl"
+#line 392 "../../keel_stl/src/list.kl"
     kl_t20 = false;
-#line 323 "../../keel_stl/src/list.kl"
+#line 392 "../../keel_stl/src/list.kl"
     return kl_t0;
-#line 325 "../../keel_stl/src/list.kl"
+#line 394 "../../keel_stl/src/list.kl"
 }
 
-#line 333 "../../keel_stl/src/list.kl"
+#line 402 "../../keel_stl/src/list.kl"
 struct kl_9sample_m8_Ticket kl_2kl4list_11swap_remove__IQ9sample_m86TicketE__SQ2kl4listIQ9sample_m86TicketE_3u64( struct kl_2kl4list_list__IQ9sample_m86TicketE* kl_this_1, uint64_t kl_index_2 )
 {
     struct kl_9sample_m8_Ticket kl_t0;
@@ -5775,66 +5775,66 @@ struct kl_9sample_m8_Ticket kl_2kl4list_11swap_remove__IQ9sample_m86TicketE__SQ2
     struct kl_9sample_m8_Ticket* kl_t12;
     struct kl_9sample_m8_Ticket* kl_t13;
     bool kl_t14;
-#line 335 "../../keel_stl/src/list.kl"
+#line 404 "../../keel_stl/src/list.kl"
     kl_t14 = false;
-#line 335 "../../keel_stl/src/list.kl"
+#line 404 "../../keel_stl/src/list.kl"
     kl_t3 = kl_index_2 >= ( *kl_this_1 ).kl_count_;
-#line 335 "../../keel_stl/src/list.kl"
+#line 404 "../../keel_stl/src/list.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
     kl_t5 = &kl_t4;
-#line 337 "../../keel_stl/src/list.kl"
+#line 406 "../../keel_stl/src/list.kl"
     kl_t6 = ( uint8_t* ) "index out of range";
-#line 337 "../../keel_stl/src/list.kl"
+#line 406 "../../keel_stl/src/list.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 18 );
-#line 337 "../../keel_stl/src/list.kl"
-    kl_rt_panic_message( "../../keel_stl/src/list.kl", 337, kl_t4.kl_data, kl_t4.kl_size );
+#line 406 "../../keel_stl/src/list.kl"
+    kl_rt_panic_message( "../../keel_stl/src/list.kl", 406, kl_t4.kl_data, kl_t4.kl_size );
     bb2:
-#line 340 "../../keel_stl/src/list.kl"
+#line 409 "../../keel_stl/src/list.kl"
     kl_t8 = __builtin_sub_overflow( ( *kl_this_1 ).kl_count_, 1, &( uint64_t ) { 0 } );
-#line 340 "../../keel_stl/src/list.kl"
+#line 409 "../../keel_stl/src/list.kl"
     if ( kl_t8 ) goto bb3; else goto bb4;
     bb3:
-#line 340 "../../keel_stl/src/list.kl"
-    kl_rt_panic( "../../keel_stl/src/list.kl", 340, "arithmetic overflow: count_ -= 1;" );
+#line 409 "../../keel_stl/src/list.kl"
+    kl_rt_panic( "../../keel_stl/src/list.kl", 409, "arithmetic overflow: count_ -= 1;" );
     bb4:
-#line 340 "../../keel_stl/src/list.kl"
+#line 409 "../../keel_stl/src/list.kl"
     ( *kl_this_1 ).kl_count_ = ( *kl_this_1 ).kl_count_ - 1;
-#line 343 "../../keel_stl/src/list.kl"
+#line 412 "../../keel_stl/src/list.kl"
     kl_t14 = false;
-#line 343 "../../keel_stl/src/list.kl"
+#line 412 "../../keel_stl/src/list.kl"
     kl_t10 = ( *kl_this_1 ).kl_data_ + kl_index_2;
-#line 343 "../../keel_stl/src/list.kl"
+#line 412 "../../keel_stl/src/list.kl"
     kl_result_9 = ( *kl_t10 );
-#line 343 "../../keel_stl/src/list.kl"
+#line 412 "../../keel_stl/src/list.kl"
     kl_t14 = true;
-#line 345 "../../keel_stl/src/list.kl"
+#line 414 "../../keel_stl/src/list.kl"
     kl_t11 = kl_index_2 != ( *kl_this_1 ).kl_count_;
-#line 345 "../../keel_stl/src/list.kl"
+#line 414 "../../keel_stl/src/list.kl"
     if ( kl_t11 ) goto bb5; else goto bb6;
     bb5:
     kl_t12 = ( *kl_this_1 ).kl_data_ + kl_index_2;
-#line 347 "../../keel_stl/src/list.kl"
+#line 416 "../../keel_stl/src/list.kl"
     kl_t13 = ( *kl_this_1 ).kl_data_ + ( *kl_this_1 ).kl_count_;
-#line 347 "../../keel_stl/src/list.kl"
+#line 416 "../../keel_stl/src/list.kl"
     ( *kl_t12 ) = ( *kl_t13 );
-#line 345 "../../keel_stl/src/list.kl"
+#line 414 "../../keel_stl/src/list.kl"
     goto bb6;
     bb6:
-#line 350 "../../keel_stl/src/list.kl"
+#line 419 "../../keel_stl/src/list.kl"
     kl_t0 = kl_result_9;
-#line 350 "../../keel_stl/src/list.kl"
+#line 419 "../../keel_stl/src/list.kl"
     kl_t14 = false;
-#line 350 "../../keel_stl/src/list.kl"
+#line 419 "../../keel_stl/src/list.kl"
     if ( kl_t14 ) kl_9sample_m8_6Ticket__dtor( &kl_result_9 );
-#line 350 "../../keel_stl/src/list.kl"
+#line 419 "../../keel_stl/src/list.kl"
     kl_t14 = false;
-#line 350 "../../keel_stl/src/list.kl"
+#line 419 "../../keel_stl/src/list.kl"
     return kl_t0;
-#line 352 "../../keel_stl/src/list.kl"
+#line 421 "../../keel_stl/src/list.kl"
 }
 
-#line 388 "../../keel_stl/src/list.kl"
+#line 457 "../../keel_stl/src/list.kl"
 struct kl_9sample_m8_Ticket kl_2kl4list_7replace__IQ9sample_m86TicketE__SQ2kl4listIQ9sample_m86TicketE_3u64_MQ9sample_m86Ticket( struct kl_2kl4list_list__IQ9sample_m86TicketE* kl_this_1, uint64_t kl_index_2, struct kl_9sample_m8_Ticket kl_value_3 )
 {
     struct kl_9sample_m8_Ticket kl_t0;
@@ -5847,53 +5847,53 @@ struct kl_9sample_m8_Ticket kl_2kl4list_7replace__IQ9sample_m86TicketE__SQ2kl4li
     struct kl_9sample_m8_Ticket* kl_t11;
     bool kl_t12;
     bool kl_t13;
-#line 390 "../../keel_stl/src/list.kl"
+#line 459 "../../keel_stl/src/list.kl"
     kl_t12 = true;
-#line 390 "../../keel_stl/src/list.kl"
+#line 459 "../../keel_stl/src/list.kl"
     kl_t13 = false;
-#line 390 "../../keel_stl/src/list.kl"
+#line 459 "../../keel_stl/src/list.kl"
     kl_t4 = kl_index_2 >= ( *kl_this_1 ).kl_count_;
-#line 390 "../../keel_stl/src/list.kl"
+#line 459 "../../keel_stl/src/list.kl"
     if ( kl_t4 ) goto bb1; else goto bb2;
     bb1:
     kl_t6 = &kl_t5;
-#line 392 "../../keel_stl/src/list.kl"
+#line 461 "../../keel_stl/src/list.kl"
     kl_t7 = ( uint8_t* ) "index out of range";
-#line 392 "../../keel_stl/src/list.kl"
+#line 461 "../../keel_stl/src/list.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t6, kl_t7, 18 );
-#line 392 "../../keel_stl/src/list.kl"
-    kl_rt_panic_message( "../../keel_stl/src/list.kl", 392, kl_t5.kl_data, kl_t5.kl_size );
+#line 461 "../../keel_stl/src/list.kl"
+    kl_rt_panic_message( "../../keel_stl/src/list.kl", 461, kl_t5.kl_data, kl_t5.kl_size );
     bb2:
-#line 397 "../../keel_stl/src/list.kl"
+#line 466 "../../keel_stl/src/list.kl"
     kl_t13 = false;
-#line 397 "../../keel_stl/src/list.kl"
+#line 466 "../../keel_stl/src/list.kl"
     kl_t10 = ( *kl_this_1 ).kl_data_ + kl_index_2;
-#line 397 "../../keel_stl/src/list.kl"
+#line 466 "../../keel_stl/src/list.kl"
     kl_result_9 = ( *kl_t10 );
-#line 397 "../../keel_stl/src/list.kl"
+#line 466 "../../keel_stl/src/list.kl"
     kl_t13 = true;
     kl_t11 = ( *kl_this_1 ).kl_data_ + kl_index_2;
-#line 398 "../../keel_stl/src/list.kl"
+#line 467 "../../keel_stl/src/list.kl"
     ( *kl_t11 ) = kl_value_3;
-#line 398 "../../keel_stl/src/list.kl"
+#line 467 "../../keel_stl/src/list.kl"
     kl_t12 = false;
     kl_t0 = kl_result_9;
-#line 399 "../../keel_stl/src/list.kl"
+#line 468 "../../keel_stl/src/list.kl"
     kl_t13 = false;
-#line 399 "../../keel_stl/src/list.kl"
+#line 468 "../../keel_stl/src/list.kl"
     if ( kl_t13 ) kl_9sample_m8_6Ticket__dtor( &kl_result_9 );
-#line 399 "../../keel_stl/src/list.kl"
+#line 468 "../../keel_stl/src/list.kl"
     kl_t13 = false;
-#line 399 "../../keel_stl/src/list.kl"
+#line 468 "../../keel_stl/src/list.kl"
     if ( kl_t12 ) kl_9sample_m8_6Ticket__dtor( &kl_value_3 );
-#line 399 "../../keel_stl/src/list.kl"
+#line 468 "../../keel_stl/src/list.kl"
     kl_t12 = false;
-#line 399 "../../keel_stl/src/list.kl"
+#line 468 "../../keel_stl/src/list.kl"
     return kl_t0;
-#line 401 "../../keel_stl/src/list.kl"
+#line 470 "../../keel_stl/src/list.kl"
 }
 
-#line 408 "../../keel_stl/src/list.kl"
+#line 477 "../../keel_stl/src/list.kl"
 void kl_2kl4list_4swap__IQ9sample_m86TicketE__SQ2kl4listIQ9sample_m86TicketE_3u64_3u64( struct kl_2kl4list_list__IQ9sample_m86TicketE* kl_this_1, uint64_t kl_a_2, uint64_t kl_b_3 )
 {
     bool kl_t4;
@@ -5909,66 +5909,66 @@ void kl_2kl4list_4swap__IQ9sample_m86TicketE__SQ2kl4listIQ9sample_m86TicketE_3u6
     struct kl_9sample_m8_Ticket* kl_t15;
     struct kl_9sample_m8_Ticket* kl_t16;
     bool kl_t17;
-#line 410 "../../keel_stl/src/list.kl"
+#line 479 "../../keel_stl/src/list.kl"
     kl_t17 = false;
-#line 410 "../../keel_stl/src/list.kl"
+#line 479 "../../keel_stl/src/list.kl"
     kl_t5 = kl_a_2 >= ( *kl_this_1 ).kl_count_;
-#line 410 "../../keel_stl/src/list.kl"
+#line 479 "../../keel_stl/src/list.kl"
     kl_t4 = kl_t5;
-#line 410 "../../keel_stl/src/list.kl"
+#line 479 "../../keel_stl/src/list.kl"
     if ( kl_t4 ) goto bb2; else goto bb1;
     bb1:
-#line 410 "../../keel_stl/src/list.kl"
+#line 479 "../../keel_stl/src/list.kl"
     kl_t6 = kl_b_3 >= ( *kl_this_1 ).kl_count_;
-#line 410 "../../keel_stl/src/list.kl"
+#line 479 "../../keel_stl/src/list.kl"
     kl_t4 = kl_t6;
-#line 410 "../../keel_stl/src/list.kl"
+#line 479 "../../keel_stl/src/list.kl"
     goto bb2;
     bb2:
-#line 410 "../../keel_stl/src/list.kl"
+#line 479 "../../keel_stl/src/list.kl"
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb3:
     kl_t8 = &kl_t7;
-#line 412 "../../keel_stl/src/list.kl"
+#line 481 "../../keel_stl/src/list.kl"
     kl_t9 = ( uint8_t* ) "index out of range";
-#line 412 "../../keel_stl/src/list.kl"
+#line 481 "../../keel_stl/src/list.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t8, kl_t9, 18 );
-#line 412 "../../keel_stl/src/list.kl"
-    kl_rt_panic_message( "../../keel_stl/src/list.kl", 412, kl_t7.kl_data, kl_t7.kl_size );
+#line 481 "../../keel_stl/src/list.kl"
+    kl_rt_panic_message( "../../keel_stl/src/list.kl", 481, kl_t7.kl_data, kl_t7.kl_size );
     bb4:
-#line 415 "../../keel_stl/src/list.kl"
+#line 484 "../../keel_stl/src/list.kl"
     kl_t11 = kl_a_2 == kl_b_3;
-#line 415 "../../keel_stl/src/list.kl"
+#line 484 "../../keel_stl/src/list.kl"
     if ( kl_t11 ) goto bb5; else goto bb6;
     bb5:
     return;
     bb6:
-#line 422 "../../keel_stl/src/list.kl"
+#line 491 "../../keel_stl/src/list.kl"
     kl_t17 = false;
-#line 422 "../../keel_stl/src/list.kl"
+#line 491 "../../keel_stl/src/list.kl"
     kl_t13 = ( *kl_this_1 ).kl_data_ + kl_a_2;
-#line 422 "../../keel_stl/src/list.kl"
+#line 491 "../../keel_stl/src/list.kl"
     kl_temp_12 = ( *kl_t13 );
-#line 422 "../../keel_stl/src/list.kl"
+#line 491 "../../keel_stl/src/list.kl"
     kl_t17 = true;
     kl_t14 = ( *kl_this_1 ).kl_data_ + kl_a_2;
-#line 423 "../../keel_stl/src/list.kl"
+#line 492 "../../keel_stl/src/list.kl"
     kl_t15 = ( *kl_this_1 ).kl_data_ + kl_b_3;
-#line 423 "../../keel_stl/src/list.kl"
+#line 492 "../../keel_stl/src/list.kl"
     ( *kl_t14 ) = ( *kl_t15 );
     kl_t16 = ( *kl_this_1 ).kl_data_ + kl_b_3;
-#line 424 "../../keel_stl/src/list.kl"
+#line 493 "../../keel_stl/src/list.kl"
     ( *kl_t16 ) = kl_temp_12;
-#line 424 "../../keel_stl/src/list.kl"
+#line 493 "../../keel_stl/src/list.kl"
     kl_t17 = false;
     if ( kl_t17 ) kl_9sample_m8_6Ticket__dtor( &kl_temp_12 );
-#line 425 "../../keel_stl/src/list.kl"
+#line 494 "../../keel_stl/src/list.kl"
     kl_t17 = false;
     return;
-#line 426 "../../keel_stl/src/list.kl"
+#line 495 "../../keel_stl/src/list.kl"
 }
 
-#line 155 "../../keel_stl/src/list.kl"
+#line 224 "../../keel_stl/src/list.kl"
 struct kl_9sample_m8_Ticket* kl_2kl4list_14operator_index__IQ9sample_m86TicketE__SQ2kl4listIQ9sample_m86TicketE_3u64( struct kl_2kl4list_list__IQ9sample_m86TicketE* kl_this_1, uint64_t kl_index_2 )
 {
     struct kl_9sample_m8_Ticket* kl_t0;
@@ -5977,29 +5977,29 @@ struct kl_9sample_m8_Ticket* kl_2kl4list_14operator_index__IQ9sample_m86TicketE_
     struct kl_7prelude_str* kl_t5;
     uint8_t* kl_t6;
     struct kl_9sample_m8_Ticket* kl_t8;
-#line 157 "../../keel_stl/src/list.kl"
+#line 226 "../../keel_stl/src/list.kl"
     kl_t3 = kl_index_2 >= ( *kl_this_1 ).kl_count_;
-#line 157 "../../keel_stl/src/list.kl"
+#line 226 "../../keel_stl/src/list.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
     kl_t5 = &kl_t4;
-#line 159 "../../keel_stl/src/list.kl"
+#line 228 "../../keel_stl/src/list.kl"
     kl_t6 = ( uint8_t* ) "index out of range";
-#line 159 "../../keel_stl/src/list.kl"
+#line 228 "../../keel_stl/src/list.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 18 );
-#line 159 "../../keel_stl/src/list.kl"
-    kl_rt_panic_message( "../../keel_stl/src/list.kl", 159, kl_t4.kl_data, kl_t4.kl_size );
+#line 228 "../../keel_stl/src/list.kl"
+    kl_rt_panic_message( "../../keel_stl/src/list.kl", 228, kl_t4.kl_data, kl_t4.kl_size );
     bb2:
-#line 164 "../../keel_stl/src/list.kl"
+#line 233 "../../keel_stl/src/list.kl"
     kl_t8 = ( *kl_this_1 ).kl_data_ + kl_index_2;
-#line 164 "../../keel_stl/src/list.kl"
+#line 233 "../../keel_stl/src/list.kl"
     kl_t0 = &( *kl_t8 );
-#line 164 "../../keel_stl/src/list.kl"
+#line 233 "../../keel_stl/src/list.kl"
     return kl_t0;
-#line 166 "../../keel_stl/src/list.kl"
+#line 235 "../../keel_stl/src/list.kl"
 }
 
-#line 372 "../../keel_stl/src/list.kl"
+#line 441 "../../keel_stl/src/list.kl"
 void kl_2kl4list_5clear__IQ9sample_m86TicketE__SQ2kl4listIQ9sample_m86TicketE( struct kl_2kl4list_list__IQ9sample_m86TicketE* kl_this_1 )
 {
     struct kl_9sample_m8_Ticket* kl_t2;
@@ -6007,32 +6007,32 @@ void kl_2kl4list_5clear__IQ9sample_m86TicketE__SQ2kl4listIQ9sample_m86TicketE( s
     uint64_t kl_t4;
     bool kl_t5;
     struct kl_9sample_m8_Ticket* kl_t6;
-#line 376 "../../keel_stl/src/list.kl"
+#line 445 "../../keel_stl/src/list.kl"
     kl_t2 = ( *kl_this_1 ).kl_data_;
-#line 376 "../../keel_stl/src/list.kl"
+#line 445 "../../keel_stl/src/list.kl"
     kl_t3 = ( *kl_this_1 ).kl_count_;
-#line 376 "../../keel_stl/src/list.kl"
+#line 445 "../../keel_stl/src/list.kl"
     kl_t4 = 0;
-#line 376 "../../keel_stl/src/list.kl"
+#line 445 "../../keel_stl/src/list.kl"
     goto bb1;
     bb1:
-#line 376 "../../keel_stl/src/list.kl"
+#line 445 "../../keel_stl/src/list.kl"
     kl_t5 = kl_t4 < kl_t3;
-#line 376 "../../keel_stl/src/list.kl"
+#line 445 "../../keel_stl/src/list.kl"
     if ( kl_t5 ) goto bb2; else goto bb3;
     bb2:
-#line 376 "../../keel_stl/src/list.kl"
+#line 445 "../../keel_stl/src/list.kl"
     kl_t6 = kl_t2 + kl_t4;
-#line 376 "../../keel_stl/src/list.kl"
+#line 445 "../../keel_stl/src/list.kl"
     kl_9sample_m8_6Ticket__dtor( &( *kl_t6 ) );
-#line 376 "../../keel_stl/src/list.kl"
+#line 445 "../../keel_stl/src/list.kl"
     kl_t4 = kl_t4 + 1;
-#line 376 "../../keel_stl/src/list.kl"
+#line 445 "../../keel_stl/src/list.kl"
     goto bb1;
     bb3:
     ( *kl_this_1 ).kl_count_ = 0;
     return;
-#line 379 "../../keel_stl/src/list.kl"
+#line 448 "../../keel_stl/src/list.kl"
 }
 
 #line 65 "codegen/sample_m8/main.kl"
@@ -6109,55 +6109,55 @@ void kl_2kl4list_4list__I3i32E__RQ2kl4listI3i32E__ctor( struct kl_2kl4list_list_
 #line 22 "../../keel_stl/src/list.kl"
 }
 
-#line 214 "../../keel_stl/src/list.kl"
+#line 283 "../../keel_stl/src/list.kl"
 void kl_2kl4list_4push__I3i32E__SQ2kl4listI3i32E_M3i32( struct kl_2kl4list_list__I3i32E* kl_this_1, int32_t kl_value_2 )
 {
     struct kl_2kl4list_list__I3i32E* kl_t3;
     int32_t* kl_t5;
     bool kl_t6;
-#line 216 "../../keel_stl/src/list.kl"
+#line 285 "../../keel_stl/src/list.kl"
     kl_t3 = &( *kl_this_1 );
-#line 216 "../../keel_stl/src/list.kl"
+#line 285 "../../keel_stl/src/list.kl"
     kl_2kl4list_20reallocate_if_needed__I3i32E__SQ2kl4listI3i32E( kl_t3 );
-#line 220 "../../keel_stl/src/list.kl"
+#line 289 "../../keel_stl/src/list.kl"
     kl_t5 = ( *kl_this_1 ).kl_data_ + ( *kl_this_1 ).kl_count_;
-#line 220 "../../keel_stl/src/list.kl"
+#line 289 "../../keel_stl/src/list.kl"
     ( *kl_t5 ) = kl_value_2;
-#line 222 "../../keel_stl/src/list.kl"
+#line 291 "../../keel_stl/src/list.kl"
     kl_t6 = __builtin_add_overflow( ( *kl_this_1 ).kl_count_, 1, &( uint64_t ) { 0 } );
-#line 222 "../../keel_stl/src/list.kl"
+#line 291 "../../keel_stl/src/list.kl"
     if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
-#line 222 "../../keel_stl/src/list.kl"
-    kl_rt_panic( "../../keel_stl/src/list.kl", 222, "arithmetic overflow: count_ += 1;" );
+#line 291 "../../keel_stl/src/list.kl"
+    kl_rt_panic( "../../keel_stl/src/list.kl", 291, "arithmetic overflow: count_ += 1;" );
     bb2:
-#line 222 "../../keel_stl/src/list.kl"
+#line 291 "../../keel_stl/src/list.kl"
     ( *kl_this_1 ).kl_count_ = ( *kl_this_1 ).kl_count_ + 1;
     return;
-#line 223 "../../keel_stl/src/list.kl"
+#line 292 "../../keel_stl/src/list.kl"
 }
 
-#line 54 "../../keel_stl/src/list.kl"
+#line 123 "../../keel_stl/src/list.kl"
 uint64_t kl_2kl4list_4size__I3i32E__SQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* kl_this_1 )
 {
     uint64_t kl_t0;
-#line 56 "../../keel_stl/src/list.kl"
+#line 125 "../../keel_stl/src/list.kl"
     kl_t0 = ( *kl_this_1 ).kl_count_;
-#line 56 "../../keel_stl/src/list.kl"
+#line 125 "../../keel_stl/src/list.kl"
     return kl_t0;
 }
 
-#line 66 "../../keel_stl/src/list.kl"
+#line 135 "../../keel_stl/src/list.kl"
 uint64_t kl_2kl4list_8capacity__I3i32E__SQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* kl_this_1 )
 {
     uint64_t kl_t0;
-#line 68 "../../keel_stl/src/list.kl"
+#line 137 "../../keel_stl/src/list.kl"
     kl_t0 = ( *kl_this_1 ).kl_cap_;
-#line 68 "../../keel_stl/src/list.kl"
+#line 137 "../../keel_stl/src/list.kl"
     return kl_t0;
 }
 
-#line 155 "../../keel_stl/src/list.kl"
+#line 224 "../../keel_stl/src/list.kl"
 int32_t* kl_2kl4list_14operator_index__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list_list__I3i32E* kl_this_1, uint64_t kl_index_2 )
 {
     int32_t* kl_t0;
@@ -6166,29 +6166,29 @@ int32_t* kl_2kl4list_14operator_index__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_
     struct kl_7prelude_str* kl_t5;
     uint8_t* kl_t6;
     int32_t* kl_t8;
-#line 157 "../../keel_stl/src/list.kl"
+#line 226 "../../keel_stl/src/list.kl"
     kl_t3 = kl_index_2 >= ( *kl_this_1 ).kl_count_;
-#line 157 "../../keel_stl/src/list.kl"
+#line 226 "../../keel_stl/src/list.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
     kl_t5 = &kl_t4;
-#line 159 "../../keel_stl/src/list.kl"
+#line 228 "../../keel_stl/src/list.kl"
     kl_t6 = ( uint8_t* ) "index out of range";
-#line 159 "../../keel_stl/src/list.kl"
+#line 228 "../../keel_stl/src/list.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 18 );
-#line 159 "../../keel_stl/src/list.kl"
-    kl_rt_panic_message( "../../keel_stl/src/list.kl", 159, kl_t4.kl_data, kl_t4.kl_size );
+#line 228 "../../keel_stl/src/list.kl"
+    kl_rt_panic_message( "../../keel_stl/src/list.kl", 228, kl_t4.kl_data, kl_t4.kl_size );
     bb2:
-#line 164 "../../keel_stl/src/list.kl"
+#line 233 "../../keel_stl/src/list.kl"
     kl_t8 = ( *kl_this_1 ).kl_data_ + kl_index_2;
-#line 164 "../../keel_stl/src/list.kl"
+#line 233 "../../keel_stl/src/list.kl"
     kl_t0 = &( *kl_t8 );
-#line 164 "../../keel_stl/src/list.kl"
+#line 233 "../../keel_stl/src/list.kl"
     return kl_t0;
-#line 166 "../../keel_stl/src/list.kl"
+#line 235 "../../keel_stl/src/list.kl"
 }
 
-#line 276 "../../keel_stl/src/list.kl"
+#line 345 "../../keel_stl/src/list.kl"
 int32_t kl_2kl4list_3pop__I3i32E__SQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* kl_this_1 )
 {
     int32_t kl_t0;
@@ -6198,38 +6198,38 @@ int32_t kl_2kl4list_3pop__I3i32E__SQ2kl4listI3i32E( struct kl_2kl4list_list__I3i
     uint8_t* kl_t5;
     bool kl_t7;
     int32_t* kl_t8;
-#line 278 "../../keel_stl/src/list.kl"
+#line 347 "../../keel_stl/src/list.kl"
     kl_t2 = ( *kl_this_1 ).kl_count_ == 0;
-#line 278 "../../keel_stl/src/list.kl"
+#line 347 "../../keel_stl/src/list.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
     kl_t4 = &kl_t3;
-#line 280 "../../keel_stl/src/list.kl"
+#line 349 "../../keel_stl/src/list.kl"
     kl_t5 = ( uint8_t* ) "the list is empty";
-#line 280 "../../keel_stl/src/list.kl"
+#line 349 "../../keel_stl/src/list.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 17 );
-#line 280 "../../keel_stl/src/list.kl"
-    kl_rt_panic_message( "../../keel_stl/src/list.kl", 280, kl_t3.kl_data, kl_t3.kl_size );
+#line 349 "../../keel_stl/src/list.kl"
+    kl_rt_panic_message( "../../keel_stl/src/list.kl", 349, kl_t3.kl_data, kl_t3.kl_size );
     bb2:
     kl_t7 = __builtin_sub_overflow( ( *kl_this_1 ).kl_count_, 1, &( uint64_t ) { 0 } );
-#line 282 "../../keel_stl/src/list.kl"
+#line 351 "../../keel_stl/src/list.kl"
     if ( kl_t7 ) goto bb3; else goto bb4;
     bb3:
-#line 282 "../../keel_stl/src/list.kl"
-    kl_rt_panic( "../../keel_stl/src/list.kl", 282, "arithmetic overflow: count_ -= 1;" );
+#line 351 "../../keel_stl/src/list.kl"
+    kl_rt_panic( "../../keel_stl/src/list.kl", 351, "arithmetic overflow: count_ -= 1;" );
     bb4:
-#line 282 "../../keel_stl/src/list.kl"
+#line 351 "../../keel_stl/src/list.kl"
     ( *kl_this_1 ).kl_count_ = ( *kl_this_1 ).kl_count_ - 1;
-#line 285 "../../keel_stl/src/list.kl"
+#line 354 "../../keel_stl/src/list.kl"
     kl_t8 = ( *kl_this_1 ).kl_data_ + ( *kl_this_1 ).kl_count_;
-#line 285 "../../keel_stl/src/list.kl"
+#line 354 "../../keel_stl/src/list.kl"
     kl_t0 = ( *kl_t8 );
-#line 285 "../../keel_stl/src/list.kl"
+#line 354 "../../keel_stl/src/list.kl"
     return kl_t0;
-#line 287 "../../keel_stl/src/list.kl"
+#line 356 "../../keel_stl/src/list.kl"
 }
 
-#line 356 "../../keel_stl/src/list.kl"
+#line 425 "../../keel_stl/src/list.kl"
 void kl_2kl4list_8truncate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE* kl_this_1, uint64_t kl_n_2 )
 {
     bool kl_t3;
@@ -6241,65 +6241,65 @@ void kl_2kl4list_8truncate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct 
     uint64_t kl_t9;
     bool kl_t10;
     struct kl_2kl6string_string* kl_t11;
-#line 358 "../../keel_stl/src/list.kl"
+#line 427 "../../keel_stl/src/list.kl"
     kl_t3 = kl_n_2 >= ( *kl_this_1 ).kl_count_;
-#line 358 "../../keel_stl/src/list.kl"
+#line 427 "../../keel_stl/src/list.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
     return;
     bb2:
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     kl_t4 = ( *kl_this_1 ).kl_data_ + kl_n_2;
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     kl_t5 = __builtin_sub_overflow( ( *kl_this_1 ).kl_count_, kl_n_2, &( uint64_t ) { 0 } );
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     if ( kl_t5 ) goto bb3; else goto bb4;
     bb3:
-#line 365 "../../keel_stl/src/list.kl"
-    kl_rt_panic( "../../keel_stl/src/list.kl", 365, "arithmetic overflow: count_ - n" );
+#line 434 "../../keel_stl/src/list.kl"
+    kl_rt_panic( "../../keel_stl/src/list.kl", 434, "arithmetic overflow: count_ - n" );
     bb4:
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     kl_t6 = ( *kl_this_1 ).kl_count_ - kl_n_2;
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     kl_t7 = kl_t4;
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     kl_t8 = kl_t6;
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     kl_t9 = 0;
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     goto bb5;
     bb5:
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     kl_t10 = kl_t9 < kl_t8;
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     if ( kl_t10 ) goto bb6; else goto bb7;
     bb6:
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     kl_t11 = kl_t7 + kl_t9;
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     kl_2kl6string_6string__dtor( &( *kl_t11 ) );
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     kl_t9 = kl_t9 + 1;
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     goto bb5;
     bb7:
-#line 368 "../../keel_stl/src/list.kl"
+#line 437 "../../keel_stl/src/list.kl"
     ( *kl_this_1 ).kl_count_ = kl_n_2;
     return;
-#line 369 "../../keel_stl/src/list.kl"
+#line 438 "../../keel_stl/src/list.kl"
 }
 
-#line 54 "../../keel_stl/src/list.kl"
+#line 123 "../../keel_stl/src/list.kl"
 uint64_t kl_2kl4list_4size__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* kl_this_1 )
 {
     uint64_t kl_t0;
-#line 56 "../../keel_stl/src/list.kl"
+#line 125 "../../keel_stl/src/list.kl"
     kl_t0 = ( *kl_this_1 ).kl_count_;
-#line 56 "../../keel_stl/src/list.kl"
+#line 125 "../../keel_stl/src/list.kl"
     return kl_t0;
 }
 
-#line 155 "../../keel_stl/src/list.kl"
+#line 224 "../../keel_stl/src/list.kl"
 struct kl_2kl6string_string* kl_2kl4list_14operator_index__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE* kl_this_1, uint64_t kl_index_2 )
 {
     struct kl_2kl6string_string* kl_t0;
@@ -6308,29 +6308,29 @@ struct kl_2kl6string_string* kl_2kl4list_14operator_index__IQ2kl6stringE__SQ2kl4
     struct kl_7prelude_str* kl_t5;
     uint8_t* kl_t6;
     struct kl_2kl6string_string* kl_t8;
-#line 157 "../../keel_stl/src/list.kl"
+#line 226 "../../keel_stl/src/list.kl"
     kl_t3 = kl_index_2 >= ( *kl_this_1 ).kl_count_;
-#line 157 "../../keel_stl/src/list.kl"
+#line 226 "../../keel_stl/src/list.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
     kl_t5 = &kl_t4;
-#line 159 "../../keel_stl/src/list.kl"
+#line 228 "../../keel_stl/src/list.kl"
     kl_t6 = ( uint8_t* ) "index out of range";
-#line 159 "../../keel_stl/src/list.kl"
+#line 228 "../../keel_stl/src/list.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 18 );
-#line 159 "../../keel_stl/src/list.kl"
-    kl_rt_panic_message( "../../keel_stl/src/list.kl", 159, kl_t4.kl_data, kl_t4.kl_size );
+#line 228 "../../keel_stl/src/list.kl"
+    kl_rt_panic_message( "../../keel_stl/src/list.kl", 228, kl_t4.kl_data, kl_t4.kl_size );
     bb2:
-#line 164 "../../keel_stl/src/list.kl"
+#line 233 "../../keel_stl/src/list.kl"
     kl_t8 = ( *kl_this_1 ).kl_data_ + kl_index_2;
-#line 164 "../../keel_stl/src/list.kl"
+#line 233 "../../keel_stl/src/list.kl"
     kl_t0 = &( *kl_t8 );
-#line 164 "../../keel_stl/src/list.kl"
+#line 233 "../../keel_stl/src/list.kl"
     return kl_t0;
-#line 166 "../../keel_stl/src/list.kl"
+#line 235 "../../keel_stl/src/list.kl"
 }
 
-#line 408 "../../keel_stl/src/list.kl"
+#line 477 "../../keel_stl/src/list.kl"
 void kl_2kl4list_4swap__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64_3u64( struct kl_2kl4list_list__IQ2kl6stringE* kl_this_1, uint64_t kl_a_2, uint64_t kl_b_3 )
 {
     bool kl_t4;
@@ -6346,66 +6346,66 @@ void kl_2kl4list_4swap__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64_3u64( struct
     struct kl_2kl6string_string* kl_t15;
     struct kl_2kl6string_string* kl_t16;
     bool kl_t17;
-#line 410 "../../keel_stl/src/list.kl"
+#line 479 "../../keel_stl/src/list.kl"
     kl_t17 = false;
-#line 410 "../../keel_stl/src/list.kl"
+#line 479 "../../keel_stl/src/list.kl"
     kl_t5 = kl_a_2 >= ( *kl_this_1 ).kl_count_;
-#line 410 "../../keel_stl/src/list.kl"
+#line 479 "../../keel_stl/src/list.kl"
     kl_t4 = kl_t5;
-#line 410 "../../keel_stl/src/list.kl"
+#line 479 "../../keel_stl/src/list.kl"
     if ( kl_t4 ) goto bb2; else goto bb1;
     bb1:
-#line 410 "../../keel_stl/src/list.kl"
+#line 479 "../../keel_stl/src/list.kl"
     kl_t6 = kl_b_3 >= ( *kl_this_1 ).kl_count_;
-#line 410 "../../keel_stl/src/list.kl"
+#line 479 "../../keel_stl/src/list.kl"
     kl_t4 = kl_t6;
-#line 410 "../../keel_stl/src/list.kl"
+#line 479 "../../keel_stl/src/list.kl"
     goto bb2;
     bb2:
-#line 410 "../../keel_stl/src/list.kl"
+#line 479 "../../keel_stl/src/list.kl"
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb3:
     kl_t8 = &kl_t7;
-#line 412 "../../keel_stl/src/list.kl"
+#line 481 "../../keel_stl/src/list.kl"
     kl_t9 = ( uint8_t* ) "index out of range";
-#line 412 "../../keel_stl/src/list.kl"
+#line 481 "../../keel_stl/src/list.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t8, kl_t9, 18 );
-#line 412 "../../keel_stl/src/list.kl"
-    kl_rt_panic_message( "../../keel_stl/src/list.kl", 412, kl_t7.kl_data, kl_t7.kl_size );
+#line 481 "../../keel_stl/src/list.kl"
+    kl_rt_panic_message( "../../keel_stl/src/list.kl", 481, kl_t7.kl_data, kl_t7.kl_size );
     bb4:
-#line 415 "../../keel_stl/src/list.kl"
+#line 484 "../../keel_stl/src/list.kl"
     kl_t11 = kl_a_2 == kl_b_3;
-#line 415 "../../keel_stl/src/list.kl"
+#line 484 "../../keel_stl/src/list.kl"
     if ( kl_t11 ) goto bb5; else goto bb6;
     bb5:
     return;
     bb6:
-#line 422 "../../keel_stl/src/list.kl"
+#line 491 "../../keel_stl/src/list.kl"
     kl_t17 = false;
-#line 422 "../../keel_stl/src/list.kl"
+#line 491 "../../keel_stl/src/list.kl"
     kl_t13 = ( *kl_this_1 ).kl_data_ + kl_a_2;
-#line 422 "../../keel_stl/src/list.kl"
+#line 491 "../../keel_stl/src/list.kl"
     kl_temp_12 = ( *kl_t13 );
-#line 422 "../../keel_stl/src/list.kl"
+#line 491 "../../keel_stl/src/list.kl"
     kl_t17 = true;
     kl_t14 = ( *kl_this_1 ).kl_data_ + kl_a_2;
-#line 423 "../../keel_stl/src/list.kl"
+#line 492 "../../keel_stl/src/list.kl"
     kl_t15 = ( *kl_this_1 ).kl_data_ + kl_b_3;
-#line 423 "../../keel_stl/src/list.kl"
+#line 492 "../../keel_stl/src/list.kl"
     ( *kl_t14 ) = ( *kl_t15 );
     kl_t16 = ( *kl_this_1 ).kl_data_ + kl_b_3;
-#line 424 "../../keel_stl/src/list.kl"
+#line 493 "../../keel_stl/src/list.kl"
     ( *kl_t16 ) = kl_temp_12;
-#line 424 "../../keel_stl/src/list.kl"
+#line 493 "../../keel_stl/src/list.kl"
     kl_t17 = false;
     if ( kl_t17 ) kl_2kl6string_6string__dtor( &kl_temp_12 );
-#line 425 "../../keel_stl/src/list.kl"
+#line 494 "../../keel_stl/src/list.kl"
     kl_t17 = false;
     return;
-#line 426 "../../keel_stl/src/list.kl"
+#line 495 "../../keel_stl/src/list.kl"
 }
 
-#line 39 "../../keel_stl/src/list.kl"
+#line 108 "../../keel_stl/src/list.kl"
 void kl_2kl4list_4list__IQ9sample_m86TicketE__dtor( struct kl_2kl4list_list__IQ9sample_m86TicketE* kl_this_1 )
 {
     bool kl_t2;
@@ -6414,45 +6414,45 @@ void kl_2kl4list_4list__IQ9sample_m86TicketE__dtor( struct kl_2kl4list_list__IQ9
     uint64_t kl_t5;
     bool kl_t6;
     struct kl_9sample_m8_Ticket* kl_t7;
-#line 41 "../../keel_stl/src/list.kl"
+#line 110 "../../keel_stl/src/list.kl"
     kl_t2 = ( *kl_this_1 ).kl_data_ != NULL;
-#line 41 "../../keel_stl/src/list.kl"
+#line 110 "../../keel_stl/src/list.kl"
     if ( kl_t2 ) goto bb1; else goto bb5;
     bb1:
-#line 45 "../../keel_stl/src/list.kl"
+#line 114 "../../keel_stl/src/list.kl"
     kl_t3 = ( *kl_this_1 ).kl_data_;
-#line 45 "../../keel_stl/src/list.kl"
+#line 114 "../../keel_stl/src/list.kl"
     kl_t4 = ( *kl_this_1 ).kl_count_;
-#line 45 "../../keel_stl/src/list.kl"
+#line 114 "../../keel_stl/src/list.kl"
     kl_t5 = 0;
-#line 45 "../../keel_stl/src/list.kl"
+#line 114 "../../keel_stl/src/list.kl"
     goto bb2;
     bb2:
-#line 45 "../../keel_stl/src/list.kl"
+#line 114 "../../keel_stl/src/list.kl"
     kl_t6 = kl_t5 < kl_t4;
-#line 45 "../../keel_stl/src/list.kl"
+#line 114 "../../keel_stl/src/list.kl"
     if ( kl_t6 ) goto bb3; else goto bb4;
     bb3:
-#line 45 "../../keel_stl/src/list.kl"
+#line 114 "../../keel_stl/src/list.kl"
     kl_t7 = kl_t3 + kl_t5;
-#line 45 "../../keel_stl/src/list.kl"
+#line 114 "../../keel_stl/src/list.kl"
     kl_9sample_m8_6Ticket__dtor( &( *kl_t7 ) );
-#line 45 "../../keel_stl/src/list.kl"
+#line 114 "../../keel_stl/src/list.kl"
     kl_t5 = kl_t5 + 1;
-#line 45 "../../keel_stl/src/list.kl"
+#line 114 "../../keel_stl/src/list.kl"
     goto bb2;
     bb4:
-#line 46 "../../keel_stl/src/list.kl"
+#line 115 "../../keel_stl/src/list.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data_ );
-#line 41 "../../keel_stl/src/list.kl"
+#line 110 "../../keel_stl/src/list.kl"
     goto bb5;
     bb5:
-#line 49 "../../keel_stl/src/list.kl"
+#line 118 "../../keel_stl/src/list.kl"
     return;
-#line 49 "../../keel_stl/src/list.kl"
+#line 118 "../../keel_stl/src/list.kl"
 }
 
-#line 356 "../../keel_stl/src/list.kl"
+#line 425 "../../keel_stl/src/list.kl"
 void kl_2kl4list_8truncate__IQ9sample_m86TicketE__SQ2kl4listIQ9sample_m86TicketE_3u64( struct kl_2kl4list_list__IQ9sample_m86TicketE* kl_this_1, uint64_t kl_n_2 )
 {
     bool kl_t3;
@@ -6464,84 +6464,84 @@ void kl_2kl4list_8truncate__IQ9sample_m86TicketE__SQ2kl4listIQ9sample_m86TicketE
     uint64_t kl_t9;
     bool kl_t10;
     struct kl_9sample_m8_Ticket* kl_t11;
-#line 358 "../../keel_stl/src/list.kl"
+#line 427 "../../keel_stl/src/list.kl"
     kl_t3 = kl_n_2 >= ( *kl_this_1 ).kl_count_;
-#line 358 "../../keel_stl/src/list.kl"
+#line 427 "../../keel_stl/src/list.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
     return;
     bb2:
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     kl_t4 = ( *kl_this_1 ).kl_data_ + kl_n_2;
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     kl_t5 = __builtin_sub_overflow( ( *kl_this_1 ).kl_count_, kl_n_2, &( uint64_t ) { 0 } );
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     if ( kl_t5 ) goto bb3; else goto bb4;
     bb3:
-#line 365 "../../keel_stl/src/list.kl"
-    kl_rt_panic( "../../keel_stl/src/list.kl", 365, "arithmetic overflow: count_ - n" );
+#line 434 "../../keel_stl/src/list.kl"
+    kl_rt_panic( "../../keel_stl/src/list.kl", 434, "arithmetic overflow: count_ - n" );
     bb4:
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     kl_t6 = ( *kl_this_1 ).kl_count_ - kl_n_2;
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     kl_t7 = kl_t4;
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     kl_t8 = kl_t6;
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     kl_t9 = 0;
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     goto bb5;
     bb5:
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     kl_t10 = kl_t9 < kl_t8;
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     if ( kl_t10 ) goto bb6; else goto bb7;
     bb6:
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     kl_t11 = kl_t7 + kl_t9;
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     kl_9sample_m8_6Ticket__dtor( &( *kl_t11 ) );
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     kl_t9 = kl_t9 + 1;
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     goto bb5;
     bb7:
-#line 368 "../../keel_stl/src/list.kl"
+#line 437 "../../keel_stl/src/list.kl"
     ( *kl_this_1 ).kl_count_ = kl_n_2;
     return;
-#line 369 "../../keel_stl/src/list.kl"
+#line 438 "../../keel_stl/src/list.kl"
 }
 
-#line 54 "../../keel_stl/src/list.kl"
+#line 123 "../../keel_stl/src/list.kl"
 uint64_t kl_2kl4list_4size__IQ9sample_m86TicketE__SQ2kl4listIQ9sample_m86TicketE( struct kl_2kl4list_list__IQ9sample_m86TicketE* kl_this_1 )
 {
     uint64_t kl_t0;
-#line 56 "../../keel_stl/src/list.kl"
+#line 125 "../../keel_stl/src/list.kl"
     kl_t0 = ( *kl_this_1 ).kl_count_;
-#line 56 "../../keel_stl/src/list.kl"
+#line 125 "../../keel_stl/src/list.kl"
     return kl_t0;
 }
 
-#line 39 "../../keel_stl/src/list.kl"
+#line 108 "../../keel_stl/src/list.kl"
 void kl_2kl4list_4list__I3i32E__dtor( struct kl_2kl4list_list__I3i32E* kl_this_1 )
 {
     bool kl_t2;
-#line 41 "../../keel_stl/src/list.kl"
+#line 110 "../../keel_stl/src/list.kl"
     kl_t2 = ( *kl_this_1 ).kl_data_ != NULL;
-#line 41 "../../keel_stl/src/list.kl"
+#line 110 "../../keel_stl/src/list.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
-#line 46 "../../keel_stl/src/list.kl"
+#line 115 "../../keel_stl/src/list.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data_ );
-#line 41 "../../keel_stl/src/list.kl"
+#line 110 "../../keel_stl/src/list.kl"
     goto bb2;
     bb2:
-#line 49 "../../keel_stl/src/list.kl"
+#line 118 "../../keel_stl/src/list.kl"
     return;
-#line 49 "../../keel_stl/src/list.kl"
+#line 118 "../../keel_stl/src/list.kl"
 }
 
-#line 356 "../../keel_stl/src/list.kl"
+#line 425 "../../keel_stl/src/list.kl"
 void kl_2kl4list_8truncate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list_list__I3i32E* kl_this_1, uint64_t kl_n_2 )
 {
     bool kl_t3;
@@ -6550,32 +6550,32 @@ void kl_2kl4list_8truncate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list_li
     uint64_t kl_t6;
     ( void ) kl_t4;
     ( void ) kl_t6;
-#line 358 "../../keel_stl/src/list.kl"
+#line 427 "../../keel_stl/src/list.kl"
     kl_t3 = kl_n_2 >= ( *kl_this_1 ).kl_count_;
-#line 358 "../../keel_stl/src/list.kl"
+#line 427 "../../keel_stl/src/list.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
     return;
     bb2:
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     kl_t4 = ( *kl_this_1 ).kl_data_ + kl_n_2;
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     kl_t5 = __builtin_sub_overflow( ( *kl_this_1 ).kl_count_, kl_n_2, &( uint64_t ) { 0 } );
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     if ( kl_t5 ) goto bb3; else goto bb4;
     bb3:
-#line 365 "../../keel_stl/src/list.kl"
-    kl_rt_panic( "../../keel_stl/src/list.kl", 365, "arithmetic overflow: count_ - n" );
+#line 434 "../../keel_stl/src/list.kl"
+    kl_rt_panic( "../../keel_stl/src/list.kl", 434, "arithmetic overflow: count_ - n" );
     bb4:
-#line 365 "../../keel_stl/src/list.kl"
+#line 434 "../../keel_stl/src/list.kl"
     kl_t6 = ( *kl_this_1 ).kl_count_ - kl_n_2;
-#line 368 "../../keel_stl/src/list.kl"
+#line 437 "../../keel_stl/src/list.kl"
     ( *kl_this_1 ).kl_count_ = kl_n_2;
     return;
-#line 369 "../../keel_stl/src/list.kl"
+#line 438 "../../keel_stl/src/list.kl"
 }
 
-#line 408 "../../keel_stl/src/list.kl"
+#line 477 "../../keel_stl/src/list.kl"
 void kl_2kl4list_4swap__I3i32E__SQ2kl4listI3i32E_3u64_3u64( struct kl_2kl4list_list__I3i32E* kl_this_1, uint64_t kl_a_2, uint64_t kl_b_3 )
 {
     bool kl_t4;
@@ -6590,56 +6590,56 @@ void kl_2kl4list_4swap__I3i32E__SQ2kl4listI3i32E_3u64_3u64( struct kl_2kl4list_l
     int32_t* kl_t14;
     int32_t* kl_t15;
     int32_t* kl_t16;
-#line 410 "../../keel_stl/src/list.kl"
+#line 479 "../../keel_stl/src/list.kl"
     kl_t5 = kl_a_2 >= ( *kl_this_1 ).kl_count_;
-#line 410 "../../keel_stl/src/list.kl"
+#line 479 "../../keel_stl/src/list.kl"
     kl_t4 = kl_t5;
-#line 410 "../../keel_stl/src/list.kl"
+#line 479 "../../keel_stl/src/list.kl"
     if ( kl_t4 ) goto bb2; else goto bb1;
     bb1:
-#line 410 "../../keel_stl/src/list.kl"
+#line 479 "../../keel_stl/src/list.kl"
     kl_t6 = kl_b_3 >= ( *kl_this_1 ).kl_count_;
-#line 410 "../../keel_stl/src/list.kl"
+#line 479 "../../keel_stl/src/list.kl"
     kl_t4 = kl_t6;
-#line 410 "../../keel_stl/src/list.kl"
+#line 479 "../../keel_stl/src/list.kl"
     goto bb2;
     bb2:
-#line 410 "../../keel_stl/src/list.kl"
+#line 479 "../../keel_stl/src/list.kl"
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb3:
     kl_t8 = &kl_t7;
-#line 412 "../../keel_stl/src/list.kl"
+#line 481 "../../keel_stl/src/list.kl"
     kl_t9 = ( uint8_t* ) "index out of range";
-#line 412 "../../keel_stl/src/list.kl"
+#line 481 "../../keel_stl/src/list.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t8, kl_t9, 18 );
-#line 412 "../../keel_stl/src/list.kl"
-    kl_rt_panic_message( "../../keel_stl/src/list.kl", 412, kl_t7.kl_data, kl_t7.kl_size );
+#line 481 "../../keel_stl/src/list.kl"
+    kl_rt_panic_message( "../../keel_stl/src/list.kl", 481, kl_t7.kl_data, kl_t7.kl_size );
     bb4:
-#line 415 "../../keel_stl/src/list.kl"
+#line 484 "../../keel_stl/src/list.kl"
     kl_t11 = kl_a_2 == kl_b_3;
-#line 415 "../../keel_stl/src/list.kl"
+#line 484 "../../keel_stl/src/list.kl"
     if ( kl_t11 ) goto bb5; else goto bb6;
     bb5:
     return;
     bb6:
-#line 422 "../../keel_stl/src/list.kl"
+#line 491 "../../keel_stl/src/list.kl"
     kl_t13 = ( *kl_this_1 ).kl_data_ + kl_a_2;
-#line 422 "../../keel_stl/src/list.kl"
+#line 491 "../../keel_stl/src/list.kl"
     kl_temp_12 = ( *kl_t13 );
     kl_t14 = ( *kl_this_1 ).kl_data_ + kl_a_2;
-#line 423 "../../keel_stl/src/list.kl"
+#line 492 "../../keel_stl/src/list.kl"
     kl_t15 = ( *kl_this_1 ).kl_data_ + kl_b_3;
-#line 423 "../../keel_stl/src/list.kl"
+#line 492 "../../keel_stl/src/list.kl"
     ( *kl_t14 ) = ( *kl_t15 );
     kl_t16 = ( *kl_this_1 ).kl_data_ + kl_b_3;
-#line 424 "../../keel_stl/src/list.kl"
+#line 493 "../../keel_stl/src/list.kl"
     ( *kl_t16 ) = kl_temp_12;
-#line 426 "../../keel_stl/src/list.kl"
+#line 495 "../../keel_stl/src/list.kl"
     return;
-#line 426 "../../keel_stl/src/list.kl"
+#line 495 "../../keel_stl/src/list.kl"
 }
 
-#line 475 "../../keel_stl/src/list.kl"
+#line 544 "../../keel_stl/src/list.kl"
 void kl_2kl4list_20reallocate_if_needed__IQ9sample_m86TicketE__SQ2kl4listIQ9sample_m86TicketE( struct kl_2kl4list_list__IQ9sample_m86TicketE* kl_this_1 )
 {
     bool kl_t2;
@@ -6648,46 +6648,46 @@ void kl_2kl4list_20reallocate_if_needed__IQ9sample_m86TicketE__SQ2kl4listIQ9samp
     bool kl_t5;
     bool kl_t6;
     uint64_t kl_t7;
-#line 477 "../../keel_stl/src/list.kl"
+#line 546 "../../keel_stl/src/list.kl"
     kl_t2 = ( *kl_this_1 ).kl_count_ == ( *kl_this_1 ).kl_cap_;
-#line 477 "../../keel_stl/src/list.kl"
+#line 546 "../../keel_stl/src/list.kl"
     if ( kl_t2 ) goto bb1; else goto bb7;
     bb1:
     kl_t3 = &( *kl_this_1 );
-#line 479 "../../keel_stl/src/list.kl"
+#line 548 "../../keel_stl/src/list.kl"
     kl_t5 = ( *kl_this_1 ).kl_cap_ > 0;
-#line 479 "../../keel_stl/src/list.kl"
+#line 548 "../../keel_stl/src/list.kl"
     if ( kl_t5 ) goto bb2; else goto bb3;
     bb2:
-#line 479 "../../keel_stl/src/list.kl"
+#line 548 "../../keel_stl/src/list.kl"
     kl_t6 = __builtin_mul_overflow( ( *kl_this_1 ).kl_cap_, 2, &( uint64_t ) { 0 } );
-#line 479 "../../keel_stl/src/list.kl"
+#line 548 "../../keel_stl/src/list.kl"
     if ( kl_t6 ) goto bb5; else goto bb6;
     bb3:
-#line 479 "../../keel_stl/src/list.kl"
+#line 548 "../../keel_stl/src/list.kl"
     kl_t4 = 1;
-#line 479 "../../keel_stl/src/list.kl"
+#line 548 "../../keel_stl/src/list.kl"
     goto bb4;
     bb4:
-#line 479 "../../keel_stl/src/list.kl"
+#line 548 "../../keel_stl/src/list.kl"
     kl_2kl4list_10reallocate__IQ9sample_m86TicketE__SQ2kl4listIQ9sample_m86TicketE_3u64( kl_t3, kl_t4 );
-#line 477 "../../keel_stl/src/list.kl"
+#line 546 "../../keel_stl/src/list.kl"
     goto bb7;
     bb5:
-    kl_rt_panic( "../../keel_stl/src/list.kl", 479, "arithmetic overflow: cap_ * 2" );
+    kl_rt_panic( "../../keel_stl/src/list.kl", 548, "arithmetic overflow: cap_ * 2" );
     bb6:
-#line 479 "../../keel_stl/src/list.kl"
+#line 548 "../../keel_stl/src/list.kl"
     kl_t7 = ( *kl_this_1 ).kl_cap_ * 2;
-#line 479 "../../keel_stl/src/list.kl"
+#line 548 "../../keel_stl/src/list.kl"
     kl_t4 = kl_t7;
-#line 479 "../../keel_stl/src/list.kl"
+#line 548 "../../keel_stl/src/list.kl"
     goto bb4;
     bb7:
     return;
-#line 481 "../../keel_stl/src/list.kl"
+#line 550 "../../keel_stl/src/list.kl"
 }
 
-#line 475 "../../keel_stl/src/list.kl"
+#line 544 "../../keel_stl/src/list.kl"
 void kl_2kl4list_20reallocate_if_needed__I3i32E__SQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* kl_this_1 )
 {
     bool kl_t2;
@@ -6696,46 +6696,46 @@ void kl_2kl4list_20reallocate_if_needed__I3i32E__SQ2kl4listI3i32E( struct kl_2kl
     bool kl_t5;
     bool kl_t6;
     uint64_t kl_t7;
-#line 477 "../../keel_stl/src/list.kl"
+#line 546 "../../keel_stl/src/list.kl"
     kl_t2 = ( *kl_this_1 ).kl_count_ == ( *kl_this_1 ).kl_cap_;
-#line 477 "../../keel_stl/src/list.kl"
+#line 546 "../../keel_stl/src/list.kl"
     if ( kl_t2 ) goto bb1; else goto bb7;
     bb1:
     kl_t3 = &( *kl_this_1 );
-#line 479 "../../keel_stl/src/list.kl"
+#line 548 "../../keel_stl/src/list.kl"
     kl_t5 = ( *kl_this_1 ).kl_cap_ > 0;
-#line 479 "../../keel_stl/src/list.kl"
+#line 548 "../../keel_stl/src/list.kl"
     if ( kl_t5 ) goto bb2; else goto bb3;
     bb2:
-#line 479 "../../keel_stl/src/list.kl"
+#line 548 "../../keel_stl/src/list.kl"
     kl_t6 = __builtin_mul_overflow( ( *kl_this_1 ).kl_cap_, 2, &( uint64_t ) { 0 } );
-#line 479 "../../keel_stl/src/list.kl"
+#line 548 "../../keel_stl/src/list.kl"
     if ( kl_t6 ) goto bb5; else goto bb6;
     bb3:
-#line 479 "../../keel_stl/src/list.kl"
+#line 548 "../../keel_stl/src/list.kl"
     kl_t4 = 1;
-#line 479 "../../keel_stl/src/list.kl"
+#line 548 "../../keel_stl/src/list.kl"
     goto bb4;
     bb4:
-#line 479 "../../keel_stl/src/list.kl"
+#line 548 "../../keel_stl/src/list.kl"
     kl_2kl4list_10reallocate__I3i32E__SQ2kl4listI3i32E_3u64( kl_t3, kl_t4 );
-#line 477 "../../keel_stl/src/list.kl"
+#line 546 "../../keel_stl/src/list.kl"
     goto bb7;
     bb5:
-    kl_rt_panic( "../../keel_stl/src/list.kl", 479, "arithmetic overflow: cap_ * 2" );
+    kl_rt_panic( "../../keel_stl/src/list.kl", 548, "arithmetic overflow: cap_ * 2" );
     bb6:
-#line 479 "../../keel_stl/src/list.kl"
+#line 548 "../../keel_stl/src/list.kl"
     kl_t7 = ( *kl_this_1 ).kl_cap_ * 2;
-#line 479 "../../keel_stl/src/list.kl"
+#line 548 "../../keel_stl/src/list.kl"
     kl_t4 = kl_t7;
-#line 479 "../../keel_stl/src/list.kl"
+#line 548 "../../keel_stl/src/list.kl"
     goto bb4;
     bb7:
     return;
-#line 481 "../../keel_stl/src/list.kl"
+#line 550 "../../keel_stl/src/list.kl"
 }
 
-#line 445 "../../keel_stl/src/list.kl"
+#line 514 "../../keel_stl/src/list.kl"
 void kl_2kl4list_10reallocate__IQ9sample_m86TicketE__SQ2kl4listIQ9sample_m86TicketE_3u64( struct kl_2kl4list_list__IQ9sample_m86TicketE* kl_this_1, uint64_t kl_n_2 )
 {
     struct kl_9sample_m8_Ticket* kl_new_data_3;
@@ -6746,58 +6746,58 @@ void kl_2kl4list_10reallocate__IQ9sample_m86TicketE__SQ2kl4listIQ9sample_m86Tick
     struct kl_9sample_m8_Ticket* kl_t8;
     struct kl_9sample_m8_Ticket* kl_t9;
     bool kl_t10;
-#line 450 "../../keel_stl/src/list.kl"
-    kl_t4 = ( struct kl_9sample_m8_Ticket* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 8, "../../keel_stl/src/list.kl", 450, "out of memory: alloc<T>( n )" );
-#line 450 "../../keel_stl/src/list.kl"
+#line 519 "../../keel_stl/src/list.kl"
+    kl_t4 = ( struct kl_9sample_m8_Ticket* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 8, "../../keel_stl/src/list.kl", 519, "out of memory: alloc<T>( n )" );
+#line 519 "../../keel_stl/src/list.kl"
     kl_new_data_3 = kl_t4;
-#line 453 "../../keel_stl/src/list.kl"
+#line 522 "../../keel_stl/src/list.kl"
     kl_t5 = ( *kl_this_1 ).kl_data_ != NULL;
-#line 453 "../../keel_stl/src/list.kl"
+#line 522 "../../keel_stl/src/list.kl"
     if ( kl_t5 ) goto bb1; else goto bb8;
     bb1:
     kl_i_6 = 0;
-#line 455 "../../keel_stl/src/list.kl"
+#line 524 "../../keel_stl/src/list.kl"
     goto bb2;
     bb2:
-#line 455 "../../keel_stl/src/list.kl"
+#line 524 "../../keel_stl/src/list.kl"
     kl_t7 = kl_i_6 < ( *kl_this_1 ).kl_count_;
-#line 455 "../../keel_stl/src/list.kl"
+#line 524 "../../keel_stl/src/list.kl"
     if ( kl_t7 ) goto bb3; else goto bb4;
     bb3:
-#line 459 "../../keel_stl/src/list.kl"
+#line 528 "../../keel_stl/src/list.kl"
     kl_t8 = kl_new_data_3 + kl_i_6;
-#line 459 "../../keel_stl/src/list.kl"
+#line 528 "../../keel_stl/src/list.kl"
     kl_t9 = ( *kl_this_1 ).kl_data_ + kl_i_6;
-#line 459 "../../keel_stl/src/list.kl"
+#line 528 "../../keel_stl/src/list.kl"
     ( *kl_t8 ) = ( *kl_t9 );
-#line 455 "../../keel_stl/src/list.kl"
+#line 524 "../../keel_stl/src/list.kl"
     goto bb5;
     bb4:
-#line 466 "../../keel_stl/src/list.kl"
+#line 535 "../../keel_stl/src/list.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data_ );
-#line 453 "../../keel_stl/src/list.kl"
+#line 522 "../../keel_stl/src/list.kl"
     goto bb8;
     bb5:
     kl_t10 = __builtin_add_overflow( kl_i_6, 1, &( uint64_t ) { 0 } );
-#line 455 "../../keel_stl/src/list.kl"
+#line 524 "../../keel_stl/src/list.kl"
     if ( kl_t10 ) goto bb6; else goto bb7;
     bb6:
-#line 455 "../../keel_stl/src/list.kl"
-    kl_rt_panic( "../../keel_stl/src/list.kl", 455, "arithmetic overflow: i++" );
+#line 524 "../../keel_stl/src/list.kl"
+    kl_rt_panic( "../../keel_stl/src/list.kl", 524, "arithmetic overflow: i++" );
     bb7:
-#line 455 "../../keel_stl/src/list.kl"
+#line 524 "../../keel_stl/src/list.kl"
     kl_i_6 = kl_i_6 + 1;
-#line 455 "../../keel_stl/src/list.kl"
+#line 524 "../../keel_stl/src/list.kl"
     goto bb2;
     bb8:
-#line 470 "../../keel_stl/src/list.kl"
+#line 539 "../../keel_stl/src/list.kl"
     ( *kl_this_1 ).kl_data_ = kl_new_data_3;
     ( *kl_this_1 ).kl_cap_ = kl_n_2;
     return;
-#line 472 "../../keel_stl/src/list.kl"
+#line 541 "../../keel_stl/src/list.kl"
 }
 
-#line 445 "../../keel_stl/src/list.kl"
+#line 514 "../../keel_stl/src/list.kl"
 void kl_2kl4list_10reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list_list__I3i32E* kl_this_1, uint64_t kl_n_2 )
 {
     int32_t* kl_new_data_3;
@@ -6808,55 +6808,55 @@ void kl_2kl4list_10reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list
     int32_t* kl_t8;
     int32_t* kl_t9;
     bool kl_t10;
-#line 450 "../../keel_stl/src/list.kl"
-    kl_t4 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 4, "../../keel_stl/src/list.kl", 450, "out of memory: alloc<T>( n )" );
-#line 450 "../../keel_stl/src/list.kl"
+#line 519 "../../keel_stl/src/list.kl"
+    kl_t4 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 4, "../../keel_stl/src/list.kl", 519, "out of memory: alloc<T>( n )" );
+#line 519 "../../keel_stl/src/list.kl"
     kl_new_data_3 = kl_t4;
-#line 453 "../../keel_stl/src/list.kl"
+#line 522 "../../keel_stl/src/list.kl"
     kl_t5 = ( *kl_this_1 ).kl_data_ != NULL;
-#line 453 "../../keel_stl/src/list.kl"
+#line 522 "../../keel_stl/src/list.kl"
     if ( kl_t5 ) goto bb1; else goto bb8;
     bb1:
     kl_i_6 = 0;
-#line 455 "../../keel_stl/src/list.kl"
+#line 524 "../../keel_stl/src/list.kl"
     goto bb2;
     bb2:
-#line 455 "../../keel_stl/src/list.kl"
+#line 524 "../../keel_stl/src/list.kl"
     kl_t7 = kl_i_6 < ( *kl_this_1 ).kl_count_;
-#line 455 "../../keel_stl/src/list.kl"
+#line 524 "../../keel_stl/src/list.kl"
     if ( kl_t7 ) goto bb3; else goto bb4;
     bb3:
-#line 459 "../../keel_stl/src/list.kl"
+#line 528 "../../keel_stl/src/list.kl"
     kl_t8 = kl_new_data_3 + kl_i_6;
-#line 459 "../../keel_stl/src/list.kl"
+#line 528 "../../keel_stl/src/list.kl"
     kl_t9 = ( *kl_this_1 ).kl_data_ + kl_i_6;
-#line 459 "../../keel_stl/src/list.kl"
+#line 528 "../../keel_stl/src/list.kl"
     ( *kl_t8 ) = ( *kl_t9 );
-#line 455 "../../keel_stl/src/list.kl"
+#line 524 "../../keel_stl/src/list.kl"
     goto bb5;
     bb4:
-#line 466 "../../keel_stl/src/list.kl"
+#line 535 "../../keel_stl/src/list.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data_ );
-#line 453 "../../keel_stl/src/list.kl"
+#line 522 "../../keel_stl/src/list.kl"
     goto bb8;
     bb5:
     kl_t10 = __builtin_add_overflow( kl_i_6, 1, &( uint64_t ) { 0 } );
-#line 455 "../../keel_stl/src/list.kl"
+#line 524 "../../keel_stl/src/list.kl"
     if ( kl_t10 ) goto bb6; else goto bb7;
     bb6:
-#line 455 "../../keel_stl/src/list.kl"
-    kl_rt_panic( "../../keel_stl/src/list.kl", 455, "arithmetic overflow: i++" );
+#line 524 "../../keel_stl/src/list.kl"
+    kl_rt_panic( "../../keel_stl/src/list.kl", 524, "arithmetic overflow: i++" );
     bb7:
-#line 455 "../../keel_stl/src/list.kl"
+#line 524 "../../keel_stl/src/list.kl"
     kl_i_6 = kl_i_6 + 1;
-#line 455 "../../keel_stl/src/list.kl"
+#line 524 "../../keel_stl/src/list.kl"
     goto bb2;
     bb8:
-#line 470 "../../keel_stl/src/list.kl"
+#line 539 "../../keel_stl/src/list.kl"
     ( *kl_this_1 ).kl_data_ = kl_new_data_3;
     ( *kl_this_1 ).kl_cap_ = kl_n_2;
     return;
-#line 472 "../../keel_stl/src/list.kl"
+#line 541 "../../keel_stl/src/list.kl"
 }
 
 void kl_2kl4list_list__IQ2kl6stringE__drop( void* kl_t1 )

@@ -506,6 +506,11 @@ dimensions, or an index outside its dimension.</p>
 <p><code>f</code> of each element, in the same shape, <code>U</code> being what <code>f</code> returns:
 <code>a.map( fn[]( f64 x ) { return x * x; } )</code>.</p>
 </div>
+<pre class="signature"><a class="anchor" href="#ndarray.map" aria-label="Link to map">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">map</span>&lt;F&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; o, F f ) <span class="kw">const</span> <span class="kw">where</span> F : <span class="kw">fn</span>( T, T ) -&gt; T</code></pre>
+<div class="doc">
+<p><code>f</code> of each element and the matching one of <code>o</code>, the two broadcast as the operators do:
+<code>a.map( b, fn[]( f64 x, f64 y ) { return kl::max( x, y ); } )</code>.</p>
+</div>
 </div>
 <h3>Products</h3>
 <div class="group" id="ndarray.dot">
