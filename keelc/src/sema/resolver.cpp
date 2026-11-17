@@ -568,11 +568,7 @@ void Resolver::visit_path( Node_id id )
 
     path_ = outer;
 
-    if( !bare )
-    {
-        return;
-    }
-
+    // The qualifier's own binding: `S`, `pkg::S` and `S<T>` alike; a call or other value has none.
     const Node_id name = bindings_[qualifier.v];
     if( name.is_valid() && is_aggregate( ast_.kind( name ) ) )
     {

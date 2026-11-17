@@ -1,0 +1,53 @@
+// codegen/static_fields_packages/counts/limits.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+uint64_t kl_6counts6limits_most__GSQ6counts5Plain = 5;
+
+
+// codegen/static_fields_packages/main.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+int32_t kl_22static_fields_packages_4main__( void );
+
+#line 5 "codegen/static_fields_packages/main.kl"
+int32_t kl_22static_fields_packages_4main__( void )
+{
+    int32_t kl_t0;
+    bool kl_t1;
+    bool kl_t2;
+#line 7 "codegen/static_fields_packages/main.kl"
+    kl_t1 = 5 != 5;
+#line 7 "codegen/static_fields_packages/main.kl"
+    if ( kl_t1 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 1;
+#line 9 "codegen/static_fields_packages/main.kl"
+    return kl_t0;
+    bb2:
+    kl_t2 = 18446744073709551615ull != 18446744073709551615ull;
+#line 11 "codegen/static_fields_packages/main.kl"
+    if ( kl_t2 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t0 = 2;
+#line 13 "codegen/static_fields_packages/main.kl"
+    return kl_t0;
+    bb4:
+    kl_t0 = 0;
+#line 15 "codegen/static_fields_packages/main.kl"
+    return kl_t0;
+}
+
+int main( void )
+{
+    int32_t kl_t0;
+#line 5 "codegen/static_fields_packages/main.kl"
+    kl_t0 = kl_22static_fields_packages_4main__(  );
+#line 5 "codegen/static_fields_packages/main.kl"
+    return kl_t0;
+#line 5 "codegen/static_fields_packages/main.kl"
+}
+

@@ -1,0 +1,16 @@
+// Static fields read through a package-qualified type, plain and generic, from outside the package
+// `counts`, which FLAGS names. Every check returns a distinct code.
+import counts::limits;
+
+i32 main()
+{
+    if( counts::Plain::most != 5 )
+    {
+        return 1;
+    }
+    if( counts::Holder<f64>::inferred != 18446744073709551615 )
+    {
+        return 2;
+    }
+    return 0;
+}

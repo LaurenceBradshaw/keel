@@ -5,6 +5,7 @@ import kl::_core::compare as kernel;
 import kl::_core::elementwise as kernel;
 import kl::_core::linear as kernel;
 import kl::_core::reduce as kernel;
+import iterable;
 import list;
 import math;
 
@@ -12,11 +13,14 @@ import math;
 ///
 /// The operators work element by element, with a scalar on either side, and two arrays of
 /// different shapes panic. `a[i, j, k]` takes one index per dimension. An array owns its elements,
-/// so `copy()` is the way to a second one.
-class ndarray<T> where T : numeric
+/// so `copy()` is the way to a second one. `for( T x : a )` walks the elements in that order.
+class ndarray<T> implements iterable<T> where T : numeric
 {
     list<T>   e_;
     list<u64> shape_;
+
+    /// Stands for one dimension `reshaped` works out from the others.
+    public static const u64 inferred = 18446744073709551615;
 
     /// `elements` row after row, in `shape`, or as one dimension when no shape is given:
     /// `ndarray<f64>( [1.0, 2.0, 3.0, 4.0], 2, 2 )`. Panics when the shape does not hold
@@ -62,11 +66,98 @@ class ndarray<T> where T : numeric
         return ndarray<T>( move e, shape );
     }
 
+    /// The rows of a nested literal: `ndarray<f64>::of( [[1.0, 2.0], [3.0, 4.0]] )` is 2 by 2.
+    public static ndarray<T> of<u64 R, u64 C>( T[C][R] rows )
+    {
+        list<T> e = list<T>::with_capacity( R * C );
+        for( u64 r : 0..R )
+        {
+            for( u64 c : 0..C )
+            {
+                e.push( rows[r][c] );
+            }
+        }
+        return ndarray<T>( move e, [R, C] );
+    }
+
+    /// The planes of a nested literal, `P` by `R` by `C`.
+    public static ndarray<T> of<u64 P, u64 R, u64 C>( T[C][R][P] planes )
+    {
+        list<T> e = list<T>::with_capacity( P * R * C );
+        for( u64 p : 0..P )
+        {
+            for( u64 r : 0..R )
+            {
+                for( u64 c : 0..C )
+                {
+                    e.push( planes[p][r][c] );
+                }
+            }
+        }
+        return ndarray<T>( move e, [P, R, C] );
+    }
+
+    /// Every element 1, in `shape`.
+    public static ndarray<T> ones( u64... shape )
+    {
+        return ndarray<T>::filled( 1, shape );
+    }
+
+    /// Every element 0, in `a`'s shape.
+    public static ndarray<T> zeros_like( const ref ndarray<T> a )
+    {
+        return ndarray<T>::filled( 0, a.shape_.as_run() );
+    }
+
+    /// Every element `x`, in `a`'s shape.
+    public static ndarray<T> filled_like( T x, const ref ndarray<T> a )
+    {
+        return ndarray<T>::filled( x, a.shape_.as_run() );
+    }
+
+    /// `from`, `from + step`, ... while short of `to`, as rank 1: `arange( 0, 5 )` is `[0, 1, 2, 3,
+    /// 4]`. A negative `step` counts down. Each element is `from + i * step`, so floats do not drift.
+    /// Panics when `step` is 0.
+    public static ndarray<T> arange( T from, T to, T step = 1 )
+    {
+        if( step == 0 )
+        {
+            panic( "the step is 0" );
+        }
+
+        list<T> e = list<T>();
+        T       x = from;
+        while( step > 0 ? x < to : x > to )
+        {
+            e.push( x );
+            x = from + cast<T>( e.size() ) * step;
+        }
+        u64 n = e.size();
+        return ndarray<T>( move e, [n] );
+    }
+
+    /// `n` evenly spaced from `a` to `b`, both included, as rank 1. One element is `a`.
+    public static ndarray<T> linspace( T a, T b, u64 n ) where T : floating
+    {
+        list<T> e = list<T>::with_capacity( n );
+        for( u64 i : 0..n )
+        {
+            e.push( i == 0 ? a : i + 1 == n ? b : a + ( b - a ) * cast<T>( i ) / cast<T>( n - 1 ) );
+        }
+        return ndarray<T>( move e, [n] );
+    }
+
     /// The `n` by `n` identity.
     public static ndarray<T> identity( u64 n )
     {
-        ndarray<T> r = ndarray<T>::zeros( n, n );
-        kernel::identity( ref r.e_.as_run(), n );
+        return ndarray<T>::eye( n, n );
+    }
+
+    /// `rows` by `cols`, 1 on the diagonal and 0 elsewhere.
+    public static ndarray<T> eye( u64 rows, u64 cols )
+    {
+        ndarray<T> r = ndarray<T>::zeros( rows, cols );
+        kernel::eye( ref r.e_.as_run(), rows, cols );
         return r;
     }
 
@@ -76,10 +167,196 @@ class ndarray<T> where T : numeric
         return ndarray<T>( elements(), shape_.as_run() );
     }
 
-    /// The same elements in `shape`, which must hold as many.
+    /// The same elements in `shape`, which must hold as many. One dimension may be
+    /// `ndarray<T>::inferred`, worked out from the others.
     public ndarray<T> reshaped( u64... shape ) const
     {
-        return ndarray<T>( elements(), shape );
+        list<u64> s     = list<u64>::with_capacity( shape.size );
+        u64       known = 1;
+        u64       at    = inferred;
+        for( u64 k : 0..shape.size )
+        {
+            s.push( shape[k] );
+            if( shape[k] != inferred )
+            {
+                known *= shape[k];
+            }
+            else if( at != inferred )
+            {
+                panic( "only one dimension can be inferred" );
+            }
+            else
+            {
+                at = k;
+            }
+        }
+        if( at != inferred )
+        {
+            if( known == 0 || size() % known != 0 )
+            {
+                panic( "the shape does not fit the elements" );
+            }
+            s[at] = size() / known;
+        }
+        return ndarray<T>( elements(), s.as_run() );
+    }
+
+    /// The elements as rank 1.
+    public ndarray<T> flattened() const
+    {
+        return ndarray<T>( elements(), [size()] );
+    }
+
+    /// Without its dimensions of length 1.
+    public ndarray<T> squeezed() const
+    {
+        list<u64> s = list<u64>();
+        for( u64 d : shape_.as_run() )
+        {
+            if( d != 1 )
+            {
+                s.push( d );
+            }
+        }
+        return ndarray<T>( elements(), s.as_run() );
+    }
+
+    /// With a dimension of length 1 before `axis`; `rank()` puts it last. Panics on a later axis.
+    public ndarray<T> expanded( u64 axis ) const
+    {
+        if( axis > rank() )
+        {
+            panic( "axis out of range" );
+        }
+
+        list<u64> s = list<u64>::with_capacity( rank() + 1 );
+        for( u64 k : 0..rank() )
+        {
+            if( k == axis )
+            {
+                s.push( 1 );
+            }
+            s.push( shape_[k] );
+        }
+        if( axis == rank() )
+        {
+            s.push( 1 );
+        }
+        return ndarray<T>( elements(), s.as_run() );
+    }
+
+    /// The elements walked with the axes in the order `axes`: dimension `k` of the result is
+    /// dimension `axes[k]` of this one. Panics unless `axes` names each axis once.
+    public ndarray<T> permuted( u64... axes ) const
+    {
+        if( axes.size != rank() )
+        {
+            panic( "the axis count differs from the rank" );
+        }
+
+        list<u64> stride = list<u64>::with_capacity( rank() );
+        u64       step   = 1;
+        for( u64 k : 0..rank() )
+        {
+            stride.push( 0 );
+        }
+        for( u64 k : 0..rank() )
+        {
+            stride[rank() - 1 - k] = step;
+            step *= shape_[rank() - 1 - k];
+        }
+
+        list<u64> s    = list<u64>::with_capacity( rank() );
+        list<u64> from = list<u64>::with_capacity( rank() );
+        for( u64 k : 0..rank() )
+        {
+            if( axes[k] >= rank() )
+            {
+                panic( "axis out of range" );
+            }
+            for( u64 j : 0..k )
+            {
+                if( axes[j] == axes[k] )
+                {
+                    panic( "an axis is named twice" );
+                }
+            }
+            s.push( shape_[axes[k]] );
+            from.push( stride[axes[k]] );
+        }
+
+        ndarray<T> r = ndarray<T>::zeros( s.as_run() );
+        kernel::gather( ref r.e_.as_run(), e_.as_run(), s.as_run(), from.as_run() );
+        return r;
+    }
+
+    /// With axes `a` and `b` exchanged.
+    public ndarray<T> swapped_axes( u64 a, u64 b ) const
+    {
+        if( a >= rank() || b >= rank() )
+        {
+            panic( "axis out of range" );
+        }
+
+        list<u64> axes = list<u64>::with_capacity( rank() );
+        for( u64 k : 0..rank() )
+        {
+            axes.push( k == a ? b : k == b ? a : k );
+        }
+        return permuted( axes.as_run() );
+    }
+
+    /// This array and `b` joined along `axis`, every other dimension matching.
+    public ndarray<T> concatenated( const ref ndarray<T> b, u64 axis ) const
+    {
+        if( axis >= rank() || b.rank() != rank() )
+        {
+            panic( axis >= rank() ? "axis out of range" : "the shapes differ" );
+        }
+
+        list<u64> s     = list<u64>::with_capacity( rank() );
+        u64       outer = 1;
+        u64       inner = 1;
+        for( u64 k : 0..rank() )
+        {
+            if( k != axis && shape_[k] != b.shape_[k] )
+            {
+                panic( "the shapes differ" );
+            }
+            s.push( k == axis ? shape_[k] + b.shape_[k] : shape_[k] );
+            if( k < axis )
+            {
+                outer *= shape_[k];
+            }
+            if( k > axis )
+            {
+                inner *= shape_[k];
+            }
+        }
+
+        // Each outer index takes a block from this array, then one from `b`.
+        u64     ra = shape_[axis] * inner;
+        u64     rb = b.shape_[axis] * inner;
+        list<T> e  = list<T>::with_capacity( size() + b.size() );
+        for( u64 o : 0..outer )
+        {
+            for( u64 i : 0..ra )
+            {
+                e.push( e_[o * ra + i] );
+            }
+            for( u64 i : 0..rb )
+            {
+                e.push( b.e_[o * rb + i] );
+            }
+        }
+        return ndarray<T>( move e, s.as_run() );
+    }
+
+    /// This array and `b`, of one shape, as the two entries of a new axis before `axis`.
+    public ndarray<T> stacked( const ref ndarray<T> b, u64 axis ) const
+    {
+        same_shape( b );
+        return expanded( axis ).concatenated( b.expanded( axis ), axis );
     }
 
     /// --- Shape and elements ---
@@ -127,6 +404,24 @@ class ndarray<T> where T : numeric
     public ref T[] as_run() const
     {
         return e_.as_run();
+    }
+
+    /// Each element in row-major order.
+    public void operator:( const ref T item ) const
+    {
+        for( u64 i : 0..e_.size() )
+        {
+            yield( e_[i] );
+        }
+    }
+
+    /// Each element in row-major order, writable in place.
+    public void operator:( ref T item )
+    {
+        for( u64 i : 0..e_.size() )
+        {
+            yield( ref e_[i] );
+        }
     }
 
     /// --- Arithmetic ---
@@ -333,22 +628,41 @@ class ndarray<T> where T : numeric
         return r;
     }
 
-    /// The rows as columns. Rank 0 and 1 come back unchanged, and ranks above 2 panic.
+    /// The axes reversed: a matrix's rows as columns. Rank 0 and 1 come back unchanged.
     public ndarray<T> transposed() const
     {
-        if( rank() > 2 )
+        if( rank() != 2 )
         {
-            panic( "transposed takes arrays of rank 2 at most" );
+            list<u64> axes = list<u64>::with_capacity( rank() );
+            for( u64 k : 0..rank() )
+            {
+                axes.push( rank() - 1 - k );
+            }
+            return permuted( axes.as_run() );
         }
 
         ndarray<T> r = copy();
-        if( rank() == 2 )
-        {
-            r.shape_[0] = shape_[1];
-            r.shape_[1] = shape_[0];
-            kernel::transpose( ref r.e_.as_run(), e_.as_run(), shape_[0], shape_[1] );
-        }
+        r.shape_[0]  = shape_[1];
+        r.shape_[1]  = shape_[0];
+        kernel::transpose( ref r.e_.as_run(), e_.as_run(), shape_[0], shape_[1] );
         return r;
+    }
+
+    /// The diagonal of a rank 2 array, as rank 1.
+    public ndarray<T> diagonal() const
+    {
+        if( rank() != 2 )
+        {
+            panic( "diagonal takes an array of rank 2" );
+        }
+
+        u64     n = shape_[0] < shape_[1] ? shape_[0] : shape_[1];
+        list<T> e = list<T>::with_capacity( n );
+        for( u64 i : 0..n )
+        {
+            e.push( e_[i * shape_[1] + i] );
+        }
+        return ndarray<T>( move e, [n] );
     }
 
     /// --- Comparing ---
@@ -453,6 +767,23 @@ class ndarray<T> where T : numeric
         }
     }
 };
+
+/// The square matrix with `v`, of rank 1, on its diagonal: `kl::diag( v )`.
+ndarray<T> diag<T>( const ref ndarray<T> v ) where T : numeric
+{
+    if( v.rank() != 1 )
+    {
+        panic( "diag takes an array of rank 1" );
+    }
+
+    u64        n = v.size();
+    ndarray<T> r = ndarray<T>::zeros( n, n );
+    for( u64 i : 0..n )
+    {
+        r[i, i] = v[i];
+    }
+    return r;
+}
 
 // The number of elements `shape` holds.
 private u64 count( const ref u64[] shape )

@@ -1,5 +1,5 @@
 // `kl::ndarray`: building in a shape, indexing at any rank, the element-wise operators with a
-// scalar either side, the products, comparing, reducing and converting.
+// scalar either side, the products, comparing, reducing, converting, reshaping and walking.
 import kl::ndarray;
 import kl::test::context;
 
@@ -144,4 +144,92 @@ private void converting( ref kl::test::context c )
     kl::ndarray<i32> v = kl::ndarray<i32>( [ -1, 0, 300 ] );
     c.check( v.to<f64>() == kl::ndarray<f64>( [ -1.0, 0.0, 300.0 ] ) );
     c.expect_panic( "cast out of range", fn[]() { _ = kl::ndarray<i32>( [ 300 ] ).to<u8>(); } );
+}
+
+private void building_more( ref kl::test::context c )
+{
+    kl::ndarray<i32> n = kl::ndarray<i32>::of( [ [ 1, 2, 3 ], [ 4, 5, 6 ] ] );
+    c.check( n == kl::ndarray<i32>( [ 1, 2, 3, 4, 5, 6 ], 2, 3 ) );
+    c.check( kl::ndarray<i32>::of( [ [ [ 1 ], [ 2 ] ], [ [ 3 ], [ 4 ] ] ] ) == kl::ndarray<i32>( [ 1, 2, 3, 4 ], 2, 2, 1 ) );
+
+    c.check( kl::ndarray<i32>::ones( 2, 2 ).sum() == 4 );
+    c.check( kl::ndarray<i32>::zeros_like( n ) == kl::ndarray<i32>::zeros( 2, 3 ) );
+    c.check( kl::ndarray<i32>::filled_like( 3, n ) == kl::ndarray<i32>::filled( 3, 2, 3 ) );
+
+    c.check( kl::ndarray<i32>::arange( 0, 5 ) == kl::ndarray<i32>( [ 0, 1, 2, 3, 4 ] ) );
+    c.check( kl::ndarray<i32>::arange( 5, 0, -2 ) == kl::ndarray<i32>( [ 5, 3, 1 ] ) );
+    c.check_eq( kl::ndarray<i32>::arange( 3, 3 ).size(), 0 );
+    c.check( kl::ndarray<f64>::arange( 0.0, 1.0, 0.25 ) == kl::ndarray<f64>( [ 0.0, 0.25, 0.5, 0.75 ] ) );
+    c.expect_panic( "the step is 0", fn[]() { _ = kl::ndarray<i32>::arange( 0, 1, 0 ); } );
+
+    // The last element is `b` exactly, not an accumulated step.
+    kl::ndarray<f64> l = kl::ndarray<f64>::linspace( 0.0, 1.0, 11 );
+    c.check_eq( l.size(), 11 );
+    c.check_eq( l[10], 1.0 );
+    c.check( l.approx_equal( kl::ndarray<f64>::arange( 0.0, 11.0 ) / 10.0 ) );
+    c.check( kl::ndarray<f64>::linspace( 2.0, 9.0, 1 ) == kl::ndarray<f64>( [ 2.0 ] ) );
+
+    c.check( kl::ndarray<i32>::eye( 2, 3 ) == kl::ndarray<i32>( [ 1, 0, 0, 0, 1, 0 ], 2, 3 ) );
+    kl::ndarray<i32> d = kl::diag( kl::ndarray<i32>( [ 1, 2 ] ) );
+    c.check( d == kl::ndarray<i32>( [ 1, 0, 0, 2 ], 2, 2 ) );
+    c.check( n.diagonal() == kl::ndarray<i32>( [ 1, 5 ] ) );
+    c.expect_panic( "diag takes an array of rank 1", fn[]() { _ = kl::diag( kl::ndarray<i32>::zeros( 2, 2 ) ); } );
+    c.expect_panic( "diagonal takes an array of rank 2", fn[]() { _ = kl::ndarray<i32>::zeros( 2 ).diagonal(); } );
+}
+
+private void shaping( ref kl::test::context c )
+{
+    kl::ndarray<i32> a = kl::ndarray<i32>::arange( 0, 24 ).reshaped( 2, kl::ndarray<i32>::inferred, 4 );
+    c.check_eq( a.shape()[1], 3 );
+    c.check( a.flattened() == kl::ndarray<i32>::arange( 0, 24 ) );
+    c.expect_panic( "only one dimension can be inferred", fn[]() { _ = kl::ndarray<i32>::zeros( 4 ).reshaped( kl::ndarray<i32>::inferred, kl::ndarray<i32>::inferred ); } );
+    c.expect_panic( "the shape does not fit the elements", fn[]() { _ = kl::ndarray<i32>::zeros( 4 ).reshaped( 3, kl::ndarray<i32>::inferred ); } );
+
+    // Every axis reversed, so each index is read backwards.
+    kl::ndarray<i32> t = a.transposed();
+    c.check_eq( t.rank(), 3 );
+    c.check_eq( t.shape()[0], 4 );
+    c.check_eq( t[3, 2, 1], a[1, 2, 3] );
+    c.check_eq( t[1, 0, 1], a[1, 0, 1] );
+    c.check( t.transposed() == a );
+
+    kl::ndarray<i32> p = a.permuted( 1, 2, 0 );
+    c.check_eq( p.shape()[0], 3 );
+    c.check_eq( p.shape()[2], 2 );
+    c.check_eq( p[2, 1, 1], a[1, 2, 1] );
+    c.check( a.swapped_axes( 0, 2 ) == a.permuted( 2, 1, 0 ) );
+    c.expect_panic( "an axis is named twice", fn[]() { _ = kl::ndarray<i32>::zeros( 2, 2 ).permuted( 0, 0 ); } );
+    c.expect_panic( "the axis count differs from the rank", fn[]() { _ = kl::ndarray<i32>::zeros( 2, 2 ).permuted( 0 ); } );
+
+    kl::ndarray<i32> e = kl::ndarray<i32>( [ 1, 2 ] ).expanded( 0 );
+    c.check( e == kl::ndarray<i32>( [ 1, 2 ], 1, 2 ) );
+    c.check( kl::ndarray<i32>( [ 1, 2 ] ).expanded( 1 ) == kl::ndarray<i32>( [ 1, 2 ], 2, 1 ) );
+    c.check( e.squeezed() == kl::ndarray<i32>( [ 1, 2 ] ) );
+    c.check_eq( kl::ndarray<i32>::zeros( 1, 1 ).squeezed().rank(), 0 );
+    c.expect_panic( "axis out of range", fn[]() { _ = kl::ndarray<i32>::zeros( 2 ).expanded( 2 ); } );
+
+    kl::ndarray<i32> x = kl::ndarray<i32>( [ 1, 2, 3, 4 ], 2, 2 );
+    kl::ndarray<i32> y = kl::ndarray<i32>( [ 5, 6 ], 1, 2 );
+    c.check( x.concatenated( y, 0 ) == kl::ndarray<i32>( [ 1, 2, 3, 4, 5, 6 ], 3, 2 ) );
+    c.check( x.concatenated( x, 1 ) == kl::ndarray<i32>( [ 1, 2, 1, 2, 3, 4, 3, 4 ], 2, 4 ) );
+    c.check( x.stacked( x * 2, 0 ) == kl::ndarray<i32>( [ 1, 2, 3, 4, 2, 4, 6, 8 ], 2, 2, 2 ) );
+    c.check( x.stacked( x * 2, 2 ) == kl::ndarray<i32>( [ 1, 2, 2, 4, 3, 6, 4, 8 ], 2, 2, 2 ) );
+    c.expect_panic( "the shapes differ", fn[]() { _ = kl::ndarray<i32>::zeros( 2, 2 ).concatenated( kl::ndarray<i32>::zeros( 2, 3 ), 0 ); } );
+}
+
+private void walking( ref kl::test::context c )
+{
+    kl::ndarray<i32> a = kl::ndarray<i32>( [ 1, 2, 3, 4 ], 2, 2 );
+    i32              s = 0;
+    for( i32 x : a )
+    {
+        s = s * 10 + x;
+    }
+    c.check_eq( s, 1234 );
+
+    for( ref i32 x : a )
+    {
+        x *= 2;
+    }
+    c.check( a == kl::ndarray<i32>( [ 2, 4, 6, 8 ], 2, 2 ) );
 }

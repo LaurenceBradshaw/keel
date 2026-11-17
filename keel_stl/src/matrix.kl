@@ -8,13 +8,14 @@ import kl::_core::compare as kernel;
 import kl::_core::elementwise as kernel;
 import kl::_core::linear as kernel;
 import kl::_core::reduce as kernel;
+import iterable;
 import math;
 
 /// `N` numbers held inline: a vector of rank 1, neither a row nor a column.
 ///
 /// The operators work element by element, with a scalar on either side. `v.dot( w )` is the inner
 /// product, and `v.matmul( m )` reads `v` as a row.
-class vec<T, u64 N> where T : numeric
+class vec<T, u64 N> implements iterable<T> where T : numeric
 {
     T[N] e_;
 
@@ -36,6 +37,12 @@ class vec<T, u64 N> where T : numeric
         return vec<T, N>( [x, ..] );
     }
 
+    /// Every element 1.
+    public static vec<T, N> ones()
+    {
+        return vec<T, N>( [1, ..] );
+    }
+
     /// --- Shape and elements ---
 
     /// The number of elements, `N`.
@@ -54,6 +61,39 @@ class vec<T, u64 N> where T : numeric
     public ref T[] as_run() const
     {
         return e_;
+    }
+
+    /// Each element in order.
+    public void operator:( const ref T item ) const
+    {
+        for( u64 i : 0..N )
+        {
+            yield( e_[i] );
+        }
+    }
+
+    /// Each element in order, writable in place.
+    public void operator:( ref T item )
+    {
+        for( u64 i : 0..N )
+        {
+            yield( ref e_[i] );
+        }
+    }
+
+    /// This vector's elements, then `b`'s.
+    public vec<T, (N + M)> concatenated<u64 M>( const ref vec<T, M> b ) const
+    {
+        vec<T, (N + M)> r = vec<T, (N + M)>::zeros();
+        for( u64 i : 0..N )
+        {
+            r.e_[i] = e_[i];
+        }
+        for( u64 i : 0..M )
+        {
+            r.e_[N + i] = b.e_[i];
+        }
+        return r;
     }
 
     /// --- Arithmetic ---
@@ -297,8 +337,9 @@ class vec<T, u64 N> where T : numeric
 /// `R` rows of `C` numbers held inline, row after row: a matrix of rank 2.
 ///
 /// The operators work element by element, with a scalar on either side; `m.matmul( b )` is the
-/// matrix product, and `m.matmul( v )` reads `v` as a column. `m[r, c]` is row `r`, column `c`.
-class mat<T, u64 R, u64 C> where T : numeric
+/// matrix product, and `m.matmul( v )` reads `v` as a column. `m[r, c]` is row `r`, column `c`, and
+/// `for( T x : m )` walks the elements row after row.
+class mat<T, u64 R, u64 C> implements iterable<T> where T : numeric
 {
     T[R * C] e_;
 
@@ -331,6 +372,20 @@ class mat<T, u64 R, u64 C> where T : numeric
     public static mat<T, R, C> filled( T x )
     {
         return mat<T, R, C>( [x, ..] );
+    }
+
+    /// Every element 1.
+    public static mat<T, R, C> ones()
+    {
+        return mat<T, R, C>( [1, ..] );
+    }
+
+    /// 1 on the diagonal and 0 elsewhere: the identity when square.
+    public static mat<T, R, C> eye()
+    {
+        mat<T, R, C> r = mat<T, R, C>::zeros();
+        kernel::eye( ref r.e_, R, C );
+        return r;
     }
 
     /// --- Shape and elements ---
@@ -368,6 +423,30 @@ class mat<T, u64 R, u64 C> where T : numeric
     public ref T[] as_run() const
     {
         return e_;
+    }
+
+    /// Each element, row after row.
+    public void operator:( const ref T item ) const
+    {
+        for( u64 i : 0..R * C )
+        {
+            yield( e_[i] );
+        }
+    }
+
+    /// Each element, row after row, writable in place.
+    public void operator:( ref T item )
+    {
+        for( u64 i : 0..R * C )
+        {
+            yield( ref e_[i] );
+        }
+    }
+
+    /// The elements row after row, as a vector.
+    public vec<T, (R * C)> flattened() const
+    {
+        return vec<T, (R * C)>( e_ );
     }
 
     /// --- Arithmetic ---
@@ -623,5 +702,16 @@ mat<T, N, N> identity<T, u64 N>() where T : numeric
 {
     mat<T, N, N> r = mat<T, N, N>::zeros();
     kernel::identity( ref r.as_run(), N );
+    return r;
+}
+
+/// The square matrix with `v` on its diagonal: `kl::diag( v )`.
+mat<T, N, N> diag<T, u64 N>( const ref vec<T, N> v ) where T : numeric
+{
+    mat<T, N, N> r = mat<T, N, N>::zeros();
+    for( u64 i : 0..N )
+    {
+        r[i, i] = v[i];
+    }
     return r;
 }

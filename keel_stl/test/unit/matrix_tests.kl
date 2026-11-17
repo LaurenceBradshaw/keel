@@ -1,5 +1,5 @@
 // `kl::vec` and `kl::mat`: building, indexing, the element-wise operators with a scalar either
-// side, the products, comparing, reducing and converting.
+// side, the products, comparing, reducing, converting and walking.
 import kl::matrix;
 import kl::test::context;
 
@@ -135,4 +135,33 @@ private void converting( ref kl::test::context c )
             _ = big.to<u8>();
         }
     );
+}
+
+private void building_and_walking( ref kl::test::context c )
+{
+    c.check( kl::vec<i32, 3>::ones() == kl::vec<i32, 3>( [ 1, 1, 1 ] ) );
+    c.check( kl::mat<i32, 2, 3>::ones().sum() == 6 );
+    c.check( kl::mat<i32, 2, 3>::eye() == kl::mat<i32, 2, 3>( [ 1, 0, 0, 0, 1, 0 ] ) );
+
+    kl::vec<i32, 2> v = kl::vec<i32, 2>( [ 1, 2 ] );
+    c.check( kl::diag( v ) == kl::mat<i32, 2, 2>( [ 1, 0, 0, 2 ] ) );
+
+    // The size is computed: 2 + 3.
+    kl::vec<i32, 5> w = v.concatenated( kl::vec<i32, 3>( [ 3, 4, 5 ] ) );
+    c.check( w == kl::vec<i32, 5>( [ 1, 2, 3, 4, 5 ] ) );
+
+    kl::mat<i32, 2, 2> m = kl::mat<i32, 2, 2>( [ [ 1, 2 ], [ 3, 4 ] ] );
+    c.check( m.flattened() == kl::vec<i32, 4>( [ 1, 2, 3, 4 ] ) );
+
+    i32 s = 0;
+    for( i32 x : m )
+    {
+        s = s * 10 + x;
+    }
+    c.check_eq( s, 1234 );
+    for( ref i32 x : w )
+    {
+        x += 1;
+    }
+    c.check( w == kl::vec<i32, 5>( [ 2, 3, 4, 5, 6 ] ) );
 }

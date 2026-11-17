@@ -187,6 +187,8 @@ end of input. A read error is also <code>false</code>; the careful path is <code
 <dd><code>R</code> rows of <code>C</code> numbers held inline, row after row: a matrix of rank 2.</dd>
 <dt><a href="matrix.html#identity"><code>identity</code></a> <span class="kind">function</span></dt>
 <dd>The <code>N</code> by <code>N</code> identity: <code>mat&lt;f64, 3, 3&gt; i = kl::identity();</code>.</dd>
+<dt><a href="matrix.html#diag"><code>diag</code></a> <span class="kind">function</span></dt>
+<dd>The square matrix with <code>v</code> on its diagonal: <code>kl::diag( v )</code>.</dd>
 </dl>
 </section>
 <section class="module">
@@ -194,6 +196,8 @@ end of input. A read error is also <code>false</code>; the careful path is <code
 <dl class="summaries">
 <dt><a href="ndarray.html#ndarray"><code>ndarray</code></a> <span class="kind">class</span></dt>
 <dd>Numbers of any rank with a shape set at run time, held row-major: the last index moves fastest.</dd>
+<dt><a href="ndarray.html#diag"><code>diag</code></a> <span class="kind">function</span></dt>
+<dd>The square matrix with <code>v</code>, of rank 1, on its diagonal: <code>kl::diag( v )</code>.</dd>
 </dl>
 </section>
 <section class="module">

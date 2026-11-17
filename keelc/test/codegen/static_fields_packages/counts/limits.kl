@@ -1,0 +1,13 @@
+class Plain
+{
+    i32 pad_;
+
+    public static const u64 most = 5;
+};
+
+class Holder<T> where T : copyable
+{
+    T pad_;
+
+    public static const u64 inferred = 18446744073709551615;
+};

@@ -63,16 +63,81 @@ void transpose<T>( ref T[] dest, const ref T[] a, u64 rows, u64 cols ) where T :
 /// If `dest` is not `n` by `n`.
 void identity<T>( ref T[] dest, u64 n ) where T : numeric
 {
-    if( dest.size != n * n )
+    eye( ref dest, n, n );
+}
+
+/// `dest` (`rows` by `cols`) = 1 on the diagonal and 0 elsewhere.
+///
+/// ### Panics
+///
+/// If `dest` is not `rows` by `cols`.
+void eye<T>( ref T[] dest, u64 rows, u64 cols ) where T : numeric
+{
+    if( dest.size != rows * cols )
     {
         panic( "the shapes differ" );
     }
 
-    for( u64 r : 0..n )
+    for( u64 r : 0..rows )
     {
-        for( u64 c : 0..n )
+        for( u64 c : 0..cols )
         {
-            dest[r * n + c] = r == c ? 1 : 0;
+            dest[r * cols + c] = r == c ? 1 : 0;
+        }
+    }
+}
+
+/// `dest`, row-major over `shape`, = `a` read at `strides`: the element at index `(i0, i1, ...)`
+/// is `a[i0 * strides[0] + i1 * strides[1] + ...]`. A permuted array reads its source's strides
+/// in the new order.
+///
+/// ### Panics
+///
+/// If `shape` and `strides` differ in length, `dest` does not hold `shape`, or a read falls
+/// outside `a`.
+void gather<T>( ref T[] dest, const ref T[] a, const ref u64[] shape, const ref u64[] strides ) where T : copyable
+{
+    if( shape.size != strides.size )
+    {
+        panic( "the shapes differ" );
+    }
+
+    u64 n = 1;
+    for( u64 d : shape )
+    {
+        n *= d;
+    }
+    if( dest.size != n )
+    {
+        panic( "the shapes differ" );
+    }
+    if( n == 0 )
+    {
+        return;
+    }
+    if( shape.size == 0 )
+    {
+        dest[0] = a[0];
+        return;
+    }
+
+    // The last index runs inside; the others are found once per row.
+    u64 last   = shape.size - 1;
+    u64 inner  = shape[last];
+    u64 stride = strides[last];
+    for( u64 row : 0..n / inner )
+    {
+        u64 base = 0;
+        u64 rest = row;
+        for( u64 k : 0..last )
+        {
+            u64 axis = last - 1 - k;
+            base += rest % shape[axis] * strides[axis];
+            rest /= shape[axis];
+        }
+        for( u64 j : 0..inner )
+        {
+            dest[row * inner + j] = a[base + j * stride];
         }
     }
 }

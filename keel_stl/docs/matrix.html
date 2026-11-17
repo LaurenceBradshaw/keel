@@ -15,11 +15,12 @@
 <li><a href="#vec"><code>vec</code></a> <span class="kind">class</span></li>
 <li><a href="#mat"><code>mat</code></a> <span class="kind">class</span></li>
 <li><a href="#identity"><code>identity</code></a> <span class="kind">function</span></li>
+<li><a href="#diag"><code>diag</code></a> <span class="kind">function</span></li>
 </ul>
 <section class="entry">
 <h2><span class="kind">class</span> <span class="type">vec</span></h2>
 <div class="group" id="vec">
-<pre class="signature"><a class="anchor" href="#vec" aria-label="Link to vec">#</a><code><span class="kw">class</span> <span class="type">vec</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt; <span class="kw">where</span> T : numeric</code></pre>
+<pre class="signature"><a class="anchor" href="#vec" aria-label="Link to vec">#</a><code><span class="kw">class</span> <span class="type">vec</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt; <span class="kw">implements</span> <a class="type" href="iterable.html#iterable">iterable</a>&lt;T&gt; <span class="kw">where</span> T : numeric</code></pre>
 <div class="doc">
 <p><code>N</code> numbers held inline: a vector of rank 1, neither a row nor a column.</p>
 <p>The operators work element by element, with a scalar on either side. <code>v.dot( w )</code> is the inner
@@ -46,6 +47,12 @@ product, and <code>v.matmul( m )</code> reads <code>v</code> as a row.</p>
 <p>Every element <code>x</code>.</p>
 </div>
 </div>
+<div class="group" id="vec.ones">
+<pre class="signature"><a class="anchor" href="#vec.ones" aria-label="Link to ones">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">ones</span>()</code></pre>
+<div class="doc">
+<p>Every element 1.</p>
+</div>
+</div>
 <h3>Shape and elements</h3>
 <div class="group" id="vec.size">
 <pre class="signature"><a class="anchor" href="#vec.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">size</span>() <span class="kw">const</span></code></pre>
@@ -63,6 +70,22 @@ product, and <code>v.matmul( m )</code> reads <code>v</code> as a row.</p>
 <pre class="signature"><a class="anchor" href="#vec.as_run" aria-label="Link to as_run">#</a><code><span class="kw">public</span> <span class="kw">ref</span> T[] <span class="fn">as_run</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>The elements as a run, writable where the vector is.</p>
+</div>
+</div>
+<div class="group" id="vec.operator:">
+<pre class="signature"><a class="anchor" href="#vec.operator:" aria-label="Link to operator:">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator:</span>( <span class="kw">const</span> <span class="kw">ref</span> T item ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each element in order.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#vec.operator:" aria-label="Link to operator:">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator:</span>( <span class="kw">ref</span> T item )</code></pre>
+<div class="doc">
+<p>Each element in order, writable in place.</p>
+</div>
+</div>
+<div class="group" id="vec.concatenated">
+<pre class="signature"><a class="anchor" href="#vec.concatenated" aria-label="Link to concatenated">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, ?&gt; <span class="fn">concatenated</span>&lt;<a class="prim" href="prelude.html#u64">u64</a> M&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, M&gt; b ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>This vector's elements, then <code>b</code>'s.</p>
 </div>
 </div>
 <h3>Arithmetic</h3>
@@ -236,11 +259,12 @@ integer needs a rounding: <code>truncated</code>, <code>rounded</code>, <code>fl
 <section class="entry">
 <h2><span class="kind">class</span> <span class="type">mat</span></h2>
 <div class="group" id="mat">
-<pre class="signature"><a class="anchor" href="#mat" aria-label="Link to mat">#</a><code><span class="kw">class</span> <span class="type">mat</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> R, <a class="prim" href="prelude.html#u64">u64</a> C&gt; <span class="kw">where</span> T : numeric</code></pre>
+<pre class="signature"><a class="anchor" href="#mat" aria-label="Link to mat">#</a><code><span class="kw">class</span> <span class="type">mat</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> R, <a class="prim" href="prelude.html#u64">u64</a> C&gt; <span class="kw">implements</span> <a class="type" href="iterable.html#iterable">iterable</a>&lt;T&gt; <span class="kw">where</span> T : numeric</code></pre>
 <div class="doc">
 <p><code>R</code> rows of <code>C</code> numbers held inline, row after row: a matrix of rank 2.</p>
 <p>The operators work element by element, with a scalar on either side; <code>m.matmul( b )</code> is the
-matrix product, and <code>m.matmul( v )</code> reads <code>v</code> as a column. <code>m[r, c]</code> is row <code>r</code>, column <code>c</code>.</p>
+matrix product, and <code>m.matmul( v )</code> reads <code>v</code> as a column. <code>m[r, c]</code> is row <code>r</code>, column <code>c</code>, and
+<code>for( T x : m )</code> walks the elements row after row.</p>
 </div>
 </div>
 <h3>Constructors</h3>
@@ -265,6 +289,18 @@ matrix product, and <code>m.matmul( v )</code> reads <code>v</code> as a column.
 <pre class="signature"><a class="anchor" href="#mat.filled" aria-label="Link to filled">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">filled</span>( T x )</code></pre>
 <div class="doc">
 <p>Every element <code>x</code>.</p>
+</div>
+</div>
+<div class="group" id="mat.ones">
+<pre class="signature"><a class="anchor" href="#mat.ones" aria-label="Link to ones">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">ones</span>()</code></pre>
+<div class="doc">
+<p>Every element 1.</p>
+</div>
+</div>
+<div class="group" id="mat.eye">
+<pre class="signature"><a class="anchor" href="#mat.eye" aria-label="Link to eye">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">eye</span>()</code></pre>
+<div class="doc">
+<p>1 on the diagonal and 0 elsewhere: the identity when square.</p>
 </div>
 </div>
 <h3>Shape and elements</h3>
@@ -296,6 +332,22 @@ matrix product, and <code>m.matmul( v )</code> reads <code>v</code> as a column.
 <pre class="signature"><a class="anchor" href="#mat.as_run" aria-label="Link to as_run">#</a><code><span class="kw">public</span> <span class="kw">ref</span> T[] <span class="fn">as_run</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>The elements row after row, as a run writable where the matrix is.</p>
+</div>
+</div>
+<div class="group" id="mat.operator:">
+<pre class="signature"><a class="anchor" href="#mat.operator:" aria-label="Link to operator:">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator:</span>( <span class="kw">const</span> <span class="kw">ref</span> T item ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each element, row after row.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#mat.operator:" aria-label="Link to operator:">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator:</span>( <span class="kw">ref</span> T item )</code></pre>
+<div class="doc">
+<p>Each element, row after row, writable in place.</p>
+</div>
+</div>
+<div class="group" id="mat.flattened">
+<pre class="signature"><a class="anchor" href="#mat.flattened" aria-label="Link to flattened">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, ?&gt; <span class="fn">flattened</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The elements row after row, as a vector.</p>
 </div>
 </div>
 <h3>Arithmetic</h3>
@@ -476,6 +528,15 @@ integer needs a rounding: <code>truncated</code>, <code>rounded</code>, <code>fl
 <pre class="signature"><a class="anchor" href="#identity" aria-label="Link to identity">#</a><code><a class="type" href="#mat">mat</a>&lt;T, N, N&gt; <span class="fn">identity</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;() <span class="kw">where</span> T : numeric</code></pre>
 <div class="doc">
 <p>The <code>N</code> by <code>N</code> identity: <code>mat&lt;f64, 3, 3&gt; i = kl::identity();</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">diag</span></h2>
+<div class="group" id="diag">
+<pre class="signature"><a class="anchor" href="#diag" aria-label="Link to diag">#</a><code><a class="type" href="#mat">mat</a>&lt;T, N, N&gt; <span class="fn">diag</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; v ) <span class="kw">where</span> T : numeric</code></pre>
+<div class="doc">
+<p>The square matrix with <code>v</code> on its diagonal: <code>kl::diag( v )</code>.</p>
 </div>
 </div>
 </section>
