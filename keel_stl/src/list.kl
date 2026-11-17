@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 import iterable;
+import kl::_core::compare as kernel;
 import optional;
 
 /// A growable array of `T` that owns its elements and the block holding them.
@@ -490,20 +491,7 @@ implements<T> equatable for list<T> where T : equatable
 {
     bool operator==( const ref list<T> other ) const
     {
-        if( this.size() != other.size() )
-        {
-            return false;
-        }
-
-        for( u64 i : 0..this.size() )
-        {
-            if( this[i] != other[i] )
-            {
-                return false;
-            }
-        }
-
-        return true;
+        return kernel::equal( this.as_run(), other.as_run() );
     }
 };
 

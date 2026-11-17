@@ -390,7 +390,7 @@ function's `-O1` code depends on nothing outside it.
 | `settle_drops` | `-O1` | Removes drop flags, which are temporaries. |
 | `forward_borrows` | `-O1` | Pinned: a named `ref` keeps its local. |
 | `propagate_values`, `fold_constants` | `-O1` | Pinned: a named local's store stays, so its value is still there. |
-| `propagate_constants`, `thread_jumps` | `-O1` | Removes only statements that never run, including a test a dominating test of the same two locals decides. |
+| `propagate_constants`, `thread_jumps` | `-O1` | Removes only statements that never run, including a test a dominating test of the same two locals decides, or two relations through one local decide (`i < n` and `n == m` give `i < m`). Each read of `size( x )`, `x` a run no store reaches after its one write off any cycle, is one value, so a loop's test on `a.size` covers every check on `a`, and a kernel's size check every check on the other run. |
 | `forward_globals` | `-O1` | A global is named: its store stays, even one every path overwrites; only reads are forwarded. |
 | `remove_dead_stores`, `remove_unused_locals` | `-O1` | Pinned: they remove temporaries only. An unread call goes only when its callee is pure and surely returns (below). |
 | `merge_blocks`, `fold_identities` | `-O1` | Block shape and rvalues; no local goes. |

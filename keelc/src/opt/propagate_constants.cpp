@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <optional>
 #include "ir/live.h"
+#include "ir/loops.h"
 #include "ir/simplify.h"
 #include "opt/fold_constants.h"
 
@@ -235,13 +236,139 @@ Local_set tracked_locals( const Function& func, const Type_table& types )
     return tracked;
 }
 
+// Whether a path leads from `from` back to itself.
+bool on_a_cycle( const Function& func, Block_id from )
+{
+    std::vector<bool>     seen( func.blocks.size(), false );
+    std::vector<Block_id> work;
+    successors( func.blocks[from].terminator, work );
+    while( !work.empty() )
+    {
+        const Block_id b = work.back();
+        work.pop_back();
+        if( b == from )
+        {
+            return true;
+        }
+        if( !seen[b.v] )
+        {
+            seen[b.v] = true;
+            successors( func.blocks[b].terminator, work );
+        }
+    }
+    return false;
+}
+
+// By local: the local whose value it always equals, or itself. A tracked local written once by
+// `size( copy x )`, `x` unaddressed and written at most once off any cycle, equals every other such
+// read of `x`; each maps to the one whose write dominates theirs, which is then written first.
+std::vector<Local_id> same_sizes( const Function& func, const Local_set& tracked )
+{
+    std::vector<Local_id> same( func.locals.size() );
+    for( const Local_id l : func.locals.ids() )
+    {
+        same[l.v] = l;
+    }
+
+    struct Write
+    {
+        u32      count = 0;
+        Block_id block {};
+        u32      index = 0;
+    };
+    std::vector<Write> writes( func.locals.size() );
+    const auto         wrote = [&]( const Place& place, Block_id b, u32 i )
+    {
+        if( !place.is_global() && place.local.is_valid() )
+        {
+            writes[place.local.v] = Write { writes[place.local.v].count + 1, b, i };
+        }
+    };
+    for( const Block_id b : func.blocks.ids() )
+    {
+        const auto statements = func.statements_of( func.blocks[b] );
+        for( u32 i = 0; i < statements.size(); ++i )
+        {
+            if( statements[i].kind == Statement_kind::Assign || statements[i].kind == Statement_kind::Drop )
+            {
+                wrote( statements[i].place, b, i );
+            }
+        }
+    }
+
+    const Local_set addressed = addressed_locals( func );
+    const auto      read_of   = [&]( Local_id l ) -> std::optional<Local_id>
+    {
+        const Write& w = writes[l.v];
+        if( !tracked[l.v] || w.count != 1 )
+        {
+            return std::nullopt;
+        }
+        const Statement& statement = func.statements_of( func.blocks[w.block] )[w.index];
+        const Rvalue&    value     = func.rvalue( statement );
+        if( statement.kind != Statement_kind::Assign || !statement.place.is_whole_local() ||
+            value.kind != Rvalue_kind::Run_size || value.a.kind != Operand_kind::Copy || !value.a.place.is_whole_local() ||
+            value.a.place.is_global() )
+        {
+            return std::nullopt;
+        }
+        const Local_id x = value.a.place.local;
+        if( addressed[x.v] || writes[x.v].count > 1 || ( writes[x.v].count == 1 && on_a_cycle( func, writes[x.v].block ) ) )
+        {
+            return std::nullopt;
+        }
+        return x;
+    };
+
+    std::vector<std::vector<Local_id>> by_run( func.locals.size() );
+    bool                               any = false;
+    for( const Local_id l : func.locals.ids() )
+    {
+        if( const std::optional<Local_id> x = read_of( l ) )
+        {
+            by_run[x->v].push_back( l );
+            any = any || by_run[x->v].size() > 1;
+        }
+    }
+    if( !any )
+    {
+        return same;
+    }
+
+    const Dominators dominators = find_dominators( func );
+    const auto       first      = [&]( Local_id a, Local_id b )
+    {
+        const Write& x = writes[a.v];
+        const Write& y = writes[b.v];
+        return x.block == y.block ? x.index < y.index : dominators.dominates( x.block, y.block );
+    };
+    for( const std::vector<Local_id>& reads : by_run )
+    {
+        if( reads.size() < 2 )
+        {
+            continue;
+        }
+        Local_id root = reads[0];
+        for( const Local_id l : reads )
+        {
+            root = first( l, root ) ? l : root;
+        }
+        for( const Local_id l : reads )
+        {
+            same[l.v] = first( root, l ) ? root : l;
+        }
+    }
+    return same;
+}
+
 struct Analysis
 {
-    const Function&     func;
-    const Type_table&   types;
-    const Literal_pool& literals;
-    Local_set           tracked;
-    bool                relating;
+    const Function&       func;
+    const Type_table&     types;
+    const Literal_pool&   literals;
+    Local_set             tracked;
+    bool                  relating;
+    std::vector<Local_id> same; // `same_sizes`
 };
 
 // Which of `a < b`, `a == b` and `a > b` may hold.
@@ -442,8 +569,8 @@ std::optional<Relation> as_relation( const Analysis& analysis, const Rvalue& tes
         return std::nullopt;
     }
 
-    const Local_id x = test.a.place.local;
-    const Local_id y = test.b.place.local;
+    const Local_id x = analysis.same[test.a.place.local.v];
+    const Local_id y = analysis.same[test.b.place.local.v];
     const Type_id  t = analysis.func.locals[x].type;
     if( x == y || analysis.func.locals[y].type != t || test.a.type != t )
     {
@@ -452,6 +579,48 @@ std::optional<Relation> as_relation( const Analysis& analysis, const Rvalue& tes
 
     const Order o = order_of( test.op );
     return x.v < y.v ? Relation { x, y, o } : Relation { y, x, swapped( o ) };
+}
+
+// How `x` may compare with `z`, given how `x` may compare with `y` and `y` with `z`.
+Order chained( Order xy, Order yz )
+{
+    Order result = 0;
+    for( const Order p : { k_less, k_equal, k_greater } )
+    {
+        for( const Order q : { k_less, k_equal, k_greater } )
+        {
+            if( ( xy & p ) && ( yz & q ) )
+            {
+                result |= p == k_equal ? q : q == k_equal || q == p ? p : k_any_order;
+            }
+        }
+    }
+    return result;
+}
+
+// How `a` may compare with `b`: what the relations hold of them, narrowed by any one local both relate to.
+Order known_order( const Relations& relations, Local_id a, Local_id b )
+{
+    const auto of = [&]( const Relation& r, Local_id l ) { return r.a == l ? r.may : swapped( r.may ); };
+
+    Order result = k_any_order;
+    for( const Relation& r : relations )
+    {
+        if( r.a == a && r.b == b )
+        {
+            result &= r.may;
+        }
+        else if( r.a == a || r.b == a )
+        {
+            const Local_id c = r.a == a ? r.b : r.a;
+            const auto     s = c.v < b.v ? find( relations, c, b ) : find( relations, b, c );
+            if( s != relations.end() )
+            {
+                result &= chained( of( r, a ), of( *s, c ) );
+            }
+        }
+    }
+    return result;
 }
 
 // A comparison of two locals the relations decide.
@@ -463,15 +632,10 @@ std::optional<bool> related( const Analysis& analysis, const Rvalue& value, cons
         return std::nullopt;
     }
 
-    const auto known = find( relations, test->a, test->b );
-    if( known == relations.end() )
-    {
-        return std::nullopt;
-    }
-
-    return ( known->may & ~test->may ) == 0  ? std::optional( true )
-           : ( known->may & test->may ) == 0 ? std::optional( false )
-                                             : std::nullopt;
+    const Order known = known_order( relations, test->a, test->b );
+    return ( known & ~test->may ) == 0  ? std::optional( true )
+           : ( known & test->may ) == 0 ? std::optional( false )
+                                        : std::nullopt;
 }
 
 // Adds what an edge knows; false when the relations already rule it out.
@@ -1098,7 +1262,16 @@ private:
 
 void propagate_constants( Function& func, const Type_table& types, Literal_pool& literals, bool relating )
 {
-    const Analysis analysis { func, types, literals, tracked_locals( func, types ), relating };
+    Local_set             tracked = tracked_locals( func, types );
+    std::vector<Local_id> same    = relating ? same_sizes( func, tracked ) : std::vector<Local_id> {};
+    if( !relating )
+    {
+        for( const Local_id l : func.locals.ids() )
+        {
+            same.push_back( l );
+        }
+    }
+    const Analysis analysis { func, types, literals, std::move( tracked ), relating, std::move( same ) };
     const auto     entry = values_on_entry( analysis );
 
     Links links( func.locals.size() );
@@ -1407,6 +1580,46 @@ TEST_CASE( "propagate_constants_drops_a_check_a_rotated_loops_test_decides", "[o
         "i32 f( i32 n ) { i32 t = 0; for( i32 i = 0; i < n; i += 1 ) { if( i >= n ) { return -1; } t += i; } return t; }\n", 3
     );
     REQUIRE( p.branches() == 2 );
+}
+
+// One local both relate to decides a third test: `z < x` with `x == y` or `x < y` gives `z < y`, and
+// `x > y` gives nothing.
+TEST_CASE( "propagate_constants_folds_a_test_two_relations_through_one_local_decide", "[opt][constants]" )
+{
+    const auto branches = []( const char* outer )
+    {
+        const Propagated p(
+            std::string( "i32 f( i32 x, i32 y, i32 z ) { if( " ) + outer +
+                " ) { return 0; } if( z < x ) { if( z < y ) { return 1; } return 2; } return 3; }\n",
+            3
+        );
+        return p.branches();
+    };
+
+    REQUIRE( branches( "x != y" ) == 2 );
+    REQUIRE( branches( "x >= y" ) == 2 );
+    REQUIRE( branches( "x <= y" ) == 3 );
+}
+
+// Each `size` of a run no store reaches is one value, so the loop's test covers every check on `a`,
+// and the sizes' equality every check on `b`; a kernel's loop then has none, at -O2.
+TEST_CASE( "propagate_constants_drops_the_checks_a_runs_size_covers", "[opt][constants]" )
+{
+    const auto checks = []( const char* guard )
+    {
+        const Propagated p(
+            std::string( "void f( ref u64[] a, const ref u64[] b ) { " ) + guard +
+            " for( u64 i : 0..a.size ) { a[i] = a[i] + b[i]; } }\n"
+        );
+        return std::ranges::count_if(
+            p.first().blocks,
+            []( const Block& block )
+            { return block.terminator.kind == Terminator_kind::Panic && block.terminator.failure == Failure::Bounds; }
+        );
+    };
+
+    REQUIRE( checks( "if( b.size != a.size ) { panic( \"the shapes differ\" ); }" ) == 0 );
+    REQUIRE( checks( "" ) == 1 );
 }
 
 // Past `x == 3`, `x` is the constant.

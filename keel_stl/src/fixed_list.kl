@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 import iterable;
+import kl::_core::compare as kernel;
 import optional;
 
 /// A list of at most `N` elements of `T`, held inline: it never allocates.
@@ -402,20 +403,7 @@ implements<T, u64 N> equatable for fixed_list<T, N> where T : equatable
 {
     bool operator==( const ref fixed_list<T, N> other ) const
     {
-        if( this.size() != other.size() )
-        {
-            return false;
-        }
-
-        for( u64 i : 0..this.size() )
-        {
-            if( this[i] != other[i] )
-            {
-                return false;
-            }
-        }
-
-        return true;
+        return kernel::equal( this.as_run(), other.as_run() );
     }
 };
 

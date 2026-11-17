@@ -1,6 +1,7 @@
 ../../../../keel_stl/src/iterable.kl
 ../../../../keel_stl/src/optional.kl
-../../../../keel_stl/src/list.kl iterable.klo optional.klo
-../../../../keel_stl/src/string.kl list.klo iterable.klo optional.klo
-../../../../keel_stl/src/os.kl list.klo iterable.klo optional.klo string.klo
-../../../../keel_stl/src/console.kl list.klo iterable.klo optional.klo string.klo os.klo
+../../../../keel_stl/src/_core/compare.kl
+../../../../keel_stl/src/list.kl iterable.klo optional.klo compare.klo
+../../../../keel_stl/src/string.kl list.klo iterable.klo optional.klo compare.klo
+../../../../keel_stl/src/os.kl list.klo iterable.klo optional.klo string.klo compare.klo
+../../../../keel_stl/src/console.kl list.klo iterable.klo optional.klo string.klo os.klo compare.klo

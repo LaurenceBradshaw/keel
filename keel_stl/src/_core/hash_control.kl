@@ -17,6 +17,8 @@
 // Entries are dense: the table's keys sit in entries `0..size()`, in the owner's arrays. A full
 // slot holds its entry's index, and each entry's hash is kept, so a rebuild never rehashes a key.
 
+import elementwise;
+
 // The process's SipHash key, the low half one more on each call, so no two tables share a key.
 private extern void kl_rt_hash_key( u64* low, u64* high );
 
@@ -49,11 +51,7 @@ class hash_control
             unsafe
             {
                 groups_ = alloc<u64>( slots / 8 );
-
-                for( u64 g = 0; g < slots / 8; g++ )
-                {
-                    groups_[g] = EMPTY_SLOTS_MASK;
-                }
+                fill( ref groups_[0..slots / 8], EMPTY_SLOTS_MASK );
 
                 entries_ = alloc<u64>( slots );
                 hashes_ = alloc<u64>( usable( slots ) );
@@ -327,12 +325,9 @@ class hash_control
     /// Empties every slot, keeping them.
     public void clear()
     {
-        for( u64 g = 0; g < slots_ / 8; g++ )
+        unsafe
         {
-            unsafe
-            {
-                groups_[g] = EMPTY_SLOTS_MASK;
-            }
+            fill( ref groups_[0..slots_ / 8], EMPTY_SLOTS_MASK );
         }
 
         count_ = 0;

@@ -4,6 +4,12 @@
 #include <stddef.h>
 
 
+// ../../src/_core/compare.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+
 // ../../src/optional.kl
 #include <stdint.h>
 #include <stdbool.h>
@@ -92,7 +98,7 @@ int32_t kl_23list_capacity_too_large_4main__( void )
     return kl_t0;
 }
 
-#line 24 "../../src/list.kl"
+#line 25 "../../src/list.kl"
 struct kl_2kl4list_list__I3i32E kl_2kl4list_13with_capacity__I3i32E__SQ2kl4listI3i32E_3u64( uint64_t kl_capacity_1 )
 {
     struct kl_2kl4list_list__I3i32E kl_t0;
@@ -100,88 +106,88 @@ struct kl_2kl4list_list__I3i32E kl_2kl4list_13with_capacity__I3i32E__SQ2kl4listI
     struct kl_2kl4list_list__I3i32E* kl_t3;
     int32_t* kl_t5;
     bool kl_t6;
-#line 26 "../../src/list.kl"
+#line 27 "../../src/list.kl"
     kl_t6 = false;
-#line 26 "../../src/list.kl"
+#line 27 "../../src/list.kl"
     kl_t6 = false;
-#line 26 "../../src/list.kl"
+#line 27 "../../src/list.kl"
     kl_t3 = &kl_result_2;
-#line 26 "../../src/list.kl"
-    kl_t6 = true;
-#line 26 "../../src/list.kl"
-    kl_2kl4list_4list__I3i32E__RQ2kl4listI3i32E__ctor( kl_t3 );
-    kl_result_2.kl_cap_ = kl_capacity_1;
 #line 27 "../../src/list.kl"
     kl_t6 = true;
-    kl_result_2.kl_count_ = 0;
+#line 27 "../../src/list.kl"
+    kl_2kl4list_4list__I3i32E__RQ2kl4listI3i32E__ctor( kl_t3 );
+    kl_result_2.kl_cap_ = kl_capacity_1;
 #line 28 "../../src/list.kl"
     kl_t6 = true;
-#line 32 "../../src/list.kl"
-    kl_t5 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_capacity_1, 4, "../../src/list.kl", 32, "out of memory: alloc<T>( capacity )" );
-#line 32 "../../src/list.kl"
-    kl_result_2.kl_data_ = kl_t5;
-#line 32 "../../src/list.kl"
+    kl_result_2.kl_count_ = 0;
+#line 29 "../../src/list.kl"
     kl_t6 = true;
-#line 35 "../../src/list.kl"
+#line 33 "../../src/list.kl"
+    kl_t5 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_capacity_1, 4, "../../src/list.kl", 33, "out of memory: alloc<T>( capacity )" );
+#line 33 "../../src/list.kl"
+    kl_result_2.kl_data_ = kl_t5;
+#line 33 "../../src/list.kl"
+    kl_t6 = true;
+#line 36 "../../src/list.kl"
     kl_t0 = kl_result_2;
-#line 35 "../../src/list.kl"
+#line 36 "../../src/list.kl"
     kl_t6 = false;
-#line 35 "../../src/list.kl"
+#line 36 "../../src/list.kl"
     if ( kl_t6 ) kl_2kl4list_4list__I3i32E__dtor( &kl_result_2 );
-#line 35 "../../src/list.kl"
+#line 36 "../../src/list.kl"
     kl_t6 = false;
-#line 35 "../../src/list.kl"
+#line 36 "../../src/list.kl"
     return kl_t0;
 }
 
-#line 213 "../../src/list.kl"
+#line 214 "../../src/list.kl"
 void kl_2kl4list_4push__I3i32E__SQ2kl4listI3i32E_M3i32( struct kl_2kl4list_list__I3i32E* kl_this_1, int32_t kl_value_2 )
 {
     struct kl_2kl4list_list__I3i32E* kl_t3;
     int32_t* kl_t5;
     bool kl_t6;
-#line 215 "../../src/list.kl"
+#line 216 "../../src/list.kl"
     kl_t3 = &( *kl_this_1 );
-#line 215 "../../src/list.kl"
+#line 216 "../../src/list.kl"
     kl_2kl4list_20reallocate_if_needed__I3i32E__SQ2kl4listI3i32E( kl_t3 );
-#line 219 "../../src/list.kl"
+#line 220 "../../src/list.kl"
     kl_t5 = ( *kl_this_1 ).kl_data_ + ( *kl_this_1 ).kl_count_;
-#line 219 "../../src/list.kl"
+#line 220 "../../src/list.kl"
     ( *kl_t5 ) = kl_value_2;
-#line 221 "../../src/list.kl"
+#line 222 "../../src/list.kl"
     kl_t6 = __builtin_add_overflow( ( *kl_this_1 ).kl_count_, 1, &( uint64_t ) { 0 } );
-#line 221 "../../src/list.kl"
+#line 222 "../../src/list.kl"
     if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
-#line 221 "../../src/list.kl"
-    kl_rt_panic( "../../src/list.kl", 221, "arithmetic overflow: count_ += 1;" );
+#line 222 "../../src/list.kl"
+    kl_rt_panic( "../../src/list.kl", 222, "arithmetic overflow: count_ += 1;" );
     bb2:
-#line 221 "../../src/list.kl"
+#line 222 "../../src/list.kl"
     ( *kl_this_1 ).kl_count_ = ( *kl_this_1 ).kl_count_ + 1;
     return;
-#line 222 "../../src/list.kl"
+#line 223 "../../src/list.kl"
 }
 
-#line 38 "../../src/list.kl"
+#line 39 "../../src/list.kl"
 void kl_2kl4list_4list__I3i32E__dtor( struct kl_2kl4list_list__I3i32E* kl_this_1 )
 {
     bool kl_t2;
-#line 40 "../../src/list.kl"
+#line 41 "../../src/list.kl"
     kl_t2 = ( *kl_this_1 ).kl_data_ != NULL;
-#line 40 "../../src/list.kl"
+#line 41 "../../src/list.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
-#line 45 "../../src/list.kl"
+#line 46 "../../src/list.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data_ );
-#line 40 "../../src/list.kl"
+#line 41 "../../src/list.kl"
     goto bb2;
     bb2:
-#line 48 "../../src/list.kl"
+#line 49 "../../src/list.kl"
     return;
-#line 48 "../../src/list.kl"
+#line 49 "../../src/list.kl"
 }
 
-#line 355 "../../src/list.kl"
+#line 356 "../../src/list.kl"
 void kl_2kl4list_8truncate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list_list__I3i32E* kl_this_1, uint64_t kl_n_2 )
 {
     bool kl_t3;
@@ -190,42 +196,42 @@ void kl_2kl4list_8truncate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list_li
     uint64_t kl_t6;
     ( void ) kl_t4;
     ( void ) kl_t6;
-#line 357 "../../src/list.kl"
+#line 358 "../../src/list.kl"
     kl_t3 = kl_n_2 >= ( *kl_this_1 ).kl_count_;
-#line 357 "../../src/list.kl"
+#line 358 "../../src/list.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
     return;
     bb2:
-#line 364 "../../src/list.kl"
+#line 365 "../../src/list.kl"
     kl_t4 = ( *kl_this_1 ).kl_data_ + kl_n_2;
-#line 364 "../../src/list.kl"
+#line 365 "../../src/list.kl"
     kl_t5 = __builtin_sub_overflow( ( *kl_this_1 ).kl_count_, kl_n_2, &( uint64_t ) { 0 } );
-#line 364 "../../src/list.kl"
+#line 365 "../../src/list.kl"
     if ( kl_t5 ) goto bb3; else goto bb4;
     bb3:
-#line 364 "../../src/list.kl"
-    kl_rt_panic( "../../src/list.kl", 364, "arithmetic overflow: count_ - n" );
+#line 365 "../../src/list.kl"
+    kl_rt_panic( "../../src/list.kl", 365, "arithmetic overflow: count_ - n" );
     bb4:
-#line 364 "../../src/list.kl"
+#line 365 "../../src/list.kl"
     kl_t6 = ( *kl_this_1 ).kl_count_ - kl_n_2;
-#line 367 "../../src/list.kl"
+#line 368 "../../src/list.kl"
     ( *kl_this_1 ).kl_count_ = kl_n_2;
     return;
-#line 368 "../../src/list.kl"
+#line 369 "../../src/list.kl"
 }
 
-#line 53 "../../src/list.kl"
+#line 54 "../../src/list.kl"
 uint64_t kl_2kl4list_4size__I3i32E__SQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* kl_this_1 )
 {
     uint64_t kl_t0;
-#line 55 "../../src/list.kl"
+#line 56 "../../src/list.kl"
     kl_t0 = ( *kl_this_1 ).kl_count_;
-#line 55 "../../src/list.kl"
+#line 56 "../../src/list.kl"
     return kl_t0;
 }
 
-#line 154 "../../src/list.kl"
+#line 155 "../../src/list.kl"
 int32_t* kl_2kl4list_14operator_index__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list_list__I3i32E* kl_this_1, uint64_t kl_index_2 )
 {
     int32_t* kl_t0;
@@ -234,29 +240,29 @@ int32_t* kl_2kl4list_14operator_index__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_
     struct kl_7prelude_str* kl_t5;
     uint8_t* kl_t6;
     int32_t* kl_t8;
-#line 156 "../../src/list.kl"
+#line 157 "../../src/list.kl"
     kl_t3 = kl_index_2 >= ( *kl_this_1 ).kl_count_;
-#line 156 "../../src/list.kl"
+#line 157 "../../src/list.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
     kl_t5 = &kl_t4;
-#line 158 "../../src/list.kl"
+#line 159 "../../src/list.kl"
     kl_t6 = ( uint8_t* ) "index out of range";
-#line 158 "../../src/list.kl"
+#line 159 "../../src/list.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 18 );
-#line 158 "../../src/list.kl"
-    kl_rt_panic_message( "../../src/list.kl", 158, kl_t4.kl_data, kl_t4.kl_size );
+#line 159 "../../src/list.kl"
+    kl_rt_panic_message( "../../src/list.kl", 159, kl_t4.kl_data, kl_t4.kl_size );
     bb2:
-#line 163 "../../src/list.kl"
+#line 164 "../../src/list.kl"
     kl_t8 = ( *kl_this_1 ).kl_data_ + kl_index_2;
-#line 163 "../../src/list.kl"
+#line 164 "../../src/list.kl"
     kl_t0 = &( *kl_t8 );
-#line 163 "../../src/list.kl"
+#line 164 "../../src/list.kl"
     return kl_t0;
-#line 165 "../../src/list.kl"
+#line 166 "../../src/list.kl"
 }
 
-#line 407 "../../src/list.kl"
+#line 408 "../../src/list.kl"
 void kl_2kl4list_4swap__I3i32E__SQ2kl4listI3i32E_3u64_3u64( struct kl_2kl4list_list__I3i32E* kl_this_1, uint64_t kl_a_2, uint64_t kl_b_3 )
 {
     bool kl_t4;
@@ -271,66 +277,66 @@ void kl_2kl4list_4swap__I3i32E__SQ2kl4listI3i32E_3u64_3u64( struct kl_2kl4list_l
     int32_t* kl_t14;
     int32_t* kl_t15;
     int32_t* kl_t16;
-#line 409 "../../src/list.kl"
+#line 410 "../../src/list.kl"
     kl_t5 = kl_a_2 >= ( *kl_this_1 ).kl_count_;
-#line 409 "../../src/list.kl"
+#line 410 "../../src/list.kl"
     kl_t4 = kl_t5;
-#line 409 "../../src/list.kl"
+#line 410 "../../src/list.kl"
     if ( kl_t4 ) goto bb2; else goto bb1;
     bb1:
-#line 409 "../../src/list.kl"
+#line 410 "../../src/list.kl"
     kl_t6 = kl_b_3 >= ( *kl_this_1 ).kl_count_;
-#line 409 "../../src/list.kl"
+#line 410 "../../src/list.kl"
     kl_t4 = kl_t6;
-#line 409 "../../src/list.kl"
+#line 410 "../../src/list.kl"
     goto bb2;
     bb2:
-#line 409 "../../src/list.kl"
+#line 410 "../../src/list.kl"
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb3:
     kl_t8 = &kl_t7;
-#line 411 "../../src/list.kl"
+#line 412 "../../src/list.kl"
     kl_t9 = ( uint8_t* ) "index out of range";
-#line 411 "../../src/list.kl"
+#line 412 "../../src/list.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t8, kl_t9, 18 );
-#line 411 "../../src/list.kl"
-    kl_rt_panic_message( "../../src/list.kl", 411, kl_t7.kl_data, kl_t7.kl_size );
+#line 412 "../../src/list.kl"
+    kl_rt_panic_message( "../../src/list.kl", 412, kl_t7.kl_data, kl_t7.kl_size );
     bb4:
-#line 414 "../../src/list.kl"
+#line 415 "../../src/list.kl"
     kl_t11 = kl_a_2 == kl_b_3;
-#line 414 "../../src/list.kl"
+#line 415 "../../src/list.kl"
     if ( kl_t11 ) goto bb5; else goto bb6;
     bb5:
     return;
     bb6:
-#line 421 "../../src/list.kl"
+#line 422 "../../src/list.kl"
     kl_t13 = ( *kl_this_1 ).kl_data_ + kl_a_2;
-#line 421 "../../src/list.kl"
+#line 422 "../../src/list.kl"
     kl_temp_12 = ( *kl_t13 );
     kl_t14 = ( *kl_this_1 ).kl_data_ + kl_a_2;
-#line 422 "../../src/list.kl"
+#line 423 "../../src/list.kl"
     kl_t15 = ( *kl_this_1 ).kl_data_ + kl_b_3;
-#line 422 "../../src/list.kl"
+#line 423 "../../src/list.kl"
     ( *kl_t14 ) = ( *kl_t15 );
     kl_t16 = ( *kl_this_1 ).kl_data_ + kl_b_3;
-#line 423 "../../src/list.kl"
+#line 424 "../../src/list.kl"
     ( *kl_t16 ) = kl_temp_12;
-#line 425 "../../src/list.kl"
+#line 426 "../../src/list.kl"
     return;
-#line 425 "../../src/list.kl"
+#line 426 "../../src/list.kl"
 }
 
-#line 16 "../../src/list.kl"
+#line 17 "../../src/list.kl"
 void kl_2kl4list_4list__I3i32E__RQ2kl4listI3i32E__ctor( struct kl_2kl4list_list__I3i32E* kl_this_1 )
 {
     ( *kl_this_1 ).kl_data_ = NULL;
     ( *kl_this_1 ).kl_count_ = 0;
     ( *kl_this_1 ).kl_cap_ = 0;
     return;
-#line 21 "../../src/list.kl"
+#line 22 "../../src/list.kl"
 }
 
-#line 474 "../../src/list.kl"
+#line 475 "../../src/list.kl"
 void kl_2kl4list_20reallocate_if_needed__I3i32E__SQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* kl_this_1 )
 {
     bool kl_t2;
@@ -339,46 +345,46 @@ void kl_2kl4list_20reallocate_if_needed__I3i32E__SQ2kl4listI3i32E( struct kl_2kl
     bool kl_t5;
     bool kl_t6;
     uint64_t kl_t7;
-#line 476 "../../src/list.kl"
+#line 477 "../../src/list.kl"
     kl_t2 = ( *kl_this_1 ).kl_count_ == ( *kl_this_1 ).kl_cap_;
-#line 476 "../../src/list.kl"
+#line 477 "../../src/list.kl"
     if ( kl_t2 ) goto bb1; else goto bb7;
     bb1:
     kl_t3 = &( *kl_this_1 );
-#line 478 "../../src/list.kl"
+#line 479 "../../src/list.kl"
     kl_t5 = ( *kl_this_1 ).kl_cap_ > 0;
-#line 478 "../../src/list.kl"
+#line 479 "../../src/list.kl"
     if ( kl_t5 ) goto bb2; else goto bb3;
     bb2:
-#line 478 "../../src/list.kl"
+#line 479 "../../src/list.kl"
     kl_t6 = __builtin_mul_overflow( ( *kl_this_1 ).kl_cap_, 2, &( uint64_t ) { 0 } );
-#line 478 "../../src/list.kl"
+#line 479 "../../src/list.kl"
     if ( kl_t6 ) goto bb5; else goto bb6;
     bb3:
-#line 478 "../../src/list.kl"
+#line 479 "../../src/list.kl"
     kl_t4 = 1;
-#line 478 "../../src/list.kl"
+#line 479 "../../src/list.kl"
     goto bb4;
     bb4:
-#line 478 "../../src/list.kl"
+#line 479 "../../src/list.kl"
     kl_2kl4list_10reallocate__I3i32E__SQ2kl4listI3i32E_3u64( kl_t3, kl_t4 );
-#line 476 "../../src/list.kl"
+#line 477 "../../src/list.kl"
     goto bb7;
     bb5:
-    kl_rt_panic( "../../src/list.kl", 478, "arithmetic overflow: cap_ * 2" );
+    kl_rt_panic( "../../src/list.kl", 479, "arithmetic overflow: cap_ * 2" );
     bb6:
-#line 478 "../../src/list.kl"
+#line 479 "../../src/list.kl"
     kl_t7 = ( *kl_this_1 ).kl_cap_ * 2;
-#line 478 "../../src/list.kl"
+#line 479 "../../src/list.kl"
     kl_t4 = kl_t7;
-#line 478 "../../src/list.kl"
+#line 479 "../../src/list.kl"
     goto bb4;
     bb7:
     return;
-#line 480 "../../src/list.kl"
+#line 481 "../../src/list.kl"
 }
 
-#line 444 "../../src/list.kl"
+#line 445 "../../src/list.kl"
 void kl_2kl4list_10reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list_list__I3i32E* kl_this_1, uint64_t kl_n_2 )
 {
     int32_t* kl_new_data_3;
@@ -389,67 +395,67 @@ void kl_2kl4list_10reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list
     int32_t* kl_t8;
     int32_t* kl_t9;
     bool kl_t10;
-#line 449 "../../src/list.kl"
-    kl_t4 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 4, "../../src/list.kl", 449, "out of memory: alloc<T>( n )" );
-#line 449 "../../src/list.kl"
+#line 450 "../../src/list.kl"
+    kl_t4 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 4, "../../src/list.kl", 450, "out of memory: alloc<T>( n )" );
+#line 450 "../../src/list.kl"
     kl_new_data_3 = kl_t4;
-#line 452 "../../src/list.kl"
+#line 453 "../../src/list.kl"
     kl_t5 = ( *kl_this_1 ).kl_data_ != NULL;
-#line 452 "../../src/list.kl"
+#line 453 "../../src/list.kl"
     if ( kl_t5 ) goto bb1; else goto bb8;
     bb1:
     kl_i_6 = 0;
-#line 454 "../../src/list.kl"
+#line 455 "../../src/list.kl"
     goto bb2;
     bb2:
-#line 454 "../../src/list.kl"
+#line 455 "../../src/list.kl"
     kl_t7 = kl_i_6 < ( *kl_this_1 ).kl_count_;
-#line 454 "../../src/list.kl"
+#line 455 "../../src/list.kl"
     if ( kl_t7 ) goto bb3; else goto bb4;
     bb3:
-#line 458 "../../src/list.kl"
+#line 459 "../../src/list.kl"
     kl_t8 = kl_new_data_3 + kl_i_6;
-#line 458 "../../src/list.kl"
+#line 459 "../../src/list.kl"
     kl_t9 = ( *kl_this_1 ).kl_data_ + kl_i_6;
-#line 458 "../../src/list.kl"
+#line 459 "../../src/list.kl"
     ( *kl_t8 ) = ( *kl_t9 );
-#line 454 "../../src/list.kl"
+#line 455 "../../src/list.kl"
     goto bb5;
     bb4:
-#line 465 "../../src/list.kl"
+#line 466 "../../src/list.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data_ );
-#line 452 "../../src/list.kl"
+#line 453 "../../src/list.kl"
     goto bb8;
     bb5:
     kl_t10 = __builtin_add_overflow( kl_i_6, 1, &( uint64_t ) { 0 } );
-#line 454 "../../src/list.kl"
+#line 455 "../../src/list.kl"
     if ( kl_t10 ) goto bb6; else goto bb7;
     bb6:
-#line 454 "../../src/list.kl"
-    kl_rt_panic( "../../src/list.kl", 454, "arithmetic overflow: i++" );
+#line 455 "../../src/list.kl"
+    kl_rt_panic( "../../src/list.kl", 455, "arithmetic overflow: i++" );
     bb7:
-#line 454 "../../src/list.kl"
+#line 455 "../../src/list.kl"
     kl_i_6 = kl_i_6 + 1;
-#line 454 "../../src/list.kl"
+#line 455 "../../src/list.kl"
     goto bb2;
     bb8:
-#line 469 "../../src/list.kl"
+#line 470 "../../src/list.kl"
     ( *kl_this_1 ).kl_data_ = kl_new_data_3;
     ( *kl_this_1 ).kl_cap_ = kl_n_2;
     return;
-#line 471 "../../src/list.kl"
+#line 472 "../../src/list.kl"
 }
 
 void kl_2kl4list_list__I3i32E__drop( void* kl_t1 )
 {
     struct kl_2kl4list_list__I3i32E* kl_t2;
-#line 11 "../../src/list.kl"
+#line 12 "../../src/list.kl"
     kl_t2 = ( struct kl_2kl4list_list__I3i32E* ) kl_t1;
-#line 11 "../../src/list.kl"
+#line 12 "../../src/list.kl"
     kl_2kl4list_4list__I3i32E__dtor( &( *kl_t2 ) );
-#line 11 "../../src/list.kl"
+#line 12 "../../src/list.kl"
     return;
-#line 11 "../../src/list.kl"
+#line 12 "../../src/list.kl"
 }
 
 int main( void )

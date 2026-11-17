@@ -4,6 +4,12 @@
 #include <stddef.h>
 
 
+// <kl>/_core/compare.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+
 // <kl>/iterable.kl
 #include <stdint.h>
 #include <stdbool.h>
@@ -186,6 +192,7 @@ bool kl_2kl6string_9same_text__7textual_7textual( struct kl_7prelude_textual__re
 bool kl_2kl6string_8is_space__2u8( uint8_t );
 void kl_2kl4list_4list__IQ2kl6stringE__RQ2kl4listIQ2kl6stringE__ctor( struct kl_2kl4list_list__IQ2kl6stringE* );
 void kl_2kl4list_4push__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_MQ2kl6string( struct kl_2kl4list_list__IQ2kl6stringE*, struct kl_2kl6string_string );
+bool kl_2kl5_core7compare_5equal__I2u8E__L2u8_L2u8( uint8_t*, uint64_t, uint8_t*, uint64_t );
 void kl_2kl4list_4list__IQ2kl6stringE__dtor( struct kl_2kl4list_list__IQ2kl6stringE* );
 void kl_2kl4list_20reallocate_if_needed__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
 void kl_2kl4list_10reallocate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
@@ -213,17 +220,17 @@ struct kl__run__L2u8__ref kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_
     return kl_t0;
 }
 
-#line 27 "<kl>/string.kl"
+#line 28 "<kl>/string.kl"
 void kl_2kl6string_6string__RQ2kl6string__ctor( struct kl_2kl6string_string* kl_this_1 )
 {
     ( *kl_this_1 ).kl_data_ = NULL;
     ( *kl_this_1 ).kl_size_ = 0;
     ( *kl_this_1 ).kl_cap_ = 0;
     return;
-#line 32 "<kl>/string.kl"
+#line 33 "<kl>/string.kl"
 }
 
-#line 35 "<kl>/string.kl"
+#line 36 "<kl>/string.kl"
 void kl_2kl6string_6string__RQ2kl6string_7textual__ctor( struct kl_2kl6string_string* kl_this_1, struct kl_7prelude_textual__ref kl_text_2 )
 {
     struct kl__run__L2u8__ref kl_bytes_3;
@@ -244,80 +251,80 @@ void kl_2kl6string_6string__RQ2kl6string_7textual__ctor( struct kl_2kl6string_st
     bool kl_t18;
     kl__fn__FMP4voidEPL2u8 kl_t19;
     void* kl_t20;
-#line 37 "<kl>/string.kl"
+#line 38 "<kl>/string.kl"
     kl_t4 = kl_text_2;
-#line 37 "<kl>/string.kl"
+#line 38 "<kl>/string.kl"
     kl_t19 = ( kl_t4 ).vtable->kl__7as_text__;
-#line 37 "<kl>/string.kl"
+#line 38 "<kl>/string.kl"
     kl_t20 = ( kl_t4 ).self;
-#line 37 "<kl>/string.kl"
+#line 38 "<kl>/string.kl"
     kl_t5 = kl_t19( kl_t20 );
-#line 37 "<kl>/string.kl"
+#line 38 "<kl>/string.kl"
     kl_bytes_3 = kl_t5;
-#line 41 "<kl>/string.kl"
+#line 42 "<kl>/string.kl"
     kl_t6 = ( kl_bytes_3 ).size;
-#line 41 "<kl>/string.kl"
-    kl_t7 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_t6, 1, "<kl>/string.kl", 41, "out of memory: alloc<u8>( bytes.size )" );
-#line 41 "<kl>/string.kl"
+#line 42 "<kl>/string.kl"
+    kl_t7 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_t6, 1, "<kl>/string.kl", 42, "out of memory: alloc<u8>( bytes.size )" );
+#line 42 "<kl>/string.kl"
     ( *kl_this_1 ).kl_data_ = kl_t7;
-#line 44 "<kl>/string.kl"
+#line 45 "<kl>/string.kl"
     kl_t8 = ( kl_bytes_3 ).size;
-#line 44 "<kl>/string.kl"
+#line 45 "<kl>/string.kl"
     ( *kl_this_1 ).kl_size_ = kl_t8;
     kl_t9 = ( kl_bytes_3 ).size;
-#line 45 "<kl>/string.kl"
+#line 46 "<kl>/string.kl"
     ( *kl_this_1 ).kl_cap_ = kl_t9;
     kl_i_10 = 0;
-#line 46 "<kl>/string.kl"
+#line 47 "<kl>/string.kl"
     goto bb1;
     bb1:
-#line 46 "<kl>/string.kl"
+#line 47 "<kl>/string.kl"
     kl_t11 = ( kl_bytes_3 ).size;
-#line 46 "<kl>/string.kl"
+#line 47 "<kl>/string.kl"
     kl_t12 = kl_i_10 < kl_t11;
-#line 46 "<kl>/string.kl"
+#line 47 "<kl>/string.kl"
     if ( kl_t12 ) goto bb2; else goto bb3;
     bb2:
-#line 50 "<kl>/string.kl"
+#line 51 "<kl>/string.kl"
     kl_t13 = ( *kl_this_1 ).kl_data_ + kl_i_10;
-#line 50 "<kl>/string.kl"
+#line 51 "<kl>/string.kl"
     kl_t14 = ( kl_bytes_3 ).size;
-#line 50 "<kl>/string.kl"
+#line 51 "<kl>/string.kl"
     kl_t15 = ( kl_bytes_3 ).data;
-#line 50 "<kl>/string.kl"
+#line 51 "<kl>/string.kl"
     kl_t16 = kl_i_10 < kl_t14;
-#line 50 "<kl>/string.kl"
+#line 51 "<kl>/string.kl"
     if ( kl_t16 ) goto bb5; else goto bb4;
     bb3:
-#line 53 "<kl>/string.kl"
+#line 54 "<kl>/string.kl"
     return;
     bb4:
-#line 50 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 50, "out of bounds: bytes[ i ]" );
+#line 51 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 51, "out of bounds: bytes[ i ]" );
     bb5:
-#line 50 "<kl>/string.kl"
+#line 51 "<kl>/string.kl"
     kl_t17 = kl_t15 + kl_i_10;
-#line 50 "<kl>/string.kl"
+#line 51 "<kl>/string.kl"
     ( *kl_t13 ) = ( *kl_t17 );
-#line 46 "<kl>/string.kl"
+#line 47 "<kl>/string.kl"
     goto bb6;
     bb6:
-#line 46 "<kl>/string.kl"
+#line 47 "<kl>/string.kl"
     kl_t18 = __builtin_add_overflow( kl_i_10, 1, &( uint64_t ) { 0 } );
-#line 46 "<kl>/string.kl"
+#line 47 "<kl>/string.kl"
     if ( kl_t18 ) goto bb7; else goto bb8;
     bb7:
-#line 46 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 46, "arithmetic overflow: i++" );
+#line 47 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 47, "arithmetic overflow: i++" );
     bb8:
-#line 46 "<kl>/string.kl"
+#line 47 "<kl>/string.kl"
     kl_i_10 = kl_i_10 + 1;
-#line 46 "<kl>/string.kl"
+#line 47 "<kl>/string.kl"
     goto bb1;
-#line 53 "<kl>/string.kl"
+#line 54 "<kl>/string.kl"
 }
 
-#line 56 "<kl>/string.kl"
+#line 57 "<kl>/string.kl"
 struct kl_2kl6string_string kl_2kl6string_13with_capacity__SQ2kl6string_3u64( uint64_t kl_capacity_1 )
 {
     struct kl_2kl6string_string kl_t0;
@@ -325,51 +332,51 @@ struct kl_2kl6string_string kl_2kl6string_13with_capacity__SQ2kl6string_3u64( ui
     struct kl_2kl6string_string* kl_t3;
     uint8_t* kl_t5;
     bool kl_t6;
-#line 58 "<kl>/string.kl"
+#line 59 "<kl>/string.kl"
     kl_t6 = false;
-#line 58 "<kl>/string.kl"
+#line 59 "<kl>/string.kl"
     kl_t6 = false;
-#line 58 "<kl>/string.kl"
+#line 59 "<kl>/string.kl"
     kl_t3 = &kl_result_2;
-#line 58 "<kl>/string.kl"
+#line 59 "<kl>/string.kl"
     kl_t6 = true;
-#line 58 "<kl>/string.kl"
+#line 59 "<kl>/string.kl"
     kl_2kl6string_6string__RQ2kl6string__ctor( kl_t3 );
-#line 61 "<kl>/string.kl"
-    kl_t5 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_capacity_1, 1, "<kl>/string.kl", 61, "out of memory: alloc<u8>( capacity )" );
-#line 61 "<kl>/string.kl"
+#line 62 "<kl>/string.kl"
+    kl_t5 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_capacity_1, 1, "<kl>/string.kl", 62, "out of memory: alloc<u8>( capacity )" );
+#line 62 "<kl>/string.kl"
     kl_result_2.kl_data_ = kl_t5;
-#line 61 "<kl>/string.kl"
+#line 62 "<kl>/string.kl"
     kl_t6 = true;
-#line 64 "<kl>/string.kl"
+#line 65 "<kl>/string.kl"
     kl_result_2.kl_size_ = 0;
-#line 64 "<kl>/string.kl"
-    kl_t6 = true;
-    kl_result_2.kl_cap_ = kl_capacity_1;
 #line 65 "<kl>/string.kl"
     kl_t6 = true;
+    kl_result_2.kl_cap_ = kl_capacity_1;
+#line 66 "<kl>/string.kl"
+    kl_t6 = true;
     kl_t0 = kl_result_2;
-#line 66 "<kl>/string.kl"
+#line 67 "<kl>/string.kl"
     kl_t6 = false;
-#line 66 "<kl>/string.kl"
+#line 67 "<kl>/string.kl"
     if ( kl_t6 ) kl_2kl6string_6string__dtor( &kl_result_2 );
-#line 66 "<kl>/string.kl"
+#line 67 "<kl>/string.kl"
     kl_t6 = false;
-#line 66 "<kl>/string.kl"
+#line 67 "<kl>/string.kl"
     return kl_t0;
 }
 
-#line 69 "<kl>/string.kl"
+#line 70 "<kl>/string.kl"
 void kl_2kl6string_6string__dtor( struct kl_2kl6string_string* kl_this_1 )
 {
-#line 73 "<kl>/string.kl"
+#line 74 "<kl>/string.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data_ );
-#line 75 "<kl>/string.kl"
+#line 76 "<kl>/string.kl"
     return;
-#line 75 "<kl>/string.kl"
+#line 76 "<kl>/string.kl"
 }
 
-#line 78 "<kl>/string.kl"
+#line 79 "<kl>/string.kl"
 struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_MQ7prelude11joined_text( struct kl_7prelude_joined_text kl_text_1 )
 {
     struct kl_2kl6string_string kl_t0;
@@ -380,47 +387,47 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_MQ7prelude11joined
     struct kl_7prelude_joined_text* kl_t7;
     uint8_t* kl_t8;
     bool kl_t9;
-#line 80 "<kl>/string.kl"
+#line 81 "<kl>/string.kl"
     kl_t9 = false;
-#line 80 "<kl>/string.kl"
+#line 81 "<kl>/string.kl"
     kl_t9 = false;
-#line 80 "<kl>/string.kl"
+#line 81 "<kl>/string.kl"
     kl_t3 = &kl_result_2;
-#line 80 "<kl>/string.kl"
+#line 81 "<kl>/string.kl"
     kl_t9 = true;
-#line 80 "<kl>/string.kl"
+#line 81 "<kl>/string.kl"
     kl_2kl6string_6string__RQ2kl6string__ctor( kl_t3 );
     kl_t5 = &kl_text_1;
-#line 81 "<kl>/string.kl"
+#line 82 "<kl>/string.kl"
     kl_t6 = kl_7prelude_4size__SQ7prelude11joined_text( kl_t5 );
-#line 81 "<kl>/string.kl"
+#line 82 "<kl>/string.kl"
     kl_result_2.kl_size_ = kl_t6;
-#line 81 "<kl>/string.kl"
-    kl_t9 = true;
-    kl_result_2.kl_cap_ = kl_result_2.kl_size_;
 #line 82 "<kl>/string.kl"
     kl_t9 = true;
-    kl_t7 = &kl_text_1;
-#line 83 "<kl>/string.kl"
-    kl_t8 = kl_7prelude_7release__SQ7prelude11joined_text( kl_t7 );
-#line 83 "<kl>/string.kl"
-    kl_result_2.kl_data_ = kl_t8;
+    kl_result_2.kl_cap_ = kl_result_2.kl_size_;
 #line 83 "<kl>/string.kl"
     kl_t9 = true;
+    kl_t7 = &kl_text_1;
+#line 84 "<kl>/string.kl"
+    kl_t8 = kl_7prelude_7release__SQ7prelude11joined_text( kl_t7 );
+#line 84 "<kl>/string.kl"
+    kl_result_2.kl_data_ = kl_t8;
+#line 84 "<kl>/string.kl"
+    kl_t9 = true;
     kl_t0 = kl_result_2;
-#line 84 "<kl>/string.kl"
+#line 85 "<kl>/string.kl"
     kl_t9 = false;
-#line 84 "<kl>/string.kl"
+#line 85 "<kl>/string.kl"
     if ( kl_t9 ) kl_2kl6string_6string__dtor( &kl_result_2 );
-#line 84 "<kl>/string.kl"
+#line 85 "<kl>/string.kl"
     kl_t9 = false;
-#line 84 "<kl>/string.kl"
+#line 85 "<kl>/string.kl"
     kl_7prelude_11joined_text__dtor( &kl_text_1 );
-#line 84 "<kl>/string.kl"
+#line 85 "<kl>/string.kl"
     return kl_t0;
 }
 
-#line 88 "<kl>/string.kl"
+#line 89 "<kl>/string.kl"
 struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_MQ7prelude3str( struct kl_7prelude_str kl_text_1 )
 {
     struct kl_2kl6string_string kl_t0;
@@ -429,33 +436,33 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_MQ7prelude3str( st
     struct kl_7prelude_str* kl_t4;
     struct kl_7prelude_textual__ref kl_t5;
     bool kl_t7;
-#line 90 "<kl>/string.kl"
+#line 91 "<kl>/string.kl"
     kl_t7 = false;
-#line 90 "<kl>/string.kl"
+#line 91 "<kl>/string.kl"
     kl_t7 = false;
-#line 90 "<kl>/string.kl"
+#line 91 "<kl>/string.kl"
     kl_t3 = &kl_t2;
-#line 90 "<kl>/string.kl"
+#line 91 "<kl>/string.kl"
     kl_t7 = true;
-#line 90 "<kl>/string.kl"
+#line 91 "<kl>/string.kl"
     kl_t4 = &kl_text_1;
-#line 90 "<kl>/string.kl"
+#line 91 "<kl>/string.kl"
     kl_t5 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t4, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 90 "<kl>/string.kl"
+#line 91 "<kl>/string.kl"
     kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t3, kl_t5 );
-#line 90 "<kl>/string.kl"
+#line 91 "<kl>/string.kl"
     kl_t0 = kl_t2;
-#line 90 "<kl>/string.kl"
+#line 91 "<kl>/string.kl"
     kl_t7 = false;
-#line 90 "<kl>/string.kl"
+#line 91 "<kl>/string.kl"
     if ( kl_t7 ) kl_2kl6string_6string__dtor( &kl_t2 );
-#line 90 "<kl>/string.kl"
+#line 91 "<kl>/string.kl"
     kl_t7 = false;
-#line 90 "<kl>/string.kl"
+#line 91 "<kl>/string.kl"
     return kl_t0;
 }
 
-#line 94 "<kl>/string.kl"
+#line 95 "<kl>/string.kl"
 struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_M3u64( uint64_t kl_value_1 )
 {
     struct kl_2kl6string_string kl_t0;
@@ -496,183 +503,183 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_M3u64( uint64_t kl
     bool kl_t40;
     bool kl_t41;
     bool kl_t42;
-#line 96 "<kl>/string.kl"
+#line 97 "<kl>/string.kl"
     kl_t41 = false;
-#line 96 "<kl>/string.kl"
+#line 97 "<kl>/string.kl"
     kl_t42 = false;
-#line 96 "<kl>/string.kl"
+#line 97 "<kl>/string.kl"
     kl_t2 = kl_value_1 == 0;
-#line 96 "<kl>/string.kl"
+#line 97 "<kl>/string.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
     kl_t41 = false;
-#line 98 "<kl>/string.kl"
+#line 99 "<kl>/string.kl"
     kl_t4 = &kl_t3;
-#line 98 "<kl>/string.kl"
+#line 99 "<kl>/string.kl"
     kl_t41 = true;
-#line 98 "<kl>/string.kl"
+#line 99 "<kl>/string.kl"
     kl_t6 = &kl_t5;
-#line 98 "<kl>/string.kl"
+#line 99 "<kl>/string.kl"
     kl_t7 = ( uint8_t* ) "0";
-#line 98 "<kl>/string.kl"
+#line 99 "<kl>/string.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t6, kl_t7, 1 );
-#line 98 "<kl>/string.kl"
+#line 99 "<kl>/string.kl"
     kl_t9 = &kl_t5;
-#line 98 "<kl>/string.kl"
+#line 99 "<kl>/string.kl"
     kl_t10 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t9, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 98 "<kl>/string.kl"
+#line 99 "<kl>/string.kl"
     kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t4, kl_t10 );
-#line 98 "<kl>/string.kl"
+#line 99 "<kl>/string.kl"
     kl_t0 = kl_t3;
-#line 98 "<kl>/string.kl"
+#line 99 "<kl>/string.kl"
     kl_t41 = false;
-#line 98 "<kl>/string.kl"
+#line 99 "<kl>/string.kl"
     if ( kl_t41 ) kl_2kl6string_6string__dtor( &kl_t3 );
-#line 98 "<kl>/string.kl"
+#line 99 "<kl>/string.kl"
     kl_t41 = false;
-#line 98 "<kl>/string.kl"
+#line 99 "<kl>/string.kl"
     return kl_t0;
     bb2:
-#line 101 "<kl>/string.kl"
+#line 102 "<kl>/string.kl"
     kl_t42 = false;
-#line 101 "<kl>/string.kl"
+#line 102 "<kl>/string.kl"
     kl_t13 = &kl_result_12;
-#line 101 "<kl>/string.kl"
+#line 102 "<kl>/string.kl"
     kl_t42 = true;
-#line 101 "<kl>/string.kl"
+#line 102 "<kl>/string.kl"
     kl_2kl6string_6string__RQ2kl6string__ctor( kl_t13 );
     goto bb3;
     bb3:
-#line 102 "<kl>/string.kl"
+#line 103 "<kl>/string.kl"
     kl_t15 = kl_value_1 > 0;
-#line 102 "<kl>/string.kl"
+#line 103 "<kl>/string.kl"
     if ( kl_t15 ) goto bb4; else goto bb5;
     bb4:
     kl_t16 = &kl_result_12;
-#line 104 "<kl>/string.kl"
+#line 105 "<kl>/string.kl"
     kl_t17 = kl_value_1 % 10;
-#line 104 "<kl>/string.kl"
+#line 105 "<kl>/string.kl"
     kl_t18 = __builtin_add_overflow( 48, kl_t17, &( uint64_t ) { 0 } );
-#line 104 "<kl>/string.kl"
+#line 105 "<kl>/string.kl"
     if ( kl_t18 ) goto bb6; else goto bb7;
     bb5:
-#line 108 "<kl>/string.kl"
+#line 109 "<kl>/string.kl"
     kl_i_24 = 0;
-#line 108 "<kl>/string.kl"
+#line 109 "<kl>/string.kl"
     goto bb10;
     bb6:
-#line 104 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 104, "arithmetic overflow: 48 + value % 10" );
+#line 105 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 105, "arithmetic overflow: 48 + value % 10" );
     bb7:
-#line 104 "<kl>/string.kl"
+#line 105 "<kl>/string.kl"
     kl_t19 = 48 + kl_t17;
-#line 104 "<kl>/string.kl"
+#line 105 "<kl>/string.kl"
     kl_t20 = ( uint8_t ) kl_t19;
-#line 104 "<kl>/string.kl"
+#line 105 "<kl>/string.kl"
     kl_t21 = ( uint64_t ) kl_t20;
-#line 104 "<kl>/string.kl"
+#line 105 "<kl>/string.kl"
     kl_t22 = kl_t21 == kl_t19;
-#line 104 "<kl>/string.kl"
+#line 105 "<kl>/string.kl"
     if ( kl_t22 ) goto bb9; else goto bb8;
     bb8:
-#line 104 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 104, "cast out of range: cast<u8>( 48 + value % 10 )" );
+#line 105 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 105, "cast out of range: cast<u8>( 48 + value % 10 )" );
     bb9:
-#line 104 "<kl>/string.kl"
+#line 105 "<kl>/string.kl"
     kl_2kl6string_4push__SQ2kl6string_2u8( kl_t16, kl_t20 );
     kl_value_1 = kl_value_1 / 10;
-#line 102 "<kl>/string.kl"
+#line 103 "<kl>/string.kl"
     goto bb3;
     bb10:
-#line 108 "<kl>/string.kl"
+#line 109 "<kl>/string.kl"
     kl_t25 = kl_result_12.kl_size_ / 2;
-#line 108 "<kl>/string.kl"
+#line 109 "<kl>/string.kl"
     kl_t26 = kl_i_24 < kl_t25;
-#line 108 "<kl>/string.kl"
+#line 109 "<kl>/string.kl"
     if ( kl_t26 ) goto bb11; else goto bb12;
     bb11:
-#line 112 "<kl>/string.kl"
+#line 113 "<kl>/string.kl"
     kl_t28 = kl_result_12.kl_data_ + kl_i_24;
-#line 112 "<kl>/string.kl"
+#line 113 "<kl>/string.kl"
     kl_low_27 = ( *kl_t28 );
     kl_t29 = kl_result_12.kl_data_ + kl_i_24;
-#line 113 "<kl>/string.kl"
+#line 114 "<kl>/string.kl"
     kl_t30 = __builtin_sub_overflow( kl_result_12.kl_size_, 1, &( uint64_t ) { 0 } );
-#line 113 "<kl>/string.kl"
+#line 114 "<kl>/string.kl"
     if ( kl_t30 ) goto bb13; else goto bb14;
     bb12:
-#line 118 "<kl>/string.kl"
+#line 119 "<kl>/string.kl"
     kl_t0 = kl_result_12;
-#line 118 "<kl>/string.kl"
+#line 119 "<kl>/string.kl"
     kl_t42 = false;
-#line 118 "<kl>/string.kl"
+#line 119 "<kl>/string.kl"
     if ( kl_t42 ) kl_2kl6string_6string__dtor( &kl_result_12 );
-#line 118 "<kl>/string.kl"
+#line 119 "<kl>/string.kl"
     kl_t42 = false;
-#line 118 "<kl>/string.kl"
+#line 119 "<kl>/string.kl"
     return kl_t0;
     bb13:
-#line 113 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 113, "arithmetic overflow: result.size_ - 1" );
-    bb14:
-#line 113 "<kl>/string.kl"
-    kl_t31 = kl_result_12.kl_size_ - 1;
-#line 113 "<kl>/string.kl"
-    kl_t32 = __builtin_sub_overflow( kl_t31, kl_i_24, &( uint64_t ) { 0 } );
-#line 113 "<kl>/string.kl"
-    if ( kl_t32 ) goto bb15; else goto bb16;
-    bb15:
-#line 113 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 113, "arithmetic overflow: result.size_ - 1 - i" );
-    bb16:
-#line 113 "<kl>/string.kl"
-    kl_t33 = kl_t31 - kl_i_24;
-#line 113 "<kl>/string.kl"
-    kl_t34 = kl_result_12.kl_data_ + kl_t33;
-#line 113 "<kl>/string.kl"
-    ( *kl_t29 ) = ( *kl_t34 );
-    kl_t35 = __builtin_sub_overflow( kl_result_12.kl_size_, 1, &( uint64_t ) { 0 } );
-#line 114 "<kl>/string.kl"
-    if ( kl_t35 ) goto bb17; else goto bb18;
-    bb17:
 #line 114 "<kl>/string.kl"
     kl_rt_panic( "<kl>/string.kl", 114, "arithmetic overflow: result.size_ - 1" );
-    bb18:
+    bb14:
 #line 114 "<kl>/string.kl"
-    kl_t36 = kl_result_12.kl_size_ - 1;
+    kl_t31 = kl_result_12.kl_size_ - 1;
 #line 114 "<kl>/string.kl"
-    kl_t37 = __builtin_sub_overflow( kl_t36, kl_i_24, &( uint64_t ) { 0 } );
+    kl_t32 = __builtin_sub_overflow( kl_t31, kl_i_24, &( uint64_t ) { 0 } );
 #line 114 "<kl>/string.kl"
-    if ( kl_t37 ) goto bb19; else goto bb20;
-    bb19:
+    if ( kl_t32 ) goto bb15; else goto bb16;
+    bb15:
 #line 114 "<kl>/string.kl"
     kl_rt_panic( "<kl>/string.kl", 114, "arithmetic overflow: result.size_ - 1 - i" );
+    bb16:
+#line 114 "<kl>/string.kl"
+    kl_t33 = kl_t31 - kl_i_24;
+#line 114 "<kl>/string.kl"
+    kl_t34 = kl_result_12.kl_data_ + kl_t33;
+#line 114 "<kl>/string.kl"
+    ( *kl_t29 ) = ( *kl_t34 );
+    kl_t35 = __builtin_sub_overflow( kl_result_12.kl_size_, 1, &( uint64_t ) { 0 } );
+#line 115 "<kl>/string.kl"
+    if ( kl_t35 ) goto bb17; else goto bb18;
+    bb17:
+#line 115 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 115, "arithmetic overflow: result.size_ - 1" );
+    bb18:
+#line 115 "<kl>/string.kl"
+    kl_t36 = kl_result_12.kl_size_ - 1;
+#line 115 "<kl>/string.kl"
+    kl_t37 = __builtin_sub_overflow( kl_t36, kl_i_24, &( uint64_t ) { 0 } );
+#line 115 "<kl>/string.kl"
+    if ( kl_t37 ) goto bb19; else goto bb20;
+    bb19:
+#line 115 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 115, "arithmetic overflow: result.size_ - 1 - i" );
     bb20:
-#line 114 "<kl>/string.kl"
+#line 115 "<kl>/string.kl"
     kl_t38 = kl_t36 - kl_i_24;
-#line 114 "<kl>/string.kl"
+#line 115 "<kl>/string.kl"
     kl_t39 = kl_result_12.kl_data_ + kl_t38;
-#line 114 "<kl>/string.kl"
+#line 115 "<kl>/string.kl"
     ( *kl_t39 ) = kl_low_27;
-#line 108 "<kl>/string.kl"
+#line 109 "<kl>/string.kl"
     goto bb21;
     bb21:
-#line 108 "<kl>/string.kl"
+#line 109 "<kl>/string.kl"
     kl_t40 = __builtin_add_overflow( kl_i_24, 1, &( uint64_t ) { 0 } );
-#line 108 "<kl>/string.kl"
+#line 109 "<kl>/string.kl"
     if ( kl_t40 ) goto bb22; else goto bb23;
     bb22:
-#line 108 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 108, "arithmetic overflow: i++" );
+#line 109 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 109, "arithmetic overflow: i++" );
     bb23:
-#line 108 "<kl>/string.kl"
+#line 109 "<kl>/string.kl"
     kl_i_24 = kl_i_24 + 1;
-#line 108 "<kl>/string.kl"
+#line 109 "<kl>/string.kl"
     goto bb10;
-#line 119 "<kl>/string.kl"
+#line 120 "<kl>/string.kl"
 }
 
-#line 122 "<kl>/string.kl"
+#line 123 "<kl>/string.kl"
 struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_M3i64( int64_t kl_value_1 )
 {
     struct kl_2kl6string_string kl_t0;
@@ -692,102 +699,102 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_M3i64( int64_t kl_
     struct kl_7prelude_textual__ref kl_t17;
     bool kl_t19;
     bool kl_t20;
-#line 124 "<kl>/string.kl"
+#line 125 "<kl>/string.kl"
     kl_t19 = false;
-#line 124 "<kl>/string.kl"
+#line 125 "<kl>/string.kl"
     kl_t20 = false;
-#line 124 "<kl>/string.kl"
+#line 125 "<kl>/string.kl"
     kl_t2 = kl_value_1 >= 0;
-#line 124 "<kl>/string.kl"
+#line 125 "<kl>/string.kl"
     if ( kl_t2 ) goto bb1; else goto bb4;
     bb1:
     kl_t3 = ( uint64_t ) kl_value_1;
-#line 126 "<kl>/string.kl"
+#line 127 "<kl>/string.kl"
     kl_t4 = kl_value_1 >= 0;
-#line 126 "<kl>/string.kl"
+#line 127 "<kl>/string.kl"
     if ( kl_t4 ) goto bb3; else goto bb2;
     bb2:
-#line 126 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 126, "cast out of range: cast<u64>( value )" );
+#line 127 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 127, "cast out of range: cast<u64>( value )" );
     bb3:
-#line 126 "<kl>/string.kl"
+#line 127 "<kl>/string.kl"
     kl_t5 = kl_2kl6string_4from__SQ2kl6string_M3u64( kl_t3 );
-#line 126 "<kl>/string.kl"
+#line 127 "<kl>/string.kl"
     kl_t19 = true;
-#line 126 "<kl>/string.kl"
+#line 127 "<kl>/string.kl"
     kl_t0 = kl_t5;
-#line 126 "<kl>/string.kl"
+#line 127 "<kl>/string.kl"
     kl_t19 = false;
-#line 126 "<kl>/string.kl"
+#line 127 "<kl>/string.kl"
     if ( kl_t19 ) kl_2kl6string_6string__dtor( &kl_t5 );
-#line 126 "<kl>/string.kl"
+#line 127 "<kl>/string.kl"
     kl_t19 = false;
-#line 126 "<kl>/string.kl"
+#line 127 "<kl>/string.kl"
     return kl_t0;
     bb4:
-#line 129 "<kl>/string.kl"
+#line 130 "<kl>/string.kl"
     kl_t7 = 0 - kl_value_1;
-#line 129 "<kl>/string.kl"
+#line 130 "<kl>/string.kl"
     kl_t8 = ( uint64_t ) kl_t7;
-#line 129 "<kl>/string.kl"
+#line 130 "<kl>/string.kl"
     kl_magnitude_6 = kl_t8;
     kl_t20 = false;
-#line 130 "<kl>/string.kl"
+#line 131 "<kl>/string.kl"
     kl_t10 = &kl_result_9;
-#line 130 "<kl>/string.kl"
+#line 131 "<kl>/string.kl"
     kl_t20 = true;
-#line 130 "<kl>/string.kl"
+#line 131 "<kl>/string.kl"
     kl_2kl6string_6string__RQ2kl6string__ctor( kl_t10 );
     kl_t12 = &kl_result_9;
-#line 131 "<kl>/string.kl"
+#line 132 "<kl>/string.kl"
     kl_2kl6string_4push__SQ2kl6string_2u8( kl_t12, 45 );
     kl_t14 = &kl_result_9;
-#line 132 "<kl>/string.kl"
+#line 133 "<kl>/string.kl"
     kl_t15 = kl_2kl6string_4from__SQ2kl6string_M3u64( kl_magnitude_6 );
-#line 132 "<kl>/string.kl"
+#line 133 "<kl>/string.kl"
     kl_t16 = &kl_t15;
-#line 132 "<kl>/string.kl"
+#line 133 "<kl>/string.kl"
     kl_t17 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t16, &kl_2kl6string_string__as_kl_7prelude_textual };
-#line 132 "<kl>/string.kl"
+#line 133 "<kl>/string.kl"
     kl_2kl6string_19operator_add_assign__SQ2kl6string_7textual( kl_t14, kl_t17 );
-#line 132 "<kl>/string.kl"
+#line 133 "<kl>/string.kl"
     kl_2kl6string_6string__dtor( &kl_t15 );
-#line 134 "<kl>/string.kl"
+#line 135 "<kl>/string.kl"
     kl_t0 = kl_result_9;
-#line 134 "<kl>/string.kl"
+#line 135 "<kl>/string.kl"
     kl_t20 = false;
-#line 134 "<kl>/string.kl"
+#line 135 "<kl>/string.kl"
     if ( kl_t20 ) kl_2kl6string_6string__dtor( &kl_result_9 );
-#line 134 "<kl>/string.kl"
+#line 135 "<kl>/string.kl"
     kl_t20 = false;
-#line 134 "<kl>/string.kl"
+#line 135 "<kl>/string.kl"
     return kl_t0;
 }
 
-#line 140 "<kl>/string.kl"
+#line 141 "<kl>/string.kl"
 uint64_t kl_2kl6string_4size__SQ2kl6string( struct kl_2kl6string_string* kl_this_1 )
 {
     uint64_t kl_t0;
-#line 142 "<kl>/string.kl"
+#line 143 "<kl>/string.kl"
     kl_t0 = ( *kl_this_1 ).kl_size_;
-#line 142 "<kl>/string.kl"
+#line 143 "<kl>/string.kl"
     return kl_t0;
 }
 
-#line 146 "<kl>/string.kl"
+#line 147 "<kl>/string.kl"
 bool kl_2kl6string_8is_empty__SQ2kl6string( struct kl_2kl6string_string* kl_this_1 )
 {
     bool kl_t0;
     bool kl_t2;
-#line 148 "<kl>/string.kl"
+#line 149 "<kl>/string.kl"
     kl_t2 = ( *kl_this_1 ).kl_size_ == 0;
-#line 148 "<kl>/string.kl"
+#line 149 "<kl>/string.kl"
     kl_t0 = kl_t2;
-#line 148 "<kl>/string.kl"
+#line 149 "<kl>/string.kl"
     return kl_t0;
 }
 
-#line 154 "<kl>/string.kl"
+#line 155 "<kl>/string.kl"
 struct kl__run__L2u8__ref kl_2kl6string_7as_text__SQ2kl6string( struct kl_2kl6string_string* kl_this_1 )
 {
     struct kl__run__L2u8__ref kl_t0;
@@ -796,30 +803,30 @@ struct kl__run__L2u8__ref kl_2kl6string_7as_text__SQ2kl6string( struct kl_2kl6st
     uint8_t* kl_t4;
     uint64_t kl_t5;
     struct kl__run__L2u8__ref kl_t6;
-#line 158 "<kl>/string.kl"
+#line 159 "<kl>/string.kl"
     kl_t2 = ( uint64_t ) 0;
-#line 158 "<kl>/string.kl"
+#line 159 "<kl>/string.kl"
     kl_t3 = kl_t2 <= ( *kl_this_1 ).kl_size_;
-#line 158 "<kl>/string.kl"
+#line 159 "<kl>/string.kl"
     if ( kl_t3 ) goto bb2; else goto bb1;
     bb1:
-#line 158 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 158, "out of bounds: data_[0..size_]" );
+#line 159 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 159, "out of bounds: data_[0..size_]" );
     bb2:
-#line 158 "<kl>/string.kl"
+#line 159 "<kl>/string.kl"
     kl_t4 = ( *kl_this_1 ).kl_data_ + kl_t2;
-#line 158 "<kl>/string.kl"
+#line 159 "<kl>/string.kl"
     kl_t5 = ( *kl_this_1 ).kl_size_ - kl_t2;
-#line 158 "<kl>/string.kl"
+#line 159 "<kl>/string.kl"
     kl_t6 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t4, kl_t5 };
-#line 158 "<kl>/string.kl"
+#line 159 "<kl>/string.kl"
     kl_t0 = kl_t6;
-#line 158 "<kl>/string.kl"
+#line 159 "<kl>/string.kl"
     return kl_t0;
-#line 160 "<kl>/string.kl"
+#line 161 "<kl>/string.kl"
 }
 
-#line 167 "<kl>/string.kl"
+#line 168 "<kl>/string.kl"
 uint8_t* kl_2kl6string_14operator_index__SQ2kl6string_3u64( struct kl_2kl6string_string* kl_this_1, uint64_t kl_index_2 )
 {
     uint8_t* kl_t0;
@@ -830,33 +837,33 @@ uint8_t* kl_2kl6string_14operator_index__SQ2kl6string_3u64( struct kl_2kl6string
     struct kl_7prelude_str* kl_t7;
     uint8_t* kl_t8;
     uint8_t* kl_t10;
-#line 169 "<kl>/string.kl"
+#line 170 "<kl>/string.kl"
     kl_t3 = &( *kl_this_1 );
-#line 169 "<kl>/string.kl"
+#line 170 "<kl>/string.kl"
     kl_t4 = kl_2kl6string_4size__SQ2kl6string( kl_t3 );
-#line 169 "<kl>/string.kl"
+#line 170 "<kl>/string.kl"
     kl_t5 = kl_index_2 >= kl_t4;
-#line 169 "<kl>/string.kl"
+#line 170 "<kl>/string.kl"
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
     kl_t7 = &kl_t6;
-#line 171 "<kl>/string.kl"
+#line 172 "<kl>/string.kl"
     kl_t8 = ( uint8_t* ) "index out of range";
-#line 171 "<kl>/string.kl"
+#line 172 "<kl>/string.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t7, kl_t8, 18 );
-#line 171 "<kl>/string.kl"
-    kl_rt_panic_message( "<kl>/string.kl", 171, kl_t6.kl_data, kl_t6.kl_size );
+#line 172 "<kl>/string.kl"
+    kl_rt_panic_message( "<kl>/string.kl", 172, kl_t6.kl_data, kl_t6.kl_size );
     bb2:
-#line 176 "<kl>/string.kl"
+#line 177 "<kl>/string.kl"
     kl_t10 = ( *kl_this_1 ).kl_data_ + kl_index_2;
-#line 176 "<kl>/string.kl"
+#line 177 "<kl>/string.kl"
     kl_t0 = &( *kl_t10 );
-#line 176 "<kl>/string.kl"
+#line 177 "<kl>/string.kl"
     return kl_t0;
-#line 178 "<kl>/string.kl"
+#line 179 "<kl>/string.kl"
 }
 
-#line 185 "<kl>/string.kl"
+#line 186 "<kl>/string.kl"
 struct kl_2kl6string_string kl_2kl6string_9substring__SQ2kl6string_3u64_3u64( struct kl_2kl6string_string* kl_this_1, uint64_t kl_start_2, uint64_t kl_count_3 )
 {
     struct kl_2kl6string_string kl_t0;
@@ -883,124 +890,124 @@ struct kl_2kl6string_string kl_2kl6string_9substring__SQ2kl6string_3u64_3u64( st
     bool kl_t26;
     bool kl_t27;
     bool kl_t28;
-#line 187 "<kl>/string.kl"
+#line 188 "<kl>/string.kl"
     kl_t27 = false;
-#line 187 "<kl>/string.kl"
+#line 188 "<kl>/string.kl"
     kl_t28 = false;
-#line 187 "<kl>/string.kl"
+#line 188 "<kl>/string.kl"
     kl_t5 = &( *kl_this_1 );
-#line 187 "<kl>/string.kl"
+#line 188 "<kl>/string.kl"
     kl_t6 = kl_2kl6string_4size__SQ2kl6string( kl_t5 );
-#line 187 "<kl>/string.kl"
+#line 188 "<kl>/string.kl"
     kl_t7 = kl_start_2 > kl_t6;
-#line 187 "<kl>/string.kl"
+#line 188 "<kl>/string.kl"
     kl_t4 = kl_t7;
-#line 187 "<kl>/string.kl"
+#line 188 "<kl>/string.kl"
     if ( kl_t4 ) goto bb2; else goto bb1;
     bb1:
-#line 187 "<kl>/string.kl"
+#line 188 "<kl>/string.kl"
     kl_t8 = &( *kl_this_1 );
-#line 187 "<kl>/string.kl"
+#line 188 "<kl>/string.kl"
     kl_t9 = kl_2kl6string_4size__SQ2kl6string( kl_t8 );
-#line 187 "<kl>/string.kl"
+#line 188 "<kl>/string.kl"
     kl_t10 = __builtin_sub_overflow( kl_t9, kl_start_2, &( uint64_t ) { 0 } );
-#line 187 "<kl>/string.kl"
+#line 188 "<kl>/string.kl"
     if ( kl_t10 ) goto bb3; else goto bb4;
     bb2:
-#line 187 "<kl>/string.kl"
+#line 188 "<kl>/string.kl"
     if ( kl_t4 ) goto bb5; else goto bb6;
     bb3:
-#line 187 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 187, "arithmetic overflow: size() - start" );
+#line 188 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 188, "arithmetic overflow: size() - start" );
     bb4:
-#line 187 "<kl>/string.kl"
+#line 188 "<kl>/string.kl"
     kl_t11 = kl_t9 - kl_start_2;
-#line 187 "<kl>/string.kl"
+#line 188 "<kl>/string.kl"
     kl_t12 = kl_count_3 > kl_t11;
-#line 187 "<kl>/string.kl"
+#line 188 "<kl>/string.kl"
     kl_t4 = kl_t12;
-#line 187 "<kl>/string.kl"
+#line 188 "<kl>/string.kl"
     goto bb2;
     bb5:
     kl_t14 = &kl_t13;
-#line 189 "<kl>/string.kl"
+#line 190 "<kl>/string.kl"
     kl_t15 = ( uint8_t* ) "substring out of range";
-#line 189 "<kl>/string.kl"
+#line 190 "<kl>/string.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t14, kl_t15, 22 );
-#line 189 "<kl>/string.kl"
-    kl_rt_panic_message( "<kl>/string.kl", 189, kl_t13.kl_data, kl_t13.kl_size );
+#line 190 "<kl>/string.kl"
+    kl_rt_panic_message( "<kl>/string.kl", 190, kl_t13.kl_data, kl_t13.kl_size );
     bb6:
-#line 192 "<kl>/string.kl"
+#line 193 "<kl>/string.kl"
     kl_t27 = false;
-#line 192 "<kl>/string.kl"
+#line 193 "<kl>/string.kl"
     kl_t18 = kl_2kl6string_13with_capacity__SQ2kl6string_3u64( kl_count_3 );
-#line 192 "<kl>/string.kl"
+#line 193 "<kl>/string.kl"
     kl_t28 = true;
-#line 192 "<kl>/string.kl"
+#line 193 "<kl>/string.kl"
     kl_result_17 = kl_t18;
-#line 192 "<kl>/string.kl"
+#line 193 "<kl>/string.kl"
     kl_t28 = false;
-#line 192 "<kl>/string.kl"
+#line 193 "<kl>/string.kl"
     kl_t27 = true;
-#line 192 "<kl>/string.kl"
+#line 193 "<kl>/string.kl"
     if ( kl_t28 ) kl_2kl6string_6string__dtor( &kl_t18 );
-#line 192 "<kl>/string.kl"
+#line 193 "<kl>/string.kl"
     kl_t28 = false;
     kl_i_19 = 0;
-#line 193 "<kl>/string.kl"
+#line 194 "<kl>/string.kl"
     goto bb7;
     bb7:
-#line 193 "<kl>/string.kl"
+#line 194 "<kl>/string.kl"
     kl_t20 = kl_i_19 < kl_count_3;
-#line 193 "<kl>/string.kl"
+#line 194 "<kl>/string.kl"
     if ( kl_t20 ) goto bb8; else goto bb9;
     bb8:
-#line 197 "<kl>/string.kl"
+#line 198 "<kl>/string.kl"
     kl_t21 = &kl_result_17;
-#line 197 "<kl>/string.kl"
+#line 198 "<kl>/string.kl"
     kl_t22 = __builtin_add_overflow( kl_start_2, kl_i_19, &( uint64_t ) { 0 } );
-#line 197 "<kl>/string.kl"
+#line 198 "<kl>/string.kl"
     if ( kl_t22 ) goto bb10; else goto bb11;
     bb9:
-#line 201 "<kl>/string.kl"
+#line 202 "<kl>/string.kl"
     kl_t0 = kl_result_17;
-#line 201 "<kl>/string.kl"
+#line 202 "<kl>/string.kl"
     kl_t27 = false;
-#line 201 "<kl>/string.kl"
+#line 202 "<kl>/string.kl"
     if ( kl_t27 ) kl_2kl6string_6string__dtor( &kl_result_17 );
-#line 201 "<kl>/string.kl"
+#line 202 "<kl>/string.kl"
     kl_t27 = false;
-#line 201 "<kl>/string.kl"
+#line 202 "<kl>/string.kl"
     return kl_t0;
     bb10:
-#line 197 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 197, "arithmetic overflow: start + i" );
+#line 198 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 198, "arithmetic overflow: start + i" );
     bb11:
-#line 197 "<kl>/string.kl"
+#line 198 "<kl>/string.kl"
     kl_t23 = kl_start_2 + kl_i_19;
-#line 197 "<kl>/string.kl"
+#line 198 "<kl>/string.kl"
     kl_t24 = ( *kl_this_1 ).kl_data_ + kl_t23;
-#line 197 "<kl>/string.kl"
+#line 198 "<kl>/string.kl"
     kl_2kl6string_4push__SQ2kl6string_2u8( kl_t21, ( *kl_t24 ) );
-#line 193 "<kl>/string.kl"
+#line 194 "<kl>/string.kl"
     goto bb12;
     bb12:
-#line 193 "<kl>/string.kl"
+#line 194 "<kl>/string.kl"
     kl_t26 = __builtin_add_overflow( kl_i_19, 1, &( uint64_t ) { 0 } );
-#line 193 "<kl>/string.kl"
+#line 194 "<kl>/string.kl"
     if ( kl_t26 ) goto bb13; else goto bb14;
     bb13:
-#line 193 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 193, "arithmetic overflow: i++" );
+#line 194 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 194, "arithmetic overflow: i++" );
     bb14:
-#line 193 "<kl>/string.kl"
+#line 194 "<kl>/string.kl"
     kl_i_19 = kl_i_19 + 1;
-#line 193 "<kl>/string.kl"
+#line 194 "<kl>/string.kl"
     goto bb7;
-#line 202 "<kl>/string.kl"
+#line 203 "<kl>/string.kl"
 }
 
-#line 207 "<kl>/string.kl"
+#line 208 "<kl>/string.kl"
 bool kl_2kl6string_11starts_with__SQ2kl6string_7textual( struct kl_2kl6string_string* kl_this_1, struct kl_7prelude_textual__ref kl_prefix_2 )
 {
     bool kl_t0;
@@ -1012,28 +1019,28 @@ bool kl_2kl6string_11starts_with__SQ2kl6string_7textual( struct kl_2kl6string_st
     bool kl_t8;
     kl__fn__FMP4voidEPL2u8 kl_t9;
     void* kl_t10;
-#line 209 "<kl>/string.kl"
+#line 210 "<kl>/string.kl"
     kl_t4 = kl_prefix_2;
-#line 209 "<kl>/string.kl"
+#line 210 "<kl>/string.kl"
     kl_t9 = ( kl_t4 ).vtable->kl__7as_text__;
-#line 209 "<kl>/string.kl"
+#line 210 "<kl>/string.kl"
     kl_t10 = ( kl_t4 ).self;
-#line 209 "<kl>/string.kl"
+#line 210 "<kl>/string.kl"
     kl_t5 = kl_t9( kl_t10 );
-#line 209 "<kl>/string.kl"
+#line 210 "<kl>/string.kl"
     kl_text_3 = kl_t5;
     kl_t6 = &( *kl_this_1 );
-#line 210 "<kl>/string.kl"
+#line 211 "<kl>/string.kl"
     kl_t7 = kl_text_3;
-#line 210 "<kl>/string.kl"
+#line 211 "<kl>/string.kl"
     kl_t8 = kl_2kl6string_10matches_at__SQ2kl6string_3u64_L2u8( kl_t6, 0, ( kl_t7 ).data, ( kl_t7 ).size );
-#line 210 "<kl>/string.kl"
+#line 211 "<kl>/string.kl"
     kl_t0 = kl_t8;
-#line 210 "<kl>/string.kl"
+#line 211 "<kl>/string.kl"
     return kl_t0;
 }
 
-#line 214 "<kl>/string.kl"
+#line 215 "<kl>/string.kl"
 bool kl_2kl6string_9ends_with__SQ2kl6string_7textual( struct kl_2kl6string_string* kl_this_1, struct kl_7prelude_textual__ref kl_suffix_2 )
 {
     bool kl_t0;
@@ -1054,59 +1061,59 @@ bool kl_2kl6string_9ends_with__SQ2kl6string_7textual( struct kl_2kl6string_strin
     bool kl_t17;
     kl__fn__FMP4voidEPL2u8 kl_t18;
     void* kl_t19;
-#line 216 "<kl>/string.kl"
+#line 217 "<kl>/string.kl"
     kl_t4 = kl_suffix_2;
-#line 216 "<kl>/string.kl"
+#line 217 "<kl>/string.kl"
     kl_t18 = ( kl_t4 ).vtable->kl__7as_text__;
-#line 216 "<kl>/string.kl"
+#line 217 "<kl>/string.kl"
     kl_t19 = ( kl_t4 ).self;
-#line 216 "<kl>/string.kl"
+#line 217 "<kl>/string.kl"
     kl_t5 = kl_t18( kl_t19 );
-#line 216 "<kl>/string.kl"
+#line 217 "<kl>/string.kl"
     kl_text_3 = kl_t5;
     kl_t6 = ( kl_text_3 ).size;
-#line 217 "<kl>/string.kl"
+#line 218 "<kl>/string.kl"
     kl_t7 = &( *kl_this_1 );
-#line 217 "<kl>/string.kl"
+#line 218 "<kl>/string.kl"
     kl_t8 = kl_2kl6string_4size__SQ2kl6string( kl_t7 );
-#line 217 "<kl>/string.kl"
+#line 218 "<kl>/string.kl"
     kl_t9 = kl_t6 > kl_t8;
-#line 217 "<kl>/string.kl"
+#line 218 "<kl>/string.kl"
     if ( kl_t9 ) goto bb1; else goto bb2;
     bb1:
     kl_t0 = false;
-#line 219 "<kl>/string.kl"
+#line 220 "<kl>/string.kl"
     return kl_t0;
     bb2:
-#line 222 "<kl>/string.kl"
+#line 223 "<kl>/string.kl"
     kl_t10 = &( *kl_this_1 );
-#line 222 "<kl>/string.kl"
+#line 223 "<kl>/string.kl"
     kl_t11 = &( *kl_this_1 );
-#line 222 "<kl>/string.kl"
+#line 223 "<kl>/string.kl"
     kl_t12 = kl_2kl6string_4size__SQ2kl6string( kl_t11 );
-#line 222 "<kl>/string.kl"
+#line 223 "<kl>/string.kl"
     kl_t13 = ( kl_text_3 ).size;
-#line 222 "<kl>/string.kl"
+#line 223 "<kl>/string.kl"
     kl_t14 = __builtin_sub_overflow( kl_t12, kl_t13, &( uint64_t ) { 0 } );
-#line 222 "<kl>/string.kl"
+#line 223 "<kl>/string.kl"
     if ( kl_t14 ) goto bb3; else goto bb4;
     bb3:
-#line 222 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 222, "arithmetic overflow: size() - text.size" );
+#line 223 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 223, "arithmetic overflow: size() - text.size" );
     bb4:
-#line 222 "<kl>/string.kl"
+#line 223 "<kl>/string.kl"
     kl_t15 = kl_t12 - kl_t13;
-#line 222 "<kl>/string.kl"
+#line 223 "<kl>/string.kl"
     kl_t16 = kl_text_3;
-#line 222 "<kl>/string.kl"
+#line 223 "<kl>/string.kl"
     kl_t17 = kl_2kl6string_10matches_at__SQ2kl6string_3u64_L2u8( kl_t10, kl_t15, ( kl_t16 ).data, ( kl_t16 ).size );
-#line 222 "<kl>/string.kl"
+#line 223 "<kl>/string.kl"
     kl_t0 = kl_t17;
-#line 222 "<kl>/string.kl"
+#line 223 "<kl>/string.kl"
     return kl_t0;
 }
 
-#line 226 "<kl>/string.kl"
+#line 227 "<kl>/string.kl"
 struct kl_2kl8optional_optional__I3u64E kl_2kl6string_4find__SQ2kl6string_7textual( struct kl_2kl6string_string* kl_this_1, struct kl_7prelude_textual__ref kl_needle_2 )
 {
     struct kl_2kl8optional_optional__I3u64E kl_t0;
@@ -1133,99 +1140,99 @@ struct kl_2kl8optional_optional__I3u64E kl_2kl6string_4find__SQ2kl6string_7textu
     struct kl_2kl8optional_optional__I3u64E kl_t23;
     kl__fn__FMP4voidEPL2u8 kl_t24;
     void* kl_t25;
-#line 228 "<kl>/string.kl"
+#line 229 "<kl>/string.kl"
     kl_t4 = kl_needle_2;
-#line 228 "<kl>/string.kl"
+#line 229 "<kl>/string.kl"
     kl_t24 = ( kl_t4 ).vtable->kl__7as_text__;
-#line 228 "<kl>/string.kl"
+#line 229 "<kl>/string.kl"
     kl_t25 = ( kl_t4 ).self;
-#line 228 "<kl>/string.kl"
+#line 229 "<kl>/string.kl"
     kl_t5 = kl_t24( kl_t25 );
-#line 228 "<kl>/string.kl"
+#line 229 "<kl>/string.kl"
     kl_text_3 = kl_t5;
-#line 230 "<kl>/string.kl"
+#line 231 "<kl>/string.kl"
     kl_t6 = ( kl_text_3 ).size;
-#line 230 "<kl>/string.kl"
+#line 231 "<kl>/string.kl"
     kl_t7 = &( *kl_this_1 );
-#line 230 "<kl>/string.kl"
+#line 231 "<kl>/string.kl"
     kl_t8 = kl_2kl6string_4size__SQ2kl6string( kl_t7 );
-#line 230 "<kl>/string.kl"
+#line 231 "<kl>/string.kl"
     kl_t9 = kl_t6 > kl_t8;
-#line 230 "<kl>/string.kl"
+#line 231 "<kl>/string.kl"
     if ( kl_t9 ) goto bb1; else goto bb2;
     bb1:
     kl_t10.tag = 1;
-#line 232 "<kl>/string.kl"
+#line 233 "<kl>/string.kl"
     kl_t0 = kl_t10;
-#line 232 "<kl>/string.kl"
+#line 233 "<kl>/string.kl"
     return kl_t0;
     bb2:
-#line 235 "<kl>/string.kl"
+#line 236 "<kl>/string.kl"
     kl_i_11 = 0;
-#line 235 "<kl>/string.kl"
+#line 236 "<kl>/string.kl"
     goto bb3;
     bb3:
-#line 235 "<kl>/string.kl"
+#line 236 "<kl>/string.kl"
     kl_t12 = &( *kl_this_1 );
-#line 235 "<kl>/string.kl"
+#line 236 "<kl>/string.kl"
     kl_t13 = kl_2kl6string_4size__SQ2kl6string( kl_t12 );
-#line 235 "<kl>/string.kl"
+#line 236 "<kl>/string.kl"
     kl_t14 = ( kl_text_3 ).size;
-#line 235 "<kl>/string.kl"
+#line 236 "<kl>/string.kl"
     kl_t15 = __builtin_sub_overflow( kl_t13, kl_t14, &( uint64_t ) { 0 } );
-#line 235 "<kl>/string.kl"
+#line 236 "<kl>/string.kl"
     if ( kl_t15 ) goto bb5; else goto bb6;
     bb4:
     kl_t18 = &( *kl_this_1 );
-#line 237 "<kl>/string.kl"
+#line 238 "<kl>/string.kl"
     kl_t19 = kl_text_3;
-#line 237 "<kl>/string.kl"
+#line 238 "<kl>/string.kl"
     kl_t20 = kl_2kl6string_10matches_at__SQ2kl6string_3u64_L2u8( kl_t18, kl_i_11, ( kl_t19 ).data, ( kl_t19 ).size );
-#line 237 "<kl>/string.kl"
+#line 238 "<kl>/string.kl"
     if ( kl_t20 ) goto bb8; else goto bb9;
     bb5:
-#line 235 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 235, "arithmetic overflow: size() - text.size" );
+#line 236 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 236, "arithmetic overflow: size() - text.size" );
     bb6:
-#line 235 "<kl>/string.kl"
+#line 236 "<kl>/string.kl"
     kl_t16 = kl_t13 - kl_t14;
-#line 235 "<kl>/string.kl"
+#line 236 "<kl>/string.kl"
     kl_t17 = kl_i_11 <= kl_t16;
-#line 235 "<kl>/string.kl"
+#line 236 "<kl>/string.kl"
     if ( kl_t17 ) goto bb4; else goto bb7;
     bb7:
-#line 243 "<kl>/string.kl"
+#line 244 "<kl>/string.kl"
     kl_t23.tag = 1;
-#line 243 "<kl>/string.kl"
+#line 244 "<kl>/string.kl"
     kl_t0 = kl_t23;
-#line 243 "<kl>/string.kl"
+#line 244 "<kl>/string.kl"
     return kl_t0;
     bb8:
-#line 239 "<kl>/string.kl"
+#line 240 "<kl>/string.kl"
     kl_t21.tag = 0;
-#line 239 "<kl>/string.kl"
+#line 240 "<kl>/string.kl"
     kl_t21.kl_4some_value = kl_i_11;
-#line 239 "<kl>/string.kl"
+#line 240 "<kl>/string.kl"
     kl_t0 = kl_t21;
-#line 239 "<kl>/string.kl"
+#line 240 "<kl>/string.kl"
     return kl_t0;
     bb9:
-#line 235 "<kl>/string.kl"
+#line 236 "<kl>/string.kl"
     kl_t22 = __builtin_add_overflow( kl_i_11, 1, &( uint64_t ) { 0 } );
-#line 235 "<kl>/string.kl"
+#line 236 "<kl>/string.kl"
     if ( kl_t22 ) goto bb10; else goto bb11;
     bb10:
-#line 235 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 235, "arithmetic overflow: i++" );
+#line 236 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 236, "arithmetic overflow: i++" );
     bb11:
-#line 235 "<kl>/string.kl"
+#line 236 "<kl>/string.kl"
     kl_i_11 = kl_i_11 + 1;
-#line 235 "<kl>/string.kl"
+#line 236 "<kl>/string.kl"
     goto bb3;
-#line 244 "<kl>/string.kl"
+#line 245 "<kl>/string.kl"
 }
 
-#line 247 "<kl>/string.kl"
+#line 248 "<kl>/string.kl"
 struct kl_2kl8optional_optional__I3u64E kl_2kl6string_5rfind__SQ2kl6string_7textual( struct kl_2kl6string_string* kl_this_1, struct kl_7prelude_textual__ref kl_needle_2 )
 {
     struct kl_2kl8optional_optional__I3u64E kl_t0;
@@ -1252,98 +1259,98 @@ struct kl_2kl8optional_optional__I3u64E kl_2kl6string_5rfind__SQ2kl6string_7text
     struct kl_2kl8optional_optional__I3u64E kl_t23;
     kl__fn__FMP4voidEPL2u8 kl_t24;
     void* kl_t25;
-#line 249 "<kl>/string.kl"
+#line 250 "<kl>/string.kl"
     kl_t4 = kl_needle_2;
-#line 249 "<kl>/string.kl"
+#line 250 "<kl>/string.kl"
     kl_t24 = ( kl_t4 ).vtable->kl__7as_text__;
-#line 249 "<kl>/string.kl"
+#line 250 "<kl>/string.kl"
     kl_t25 = ( kl_t4 ).self;
-#line 249 "<kl>/string.kl"
+#line 250 "<kl>/string.kl"
     kl_t5 = kl_t24( kl_t25 );
-#line 249 "<kl>/string.kl"
+#line 250 "<kl>/string.kl"
     kl_text_3 = kl_t5;
-#line 251 "<kl>/string.kl"
+#line 252 "<kl>/string.kl"
     kl_t6 = ( kl_text_3 ).size;
-#line 251 "<kl>/string.kl"
+#line 252 "<kl>/string.kl"
     kl_t7 = &( *kl_this_1 );
-#line 251 "<kl>/string.kl"
+#line 252 "<kl>/string.kl"
     kl_t8 = kl_2kl6string_4size__SQ2kl6string( kl_t7 );
-#line 251 "<kl>/string.kl"
+#line 252 "<kl>/string.kl"
     kl_t9 = kl_t6 > kl_t8;
-#line 251 "<kl>/string.kl"
+#line 252 "<kl>/string.kl"
     if ( kl_t9 ) goto bb1; else goto bb2;
     bb1:
     kl_t10.tag = 1;
-#line 253 "<kl>/string.kl"
+#line 254 "<kl>/string.kl"
     kl_t0 = kl_t10;
-#line 253 "<kl>/string.kl"
+#line 254 "<kl>/string.kl"
     return kl_t0;
     bb2:
-#line 256 "<kl>/string.kl"
+#line 257 "<kl>/string.kl"
     kl_t12 = &( *kl_this_1 );
-#line 256 "<kl>/string.kl"
+#line 257 "<kl>/string.kl"
     kl_t13 = kl_2kl6string_4size__SQ2kl6string( kl_t12 );
-#line 256 "<kl>/string.kl"
+#line 257 "<kl>/string.kl"
     kl_t14 = ( kl_text_3 ).size;
-#line 256 "<kl>/string.kl"
+#line 257 "<kl>/string.kl"
     kl_t15 = __builtin_sub_overflow( kl_t13, kl_t14, &( uint64_t ) { 0 } );
-#line 256 "<kl>/string.kl"
+#line 257 "<kl>/string.kl"
     if ( kl_t15 ) goto bb3; else goto bb4;
     bb3:
-#line 256 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 256, "arithmetic overflow: size() - text.size" );
+#line 257 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 257, "arithmetic overflow: size() - text.size" );
     bb4:
-#line 256 "<kl>/string.kl"
+#line 257 "<kl>/string.kl"
     kl_t16 = kl_t13 - kl_t14;
-#line 256 "<kl>/string.kl"
+#line 257 "<kl>/string.kl"
     kl_i_11 = kl_t16;
     goto bb5;
     bb5:
     kl_t17 = &( *kl_this_1 );
-#line 259 "<kl>/string.kl"
+#line 260 "<kl>/string.kl"
     kl_t18 = kl_text_3;
-#line 259 "<kl>/string.kl"
+#line 260 "<kl>/string.kl"
     kl_t19 = kl_2kl6string_10matches_at__SQ2kl6string_3u64_L2u8( kl_t17, kl_i_11, ( kl_t18 ).data, ( kl_t18 ).size );
-#line 259 "<kl>/string.kl"
+#line 260 "<kl>/string.kl"
     if ( kl_t19 ) goto bb7; else goto bb8;
     bb6:
-#line 272 "<kl>/string.kl"
+#line 273 "<kl>/string.kl"
     kl_t23.tag = 1;
-#line 272 "<kl>/string.kl"
+#line 273 "<kl>/string.kl"
     kl_t0 = kl_t23;
-#line 272 "<kl>/string.kl"
+#line 273 "<kl>/string.kl"
     return kl_t0;
     bb7:
-#line 261 "<kl>/string.kl"
+#line 262 "<kl>/string.kl"
     kl_t20.tag = 0;
-#line 261 "<kl>/string.kl"
+#line 262 "<kl>/string.kl"
     kl_t20.kl_4some_value = kl_i_11;
-#line 261 "<kl>/string.kl"
+#line 262 "<kl>/string.kl"
     kl_t0 = kl_t20;
-#line 261 "<kl>/string.kl"
+#line 262 "<kl>/string.kl"
     return kl_t0;
     bb8:
-#line 264 "<kl>/string.kl"
+#line 265 "<kl>/string.kl"
     kl_t21 = kl_i_11 == 0;
-#line 264 "<kl>/string.kl"
+#line 265 "<kl>/string.kl"
     if ( kl_t21 ) goto bb6; else goto bb9;
     bb9:
-#line 269 "<kl>/string.kl"
+#line 270 "<kl>/string.kl"
     kl_t22 = __builtin_sub_overflow( kl_i_11, 1, &( uint64_t ) { 0 } );
-#line 269 "<kl>/string.kl"
+#line 270 "<kl>/string.kl"
     if ( kl_t22 ) goto bb10; else goto bb11;
     bb10:
-#line 269 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 269, "arithmetic overflow: i--;" );
+#line 270 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 270, "arithmetic overflow: i--;" );
     bb11:
-#line 269 "<kl>/string.kl"
+#line 270 "<kl>/string.kl"
     kl_i_11 = kl_i_11 - 1;
-#line 257 "<kl>/string.kl"
+#line 258 "<kl>/string.kl"
     goto bb5;
-#line 273 "<kl>/string.kl"
+#line 274 "<kl>/string.kl"
 }
 
-#line 281 "<kl>/string.kl"
+#line 282 "<kl>/string.kl"
 struct kl_2kl4list_list__IQ2kl6stringE kl_2kl6string_5split__SQ2kl6string_7textual( struct kl_2kl6string_string* kl_this_1, struct kl_7prelude_textual__ref kl_separator_2 )
 {
     struct kl_2kl4list_list__IQ2kl6stringE kl_t0;
@@ -1393,197 +1400,197 @@ struct kl_2kl4list_list__IQ2kl6stringE kl_2kl6string_5split__SQ2kl6string_7textu
     bool kl_t50;
     kl__fn__FMP4voidEPL2u8 kl_t51;
     void* kl_t52;
-#line 283 "<kl>/string.kl"
+#line 284 "<kl>/string.kl"
     kl_t48 = false;
-#line 283 "<kl>/string.kl"
+#line 284 "<kl>/string.kl"
     kl_t49 = false;
-#line 283 "<kl>/string.kl"
+#line 284 "<kl>/string.kl"
     kl_t50 = false;
-#line 283 "<kl>/string.kl"
+#line 284 "<kl>/string.kl"
     kl_t4 = kl_separator_2;
-#line 283 "<kl>/string.kl"
+#line 284 "<kl>/string.kl"
     kl_t51 = ( kl_t4 ).vtable->kl__7as_text__;
-#line 283 "<kl>/string.kl"
+#line 284 "<kl>/string.kl"
     kl_t52 = ( kl_t4 ).self;
-#line 283 "<kl>/string.kl"
+#line 284 "<kl>/string.kl"
     kl_t5 = kl_t51( kl_t52 );
-#line 283 "<kl>/string.kl"
+#line 284 "<kl>/string.kl"
     kl_text_3 = kl_t5;
-#line 285 "<kl>/string.kl"
+#line 286 "<kl>/string.kl"
     kl_t6 = ( kl_text_3 ).size;
-#line 285 "<kl>/string.kl"
+#line 286 "<kl>/string.kl"
     kl_t7 = kl_t6 == 0;
-#line 285 "<kl>/string.kl"
+#line 286 "<kl>/string.kl"
     if ( kl_t7 ) goto bb1; else goto bb2;
     bb1:
     kl_t9 = &kl_t8;
-#line 287 "<kl>/string.kl"
+#line 288 "<kl>/string.kl"
     kl_t10 = ( uint8_t* ) "split on an empty separator";
-#line 287 "<kl>/string.kl"
+#line 288 "<kl>/string.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t9, kl_t10, 27 );
-#line 287 "<kl>/string.kl"
-    kl_rt_panic_message( "<kl>/string.kl", 287, kl_t8.kl_data, kl_t8.kl_size );
+#line 288 "<kl>/string.kl"
+    kl_rt_panic_message( "<kl>/string.kl", 288, kl_t8.kl_data, kl_t8.kl_size );
     bb2:
-#line 290 "<kl>/string.kl"
+#line 291 "<kl>/string.kl"
     kl_start_12 = 0;
     kl_t48 = false;
-#line 291 "<kl>/string.kl"
+#line 292 "<kl>/string.kl"
     kl_t14 = &kl_pieces_13;
-#line 291 "<kl>/string.kl"
+#line 292 "<kl>/string.kl"
     kl_t48 = true;
-#line 291 "<kl>/string.kl"
+#line 292 "<kl>/string.kl"
     kl_2kl4list_4list__IQ2kl6stringE__RQ2kl4listIQ2kl6stringE__ctor( kl_t14 );
     kl_i_16 = 0;
-#line 292 "<kl>/string.kl"
+#line 293 "<kl>/string.kl"
     goto bb3;
     bb3:
-#line 292 "<kl>/string.kl"
+#line 293 "<kl>/string.kl"
     kl_t17 = ( kl_text_3 ).size;
-#line 292 "<kl>/string.kl"
+#line 293 "<kl>/string.kl"
     kl_t18 = __builtin_add_overflow( kl_i_16, kl_t17, &( uint64_t ) { 0 } );
-#line 292 "<kl>/string.kl"
+#line 293 "<kl>/string.kl"
     if ( kl_t18 ) goto bb5; else goto bb6;
     bb4:
     kl_t23 = &( *kl_this_1 );
-#line 294 "<kl>/string.kl"
+#line 295 "<kl>/string.kl"
     kl_t24 = kl_text_3;
-#line 294 "<kl>/string.kl"
+#line 295 "<kl>/string.kl"
     kl_t25 = kl_2kl6string_10matches_at__SQ2kl6string_3u64_L2u8( kl_t23, kl_i_16, ( kl_t24 ).data, ( kl_t24 ).size );
-#line 294 "<kl>/string.kl"
+#line 295 "<kl>/string.kl"
     if ( kl_t25 ) goto bb8; else goto bb17;
     bb5:
-#line 292 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 292, "arithmetic overflow: i + text.size" );
+#line 293 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 293, "arithmetic overflow: i + text.size" );
     bb6:
-#line 292 "<kl>/string.kl"
+#line 293 "<kl>/string.kl"
     kl_t19 = kl_i_16 + kl_t17;
-#line 292 "<kl>/string.kl"
+#line 293 "<kl>/string.kl"
     kl_t20 = &( *kl_this_1 );
-#line 292 "<kl>/string.kl"
+#line 293 "<kl>/string.kl"
     kl_t21 = kl_2kl6string_4size__SQ2kl6string( kl_t20 );
-#line 292 "<kl>/string.kl"
+#line 293 "<kl>/string.kl"
     kl_t22 = kl_t19 <= kl_t21;
-#line 292 "<kl>/string.kl"
+#line 293 "<kl>/string.kl"
     if ( kl_t22 ) goto bb4; else goto bb7;
     bb7:
-#line 302 "<kl>/string.kl"
+#line 303 "<kl>/string.kl"
     kl_t40 = &kl_pieces_13;
-#line 302 "<kl>/string.kl"
+#line 303 "<kl>/string.kl"
     kl_t41 = &( *kl_this_1 );
-#line 302 "<kl>/string.kl"
+#line 303 "<kl>/string.kl"
     kl_t42 = &( *kl_this_1 );
-#line 302 "<kl>/string.kl"
+#line 303 "<kl>/string.kl"
     kl_t43 = kl_2kl6string_4size__SQ2kl6string( kl_t42 );
-#line 302 "<kl>/string.kl"
+#line 303 "<kl>/string.kl"
     kl_t44 = __builtin_sub_overflow( kl_t43, kl_start_12, &( uint64_t ) { 0 } );
-#line 302 "<kl>/string.kl"
+#line 303 "<kl>/string.kl"
     if ( kl_t44 ) goto bb20; else goto bb21;
     bb8:
-#line 296 "<kl>/string.kl"
+#line 297 "<kl>/string.kl"
     kl_t26 = &kl_pieces_13;
-#line 296 "<kl>/string.kl"
+#line 297 "<kl>/string.kl"
     kl_t27 = &( *kl_this_1 );
-#line 296 "<kl>/string.kl"
+#line 297 "<kl>/string.kl"
     kl_t28 = __builtin_sub_overflow( kl_i_16, kl_start_12, &( uint64_t ) { 0 } );
-#line 296 "<kl>/string.kl"
+#line 297 "<kl>/string.kl"
     if ( kl_t28 ) goto bb9; else goto bb10;
     bb9:
-#line 296 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 296, "arithmetic overflow: i - start" );
+#line 297 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 297, "arithmetic overflow: i - start" );
     bb10:
-#line 296 "<kl>/string.kl"
+#line 297 "<kl>/string.kl"
     kl_t29 = kl_i_16 - kl_start_12;
-#line 296 "<kl>/string.kl"
+#line 297 "<kl>/string.kl"
     kl_t30 = kl_2kl6string_9substring__SQ2kl6string_3u64_3u64( kl_t27, kl_start_12, kl_t29 );
-#line 296 "<kl>/string.kl"
+#line 297 "<kl>/string.kl"
     kl_t49 = true;
-#line 296 "<kl>/string.kl"
+#line 297 "<kl>/string.kl"
     kl_2kl4list_4push__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_MQ2kl6string( kl_t26, kl_t30 );
-#line 296 "<kl>/string.kl"
+#line 297 "<kl>/string.kl"
     kl_t49 = false;
-#line 296 "<kl>/string.kl"
+#line 297 "<kl>/string.kl"
     if ( kl_t49 ) kl_2kl6string_6string__dtor( &kl_t30 );
-#line 296 "<kl>/string.kl"
+#line 297 "<kl>/string.kl"
     kl_t49 = false;
     kl_t32 = ( kl_text_3 ).size;
-#line 297 "<kl>/string.kl"
+#line 298 "<kl>/string.kl"
     kl_t33 = __builtin_add_overflow( kl_i_16, kl_t32, &( uint64_t ) { 0 } );
-#line 297 "<kl>/string.kl"
+#line 298 "<kl>/string.kl"
     if ( kl_t33 ) goto bb11; else goto bb12;
     bb11:
-#line 297 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 297, "arithmetic overflow: i + text.size" );
+#line 298 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 298, "arithmetic overflow: i + text.size" );
     bb12:
-#line 297 "<kl>/string.kl"
+#line 298 "<kl>/string.kl"
     kl_t34 = kl_i_16 + kl_t32;
-#line 297 "<kl>/string.kl"
+#line 298 "<kl>/string.kl"
     kl_start_12 = kl_t34;
     kl_t35 = ( kl_text_3 ).size;
-#line 298 "<kl>/string.kl"
+#line 299 "<kl>/string.kl"
     kl_t36 = __builtin_sub_overflow( kl_t35, 1, &( uint64_t ) { 0 } );
-#line 298 "<kl>/string.kl"
+#line 299 "<kl>/string.kl"
     if ( kl_t36 ) goto bb13; else goto bb14;
     bb13:
-#line 298 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 298, "arithmetic overflow: text.size - 1" );
+#line 299 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 299, "arithmetic overflow: text.size - 1" );
     bb14:
-#line 298 "<kl>/string.kl"
+#line 299 "<kl>/string.kl"
     kl_t37 = kl_t35 - 1;
-#line 298 "<kl>/string.kl"
+#line 299 "<kl>/string.kl"
     kl_t38 = __builtin_add_overflow( kl_i_16, kl_t37, &( uint64_t ) { 0 } );
-#line 298 "<kl>/string.kl"
+#line 299 "<kl>/string.kl"
     if ( kl_t38 ) goto bb15; else goto bb16;
     bb15:
-#line 298 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 298, "arithmetic overflow: i += text.size - 1;" );
+#line 299 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 299, "arithmetic overflow: i += text.size - 1;" );
     bb16:
-#line 298 "<kl>/string.kl"
+#line 299 "<kl>/string.kl"
     kl_i_16 = kl_i_16 + kl_t37;
-#line 294 "<kl>/string.kl"
+#line 295 "<kl>/string.kl"
     goto bb17;
     bb17:
-#line 292 "<kl>/string.kl"
+#line 293 "<kl>/string.kl"
     kl_t39 = __builtin_add_overflow( kl_i_16, 1, &( uint64_t ) { 0 } );
-#line 292 "<kl>/string.kl"
+#line 293 "<kl>/string.kl"
     if ( kl_t39 ) goto bb18; else goto bb19;
     bb18:
-#line 292 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 292, "arithmetic overflow: i++" );
+#line 293 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 293, "arithmetic overflow: i++" );
     bb19:
-#line 292 "<kl>/string.kl"
+#line 293 "<kl>/string.kl"
     kl_i_16 = kl_i_16 + 1;
-#line 292 "<kl>/string.kl"
+#line 293 "<kl>/string.kl"
     goto bb3;
     bb20:
-#line 302 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 302, "arithmetic overflow: size() - start" );
+#line 303 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 303, "arithmetic overflow: size() - start" );
     bb21:
-#line 302 "<kl>/string.kl"
+#line 303 "<kl>/string.kl"
     kl_t45 = kl_t43 - kl_start_12;
-#line 302 "<kl>/string.kl"
+#line 303 "<kl>/string.kl"
     kl_t46 = kl_2kl6string_9substring__SQ2kl6string_3u64_3u64( kl_t41, kl_start_12, kl_t45 );
-#line 302 "<kl>/string.kl"
+#line 303 "<kl>/string.kl"
     kl_t50 = true;
-#line 302 "<kl>/string.kl"
+#line 303 "<kl>/string.kl"
     kl_2kl4list_4push__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_MQ2kl6string( kl_t40, kl_t46 );
-#line 302 "<kl>/string.kl"
+#line 303 "<kl>/string.kl"
     kl_t50 = false;
-#line 302 "<kl>/string.kl"
+#line 303 "<kl>/string.kl"
     if ( kl_t50 ) kl_2kl6string_6string__dtor( &kl_t46 );
-#line 302 "<kl>/string.kl"
+#line 303 "<kl>/string.kl"
     kl_t50 = false;
     kl_t0 = kl_pieces_13;
-#line 303 "<kl>/string.kl"
+#line 304 "<kl>/string.kl"
     kl_t48 = false;
-#line 303 "<kl>/string.kl"
+#line 304 "<kl>/string.kl"
     if ( kl_t48 ) kl_2kl4list_4list__IQ2kl6stringE__dtor( &kl_pieces_13 );
-#line 303 "<kl>/string.kl"
+#line 304 "<kl>/string.kl"
     kl_t48 = false;
-#line 303 "<kl>/string.kl"
+#line 304 "<kl>/string.kl"
     return kl_t0;
 }
 
-#line 312 "<kl>/string.kl"
+#line 313 "<kl>/string.kl"
 struct kl_2kl6string_string kl_2kl6string_7replace__SQ2kl6string_7textual_7textual( struct kl_2kl6string_string* kl_this_1, struct kl_7prelude_textual__ref kl_pattern_2, struct kl_7prelude_textual__ref kl_replacement_3 )
 {
     struct kl_2kl6string_string kl_t0;
@@ -1622,138 +1629,138 @@ struct kl_2kl6string_string kl_2kl6string_7replace__SQ2kl6string_7textual_7textu
     void* kl_t39;
     kl__fn__FMP4voidEPL2u8 kl_t40;
     void* kl_t41;
-#line 314 "<kl>/string.kl"
+#line 315 "<kl>/string.kl"
     kl_t36 = false;
-#line 314 "<kl>/string.kl"
+#line 315 "<kl>/string.kl"
     kl_t37 = false;
-#line 314 "<kl>/string.kl"
+#line 315 "<kl>/string.kl"
     kl_t5 = kl_pattern_2;
-#line 314 "<kl>/string.kl"
+#line 315 "<kl>/string.kl"
     kl_t38 = ( kl_t5 ).vtable->kl__7as_text__;
-#line 314 "<kl>/string.kl"
+#line 315 "<kl>/string.kl"
     kl_t39 = ( kl_t5 ).self;
-#line 314 "<kl>/string.kl"
+#line 315 "<kl>/string.kl"
     kl_t6 = kl_t38( kl_t39 );
-#line 314 "<kl>/string.kl"
+#line 315 "<kl>/string.kl"
     kl_pattern_bytes_4 = kl_t6;
     kl_t8 = kl_replacement_3;
-#line 315 "<kl>/string.kl"
+#line 316 "<kl>/string.kl"
     kl_t40 = ( kl_t8 ).vtable->kl__7as_text__;
-#line 315 "<kl>/string.kl"
+#line 316 "<kl>/string.kl"
     kl_t41 = ( kl_t8 ).self;
-#line 315 "<kl>/string.kl"
+#line 316 "<kl>/string.kl"
     kl_t9 = kl_t40( kl_t41 );
-#line 315 "<kl>/string.kl"
+#line 316 "<kl>/string.kl"
     kl_replacement_bytes_7 = kl_t9;
-#line 317 "<kl>/string.kl"
+#line 318 "<kl>/string.kl"
     kl_t10 = ( kl_pattern_bytes_4 ).size;
-#line 317 "<kl>/string.kl"
+#line 318 "<kl>/string.kl"
     kl_t11 = kl_t10 == 0;
-#line 317 "<kl>/string.kl"
+#line 318 "<kl>/string.kl"
     if ( kl_t11 ) goto bb1; else goto bb2;
     bb1:
     kl_t13 = &kl_t12;
-#line 319 "<kl>/string.kl"
+#line 320 "<kl>/string.kl"
     kl_t14 = ( uint8_t* ) "replace with an empty pattern";
-#line 319 "<kl>/string.kl"
+#line 320 "<kl>/string.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t13, kl_t14, 29 );
-#line 319 "<kl>/string.kl"
-    kl_rt_panic_message( "<kl>/string.kl", 319, kl_t12.kl_data, kl_t12.kl_size );
+#line 320 "<kl>/string.kl"
+    kl_rt_panic_message( "<kl>/string.kl", 320, kl_t12.kl_data, kl_t12.kl_size );
     bb2:
-#line 322 "<kl>/string.kl"
+#line 323 "<kl>/string.kl"
     kl_t36 = false;
-#line 322 "<kl>/string.kl"
+#line 323 "<kl>/string.kl"
     kl_t17 = &( *kl_this_1 );
-#line 322 "<kl>/string.kl"
+#line 323 "<kl>/string.kl"
     kl_t18 = kl_2kl6string_4size__SQ2kl6string( kl_t17 );
-#line 322 "<kl>/string.kl"
+#line 323 "<kl>/string.kl"
     kl_t19 = kl_2kl6string_13with_capacity__SQ2kl6string_3u64( kl_t18 );
-#line 322 "<kl>/string.kl"
+#line 323 "<kl>/string.kl"
     kl_t37 = true;
-#line 322 "<kl>/string.kl"
+#line 323 "<kl>/string.kl"
     kl_result_16 = kl_t19;
-#line 322 "<kl>/string.kl"
+#line 323 "<kl>/string.kl"
     kl_t37 = false;
-#line 322 "<kl>/string.kl"
+#line 323 "<kl>/string.kl"
     kl_t36 = true;
-#line 322 "<kl>/string.kl"
+#line 323 "<kl>/string.kl"
     if ( kl_t37 ) kl_2kl6string_6string__dtor( &kl_t19 );
-#line 322 "<kl>/string.kl"
+#line 323 "<kl>/string.kl"
     kl_t37 = false;
-#line 324 "<kl>/string.kl"
+#line 325 "<kl>/string.kl"
     kl_i_20 = 0;
     goto bb3;
     bb3:
-#line 325 "<kl>/string.kl"
+#line 326 "<kl>/string.kl"
     kl_t21 = &( *kl_this_1 );
-#line 325 "<kl>/string.kl"
+#line 326 "<kl>/string.kl"
     kl_t22 = kl_2kl6string_4size__SQ2kl6string( kl_t21 );
-#line 325 "<kl>/string.kl"
+#line 326 "<kl>/string.kl"
     kl_t23 = kl_i_20 < kl_t22;
-#line 325 "<kl>/string.kl"
+#line 326 "<kl>/string.kl"
     if ( kl_t23 ) goto bb4; else goto bb5;
     bb4:
     kl_t24 = &( *kl_this_1 );
-#line 327 "<kl>/string.kl"
+#line 328 "<kl>/string.kl"
     kl_t25 = kl_pattern_bytes_4;
-#line 327 "<kl>/string.kl"
+#line 328 "<kl>/string.kl"
     kl_t26 = kl_2kl6string_10matches_at__SQ2kl6string_3u64_L2u8( kl_t24, kl_i_20, ( kl_t25 ).data, ( kl_t25 ).size );
-#line 327 "<kl>/string.kl"
+#line 328 "<kl>/string.kl"
     if ( kl_t26 ) goto bb6; else goto bb7;
     bb5:
-#line 342 "<kl>/string.kl"
+#line 343 "<kl>/string.kl"
     kl_t0 = kl_result_16;
-#line 342 "<kl>/string.kl"
+#line 343 "<kl>/string.kl"
     kl_t36 = false;
-#line 342 "<kl>/string.kl"
+#line 343 "<kl>/string.kl"
     if ( kl_t36 ) kl_2kl6string_6string__dtor( &kl_result_16 );
-#line 342 "<kl>/string.kl"
+#line 343 "<kl>/string.kl"
     kl_t36 = false;
-#line 342 "<kl>/string.kl"
+#line 343 "<kl>/string.kl"
     return kl_t0;
     bb6:
-#line 329 "<kl>/string.kl"
+#line 330 "<kl>/string.kl"
     kl_t27 = &kl_result_16;
-#line 329 "<kl>/string.kl"
+#line 330 "<kl>/string.kl"
     kl_t28 = kl_replacement_bytes_7;
-#line 329 "<kl>/string.kl"
+#line 330 "<kl>/string.kl"
     kl_2kl6string_6append__SQ2kl6string_L2u8( kl_t27, ( kl_t28 ).data, ( kl_t28 ).size );
     kl_t30 = ( kl_pattern_bytes_4 ).size;
-#line 330 "<kl>/string.kl"
+#line 331 "<kl>/string.kl"
     kl_t31 = __builtin_add_overflow( kl_i_20, kl_t30, &( uint64_t ) { 0 } );
-#line 330 "<kl>/string.kl"
+#line 331 "<kl>/string.kl"
     if ( kl_t31 ) goto bb8; else goto bb9;
     bb7:
-#line 336 "<kl>/string.kl"
+#line 337 "<kl>/string.kl"
     kl_t32 = &kl_result_16;
-#line 336 "<kl>/string.kl"
+#line 337 "<kl>/string.kl"
     kl_t33 = ( *kl_this_1 ).kl_data_ + kl_i_20;
-#line 336 "<kl>/string.kl"
+#line 337 "<kl>/string.kl"
     kl_2kl6string_4push__SQ2kl6string_2u8( kl_t32, ( *kl_t33 ) );
-#line 338 "<kl>/string.kl"
+#line 339 "<kl>/string.kl"
     kl_t35 = __builtin_add_overflow( kl_i_20, 1, &( uint64_t ) { 0 } );
-#line 338 "<kl>/string.kl"
+#line 339 "<kl>/string.kl"
     if ( kl_t35 ) goto bb10; else goto bb11;
     bb8:
-#line 330 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 330, "arithmetic overflow: i += pattern_bytes.size;" );
+#line 331 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 331, "arithmetic overflow: i += pattern_bytes.size;" );
     bb9:
-#line 330 "<kl>/string.kl"
+#line 331 "<kl>/string.kl"
     kl_i_20 = kl_i_20 + kl_t30;
-#line 327 "<kl>/string.kl"
+#line 328 "<kl>/string.kl"
     goto bb3;
     bb10:
-#line 338 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 338, "arithmetic overflow: i++;" );
+#line 339 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 339, "arithmetic overflow: i++;" );
     bb11:
-#line 338 "<kl>/string.kl"
+#line 339 "<kl>/string.kl"
     kl_i_20 = kl_i_20 + 1;
-#line 327 "<kl>/string.kl"
+#line 328 "<kl>/string.kl"
     goto bb3;
-#line 343 "<kl>/string.kl"
+#line 344 "<kl>/string.kl"
 }
 
-#line 348 "<kl>/string.kl"
+#line 349 "<kl>/string.kl"
 struct kl_2kl6string_string kl_2kl6string_10trim_start__SQ2kl6string( struct kl_2kl6string_string* kl_this_1 )
 {
     struct kl_2kl6string_string kl_t0;
@@ -1777,96 +1784,96 @@ struct kl_2kl6string_string kl_2kl6string_10trim_start__SQ2kl6string( struct kl_
     uint64_t kl_t19;
     struct kl_2kl6string_string kl_t20;
     bool kl_t21;
-#line 350 "<kl>/string.kl"
+#line 351 "<kl>/string.kl"
     kl_t21 = false;
-#line 350 "<kl>/string.kl"
+#line 351 "<kl>/string.kl"
     kl_start_2 = 0;
     goto bb1;
     bb1:
-#line 351 "<kl>/string.kl"
+#line 352 "<kl>/string.kl"
     kl_t4 = &( *kl_this_1 );
-#line 351 "<kl>/string.kl"
+#line 352 "<kl>/string.kl"
     kl_t5 = kl_2kl6string_4size__SQ2kl6string( kl_t4 );
-#line 351 "<kl>/string.kl"
+#line 352 "<kl>/string.kl"
     kl_t6 = kl_start_2 < kl_t5;
-#line 351 "<kl>/string.kl"
+#line 352 "<kl>/string.kl"
     kl_t3 = kl_t6;
-#line 351 "<kl>/string.kl"
+#line 352 "<kl>/string.kl"
     if ( kl_t3 ) goto bb3; else goto bb4;
     bb2:
     kl_t14 = __builtin_add_overflow( kl_start_2, 1, &( uint64_t ) { 0 } );
-#line 353 "<kl>/string.kl"
+#line 354 "<kl>/string.kl"
     if ( kl_t14 ) goto bb8; else goto bb9;
     bb3:
-#line 351 "<kl>/string.kl"
+#line 352 "<kl>/string.kl"
     kl_t7 = &( *kl_this_1 );
-#line 351 "<kl>/string.kl"
+#line 352 "<kl>/string.kl"
     kl_t8 = kl_2kl6string_7as_text__SQ2kl6string( kl_t7 );
-#line 351 "<kl>/string.kl"
+#line 352 "<kl>/string.kl"
     kl_t9 = ( kl_t8 ).size;
-#line 351 "<kl>/string.kl"
+#line 352 "<kl>/string.kl"
     kl_t10 = ( kl_t8 ).data;
-#line 351 "<kl>/string.kl"
+#line 352 "<kl>/string.kl"
     kl_t11 = kl_start_2 < kl_t9;
-#line 351 "<kl>/string.kl"
+#line 352 "<kl>/string.kl"
     if ( kl_t11 ) goto bb6; else goto bb5;
     bb4:
-#line 351 "<kl>/string.kl"
+#line 352 "<kl>/string.kl"
     if ( kl_t3 ) goto bb2; else goto bb7;
     bb5:
-#line 351 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 351, "out of bounds: as_text()[start]" );
+#line 352 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 352, "out of bounds: as_text()[start]" );
     bb6:
-#line 351 "<kl>/string.kl"
+#line 352 "<kl>/string.kl"
     kl_t12 = kl_t10 + kl_start_2;
-#line 351 "<kl>/string.kl"
+#line 352 "<kl>/string.kl"
     kl_t13 = kl_2kl6string_8is_space__2u8( ( *kl_t12 ) );
-#line 351 "<kl>/string.kl"
+#line 352 "<kl>/string.kl"
     kl_t3 = kl_t13;
-#line 351 "<kl>/string.kl"
+#line 352 "<kl>/string.kl"
     goto bb4;
     bb7:
-#line 356 "<kl>/string.kl"
+#line 357 "<kl>/string.kl"
     kl_t15 = &( *kl_this_1 );
-#line 356 "<kl>/string.kl"
+#line 357 "<kl>/string.kl"
     kl_t16 = &( *kl_this_1 );
-#line 356 "<kl>/string.kl"
+#line 357 "<kl>/string.kl"
     kl_t17 = kl_2kl6string_4size__SQ2kl6string( kl_t16 );
-#line 356 "<kl>/string.kl"
+#line 357 "<kl>/string.kl"
     kl_t18 = __builtin_sub_overflow( kl_t17, kl_start_2, &( uint64_t ) { 0 } );
-#line 356 "<kl>/string.kl"
+#line 357 "<kl>/string.kl"
     if ( kl_t18 ) goto bb10; else goto bb11;
     bb8:
-#line 353 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 353, "arithmetic overflow: start++;" );
+#line 354 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 354, "arithmetic overflow: start++;" );
     bb9:
-#line 353 "<kl>/string.kl"
+#line 354 "<kl>/string.kl"
     kl_start_2 = kl_start_2 + 1;
-#line 351 "<kl>/string.kl"
+#line 352 "<kl>/string.kl"
     goto bb1;
     bb10:
-#line 356 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 356, "arithmetic overflow: size() - start" );
+#line 357 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 357, "arithmetic overflow: size() - start" );
     bb11:
-#line 356 "<kl>/string.kl"
+#line 357 "<kl>/string.kl"
     kl_t19 = kl_t17 - kl_start_2;
-#line 356 "<kl>/string.kl"
+#line 357 "<kl>/string.kl"
     kl_t20 = kl_2kl6string_9substring__SQ2kl6string_3u64_3u64( kl_t15, kl_start_2, kl_t19 );
-#line 356 "<kl>/string.kl"
+#line 357 "<kl>/string.kl"
     kl_t21 = true;
-#line 356 "<kl>/string.kl"
+#line 357 "<kl>/string.kl"
     kl_t0 = kl_t20;
-#line 356 "<kl>/string.kl"
+#line 357 "<kl>/string.kl"
     kl_t21 = false;
-#line 356 "<kl>/string.kl"
+#line 357 "<kl>/string.kl"
     if ( kl_t21 ) kl_2kl6string_6string__dtor( &kl_t20 );
-#line 356 "<kl>/string.kl"
+#line 357 "<kl>/string.kl"
     kl_t21 = false;
-#line 356 "<kl>/string.kl"
+#line 357 "<kl>/string.kl"
     return kl_t0;
 }
 
-#line 360 "<kl>/string.kl"
+#line 361 "<kl>/string.kl"
 struct kl_2kl6string_string kl_2kl6string_8trim_end__SQ2kl6string( struct kl_2kl6string_string* kl_this_1 )
 {
     struct kl_2kl6string_string kl_t0;
@@ -1888,93 +1895,93 @@ struct kl_2kl6string_string kl_2kl6string_8trim_end__SQ2kl6string( struct kl_2kl
     struct kl_2kl6string_string* kl_t17;
     struct kl_2kl6string_string kl_t18;
     bool kl_t19;
-#line 362 "<kl>/string.kl"
+#line 363 "<kl>/string.kl"
     kl_t19 = false;
-#line 362 "<kl>/string.kl"
+#line 363 "<kl>/string.kl"
     kl_t3 = &( *kl_this_1 );
-#line 362 "<kl>/string.kl"
+#line 363 "<kl>/string.kl"
     kl_t4 = kl_2kl6string_4size__SQ2kl6string( kl_t3 );
-#line 362 "<kl>/string.kl"
+#line 363 "<kl>/string.kl"
     kl_end_2 = kl_t4;
     goto bb1;
     bb1:
-#line 363 "<kl>/string.kl"
+#line 364 "<kl>/string.kl"
     kl_t6 = kl_end_2 > 0;
-#line 363 "<kl>/string.kl"
+#line 364 "<kl>/string.kl"
     kl_t5 = kl_t6;
-#line 363 "<kl>/string.kl"
+#line 364 "<kl>/string.kl"
     if ( kl_t5 ) goto bb3; else goto bb4;
     bb2:
     kl_t16 = __builtin_sub_overflow( kl_end_2, 1, &( uint64_t ) { 0 } );
-#line 365 "<kl>/string.kl"
+#line 366 "<kl>/string.kl"
     if ( kl_t16 ) goto bb10; else goto bb11;
     bb3:
-#line 363 "<kl>/string.kl"
+#line 364 "<kl>/string.kl"
     kl_t7 = &( *kl_this_1 );
-#line 363 "<kl>/string.kl"
+#line 364 "<kl>/string.kl"
     kl_t8 = kl_2kl6string_7as_text__SQ2kl6string( kl_t7 );
-#line 363 "<kl>/string.kl"
+#line 364 "<kl>/string.kl"
     kl_t9 = ( kl_t8 ).size;
-#line 363 "<kl>/string.kl"
+#line 364 "<kl>/string.kl"
     kl_t10 = ( kl_t8 ).data;
-#line 363 "<kl>/string.kl"
+#line 364 "<kl>/string.kl"
     kl_t11 = __builtin_sub_overflow( kl_end_2, 1, &( uint64_t ) { 0 } );
-#line 363 "<kl>/string.kl"
+#line 364 "<kl>/string.kl"
     if ( kl_t11 ) goto bb5; else goto bb6;
     bb4:
-#line 363 "<kl>/string.kl"
+#line 364 "<kl>/string.kl"
     if ( kl_t5 ) goto bb2; else goto bb9;
     bb5:
-#line 363 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 363, "arithmetic overflow: end - 1" );
+#line 364 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 364, "arithmetic overflow: end - 1" );
     bb6:
-#line 363 "<kl>/string.kl"
+#line 364 "<kl>/string.kl"
     kl_t12 = kl_end_2 - 1;
-#line 363 "<kl>/string.kl"
+#line 364 "<kl>/string.kl"
     kl_t13 = kl_t12 < kl_t9;
-#line 363 "<kl>/string.kl"
+#line 364 "<kl>/string.kl"
     if ( kl_t13 ) goto bb8; else goto bb7;
     bb7:
-#line 363 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 363, "out of bounds: as_text()[end - 1]" );
+#line 364 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 364, "out of bounds: as_text()[end - 1]" );
     bb8:
-#line 363 "<kl>/string.kl"
+#line 364 "<kl>/string.kl"
     kl_t14 = kl_t10 + kl_t12;
-#line 363 "<kl>/string.kl"
+#line 364 "<kl>/string.kl"
     kl_t15 = kl_2kl6string_8is_space__2u8( ( *kl_t14 ) );
-#line 363 "<kl>/string.kl"
+#line 364 "<kl>/string.kl"
     kl_t5 = kl_t15;
-#line 363 "<kl>/string.kl"
+#line 364 "<kl>/string.kl"
     goto bb4;
     bb9:
-#line 368 "<kl>/string.kl"
+#line 369 "<kl>/string.kl"
     kl_t17 = &( *kl_this_1 );
-#line 368 "<kl>/string.kl"
+#line 369 "<kl>/string.kl"
     kl_t18 = kl_2kl6string_9substring__SQ2kl6string_3u64_3u64( kl_t17, 0, kl_end_2 );
-#line 368 "<kl>/string.kl"
+#line 369 "<kl>/string.kl"
     kl_t19 = true;
-#line 368 "<kl>/string.kl"
+#line 369 "<kl>/string.kl"
     kl_t0 = kl_t18;
-#line 368 "<kl>/string.kl"
+#line 369 "<kl>/string.kl"
     kl_t19 = false;
-#line 368 "<kl>/string.kl"
+#line 369 "<kl>/string.kl"
     if ( kl_t19 ) kl_2kl6string_6string__dtor( &kl_t18 );
-#line 368 "<kl>/string.kl"
+#line 369 "<kl>/string.kl"
     kl_t19 = false;
-#line 368 "<kl>/string.kl"
+#line 369 "<kl>/string.kl"
     return kl_t0;
     bb10:
-#line 365 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 365, "arithmetic overflow: end--;" );
+#line 366 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 366, "arithmetic overflow: end--;" );
     bb11:
-#line 365 "<kl>/string.kl"
+#line 366 "<kl>/string.kl"
     kl_end_2 = kl_end_2 - 1;
-#line 363 "<kl>/string.kl"
+#line 364 "<kl>/string.kl"
     goto bb1;
-#line 369 "<kl>/string.kl"
+#line 370 "<kl>/string.kl"
 }
 
-#line 372 "<kl>/string.kl"
+#line 373 "<kl>/string.kl"
 struct kl_2kl6string_string kl_2kl6string_4trim__SQ2kl6string( struct kl_2kl6string_string* kl_this_1 )
 {
     struct kl_2kl6string_string kl_t0;
@@ -2011,157 +2018,157 @@ struct kl_2kl6string_string kl_2kl6string_4trim__SQ2kl6string( struct kl_2kl6str
     uint64_t kl_t32;
     struct kl_2kl6string_string kl_t33;
     bool kl_t34;
-#line 374 "<kl>/string.kl"
+#line 375 "<kl>/string.kl"
     kl_t34 = false;
-#line 374 "<kl>/string.kl"
+#line 375 "<kl>/string.kl"
     kl_start_2 = 0;
     goto bb1;
     bb1:
-#line 375 "<kl>/string.kl"
+#line 376 "<kl>/string.kl"
     kl_t4 = &( *kl_this_1 );
-#line 375 "<kl>/string.kl"
+#line 376 "<kl>/string.kl"
     kl_t5 = kl_2kl6string_4size__SQ2kl6string( kl_t4 );
-#line 375 "<kl>/string.kl"
+#line 376 "<kl>/string.kl"
     kl_t6 = kl_start_2 < kl_t5;
-#line 375 "<kl>/string.kl"
+#line 376 "<kl>/string.kl"
     kl_t3 = kl_t6;
-#line 375 "<kl>/string.kl"
+#line 376 "<kl>/string.kl"
     if ( kl_t3 ) goto bb3; else goto bb4;
     bb2:
     kl_t14 = __builtin_add_overflow( kl_start_2, 1, &( uint64_t ) { 0 } );
-#line 377 "<kl>/string.kl"
+#line 378 "<kl>/string.kl"
     if ( kl_t14 ) goto bb8; else goto bb9;
     bb3:
-#line 375 "<kl>/string.kl"
+#line 376 "<kl>/string.kl"
     kl_t7 = &( *kl_this_1 );
-#line 375 "<kl>/string.kl"
+#line 376 "<kl>/string.kl"
     kl_t8 = kl_2kl6string_7as_text__SQ2kl6string( kl_t7 );
-#line 375 "<kl>/string.kl"
+#line 376 "<kl>/string.kl"
     kl_t9 = ( kl_t8 ).size;
-#line 375 "<kl>/string.kl"
+#line 376 "<kl>/string.kl"
     kl_t10 = ( kl_t8 ).data;
-#line 375 "<kl>/string.kl"
+#line 376 "<kl>/string.kl"
     kl_t11 = kl_start_2 < kl_t9;
-#line 375 "<kl>/string.kl"
+#line 376 "<kl>/string.kl"
     if ( kl_t11 ) goto bb6; else goto bb5;
     bb4:
-#line 375 "<kl>/string.kl"
+#line 376 "<kl>/string.kl"
     if ( kl_t3 ) goto bb2; else goto bb7;
     bb5:
-#line 375 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 375, "out of bounds: as_text()[start]" );
+#line 376 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 376, "out of bounds: as_text()[start]" );
     bb6:
-#line 375 "<kl>/string.kl"
+#line 376 "<kl>/string.kl"
     kl_t12 = kl_t10 + kl_start_2;
-#line 375 "<kl>/string.kl"
+#line 376 "<kl>/string.kl"
     kl_t13 = kl_2kl6string_8is_space__2u8( ( *kl_t12 ) );
-#line 375 "<kl>/string.kl"
+#line 376 "<kl>/string.kl"
     kl_t3 = kl_t13;
-#line 375 "<kl>/string.kl"
+#line 376 "<kl>/string.kl"
     goto bb4;
     bb7:
-#line 380 "<kl>/string.kl"
+#line 381 "<kl>/string.kl"
     kl_t16 = &( *kl_this_1 );
-#line 380 "<kl>/string.kl"
+#line 381 "<kl>/string.kl"
     kl_t17 = kl_2kl6string_4size__SQ2kl6string( kl_t16 );
-#line 380 "<kl>/string.kl"
+#line 381 "<kl>/string.kl"
     kl_end_15 = kl_t17;
     goto bb10;
     bb8:
-#line 377 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 377, "arithmetic overflow: start++;" );
+#line 378 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 378, "arithmetic overflow: start++;" );
     bb9:
-#line 377 "<kl>/string.kl"
+#line 378 "<kl>/string.kl"
     kl_start_2 = kl_start_2 + 1;
-#line 375 "<kl>/string.kl"
+#line 376 "<kl>/string.kl"
     goto bb1;
     bb10:
-#line 381 "<kl>/string.kl"
+#line 382 "<kl>/string.kl"
     kl_t19 = kl_end_15 > kl_start_2;
-#line 381 "<kl>/string.kl"
+#line 382 "<kl>/string.kl"
     kl_t18 = kl_t19;
-#line 381 "<kl>/string.kl"
+#line 382 "<kl>/string.kl"
     if ( kl_t18 ) goto bb12; else goto bb13;
     bb11:
     kl_t29 = __builtin_sub_overflow( kl_end_15, 1, &( uint64_t ) { 0 } );
-#line 383 "<kl>/string.kl"
+#line 384 "<kl>/string.kl"
     if ( kl_t29 ) goto bb19; else goto bb20;
     bb12:
-#line 381 "<kl>/string.kl"
+#line 382 "<kl>/string.kl"
     kl_t20 = &( *kl_this_1 );
-#line 381 "<kl>/string.kl"
+#line 382 "<kl>/string.kl"
     kl_t21 = kl_2kl6string_7as_text__SQ2kl6string( kl_t20 );
-#line 381 "<kl>/string.kl"
+#line 382 "<kl>/string.kl"
     kl_t22 = ( kl_t21 ).size;
-#line 381 "<kl>/string.kl"
+#line 382 "<kl>/string.kl"
     kl_t23 = ( kl_t21 ).data;
-#line 381 "<kl>/string.kl"
+#line 382 "<kl>/string.kl"
     kl_t24 = __builtin_sub_overflow( kl_end_15, 1, &( uint64_t ) { 0 } );
-#line 381 "<kl>/string.kl"
+#line 382 "<kl>/string.kl"
     if ( kl_t24 ) goto bb14; else goto bb15;
     bb13:
-#line 381 "<kl>/string.kl"
+#line 382 "<kl>/string.kl"
     if ( kl_t18 ) goto bb11; else goto bb18;
     bb14:
-#line 381 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 381, "arithmetic overflow: end - 1" );
+#line 382 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 382, "arithmetic overflow: end - 1" );
     bb15:
-#line 381 "<kl>/string.kl"
+#line 382 "<kl>/string.kl"
     kl_t25 = kl_end_15 - 1;
-#line 381 "<kl>/string.kl"
+#line 382 "<kl>/string.kl"
     kl_t26 = kl_t25 < kl_t22;
-#line 381 "<kl>/string.kl"
+#line 382 "<kl>/string.kl"
     if ( kl_t26 ) goto bb17; else goto bb16;
     bb16:
-#line 381 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 381, "out of bounds: as_text()[end - 1]" );
+#line 382 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 382, "out of bounds: as_text()[end - 1]" );
     bb17:
-#line 381 "<kl>/string.kl"
+#line 382 "<kl>/string.kl"
     kl_t27 = kl_t23 + kl_t25;
-#line 381 "<kl>/string.kl"
+#line 382 "<kl>/string.kl"
     kl_t28 = kl_2kl6string_8is_space__2u8( ( *kl_t27 ) );
-#line 381 "<kl>/string.kl"
+#line 382 "<kl>/string.kl"
     kl_t18 = kl_t28;
-#line 381 "<kl>/string.kl"
+#line 382 "<kl>/string.kl"
     goto bb13;
     bb18:
-#line 386 "<kl>/string.kl"
+#line 387 "<kl>/string.kl"
     kl_t30 = &( *kl_this_1 );
-#line 386 "<kl>/string.kl"
+#line 387 "<kl>/string.kl"
     kl_t31 = __builtin_sub_overflow( kl_end_15, kl_start_2, &( uint64_t ) { 0 } );
-#line 386 "<kl>/string.kl"
+#line 387 "<kl>/string.kl"
     if ( kl_t31 ) goto bb21; else goto bb22;
     bb19:
-#line 383 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 383, "arithmetic overflow: end--;" );
+#line 384 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 384, "arithmetic overflow: end--;" );
     bb20:
-#line 383 "<kl>/string.kl"
+#line 384 "<kl>/string.kl"
     kl_end_15 = kl_end_15 - 1;
-#line 381 "<kl>/string.kl"
+#line 382 "<kl>/string.kl"
     goto bb10;
     bb21:
-#line 386 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 386, "arithmetic overflow: end - start" );
+#line 387 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 387, "arithmetic overflow: end - start" );
     bb22:
-#line 386 "<kl>/string.kl"
+#line 387 "<kl>/string.kl"
     kl_t32 = kl_end_15 - kl_start_2;
-#line 386 "<kl>/string.kl"
+#line 387 "<kl>/string.kl"
     kl_t33 = kl_2kl6string_9substring__SQ2kl6string_3u64_3u64( kl_t30, kl_start_2, kl_t32 );
-#line 386 "<kl>/string.kl"
+#line 387 "<kl>/string.kl"
     kl_t34 = true;
-#line 386 "<kl>/string.kl"
+#line 387 "<kl>/string.kl"
     kl_t0 = kl_t33;
-#line 386 "<kl>/string.kl"
+#line 387 "<kl>/string.kl"
     kl_t34 = false;
-#line 386 "<kl>/string.kl"
+#line 387 "<kl>/string.kl"
     if ( kl_t34 ) kl_2kl6string_6string__dtor( &kl_t33 );
-#line 386 "<kl>/string.kl"
+#line 387 "<kl>/string.kl"
     kl_t34 = false;
-#line 386 "<kl>/string.kl"
+#line 387 "<kl>/string.kl"
     return kl_t0;
 }
 
-#line 390 "<kl>/string.kl"
+#line 391 "<kl>/string.kl"
 struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_12strip_prefix__SQ2kl6string_7textual( struct kl_2kl6string_string* kl_this_1, struct kl_7prelude_textual__ref kl_prefix_2 )
 {
     struct kl_2kl8optional_optional__IQ2kl6stringE kl_t0;
@@ -2185,93 +2192,93 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_12strip_prefix__SQ2
     bool kl_t20;
     kl__fn__FMP4voidEPL2u8 kl_t21;
     void* kl_t22;
-#line 392 "<kl>/string.kl"
+#line 393 "<kl>/string.kl"
     kl_t18 = false;
-#line 392 "<kl>/string.kl"
+#line 393 "<kl>/string.kl"
     kl_t19 = false;
-#line 392 "<kl>/string.kl"
+#line 393 "<kl>/string.kl"
     kl_t20 = false;
-#line 392 "<kl>/string.kl"
+#line 393 "<kl>/string.kl"
     kl_t3 = &( *kl_this_1 );
-#line 392 "<kl>/string.kl"
+#line 393 "<kl>/string.kl"
     kl_t4 = kl_prefix_2;
-#line 392 "<kl>/string.kl"
+#line 393 "<kl>/string.kl"
     kl_t5 = kl_2kl6string_11starts_with__SQ2kl6string_7textual( kl_t3, kl_t4 );
-#line 392 "<kl>/string.kl"
+#line 393 "<kl>/string.kl"
     if ( kl_t5 ) goto bb1; else goto bb4;
     bb1:
     kl_t7 = kl_prefix_2;
-#line 394 "<kl>/string.kl"
+#line 395 "<kl>/string.kl"
     kl_t21 = ( kl_t7 ).vtable->kl__7as_text__;
-#line 394 "<kl>/string.kl"
+#line 395 "<kl>/string.kl"
     kl_t22 = ( kl_t7 ).self;
-#line 394 "<kl>/string.kl"
+#line 395 "<kl>/string.kl"
     kl_t8 = kl_t21( kl_t22 );
-#line 394 "<kl>/string.kl"
+#line 395 "<kl>/string.kl"
     kl_t9 = ( kl_t8 ).size;
-#line 394 "<kl>/string.kl"
+#line 395 "<kl>/string.kl"
     kl_prefix_size_6 = kl_t9;
     kl_t11 = &( *kl_this_1 );
-#line 395 "<kl>/string.kl"
+#line 396 "<kl>/string.kl"
     kl_t12 = &( *kl_this_1 );
-#line 395 "<kl>/string.kl"
+#line 396 "<kl>/string.kl"
     kl_t13 = kl_2kl6string_4size__SQ2kl6string( kl_t12 );
-#line 395 "<kl>/string.kl"
+#line 396 "<kl>/string.kl"
     kl_t14 = __builtin_sub_overflow( kl_t13, kl_prefix_size_6, &( uint64_t ) { 0 } );
-#line 395 "<kl>/string.kl"
+#line 396 "<kl>/string.kl"
     if ( kl_t14 ) goto bb2; else goto bb3;
     bb2:
-#line 395 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 395, "arithmetic overflow: size() - prefix_size" );
+#line 396 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 396, "arithmetic overflow: size() - prefix_size" );
     bb3:
-#line 395 "<kl>/string.kl"
+#line 396 "<kl>/string.kl"
     kl_t15 = kl_t13 - kl_prefix_size_6;
-#line 395 "<kl>/string.kl"
+#line 396 "<kl>/string.kl"
     kl_t16 = kl_2kl6string_9substring__SQ2kl6string_3u64_3u64( kl_t11, kl_prefix_size_6, kl_t15 );
-#line 395 "<kl>/string.kl"
+#line 396 "<kl>/string.kl"
     kl_t19 = true;
-#line 395 "<kl>/string.kl"
+#line 396 "<kl>/string.kl"
     kl_t10.tag = 0;
-#line 395 "<kl>/string.kl"
+#line 396 "<kl>/string.kl"
     kl_t18 = true;
-#line 395 "<kl>/string.kl"
+#line 396 "<kl>/string.kl"
     kl_t10.kl_4some_value = kl_t16;
-#line 395 "<kl>/string.kl"
+#line 396 "<kl>/string.kl"
     kl_t19 = false;
-#line 395 "<kl>/string.kl"
+#line 396 "<kl>/string.kl"
     kl_t18 = true;
-#line 395 "<kl>/string.kl"
+#line 396 "<kl>/string.kl"
     kl_t0 = kl_t10;
-#line 395 "<kl>/string.kl"
+#line 396 "<kl>/string.kl"
     kl_t18 = false;
-#line 395 "<kl>/string.kl"
+#line 396 "<kl>/string.kl"
     if ( kl_t18 ) kl_2kl8optional_8optional__IQ2kl6stringE__dtor( &kl_t10 );
-#line 395 "<kl>/string.kl"
+#line 396 "<kl>/string.kl"
     if ( kl_t19 ) kl_2kl6string_6string__dtor( &kl_t16 );
-#line 395 "<kl>/string.kl"
+#line 396 "<kl>/string.kl"
     kl_t19 = false;
-#line 395 "<kl>/string.kl"
+#line 396 "<kl>/string.kl"
     kl_t18 = false;
-#line 395 "<kl>/string.kl"
+#line 396 "<kl>/string.kl"
     return kl_t0;
     bb4:
-#line 398 "<kl>/string.kl"
+#line 399 "<kl>/string.kl"
     kl_t17.tag = 1;
-#line 398 "<kl>/string.kl"
+#line 399 "<kl>/string.kl"
     kl_t20 = true;
-#line 398 "<kl>/string.kl"
+#line 399 "<kl>/string.kl"
     kl_t0 = kl_t17;
-#line 398 "<kl>/string.kl"
+#line 399 "<kl>/string.kl"
     kl_t20 = false;
-#line 398 "<kl>/string.kl"
+#line 399 "<kl>/string.kl"
     if ( kl_t20 ) kl_2kl8optional_8optional__IQ2kl6stringE__dtor( &kl_t17 );
-#line 398 "<kl>/string.kl"
+#line 399 "<kl>/string.kl"
     kl_t20 = false;
-#line 398 "<kl>/string.kl"
+#line 399 "<kl>/string.kl"
     return kl_t0;
 }
 
-#line 402 "<kl>/string.kl"
+#line 403 "<kl>/string.kl"
 struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_12strip_suffix__SQ2kl6string_7textual( struct kl_2kl6string_string* kl_this_1, struct kl_7prelude_textual__ref kl_suffix_2 )
 {
     struct kl_2kl8optional_optional__IQ2kl6stringE kl_t0;
@@ -2295,93 +2302,93 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_12strip_suffix__SQ2
     bool kl_t20;
     kl__fn__FMP4voidEPL2u8 kl_t21;
     void* kl_t22;
-#line 404 "<kl>/string.kl"
+#line 405 "<kl>/string.kl"
     kl_t18 = false;
-#line 404 "<kl>/string.kl"
+#line 405 "<kl>/string.kl"
     kl_t19 = false;
-#line 404 "<kl>/string.kl"
+#line 405 "<kl>/string.kl"
     kl_t20 = false;
-#line 404 "<kl>/string.kl"
+#line 405 "<kl>/string.kl"
     kl_t3 = &( *kl_this_1 );
-#line 404 "<kl>/string.kl"
+#line 405 "<kl>/string.kl"
     kl_t4 = kl_suffix_2;
-#line 404 "<kl>/string.kl"
+#line 405 "<kl>/string.kl"
     kl_t5 = kl_2kl6string_9ends_with__SQ2kl6string_7textual( kl_t3, kl_t4 );
-#line 404 "<kl>/string.kl"
+#line 405 "<kl>/string.kl"
     if ( kl_t5 ) goto bb1; else goto bb4;
     bb1:
     kl_t7 = kl_suffix_2;
-#line 406 "<kl>/string.kl"
+#line 407 "<kl>/string.kl"
     kl_t21 = ( kl_t7 ).vtable->kl__7as_text__;
-#line 406 "<kl>/string.kl"
+#line 407 "<kl>/string.kl"
     kl_t22 = ( kl_t7 ).self;
-#line 406 "<kl>/string.kl"
+#line 407 "<kl>/string.kl"
     kl_t8 = kl_t21( kl_t22 );
-#line 406 "<kl>/string.kl"
+#line 407 "<kl>/string.kl"
     kl_t9 = ( kl_t8 ).size;
-#line 406 "<kl>/string.kl"
+#line 407 "<kl>/string.kl"
     kl_suffix_size_6 = kl_t9;
     kl_t11 = &( *kl_this_1 );
-#line 407 "<kl>/string.kl"
+#line 408 "<kl>/string.kl"
     kl_t12 = &( *kl_this_1 );
-#line 407 "<kl>/string.kl"
+#line 408 "<kl>/string.kl"
     kl_t13 = kl_2kl6string_4size__SQ2kl6string( kl_t12 );
-#line 407 "<kl>/string.kl"
+#line 408 "<kl>/string.kl"
     kl_t14 = __builtin_sub_overflow( kl_t13, kl_suffix_size_6, &( uint64_t ) { 0 } );
-#line 407 "<kl>/string.kl"
+#line 408 "<kl>/string.kl"
     if ( kl_t14 ) goto bb2; else goto bb3;
     bb2:
-#line 407 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 407, "arithmetic overflow: size() - suffix_size" );
+#line 408 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 408, "arithmetic overflow: size() - suffix_size" );
     bb3:
-#line 407 "<kl>/string.kl"
+#line 408 "<kl>/string.kl"
     kl_t15 = kl_t13 - kl_suffix_size_6;
-#line 407 "<kl>/string.kl"
+#line 408 "<kl>/string.kl"
     kl_t16 = kl_2kl6string_9substring__SQ2kl6string_3u64_3u64( kl_t11, 0, kl_t15 );
-#line 407 "<kl>/string.kl"
+#line 408 "<kl>/string.kl"
     kl_t19 = true;
-#line 407 "<kl>/string.kl"
+#line 408 "<kl>/string.kl"
     kl_t10.tag = 0;
-#line 407 "<kl>/string.kl"
+#line 408 "<kl>/string.kl"
     kl_t18 = true;
-#line 407 "<kl>/string.kl"
+#line 408 "<kl>/string.kl"
     kl_t10.kl_4some_value = kl_t16;
-#line 407 "<kl>/string.kl"
+#line 408 "<kl>/string.kl"
     kl_t19 = false;
-#line 407 "<kl>/string.kl"
+#line 408 "<kl>/string.kl"
     kl_t18 = true;
-#line 407 "<kl>/string.kl"
+#line 408 "<kl>/string.kl"
     kl_t0 = kl_t10;
-#line 407 "<kl>/string.kl"
+#line 408 "<kl>/string.kl"
     kl_t18 = false;
-#line 407 "<kl>/string.kl"
+#line 408 "<kl>/string.kl"
     if ( kl_t18 ) kl_2kl8optional_8optional__IQ2kl6stringE__dtor( &kl_t10 );
-#line 407 "<kl>/string.kl"
+#line 408 "<kl>/string.kl"
     if ( kl_t19 ) kl_2kl6string_6string__dtor( &kl_t16 );
-#line 407 "<kl>/string.kl"
+#line 408 "<kl>/string.kl"
     kl_t19 = false;
-#line 407 "<kl>/string.kl"
+#line 408 "<kl>/string.kl"
     kl_t18 = false;
-#line 407 "<kl>/string.kl"
+#line 408 "<kl>/string.kl"
     return kl_t0;
     bb4:
-#line 410 "<kl>/string.kl"
+#line 411 "<kl>/string.kl"
     kl_t17.tag = 1;
-#line 410 "<kl>/string.kl"
+#line 411 "<kl>/string.kl"
     kl_t20 = true;
-#line 410 "<kl>/string.kl"
+#line 411 "<kl>/string.kl"
     kl_t0 = kl_t17;
-#line 410 "<kl>/string.kl"
+#line 411 "<kl>/string.kl"
     kl_t20 = false;
-#line 410 "<kl>/string.kl"
+#line 411 "<kl>/string.kl"
     if ( kl_t20 ) kl_2kl8optional_8optional__IQ2kl6stringE__dtor( &kl_t17 );
-#line 410 "<kl>/string.kl"
+#line 411 "<kl>/string.kl"
     kl_t20 = false;
-#line 410 "<kl>/string.kl"
+#line 411 "<kl>/string.kl"
     return kl_t0;
 }
 
-#line 416 "<kl>/string.kl"
+#line 417 "<kl>/string.kl"
 void kl_2kl6string_4push__SQ2kl6string_2u8( struct kl_2kl6string_string* kl_this_1, uint8_t kl_value_2 )
 {
     bool kl_t3;
@@ -2392,60 +2399,60 @@ void kl_2kl6string_4push__SQ2kl6string_2u8( struct kl_2kl6string_string* kl_this
     uint64_t kl_t8;
     uint8_t* kl_t10;
     bool kl_t11;
-#line 418 "<kl>/string.kl"
+#line 419 "<kl>/string.kl"
     kl_t3 = ( *kl_this_1 ).kl_size_ == ( *kl_this_1 ).kl_cap_;
-#line 418 "<kl>/string.kl"
+#line 419 "<kl>/string.kl"
     if ( kl_t3 ) goto bb1; else goto bb7;
     bb1:
     kl_t4 = &( *kl_this_1 );
-#line 420 "<kl>/string.kl"
+#line 421 "<kl>/string.kl"
     kl_t6 = ( *kl_this_1 ).kl_cap_ > 0;
-#line 420 "<kl>/string.kl"
+#line 421 "<kl>/string.kl"
     if ( kl_t6 ) goto bb2; else goto bb3;
     bb2:
-#line 420 "<kl>/string.kl"
+#line 421 "<kl>/string.kl"
     kl_t7 = __builtin_mul_overflow( ( *kl_this_1 ).kl_cap_, 2, &( uint64_t ) { 0 } );
-#line 420 "<kl>/string.kl"
+#line 421 "<kl>/string.kl"
     if ( kl_t7 ) goto bb5; else goto bb6;
     bb3:
-#line 420 "<kl>/string.kl"
+#line 421 "<kl>/string.kl"
     kl_t5 = 1;
-#line 420 "<kl>/string.kl"
+#line 421 "<kl>/string.kl"
     goto bb4;
     bb4:
-#line 420 "<kl>/string.kl"
+#line 421 "<kl>/string.kl"
     kl_2kl6string_10reallocate__SQ2kl6string_3u64( kl_t4, kl_t5 );
-#line 418 "<kl>/string.kl"
+#line 419 "<kl>/string.kl"
     goto bb7;
     bb5:
-    kl_rt_panic( "<kl>/string.kl", 420, "arithmetic overflow: cap_ * 2" );
+    kl_rt_panic( "<kl>/string.kl", 421, "arithmetic overflow: cap_ * 2" );
     bb6:
-#line 420 "<kl>/string.kl"
+#line 421 "<kl>/string.kl"
     kl_t8 = ( *kl_this_1 ).kl_cap_ * 2;
-#line 420 "<kl>/string.kl"
+#line 421 "<kl>/string.kl"
     kl_t5 = kl_t8;
-#line 420 "<kl>/string.kl"
+#line 421 "<kl>/string.kl"
     goto bb4;
     bb7:
-#line 425 "<kl>/string.kl"
+#line 426 "<kl>/string.kl"
     kl_t10 = ( *kl_this_1 ).kl_data_ + ( *kl_this_1 ).kl_size_;
-#line 425 "<kl>/string.kl"
+#line 426 "<kl>/string.kl"
     ( *kl_t10 ) = kl_value_2;
-#line 427 "<kl>/string.kl"
+#line 428 "<kl>/string.kl"
     kl_t11 = __builtin_add_overflow( ( *kl_this_1 ).kl_size_, 1, &( uint64_t ) { 0 } );
-#line 427 "<kl>/string.kl"
+#line 428 "<kl>/string.kl"
     if ( kl_t11 ) goto bb8; else goto bb9;
     bb8:
-#line 427 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 427, "arithmetic overflow: size_ += 1;" );
+#line 428 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 428, "arithmetic overflow: size_ += 1;" );
     bb9:
-#line 427 "<kl>/string.kl"
+#line 428 "<kl>/string.kl"
     ( *kl_this_1 ).kl_size_ = ( *kl_this_1 ).kl_size_ + 1;
     return;
-#line 428 "<kl>/string.kl"
+#line 429 "<kl>/string.kl"
 }
 
-#line 435 "<kl>/string.kl"
+#line 436 "<kl>/string.kl"
 uint8_t kl_2kl6string_3pop__SQ2kl6string( struct kl_2kl6string_string* kl_this_1 )
 {
     uint8_t kl_t0;
@@ -2455,41 +2462,41 @@ uint8_t kl_2kl6string_3pop__SQ2kl6string( struct kl_2kl6string_string* kl_this_1
     uint8_t* kl_t5;
     bool kl_t7;
     uint8_t* kl_t8;
-#line 437 "<kl>/string.kl"
+#line 438 "<kl>/string.kl"
     kl_t2 = ( *kl_this_1 ).kl_size_ == 0;
-#line 437 "<kl>/string.kl"
+#line 438 "<kl>/string.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
     kl_t4 = &kl_t3;
-#line 439 "<kl>/string.kl"
+#line 440 "<kl>/string.kl"
     kl_t5 = ( uint8_t* ) "the string is empty";
-#line 439 "<kl>/string.kl"
+#line 440 "<kl>/string.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 19 );
-#line 439 "<kl>/string.kl"
-    kl_rt_panic_message( "<kl>/string.kl", 439, kl_t3.kl_data, kl_t3.kl_size );
+#line 440 "<kl>/string.kl"
+    kl_rt_panic_message( "<kl>/string.kl", 440, kl_t3.kl_data, kl_t3.kl_size );
     bb2:
     kl_t7 = __builtin_sub_overflow( ( *kl_this_1 ).kl_size_, 1, &( uint64_t ) { 0 } );
-#line 441 "<kl>/string.kl"
+#line 442 "<kl>/string.kl"
     if ( kl_t7 ) goto bb3; else goto bb4;
     bb3:
-#line 441 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 441, "arithmetic overflow: size_ -= 1;" );
+#line 442 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 442, "arithmetic overflow: size_ -= 1;" );
     bb4:
-#line 441 "<kl>/string.kl"
+#line 442 "<kl>/string.kl"
     ( *kl_this_1 ).kl_size_ = ( *kl_this_1 ).kl_size_ - 1;
-#line 444 "<kl>/string.kl"
+#line 445 "<kl>/string.kl"
     kl_t8 = ( *kl_this_1 ).kl_data_ + ( *kl_this_1 ).kl_size_;
-#line 444 "<kl>/string.kl"
+#line 445 "<kl>/string.kl"
     kl_t0 = ( *kl_t8 );
-#line 444 "<kl>/string.kl"
+#line 445 "<kl>/string.kl"
     return kl_t0;
-#line 446 "<kl>/string.kl"
+#line 447 "<kl>/string.kl"
 }
 
-#line 449 "<kl>/string.kl"
+#line 450 "<kl>/string.kl"
 void kl_2kl6string_6append__SQ2kl6string_L2u8( struct kl_2kl6string_string* kl_this_1, uint8_t* kl_bytes_2_data, uint64_t kl_bytes_2_size )
 {
-#line 449 "<kl>/string.kl"
+#line 450 "<kl>/string.kl"
     struct kl__run__L2u8__ref kl_bytes_2 = { kl_bytes_2_data, kl_bytes_2_size };
     uint64_t kl_i_3;
     uint64_t kl_t4;
@@ -2500,56 +2507,56 @@ void kl_2kl6string_6append__SQ2kl6string_L2u8( struct kl_2kl6string_string* kl_t
     bool kl_t9;
     uint8_t* kl_t10;
     bool kl_t12;
-#line 451 "<kl>/string.kl"
+#line 452 "<kl>/string.kl"
     kl_i_3 = 0;
-#line 451 "<kl>/string.kl"
+#line 452 "<kl>/string.kl"
     goto bb1;
     bb1:
-#line 451 "<kl>/string.kl"
+#line 452 "<kl>/string.kl"
     kl_t4 = ( kl_bytes_2 ).size;
-#line 451 "<kl>/string.kl"
+#line 452 "<kl>/string.kl"
     kl_t5 = kl_i_3 < kl_t4;
-#line 451 "<kl>/string.kl"
+#line 452 "<kl>/string.kl"
     if ( kl_t5 ) goto bb2; else goto bb3;
     bb2:
     kl_t6 = &( *kl_this_1 );
-#line 453 "<kl>/string.kl"
+#line 454 "<kl>/string.kl"
     kl_t7 = ( kl_bytes_2 ).size;
-#line 453 "<kl>/string.kl"
+#line 454 "<kl>/string.kl"
     kl_t8 = ( kl_bytes_2 ).data;
-#line 453 "<kl>/string.kl"
+#line 454 "<kl>/string.kl"
     kl_t9 = kl_i_3 < kl_t7;
-#line 453 "<kl>/string.kl"
+#line 454 "<kl>/string.kl"
     if ( kl_t9 ) goto bb5; else goto bb4;
     bb3:
     return;
     bb4:
-#line 453 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 453, "out of bounds: bytes[i]" );
+#line 454 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 454, "out of bounds: bytes[i]" );
     bb5:
-#line 453 "<kl>/string.kl"
+#line 454 "<kl>/string.kl"
     kl_t10 = kl_t8 + kl_i_3;
-#line 453 "<kl>/string.kl"
+#line 454 "<kl>/string.kl"
     kl_2kl6string_4push__SQ2kl6string_2u8( kl_t6, ( *kl_t10 ) );
-#line 451 "<kl>/string.kl"
+#line 452 "<kl>/string.kl"
     goto bb6;
     bb6:
-#line 451 "<kl>/string.kl"
+#line 452 "<kl>/string.kl"
     kl_t12 = __builtin_add_overflow( kl_i_3, 1, &( uint64_t ) { 0 } );
-#line 451 "<kl>/string.kl"
+#line 452 "<kl>/string.kl"
     if ( kl_t12 ) goto bb7; else goto bb8;
     bb7:
-#line 451 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 451, "arithmetic overflow: i++" );
+#line 452 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 452, "arithmetic overflow: i++" );
     bb8:
-#line 451 "<kl>/string.kl"
+#line 452 "<kl>/string.kl"
     kl_i_3 = kl_i_3 + 1;
-#line 451 "<kl>/string.kl"
+#line 452 "<kl>/string.kl"
     goto bb1;
-#line 455 "<kl>/string.kl"
+#line 456 "<kl>/string.kl"
 }
 
-#line 458 "<kl>/string.kl"
+#line 459 "<kl>/string.kl"
 void kl_2kl6string_19operator_add_assign__SQ2kl6string_7textual( struct kl_2kl6string_string* kl_this_1, struct kl_7prelude_textual__ref kl_other_2 )
 {
     struct kl__run__L2u8__ref kl_text_3;
@@ -2559,26 +2566,26 @@ void kl_2kl6string_19operator_add_assign__SQ2kl6string_7textual( struct kl_2kl6s
     struct kl__run__L2u8__ref kl_t7;
     kl__fn__FMP4voidEPL2u8 kl_t9;
     void* kl_t10;
-#line 460 "<kl>/string.kl"
+#line 461 "<kl>/string.kl"
     kl_t4 = kl_other_2;
-#line 460 "<kl>/string.kl"
+#line 461 "<kl>/string.kl"
     kl_t9 = ( kl_t4 ).vtable->kl__7as_text__;
-#line 460 "<kl>/string.kl"
+#line 461 "<kl>/string.kl"
     kl_t10 = ( kl_t4 ).self;
-#line 460 "<kl>/string.kl"
+#line 461 "<kl>/string.kl"
     kl_t5 = kl_t9( kl_t10 );
-#line 460 "<kl>/string.kl"
+#line 461 "<kl>/string.kl"
     kl_text_3 = kl_t5;
     kl_t6 = &( *kl_this_1 );
-#line 461 "<kl>/string.kl"
+#line 462 "<kl>/string.kl"
     kl_t7 = kl_text_3;
-#line 461 "<kl>/string.kl"
+#line 462 "<kl>/string.kl"
     kl_2kl6string_6append__SQ2kl6string_L2u8( kl_t6, ( kl_t7 ).data, ( kl_t7 ).size );
     return;
-#line 462 "<kl>/string.kl"
+#line 463 "<kl>/string.kl"
 }
 
-#line 465 "<kl>/string.kl"
+#line 466 "<kl>/string.kl"
 struct kl_2kl6string_string kl_2kl6string_12operator_add__SQ2kl6string_7textual( struct kl_2kl6string_string* kl_this_1, struct kl_7prelude_textual__ref kl_other_2 )
 {
     struct kl_2kl6string_string kl_t0;
@@ -2617,278 +2624,205 @@ struct kl_2kl6string_string kl_2kl6string_12operator_add__SQ2kl6string_7textual(
     bool kl_t37;
     kl__fn__FMP4voidEPL2u8 kl_t38;
     void* kl_t39;
-#line 467 "<kl>/string.kl"
+#line 468 "<kl>/string.kl"
     kl_t36 = false;
-#line 467 "<kl>/string.kl"
+#line 468 "<kl>/string.kl"
     kl_t37 = false;
-#line 467 "<kl>/string.kl"
+#line 468 "<kl>/string.kl"
     kl_t4 = kl_other_2;
-#line 467 "<kl>/string.kl"
+#line 468 "<kl>/string.kl"
     kl_t38 = ( kl_t4 ).vtable->kl__7as_text__;
-#line 467 "<kl>/string.kl"
+#line 468 "<kl>/string.kl"
     kl_t39 = ( kl_t4 ).self;
-#line 467 "<kl>/string.kl"
+#line 468 "<kl>/string.kl"
     kl_t5 = kl_t38( kl_t39 );
-#line 467 "<kl>/string.kl"
+#line 468 "<kl>/string.kl"
     kl_text_3 = kl_t5;
     kl_t36 = false;
-#line 468 "<kl>/string.kl"
+#line 469 "<kl>/string.kl"
     kl_t7 = &( *kl_this_1 );
-#line 468 "<kl>/string.kl"
+#line 469 "<kl>/string.kl"
     kl_t8 = kl_2kl6string_4size__SQ2kl6string( kl_t7 );
-#line 468 "<kl>/string.kl"
+#line 469 "<kl>/string.kl"
     kl_t9 = ( kl_text_3 ).size;
-#line 468 "<kl>/string.kl"
+#line 469 "<kl>/string.kl"
     kl_t10 = __builtin_add_overflow( kl_t8, kl_t9, &( uint64_t ) { 0 } );
-#line 468 "<kl>/string.kl"
+#line 469 "<kl>/string.kl"
     if ( kl_t10 ) goto bb1; else goto bb2;
     bb1:
-#line 468 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 468, "arithmetic overflow: size() + text.size" );
+#line 469 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 469, "arithmetic overflow: size() + text.size" );
     bb2:
-#line 468 "<kl>/string.kl"
+#line 469 "<kl>/string.kl"
     kl_t11 = kl_t8 + kl_t9;
-#line 468 "<kl>/string.kl"
+#line 469 "<kl>/string.kl"
     kl_t12 = kl_2kl6string_13with_capacity__SQ2kl6string_3u64( kl_t11 );
-#line 468 "<kl>/string.kl"
+#line 469 "<kl>/string.kl"
     kl_t37 = true;
-#line 468 "<kl>/string.kl"
+#line 469 "<kl>/string.kl"
     kl_result_6 = kl_t12;
-#line 468 "<kl>/string.kl"
+#line 469 "<kl>/string.kl"
     kl_t37 = false;
-#line 468 "<kl>/string.kl"
+#line 469 "<kl>/string.kl"
     kl_t36 = true;
-#line 468 "<kl>/string.kl"
+#line 469 "<kl>/string.kl"
     if ( kl_t37 ) kl_2kl6string_6string__dtor( &kl_t12 );
-#line 468 "<kl>/string.kl"
+#line 469 "<kl>/string.kl"
     kl_t37 = false;
-#line 470 "<kl>/string.kl"
+#line 471 "<kl>/string.kl"
     kl_i_13 = 0;
-#line 470 "<kl>/string.kl"
+#line 471 "<kl>/string.kl"
     goto bb3;
     bb3:
-#line 470 "<kl>/string.kl"
+#line 471 "<kl>/string.kl"
     kl_t14 = &( *kl_this_1 );
-#line 470 "<kl>/string.kl"
+#line 471 "<kl>/string.kl"
     kl_t15 = kl_2kl6string_4size__SQ2kl6string( kl_t14 );
-#line 470 "<kl>/string.kl"
+#line 471 "<kl>/string.kl"
     kl_t16 = kl_i_13 < kl_t15;
-#line 470 "<kl>/string.kl"
+#line 471 "<kl>/string.kl"
     if ( kl_t16 ) goto bb4; else goto bb5;
     bb4:
     kl_t17 = &kl_result_6;
-#line 472 "<kl>/string.kl"
+#line 473 "<kl>/string.kl"
     kl_t18 = &( *kl_this_1 );
-#line 472 "<kl>/string.kl"
+#line 473 "<kl>/string.kl"
     kl_t19 = kl_2kl6string_7as_text__SQ2kl6string( kl_t18 );
-#line 472 "<kl>/string.kl"
+#line 473 "<kl>/string.kl"
     kl_t20 = ( kl_t19 ).size;
-#line 472 "<kl>/string.kl"
+#line 473 "<kl>/string.kl"
     kl_t21 = ( kl_t19 ).data;
-#line 472 "<kl>/string.kl"
+#line 473 "<kl>/string.kl"
     kl_t22 = kl_i_13 < kl_t20;
-#line 472 "<kl>/string.kl"
+#line 473 "<kl>/string.kl"
     if ( kl_t22 ) goto bb7; else goto bb6;
     bb5:
-#line 475 "<kl>/string.kl"
+#line 476 "<kl>/string.kl"
     kl_i_26 = 0;
-#line 475 "<kl>/string.kl"
+#line 476 "<kl>/string.kl"
     goto bb11;
     bb6:
-#line 472 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 472, "out of bounds: as_text()[i]" );
+#line 473 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 473, "out of bounds: as_text()[i]" );
     bb7:
-#line 472 "<kl>/string.kl"
+#line 473 "<kl>/string.kl"
     kl_t23 = kl_t21 + kl_i_13;
-#line 472 "<kl>/string.kl"
+#line 473 "<kl>/string.kl"
     kl_2kl6string_4push__SQ2kl6string_2u8( kl_t17, ( *kl_t23 ) );
-#line 470 "<kl>/string.kl"
+#line 471 "<kl>/string.kl"
     goto bb8;
     bb8:
-#line 470 "<kl>/string.kl"
+#line 471 "<kl>/string.kl"
     kl_t25 = __builtin_add_overflow( kl_i_13, 1, &( uint64_t ) { 0 } );
-#line 470 "<kl>/string.kl"
+#line 471 "<kl>/string.kl"
     if ( kl_t25 ) goto bb9; else goto bb10;
     bb9:
-#line 470 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 470, "arithmetic overflow: i++" );
+#line 471 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 471, "arithmetic overflow: i++" );
     bb10:
-#line 470 "<kl>/string.kl"
+#line 471 "<kl>/string.kl"
     kl_i_13 = kl_i_13 + 1;
-#line 470 "<kl>/string.kl"
+#line 471 "<kl>/string.kl"
     goto bb3;
     bb11:
-#line 475 "<kl>/string.kl"
+#line 476 "<kl>/string.kl"
     kl_t27 = ( kl_text_3 ).size;
-#line 475 "<kl>/string.kl"
+#line 476 "<kl>/string.kl"
     kl_t28 = kl_i_26 < kl_t27;
-#line 475 "<kl>/string.kl"
+#line 476 "<kl>/string.kl"
     if ( kl_t28 ) goto bb12; else goto bb13;
     bb12:
     kl_t29 = &kl_result_6;
-#line 477 "<kl>/string.kl"
+#line 478 "<kl>/string.kl"
     kl_t30 = ( kl_text_3 ).size;
-#line 477 "<kl>/string.kl"
+#line 478 "<kl>/string.kl"
     kl_t31 = ( kl_text_3 ).data;
-#line 477 "<kl>/string.kl"
+#line 478 "<kl>/string.kl"
     kl_t32 = kl_i_26 < kl_t30;
-#line 477 "<kl>/string.kl"
+#line 478 "<kl>/string.kl"
     if ( kl_t32 ) goto bb15; else goto bb14;
     bb13:
-#line 480 "<kl>/string.kl"
+#line 481 "<kl>/string.kl"
     kl_t0 = kl_result_6;
-#line 480 "<kl>/string.kl"
+#line 481 "<kl>/string.kl"
     kl_t36 = false;
-#line 480 "<kl>/string.kl"
+#line 481 "<kl>/string.kl"
     if ( kl_t36 ) kl_2kl6string_6string__dtor( &kl_result_6 );
-#line 480 "<kl>/string.kl"
+#line 481 "<kl>/string.kl"
     kl_t36 = false;
-#line 480 "<kl>/string.kl"
+#line 481 "<kl>/string.kl"
     return kl_t0;
     bb14:
-#line 477 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 477, "out of bounds: text[i]" );
+#line 478 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 478, "out of bounds: text[i]" );
     bb15:
-#line 477 "<kl>/string.kl"
+#line 478 "<kl>/string.kl"
     kl_t33 = kl_t31 + kl_i_26;
-#line 477 "<kl>/string.kl"
+#line 478 "<kl>/string.kl"
     kl_2kl6string_4push__SQ2kl6string_2u8( kl_t29, ( *kl_t33 ) );
-#line 475 "<kl>/string.kl"
+#line 476 "<kl>/string.kl"
     goto bb16;
     bb16:
-#line 475 "<kl>/string.kl"
+#line 476 "<kl>/string.kl"
     kl_t35 = __builtin_add_overflow( kl_i_26, 1, &( uint64_t ) { 0 } );
-#line 475 "<kl>/string.kl"
+#line 476 "<kl>/string.kl"
     if ( kl_t35 ) goto bb17; else goto bb18;
     bb17:
-#line 475 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 475, "arithmetic overflow: i++" );
+#line 476 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 476, "arithmetic overflow: i++" );
     bb18:
-#line 475 "<kl>/string.kl"
+#line 476 "<kl>/string.kl"
     kl_i_26 = kl_i_26 + 1;
-#line 475 "<kl>/string.kl"
+#line 476 "<kl>/string.kl"
     goto bb11;
-#line 481 "<kl>/string.kl"
+#line 482 "<kl>/string.kl"
 }
 
-#line 484 "<kl>/string.kl"
+#line 485 "<kl>/string.kl"
 void kl_2kl6string_5clear__SQ2kl6string( struct kl_2kl6string_string* kl_this_1 )
 {
-#line 488 "<kl>/string.kl"
+#line 489 "<kl>/string.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data_ );
-#line 490 "<kl>/string.kl"
+#line 491 "<kl>/string.kl"
     ( *kl_this_1 ).kl_data_ = NULL;
     ( *kl_this_1 ).kl_size_ = 0;
     ( *kl_this_1 ).kl_cap_ = 0;
     return;
-#line 493 "<kl>/string.kl"
+#line 494 "<kl>/string.kl"
 }
 
-#line 498 "<kl>/string.kl"
+#line 499 "<kl>/string.kl"
 bool kl_2kl6string_11operator_eq__SQ2kl6string_Q2kl6string( struct kl_2kl6string_string* kl_this_1, struct kl_2kl6string_string* kl_other_2 )
 {
     bool kl_t0;
     struct kl_2kl6string_string* kl_t3;
-    uint64_t kl_t4;
-    struct kl_2kl6string_string* kl_t5;
-    uint64_t kl_t6;
-    bool kl_t7;
-    uint64_t kl_i_8;
-    struct kl_2kl6string_string* kl_t9;
-    uint64_t kl_t10;
-    bool kl_t11;
-    struct kl_2kl6string_string* kl_t12;
-    struct kl__run__L2u8__ref kl_t13;
-    uint64_t kl_t14;
-    uint8_t* kl_t15;
-    bool kl_t16;
-    uint8_t* kl_t17;
-    struct kl_2kl6string_string* kl_t18;
-    uint8_t* kl_t19;
-    bool kl_t20;
-    bool kl_t21;
-#line 500 "<kl>/string.kl"
+    struct kl__run__L2u8__ref kl_t4;
+    struct kl__run__L2u8__ref kl_t5;
+    struct kl_2kl6string_string* kl_t6;
+    struct kl__run__L2u8__ref kl_t7;
+    struct kl__run__L2u8__ref kl_t8;
+    bool kl_t9;
+#line 501 "<kl>/string.kl"
     kl_t3 = &( *kl_this_1 );
-#line 500 "<kl>/string.kl"
-    kl_t4 = kl_2kl6string_4size__SQ2kl6string( kl_t3 );
-#line 500 "<kl>/string.kl"
-    kl_t5 = &( *kl_other_2 );
-#line 500 "<kl>/string.kl"
-    kl_t6 = kl_2kl6string_4size__SQ2kl6string( kl_t5 );
-#line 500 "<kl>/string.kl"
-    kl_t7 = kl_t4 != kl_t6;
-#line 500 "<kl>/string.kl"
-    if ( kl_t7 ) goto bb1; else goto bb2;
-    bb1:
-    kl_t0 = false;
-#line 502 "<kl>/string.kl"
+#line 501 "<kl>/string.kl"
+    kl_t4 = kl_2kl6string_7as_text__SQ2kl6string( kl_t3 );
+#line 501 "<kl>/string.kl"
+    kl_t5 = kl_t4;
+#line 501 "<kl>/string.kl"
+    kl_t6 = &( *kl_other_2 );
+#line 501 "<kl>/string.kl"
+    kl_t7 = kl_2kl6string_7as_text__SQ2kl6string( kl_t6 );
+#line 501 "<kl>/string.kl"
+    kl_t8 = kl_t7;
+#line 501 "<kl>/string.kl"
+    kl_t9 = kl_2kl5_core7compare_5equal__I2u8E__L2u8_L2u8( ( kl_t5 ).data, ( kl_t5 ).size, ( kl_t8 ).data, ( kl_t8 ).size );
+#line 501 "<kl>/string.kl"
+    kl_t0 = kl_t9;
+#line 501 "<kl>/string.kl"
     return kl_t0;
-    bb2:
-#line 505 "<kl>/string.kl"
-    kl_i_8 = 0;
-#line 505 "<kl>/string.kl"
-    goto bb3;
-    bb3:
-#line 505 "<kl>/string.kl"
-    kl_t9 = &( *kl_this_1 );
-#line 505 "<kl>/string.kl"
-    kl_t10 = kl_2kl6string_4size__SQ2kl6string( kl_t9 );
-#line 505 "<kl>/string.kl"
-    kl_t11 = kl_i_8 < kl_t10;
-#line 505 "<kl>/string.kl"
-    if ( kl_t11 ) goto bb4; else goto bb5;
-    bb4:
-    kl_t12 = &( *kl_this_1 );
-#line 507 "<kl>/string.kl"
-    kl_t13 = kl_2kl6string_7as_text__SQ2kl6string( kl_t12 );
-#line 507 "<kl>/string.kl"
-    kl_t14 = ( kl_t13 ).size;
-#line 507 "<kl>/string.kl"
-    kl_t15 = ( kl_t13 ).data;
-#line 507 "<kl>/string.kl"
-    kl_t16 = kl_i_8 < kl_t14;
-#line 507 "<kl>/string.kl"
-    if ( kl_t16 ) goto bb7; else goto bb6;
-    bb5:
-#line 513 "<kl>/string.kl"
-    kl_t0 = true;
-#line 513 "<kl>/string.kl"
-    return kl_t0;
-    bb6:
-#line 507 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 507, "out of bounds: as_text()[i]" );
-    bb7:
-#line 507 "<kl>/string.kl"
-    kl_t17 = kl_t15 + kl_i_8;
-#line 507 "<kl>/string.kl"
-    kl_t18 = &( *kl_other_2 );
-#line 507 "<kl>/string.kl"
-    kl_t19 = kl_2kl6string_14operator_index__SQ2kl6string_3u64( kl_t18, kl_i_8 );
-#line 507 "<kl>/string.kl"
-    kl_t20 = ( *kl_t17 ) != ( *kl_t19 );
-#line 507 "<kl>/string.kl"
-    if ( kl_t20 ) goto bb8; else goto bb9;
-    bb8:
-    kl_t0 = false;
-#line 509 "<kl>/string.kl"
-    return kl_t0;
-    bb9:
-#line 505 "<kl>/string.kl"
-    kl_t21 = __builtin_add_overflow( kl_i_8, 1, &( uint64_t ) { 0 } );
-#line 505 "<kl>/string.kl"
-    if ( kl_t21 ) goto bb10; else goto bb11;
-    bb10:
-#line 505 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 505, "arithmetic overflow: i++" );
-    bb11:
-#line 505 "<kl>/string.kl"
-    kl_i_8 = kl_i_8 + 1;
-#line 505 "<kl>/string.kl"
-    goto bb3;
-#line 514 "<kl>/string.kl"
 }
 
-#line 517 "<kl>/string.kl"
+#line 505 "<kl>/string.kl"
 int32_t kl_2kl6string_16operator_compare__SQ2kl6string_Q2kl6string( struct kl_2kl6string_string* kl_this_1, struct kl_2kl6string_string* kl_other_2 )
 {
     int32_t kl_t0;
@@ -2934,184 +2868,184 @@ int32_t kl_2kl6string_16operator_compare__SQ2kl6string_Q2kl6string( struct kl_2k
     struct kl_2kl6string_string* kl_t42;
     uint64_t kl_t43;
     bool kl_t44;
-#line 519 "<kl>/string.kl"
+#line 507 "<kl>/string.kl"
     kl_t5 = &( *kl_this_1 );
-#line 519 "<kl>/string.kl"
+#line 507 "<kl>/string.kl"
     kl_t6 = kl_2kl6string_4size__SQ2kl6string( kl_t5 );
-#line 519 "<kl>/string.kl"
+#line 507 "<kl>/string.kl"
     kl_t7 = &( *kl_other_2 );
-#line 519 "<kl>/string.kl"
+#line 507 "<kl>/string.kl"
     kl_t8 = kl_2kl6string_4size__SQ2kl6string( kl_t7 );
-#line 519 "<kl>/string.kl"
+#line 507 "<kl>/string.kl"
     kl_t9 = kl_t6 < kl_t8;
-#line 519 "<kl>/string.kl"
+#line 507 "<kl>/string.kl"
     if ( kl_t9 ) goto bb1; else goto bb2;
     bb1:
-#line 519 "<kl>/string.kl"
+#line 507 "<kl>/string.kl"
     kl_t10 = &( *kl_this_1 );
-#line 519 "<kl>/string.kl"
+#line 507 "<kl>/string.kl"
     kl_t11 = kl_2kl6string_4size__SQ2kl6string( kl_t10 );
-#line 519 "<kl>/string.kl"
+#line 507 "<kl>/string.kl"
     kl_t4 = kl_t11;
-#line 519 "<kl>/string.kl"
+#line 507 "<kl>/string.kl"
     goto bb3;
     bb2:
-#line 519 "<kl>/string.kl"
+#line 507 "<kl>/string.kl"
     kl_t12 = &( *kl_other_2 );
-#line 519 "<kl>/string.kl"
+#line 507 "<kl>/string.kl"
     kl_t13 = kl_2kl6string_4size__SQ2kl6string( kl_t12 );
-#line 519 "<kl>/string.kl"
+#line 507 "<kl>/string.kl"
     kl_t4 = kl_t13;
-#line 519 "<kl>/string.kl"
+#line 507 "<kl>/string.kl"
     goto bb3;
     bb3:
-#line 519 "<kl>/string.kl"
+#line 507 "<kl>/string.kl"
     kl_min_size_3 = kl_t4;
-#line 521 "<kl>/string.kl"
+#line 509 "<kl>/string.kl"
     kl_i_14 = 0;
-#line 521 "<kl>/string.kl"
+#line 509 "<kl>/string.kl"
     goto bb4;
     bb4:
-#line 521 "<kl>/string.kl"
+#line 509 "<kl>/string.kl"
     kl_t15 = kl_i_14 < kl_min_size_3;
-#line 521 "<kl>/string.kl"
+#line 509 "<kl>/string.kl"
     if ( kl_t15 ) goto bb5; else goto bb6;
     bb5:
     kl_t16 = &( *kl_this_1 );
-#line 523 "<kl>/string.kl"
+#line 511 "<kl>/string.kl"
     kl_t17 = kl_2kl6string_7as_text__SQ2kl6string( kl_t16 );
-#line 523 "<kl>/string.kl"
+#line 511 "<kl>/string.kl"
     kl_t18 = ( kl_t17 ).size;
-#line 523 "<kl>/string.kl"
+#line 511 "<kl>/string.kl"
     kl_t19 = ( kl_t17 ).data;
-#line 523 "<kl>/string.kl"
+#line 511 "<kl>/string.kl"
     kl_t20 = kl_i_14 < kl_t18;
-#line 523 "<kl>/string.kl"
+#line 511 "<kl>/string.kl"
     if ( kl_t20 ) goto bb8; else goto bb7;
     bb6:
-#line 533 "<kl>/string.kl"
+#line 521 "<kl>/string.kl"
     kl_t35 = &( *kl_this_1 );
-#line 533 "<kl>/string.kl"
+#line 521 "<kl>/string.kl"
     kl_t36 = kl_2kl6string_4size__SQ2kl6string( kl_t35 );
-#line 533 "<kl>/string.kl"
+#line 521 "<kl>/string.kl"
     kl_t37 = &( *kl_other_2 );
-#line 533 "<kl>/string.kl"
+#line 521 "<kl>/string.kl"
     kl_t38 = kl_2kl6string_4size__SQ2kl6string( kl_t37 );
-#line 533 "<kl>/string.kl"
+#line 521 "<kl>/string.kl"
     kl_t39 = kl_t36 < kl_t38;
-#line 533 "<kl>/string.kl"
+#line 521 "<kl>/string.kl"
     if ( kl_t39 ) goto bb17; else goto bb18;
     bb7:
-#line 523 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 523, "out of bounds: as_text()[i]" );
+#line 511 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 511, "out of bounds: as_text()[i]" );
     bb8:
-#line 523 "<kl>/string.kl"
+#line 511 "<kl>/string.kl"
     kl_t21 = kl_t19 + kl_i_14;
-#line 523 "<kl>/string.kl"
+#line 511 "<kl>/string.kl"
     kl_t22 = &( *kl_other_2 );
-#line 523 "<kl>/string.kl"
+#line 511 "<kl>/string.kl"
     kl_t23 = kl_2kl6string_14operator_index__SQ2kl6string_3u64( kl_t22, kl_i_14 );
-#line 523 "<kl>/string.kl"
+#line 511 "<kl>/string.kl"
     kl_t24 = ( *kl_t21 ) < ( *kl_t23 );
-#line 523 "<kl>/string.kl"
+#line 511 "<kl>/string.kl"
     if ( kl_t24 ) goto bb9; else goto bb10;
     bb9:
     kl_t0 = 0;
-#line 525 "<kl>/string.kl"
+#line 513 "<kl>/string.kl"
     return kl_t0;
     bb10:
     kl_t25 = &( *kl_this_1 );
-#line 527 "<kl>/string.kl"
+#line 515 "<kl>/string.kl"
     kl_t26 = kl_2kl6string_7as_text__SQ2kl6string( kl_t25 );
-#line 527 "<kl>/string.kl"
+#line 515 "<kl>/string.kl"
     kl_t27 = ( kl_t26 ).size;
-#line 527 "<kl>/string.kl"
+#line 515 "<kl>/string.kl"
     kl_t28 = ( kl_t26 ).data;
-#line 527 "<kl>/string.kl"
+#line 515 "<kl>/string.kl"
     kl_t29 = kl_i_14 < kl_t27;
-#line 527 "<kl>/string.kl"
+#line 515 "<kl>/string.kl"
     if ( kl_t29 ) goto bb12; else goto bb11;
     bb11:
-#line 527 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 527, "out of bounds: as_text()[i]" );
+#line 515 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 515, "out of bounds: as_text()[i]" );
     bb12:
-#line 527 "<kl>/string.kl"
+#line 515 "<kl>/string.kl"
     kl_t30 = kl_t28 + kl_i_14;
-#line 527 "<kl>/string.kl"
+#line 515 "<kl>/string.kl"
     kl_t31 = &( *kl_other_2 );
-#line 527 "<kl>/string.kl"
+#line 515 "<kl>/string.kl"
     kl_t32 = kl_2kl6string_14operator_index__SQ2kl6string_3u64( kl_t31, kl_i_14 );
-#line 527 "<kl>/string.kl"
+#line 515 "<kl>/string.kl"
     kl_t33 = ( *kl_t30 ) > ( *kl_t32 );
-#line 527 "<kl>/string.kl"
+#line 515 "<kl>/string.kl"
     if ( kl_t33 ) goto bb13; else goto bb14;
     bb13:
     kl_t0 = 2;
-#line 529 "<kl>/string.kl"
+#line 517 "<kl>/string.kl"
     return kl_t0;
     bb14:
-#line 521 "<kl>/string.kl"
+#line 509 "<kl>/string.kl"
     kl_t34 = __builtin_add_overflow( kl_i_14, 1, &( uint64_t ) { 0 } );
-#line 521 "<kl>/string.kl"
+#line 509 "<kl>/string.kl"
     if ( kl_t34 ) goto bb15; else goto bb16;
     bb15:
-#line 521 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 521, "arithmetic overflow: i++" );
+#line 509 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 509, "arithmetic overflow: i++" );
     bb16:
-#line 521 "<kl>/string.kl"
+#line 509 "<kl>/string.kl"
     kl_i_14 = kl_i_14 + 1;
-#line 521 "<kl>/string.kl"
+#line 509 "<kl>/string.kl"
     goto bb4;
     bb17:
-#line 535 "<kl>/string.kl"
+#line 523 "<kl>/string.kl"
     kl_t0 = 0;
-#line 535 "<kl>/string.kl"
+#line 523 "<kl>/string.kl"
     return kl_t0;
     bb18:
     kl_t40 = &( *kl_this_1 );
-#line 537 "<kl>/string.kl"
+#line 525 "<kl>/string.kl"
     kl_t41 = kl_2kl6string_4size__SQ2kl6string( kl_t40 );
-#line 537 "<kl>/string.kl"
+#line 525 "<kl>/string.kl"
     kl_t42 = &( *kl_other_2 );
-#line 537 "<kl>/string.kl"
+#line 525 "<kl>/string.kl"
     kl_t43 = kl_2kl6string_4size__SQ2kl6string( kl_t42 );
-#line 537 "<kl>/string.kl"
+#line 525 "<kl>/string.kl"
     kl_t44 = kl_t41 > kl_t43;
-#line 537 "<kl>/string.kl"
+#line 525 "<kl>/string.kl"
     if ( kl_t44 ) goto bb19; else goto bb20;
     bb19:
     kl_t0 = 2;
-#line 539 "<kl>/string.kl"
+#line 527 "<kl>/string.kl"
     return kl_t0;
     bb20:
-#line 542 "<kl>/string.kl"
+#line 530 "<kl>/string.kl"
     kl_t0 = 1;
-#line 542 "<kl>/string.kl"
+#line 530 "<kl>/string.kl"
     return kl_t0;
 }
 
-#line 547 "<kl>/string.kl"
+#line 535 "<kl>/string.kl"
 void kl_2kl6string_4hash__SQ2kl6string_RQ7prelude6hasher( struct kl_2kl6string_string* kl_this_1, struct kl_7prelude_hasher* kl_h_2 )
 {
     struct kl_7prelude_hasher* kl_t3;
     struct kl_2kl6string_string* kl_t4;
     struct kl__run__L2u8__ref kl_t5;
     struct kl__run__L2u8__ref kl_t6;
-#line 549 "<kl>/string.kl"
+#line 537 "<kl>/string.kl"
     kl_t3 = &( *kl_h_2 );
-#line 549 "<kl>/string.kl"
+#line 537 "<kl>/string.kl"
     kl_t4 = &( *kl_this_1 );
-#line 549 "<kl>/string.kl"
+#line 537 "<kl>/string.kl"
     kl_t5 = kl_2kl6string_7as_text__SQ2kl6string( kl_t4 );
-#line 549 "<kl>/string.kl"
+#line 537 "<kl>/string.kl"
     kl_t6 = kl_t5;
-#line 549 "<kl>/string.kl"
+#line 537 "<kl>/string.kl"
     kl_7prelude_11write_bytes__SQ7prelude6hasher_L2u8( kl_t3, ( kl_t6 ).data, ( kl_t6 ).size );
     return;
-#line 550 "<kl>/string.kl"
+#line 538 "<kl>/string.kl"
 }
 
-#line 563 "<kl>/string.kl"
+#line 551 "<kl>/string.kl"
 struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_2kl6string_9parse_i64__SQ2kl6string( struct kl_2kl6string_string* kl_this_1 )
 {
     struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_t0;
@@ -3175,276 +3109,276 @@ struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_2kl6string_9parse_i64__SQ
     int64_t kl_t59;
     int64_t kl_t60;
     bool kl_t61;
-#line 565 "<kl>/string.kl"
+#line 553 "<kl>/string.kl"
     kl_t4 = &( *kl_this_1 );
-#line 565 "<kl>/string.kl"
+#line 553 "<kl>/string.kl"
     kl_t5 = kl_2kl6string_8is_empty__SQ2kl6string( kl_t4 );
-#line 565 "<kl>/string.kl"
+#line 553 "<kl>/string.kl"
     kl_t6 = !kl_t5;
-#line 565 "<kl>/string.kl"
+#line 553 "<kl>/string.kl"
     kl_t3 = kl_t6;
-#line 565 "<kl>/string.kl"
+#line 553 "<kl>/string.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
-#line 565 "<kl>/string.kl"
+#line 553 "<kl>/string.kl"
     kl_t7 = &( *kl_this_1 );
-#line 565 "<kl>/string.kl"
+#line 553 "<kl>/string.kl"
     kl_t8 = kl_2kl6string_7as_text__SQ2kl6string( kl_t7 );
-#line 565 "<kl>/string.kl"
+#line 553 "<kl>/string.kl"
     kl_t9 = ( kl_t8 ).size;
-#line 565 "<kl>/string.kl"
+#line 553 "<kl>/string.kl"
     kl_t10 = ( kl_t8 ).data;
-#line 565 "<kl>/string.kl"
+#line 553 "<kl>/string.kl"
     kl_t11 = ( uint64_t ) 0;
-#line 565 "<kl>/string.kl"
+#line 553 "<kl>/string.kl"
     kl_t12 = kl_t11 < kl_t9;
-#line 565 "<kl>/string.kl"
+#line 553 "<kl>/string.kl"
     if ( kl_t12 ) goto bb4; else goto bb3;
     bb2:
-#line 565 "<kl>/string.kl"
+#line 553 "<kl>/string.kl"
     kl_is_negative_2 = kl_t3;
     if ( kl_is_negative_2 ) goto bb5; else goto bb6;
     bb3:
-#line 565 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 565, "out of bounds: as_text()[0]" );
+#line 553 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 553, "out of bounds: as_text()[0]" );
     bb4:
-#line 565 "<kl>/string.kl"
+#line 553 "<kl>/string.kl"
     kl_t13 = kl_t10 + kl_t11;
-#line 565 "<kl>/string.kl"
+#line 553 "<kl>/string.kl"
     kl_t14 = ( *kl_t13 ) == 45;
-#line 565 "<kl>/string.kl"
+#line 553 "<kl>/string.kl"
     kl_t3 = kl_t14;
-#line 565 "<kl>/string.kl"
+#line 553 "<kl>/string.kl"
     goto bb2;
     bb5:
-#line 566 "<kl>/string.kl"
+#line 554 "<kl>/string.kl"
     kl_t16 = 1;
-#line 566 "<kl>/string.kl"
+#line 554 "<kl>/string.kl"
     goto bb7;
     bb6:
-#line 566 "<kl>/string.kl"
+#line 554 "<kl>/string.kl"
     kl_t16 = 0;
-#line 566 "<kl>/string.kl"
+#line 554 "<kl>/string.kl"
     goto bb7;
     bb7:
-#line 566 "<kl>/string.kl"
+#line 554 "<kl>/string.kl"
     kl_start_15 = kl_t16;
     if ( kl_is_negative_2 ) goto bb8; else goto bb9;
     bb8:
-#line 567 "<kl>/string.kl"
+#line 555 "<kl>/string.kl"
     kl_t18 = 9223372036854775808ull;
-#line 567 "<kl>/string.kl"
+#line 555 "<kl>/string.kl"
     goto bb10;
     bb9:
-#line 567 "<kl>/string.kl"
+#line 555 "<kl>/string.kl"
     kl_t18 = 9223372036854775807;
-#line 567 "<kl>/string.kl"
+#line 555 "<kl>/string.kl"
     goto bb10;
     bb10:
-#line 567 "<kl>/string.kl"
+#line 555 "<kl>/string.kl"
     kl_limit_17 = kl_t18;
-#line 569 "<kl>/string.kl"
+#line 557 "<kl>/string.kl"
     kl_t19 = &( *kl_this_1 );
-#line 569 "<kl>/string.kl"
+#line 557 "<kl>/string.kl"
     kl_t20 = kl_2kl6string_4size__SQ2kl6string( kl_t19 );
-#line 569 "<kl>/string.kl"
+#line 557 "<kl>/string.kl"
     kl_t21 = kl_t20 == kl_start_15;
-#line 569 "<kl>/string.kl"
+#line 557 "<kl>/string.kl"
     if ( kl_t21 ) goto bb11; else goto bb12;
     bb11:
     kl_t23.tag = 0;
-#line 571 "<kl>/string.kl"
+#line 559 "<kl>/string.kl"
     kl_t22.tag = 1;
-#line 571 "<kl>/string.kl"
+#line 559 "<kl>/string.kl"
     kl_t22.kl_3err_error = kl_t23;
-#line 571 "<kl>/string.kl"
+#line 559 "<kl>/string.kl"
     kl_t0 = kl_t22;
-#line 571 "<kl>/string.kl"
+#line 559 "<kl>/string.kl"
     return kl_t0;
     bb12:
-#line 574 "<kl>/string.kl"
+#line 562 "<kl>/string.kl"
     kl_magnitude_24 = 0;
     kl_i_25 = kl_start_15;
-#line 575 "<kl>/string.kl"
+#line 563 "<kl>/string.kl"
     goto bb13;
     bb13:
-#line 575 "<kl>/string.kl"
+#line 563 "<kl>/string.kl"
     kl_t26 = &( *kl_this_1 );
-#line 575 "<kl>/string.kl"
+#line 563 "<kl>/string.kl"
     kl_t27 = kl_2kl6string_4size__SQ2kl6string( kl_t26 );
-#line 575 "<kl>/string.kl"
+#line 563 "<kl>/string.kl"
     kl_t28 = kl_i_25 < kl_t27;
-#line 575 "<kl>/string.kl"
+#line 563 "<kl>/string.kl"
     if ( kl_t28 ) goto bb14; else goto bb15;
     bb14:
     kl_t30 = &( *kl_this_1 );
-#line 577 "<kl>/string.kl"
+#line 565 "<kl>/string.kl"
     kl_t31 = kl_2kl6string_7as_text__SQ2kl6string( kl_t30 );
-#line 577 "<kl>/string.kl"
+#line 565 "<kl>/string.kl"
     kl_t32 = ( kl_t31 ).size;
-#line 577 "<kl>/string.kl"
+#line 565 "<kl>/string.kl"
     kl_t33 = ( kl_t31 ).data;
-#line 577 "<kl>/string.kl"
+#line 565 "<kl>/string.kl"
     kl_t34 = kl_i_25 < kl_t32;
-#line 577 "<kl>/string.kl"
+#line 565 "<kl>/string.kl"
     if ( kl_t34 ) goto bb17; else goto bb16;
     bb15:
-#line 593 "<kl>/string.kl"
+#line 581 "<kl>/string.kl"
     if ( kl_is_negative_2 ) goto bb35; else goto bb36;
     bb16:
-#line 577 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 577, "out of bounds: as_text()[i]" );
+#line 565 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 565, "out of bounds: as_text()[i]" );
     bb17:
-#line 577 "<kl>/string.kl"
+#line 565 "<kl>/string.kl"
     kl_t35 = kl_t33 + kl_i_25;
-#line 577 "<kl>/string.kl"
+#line 565 "<kl>/string.kl"
     kl_byte_29 = ( *kl_t35 );
     kl_t37 = kl_byte_29 < 48;
-#line 578 "<kl>/string.kl"
+#line 566 "<kl>/string.kl"
     kl_t36 = kl_t37;
-#line 578 "<kl>/string.kl"
+#line 566 "<kl>/string.kl"
     if ( kl_t36 ) goto bb19; else goto bb18;
     bb18:
-#line 578 "<kl>/string.kl"
+#line 566 "<kl>/string.kl"
     kl_t38 = kl_byte_29 > 57;
-#line 578 "<kl>/string.kl"
+#line 566 "<kl>/string.kl"
     kl_t36 = kl_t38;
-#line 578 "<kl>/string.kl"
+#line 566 "<kl>/string.kl"
     goto bb19;
     bb19:
-#line 578 "<kl>/string.kl"
+#line 566 "<kl>/string.kl"
     if ( kl_t36 ) goto bb20; else goto bb21;
     bb20:
     kl_t40.tag = 1;
-#line 580 "<kl>/string.kl"
+#line 568 "<kl>/string.kl"
     kl_t40.kl_13invalid_digit_index = kl_i_25;
-#line 580 "<kl>/string.kl"
+#line 568 "<kl>/string.kl"
     kl_t39.tag = 1;
-#line 580 "<kl>/string.kl"
+#line 568 "<kl>/string.kl"
     kl_t39.kl_3err_error = kl_t40;
-#line 580 "<kl>/string.kl"
+#line 568 "<kl>/string.kl"
     kl_t0 = kl_t39;
-#line 580 "<kl>/string.kl"
+#line 568 "<kl>/string.kl"
     return kl_t0;
     bb21:
-#line 583 "<kl>/string.kl"
+#line 571 "<kl>/string.kl"
     kl_t42 = __builtin_sub_overflow( kl_byte_29, 48, &( uint8_t ) { 0 } );
-#line 583 "<kl>/string.kl"
+#line 571 "<kl>/string.kl"
     if ( kl_t42 ) goto bb22; else goto bb23;
     bb22:
-#line 583 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 583, "arithmetic overflow: byte - 48" );
+#line 571 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 571, "arithmetic overflow: byte - 48" );
     bb23:
-#line 583 "<kl>/string.kl"
+#line 571 "<kl>/string.kl"
     kl_t43 = kl_byte_29 - 48;
-#line 583 "<kl>/string.kl"
+#line 571 "<kl>/string.kl"
     kl_t44 = ( uint64_t ) kl_t43;
-#line 583 "<kl>/string.kl"
+#line 571 "<kl>/string.kl"
     kl_digit_41 = kl_t44;
-#line 585 "<kl>/string.kl"
+#line 573 "<kl>/string.kl"
     kl_t45 = __builtin_sub_overflow( kl_limit_17, kl_digit_41, &( uint64_t ) { 0 } );
-#line 585 "<kl>/string.kl"
+#line 573 "<kl>/string.kl"
     if ( kl_t45 ) goto bb24; else goto bb25;
     bb24:
-#line 585 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 585, "arithmetic overflow: (limit - digit)" );
+#line 573 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 573, "arithmetic overflow: (limit - digit)" );
     bb25:
-#line 585 "<kl>/string.kl"
+#line 573 "<kl>/string.kl"
     kl_t46 = kl_limit_17 - kl_digit_41;
-#line 585 "<kl>/string.kl"
+#line 573 "<kl>/string.kl"
     kl_t47 = kl_t46 / 10;
-#line 585 "<kl>/string.kl"
+#line 573 "<kl>/string.kl"
     kl_t48 = kl_magnitude_24 > kl_t47;
-#line 585 "<kl>/string.kl"
+#line 573 "<kl>/string.kl"
     if ( kl_t48 ) goto bb26; else goto bb27;
     bb26:
     kl_t50.tag = 2;
-#line 587 "<kl>/string.kl"
+#line 575 "<kl>/string.kl"
     kl_t49.tag = 1;
-#line 587 "<kl>/string.kl"
+#line 575 "<kl>/string.kl"
     kl_t49.kl_3err_error = kl_t50;
-#line 587 "<kl>/string.kl"
+#line 575 "<kl>/string.kl"
     kl_t0 = kl_t49;
-#line 587 "<kl>/string.kl"
+#line 575 "<kl>/string.kl"
     return kl_t0;
     bb27:
-#line 590 "<kl>/string.kl"
+#line 578 "<kl>/string.kl"
     kl_t51 = __builtin_mul_overflow( kl_magnitude_24, 10, &( uint64_t ) { 0 } );
-#line 590 "<kl>/string.kl"
+#line 578 "<kl>/string.kl"
     if ( kl_t51 ) goto bb28; else goto bb29;
     bb28:
-#line 590 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 590, "arithmetic overflow: magnitude * 10" );
+#line 578 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 578, "arithmetic overflow: magnitude * 10" );
     bb29:
-#line 590 "<kl>/string.kl"
+#line 578 "<kl>/string.kl"
     kl_t52 = kl_magnitude_24 * 10;
-#line 590 "<kl>/string.kl"
+#line 578 "<kl>/string.kl"
     kl_t53 = __builtin_add_overflow( kl_t52, kl_digit_41, &( uint64_t ) { 0 } );
-#line 590 "<kl>/string.kl"
+#line 578 "<kl>/string.kl"
     if ( kl_t53 ) goto bb30; else goto bb31;
     bb30:
-#line 590 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 590, "arithmetic overflow: magnitude * 10 + digit" );
+#line 578 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 578, "arithmetic overflow: magnitude * 10 + digit" );
     bb31:
-#line 590 "<kl>/string.kl"
+#line 578 "<kl>/string.kl"
     kl_t54 = kl_t52 + kl_digit_41;
-#line 590 "<kl>/string.kl"
+#line 578 "<kl>/string.kl"
     kl_magnitude_24 = kl_t54;
-#line 575 "<kl>/string.kl"
+#line 563 "<kl>/string.kl"
     goto bb32;
     bb32:
-#line 575 "<kl>/string.kl"
+#line 563 "<kl>/string.kl"
     kl_t55 = __builtin_add_overflow( kl_i_25, 1, &( uint64_t ) { 0 } );
-#line 575 "<kl>/string.kl"
+#line 563 "<kl>/string.kl"
     if ( kl_t55 ) goto bb33; else goto bb34;
     bb33:
-#line 575 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 575, "arithmetic overflow: i++" );
+#line 563 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 563, "arithmetic overflow: i++" );
     bb34:
-#line 575 "<kl>/string.kl"
+#line 563 "<kl>/string.kl"
     kl_i_25 = kl_i_25 + 1;
-#line 575 "<kl>/string.kl"
+#line 563 "<kl>/string.kl"
     goto bb13;
     bb35:
-#line 593 "<kl>/string.kl"
+#line 581 "<kl>/string.kl"
     kl_t58 = 0 - kl_magnitude_24;
-#line 593 "<kl>/string.kl"
+#line 581 "<kl>/string.kl"
     kl_t59 = ( int64_t ) kl_t58;
-#line 593 "<kl>/string.kl"
+#line 581 "<kl>/string.kl"
     kl_t57 = kl_t59;
-#line 593 "<kl>/string.kl"
+#line 581 "<kl>/string.kl"
     goto bb37;
     bb36:
-#line 593 "<kl>/string.kl"
+#line 581 "<kl>/string.kl"
     kl_t60 = ( int64_t ) kl_magnitude_24;
-#line 593 "<kl>/string.kl"
+#line 581 "<kl>/string.kl"
     kl_t61 = kl_t60 >= 0;
-#line 593 "<kl>/string.kl"
+#line 581 "<kl>/string.kl"
     if ( kl_t61 ) goto bb39; else goto bb38;
     bb37:
-#line 593 "<kl>/string.kl"
+#line 581 "<kl>/string.kl"
     kl_t56.tag = 0;
-#line 593 "<kl>/string.kl"
+#line 581 "<kl>/string.kl"
     kl_t56.kl_2ok_value = kl_t57;
-#line 593 "<kl>/string.kl"
+#line 581 "<kl>/string.kl"
     kl_t0 = kl_t56;
-#line 593 "<kl>/string.kl"
+#line 581 "<kl>/string.kl"
     return kl_t0;
     bb38:
-#line 593 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 593, "cast out of range: cast<i64>( magnitude )" );
+#line 581 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 581, "cast out of range: cast<i64>( magnitude )" );
     bb39:
-#line 593 "<kl>/string.kl"
+#line 581 "<kl>/string.kl"
     kl_t57 = kl_t60;
-#line 593 "<kl>/string.kl"
+#line 581 "<kl>/string.kl"
     goto bb37;
 }
 
-#line 599 "<kl>/string.kl"
+#line 587 "<kl>/string.kl"
 bool kl_2kl6string_10matches_at__SQ2kl6string_3u64_L2u8( struct kl_2kl6string_string* kl_this_1, uint64_t kl_at_2, uint8_t* kl_text_3_data, uint64_t kl_text_3_size )
 {
     bool kl_t0;
-#line 599 "<kl>/string.kl"
+#line 587 "<kl>/string.kl"
     struct kl__run__L2u8__ref kl_text_3 = { kl_text_3_data, kl_text_3_size };
     uint64_t kl_t4;
     bool kl_t5;
@@ -3452,131 +3386,98 @@ bool kl_2kl6string_10matches_at__SQ2kl6string_3u64_L2u8( struct kl_2kl6string_st
     struct kl_2kl6string_string* kl_t7;
     uint64_t kl_t8;
     bool kl_t9;
-    uint64_t kl_i_10;
-    uint64_t kl_t11;
-    bool kl_t12;
-    struct kl_2kl6string_string* kl_t13;
-    struct kl__run__L2u8__ref kl_t14;
-    uint64_t kl_t15;
-    uint8_t* kl_t16;
+    struct kl_2kl6string_string* kl_t10;
+    struct kl__run__L2u8__ref kl_t11;
+    uint64_t kl_t12;
+    uint8_t* kl_t13;
+    uint64_t kl_t14;
+    bool kl_t15;
+    uint64_t kl_t16;
     bool kl_t17;
-    uint64_t kl_t18;
-    bool kl_t19;
-    uint8_t* kl_t20;
-    uint64_t kl_t21;
-    uint8_t* kl_t22;
-    bool kl_t23;
-    uint8_t* kl_t24;
-    bool kl_t25;
-    bool kl_t26;
-#line 601 "<kl>/string.kl"
+    bool kl_t18;
+    uint8_t* kl_t19;
+    uint64_t kl_t20;
+    struct kl__run__L2u8__ref kl_t21;
+    struct kl__run__L2u8__ref kl_t22;
+    struct kl__run__L2u8__ref kl_t23;
+    bool kl_t24;
+#line 589 "<kl>/string.kl"
     kl_t4 = ( kl_text_3 ).size;
-#line 601 "<kl>/string.kl"
+#line 589 "<kl>/string.kl"
     kl_t5 = __builtin_add_overflow( kl_at_2, kl_t4, &( uint64_t ) { 0 } );
-#line 601 "<kl>/string.kl"
+#line 589 "<kl>/string.kl"
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
-#line 601 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 601, "arithmetic overflow: at + text.size" );
+#line 589 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 589, "arithmetic overflow: at + text.size" );
     bb2:
-#line 601 "<kl>/string.kl"
+#line 589 "<kl>/string.kl"
     kl_t6 = kl_at_2 + kl_t4;
-#line 601 "<kl>/string.kl"
+#line 589 "<kl>/string.kl"
     kl_t7 = &( *kl_this_1 );
-#line 601 "<kl>/string.kl"
+#line 589 "<kl>/string.kl"
     kl_t8 = kl_2kl6string_4size__SQ2kl6string( kl_t7 );
-#line 601 "<kl>/string.kl"
+#line 589 "<kl>/string.kl"
     kl_t9 = kl_t6 > kl_t8;
-#line 601 "<kl>/string.kl"
+#line 589 "<kl>/string.kl"
     if ( kl_t9 ) goto bb3; else goto bb4;
     bb3:
     kl_t0 = false;
-#line 603 "<kl>/string.kl"
+#line 591 "<kl>/string.kl"
     return kl_t0;
     bb4:
-#line 606 "<kl>/string.kl"
-    kl_i_10 = 0;
-#line 606 "<kl>/string.kl"
-    goto bb5;
+#line 594 "<kl>/string.kl"
+    kl_t10 = &( *kl_this_1 );
+#line 594 "<kl>/string.kl"
+    kl_t11 = kl_2kl6string_7as_text__SQ2kl6string( kl_t10 );
+#line 594 "<kl>/string.kl"
+    kl_t12 = ( kl_t11 ).size;
+#line 594 "<kl>/string.kl"
+    kl_t13 = ( kl_t11 ).data;
+#line 594 "<kl>/string.kl"
+    kl_t14 = ( kl_text_3 ).size;
+#line 594 "<kl>/string.kl"
+    kl_t15 = __builtin_add_overflow( kl_at_2, kl_t14, &( uint64_t ) { 0 } );
+#line 594 "<kl>/string.kl"
+    if ( kl_t15 ) goto bb5; else goto bb6;
     bb5:
-#line 606 "<kl>/string.kl"
-    kl_t11 = ( kl_text_3 ).size;
-#line 606 "<kl>/string.kl"
-    kl_t12 = kl_i_10 < kl_t11;
-#line 606 "<kl>/string.kl"
-    if ( kl_t12 ) goto bb6; else goto bb7;
+#line 594 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 594, "arithmetic overflow: at + text.size" );
     bb6:
-    kl_t13 = &( *kl_this_1 );
-#line 608 "<kl>/string.kl"
-    kl_t14 = kl_2kl6string_7as_text__SQ2kl6string( kl_t13 );
-#line 608 "<kl>/string.kl"
-    kl_t15 = ( kl_t14 ).size;
-#line 608 "<kl>/string.kl"
-    kl_t16 = ( kl_t14 ).data;
-#line 608 "<kl>/string.kl"
-    kl_t17 = __builtin_add_overflow( kl_at_2, kl_i_10, &( uint64_t ) { 0 } );
-#line 608 "<kl>/string.kl"
-    if ( kl_t17 ) goto bb8; else goto bb9;
+#line 594 "<kl>/string.kl"
+    kl_t16 = kl_at_2 + kl_t14;
+#line 594 "<kl>/string.kl"
+    kl_t17 = kl_at_2 <= kl_t16;
+#line 594 "<kl>/string.kl"
+    if ( kl_t17 ) goto bb8; else goto bb7;
     bb7:
-#line 614 "<kl>/string.kl"
-    kl_t0 = true;
-#line 614 "<kl>/string.kl"
-    return kl_t0;
+#line 594 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 594, "out of bounds: as_text()[at..at + text.size]" );
     bb8:
-#line 608 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 608, "arithmetic overflow: at + i" );
+#line 594 "<kl>/string.kl"
+    kl_t18 = kl_t16 <= kl_t12;
+#line 594 "<kl>/string.kl"
+    if ( kl_t18 ) goto bb9; else goto bb7;
     bb9:
-#line 608 "<kl>/string.kl"
-    kl_t18 = kl_at_2 + kl_i_10;
-#line 608 "<kl>/string.kl"
-    kl_t19 = kl_t18 < kl_t15;
-#line 608 "<kl>/string.kl"
-    if ( kl_t19 ) goto bb11; else goto bb10;
-    bb10:
-#line 608 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 608, "out of bounds: as_text()[at + i]" );
-    bb11:
-#line 608 "<kl>/string.kl"
-    kl_t20 = kl_t16 + kl_t18;
-#line 608 "<kl>/string.kl"
-    kl_t21 = ( kl_text_3 ).size;
-#line 608 "<kl>/string.kl"
-    kl_t22 = ( kl_text_3 ).data;
-#line 608 "<kl>/string.kl"
-    kl_t23 = kl_i_10 < kl_t21;
-#line 608 "<kl>/string.kl"
-    if ( kl_t23 ) goto bb13; else goto bb12;
-    bb12:
-#line 608 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 608, "out of bounds: text[i]" );
-    bb13:
-#line 608 "<kl>/string.kl"
-    kl_t24 = kl_t22 + kl_i_10;
-#line 608 "<kl>/string.kl"
-    kl_t25 = ( *kl_t20 ) != ( *kl_t24 );
-#line 608 "<kl>/string.kl"
-    if ( kl_t25 ) goto bb14; else goto bb15;
-    bb14:
-    kl_t0 = false;
-#line 610 "<kl>/string.kl"
+#line 594 "<kl>/string.kl"
+    kl_t19 = kl_t13 + kl_at_2;
+#line 594 "<kl>/string.kl"
+    kl_t20 = kl_t16 - kl_at_2;
+#line 594 "<kl>/string.kl"
+    kl_t21 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t19, kl_t20 };
+#line 594 "<kl>/string.kl"
+    kl_t22 = kl_t21;
+#line 594 "<kl>/string.kl"
+    kl_t23 = kl_text_3;
+#line 594 "<kl>/string.kl"
+    kl_t24 = kl_2kl5_core7compare_5equal__I2u8E__L2u8_L2u8( ( kl_t22 ).data, ( kl_t22 ).size, ( kl_t23 ).data, ( kl_t23 ).size );
+#line 594 "<kl>/string.kl"
+    kl_t0 = kl_t24;
+#line 594 "<kl>/string.kl"
     return kl_t0;
-    bb15:
-#line 606 "<kl>/string.kl"
-    kl_t26 = __builtin_add_overflow( kl_i_10, 1, &( uint64_t ) { 0 } );
-#line 606 "<kl>/string.kl"
-    if ( kl_t26 ) goto bb16; else goto bb17;
-    bb16:
-#line 606 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 606, "arithmetic overflow: i++" );
-    bb17:
-#line 606 "<kl>/string.kl"
-    kl_i_10 = kl_i_10 + 1;
-#line 606 "<kl>/string.kl"
-    goto bb5;
-#line 615 "<kl>/string.kl"
 }
 
-#line 618 "<kl>/string.kl"
+#line 598 "<kl>/string.kl"
 void kl_2kl6string_10reallocate__SQ2kl6string_3u64( struct kl_2kl6string_string* kl_this_1, uint64_t kl_n_2 )
 {
     uint8_t* kl_new_data_3;
@@ -3586,50 +3487,50 @@ void kl_2kl6string_10reallocate__SQ2kl6string_3u64( struct kl_2kl6string_string*
     uint8_t* kl_t7;
     uint8_t* kl_t8;
     bool kl_t9;
-#line 623 "<kl>/string.kl"
-    kl_t4 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 1, "<kl>/string.kl", 623, "out of memory: alloc<u8>( n )" );
-#line 623 "<kl>/string.kl"
+#line 603 "<kl>/string.kl"
+    kl_t4 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 1, "<kl>/string.kl", 603, "out of memory: alloc<u8>( n )" );
+#line 603 "<kl>/string.kl"
     kl_new_data_3 = kl_t4;
     kl_i_5 = 0;
-#line 624 "<kl>/string.kl"
+#line 604 "<kl>/string.kl"
     goto bb1;
     bb1:
-#line 624 "<kl>/string.kl"
+#line 604 "<kl>/string.kl"
     kl_t6 = kl_i_5 < ( *kl_this_1 ).kl_size_;
-#line 624 "<kl>/string.kl"
+#line 604 "<kl>/string.kl"
     if ( kl_t6 ) goto bb2; else goto bb3;
     bb2:
     kl_t7 = kl_new_data_3 + kl_i_5;
-#line 626 "<kl>/string.kl"
+#line 606 "<kl>/string.kl"
     kl_t8 = ( *kl_this_1 ).kl_data_ + kl_i_5;
-#line 626 "<kl>/string.kl"
+#line 606 "<kl>/string.kl"
     ( *kl_t7 ) = ( *kl_t8 );
-#line 624 "<kl>/string.kl"
+#line 604 "<kl>/string.kl"
     goto bb4;
     bb3:
-#line 628 "<kl>/string.kl"
+#line 608 "<kl>/string.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data_ );
-#line 631 "<kl>/string.kl"
+#line 611 "<kl>/string.kl"
     ( *kl_this_1 ).kl_data_ = kl_new_data_3;
     ( *kl_this_1 ).kl_cap_ = kl_n_2;
     return;
     bb4:
-#line 624 "<kl>/string.kl"
+#line 604 "<kl>/string.kl"
     kl_t9 = __builtin_add_overflow( kl_i_5, 1, &( uint64_t ) { 0 } );
-#line 624 "<kl>/string.kl"
+#line 604 "<kl>/string.kl"
     if ( kl_t9 ) goto bb5; else goto bb6;
     bb5:
-#line 624 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 624, "arithmetic overflow: i++" );
+#line 604 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 604, "arithmetic overflow: i++" );
     bb6:
-#line 624 "<kl>/string.kl"
+#line 604 "<kl>/string.kl"
     kl_i_5 = kl_i_5 + 1;
-#line 624 "<kl>/string.kl"
+#line 604 "<kl>/string.kl"
     goto bb1;
-#line 633 "<kl>/string.kl"
+#line 613 "<kl>/string.kl"
 }
 
-#line 642 "<kl>/string.kl"
+#line 622 "<kl>/string.kl"
 bool kl_2kl6string_9same_text__7textual_7textual( struct kl_7prelude_textual__ref kl_a_1, struct kl_7prelude_textual__ref kl_b_2 )
 {
     bool kl_t0;
@@ -3659,101 +3560,101 @@ bool kl_2kl6string_9same_text__7textual_7textual( struct kl_7prelude_textual__re
     void* kl_t26;
     kl__fn__FMP4voidEPL2u8 kl_t27;
     void* kl_t28;
-#line 644 "<kl>/string.kl"
+#line 624 "<kl>/string.kl"
     kl_t4 = kl_a_1;
-#line 644 "<kl>/string.kl"
+#line 624 "<kl>/string.kl"
     kl_t25 = ( kl_t4 ).vtable->kl__7as_text__;
-#line 644 "<kl>/string.kl"
+#line 624 "<kl>/string.kl"
     kl_t26 = ( kl_t4 ).self;
-#line 644 "<kl>/string.kl"
+#line 624 "<kl>/string.kl"
     kl_t5 = kl_t25( kl_t26 );
-#line 644 "<kl>/string.kl"
+#line 624 "<kl>/string.kl"
     kl_a_bytes_3 = kl_t5;
     kl_t7 = kl_b_2;
-#line 645 "<kl>/string.kl"
+#line 625 "<kl>/string.kl"
     kl_t27 = ( kl_t7 ).vtable->kl__7as_text__;
-#line 645 "<kl>/string.kl"
+#line 625 "<kl>/string.kl"
     kl_t28 = ( kl_t7 ).self;
-#line 645 "<kl>/string.kl"
+#line 625 "<kl>/string.kl"
     kl_t8 = kl_t27( kl_t28 );
-#line 645 "<kl>/string.kl"
+#line 625 "<kl>/string.kl"
     kl_b_bytes_6 = kl_t8;
-#line 647 "<kl>/string.kl"
+#line 627 "<kl>/string.kl"
     kl_t9 = ( kl_a_bytes_3 ).size;
-#line 647 "<kl>/string.kl"
+#line 627 "<kl>/string.kl"
     kl_t10 = ( kl_b_bytes_6 ).size;
-#line 647 "<kl>/string.kl"
+#line 627 "<kl>/string.kl"
     kl_t11 = kl_t9 != kl_t10;
-#line 647 "<kl>/string.kl"
+#line 627 "<kl>/string.kl"
     if ( kl_t11 ) goto bb1; else goto bb2;
     bb1:
     kl_t0 = false;
-#line 649 "<kl>/string.kl"
+#line 629 "<kl>/string.kl"
     return kl_t0;
     bb2:
-#line 652 "<kl>/string.kl"
+#line 632 "<kl>/string.kl"
     kl_i_12 = 0;
-#line 652 "<kl>/string.kl"
+#line 632 "<kl>/string.kl"
     kl_t14 = ( kl_a_bytes_3 ).size;
-#line 652 "<kl>/string.kl"
+#line 632 "<kl>/string.kl"
     kl_t13 = kl_t14;
-#line 652 "<kl>/string.kl"
+#line 632 "<kl>/string.kl"
     goto bb3;
     bb3:
-#line 652 "<kl>/string.kl"
+#line 632 "<kl>/string.kl"
     kl_t15 = kl_i_12 < kl_t13;
-#line 652 "<kl>/string.kl"
+#line 632 "<kl>/string.kl"
     if ( kl_t15 ) goto bb4; else goto bb5;
     bb4:
     kl_t16 = ( kl_a_bytes_3 ).size;
-#line 654 "<kl>/string.kl"
+#line 634 "<kl>/string.kl"
     kl_t17 = ( kl_a_bytes_3 ).data;
-#line 654 "<kl>/string.kl"
+#line 634 "<kl>/string.kl"
     kl_t18 = kl_i_12 < kl_t16;
-#line 654 "<kl>/string.kl"
+#line 634 "<kl>/string.kl"
     if ( kl_t18 ) goto bb7; else goto bb6;
     bb5:
-#line 660 "<kl>/string.kl"
+#line 640 "<kl>/string.kl"
     kl_t0 = true;
-#line 660 "<kl>/string.kl"
+#line 640 "<kl>/string.kl"
     return kl_t0;
     bb6:
-#line 654 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 654, "out of bounds: a_bytes[i]" );
+#line 634 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 634, "out of bounds: a_bytes[i]" );
     bb7:
-#line 654 "<kl>/string.kl"
+#line 634 "<kl>/string.kl"
     kl_t19 = kl_t17 + kl_i_12;
-#line 654 "<kl>/string.kl"
+#line 634 "<kl>/string.kl"
     kl_t20 = ( kl_b_bytes_6 ).size;
-#line 654 "<kl>/string.kl"
+#line 634 "<kl>/string.kl"
     kl_t21 = ( kl_b_bytes_6 ).data;
-#line 654 "<kl>/string.kl"
+#line 634 "<kl>/string.kl"
     kl_t22 = kl_i_12 < kl_t20;
-#line 654 "<kl>/string.kl"
+#line 634 "<kl>/string.kl"
     if ( kl_t22 ) goto bb9; else goto bb8;
     bb8:
-#line 654 "<kl>/string.kl"
-    kl_rt_panic( "<kl>/string.kl", 654, "out of bounds: b_bytes[i]" );
+#line 634 "<kl>/string.kl"
+    kl_rt_panic( "<kl>/string.kl", 634, "out of bounds: b_bytes[i]" );
     bb9:
-#line 654 "<kl>/string.kl"
+#line 634 "<kl>/string.kl"
     kl_t23 = kl_t21 + kl_i_12;
-#line 654 "<kl>/string.kl"
+#line 634 "<kl>/string.kl"
     kl_t24 = ( *kl_t19 ) != ( *kl_t23 );
-#line 654 "<kl>/string.kl"
+#line 634 "<kl>/string.kl"
     if ( kl_t24 ) goto bb10; else goto bb11;
     bb10:
     kl_t0 = false;
-#line 656 "<kl>/string.kl"
+#line 636 "<kl>/string.kl"
     return kl_t0;
     bb11:
-#line 652 "<kl>/string.kl"
+#line 632 "<kl>/string.kl"
     kl_i_12 = kl_i_12 + 1;
-#line 652 "<kl>/string.kl"
+#line 632 "<kl>/string.kl"
     goto bb3;
-#line 661 "<kl>/string.kl"
+#line 641 "<kl>/string.kl"
 }
 
-#line 664 "<kl>/string.kl"
+#line 644 "<kl>/string.kl"
 bool kl_2kl6string_8is_space__2u8( uint8_t kl_byte_1 )
 {
     bool kl_t0;
@@ -3762,86 +3663,185 @@ bool kl_2kl6string_8is_space__2u8( uint8_t kl_byte_1 )
     bool kl_t4;
     bool kl_t5;
     bool kl_t6;
-#line 666 "<kl>/string.kl"
+#line 646 "<kl>/string.kl"
     kl_t3 = kl_byte_1 == 32;
-#line 666 "<kl>/string.kl"
+#line 646 "<kl>/string.kl"
     kl_t2 = kl_t3;
-#line 666 "<kl>/string.kl"
+#line 646 "<kl>/string.kl"
     if ( kl_t2 ) goto bb2; else goto bb1;
     bb1:
-#line 666 "<kl>/string.kl"
+#line 646 "<kl>/string.kl"
     kl_t5 = kl_byte_1 >= 9;
-#line 666 "<kl>/string.kl"
+#line 646 "<kl>/string.kl"
     kl_t4 = kl_t5;
-#line 666 "<kl>/string.kl"
+#line 646 "<kl>/string.kl"
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb2:
-#line 666 "<kl>/string.kl"
+#line 646 "<kl>/string.kl"
     kl_t0 = kl_t2;
-#line 666 "<kl>/string.kl"
+#line 646 "<kl>/string.kl"
     return kl_t0;
     bb3:
-#line 666 "<kl>/string.kl"
+#line 646 "<kl>/string.kl"
     kl_t6 = kl_byte_1 <= 13;
-#line 666 "<kl>/string.kl"
+#line 646 "<kl>/string.kl"
     kl_t4 = kl_t6;
-#line 666 "<kl>/string.kl"
+#line 646 "<kl>/string.kl"
     goto bb4;
     bb4:
-#line 666 "<kl>/string.kl"
+#line 646 "<kl>/string.kl"
     kl_t2 = kl_t4;
-#line 666 "<kl>/string.kl"
+#line 646 "<kl>/string.kl"
     goto bb2;
 }
 
-#line 16 "<kl>/list.kl"
+#line 17 "<kl>/list.kl"
 void kl_2kl4list_4list__IQ2kl6stringE__RQ2kl4listIQ2kl6stringE__ctor( struct kl_2kl4list_list__IQ2kl6stringE* kl_this_1 )
 {
     ( *kl_this_1 ).kl_data_ = NULL;
     ( *kl_this_1 ).kl_count_ = 0;
     ( *kl_this_1 ).kl_cap_ = 0;
     return;
-#line 21 "<kl>/list.kl"
+#line 22 "<kl>/list.kl"
 }
 
-#line 213 "<kl>/list.kl"
+#line 214 "<kl>/list.kl"
 void kl_2kl4list_4push__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_MQ2kl6string( struct kl_2kl4list_list__IQ2kl6stringE* kl_this_1, struct kl_2kl6string_string kl_value_2 )
 {
     struct kl_2kl4list_list__IQ2kl6stringE* kl_t3;
     struct kl_2kl6string_string* kl_t5;
     bool kl_t6;
     bool kl_t7;
-#line 215 "<kl>/list.kl"
+#line 216 "<kl>/list.kl"
     kl_t7 = true;
-#line 215 "<kl>/list.kl"
+#line 216 "<kl>/list.kl"
     kl_t3 = &( *kl_this_1 );
-#line 215 "<kl>/list.kl"
+#line 216 "<kl>/list.kl"
     kl_2kl4list_20reallocate_if_needed__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( kl_t3 );
-#line 219 "<kl>/list.kl"
+#line 220 "<kl>/list.kl"
     kl_t5 = ( *kl_this_1 ).kl_data_ + ( *kl_this_1 ).kl_count_;
-#line 219 "<kl>/list.kl"
+#line 220 "<kl>/list.kl"
     ( *kl_t5 ) = kl_value_2;
-#line 219 "<kl>/list.kl"
+#line 220 "<kl>/list.kl"
     kl_t7 = false;
-#line 221 "<kl>/list.kl"
+#line 222 "<kl>/list.kl"
     kl_t6 = __builtin_add_overflow( ( *kl_this_1 ).kl_count_, 1, &( uint64_t ) { 0 } );
-#line 221 "<kl>/list.kl"
+#line 222 "<kl>/list.kl"
     if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
-#line 221 "<kl>/list.kl"
-    kl_rt_panic( "<kl>/list.kl", 221, "arithmetic overflow: count_ += 1;" );
+#line 222 "<kl>/list.kl"
+    kl_rt_panic( "<kl>/list.kl", 222, "arithmetic overflow: count_ += 1;" );
     bb2:
-#line 221 "<kl>/list.kl"
+#line 222 "<kl>/list.kl"
     ( *kl_this_1 ).kl_count_ = ( *kl_this_1 ).kl_count_ + 1;
     if ( kl_t7 ) kl_2kl6string_6string__dtor( &kl_value_2 );
-#line 222 "<kl>/list.kl"
+#line 223 "<kl>/list.kl"
     kl_t7 = false;
-#line 222 "<kl>/list.kl"
+#line 223 "<kl>/list.kl"
     return;
-#line 222 "<kl>/list.kl"
+#line 223 "<kl>/list.kl"
 }
 
-#line 38 "<kl>/list.kl"
+#line 7 "<kl>/_core/compare.kl"
+bool kl_2kl5_core7compare_5equal__I2u8E__L2u8_L2u8( uint8_t* kl_a_1_data, uint64_t kl_a_1_size, uint8_t* kl_b_2_data, uint64_t kl_b_2_size )
+{
+    bool kl_t0;
+#line 7 "<kl>/_core/compare.kl"
+    struct kl__run__L2u8__ref kl_a_1 = { kl_a_1_data, kl_a_1_size };
+#line 7 "<kl>/_core/compare.kl"
+    struct kl__run__L2u8__ref kl_b_2 = { kl_b_2_data, kl_b_2_size };
+    uint64_t kl_t3;
+    uint64_t kl_t4;
+    bool kl_t5;
+    uint64_t kl_i_6;
+    uint64_t kl_t7;
+    uint64_t kl_t8;
+    bool kl_t9;
+    uint64_t kl_t10;
+    uint8_t* kl_t11;
+    bool kl_t12;
+    uint8_t* kl_t13;
+    uint64_t kl_t14;
+    uint8_t* kl_t15;
+    bool kl_t16;
+    uint8_t* kl_t17;
+    bool kl_t18;
+#line 9 "<kl>/_core/compare.kl"
+    kl_t3 = ( kl_a_1 ).size;
+#line 9 "<kl>/_core/compare.kl"
+    kl_t4 = ( kl_b_2 ).size;
+#line 9 "<kl>/_core/compare.kl"
+    kl_t5 = kl_t3 != kl_t4;
+#line 9 "<kl>/_core/compare.kl"
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = false;
+#line 11 "<kl>/_core/compare.kl"
+    return kl_t0;
+    bb2:
+#line 14 "<kl>/_core/compare.kl"
+    kl_i_6 = 0;
+#line 14 "<kl>/_core/compare.kl"
+    kl_t8 = ( kl_a_1 ).size;
+#line 14 "<kl>/_core/compare.kl"
+    kl_t7 = kl_t8;
+#line 14 "<kl>/_core/compare.kl"
+    goto bb3;
+    bb3:
+#line 14 "<kl>/_core/compare.kl"
+    kl_t9 = kl_i_6 < kl_t7;
+#line 14 "<kl>/_core/compare.kl"
+    if ( kl_t9 ) goto bb4; else goto bb5;
+    bb4:
+    kl_t10 = ( kl_a_1 ).size;
+#line 16 "<kl>/_core/compare.kl"
+    kl_t11 = ( kl_a_1 ).data;
+#line 16 "<kl>/_core/compare.kl"
+    kl_t12 = kl_i_6 < kl_t10;
+#line 16 "<kl>/_core/compare.kl"
+    if ( kl_t12 ) goto bb7; else goto bb6;
+    bb5:
+#line 22 "<kl>/_core/compare.kl"
+    kl_t0 = true;
+#line 22 "<kl>/_core/compare.kl"
+    return kl_t0;
+    bb6:
+#line 16 "<kl>/_core/compare.kl"
+    kl_rt_panic( "<kl>/_core/compare.kl", 16, "out of bounds: a[i]" );
+    bb7:
+#line 16 "<kl>/_core/compare.kl"
+    kl_t13 = kl_t11 + kl_i_6;
+#line 16 "<kl>/_core/compare.kl"
+    kl_t14 = ( kl_b_2 ).size;
+#line 16 "<kl>/_core/compare.kl"
+    kl_t15 = ( kl_b_2 ).data;
+#line 16 "<kl>/_core/compare.kl"
+    kl_t16 = kl_i_6 < kl_t14;
+#line 16 "<kl>/_core/compare.kl"
+    if ( kl_t16 ) goto bb9; else goto bb8;
+    bb8:
+#line 16 "<kl>/_core/compare.kl"
+    kl_rt_panic( "<kl>/_core/compare.kl", 16, "out of bounds: b[i]" );
+    bb9:
+#line 16 "<kl>/_core/compare.kl"
+    kl_t17 = kl_t15 + kl_i_6;
+#line 16 "<kl>/_core/compare.kl"
+    kl_t18 = ( *kl_t13 ) != ( *kl_t17 );
+#line 16 "<kl>/_core/compare.kl"
+    if ( kl_t18 ) goto bb10; else goto bb11;
+    bb10:
+    kl_t0 = false;
+#line 18 "<kl>/_core/compare.kl"
+    return kl_t0;
+    bb11:
+#line 14 "<kl>/_core/compare.kl"
+    kl_i_6 = kl_i_6 + 1;
+#line 14 "<kl>/_core/compare.kl"
+    goto bb3;
+#line 23 "<kl>/_core/compare.kl"
+}
+
+#line 39 "<kl>/list.kl"
 void kl_2kl4list_4list__IQ2kl6stringE__dtor( struct kl_2kl4list_list__IQ2kl6stringE* kl_this_1 )
 {
     bool kl_t2;
@@ -3850,45 +3850,45 @@ void kl_2kl4list_4list__IQ2kl6stringE__dtor( struct kl_2kl4list_list__IQ2kl6stri
     uint64_t kl_t5;
     bool kl_t6;
     struct kl_2kl6string_string* kl_t7;
-#line 40 "<kl>/list.kl"
+#line 41 "<kl>/list.kl"
     kl_t2 = ( *kl_this_1 ).kl_data_ != NULL;
-#line 40 "<kl>/list.kl"
+#line 41 "<kl>/list.kl"
     if ( kl_t2 ) goto bb1; else goto bb5;
     bb1:
-#line 44 "<kl>/list.kl"
+#line 45 "<kl>/list.kl"
     kl_t3 = ( *kl_this_1 ).kl_data_;
-#line 44 "<kl>/list.kl"
+#line 45 "<kl>/list.kl"
     kl_t4 = ( *kl_this_1 ).kl_count_;
-#line 44 "<kl>/list.kl"
+#line 45 "<kl>/list.kl"
     kl_t5 = 0;
-#line 44 "<kl>/list.kl"
+#line 45 "<kl>/list.kl"
     goto bb2;
     bb2:
-#line 44 "<kl>/list.kl"
+#line 45 "<kl>/list.kl"
     kl_t6 = kl_t5 < kl_t4;
-#line 44 "<kl>/list.kl"
+#line 45 "<kl>/list.kl"
     if ( kl_t6 ) goto bb3; else goto bb4;
     bb3:
-#line 44 "<kl>/list.kl"
+#line 45 "<kl>/list.kl"
     kl_t7 = kl_t3 + kl_t5;
-#line 44 "<kl>/list.kl"
+#line 45 "<kl>/list.kl"
     kl_2kl6string_6string__dtor( &( *kl_t7 ) );
-#line 44 "<kl>/list.kl"
+#line 45 "<kl>/list.kl"
     kl_t5 = kl_t5 + 1;
-#line 44 "<kl>/list.kl"
+#line 45 "<kl>/list.kl"
     goto bb2;
     bb4:
-#line 45 "<kl>/list.kl"
+#line 46 "<kl>/list.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data_ );
-#line 40 "<kl>/list.kl"
+#line 41 "<kl>/list.kl"
     goto bb5;
     bb5:
-#line 48 "<kl>/list.kl"
+#line 49 "<kl>/list.kl"
     return;
-#line 48 "<kl>/list.kl"
+#line 49 "<kl>/list.kl"
 }
 
-#line 474 "<kl>/list.kl"
+#line 475 "<kl>/list.kl"
 void kl_2kl4list_20reallocate_if_needed__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* kl_this_1 )
 {
     bool kl_t2;
@@ -3897,46 +3897,46 @@ void kl_2kl4list_20reallocate_if_needed__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE(
     bool kl_t5;
     bool kl_t6;
     uint64_t kl_t7;
-#line 476 "<kl>/list.kl"
+#line 477 "<kl>/list.kl"
     kl_t2 = ( *kl_this_1 ).kl_count_ == ( *kl_this_1 ).kl_cap_;
-#line 476 "<kl>/list.kl"
+#line 477 "<kl>/list.kl"
     if ( kl_t2 ) goto bb1; else goto bb7;
     bb1:
     kl_t3 = &( *kl_this_1 );
-#line 478 "<kl>/list.kl"
+#line 479 "<kl>/list.kl"
     kl_t5 = ( *kl_this_1 ).kl_cap_ > 0;
-#line 478 "<kl>/list.kl"
+#line 479 "<kl>/list.kl"
     if ( kl_t5 ) goto bb2; else goto bb3;
     bb2:
-#line 478 "<kl>/list.kl"
+#line 479 "<kl>/list.kl"
     kl_t6 = __builtin_mul_overflow( ( *kl_this_1 ).kl_cap_, 2, &( uint64_t ) { 0 } );
-#line 478 "<kl>/list.kl"
+#line 479 "<kl>/list.kl"
     if ( kl_t6 ) goto bb5; else goto bb6;
     bb3:
-#line 478 "<kl>/list.kl"
+#line 479 "<kl>/list.kl"
     kl_t4 = 1;
-#line 478 "<kl>/list.kl"
+#line 479 "<kl>/list.kl"
     goto bb4;
     bb4:
-#line 478 "<kl>/list.kl"
+#line 479 "<kl>/list.kl"
     kl_2kl4list_10reallocate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( kl_t3, kl_t4 );
-#line 476 "<kl>/list.kl"
+#line 477 "<kl>/list.kl"
     goto bb7;
     bb5:
-    kl_rt_panic( "<kl>/list.kl", 478, "arithmetic overflow: cap_ * 2" );
+    kl_rt_panic( "<kl>/list.kl", 479, "arithmetic overflow: cap_ * 2" );
     bb6:
-#line 478 "<kl>/list.kl"
+#line 479 "<kl>/list.kl"
     kl_t7 = ( *kl_this_1 ).kl_cap_ * 2;
-#line 478 "<kl>/list.kl"
+#line 479 "<kl>/list.kl"
     kl_t4 = kl_t7;
-#line 478 "<kl>/list.kl"
+#line 479 "<kl>/list.kl"
     goto bb4;
     bb7:
     return;
-#line 480 "<kl>/list.kl"
+#line 481 "<kl>/list.kl"
 }
 
-#line 444 "<kl>/list.kl"
+#line 445 "<kl>/list.kl"
 void kl_2kl4list_10reallocate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE* kl_this_1, uint64_t kl_n_2 )
 {
     struct kl_2kl6string_string* kl_new_data_3;
@@ -3947,55 +3947,55 @@ void kl_2kl4list_10reallocate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( stru
     struct kl_2kl6string_string* kl_t8;
     struct kl_2kl6string_string* kl_t9;
     bool kl_t10;
-#line 449 "<kl>/list.kl"
-    kl_t4 = ( struct kl_2kl6string_string* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 24, "<kl>/list.kl", 449, "out of memory: alloc<T>( n )" );
-#line 449 "<kl>/list.kl"
+#line 450 "<kl>/list.kl"
+    kl_t4 = ( struct kl_2kl6string_string* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 24, "<kl>/list.kl", 450, "out of memory: alloc<T>( n )" );
+#line 450 "<kl>/list.kl"
     kl_new_data_3 = kl_t4;
-#line 452 "<kl>/list.kl"
+#line 453 "<kl>/list.kl"
     kl_t5 = ( *kl_this_1 ).kl_data_ != NULL;
-#line 452 "<kl>/list.kl"
+#line 453 "<kl>/list.kl"
     if ( kl_t5 ) goto bb1; else goto bb8;
     bb1:
     kl_i_6 = 0;
-#line 454 "<kl>/list.kl"
+#line 455 "<kl>/list.kl"
     goto bb2;
     bb2:
-#line 454 "<kl>/list.kl"
+#line 455 "<kl>/list.kl"
     kl_t7 = kl_i_6 < ( *kl_this_1 ).kl_count_;
-#line 454 "<kl>/list.kl"
+#line 455 "<kl>/list.kl"
     if ( kl_t7 ) goto bb3; else goto bb4;
     bb3:
-#line 458 "<kl>/list.kl"
+#line 459 "<kl>/list.kl"
     kl_t8 = kl_new_data_3 + kl_i_6;
-#line 458 "<kl>/list.kl"
+#line 459 "<kl>/list.kl"
     kl_t9 = ( *kl_this_1 ).kl_data_ + kl_i_6;
-#line 458 "<kl>/list.kl"
+#line 459 "<kl>/list.kl"
     ( *kl_t8 ) = ( *kl_t9 );
-#line 454 "<kl>/list.kl"
+#line 455 "<kl>/list.kl"
     goto bb5;
     bb4:
-#line 465 "<kl>/list.kl"
+#line 466 "<kl>/list.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data_ );
-#line 452 "<kl>/list.kl"
+#line 453 "<kl>/list.kl"
     goto bb8;
     bb5:
     kl_t10 = __builtin_add_overflow( kl_i_6, 1, &( uint64_t ) { 0 } );
-#line 454 "<kl>/list.kl"
+#line 455 "<kl>/list.kl"
     if ( kl_t10 ) goto bb6; else goto bb7;
     bb6:
-#line 454 "<kl>/list.kl"
-    kl_rt_panic( "<kl>/list.kl", 454, "arithmetic overflow: i++" );
+#line 455 "<kl>/list.kl"
+    kl_rt_panic( "<kl>/list.kl", 455, "arithmetic overflow: i++" );
     bb7:
-#line 454 "<kl>/list.kl"
+#line 455 "<kl>/list.kl"
     kl_i_6 = kl_i_6 + 1;
-#line 454 "<kl>/list.kl"
+#line 455 "<kl>/list.kl"
     goto bb2;
     bb8:
-#line 469 "<kl>/list.kl"
+#line 470 "<kl>/list.kl"
     ( *kl_this_1 ).kl_data_ = kl_new_data_3;
     ( *kl_this_1 ).kl_cap_ = kl_n_2;
     return;
-#line 471 "<kl>/list.kl"
+#line 472 "<kl>/list.kl"
 }
 
 #line 5 "<kl>/optional.kl"
@@ -4020,13 +4020,13 @@ void kl_2kl8optional_8optional__IQ2kl6stringE__dtor( struct kl_2kl8optional_opti
 void kl_2kl6string_string__drop( void* kl_t1 )
 {
     struct kl_2kl6string_string* kl_t2;
-#line 21 "<kl>/string.kl"
+#line 22 "<kl>/string.kl"
     kl_t2 = ( struct kl_2kl6string_string* ) kl_t1;
-#line 21 "<kl>/string.kl"
+#line 22 "<kl>/string.kl"
     kl_2kl6string_6string__dtor( &( *kl_t2 ) );
-#line 21 "<kl>/string.kl"
+#line 22 "<kl>/string.kl"
     return;
-#line 21 "<kl>/string.kl"
+#line 22 "<kl>/string.kl"
 }
 
 // codegen/returns_through_bindings.kl
@@ -4172,23 +4172,23 @@ int32_t* kl_7codegen_11first_above__Q2kl4listI3i32E_3i32_3i32( struct kl_2kl4lis
     bool kl_t11;
 #line 27 "codegen/returns_through_bindings.kl"
     kl_t4 = &( *kl_v_1 );
-#line 171 "<kl>/list.kl"
+#line 172 "<kl>/list.kl"
     kl_i_5 = 0;
-#line 171 "<kl>/list.kl"
+#line 172 "<kl>/list.kl"
     kl_t6 = ( *kl_t4 ).kl_count_;
-#line 171 "<kl>/list.kl"
+#line 172 "<kl>/list.kl"
     goto bb1;
     bb1:
-#line 171 "<kl>/list.kl"
+#line 172 "<kl>/list.kl"
     kl_t7 = kl_i_5 < kl_t6;
-#line 171 "<kl>/list.kl"
+#line 172 "<kl>/list.kl"
     if ( kl_t7 ) goto bb2; else goto bb3;
     bb2:
-#line 175 "<kl>/list.kl"
+#line 176 "<kl>/list.kl"
     kl_t8 = ( *kl_t4 ).kl_data_ + kl_i_5;
-#line 175 "<kl>/list.kl"
+#line 176 "<kl>/list.kl"
     kl_t9 = &( *kl_t8 );
-#line 175 "<kl>/list.kl"
+#line 176 "<kl>/list.kl"
     kl_x_10 = kl_t9;
 #line 29 "codegen/returns_through_bindings.kl"
     kl_t11 = ( *kl_x_10 ) > kl_floor_2;
@@ -4203,12 +4203,12 @@ int32_t* kl_7codegen_11first_above__Q2kl4listI3i32E_3i32_3i32( struct kl_2kl4lis
 #line 31 "codegen/returns_through_bindings.kl"
     return kl_t0;
     bb5:
-#line 171 "<kl>/list.kl"
+#line 172 "<kl>/list.kl"
     goto bb6;
     bb6:
-#line 171 "<kl>/list.kl"
+#line 172 "<kl>/list.kl"
     kl_i_5 = kl_i_5 + 1;
-#line 171 "<kl>/list.kl"
+#line 172 "<kl>/list.kl"
     goto bb1;
     bb7:
 #line 34 "codegen/returns_through_bindings.kl"
@@ -4639,45 +4639,45 @@ int32_t kl_7codegen_4main__( void )
     return kl_t0;
 }
 
-#line 16 "<kl>/list.kl"
+#line 17 "<kl>/list.kl"
 void kl_2kl4list_4list__I3i32E__RQ2kl4listI3i32E__ctor( struct kl_2kl4list_list__I3i32E* kl_this_1 )
 {
     ( *kl_this_1 ).kl_data_ = NULL;
     ( *kl_this_1 ).kl_count_ = 0;
     ( *kl_this_1 ).kl_cap_ = 0;
     return;
-#line 21 "<kl>/list.kl"
+#line 22 "<kl>/list.kl"
 }
 
-#line 213 "<kl>/list.kl"
+#line 214 "<kl>/list.kl"
 void kl_2kl4list_4push__I3i32E__SQ2kl4listI3i32E_M3i32( struct kl_2kl4list_list__I3i32E* kl_this_1, int32_t kl_value_2 )
 {
     struct kl_2kl4list_list__I3i32E* kl_t3;
     int32_t* kl_t5;
     bool kl_t6;
-#line 215 "<kl>/list.kl"
+#line 216 "<kl>/list.kl"
     kl_t3 = &( *kl_this_1 );
-#line 215 "<kl>/list.kl"
+#line 216 "<kl>/list.kl"
     kl_2kl4list_20reallocate_if_needed__I3i32E__SQ2kl4listI3i32E( kl_t3 );
-#line 219 "<kl>/list.kl"
+#line 220 "<kl>/list.kl"
     kl_t5 = ( *kl_this_1 ).kl_data_ + ( *kl_this_1 ).kl_count_;
-#line 219 "<kl>/list.kl"
+#line 220 "<kl>/list.kl"
     ( *kl_t5 ) = kl_value_2;
-#line 221 "<kl>/list.kl"
+#line 222 "<kl>/list.kl"
     kl_t6 = __builtin_add_overflow( ( *kl_this_1 ).kl_count_, 1, &( uint64_t ) { 0 } );
-#line 221 "<kl>/list.kl"
+#line 222 "<kl>/list.kl"
     if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
-#line 221 "<kl>/list.kl"
-    kl_rt_panic( "<kl>/list.kl", 221, "arithmetic overflow: count_ += 1;" );
+#line 222 "<kl>/list.kl"
+    kl_rt_panic( "<kl>/list.kl", 222, "arithmetic overflow: count_ += 1;" );
     bb2:
-#line 221 "<kl>/list.kl"
+#line 222 "<kl>/list.kl"
     ( *kl_this_1 ).kl_count_ = ( *kl_this_1 ).kl_count_ + 1;
     return;
-#line 222 "<kl>/list.kl"
+#line 223 "<kl>/list.kl"
 }
 
-#line 154 "<kl>/list.kl"
+#line 155 "<kl>/list.kl"
 int32_t* kl_2kl4list_14operator_index__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list_list__I3i32E* kl_this_1, uint64_t kl_index_2 )
 {
     int32_t* kl_t0;
@@ -4686,29 +4686,29 @@ int32_t* kl_2kl4list_14operator_index__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_
     struct kl_7prelude_str* kl_t5;
     uint8_t* kl_t6;
     int32_t* kl_t8;
-#line 156 "<kl>/list.kl"
+#line 157 "<kl>/list.kl"
     kl_t3 = kl_index_2 >= ( *kl_this_1 ).kl_count_;
-#line 156 "<kl>/list.kl"
+#line 157 "<kl>/list.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
     kl_t5 = &kl_t4;
-#line 158 "<kl>/list.kl"
+#line 159 "<kl>/list.kl"
     kl_t6 = ( uint8_t* ) "index out of range";
-#line 158 "<kl>/list.kl"
+#line 159 "<kl>/list.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 18 );
-#line 158 "<kl>/list.kl"
-    kl_rt_panic_message( "<kl>/list.kl", 158, kl_t4.kl_data, kl_t4.kl_size );
+#line 159 "<kl>/list.kl"
+    kl_rt_panic_message( "<kl>/list.kl", 159, kl_t4.kl_data, kl_t4.kl_size );
     bb2:
-#line 163 "<kl>/list.kl"
+#line 164 "<kl>/list.kl"
     kl_t8 = ( *kl_this_1 ).kl_data_ + kl_index_2;
-#line 163 "<kl>/list.kl"
+#line 164 "<kl>/list.kl"
     kl_t0 = &( *kl_t8 );
-#line 163 "<kl>/list.kl"
+#line 164 "<kl>/list.kl"
     return kl_t0;
-#line 165 "<kl>/list.kl"
+#line 166 "<kl>/list.kl"
 }
 
-#line 355 "<kl>/list.kl"
+#line 356 "<kl>/list.kl"
 void kl_2kl4list_8truncate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE* kl_this_1, uint64_t kl_n_2 )
 {
     bool kl_t3;
@@ -4720,65 +4720,65 @@ void kl_2kl4list_8truncate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct 
     uint64_t kl_t9;
     bool kl_t10;
     struct kl_2kl6string_string* kl_t11;
-#line 357 "<kl>/list.kl"
+#line 358 "<kl>/list.kl"
     kl_t3 = kl_n_2 >= ( *kl_this_1 ).kl_count_;
-#line 357 "<kl>/list.kl"
+#line 358 "<kl>/list.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
     return;
     bb2:
-#line 364 "<kl>/list.kl"
+#line 365 "<kl>/list.kl"
     kl_t4 = ( *kl_this_1 ).kl_data_ + kl_n_2;
-#line 364 "<kl>/list.kl"
+#line 365 "<kl>/list.kl"
     kl_t5 = __builtin_sub_overflow( ( *kl_this_1 ).kl_count_, kl_n_2, &( uint64_t ) { 0 } );
-#line 364 "<kl>/list.kl"
+#line 365 "<kl>/list.kl"
     if ( kl_t5 ) goto bb3; else goto bb4;
     bb3:
-#line 364 "<kl>/list.kl"
-    kl_rt_panic( "<kl>/list.kl", 364, "arithmetic overflow: count_ - n" );
+#line 365 "<kl>/list.kl"
+    kl_rt_panic( "<kl>/list.kl", 365, "arithmetic overflow: count_ - n" );
     bb4:
-#line 364 "<kl>/list.kl"
+#line 365 "<kl>/list.kl"
     kl_t6 = ( *kl_this_1 ).kl_count_ - kl_n_2;
-#line 364 "<kl>/list.kl"
+#line 365 "<kl>/list.kl"
     kl_t7 = kl_t4;
-#line 364 "<kl>/list.kl"
+#line 365 "<kl>/list.kl"
     kl_t8 = kl_t6;
-#line 364 "<kl>/list.kl"
+#line 365 "<kl>/list.kl"
     kl_t9 = 0;
-#line 364 "<kl>/list.kl"
+#line 365 "<kl>/list.kl"
     goto bb5;
     bb5:
-#line 364 "<kl>/list.kl"
+#line 365 "<kl>/list.kl"
     kl_t10 = kl_t9 < kl_t8;
-#line 364 "<kl>/list.kl"
+#line 365 "<kl>/list.kl"
     if ( kl_t10 ) goto bb6; else goto bb7;
     bb6:
-#line 364 "<kl>/list.kl"
+#line 365 "<kl>/list.kl"
     kl_t11 = kl_t7 + kl_t9;
-#line 364 "<kl>/list.kl"
+#line 365 "<kl>/list.kl"
     kl_2kl6string_6string__dtor( &( *kl_t11 ) );
-#line 364 "<kl>/list.kl"
+#line 365 "<kl>/list.kl"
     kl_t9 = kl_t9 + 1;
-#line 364 "<kl>/list.kl"
+#line 365 "<kl>/list.kl"
     goto bb5;
     bb7:
-#line 367 "<kl>/list.kl"
+#line 368 "<kl>/list.kl"
     ( *kl_this_1 ).kl_count_ = kl_n_2;
     return;
-#line 368 "<kl>/list.kl"
+#line 369 "<kl>/list.kl"
 }
 
-#line 53 "<kl>/list.kl"
+#line 54 "<kl>/list.kl"
 uint64_t kl_2kl4list_4size__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* kl_this_1 )
 {
     uint64_t kl_t0;
-#line 55 "<kl>/list.kl"
+#line 56 "<kl>/list.kl"
     kl_t0 = ( *kl_this_1 ).kl_count_;
-#line 55 "<kl>/list.kl"
+#line 56 "<kl>/list.kl"
     return kl_t0;
 }
 
-#line 154 "<kl>/list.kl"
+#line 155 "<kl>/list.kl"
 struct kl_2kl6string_string* kl_2kl4list_14operator_index__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE* kl_this_1, uint64_t kl_index_2 )
 {
     struct kl_2kl6string_string* kl_t0;
@@ -4787,29 +4787,29 @@ struct kl_2kl6string_string* kl_2kl4list_14operator_index__IQ2kl6stringE__SQ2kl4
     struct kl_7prelude_str* kl_t5;
     uint8_t* kl_t6;
     struct kl_2kl6string_string* kl_t8;
-#line 156 "<kl>/list.kl"
+#line 157 "<kl>/list.kl"
     kl_t3 = kl_index_2 >= ( *kl_this_1 ).kl_count_;
-#line 156 "<kl>/list.kl"
+#line 157 "<kl>/list.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
     kl_t5 = &kl_t4;
-#line 158 "<kl>/list.kl"
+#line 159 "<kl>/list.kl"
     kl_t6 = ( uint8_t* ) "index out of range";
-#line 158 "<kl>/list.kl"
+#line 159 "<kl>/list.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 18 );
-#line 158 "<kl>/list.kl"
-    kl_rt_panic_message( "<kl>/list.kl", 158, kl_t4.kl_data, kl_t4.kl_size );
+#line 159 "<kl>/list.kl"
+    kl_rt_panic_message( "<kl>/list.kl", 159, kl_t4.kl_data, kl_t4.kl_size );
     bb2:
-#line 163 "<kl>/list.kl"
+#line 164 "<kl>/list.kl"
     kl_t8 = ( *kl_this_1 ).kl_data_ + kl_index_2;
-#line 163 "<kl>/list.kl"
+#line 164 "<kl>/list.kl"
     kl_t0 = &( *kl_t8 );
-#line 163 "<kl>/list.kl"
+#line 164 "<kl>/list.kl"
     return kl_t0;
-#line 165 "<kl>/list.kl"
+#line 166 "<kl>/list.kl"
 }
 
-#line 407 "<kl>/list.kl"
+#line 408 "<kl>/list.kl"
 void kl_2kl4list_4swap__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64_3u64( struct kl_2kl4list_list__IQ2kl6stringE* kl_this_1, uint64_t kl_a_2, uint64_t kl_b_3 )
 {
     bool kl_t4;
@@ -4825,85 +4825,85 @@ void kl_2kl4list_4swap__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64_3u64( struct
     struct kl_2kl6string_string* kl_t15;
     struct kl_2kl6string_string* kl_t16;
     bool kl_t17;
-#line 409 "<kl>/list.kl"
+#line 410 "<kl>/list.kl"
     kl_t17 = false;
-#line 409 "<kl>/list.kl"
+#line 410 "<kl>/list.kl"
     kl_t5 = kl_a_2 >= ( *kl_this_1 ).kl_count_;
-#line 409 "<kl>/list.kl"
+#line 410 "<kl>/list.kl"
     kl_t4 = kl_t5;
-#line 409 "<kl>/list.kl"
+#line 410 "<kl>/list.kl"
     if ( kl_t4 ) goto bb2; else goto bb1;
     bb1:
-#line 409 "<kl>/list.kl"
+#line 410 "<kl>/list.kl"
     kl_t6 = kl_b_3 >= ( *kl_this_1 ).kl_count_;
-#line 409 "<kl>/list.kl"
+#line 410 "<kl>/list.kl"
     kl_t4 = kl_t6;
-#line 409 "<kl>/list.kl"
+#line 410 "<kl>/list.kl"
     goto bb2;
     bb2:
-#line 409 "<kl>/list.kl"
+#line 410 "<kl>/list.kl"
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb3:
     kl_t8 = &kl_t7;
-#line 411 "<kl>/list.kl"
+#line 412 "<kl>/list.kl"
     kl_t9 = ( uint8_t* ) "index out of range";
-#line 411 "<kl>/list.kl"
+#line 412 "<kl>/list.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t8, kl_t9, 18 );
-#line 411 "<kl>/list.kl"
-    kl_rt_panic_message( "<kl>/list.kl", 411, kl_t7.kl_data, kl_t7.kl_size );
+#line 412 "<kl>/list.kl"
+    kl_rt_panic_message( "<kl>/list.kl", 412, kl_t7.kl_data, kl_t7.kl_size );
     bb4:
-#line 414 "<kl>/list.kl"
+#line 415 "<kl>/list.kl"
     kl_t11 = kl_a_2 == kl_b_3;
-#line 414 "<kl>/list.kl"
+#line 415 "<kl>/list.kl"
     if ( kl_t11 ) goto bb5; else goto bb6;
     bb5:
     return;
     bb6:
-#line 421 "<kl>/list.kl"
+#line 422 "<kl>/list.kl"
     kl_t17 = false;
-#line 421 "<kl>/list.kl"
+#line 422 "<kl>/list.kl"
     kl_t13 = ( *kl_this_1 ).kl_data_ + kl_a_2;
-#line 421 "<kl>/list.kl"
+#line 422 "<kl>/list.kl"
     kl_temp_12 = ( *kl_t13 );
-#line 421 "<kl>/list.kl"
+#line 422 "<kl>/list.kl"
     kl_t17 = true;
     kl_t14 = ( *kl_this_1 ).kl_data_ + kl_a_2;
-#line 422 "<kl>/list.kl"
+#line 423 "<kl>/list.kl"
     kl_t15 = ( *kl_this_1 ).kl_data_ + kl_b_3;
-#line 422 "<kl>/list.kl"
+#line 423 "<kl>/list.kl"
     ( *kl_t14 ) = ( *kl_t15 );
     kl_t16 = ( *kl_this_1 ).kl_data_ + kl_b_3;
-#line 423 "<kl>/list.kl"
+#line 424 "<kl>/list.kl"
     ( *kl_t16 ) = kl_temp_12;
-#line 423 "<kl>/list.kl"
-    kl_t17 = false;
-    if ( kl_t17 ) kl_2kl6string_6string__dtor( &kl_temp_12 );
 #line 424 "<kl>/list.kl"
     kl_t17 = false;
-    return;
+    if ( kl_t17 ) kl_2kl6string_6string__dtor( &kl_temp_12 );
 #line 425 "<kl>/list.kl"
+    kl_t17 = false;
+    return;
+#line 426 "<kl>/list.kl"
 }
 
-#line 38 "<kl>/list.kl"
+#line 39 "<kl>/list.kl"
 void kl_2kl4list_4list__I3i32E__dtor( struct kl_2kl4list_list__I3i32E* kl_this_1 )
 {
     bool kl_t2;
-#line 40 "<kl>/list.kl"
+#line 41 "<kl>/list.kl"
     kl_t2 = ( *kl_this_1 ).kl_data_ != NULL;
-#line 40 "<kl>/list.kl"
+#line 41 "<kl>/list.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
-#line 45 "<kl>/list.kl"
+#line 46 "<kl>/list.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data_ );
-#line 40 "<kl>/list.kl"
+#line 41 "<kl>/list.kl"
     goto bb2;
     bb2:
-#line 48 "<kl>/list.kl"
+#line 49 "<kl>/list.kl"
     return;
-#line 48 "<kl>/list.kl"
+#line 49 "<kl>/list.kl"
 }
 
-#line 355 "<kl>/list.kl"
+#line 356 "<kl>/list.kl"
 void kl_2kl4list_8truncate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list_list__I3i32E* kl_this_1, uint64_t kl_n_2 )
 {
     bool kl_t3;
@@ -4912,42 +4912,42 @@ void kl_2kl4list_8truncate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list_li
     uint64_t kl_t6;
     ( void ) kl_t4;
     ( void ) kl_t6;
-#line 357 "<kl>/list.kl"
+#line 358 "<kl>/list.kl"
     kl_t3 = kl_n_2 >= ( *kl_this_1 ).kl_count_;
-#line 357 "<kl>/list.kl"
+#line 358 "<kl>/list.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
     return;
     bb2:
-#line 364 "<kl>/list.kl"
+#line 365 "<kl>/list.kl"
     kl_t4 = ( *kl_this_1 ).kl_data_ + kl_n_2;
-#line 364 "<kl>/list.kl"
+#line 365 "<kl>/list.kl"
     kl_t5 = __builtin_sub_overflow( ( *kl_this_1 ).kl_count_, kl_n_2, &( uint64_t ) { 0 } );
-#line 364 "<kl>/list.kl"
+#line 365 "<kl>/list.kl"
     if ( kl_t5 ) goto bb3; else goto bb4;
     bb3:
-#line 364 "<kl>/list.kl"
-    kl_rt_panic( "<kl>/list.kl", 364, "arithmetic overflow: count_ - n" );
+#line 365 "<kl>/list.kl"
+    kl_rt_panic( "<kl>/list.kl", 365, "arithmetic overflow: count_ - n" );
     bb4:
-#line 364 "<kl>/list.kl"
+#line 365 "<kl>/list.kl"
     kl_t6 = ( *kl_this_1 ).kl_count_ - kl_n_2;
-#line 367 "<kl>/list.kl"
+#line 368 "<kl>/list.kl"
     ( *kl_this_1 ).kl_count_ = kl_n_2;
     return;
-#line 368 "<kl>/list.kl"
+#line 369 "<kl>/list.kl"
 }
 
-#line 53 "<kl>/list.kl"
+#line 54 "<kl>/list.kl"
 uint64_t kl_2kl4list_4size__I3i32E__SQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* kl_this_1 )
 {
     uint64_t kl_t0;
-#line 55 "<kl>/list.kl"
+#line 56 "<kl>/list.kl"
     kl_t0 = ( *kl_this_1 ).kl_count_;
-#line 55 "<kl>/list.kl"
+#line 56 "<kl>/list.kl"
     return kl_t0;
 }
 
-#line 407 "<kl>/list.kl"
+#line 408 "<kl>/list.kl"
 void kl_2kl4list_4swap__I3i32E__SQ2kl4listI3i32E_3u64_3u64( struct kl_2kl4list_list__I3i32E* kl_this_1, uint64_t kl_a_2, uint64_t kl_b_3 )
 {
     bool kl_t4;
@@ -4962,56 +4962,56 @@ void kl_2kl4list_4swap__I3i32E__SQ2kl4listI3i32E_3u64_3u64( struct kl_2kl4list_l
     int32_t* kl_t14;
     int32_t* kl_t15;
     int32_t* kl_t16;
-#line 409 "<kl>/list.kl"
+#line 410 "<kl>/list.kl"
     kl_t5 = kl_a_2 >= ( *kl_this_1 ).kl_count_;
-#line 409 "<kl>/list.kl"
+#line 410 "<kl>/list.kl"
     kl_t4 = kl_t5;
-#line 409 "<kl>/list.kl"
+#line 410 "<kl>/list.kl"
     if ( kl_t4 ) goto bb2; else goto bb1;
     bb1:
-#line 409 "<kl>/list.kl"
+#line 410 "<kl>/list.kl"
     kl_t6 = kl_b_3 >= ( *kl_this_1 ).kl_count_;
-#line 409 "<kl>/list.kl"
+#line 410 "<kl>/list.kl"
     kl_t4 = kl_t6;
-#line 409 "<kl>/list.kl"
+#line 410 "<kl>/list.kl"
     goto bb2;
     bb2:
-#line 409 "<kl>/list.kl"
+#line 410 "<kl>/list.kl"
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb3:
     kl_t8 = &kl_t7;
-#line 411 "<kl>/list.kl"
+#line 412 "<kl>/list.kl"
     kl_t9 = ( uint8_t* ) "index out of range";
-#line 411 "<kl>/list.kl"
+#line 412 "<kl>/list.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t8, kl_t9, 18 );
-#line 411 "<kl>/list.kl"
-    kl_rt_panic_message( "<kl>/list.kl", 411, kl_t7.kl_data, kl_t7.kl_size );
+#line 412 "<kl>/list.kl"
+    kl_rt_panic_message( "<kl>/list.kl", 412, kl_t7.kl_data, kl_t7.kl_size );
     bb4:
-#line 414 "<kl>/list.kl"
+#line 415 "<kl>/list.kl"
     kl_t11 = kl_a_2 == kl_b_3;
-#line 414 "<kl>/list.kl"
+#line 415 "<kl>/list.kl"
     if ( kl_t11 ) goto bb5; else goto bb6;
     bb5:
     return;
     bb6:
-#line 421 "<kl>/list.kl"
+#line 422 "<kl>/list.kl"
     kl_t13 = ( *kl_this_1 ).kl_data_ + kl_a_2;
-#line 421 "<kl>/list.kl"
+#line 422 "<kl>/list.kl"
     kl_temp_12 = ( *kl_t13 );
     kl_t14 = ( *kl_this_1 ).kl_data_ + kl_a_2;
-#line 422 "<kl>/list.kl"
+#line 423 "<kl>/list.kl"
     kl_t15 = ( *kl_this_1 ).kl_data_ + kl_b_3;
-#line 422 "<kl>/list.kl"
+#line 423 "<kl>/list.kl"
     ( *kl_t14 ) = ( *kl_t15 );
     kl_t16 = ( *kl_this_1 ).kl_data_ + kl_b_3;
-#line 423 "<kl>/list.kl"
+#line 424 "<kl>/list.kl"
     ( *kl_t16 ) = kl_temp_12;
-#line 425 "<kl>/list.kl"
+#line 426 "<kl>/list.kl"
     return;
-#line 425 "<kl>/list.kl"
+#line 426 "<kl>/list.kl"
 }
 
-#line 474 "<kl>/list.kl"
+#line 475 "<kl>/list.kl"
 void kl_2kl4list_20reallocate_if_needed__I3i32E__SQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* kl_this_1 )
 {
     bool kl_t2;
@@ -5020,46 +5020,46 @@ void kl_2kl4list_20reallocate_if_needed__I3i32E__SQ2kl4listI3i32E( struct kl_2kl
     bool kl_t5;
     bool kl_t6;
     uint64_t kl_t7;
-#line 476 "<kl>/list.kl"
+#line 477 "<kl>/list.kl"
     kl_t2 = ( *kl_this_1 ).kl_count_ == ( *kl_this_1 ).kl_cap_;
-#line 476 "<kl>/list.kl"
+#line 477 "<kl>/list.kl"
     if ( kl_t2 ) goto bb1; else goto bb7;
     bb1:
     kl_t3 = &( *kl_this_1 );
-#line 478 "<kl>/list.kl"
+#line 479 "<kl>/list.kl"
     kl_t5 = ( *kl_this_1 ).kl_cap_ > 0;
-#line 478 "<kl>/list.kl"
+#line 479 "<kl>/list.kl"
     if ( kl_t5 ) goto bb2; else goto bb3;
     bb2:
-#line 478 "<kl>/list.kl"
+#line 479 "<kl>/list.kl"
     kl_t6 = __builtin_mul_overflow( ( *kl_this_1 ).kl_cap_, 2, &( uint64_t ) { 0 } );
-#line 478 "<kl>/list.kl"
+#line 479 "<kl>/list.kl"
     if ( kl_t6 ) goto bb5; else goto bb6;
     bb3:
-#line 478 "<kl>/list.kl"
+#line 479 "<kl>/list.kl"
     kl_t4 = 1;
-#line 478 "<kl>/list.kl"
+#line 479 "<kl>/list.kl"
     goto bb4;
     bb4:
-#line 478 "<kl>/list.kl"
+#line 479 "<kl>/list.kl"
     kl_2kl4list_10reallocate__I3i32E__SQ2kl4listI3i32E_3u64( kl_t3, kl_t4 );
-#line 476 "<kl>/list.kl"
+#line 477 "<kl>/list.kl"
     goto bb7;
     bb5:
-    kl_rt_panic( "<kl>/list.kl", 478, "arithmetic overflow: cap_ * 2" );
+    kl_rt_panic( "<kl>/list.kl", 479, "arithmetic overflow: cap_ * 2" );
     bb6:
-#line 478 "<kl>/list.kl"
+#line 479 "<kl>/list.kl"
     kl_t7 = ( *kl_this_1 ).kl_cap_ * 2;
-#line 478 "<kl>/list.kl"
+#line 479 "<kl>/list.kl"
     kl_t4 = kl_t7;
-#line 478 "<kl>/list.kl"
+#line 479 "<kl>/list.kl"
     goto bb4;
     bb7:
     return;
-#line 480 "<kl>/list.kl"
+#line 481 "<kl>/list.kl"
 }
 
-#line 444 "<kl>/list.kl"
+#line 445 "<kl>/list.kl"
 void kl_2kl4list_10reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list_list__I3i32E* kl_this_1, uint64_t kl_n_2 )
 {
     int32_t* kl_new_data_3;
@@ -5070,79 +5070,79 @@ void kl_2kl4list_10reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list
     int32_t* kl_t8;
     int32_t* kl_t9;
     bool kl_t10;
-#line 449 "<kl>/list.kl"
-    kl_t4 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 4, "<kl>/list.kl", 449, "out of memory: alloc<T>( n )" );
-#line 449 "<kl>/list.kl"
+#line 450 "<kl>/list.kl"
+    kl_t4 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 4, "<kl>/list.kl", 450, "out of memory: alloc<T>( n )" );
+#line 450 "<kl>/list.kl"
     kl_new_data_3 = kl_t4;
-#line 452 "<kl>/list.kl"
+#line 453 "<kl>/list.kl"
     kl_t5 = ( *kl_this_1 ).kl_data_ != NULL;
-#line 452 "<kl>/list.kl"
+#line 453 "<kl>/list.kl"
     if ( kl_t5 ) goto bb1; else goto bb8;
     bb1:
     kl_i_6 = 0;
-#line 454 "<kl>/list.kl"
+#line 455 "<kl>/list.kl"
     goto bb2;
     bb2:
-#line 454 "<kl>/list.kl"
+#line 455 "<kl>/list.kl"
     kl_t7 = kl_i_6 < ( *kl_this_1 ).kl_count_;
-#line 454 "<kl>/list.kl"
+#line 455 "<kl>/list.kl"
     if ( kl_t7 ) goto bb3; else goto bb4;
     bb3:
-#line 458 "<kl>/list.kl"
+#line 459 "<kl>/list.kl"
     kl_t8 = kl_new_data_3 + kl_i_6;
-#line 458 "<kl>/list.kl"
+#line 459 "<kl>/list.kl"
     kl_t9 = ( *kl_this_1 ).kl_data_ + kl_i_6;
-#line 458 "<kl>/list.kl"
+#line 459 "<kl>/list.kl"
     ( *kl_t8 ) = ( *kl_t9 );
-#line 454 "<kl>/list.kl"
+#line 455 "<kl>/list.kl"
     goto bb5;
     bb4:
-#line 465 "<kl>/list.kl"
+#line 466 "<kl>/list.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data_ );
-#line 452 "<kl>/list.kl"
+#line 453 "<kl>/list.kl"
     goto bb8;
     bb5:
     kl_t10 = __builtin_add_overflow( kl_i_6, 1, &( uint64_t ) { 0 } );
-#line 454 "<kl>/list.kl"
+#line 455 "<kl>/list.kl"
     if ( kl_t10 ) goto bb6; else goto bb7;
     bb6:
-#line 454 "<kl>/list.kl"
-    kl_rt_panic( "<kl>/list.kl", 454, "arithmetic overflow: i++" );
+#line 455 "<kl>/list.kl"
+    kl_rt_panic( "<kl>/list.kl", 455, "arithmetic overflow: i++" );
     bb7:
-#line 454 "<kl>/list.kl"
+#line 455 "<kl>/list.kl"
     kl_i_6 = kl_i_6 + 1;
-#line 454 "<kl>/list.kl"
+#line 455 "<kl>/list.kl"
     goto bb2;
     bb8:
-#line 469 "<kl>/list.kl"
+#line 470 "<kl>/list.kl"
     ( *kl_this_1 ).kl_data_ = kl_new_data_3;
     ( *kl_this_1 ).kl_cap_ = kl_n_2;
     return;
-#line 471 "<kl>/list.kl"
+#line 472 "<kl>/list.kl"
 }
 
 void kl_2kl4list_list__IQ2kl6stringE__drop( void* kl_t1 )
 {
     struct kl_2kl4list_list__IQ2kl6stringE* kl_t2;
-#line 11 "<kl>/list.kl"
+#line 12 "<kl>/list.kl"
     kl_t2 = ( struct kl_2kl4list_list__IQ2kl6stringE* ) kl_t1;
-#line 11 "<kl>/list.kl"
+#line 12 "<kl>/list.kl"
     kl_2kl4list_4list__IQ2kl6stringE__dtor( &( *kl_t2 ) );
-#line 11 "<kl>/list.kl"
+#line 12 "<kl>/list.kl"
     return;
-#line 11 "<kl>/list.kl"
+#line 12 "<kl>/list.kl"
 }
 
 void kl_2kl4list_list__I3i32E__drop( void* kl_t1 )
 {
     struct kl_2kl4list_list__I3i32E* kl_t2;
-#line 11 "<kl>/list.kl"
+#line 12 "<kl>/list.kl"
     kl_t2 = ( struct kl_2kl4list_list__I3i32E* ) kl_t1;
-#line 11 "<kl>/list.kl"
+#line 12 "<kl>/list.kl"
     kl_2kl4list_4list__I3i32E__dtor( &( *kl_t2 ) );
-#line 11 "<kl>/list.kl"
+#line 12 "<kl>/list.kl"
     return;
-#line 11 "<kl>/list.kl"
+#line 12 "<kl>/list.kl"
 }
 
 int main( void )

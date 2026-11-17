@@ -1,6 +1,7 @@
 compiling geo::area
 compiling geo::solid::volume
 compiling kl::iterable
+compiling kl::_core::compare
 compiling kl::optional
 compiling kl::list
 compiling kl::string

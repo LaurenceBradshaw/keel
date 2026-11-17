@@ -1,6 +1,7 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+import kl::_core::compare as kernel;
 import list;
 import optional;
 
@@ -497,20 +498,7 @@ class string implements textual, equatable, comparable, hashable, from<str>, fro
     /// Whether both strings hold the same bytes in the same order.
     public bool operator==( const ref string other ) const
     {
-        if( size() != other.size() )
-        {
-            return false;
-        }
-
-        for( u64 i = 0; i < size(); i++ )
-        {
-            if( as_text()[i] != other[i] )
-            {
-                return false;
-            }
-        }
-
-        return true;
+        return kernel::equal( as_text(), other.as_text() );
     }
 
     /// Orders by the first byte that differs, and a string before any it is a prefix of.
@@ -603,15 +591,7 @@ class string implements textual, equatable, comparable, hashable, from<str>, fro
             return false;
         }
 
-        for( u64 i = 0; i < text.size; i++ )
-        {
-            if( as_text()[at + i] != text[i] )
-            {
-                return false;
-            }
-        }
-
-        return true;
+        return kernel::equal( as_text()[at..at + text.size], text );
     }
 
     /// Moves the bytes into a new block of `n` bytes and frees the old one.
