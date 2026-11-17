@@ -1,0 +1,20 @@
+// Any size computed from a parameter around a cycle is refused, shrinking or not: every instance
+// compiles its whole body, so a test on `N` never stops the next instance.
+u64 grow<u64 N>()
+{
+    return grow<(N + 1)>();
+}
+
+u64 shrink<u64 N>()
+{
+    if( N == 1 )
+    {
+        return 1;
+    }
+    return shrink<(N - 1)>();
+}
+
+i32 main()
+{
+    return 0;
+}

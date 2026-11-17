@@ -1,0 +1,25 @@
+// A computed size argument that is 0 at an instance, 0 over constants, or given for a type.
+const u64 K = 3;
+
+struct Bits<u64 N>
+{
+    u64[(N + 63) / 64] words = [ 0, .. ];
+};
+
+struct Less<u64 N>
+{
+    Bits<(N - 1)> b = Bits<(N - 1)> {};
+};
+
+struct Box<T> where T : copyable
+{
+    T value;
+};
+
+i32 main()
+{
+    Less<1> l = Less<1> {};
+    Bits<(K - 3)> z = Bits<1> {};
+    Box<(K * 2)> b;
+    return 0;
+}

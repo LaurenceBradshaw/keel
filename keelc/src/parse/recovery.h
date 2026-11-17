@@ -85,7 +85,8 @@ public:
     bool end_list_element( Token_kind close, std::size_t list_errors, List_site site = List_site::Expression );
 
     // One closing `>`. On a miss, reports once and skips to this list's `>`; false means the list was broken.
-    bool expect_generic_close( std::optional<Hint_place> place = std::nullopt );
+    bool             expect_generic_close( std::optional<Hint_place> place = std::nullopt );
+    std::string_view size_hint( u32 at ) const; // `bitset<R * C>`: say to write `<(R * C)>`
 
 private:
     bool at_statement_keyword() const;

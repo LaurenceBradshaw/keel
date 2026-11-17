@@ -1,0 +1,19 @@
+error: `Less<1>` makes a size argument of 0
+  --> sema/errors_size_arguments_computed.kl:21:10
+   |
+21 |     Less<1> l = Less<1> {};
+   |          ^ `N - 1` at sema/errors_size_arguments_computed.kl:11:10 is 0 when `N` is 1
+
+error: `N` is a size, which is at least 1
+  --> sema/errors_size_arguments_computed.kl:22:10
+   |
+22 |     Bits<(K - 3)> z = Bits<1> {};
+   |          ^^^^^^^
+
+error: `T` takes a type, but `6` is a size
+  --> sema/errors_size_arguments_computed.kl:23:9
+   |
+23 |     Box<(K * 2)> b;
+   |         ^^^^^^^
+
+3 errors generated

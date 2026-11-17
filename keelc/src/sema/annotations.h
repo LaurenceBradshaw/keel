@@ -89,9 +89,9 @@ private:
     Type_id resolve_union( Node_id annotation );
     Type_id resolve_array( Node_id annotation );
 
-    std::optional<u64> array_size( Node_id size );                   // empty when not known at compile time
-    Type_id            size_tree( Node_id size, Node_id parameter ); // a suffix over `parameter`
-    Node_id            size_parameter_read( Node_id size ) const;    // the first size parameter `size` reads
+    std::optional<u64> array_size( Node_id size ); // empty when not known at compile time
+    Type_id            size_tree( Node_id size, Node_id parameter, std::string_view what ); // a size over `parameter`
+    Node_id            size_parameter_read( Node_id size ) const; // the first size parameter `size` reads
 
     Span const_keyword( Node_id const_type ) const;
 

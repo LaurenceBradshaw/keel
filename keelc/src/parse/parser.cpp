@@ -2411,6 +2411,17 @@ Node_id Parser::parse_type_argument()
         return ast_.add( Node_kind::Int_literal, literal.span, literal.symbol.v, {} );
     }
 
+    // A computed size, `bitset<(R * C)>`: no type begins with `(`.
+    if( cursor_.check( Token_kind::L_paren ) )
+    {
+        const Span    start = cursor_.advance().span;
+        const Node_id inner = parse_expression( 0 );
+        recovery_.expect( Token_kind::R_paren );
+        ast_.set_span( inner, Span::merge( start, cursor_.previous().span ) );
+        mark_parenthesised( inner );
+        return inner;
+    }
+
     return parse_type();
 }
 
@@ -14742,6 +14753,8 @@ TEST_CASE( "parser_parses_a_fixed_array_type", "[parse][fixed_array]" )
             { "const ref i32[4] a = x;", "Const_type(Mode_type(Array_type(i32,4)))" },
             { "const i32[4] a = x;", "Const_type(Array_type(i32,4))" }, // an array is its elements
             { "list<i32[4]> l;", "Generic_type(list,Type_arg_list(Array_type(i32,4)))" },
+            { "bits<(R * C)> b;", "Generic_type(bits,Type_arg_list(Binary_expr(R,C)))" }, // a computed size
+            { "bits<(N)> b;", "Generic_type(bits,Type_arg_list((N)))" },                  // a name is spelt by its span
         };
 
         for( const auto& [body, expected] : cases )

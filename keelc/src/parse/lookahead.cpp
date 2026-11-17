@@ -488,6 +488,37 @@ bool Lookahead::looks_like_type_arguments( u32 at )
             break;
         }
 
+        // A computed size, `bitset<(R * C)>`, only as a whole argument; a `>` inside does not close.
+        case Token_kind::L_paren:
+        {
+            const Token_kind before = cursor_.previous().kind;
+            if( before != Token_kind::Less && before != Token_kind::Comma )
+            {
+                return false;
+            }
+
+            u32 parens = 0;
+            do
+            {
+                const Token_kind kind = cursor_.peek().kind;
+                if( kind == Token_kind::Semicolon || kind == Token_kind::L_brace || kind == Token_kind::R_brace ||
+                    cursor_.at_end() )
+                {
+                    return false;
+                }
+                parens += kind == Token_kind::L_paren;
+                parens -= kind == Token_kind::R_paren;
+                cursor_.advance();
+            } while( parens > 0 );
+
+            const Token_kind after = cursor_.peek().kind;
+            if( after != Token_kind::Comma && after != Token_kind::Greater && after != Token_kind::Greater_greater )
+            {
+                return false;
+            }
+            continue; // already past the `)`
+        }
+
         case Token_kind::L_bracket:
             if( cursor_.peek( 1 ).kind == Token_kind::R_bracket )
             {
@@ -819,10 +850,27 @@ bool Lookahead::scan_type()
     return true;
 }
 
-// A size, `bitset<64>`, or a type.
+// A size, `bitset<64>` or `bitset<(R * C)>`, or a type.
 bool Lookahead::scan_type_argument()
 {
-    return cursor_.match( Token_kind::Int_literal ) || scan_type();
+    if( !cursor_.check( Token_kind::L_paren ) )
+    {
+        return cursor_.match( Token_kind::Int_literal ) || scan_type();
+    }
+
+    u32 parens = 0;
+    do
+    {
+        const Token_kind kind = cursor_.peek().kind;
+        if( kind == Token_kind::Semicolon || kind == Token_kind::L_brace || kind == Token_kind::R_brace || cursor_.at_end() )
+        {
+            return false;
+        }
+        parens += kind == Token_kind::L_paren;
+        parens -= kind == Token_kind::R_paren;
+        cursor_.advance();
+    } while( parens > 0 );
+    return true;
 }
 
 bool Lookahead::scan_type_term()
@@ -1975,6 +2023,16 @@ TEST_CASE( "lookahead_answers_the_parsers_lookahead", "[scan]" )
         CHECK_FALSE( type_arguments( "a < 4 > b" ) );
         CHECK_FALSE( type_arguments( "a < 1 + 2 > ( c )" ) );
         CHECK_FALSE( type_arguments( "a < b[ 1 + 2 ] > ( c )" ) );
+    }
+
+    SECTION( "a computed size is a whole argument in parentheses" )
+    {
+        CHECK( type_arguments( "f<(N + 1)>( x )" ) );
+        CHECK( type_arguments( "Grid<i32, (R * C), 2>::make()" ) );
+        CHECK( type_arguments( "make<Box<(N > 2 ? 1 : 2)>>()" ) ); // a `>` inside does not close
+        CHECK_FALSE( type_arguments( "a < (b) > c" ) );
+        CHECK_FALSE( type_arguments( "a < (b) + 1 > ( c )" ) );
+        CHECK_FALSE( type_arguments( "a < b(c) > ( d )" ) );
     }
 
     SECTION( "a comparison is not type arguments" )

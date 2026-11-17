@@ -56,9 +56,10 @@ private:
     {
         Node_id node;
         Type_id extent;
+        bool    argument = false; // `bitset<(N - 1)>` rather than `u64[N - 1]`
     };
 
-    void                    collect( Node_id id, Node_id owner );
+    void                    collect( Node_id id, Node_id owner, Node_kind parent = Node_kind::Error );
     std::optional<Instance> reach( const Generic_call& edge, const Bindings& bindings, const Instance* caller );
     Bindings                bindings_of( const Instance& instance ) const;
     bool                    report( const Instance& instance, Span origin );

@@ -714,15 +714,19 @@ std::vector<Type_id> Annotations::resolve_written( std::span<const Node_id> para
         {
             type = resolve_size_argument( parameters[i], argument );
         }
-        else if( ast_.kind( argument ) == Node_kind::Int_literal )
+        else if( ast_.kind( argument ) == Node_kind::Int_literal || ast_.kind( argument ) == Node_kind::Binary_expr ||
+                 ast_.kind( argument ) == Node_kind::Name_expr )
         {
+            const Folded folded = constant_folder_.fold_integer( argument );
             reporter_.error_at(
                 ast_.span( argument ),
-                fmt::format(
-                    "`{}` takes a type, but `{}` is a size",
-                    interner_.text( ast_.name( parameters[i] ) ),
-                    constant_folder_.fold_integer( argument ).value.magnitude
-                )
+                folded.constant
+                    ? fmt::format(
+                          "`{}` takes a type, but `{}` is a size",
+                          interner_.text( ast_.name( parameters[i] ) ),
+                          folded.value.magnitude
+                      )
+                    : fmt::format( "`{}` takes a type, but this is a size", interner_.text( ast_.name( parameters[i] ) ) )
             );
             type = table_.builtin( Type_kind::Error );
         }
@@ -744,10 +748,21 @@ Type_id Annotations::resolve_size_argument( Node_id parameter, Node_id argument 
         return types_.record( argument, types_.type_of( forwarded ) );
     }
 
+    // `(R * C)`: built per instance when it reads a parameter, else folded below as a `const` is.
+    const bool computed = ast_.kind( argument ) == Node_kind::Binary_expr || ast_.kind( argument ) == Node_kind::Name_expr;
+    if( computed )
+    {
+        if( const Node_id read = size_parameter_read( argument ); read.is_valid() )
+        {
+            const Type_id extent = size_tree( argument, read, "a size argument" );
+            return table_.is_error( extent ) ? extent : types_.record( argument, extent );
+        }
+    }
+
     const Node_id decl = ast_.kind( argument ) == Node_kind::Named_type ? resolution_.declaration_of( argument ) : Node_id {};
 
-    const bool is_value =
-        ast_.kind( argument ) == Node_kind::Int_literal || ( decl.is_valid() && ast_.kind( decl ) == Node_kind::Var_decl );
+    const bool is_value = computed || ast_.kind( argument ) == Node_kind::Int_literal ||
+                          ( decl.is_valid() && ast_.kind( decl ) == Node_kind::Var_decl );
 
     if( !is_value )
     {
@@ -975,7 +990,7 @@ Type_id Annotations::resolve_array( Node_id annotation )
 
     if( parameter.is_valid() )
     {
-        const Type_id extent = size_tree( suffix, parameter );
+        const Type_id extent = size_tree( suffix, parameter, "an array's size" );
         if( !table_.is_error( extent ) )
         {
             types_.record( suffix, extent ); // what Signature_printer reads back
@@ -1082,7 +1097,7 @@ Node_id Annotations::size_parameter_read( Node_id size ) const
 }
 
 // Folded when it reads no parameter; otherwise built as a size, to be computed per instance.
-Type_id Annotations::size_tree( Node_id size, Node_id parameter )
+Type_id Annotations::size_tree( Node_id size, Node_id parameter, std::string_view what )
 {
     if( !size_parameter_read( size ).is_valid() )
     {
@@ -1095,7 +1110,7 @@ Type_id Annotations::size_tree( Node_id size, Node_id parameter )
         {
             reporter_.error_at(
                 ast_.span( size ),
-                "an array's size must be known at compile time",
+                fmt::format( "{} must be known at compile time", what ),
                 "write literals and `const` names, with arithmetic over them"
             );
         }
@@ -1121,8 +1136,8 @@ Type_id Annotations::size_tree( Node_id size, Node_id parameter )
         {
             if( ast_.op( size ) == token )
             {
-                const Type_id lhs = size_tree( ast_.lhs( size ), parameter );
-                const Type_id rhs = size_tree( ast_.rhs( size ), parameter );
+                const Type_id lhs = size_tree( ast_.lhs( size ), parameter, what );
+                const Type_id rhs = size_tree( ast_.rhs( size ), parameter, what );
                 return table_.size_op( op, lhs, rhs );
             }
         }
@@ -1130,7 +1145,7 @@ Type_id Annotations::size_tree( Node_id size, Node_id parameter )
 
     reporter_.error_at(
         ast_.span( size ),
-        fmt::format( "an array's size over `{}` may use `+`, `-`, `*`, `/` and `%`", interner_.text( ast_.name( parameter ) ) )
+        fmt::format( "{} over `{}` may use `+`, `-`, `*`, `/` and `%`", what, interner_.text( ast_.name( parameter ) ) )
     );
     return table_.builtin( Type_kind::Error );
 }

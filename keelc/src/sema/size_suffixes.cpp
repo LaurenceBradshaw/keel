@@ -101,7 +101,7 @@ void Size_suffixes::check(
 }
 
 // Every suffix whose extent is still a computation, under the generic that instantiates it.
-void Size_suffixes::collect( Node_id id, Node_id owner )
+void Size_suffixes::collect( Node_id id, Node_id owner, Node_kind parent )
 {
     const Node_kind kind = ast_.kind( id );
 
@@ -117,14 +117,16 @@ void Size_suffixes::collect( Node_id id, Node_id owner )
     if( owner.is_valid() && id.v < types_.size() && types_[id.v].is_valid() && table_.is_size( types_[id.v] ) &&
         table_.get( types_[id.v] ).width != 0 )
     {
-        suffixes_[owner.v].push_back( Suffix { .node = id, .extent = types_[id.v] } );
+        suffixes_[owner.v].push_back(
+            Suffix { .node = id, .extent = types_[id.v], .argument = parent == Node_kind::Type_arg_list }
+        );
     }
 
     for( const Node_id child : ast_.children( id ) )
     {
         if( child.is_valid() )
         {
-            collect( child, owner );
+            collect( child, owner, kind );
         }
     }
 }
@@ -268,7 +270,11 @@ bool Size_suffixes::report( const Instance& instance, Span origin )
         reporter_.error_at(
             written( origin, values, sources ),
             fmt::format(
-                "`{}` makes {}", name_of( instance ), value ? "an array of 0 elements" : "an array whose size " + reason
+                "`{}` makes {}",
+                name_of( instance ),
+                suffix.argument ? ( value ? "a size argument of 0" : "a size argument that " + reason )
+                : value         ? "an array of 0 elements"
+                                : "an array whose size " + reason
             ),
             fmt::format(
                 "`{}` at {} {} when {}",

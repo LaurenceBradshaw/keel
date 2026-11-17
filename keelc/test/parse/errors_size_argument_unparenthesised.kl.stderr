@@ -1,0 +1,7 @@
+error: expected `>`, found `C`
+ --> parse/errors_size_argument_unparenthesised.kl:9:14
+  |
+9 |     Bits<R * C> cells;
+  |              ^ a size computed from others goes in parentheses: `<(N + 1)>`
+
+1 error generated

@@ -224,7 +224,9 @@ Type_id Type_table::size_op( Size_op op, Type_id lhs, Type_id rhs )
         return value ? size( *value ) : error_;
     }
 
-    const std::tuple key { u8( op ), lhs.v, rhs.v };
+    // `C * R` is `R * C`, so one generic may write either; the first spelling met names both.
+    const bool       commutes = op == Size_op::Add || op == Size_op::Multiply;
+    const std::tuple key { u8( op ), commutes ? std::min( lhs.v, rhs.v ) : lhs.v, commutes ? std::max( lhs.v, rhs.v ) : rhs.v };
     const auto       it = size_ops_.find( key );
     if( it != size_ops_.end() )
     {
@@ -1858,7 +1860,9 @@ Type_id Type_table::composite(
     for( std::size_t i = 0; i < owned.size(); ++i )
     {
         spelling += i == 0 ? "<" : ", ";
-        spelling += this->name( owned[i] );
+        const Type& argument = get( owned[i] );
+        const bool  computed = argument.kind == Type_kind::Size && argument.width != 0;
+        spelling += computed ? fmt::format( "({})", this->name( owned[i] ) ) : std::string( this->name( owned[i] ) );
     }
 
     if( !owned.empty() )

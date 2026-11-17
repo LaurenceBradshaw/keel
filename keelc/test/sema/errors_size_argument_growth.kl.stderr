@@ -1,0 +1,13 @@
+error: `grow` is instantiated with a different size each time round
+ --> sema/errors_size_argument_growth.kl:5:12
+  |
+5 |     return grow<(N + 1)>();
+  |            ^^^^^^^^^^^^^^^ `grow` to `grow`, and each round computes a size from the last - so no set of instances ever finishes; forward the size parameter itself
+
+error: `shrink` is instantiated with a different size each time round
+  --> sema/errors_size_argument_growth.kl:14:12
+   |
+14 |     return shrink<(N - 1)>();
+   |            ^^^^^^^^^^^^^^^^^ `shrink` to `shrink`, and each round computes a size from the last - so no set of instances ever finishes; forward the size parameter itself
+
+2 errors generated

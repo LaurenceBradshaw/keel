@@ -1,0 +1,15 @@
+// A size computed in a type argument needs parentheses.
+struct Bits<u64 N>
+{
+    u64[(N + 63) / 64] words = [ 0, .. ];
+};
+
+struct Grid<u64 R, u64 C>
+{
+    Bits<R * C> cells;
+};
+
+i32 main()
+{
+    return 0;
+}

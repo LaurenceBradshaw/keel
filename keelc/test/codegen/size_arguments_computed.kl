@@ -1,0 +1,39 @@
+// A size argument may be computed in parentheses, `Bits<(R * C)>`: folded at once over constants,
+// and per instance over size parameters. `C * R` and `R * C` are one size.
+import t::console;
+
+const u64 K = 3;
+
+struct Bits<u64 N>
+{
+    u64[(N + 63) / 64] words = [ 0, .. ];
+};
+
+struct Grid<u64 R, u64 C>
+{
+    Bits<(R * C)> cells = Bits<(R * C)> {};
+    Bits<(C * R)> spare = Bits<(C * R)> {};
+    Bits<(R + 1)> rows  = Bits<(1 + R)> {};
+};
+
+u64 count<u64 N>( const ref Bits<N> _ )
+{
+    return N;
+}
+
+u64 doubled<u64 N>()
+{
+    return count( Bits<(N * 2)> {} );
+}
+
+i32 main()
+{
+    Grid<2, 3> g = Grid<2, 3> {};
+    g.cells      = g.spare;
+    Bits<6> six  = g.cells;
+    Bits<(K * 2)> also = six;
+    t::print( count( also ) );
+    t::print( count( g.rows ) );
+    t::print( doubled<5>() );
+    return 0;
+}

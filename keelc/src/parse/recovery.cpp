@@ -401,7 +401,9 @@ void Recovery::report_dropped( u32 begin, u32 end, const Scan_failure& failure, 
         {
         case Wanted::Token:
             message += expectation( failure.token );
-            help = std::string( stop_hint( failure.token, stop.kind, place ) );
+            help = failure.token == Token_kind::Greater && !size_hint( failure.at ).empty()
+                       ? std::string( size_hint( failure.at ) )
+                       : std::string( stop_hint( failure.token, stop.kind, place ) );
             break;
         case Wanted::Member:
             message += "a member";
@@ -443,6 +445,22 @@ bool Recovery::gap_before( u32 at ) const
            before_kind != Token_kind::Comma;
 }
 
+// `bitset<R * C>` stopped where a `>` was wanted: `R *` read as a pointer, or `N + 1` at the `+`.
+std::string_view Recovery::size_hint( u32 at ) const
+{
+    const std::span<const Token> tokens = cursor_.tokens();
+    if( at == 0 || at >= tokens.size() )
+    {
+        return {};
+    }
+
+    const Token_kind next     = tokens[at].kind;
+    const bool       operand  = next == Token_kind::Identifier || next == Token_kind::Int_literal;
+    const bool       computed = ( tokens[at - 1].kind == Token_kind::Star && operand ) || next == Token_kind::Plus ||
+                          next == Token_kind::Minus || next == Token_kind::Slash || next == Token_kind::Percent;
+    return computed ? "a size computed from others goes in parentheses: `<(N + 1)>`" : std::string_view {};
+}
+
 bool Recovery::expect_generic_close( std::optional<Hint_place> place )
 {
     if( cursor_.match_generic_close() )
@@ -452,9 +470,12 @@ bool Recovery::expect_generic_close( std::optional<Hint_place> place )
 
     if( !unclosed_at_ || cursor_.position() != *unclosed_at_ )
     {
+        const std::string_view sized = size_hint( cursor_.position() );
         error_expected(
             Token_kind::Greater,
-            place ? std::string( stop_hint( Token_kind::Greater, cursor_.peek().kind, *place ) ) : std::string {}
+            !sized.empty() ? std::string( sized )
+            : place        ? std::string( stop_hint( Token_kind::Greater, cursor_.peek().kind, *place ) )
+                           : std::string {}
         );
     }
 
