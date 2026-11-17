@@ -511,8 +511,8 @@ void kl_2kl4list_10reallocate__I3i64E__SQ2kl4listI3i64E_3u64( struct kl_2kl4list
     bool kl_t6;
     int64_t* kl_t7;
     int64_t* kl_t8;
-    int64_t* kl_t10;
-    uint64_t kl_t11;
+    uint64_t kl_t10;
+    int64_t* kl_t11;
 #line 450 "<kl>/list.kl"
     kl_new_data_3 = ( int64_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 8, "<kl>/list.kl", 450, "out of memory: alloc<T>( n )" );
 #line 453 "<kl>/list.kl"
@@ -529,13 +529,13 @@ void kl_2kl4list_10reallocate__I3i64E__SQ2kl4listI3i64E_3u64( struct kl_2kl4list
 #line 459 "<kl>/list.kl"
     kl_t7 = kl_new_data_3 + kl_i_5;
 #line 459 "<kl>/list.kl"
-    kl_t8 = kl_t10 + kl_i_5;
+    kl_t8 = kl_t11 + kl_i_5;
 #line 459 "<kl>/list.kl"
     ( *kl_t7 ) = ( *kl_t8 );
 #line 455 "<kl>/list.kl"
     kl_i_5 = kl_i_5 + 1;
 #line 455 "<kl>/list.kl"
-    kl_t6 = kl_i_5 < kl_t11;
+    kl_t6 = kl_i_5 < kl_t10;
 #line 455 "<kl>/list.kl"
     if ( kl_t6 ) goto bb2; else goto bb3;
     bb3:
@@ -550,9 +550,9 @@ void kl_2kl4list_10reallocate__I3i64E__SQ2kl4listI3i64E_3u64( struct kl_2kl4list
     return;
     bb5:
 #line 459 "<kl>/list.kl"
-    kl_t10 = ( *kl_this_1 ).kl_data_;
+    kl_t11 = ( *kl_this_1 ).kl_data_;
 #line 455 "<kl>/list.kl"
-    kl_t11 = ( *kl_this_1 ).kl_count_;
+    kl_t10 = ( *kl_this_1 ).kl_count_;
 #line 455 "<kl>/list.kl"
     goto bb2;
 #line 472 "<kl>/list.kl"

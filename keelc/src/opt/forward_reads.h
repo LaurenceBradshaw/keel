@@ -11,7 +11,8 @@ namespace keel
 // In -O3's loop phase: a read of a place through a pointer, where every path to it copied the place to a
 // local that still holds it, reads that local; a call, a drop, or a store through a pointer or to an
 // addressed local between them keeps the read, but a store of one scalar kind keeps no read of another
-// (D89). Whether it changed anything.
+// (D89). A read in a loop inside a larger rvalue or a terminator, of a place read elsewhere too, is first read
+// into a local of its own, so a later read can take it. Whether it changed anything.
 bool forward_reads( Function& func, const Type_table& table );
 
 // Shared with the other loop passes.

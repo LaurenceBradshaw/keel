@@ -28,8 +28,9 @@ void kl_3opt_5moved__RQ3opt3Buf_Q3opt3Buf( struct kl_3opt_Buf* kl_ys_1, struct k
     int64_t* kl_t5;
     int64_t* kl_t6;
     int64_t kl_t7;
-    int64_t* kl_t8;
+    uint64_t kl_t8;
     int64_t* kl_t9;
+    int64_t* kl_t10;
 #line 15 "opt/versioned_loops.kl"
     kl_i_3 = 0;
 #line 15 "opt/versioned_loops.kl"
@@ -38,9 +39,9 @@ void kl_3opt_5moved__RQ3opt3Buf_Q3opt3Buf( struct kl_3opt_Buf* kl_ys_1, struct k
     if ( kl_t4 ) goto bb3; else goto bb2;
     bb1:
 #line 19 "opt/versioned_loops.kl"
-    kl_t5 = kl_t8 + kl_i_3;
+    kl_t5 = kl_t9 + kl_i_3;
 #line 19 "opt/versioned_loops.kl"
-    kl_t6 = kl_t9 + kl_i_3;
+    kl_t6 = kl_t10 + kl_i_3;
 #line 19 "opt/versioned_loops.kl"
     kl_t7 = ( *kl_t6 ) + 1;
 #line 19 "opt/versioned_loops.kl"
@@ -48,7 +49,9 @@ void kl_3opt_5moved__RQ3opt3Buf_Q3opt3Buf( struct kl_3opt_Buf* kl_ys_1, struct k
 #line 15 "opt/versioned_loops.kl"
     kl_i_3 = kl_i_3 + 1;
 #line 15 "opt/versioned_loops.kl"
-    kl_t4 = kl_i_3 < ( *kl_xs_2 ).kl_count;
+    kl_t8 = ( *kl_xs_2 ).kl_count;
+#line 15 "opt/versioned_loops.kl"
+    kl_t4 = kl_i_3 < kl_t8;
 #line 15 "opt/versioned_loops.kl"
     if ( kl_t4 ) goto bb1; else goto bb2;
     bb2:
@@ -56,9 +59,9 @@ void kl_3opt_5moved__RQ3opt3Buf_Q3opt3Buf( struct kl_3opt_Buf* kl_ys_1, struct k
     return;
     bb3:
 #line 19 "opt/versioned_loops.kl"
-    kl_t8 = ( *kl_ys_1 ).kl_data;
+    kl_t9 = ( *kl_ys_1 ).kl_data;
 #line 19 "opt/versioned_loops.kl"
-    kl_t9 = ( *kl_xs_2 ).kl_data;
+    kl_t10 = ( *kl_xs_2 ).kl_data;
 #line 15 "opt/versioned_loops.kl"
     goto bb1;
 #line 22 "opt/versioned_loops.kl"
