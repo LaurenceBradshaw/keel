@@ -193,6 +193,7 @@ private:
     // D69: the location an `@located` callee receives, passed on from this function's own caller
     // when it is `@located` too.
     Operand caller_location( Span span );
+    Operand lower_range( Node_id id );
     Node_id str_constructor() const;
     Operand lower_binary( Node_id id );
     Operand lower_unary( Node_id id );
@@ -2282,6 +2283,23 @@ Operand Lowering::caller_location( Span span )
     return copy( builder_.place( temp ), location );
 }
 
+// `a..b` as a value: a prelude `range`, `from` then `to`.
+Operand Lowering::lower_range( Node_id id )
+{
+    const Span                     span   = ast_.span( id );
+    const Type_id                  type   = types_.type_of( id );
+    const std::span<const Node_id> fields = ast_.members( types_.table().prelude().range );
+    const Local_id                 temp   = builder_.add_local( type, span );
+
+    builder_.storage_live( temp, span );
+    const Operand from = lower_expression( ast_.lower( id ) );
+    builder_.assign( builder_.field( builder_.place( temp ), fields[0] ), use( from ), span );
+    const Operand to = lower_expression( ast_.upper( id ) );
+    builder_.assign( builder_.field( builder_.place( temp ), fields[1] ), use( to ), span );
+
+    return copy( builder_.place( temp ), type );
+}
+
 Operand Lowering::lower_binary( Node_id id )
 {
     const Token_kind op = ast_.op( id );
@@ -3769,6 +3787,8 @@ Operand Lowering::lower_unspanned( Node_id id )
     }
     case Node_kind::Caller_expr:
         return caller_location( ast_.span( id ) );
+    case Node_kind::Range_expr:
+        return lower_range( id );
     case Node_kind::Panic_expr:
     {
         const Operand op = lower_expression( ast_.operand( id ) );
@@ -3996,6 +4016,7 @@ Place Lowering::lower_place( Node_id id )
     case Node_kind::Array_literal:
     case Node_kind::Array_fill:
     case Node_kind::Caller_expr:
+    case Node_kind::Range_expr:
     case Node_kind::Functions_of_expr:
     {
         return lower_expression( id ).place;

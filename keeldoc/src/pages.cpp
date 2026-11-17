@@ -229,7 +229,15 @@ std::string Page_writer::signature(
         const std::string_view word = text.substr( i, end - i );
         i                           = end;
 
-        if( k_keywords.contains( word ) )
+        // A field's or variant's own name, which may spell a type's: `u64 from` beside `from<T>`.
+        const std::string_view rest = text.substr( end );
+        if( name_class( declares ).empty() && word == name &&
+            ( rest.empty() || rest.starts_with( " =" ) || rest.starts_with( "(" ) ) )
+        {
+            out += html_escape( word );
+            name = {};
+        }
+        else if( k_keywords.contains( word ) )
         {
             out += fmt::format( "<span class=\"kw\">{}</span>", word );
         }
@@ -618,7 +626,11 @@ TEST_CASE( "pages_mark_the_declared_name", "[pages]" )
             { Entry {
                   Group { "Box", { { "class", "Box", "class Box<T>", "" } } },
                   {
-                      Section { "Fields", { Group { "cb", { { "field", "cb", "public fn( T ) -> T cb", "" } } } } },
+                      Section {
+                          "Fields",
+                          { Group { "cb", { { "field", "cb", "public fn( T ) -> T cb", "" } } },
+                            Group { "Box", { { "field", "Box", "public i32 Box", "" } } } }
+                      },
                       Section { "Constructors", { Group { "~Box", { { "destructor", "~Box", "~Box()", "" } } } } },
                       Section {
                           "Methods",
@@ -637,6 +649,7 @@ TEST_CASE( "pages_mark_the_declared_name", "[pages]" )
     // constructor or destructor, and a type's own signature and title, mark it as a type.
     REQUIRE( wrap.find( "<span class=\"fn\">wrap</span>&lt;T&gt;( T v )" ) != std::string::npos );
     REQUIRE( wrap.find( "<code><span class=\"type\">~Box</span>()</code>" ) != std::string::npos );
+    REQUIRE( wrap.find( "<span class=\"prim\">i32</span> Box</code>" ) != std::string::npos ); // a field named as a type
     REQUIRE(
         wrap.find( "<code><span class=\"kw\">class</span> <span class=\"type\">Box</span>&lt;T&gt;</code>" ) !=
         std::string::npos

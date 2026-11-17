@@ -500,6 +500,17 @@ struct location
     u32 line;
 };
 
+/// --- Ranges ---
+
+/// `from..to` as a value: the numbers from `from` up to, not including, `to`. `a..b` is one.
+struct range
+{
+    /// The first number.
+    u64 from;
+    /// One past the last.
+    u64 to;
+};
+
 /// --- Numbers ---
 
 /// The square root of `x`, correctly rounded: the target's instruction. `kl::sqrt` is the name to use.

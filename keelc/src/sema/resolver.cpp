@@ -1594,6 +1594,7 @@ Prelude_items Resolver::prelude_items() const
     items.from           = named( "from", an_interface );
     items.ordering       = named( "ordering", an_enum );
     items.location       = named( "location", an_aggregate );
+    items.range          = named( "range", an_aggregate );
     items.equatable      = named( "equatable", an_interface );
     items.comparable     = named( "comparable", an_interface );
     items.hashable       = named( "hashable", an_interface );

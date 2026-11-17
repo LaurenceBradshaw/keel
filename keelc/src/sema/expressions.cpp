@@ -142,6 +142,17 @@ Type_id Expressions::infer( Node_id id )
         }
         return types_.record( id, table_.builtin( Type_kind::Never ) );
 
+    case Node_kind::Range_expr: // a slice's, a label's and a counter's never reach here
+    {
+        const Type_id bound = table_.integer( 64, false );
+        check( ast_.lower( id ), bound );
+        check( ast_.upper( id ), bound );
+        refuse_backwards( id );
+
+        const Type_id type = types_.type_of( table_.prelude().range );
+        return type.is_valid() ? types_.record( id, type ) : types_.poison( id );
+    }
+
     case Node_kind::Caller_expr:
     {
         const Type_id type = types_.type_of( table_.prelude().location );

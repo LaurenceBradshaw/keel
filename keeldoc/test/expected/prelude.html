@@ -55,6 +55,8 @@ functions.</p>
 <li><a href="#box"><code>box</code></a> <span class="kind">class</span></li>
 <li class="divider">Call sites</li>
 <li><a href="#location"><code>location</code></a> <span class="kind">struct</span></li>
+<li class="divider">Ranges</li>
+<li><a href="#range"><code>range</code></a> <span class="kind">struct</span></li>
 <li class="divider">Numbers</li>
 <li><a href="#sqrt_f64"><code>sqrt_f64</code></a> <span class="kind">function</span></li>
 <li><a href="#sqrt_f32"><code>sqrt_f32</code></a> <span class="kind">function</span></li>
@@ -636,6 +638,29 @@ interface as its type argument.</p>
 <pre class="signature"><a class="anchor" href="#location.line" aria-label="Link to line">#</a><code><span class="kw">public</span> <a class="prim" href="#u32">u32</a> line</code></pre>
 <div class="doc">
 <p>The call's line, counting from 1.</p>
+</div>
+</div>
+</section>
+<h2 class="divider">Ranges</h2>
+<section class="entry">
+<h2><span class="kind">struct</span> <span class="type">range</span></h2>
+<div class="group" id="range">
+<pre class="signature"><a class="anchor" href="#range" aria-label="Link to range">#</a><code><span class="kw">struct</span> <span class="type">range</span></code></pre>
+<div class="doc">
+<p><code>from..to</code> as a value: the numbers from <code>from</code> up to, not including, <code>to</code>. <code>a..b</code> is one.</p>
+</div>
+</div>
+<h3>Fields</h3>
+<div class="group" id="range.from">
+<pre class="signature"><a class="anchor" href="#range.from" aria-label="Link to from">#</a><code><span class="kw">public</span> <a class="prim" href="#u64">u64</a> from</code></pre>
+<div class="doc">
+<p>The first number.</p>
+</div>
+</div>
+<div class="group" id="range.to">
+<pre class="signature"><a class="anchor" href="#range.to" aria-label="Link to to">#</a><code><span class="kw">public</span> <a class="prim" href="#u64">u64</a> to</code></pre>
+<div class="doc">
+<p>One past the last.</p>
 </div>
 </div>
 </section>

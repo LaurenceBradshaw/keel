@@ -150,7 +150,8 @@ enum class Node_kind : u16
     // aux: 1 when `default` labels it; children: the labels (expressions, Range_exprs and
     // Variant_patterns), then the body Block.
     Case_arm,
-    // `1..5`, half-open: a `case` label or an Index_expr's index; children: the two bounds.
+    // `1..5`, half-open: a `case` label, a slice, a counting `for`'s bounds (aux 1) or a `range`
+    // value; children: the two bounds.
     Range_expr,
     // `Shape::Circle( r )`; children: the Path_expr, then the Binding_decls.
     Variant_pattern,

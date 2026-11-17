@@ -957,14 +957,14 @@ bool Ast::is_const_binding( Node_id decl ) const
 
 bool Ast::is_counter( Node_id decl ) const
 {
-    // Only a counting `for` gives a Var_decl a Range_expr; elsewhere a range is a slice or a label.
+    // `range r = 1..3;` holds a value, so the counting `for` marks its own range.
     if( !decl.is_valid() || kind( decl ) != Node_kind::Var_decl )
     {
         return false;
     }
 
     const Node_id init = initialiser( decl );
-    return init.is_valid() && kind( init ) == Node_kind::Range_expr;
+    return init.is_valid() && kind( init ) == Node_kind::Range_expr && aux( init ) == 1;
 }
 
 bool Ast::is_const_field( Node_id decl ) const

@@ -1,0 +1,9 @@
+// PLAN D34: a range's bounds are `u64`s, a constant one runs upwards, and a range is no number.
+i32 main()
+{
+    i32   x = 1;
+    range a = 5..3;
+    range b = x..3;
+    i32   d = 1..2;
+    return 0;
+}

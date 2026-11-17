@@ -1,0 +1,19 @@
+error: `5..3` runs backwards
+ --> sema/errors_range_values.kl:5:15
+  |
+5 |     range a = 5..3;
+  |               ^^^^ a range runs upwards; the lower bound comes first
+
+error: expected `u64`, but got `i32`
+ --> sema/errors_range_values.kl:6:15
+  |
+6 |     range b = x..3;
+  |               ^ write `cast<u64>(x)`
+
+error: expected `i32`, but got `range`
+ --> sema/errors_range_values.kl:7:15
+  |
+7 |     i32   d = 1..2;
+  |               ^^^^
+
+3 errors generated

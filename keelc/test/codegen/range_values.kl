@@ -1,0 +1,45 @@
+// PLAN D34: `a..b` is a value of the prelude's `range` outside a slice, a label and a counter. It
+// binds loosest of all, so `2..n - 1` is `2..(n - 1)`, and a `range...` parameter takes several.
+u64 width( range r )
+{
+    return r.to - r.from;
+}
+
+u64 widths( range... rs )
+{
+    u64 n = 0;
+    for( range r : rs )
+    {
+        n += width( r );
+    }
+    return n;
+}
+
+i32 main()
+{
+    u64   n = 10;
+    range r = 2..n - 1;
+    if( r.from != 2 || r.to != 9 )
+    {
+        return 1;
+    }
+
+    // The counting `for` and the slice are still their own.
+    u64      s = 0;
+    u64[5]   a = [ 1, 2, 3, 4, 5 ];
+    for( u64 i : r.from..r.to )
+    {
+        s += i;
+    }
+    for( u64 x : a[1..3] )
+    {
+        s += x;
+    }
+    if( s != 40 )
+    {
+        return 2;
+    }
+
+    // An empty range is a value too.
+    return widths( r, 0..3, ( n..n ) ) == 10 ? 0 : 3;
+}

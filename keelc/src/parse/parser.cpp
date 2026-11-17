@@ -3279,11 +3279,11 @@ Node_id Parser::parse_colon_head( Node_id& container )
     const Span      name_span = cursor_.previous().span;
 
     recovery_.expect( Token_kind::Colon );
-    const Node_id lower = parse_expression( 0 );
+    const Node_id range = parse_expression( 0 );
 
-    if( !cursor_.match( Token_kind::Dot_dot ) )
+    if( ast_.kind( range ) != Node_kind::Range_expr )
     {
-        container = lower;
+        container = range;
 
         // A nameless `const ref`, so any element type walks.
         if( discard )
@@ -3294,23 +3294,22 @@ Node_id Parser::parse_colon_head( Node_id& container )
 
         const Node_id binding =
             name.is_valid() || discard
-                ? ast_.add( Node_kind::Var_decl, Span::merge( start, ast_.span( lower ) ), name.v, { type, Node_id {} } )
+                ? ast_.add( Node_kind::Var_decl, Span::merge( start, ast_.span( range ) ), name.v, { type, Node_id {} } )
                 : error_node( Span::merge( start, cursor_.previous().span ) );
         ast_.set_name_span( binding, name_span );
         return binding;
     }
-
-    const Node_id upper = parse_expression( 0 );
-    const Node_id range =
-        ast_.add( Node_kind::Range_expr, Span::merge( ast_.span( lower ), ast_.span( upper ) ), 0, { lower, upper } );
 
     if( !name.is_valid() && !discard )
     {
         return error_node( Span::merge( start, cursor_.previous().span ) );
     }
 
+    // aux 1 marks a counter's bounds, as against a range value's.
+    const Node_id counted =
+        ast_.add( Node_kind::Range_expr, ast_.span( range ), 1, { ast_.lower( range ), ast_.upper( range ) } );
     const Node_id node =
-        ast_.add( Node_kind::Var_decl, Span::merge( start, cursor_.previous().span ), name.v, { type, range } );
+        ast_.add( Node_kind::Var_decl, Span::merge( start, cursor_.previous().span ), name.v, { type, counted } );
     ast_.set_name_span( node, name_span );
     return node;
 }
@@ -3812,7 +3811,7 @@ Node_id Parser::parse_switch_stmt()
                     recovery_.error_at( discard, "`_` stands only for a field of a pattern" );
                 }
 
-                // D34: a range is parsed only here and as an index, not in the expression grammar.
+                // A label's bounds are parsed as Case_bounds, so its `..` is read here.
                 if( cursor_.match( Token_kind::Dot_dot ) )
                 {
                     const Node_id upper = parse_expression( 0 );
@@ -3962,6 +3961,16 @@ Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing, Expression
         );
     }
 
+    // `a..b` binds loosest of all, so `0..n - 1` is `0..(n - 1)`; a label parses its own. `...` is a
+    // variadic's, never a range's.
+    if( min_power == 0 && use == Expression_use::Value && cursor_.check( Token_kind::Dot_dot ) &&
+        cursor_.peek( 1 ).kind != Token_kind::Dot )
+    {
+        cursor_.advance();
+        const Node_id upper = parse_expression( 1 );
+        left = ast_.add( Node_kind::Range_expr, Span::merge( ast_.span( left ), ast_.span( upper ) ), 0, { left, upper } );
+    }
+
     if( min_power == 0 && use != Expression_use::Case_bound && ast_.broken( left ) && ast_.kind( left ) != Node_kind::Error )
     {
         left = error_node( ast_.span( left ) );
@@ -4059,20 +4068,7 @@ Node_id Parser::parse_postfix( Node_id left, Expression_use use )
             std::vector<Node_id> children { left };
             do
             {
-                Node_id range = parse_expression( 0 );
-
-                if( cursor_.match( Token_kind::Dot_dot ) )
-                {
-                    const Node_id upper_bound = parse_expression( 0 );
-                    range                     = ast_.add(
-                        Node_kind::Range_expr,
-                        Span::merge( ast_.span( range ), ast_.span( upper_bound ) ),
-                        0,
-                        { range, upper_bound }
-                    );
-                }
-
-                children.push_back( range );
+                children.push_back( parse_expression( 0 ) ); // a slice's `a..b` is a Range_expr
             } while( cursor_.match( Token_kind::Comma ) );
 
             recovery_.expect( Token_kind::R_bracket );
@@ -4831,7 +4827,7 @@ Node_id Parser::parse_array_literal()
     {
         const u32 before = cursor_.position();
 
-        // D60's fill. A range is never an expression (D34), so `..` here means nothing else.
+        // D60's fill: a range never opens an element, so `..` here means nothing else.
         if( cursor_.check( Token_kind::Dot_dot ) )
         {
             const Span dots = cursor_.advance().span;
@@ -9312,6 +9308,32 @@ TEST_CASE( "parser_counting_for", "[parse]" )
 
         REQUIRE_FALSE( p.ast().is_counter( p.child( first_statement( p ), 0 ) ) );
     }
+
+    SECTION( "a range value is not a counter" )
+    {
+        const Parsed p( "i32 main() { range r = 0..3; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE_FALSE( p.ast().is_counter( first_statement( p ) ) );
+    }
+}
+
+// D34: `a..b` stands wherever a whole expression does, looser than every operator.
+TEST_CASE( "parser_range_value", "[parse]" )
+{
+    const auto range_in = []( const Parsed& p ) { return find_first( p.ast(), p.root(), Node_kind::Range_expr ); };
+
+    const Parsed sum( "i32 main() { f( 2..n - 1 ); return 0; }" );
+    INFO( sum.errors() );
+    REQUIRE_FALSE( sum.has_errors() );
+    REQUIRE( sum.text( range_in( sum ) ) == "2..n - 1" );
+    REQUIRE( sum.kind( sum.child( range_in( sum ), 1 ) ) == Node_kind::Binary_expr );
+
+    const Parsed conditional( "i32 main() { r = c ? a : b..d; return 0; }" );
+    INFO( conditional.errors() );
+    REQUIRE_FALSE( conditional.has_errors() );
+    REQUIRE( conditional.kind( conditional.child( range_in( conditional ), 0 ) ) == Node_kind::Conditional_expr );
 }
 
 // D74: anything but a range after the `:` is a walk: the container, a binding with no initialiser,
@@ -13670,8 +13692,7 @@ TEST_CASE( "parser_rejects_a_malformed_run_type", "[parse][run]" )
     }
 }
 
-// D34: `p[ a..b ]` is an Index_expr whose index is a Range_expr. A range stays syntax: it is
-// parsed only as a `switch` label and as an index, and nowhere else.
+// D34: `p[ a..b ]` is an Index_expr whose index is a Range_expr.
 TEST_CASE( "parser_parses_a_slice", "[parse][run]" )
 {
     SECTION( "the shapes" )
@@ -13741,33 +13762,16 @@ TEST_CASE( "parser_parses_a_slice", "[parse][run]" )
 TEST_CASE( "parser_rejects_a_malformed_slice", "[parse][run]" )
 {
     for( const char* body : {
-             "u8 v = a[ 0.. ];",      // no upper bound
-             "u8 v = a[ ..2 ];",      // no lower bound
-             "u8 v = a[ 0..2..3 ];",  // a range of a range
-             "u8 v = a[ 0..2;",       // unterminated
-             "u8 v = a[ ( 0..2 ) ];", // a range in parentheses
+             "u8 v = a[ 0.. ];",     // no upper bound
+             "u8 v = a[ ..2 ];",     // no lower bound
+             "u8 v = a[ 0..2..3 ];", // a range of a range
+             "u8 v = a[ 0..2;",      // unterminated
          } )
     {
         const Parsed p( std::string( "i32 main() { " ) + body + " return 0; }" );
 
         INFO( body << "\n" << p.errors() );
         REQUIRE( p.has_errors() );
-    }
-
-    // Still not an expression: the index's own brackets are what make the range legal.
-    SECTION( "a range outside an index or a label" )
-    {
-        for( const char* body : {
-                 "i32 x = 1..5;",
-                 "f( 1..5 );",
-             } )
-        {
-            const Parsed p( std::string( "i32 main() { " ) + body + " return 0; }" );
-
-            INFO( body << "\n" << p.errors() );
-            REQUIRE( p.has_errors() );
-            REQUIRE_FALSE( first_named( p, "Range_expr" ).is_valid() );
-        }
     }
 }
 
