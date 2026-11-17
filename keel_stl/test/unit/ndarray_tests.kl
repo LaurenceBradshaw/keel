@@ -1,0 +1,147 @@
+// `kl::ndarray`: building in a shape, indexing at any rank, the element-wise operators with a
+// scalar either side, the products, comparing, reducing and converting.
+import kl::ndarray;
+import kl::test::context;
+
+private void building( ref kl::test::context c )
+{
+    kl::ndarray<i32> v = kl::ndarray<i32>( [ 1, 2, 3 ] );
+    c.check_eq( v.rank(), 1 );
+    c.check_eq( v.size(), 3 );
+    c.check_eq( v.shape()[0], 3 );
+
+    kl::ndarray<f64> m = kl::ndarray<f64>( [ 1.0, 2.0, 3.0, 4.0, 5.0, 6.0 ], 2, 3 );
+    c.check_eq( m.rank(), 2 );
+    c.check_eq( m.shape()[1], 3 );
+    c.check_eq( m[1, 0], 4.0 );
+    c.check( m.reshaped( 6 ) == kl::ndarray<f64>( [ 1.0, 2.0, 3.0, 4.0, 5.0, 6.0 ] ) );
+    c.check( !( m.reshaped( 3, 2 ) == m ) );
+
+    kl::ndarray<i32> z = kl::ndarray<i32>::zeros( 2, 3, 4 );
+    c.check_eq( z.rank(), 3 );
+    c.check_eq( z.size(), 24 );
+    c.check_eq( z.sum(), 0 );
+    c.check_eq( kl::ndarray<i32>::filled( 2, 2, 2 ).sum(), 8 );
+
+    // No shape is rank 0, holding one element.
+    kl::ndarray<i32> s = kl::ndarray<i32>::filled( 7 );
+    c.check_eq( s.rank(), 0 );
+    c.check_eq( s.size(), 1 );
+
+    c.check( kl::ndarray<i32>::identity( 2 ) == kl::ndarray<i32>( [ 1, 0, 0, 1 ], 2, 2 ) );
+
+    kl::ndarray<i32> d = v.copy();
+    d[0] = 9;
+    c.check_eq( v[0], 1 );
+
+    c.expect_panic( "the shape does not fit the elements", fn[]() { _ = kl::ndarray<i32>( [ 1, 2, 3 ], 2, 2 ); } );
+    c.expect_panic( "the shape does not fit the elements", fn[]() { _ = kl::ndarray<i32>::zeros( 4 ).reshaped( 3 ); } );
+}
+
+private void writing( ref kl::test::context c )
+{
+    kl::ndarray<i32> z = kl::ndarray<i32>::zeros( 2, 3, 4 );
+    z[1, 2, 3] = 5;
+    z[0, 0, 1] += 2;
+    c.check_eq( z.as_run()[23], 5 );
+    c.check_eq( z.as_run()[1], 2 );
+
+    c.expect_panic(
+        "index out of range",
+        fn[]()
+        {
+            kl::ndarray<i32> m = kl::ndarray<i32>::zeros( 2, 2 );
+            m[0, 2] = 1;
+        }
+    );
+    c.expect_panic(
+        "the index count differs from the rank",
+        fn[]()
+        {
+            kl::ndarray<i32> m = kl::ndarray<i32>::zeros( 2, 2 );
+            m[0] = 1;
+        }
+    );
+}
+
+private void arithmetic( ref kl::test::context c )
+{
+    kl::ndarray<i32> a = kl::ndarray<i32>( [ 1, 2, 3 ] );
+    kl::ndarray<i32> b = kl::ndarray<i32>( [ 10, 20, 30 ] );
+    c.check( a + b == kl::ndarray<i32>( [ 11, 22, 33 ] ) );
+    c.check( b - a == kl::ndarray<i32>( [ 9, 18, 27 ] ) );
+    c.check( a * b == kl::ndarray<i32>( [ 10, 40, 90 ] ) );
+    c.check( b / a == kl::ndarray<i32>( [ 10, 10, 10 ] ) );
+
+    c.check( a * 2 == kl::ndarray<i32>( [ 2, 4, 6 ] ) );
+    c.check( 2 * a == a * 2 );
+    c.check( 10 - a == kl::ndarray<i32>( [ 9, 8, 7 ] ) );
+    c.check( 60 / b == kl::ndarray<i32>( [ 6, 3, 2 ] ) );
+
+    kl::ndarray<i32> s = a.copy();
+    s += b;
+    s -= a;
+    s *= 2;
+    s /= b;
+    c.check( s == kl::ndarray<i32>( [ 2, 2, 2 ] ) );
+
+    kl::ndarray<f64> m = kl::ndarray<f64>( [ 1.0, -2.0, 3.0, -4.0 ], 2, 2 );
+    c.check( -m == m * -1.0 );
+    m /= 2.0;
+    c.check_eq( m[1, 1], -2.0 );
+
+    // Equal sizes are not enough: the shapes must match.
+    c.expect_panic(
+        "the shapes differ",
+        fn[]()
+        {
+            _ = kl::ndarray<i32>::zeros( 2, 3 ) + kl::ndarray<i32>::zeros( 3, 2 );
+        }
+    );
+}
+
+private void products( ref kl::test::context c )
+{
+    kl::ndarray<i32> a = kl::ndarray<i32>( [ 1, 2, 3, 4, 5, 6 ], 2, 3 );
+    kl::ndarray<i32> b = kl::ndarray<i32>( [ 7, 8, 9, 10, 11, 12 ], 3, 2 );
+    c.check( a.matmul( b ) == kl::ndarray<i32>( [ 58, 64, 139, 154 ], 2, 2 ) );
+    c.check( a.transposed() == kl::ndarray<i32>( [ 1, 4, 2, 5, 3, 6 ], 3, 2 ) );
+    c.check( a.matmul( kl::ndarray<i32>::identity( 3 ) ) == a );
+
+    // A rank 1 array is a column on the right and a row on the left.
+    kl::ndarray<i32> ones = kl::ndarray<i32>::filled( 1, 3 );
+    c.check( a.matmul( ones ) == kl::ndarray<i32>( [ 6, 15 ] ) );
+    c.check( ones.matmul( b ) == kl::ndarray<i32>( [ 27, 30 ] ) );
+    c.check( ones.matmul( ones ) == kl::ndarray<i32>::filled( 3 ) );
+
+    kl::ndarray<i32> v = kl::ndarray<i32>( [ 1, 2, 3 ] );
+    c.check_eq( v.dot( v ), 14 );
+    c.check( v.transposed() == v );
+    c.check_eq( a.sum(), 21 );
+
+    c.expect_panic( "the shapes differ", fn[]() { _ = kl::ndarray<i32>::zeros( 2, 3 ).matmul( kl::ndarray<i32>::zeros( 2, 3 ) ); } );
+    c.expect_panic( "matmul takes arrays of rank 1 or 2", fn[]() { _ = kl::ndarray<i32>::zeros( 1, 1, 1 ).matmul( kl::ndarray<i32>::zeros( 1 ) ); } );
+}
+
+private void comparing( ref kl::test::context c )
+{
+    kl::ndarray<f64> x = kl::ndarray<f64>( [ 1.0, 1000.0 ] );
+    kl::ndarray<f64> y = kl::ndarray<f64>( [ 1.0 + 1e-10, 1000.0 + 1e-6 ] );
+    c.check( !( x == y ) );
+    c.check( x.approx_equal( y ) );
+    c.check( !x.approx_equal( y, 0.0, 1e-9 ) );
+    c.check( !x.approx_equal( x.reshaped( 1, 2 ) ) );
+}
+
+private void converting( ref kl::test::context c )
+{
+    kl::ndarray<f64> r = kl::ndarray<f64>( [ -2.5, -0.5, 0.5, 2.7 ], 2, 2 );
+    c.check( r.truncated<i32>() == kl::ndarray<i32>( [ -2, 0, 0, 2 ], 2, 2 ) );
+    c.check( r.rounded<i32>() == kl::ndarray<i32>( [ -3, -1, 1, 3 ], 2, 2 ) );
+    c.check( r.floored<i32>() == kl::ndarray<i32>( [ -3, -1, 0, 2 ], 2, 2 ) );
+    c.check( r.ceiled<i32>() == kl::ndarray<i32>( [ -2, 0, 1, 3 ], 2, 2 ) );
+
+    kl::ndarray<i32> v = kl::ndarray<i32>( [ -1, 0, 300 ] );
+    c.check( v.to<f64>() == kl::ndarray<f64>( [ -1.0, 0.0, 300.0 ] ) );
+    c.expect_panic( "cast out of range", fn[]() { _ = kl::ndarray<i32>( [ 300 ] ).to<u8>(); } );
+}

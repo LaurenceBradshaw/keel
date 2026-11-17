@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kl::ndarray</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+</head>
+<body>
+<header><nav><a href="index.html"><img src="logo.svg" alt="">The Keel standard library</a></nav></header>
+<main>
+<h1><span class="kind">module</span> <a class="package" href="index.html">kl</a>::ndarray</h1>
+<section class="entry">
+<h2><span class="kind">class</span> <span class="type">ndarray</span></h2>
+<div class="group" id="ndarray">
+<pre class="signature"><a class="anchor" href="#ndarray" aria-label="Link to ndarray">#</a><code><span class="kw">class</span> <span class="type">ndarray</span>&lt;T&gt; <span class="kw">where</span> T : numeric</code></pre>
+<div class="doc">
+<p>Numbers of any rank with a shape set at run time, held row-major: the last index moves fastest.</p>
+<p>The operators work element by element, with a scalar on either side, and two arrays of
+different shapes panic. <code>a[i, j, k]</code> takes one index per dimension. An array owns its elements,
+so <code>copy()</code> is the way to a second one.</p>
+</div>
+</div>
+<h3>Constructors</h3>
+<div class="group" id="ndarray.ndarray">
+<pre class="signature"><a class="anchor" href="#ndarray.ndarray" aria-label="Link to ndarray">#</a><code><span class="kw">public</span> <span class="type">ndarray</span>( <span class="kw">const</span> <span class="kw">ref</span> T[] elements, <a class="prim" href="prelude.html#u64">u64</a>... shape )</code></pre>
+<div class="doc">
+<p><code>elements</code> row after row, in <code>shape</code>, or as one dimension when no shape is given:
+<code>ndarray&lt;f64&gt;( [1.0, 2.0, 3.0, 4.0], 2, 2 )</code>. Panics when the shape does not hold
+exactly as many elements.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="ndarray.zeros">
+<pre class="signature"><a class="anchor" href="#ndarray.zeros" aria-label="Link to zeros">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">zeros</span>( <a class="prim" href="prelude.html#u64">u64</a>... shape )</code></pre>
+<div class="doc">
+<p>Every element 0, in <code>shape</code>: <code>ndarray&lt;f64&gt;::zeros( 3, 4 )</code>. No shape is rank 0, one element.</p>
+</div>
+</div>
+<div class="group" id="ndarray.filled">
+<pre class="signature"><a class="anchor" href="#ndarray.filled" aria-label="Link to filled">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">filled</span>( T x, <a class="prim" href="prelude.html#u64">u64</a>... shape )</code></pre>
+<div class="doc">
+<p>Every element <code>x</code>, in <code>shape</code>.</p>
+</div>
+</div>
+<div class="group" id="ndarray.identity">
+<pre class="signature"><a class="anchor" href="#ndarray.identity" aria-label="Link to identity">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">identity</span>( <a class="prim" href="prelude.html#u64">u64</a> n )</code></pre>
+<div class="doc">
+<p>The <code>n</code> by <code>n</code> identity.</p>
+</div>
+</div>
+<div class="group" id="ndarray.copy">
+<pre class="signature"><a class="anchor" href="#ndarray.copy" aria-label="Link to copy">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">copy</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A second array with the same shape and elements.</p>
+</div>
+</div>
+<div class="group" id="ndarray.reshaped">
+<pre class="signature"><a class="anchor" href="#ndarray.reshaped" aria-label="Link to reshaped">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">reshaped</span>( <a class="prim" href="prelude.html#u64">u64</a>... shape ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The same elements in <code>shape</code>, which must hold as many.</p>
+</div>
+</div>
+<h3>Shape and elements</h3>
+<div class="group" id="ndarray.shape">
+<pre class="signature"><a class="anchor" href="#ndarray.shape" aria-label="Link to shape">#</a><code><span class="kw">public</span> <span class="kw">const</span> <span class="kw">ref</span> <a class="prim" href="prelude.html#u64">u64</a>[] <span class="fn">shape</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The length of each dimension, outermost first.</p>
+</div>
+</div>
+<div class="group" id="ndarray.rank">
+<pre class="signature"><a class="anchor" href="#ndarray.rank" aria-label="Link to rank">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">rank</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The number of dimensions.</p>
+</div>
+</div>
+<div class="group" id="ndarray.size">
+<pre class="signature"><a class="anchor" href="#ndarray.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">size</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The number of elements, the product of the shape.</p>
+</div>
+</div>
+<div class="group" id="ndarray.operator[]">
+<pre class="signature"><a class="anchor" href="#ndarray.operator[]" aria-label="Link to operator[]">#</a><code><span class="kw">public</span> <span class="kw">ref</span> T <span class="fn">operator[]</span>( <a class="prim" href="prelude.html#u64">u64</a>... at ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The element at <code>at</code>, one index per dimension. Panics on another count or an index outside
+its dimension.</p>
+</div>
+</div>
+<div class="group" id="ndarray.as_run">
+<pre class="signature"><a class="anchor" href="#ndarray.as_run" aria-label="Link to as_run">#</a><code><span class="kw">public</span> <span class="kw">ref</span> T[] <span class="fn">as_run</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The elements row after row, as a run writable where the array is.</p>
+</div>
+</div>
+<h3>Arithmetic</h3>
+<div class="group" id="ndarray.operator+">
+<pre class="signature"><a class="anchor" href="#ndarray.operator+" aria-label="Link to operator+">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">operator+</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The element-wise sum with <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.operator+" aria-label="Link to operator+">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">operator+</span>( T s ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each element + <code>s</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.operator+" aria-label="Link to operator+">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">operator+</span>( T s, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; a )</code></pre>
+<div class="doc">
+<p><code>s</code> + each element.</p>
+</div>
+</div>
+<div class="group" id="ndarray.operator-">
+<pre class="signature"><a class="anchor" href="#ndarray.operator-" aria-label="Link to operator-">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">operator-</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The element-wise difference with <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.operator-" aria-label="Link to operator-">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">operator-</span>( T s ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each element - <code>s</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.operator-" aria-label="Link to operator-">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">operator-</span>( T s, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; a )</code></pre>
+<div class="doc">
+<p><code>s</code> - each element.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.operator-" aria-label="Link to operator-">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">operator-</span>() <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>Each element negated.</p>
+</div>
+</div>
+<div class="group" id="ndarray.operator*">
+<pre class="signature"><a class="anchor" href="#ndarray.operator*" aria-label="Link to operator*">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">operator*</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The element-wise product with <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.operator*" aria-label="Link to operator*">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">operator*</span>( T s ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each element * <code>s</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.operator*" aria-label="Link to operator*">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">operator*</span>( T s, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; a )</code></pre>
+<div class="doc">
+<p><code>s</code> * each element.</p>
+</div>
+</div>
+<div class="group" id="ndarray.operator/">
+<pre class="signature"><a class="anchor" href="#ndarray.operator/" aria-label="Link to operator/">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">operator/</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The element-wise quotient with <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.operator/" aria-label="Link to operator/">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">operator/</span>( T s ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each element / <code>s</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.operator/" aria-label="Link to operator/">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">operator/</span>( T s, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; a )</code></pre>
+<div class="doc">
+<p><code>s</code> / each element.</p>
+</div>
+</div>
+<div class="group" id="ndarray.operator+=">
+<pre class="signature"><a class="anchor" href="#ndarray.operator+=" aria-label="Link to operator+=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator+=</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; o )</code></pre>
+<div class="doc">
+<p>Each element += the matching one of <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.operator+=" aria-label="Link to operator+=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator+=</span>( T s )</code></pre>
+<div class="doc">
+<p>Each element += <code>s</code>.</p>
+</div>
+</div>
+<div class="group" id="ndarray.operator-=">
+<pre class="signature"><a class="anchor" href="#ndarray.operator-=" aria-label="Link to operator-=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator-=</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; o )</code></pre>
+<div class="doc">
+<p>Each element -= the matching one of <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.operator-=" aria-label="Link to operator-=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator-=</span>( T s )</code></pre>
+<div class="doc">
+<p>Each element -= <code>s</code>.</p>
+</div>
+</div>
+<div class="group" id="ndarray.operator*=">
+<pre class="signature"><a class="anchor" href="#ndarray.operator*=" aria-label="Link to operator*=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator*=</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; o )</code></pre>
+<div class="doc">
+<p>Each element *= the matching one of <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.operator*=" aria-label="Link to operator*=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator*=</span>( T s )</code></pre>
+<div class="doc">
+<p>Each element *= <code>s</code>.</p>
+</div>
+</div>
+<div class="group" id="ndarray.operator/=">
+<pre class="signature"><a class="anchor" href="#ndarray.operator/=" aria-label="Link to operator/=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator/=</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; o )</code></pre>
+<div class="doc">
+<p>Each element /= the matching one of <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.operator/=" aria-label="Link to operator/=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator/=</span>( T s )</code></pre>
+<div class="doc">
+<p>Each element /= <code>s</code>.</p>
+</div>
+</div>
+<h3>Products</h3>
+<div class="group" id="ndarray.dot">
+<pre class="signature"><a class="anchor" href="#ndarray.dot" aria-label="Link to dot">#</a><code><span class="kw">public</span> T <span class="fn">dot</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The inner product with <code>o</code>, both of rank 1 and one length.</p>
+</div>
+</div>
+<div class="group" id="ndarray.matmul">
+<pre class="signature"><a class="anchor" href="#ndarray.matmul" aria-label="Link to matmul">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">matmul</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; b ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The matrix product with <code>b</code>, each of rank 1 or 2. A rank 1 array is a row on the left and a
+column on the right, and that dimension is dropped from the result, so two of them give rank</p>
+<ol>
+<li>Ranks above 2 panic.</li>
+</ol>
+</div>
+</div>
+<div class="group" id="ndarray.transposed">
+<pre class="signature"><a class="anchor" href="#ndarray.transposed" aria-label="Link to transposed">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">transposed</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The rows as columns. Rank 0 and 1 come back unchanged, and ranks above 2 panic.</p>
+</div>
+</div>
+<h3>Comparing</h3>
+<div class="group" id="ndarray.operator==">
+<pre class="signature"><a class="anchor" href="#ndarray.operator==" aria-label="Link to operator==">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">operator==</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether <code>o</code> has this shape and every element equals the matching one.</p>
+</div>
+</div>
+<div class="group" id="ndarray.approx_equal">
+<pre class="signature"><a class="anchor" href="#ndarray.approx_equal" aria-label="Link to approx_equal">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">approx_equal</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; o, T rtol = 1e-5, T atol = 1e-8 ) <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>Whether <code>o</code> has this shape and every <code>|a - b| &lt;= atol + rtol * |b|</code>, <code>b</code> being <code>o</code>'s
+element. A NaN is close to nothing, and an infinity only to itself.</p>
+</div>
+</div>
+<h3>Reducing</h3>
+<div class="group" id="ndarray.sum">
+<pre class="signature"><a class="anchor" href="#ndarray.sum" aria-label="Link to sum">#</a><code><span class="kw">public</span> T <span class="fn">sum</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The total of every element, added in index order.</p>
+</div>
+</div>
+<h3>Converting</h3>
+<div class="group" id="ndarray.to">
+<pre class="signature"><a class="anchor" href="#ndarray.to" aria-label="Link to to">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;U&gt; <span class="fn">to</span>&lt;U&gt;() <span class="kw">const</span> <span class="kw">where</span> U : numeric, <span class="kw">where</span> T : <a class="type" href="prelude.html#converts_to">converts_to</a>&lt;U&gt;</code></pre>
+<div class="doc">
+<p>Each element converted by <code>cast</code>, which panics on a value <code>U</code> cannot hold. A float to an
+integer needs a rounding: <code>truncated</code>, <code>rounded</code>, <code>floored</code> or <code>ceiled</code>.</p>
+</div>
+</div>
+<div class="group" id="ndarray.truncated">
+<pre class="signature"><a class="anchor" href="#ndarray.truncated" aria-label="Link to truncated">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;U&gt; <span class="fn">truncated</span>&lt;U&gt;() <span class="kw">const</span> <span class="kw">where</span> U : integral, <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>Each element toward zero, as a <code>U</code>. Panics on an infinity, a NaN, or a value <code>U</code> cannot hold.</p>
+</div>
+</div>
+<div class="group" id="ndarray.rounded">
+<pre class="signature"><a class="anchor" href="#ndarray.rounded" aria-label="Link to rounded">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;U&gt; <span class="fn">rounded</span>&lt;U&gt;() <span class="kw">const</span> <span class="kw">where</span> U : integral, <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>Each element to the nearest, a half away from zero, as a <code>U</code>. Panics on an infinity, a NaN, or a value <code>U</code> cannot hold.</p>
+</div>
+</div>
+<div class="group" id="ndarray.floored">
+<pre class="signature"><a class="anchor" href="#ndarray.floored" aria-label="Link to floored">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;U&gt; <span class="fn">floored</span>&lt;U&gt;() <span class="kw">const</span> <span class="kw">where</span> U : integral, <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>Each element down, as a <code>U</code>. Panics on an infinity, a NaN, or a value <code>U</code> cannot hold.</p>
+</div>
+</div>
+<div class="group" id="ndarray.ceiled">
+<pre class="signature"><a class="anchor" href="#ndarray.ceiled" aria-label="Link to ceiled">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;U&gt; <span class="fn">ceiled</span>&lt;U&gt;() <span class="kw">const</span> <span class="kw">where</span> U : integral, <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>Each element up, as a <code>U</code>. Panics on an infinity, a NaN, or a value <code>U</code> cannot hold.</p>
+</div>
+</div>
+</section>
+</main>
+<footer>Copyright 2026 Laurence Bradshaw. Licensed under Apache-2.0 WITH LLVM-exception.</footer>
+</body>
+</html>

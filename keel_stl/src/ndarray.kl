@@ -1,0 +1,466 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+import kl::_core::compare as kernel;
+import kl::_core::elementwise as kernel;
+import kl::_core::linear as kernel;
+import kl::_core::reduce as kernel;
+import list;
+import math;
+
+/// Numbers of any rank with a shape set at run time, held row-major: the last index moves fastest.
+///
+/// The operators work element by element, with a scalar on either side, and two arrays of
+/// different shapes panic. `a[i, j, k]` takes one index per dimension. An array owns its elements,
+/// so `copy()` is the way to a second one.
+class ndarray<T> where T : numeric
+{
+    list<T>   e_;
+    list<u64> shape_;
+
+    /// `elements` row after row, in `shape`, or as one dimension when no shape is given:
+    /// `ndarray<f64>( [1.0, 2.0, 3.0, 4.0], 2, 2 )`. Panics when the shape does not hold
+    /// exactly as many elements.
+    public ndarray( const ref T[] elements, u64... shape )
+    {
+        e_ = list<T>::with_capacity( elements.size );
+        for( T x : elements )
+        {
+            e_.push( x );
+        }
+
+        shape_ = list<u64>::with_capacity( shape.size );
+        if( shape.size == 0 )
+        {
+            shape_.push( elements.size );
+        }
+        for( u64 d : shape )
+        {
+            shape_.push( d );
+        }
+
+        if( count( shape_.as_run() ) != elements.size )
+        {
+            panic( "the shape does not fit the elements" );
+        }
+    }
+
+    /// Every element 0, in `shape`: `ndarray<f64>::zeros( 3, 4 )`. No shape is rank 0, one element.
+    public static ndarray<T> zeros( u64... shape )
+    {
+        return ndarray<T>::filled( 0, shape );
+    }
+
+    /// Every element `x`, in `shape`.
+    public static ndarray<T> filled( T x, u64... shape )
+    {
+        list<T> e = list<T>::with_capacity( count( shape ) );
+        for( u64 i : 0..count( shape ) )
+        {
+            e.push( x );
+        }
+        return ndarray<T>( move e, shape );
+    }
+
+    /// The `n` by `n` identity.
+    public static ndarray<T> identity( u64 n )
+    {
+        ndarray<T> r = ndarray<T>::zeros( n, n );
+        kernel::identity( ref r.e_.as_run(), n );
+        return r;
+    }
+
+    /// A second array with the same shape and elements.
+    public ndarray<T> copy() const
+    {
+        return ndarray<T>( elements(), shape_.as_run() );
+    }
+
+    /// The same elements in `shape`, which must hold as many.
+    public ndarray<T> reshaped( u64... shape ) const
+    {
+        return ndarray<T>( elements(), shape );
+    }
+
+    /// --- Shape and elements ---
+
+    /// The length of each dimension, outermost first.
+    public const ref u64[] shape() const
+    {
+        return shape_.as_run();
+    }
+
+    /// The number of dimensions.
+    public u64 rank() const
+    {
+        return shape_.size();
+    }
+
+    /// The number of elements, the product of the shape.
+    public u64 size() const
+    {
+        return e_.size();
+    }
+
+    /// The element at `at`, one index per dimension. Panics on another count or an index outside
+    /// its dimension.
+    public ref T operator[]( u64... at ) const
+    {
+        if( at.size != shape_.size() )
+        {
+            panic( "the index count differs from the rank" );
+        }
+
+        u64 flat = 0;
+        for( u64 k : 0..at.size )
+        {
+            if( at[k] >= shape_[k] )
+            {
+                panic( "index out of range" );
+            }
+            flat = flat * shape_[k] + at[k];
+        }
+        return e_[flat];
+    }
+
+    /// The elements row after row, as a run writable where the array is.
+    public ref T[] as_run() const
+    {
+        return e_.as_run();
+    }
+
+    /// --- Arithmetic ---
+
+    /// The element-wise sum with `o`.
+    public ndarray<T> operator+( const ref ndarray<T> o ) const
+    {
+        ndarray<T> r = copy();
+        r += o;
+        return r;
+    }
+
+    /// Each element + `s`.
+    public ndarray<T> operator+( T s ) const
+    {
+        ndarray<T> r = copy();
+        r += s;
+        return r;
+    }
+
+    /// `s` + each element.
+    public static ndarray<T> operator+( T s, const ref ndarray<T> a )
+    {
+        ndarray<T> r = a.copy();
+        kernel::map_into( ref r.e_.as_run(), fn[ s ]( T x ) { return s + x; } );
+        return r;
+    }
+
+    /// The element-wise difference with `o`.
+    public ndarray<T> operator-( const ref ndarray<T> o ) const
+    {
+        ndarray<T> r = copy();
+        r -= o;
+        return r;
+    }
+
+    /// Each element - `s`.
+    public ndarray<T> operator-( T s ) const
+    {
+        ndarray<T> r = copy();
+        r -= s;
+        return r;
+    }
+
+    /// `s` - each element.
+    public static ndarray<T> operator-( T s, const ref ndarray<T> a )
+    {
+        ndarray<T> r = a.copy();
+        kernel::map_into( ref r.e_.as_run(), fn[ s ]( T x ) { return s - x; } );
+        return r;
+    }
+
+    /// The element-wise product with `o`.
+    public ndarray<T> operator*( const ref ndarray<T> o ) const
+    {
+        ndarray<T> r = copy();
+        r *= o;
+        return r;
+    }
+
+    /// Each element * `s`.
+    public ndarray<T> operator*( T s ) const
+    {
+        ndarray<T> r = copy();
+        r *= s;
+        return r;
+    }
+
+    /// `s` * each element.
+    public static ndarray<T> operator*( T s, const ref ndarray<T> a )
+    {
+        ndarray<T> r = a.copy();
+        kernel::map_into( ref r.e_.as_run(), fn[ s ]( T x ) { return s * x; } );
+        return r;
+    }
+
+    /// The element-wise quotient with `o`.
+    public ndarray<T> operator/( const ref ndarray<T> o ) const
+    {
+        ndarray<T> r = copy();
+        r /= o;
+        return r;
+    }
+
+    /// Each element / `s`.
+    public ndarray<T> operator/( T s ) const
+    {
+        ndarray<T> r = copy();
+        r /= s;
+        return r;
+    }
+
+    /// `s` / each element.
+    public static ndarray<T> operator/( T s, const ref ndarray<T> a )
+    {
+        ndarray<T> r = a.copy();
+        kernel::map_into( ref r.e_.as_run(), fn[ s ]( T x ) { return s / x; } );
+        return r;
+    }
+
+    /// Each element += the matching one of `o`.
+    public void operator+=( const ref ndarray<T> o )
+    {
+        same_shape( o );
+        kernel::zip_into( ref e_.as_run(), o.e_.as_run(), fn[]( T x, T y ) { return x + y; } );
+    }
+
+    /// Each element += `s`.
+    public void operator+=( T s )
+    {
+        kernel::map_into( ref e_.as_run(), fn[ s ]( T x ) { return x + s; } );
+    }
+
+    /// Each element -= the matching one of `o`.
+    public void operator-=( const ref ndarray<T> o )
+    {
+        same_shape( o );
+        kernel::zip_into( ref e_.as_run(), o.e_.as_run(), fn[]( T x, T y ) { return x - y; } );
+    }
+
+    /// Each element -= `s`.
+    public void operator-=( T s )
+    {
+        kernel::map_into( ref e_.as_run(), fn[ s ]( T x ) { return x - s; } );
+    }
+
+    /// Each element *= the matching one of `o`.
+    public void operator*=( const ref ndarray<T> o )
+    {
+        same_shape( o );
+        kernel::zip_into( ref e_.as_run(), o.e_.as_run(), fn[]( T x, T y ) { return x * y; } );
+    }
+
+    /// Each element *= `s`.
+    public void operator*=( T s )
+    {
+        kernel::map_into( ref e_.as_run(), fn[ s ]( T x ) { return x * s; } );
+    }
+
+    /// Each element /= the matching one of `o`.
+    public void operator/=( const ref ndarray<T> o )
+    {
+        same_shape( o );
+        kernel::zip_into( ref e_.as_run(), o.e_.as_run(), fn[]( T x, T y ) { return x / y; } );
+    }
+
+    /// Each element /= `s`.
+    public void operator/=( T s )
+    {
+        kernel::map_into( ref e_.as_run(), fn[ s ]( T x ) { return x / s; } );
+    }
+
+    /// Each element negated.
+    public ndarray<T> operator-() const where T : floating
+    {
+        ndarray<T> r = copy();
+        kernel::map_into( ref r.e_.as_run(), fn[]( T x ) { return -x; } );
+        return r;
+    }
+
+    /// --- Products ---
+
+    /// The inner product with `o`, both of rank 1 and one length.
+    public T dot( const ref ndarray<T> o ) const
+    {
+        if( rank() != 1 )
+        {
+            panic( "dot takes arrays of rank 1" );
+        }
+
+        same_shape( o );
+        return kernel::dot( e_.as_run(), o.e_.as_run() );
+    }
+
+    /// The matrix product with `b`, each of rank 1 or 2. A rank 1 array is a row on the left and a
+    /// column on the right, and that dimension is dropped from the result, so two of them give rank
+    /// 0. Ranks above 2 panic.
+    public ndarray<T> matmul( const ref ndarray<T> b ) const
+    {
+        if( rank() == 0 || rank() > 2 || b.rank() == 0 || b.rank() > 2 )
+        {
+            panic( "matmul takes arrays of rank 1 or 2" );
+        }
+
+        u64 rows  = rank() == 2 ? shape_[0] : 1;
+        u64 inner = shape_[rank() - 1];
+        u64 cols  = b.rank() == 2 ? b.shape_[1] : 1;
+        if( b.shape_[0] != inner )
+        {
+            panic( "the shapes differ" );
+        }
+
+        ndarray<T> r = ndarray<T>::zeros( rows * cols );
+        r.shape_.clear();
+        if( rank() == 2 )
+        {
+            r.shape_.push( rows );
+        }
+        if( b.rank() == 2 )
+        {
+            r.shape_.push( cols );
+        }
+        kernel::matmul( ref r.e_.as_run(), e_.as_run(), b.e_.as_run(), rows, inner, cols );
+        return r;
+    }
+
+    /// The rows as columns. Rank 0 and 1 come back unchanged, and ranks above 2 panic.
+    public ndarray<T> transposed() const
+    {
+        if( rank() > 2 )
+        {
+            panic( "transposed takes arrays of rank 2 at most" );
+        }
+
+        ndarray<T> r = copy();
+        if( rank() == 2 )
+        {
+            r.shape_[0] = shape_[1];
+            r.shape_[1] = shape_[0];
+            kernel::transpose( ref r.e_.as_run(), e_.as_run(), shape_[0], shape_[1] );
+        }
+        return r;
+    }
+
+    /// --- Comparing ---
+
+    /// Whether `o` has this shape and every element equals the matching one.
+    public bool operator==( const ref ndarray<T> o ) const
+    {
+        return kernel::equal( shape_.as_run(), o.shape_.as_run() ) && kernel::equal( e_.as_run(), o.e_.as_run() );
+    }
+
+    /// Whether `o` has this shape and every `|a - b| <= atol + rtol * |b|`, `b` being `o`'s
+    /// element. A NaN is close to nothing, and an infinity only to itself.
+    public bool approx_equal( const ref ndarray<T> o, T rtol = 1e-5, T atol = 1e-8 ) const where T : floating
+    {
+        return kernel::equal( shape_.as_run(), o.shape_.as_run() ) && kernel::approx_equal( e_.as_run(), o.e_.as_run(), rtol, atol );
+    }
+
+    /// --- Reducing ---
+
+    /// The total of every element, added in index order.
+    public T sum() const
+    {
+        return kernel::sum( e_.as_run() );
+    }
+
+    /// --- Converting ---
+
+    /// Each element converted by `cast`, which panics on a value `U` cannot hold. A float to an
+    /// integer needs a rounding: `truncated`, `rounded`, `floored` or `ceiled`.
+    public ndarray<U> to<U>() const where T : converts_to<U>, where U : numeric
+    {
+        ndarray<U> r = ndarray<U>::zeros( shape_.as_run() );
+        kernel::map( ref r.as_run(), e_.as_run(), fn[]( T x ) { return cast<U>( x ); } );
+        return r;
+    }
+
+    /// Each element toward zero, as a `U`. Panics on an infinity, a NaN, or a value `U` cannot hold.
+    public ndarray<U> truncated<U>() const where T : floating, where U : integral
+    {
+        ndarray<U> r = ndarray<U>::zeros( shape_.as_run() );
+        kernel::map( ref r.as_run(), e_.as_run(), fn[]( T x ) { return kl::truncated<U>( cast<f64>( x ) ); } );
+        return r;
+    }
+
+    /// Each element to the nearest, a half away from zero, as a `U`. Panics on an infinity, a NaN, or a value `U` cannot hold.
+    public ndarray<U> rounded<U>() const where T : floating, where U : integral
+    {
+        ndarray<U> r = ndarray<U>::zeros( shape_.as_run() );
+        kernel::map( ref r.as_run(), e_.as_run(), fn[]( T x ) { return kl::rounded<U>( cast<f64>( x ) ); } );
+        return r;
+    }
+
+    /// Each element down, as a `U`. Panics on an infinity, a NaN, or a value `U` cannot hold.
+    public ndarray<U> floored<U>() const where T : floating, where U : integral
+    {
+        ndarray<U> r = ndarray<U>::zeros( shape_.as_run() );
+        kernel::map( ref r.as_run(), e_.as_run(), fn[]( T x ) { return kl::floored<U>( cast<f64>( x ) ); } );
+        return r;
+    }
+
+    /// Each element up, as a `U`. Panics on an infinity, a NaN, or a value `U` cannot hold.
+    public ndarray<U> ceiled<U>() const where T : floating, where U : integral
+    {
+        ndarray<U> r = ndarray<U>::zeros( shape_.as_run() );
+        kernel::map( ref r.as_run(), e_.as_run(), fn[]( T x ) { return kl::ceiled<U>( cast<f64>( x ) ); } );
+        return r;
+    }
+
+    /// --- Internals ---
+
+    // Panics when `shape` does not hold as many elements as `elements`.
+    private ndarray( move list<T> elements, const ref u64[] shape )
+    {
+        e_     = move elements;
+        shape_ = list<u64>::with_capacity( shape.size );
+        for( u64 d : shape )
+        {
+            shape_.push( d );
+        }
+
+        if( count( shape ) != e_.size() )
+        {
+            panic( "the shape does not fit the elements" );
+        }
+    }
+
+    private list<T> elements() const
+    {
+        list<T> e = list<T>::with_capacity( e_.size() );
+        for( T x : e_.as_run() )
+        {
+            e.push( x );
+        }
+        return e;
+    }
+
+    private void same_shape( const ref ndarray<T> o ) const
+    {
+        if( !kernel::equal( shape_.as_run(), o.shape_.as_run() ) )
+        {
+            panic( "the shapes differ" );
+        }
+    }
+};
+
+// The number of elements `shape` holds.
+private u64 count( const ref u64[] shape )
+{
+    u64 n = 1;
+    for( u64 d : shape )
+    {
+        n *= d;
+    }
+    return n;
+}
