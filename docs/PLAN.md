@@ -1261,6 +1261,15 @@ value, a whole number keeps its `.0`, and a NaN is `nan` whatever its sign. The
 runtime proper is Keel above it, as the library is. libc is the floor; raw syscalls would couple the
 C backend to one compiler's `__asm__`. **Keep it under 200 lines for as long as possible.**
 
+**A freed large block is kept for the next allocation, not handed back to the system.** A loop that
+drops one big array and builds the next would otherwise fault every page of it in again. On glibc a
+constructor sets `M_MMAP_THRESHOLD` to 32 MiB and `M_TRIM_THRESHOLD` to 64 MiB, so blocks up to 32 MiB
+come from the heap and are reused, and at most 64 MiB of free memory is held. Win32's heap gives a
+block past its VirtualAlloc threshold pages of its own and frees them at once, with no setting to
+change it, so `kl_rt_free` keeps blocks of 256 KiB and up (16 at most, 64 MiB in all, the oldest freed
+first) and `kl_rt_alloc` takes the smallest that holds the request and is at most twice it. Every kept
+block is still `malloc`'s, so C's `free` and `realloc` take one. Other libcs are left to themselves.
+
 keelc links the runtime itself: by default from `${CMAKE_INSTALL_PREFIX}/lib/keel/libkeel_rt.a`,
 fixed at configure time, or from `--runtime <path>`. A missing runtime is keelc's own error, before
 anything is written; `--check`, `--emit-c` and the dumps link nothing. `$CC` chooses the compiler and

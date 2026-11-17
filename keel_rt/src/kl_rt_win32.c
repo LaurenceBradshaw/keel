@@ -9,7 +9,9 @@
 #include <fcntl.h>
 #include <io.h>
 #include <limits.h>
+#include <malloc.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -843,4 +845,93 @@ int32_t kl_rt_environment( const uint8_t* name, uint64_t size, uint8_t** value, 
     *value      = lent;
     *value_size = (uint64_t) bytes - 1;
     return 0;
+}
+
+// --- Large blocks kept for reuse ---
+
+// The heap gives a block past its VirtualAlloc threshold pages of its own and hands them back on
+// free, so the next block that size faults each page in again; kl_rt_free keeps such blocks here
+// instead, and kl_rt_alloc takes one back. Every block is still malloc's, so free and realloc take it.
+enum
+{
+    k_kept_slots = 16
+};
+static const size_t k_kept_smallest = 256 * 1024;       // below this the heap reuses blocks itself
+static const size_t k_kept_most     = 64 * 1024 * 1024; // at most this much held, in all
+
+static struct
+{
+    void*  ptr;
+    size_t size;
+} kept[k_kept_slots];
+static size_t  kept_size; // the total held
+static int     kept_next; // the slot to fill next, the oldest once all are full
+static SRWLOCK kept_lock = SRWLOCK_INIT;
+
+// A kept block of at least `size` bytes and at most twice it, the smallest such; NULL if none.
+void* kl_rt_cache_take( size_t size )
+{
+    if( size < k_kept_smallest )
+    {
+        return NULL;
+    }
+
+    void* found = NULL;
+    AcquireSRWLockExclusive( &kept_lock );
+    int best = -1;
+    for( int i = 0; i < k_kept_slots; ++i )
+    {
+        if( kept[i].ptr != NULL && kept[i].size >= size && kept[i].size / 2 <= size &&
+            ( best < 0 || kept[i].size < kept[best].size ) )
+        {
+            best = i;
+        }
+    }
+    if( best >= 0 )
+    {
+        found = kept[best].ptr;
+        kept_size -= kept[best].size;
+        kept[best].ptr = NULL;
+    }
+    ReleaseSRWLockExclusive( &kept_lock );
+    return found;
+}
+
+// Whether `ptr` is kept rather than freed; the oldest blocks are freed to make room.
+bool kl_rt_cache_keep( void* ptr )
+{
+    const size_t size = _msize( ptr );
+    if( size == (size_t) -1 || size < k_kept_smallest || size > k_kept_most )
+    {
+        return false;
+    }
+
+    void* evicted[k_kept_slots];
+    int   count = 0;
+    AcquireSRWLockExclusive( &kept_lock );
+    while( kept[kept_next].ptr != NULL || kept_size + size > k_kept_most )
+    {
+        if( kept[kept_next].ptr != NULL )
+        {
+            evicted[count++] = kept[kept_next].ptr;
+            kept_size -= kept[kept_next].size;
+            kept[kept_next].ptr = NULL;
+        }
+        if( kept[kept_next].ptr == NULL && kept_size + size <= k_kept_most )
+        {
+            break;
+        }
+        kept_next = ( kept_next + 1 ) % k_kept_slots;
+    }
+    kept[kept_next].ptr  = ptr;
+    kept[kept_next].size = size;
+    kept_size += size;
+    kept_next = ( kept_next + 1 ) % k_kept_slots;
+    ReleaseSRWLockExclusive( &kept_lock );
+
+    for( int i = 0; i < count; ++i )
+    {
+        free( evicted[i] );
+    }
+    return true;
 }

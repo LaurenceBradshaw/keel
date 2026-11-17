@@ -22,6 +22,24 @@
 #include <time.h>
 #include <unistd.h>
 #endif
+#ifdef __GLIBC__
+#include <malloc.h>
+#endif
+
+// A freed large block is kept for the next request rather than handed back to the system, so a loop
+// that drops one big array and makes the next does not fault every page in again. glibc does it given
+// thresholds; Win32's heap cannot, so kl_rt_win32.c keeps the blocks itself.
+#ifdef __GLIBC__
+__attribute__( ( constructor ) ) static void keep_freed_blocks( void )
+{
+    mallopt( M_MMAP_THRESHOLD, 32 * 1024 * 1024 ); // from the heap, and reused, up to 32 MiB
+    mallopt( M_TRIM_THRESHOLD, 64 * 1024 * 1024 ); // at most 64 MiB of free memory held
+}
+#endif
+#ifdef _WIN32
+void* kl_rt_cache_take( size_t size );
+bool  kl_rt_cache_keep( void* ptr );
+#endif
 
 // A panic's end: SIGABRT on POSIX, which a shell reports as 134; Windows exits 134 itself, since
 // its `abort` can stop for Windows Error Reporting.
@@ -42,6 +60,14 @@ void* kl_rt_alloc( size_t size, const char* file, uint32_t line, const char* mes
     {
         size = 1;
     }
+
+#ifdef _WIN32
+    void* const kept = kl_rt_cache_take( size );
+    if( kept != NULL )
+    {
+        return kept;
+    }
+#endif
 
     void* ptr = malloc( size );
     if( ptr == NULL )
@@ -64,6 +90,12 @@ void* kl_rt_alloc_many( size_t count, size_t size, const char* file, uint32_t li
 
 void kl_rt_free( void* ptr )
 {
+#ifdef _WIN32
+    if( ptr != NULL && kl_rt_cache_keep( ptr ) )
+    {
+        return;
+    }
+#endif
     // free( NULL ) must be a no-op - C guarantees it
     free( ptr );
 }

@@ -22,6 +22,8 @@
 #include <fcntl.h>
 #include <io.h>
 #include <windows.h>
+
+#include <psapi.h> // after windows.h, whose types it uses
 #define os_close _close
 #define os_dup2 _dup2
 #define os_getcwd _getcwd
@@ -33,6 +35,7 @@
 #define NULL_DEVICE "NUL"
 #define PLATFORM "1"
 #else
+#include <sys/resource.h>
 #include <sys/wait.h>
 #include <unistd.h>
 #define os_close close
@@ -582,6 +585,42 @@ static void large_frame( void )
     printf( "%c%c", big[0], big[sizeof big - 1] );
 }
 
+// The page faults so far: each page a block touches for the first time is one.
+static uint64_t page_faults( void )
+{
+#ifdef _WIN32
+    PROCESS_MEMORY_COUNTERS counters = { .cb = sizeof counters };
+    return K32GetProcessMemoryInfo( GetCurrentProcess(), &counters, sizeof counters ) ? counters.PageFaultCount : 0;
+#else
+    struct rusage usage;
+    return getrusage( RUSAGE_SELF, &usage ) == 0 ? (uint64_t) usage.ru_minflt : 0;
+#endif
+}
+
+// A 2 MiB block freed and made again 64 times: the same block each time, and its pages faulted in
+// about once, not 64 times.
+static void large_blocks_reused( void )
+{
+    enum
+    {
+        k_size   = 2 * 1024 * 1024,
+        k_rounds = 64
+    };
+    const uint64_t before = page_faults();
+    char*          first  = NULL;
+    bool           same   = true;
+    for( int r = 0; r < k_rounds; ++r )
+    {
+        char* block = kl_rt_alloc( k_size, "", 0, "no memory" );
+        memset( block, r, k_size );
+        first = first == NULL ? block : first;
+        same &= block == first;
+        kl_rt_free( block );
+    }
+    const uint64_t faults = page_faults() - before;
+    printf( "%d %d", same, faults < 2 * ( k_size / 4096 ) );
+}
+
 static void platform( void )
 {
     printf( "%d", kl_rt_platform() );
@@ -628,6 +667,7 @@ static const Case cases[] = {
     { "environment", environment, "0 value 0 0 1 1 1 1", 0 },
     { "deep_drop", deep_drop, "1000000", 0 },
     { "large_frame", large_frame, "az", 0 },
+    { "large_blocks_reused", large_blocks_reused, "1 1", 0 },
     { "platform", platform, PLATFORM, 0 },
 };
 
