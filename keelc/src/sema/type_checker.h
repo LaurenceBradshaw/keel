@@ -290,7 +290,7 @@ bool instance_holds_address( const Ast& ast, Type_table& table, Type_id instance
 // emitter needs the same answers and has no checker.
 Bindings aggregate_bindings( const Ast& ast, const Type_table& table, Type_id aggregate, std::span<const Type_id> recorded );
 Type_id  field_type( const Ast& ast, Type_table& table, Type_id aggregate, Node_id field, std::span<const Type_id> recorded );
-// A closure's capture holds a copy when it is written bare and does not own; otherwise an address.
+// A closure's capture holds a copy when it is written bare and is neither a run nor owning; otherwise an address.
 bool copies_capture( const Ast& ast, Type_table& table, Node_id capture, Type_id held, std::span<const Type_id> recorded );
 std::vector<Node_id>
 carried_payload( const Ast& ast, Type_table& table, Type_id instance, Node_id variant, std::span<const Type_id> recorded );

@@ -1,0 +1,16 @@
+// A recursive call passes on its own fn-bound parameter, whose bound settles `T`, named nowhere else.
+T total<T, F>( u64 n, F at ) where T : numeric, where F : fn( u64 ) -> T
+{
+    if( n == 0 )
+    {
+        return 0;
+    }
+    return at( n - 1 ) + total( n - 1, at );
+}
+
+i32 main()
+{
+    i32 sum = total( 4, fn[]( u64 i ) -> i32 { return cast<i32>( i ); } );
+    f64 half = total( 2, fn[]( u64 _ ) -> f64 { return 0.5; } );
+    return sum == 6 && half == 1.0 ? 0 : 1;
+}

@@ -1860,7 +1860,11 @@ bool Expressions::bind_fn_parameters(
         // What the argument returns settles the parameters its bound's return names.
         if( open_return )
         {
-            const Type_id given = table_.is_closure( shape.type ) ? table_.get( shape.type ).element : shape.type;
+            // A closure's signature is its element; an enclosing generic's fn-bound parameter's, its bound.
+            const Type_id bound = bounds_.signature_of( shape.type );
+            const Type_id given = table_.is_closure( shape.type ) ? table_.get( shape.type ).element
+                                  : bound.is_valid()              ? bound
+                                                                  : shape.type;
             Bindings      found;
             table_.deduce( expected, given, found );
 

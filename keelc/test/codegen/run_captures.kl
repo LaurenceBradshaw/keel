@@ -1,0 +1,30 @@
+// A captured run is held by address, read through and written through, at a run and at an array.
+import kl::list;
+
+void each<F>( u64 n, F f ) where F : fn( u64 ) -> void
+{
+    for( u64 i : 0..n )
+    {
+        f( i );
+    }
+}
+
+T total<T>( const ref T[] a ) where T : numeric
+{
+    T t = 0;
+    each( a.size, fn[a, ref t]( u64 i ) { t += a[i]; } );
+    return t;
+}
+
+void scale( ref f64[] a )
+{
+    each( a.size, fn[ref a]( u64 i ) { a[i] *= 2.0; } );
+}
+
+i32 main()
+{
+    kl::list<f64> l = kl::list<f64>::filled( 4, 2.5 );
+    scale( ref l.as_run() );
+    i32[3] fixed = [ 1, 2, 3 ];
+    return total( l.as_run() ) == 20.0 && total( fixed ) == 6 ? 0 : 1;
+}

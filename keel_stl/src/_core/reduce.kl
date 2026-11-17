@@ -17,7 +17,7 @@ T sum<T>( const ref T[] a ) where T : numeric
         }
         return total;
     }
-    return pairwise( start( a ), start( a ), 1, a.size, fn[]( T x, T _ ) -> T { return x; } );
+    return pairwise( 0, a.size, fn[a]( u64 i ) -> T { return a[i]; } );
 }
 
 /// The sum of `a[i] * b[i]`.
@@ -41,7 +41,7 @@ T dot<T>( const ref T[] a, const ref T[] b ) where T : numeric
         }
         return total;
     }
-    return pairwise( start( a ), start( b ), 1, a.size, fn[]( T x, T y ) -> T { return x * y; } );
+    return pairwise( 0, a.size, fn[a, b]( u64 i ) -> T { return a[i] * b[i]; } );
 }
 
 /// The product of every element; 1 when there are none.
@@ -195,25 +195,18 @@ void variance_axis<T>( ref T[] dest, const ref T[] a, u64 outer, u64 n, u64 inne
         panic( "the shapes differ" );
     }
 
-    const T[*] base = start( a );
     for( u64 o : 0..outer )
     {
         for( u64 i : 0..inner )
         {
-            const T[*] first;
-            unsafe
-            {
-                first = base + ( o * n * inner + i );
-            }
-            T mean  = pairwise( first, first, inner, n, fn[]( T x, T _ ) -> T { return x; } ) / cast<T>( n );
-            T total = pairwise(
-                first,
-                first,
-                inner,
+            u64 first = o * n * inner + i;
+            T   mean  = pairwise( 0, n, fn[a, first, inner]( u64 k ) -> T { return a[first + k * inner]; } ) / cast<T>( n );
+            T   total = pairwise(
+                0,
                 n,
-                fn[mean]( T x, T _ ) -> T
+                fn[a, first, inner, mean]( u64 k ) -> T
                 {
-                    T d = x - mean;
+                    T d = a[first + k * inner] - mean;
                     return d * d;
                 }
             );
@@ -230,64 +223,45 @@ T variance<T>( const ref T[] a ) where T : floating
     return d[0];
 }
 
-// The first element's address, through which `pairwise` reads with the size already checked; null for an
-// empty run.
-private const T[*] start<T>( const ref T[] a )
+// `at( k )` summed for `k` in `begin..end`, pairwise as numpy adds: a run of up to 128 in eight running
+// totals joined as a tree, a longer one as its halves' totals, split at a multiple of 8.
+private T pairwise<T, F>( u64 begin, u64 end, F at ) where T : numeric, where F : fn( u64 ) -> T
 {
-    if( a.size == 0 )
+    u64 n = end - begin;
+    if( n > 128 )
     {
-        return nullptr;
+        u64 half = n / 2 - n / 2 % 8;
+        return pairwise( begin, begin + half, at ) + pairwise( begin + half, end, at );
     }
-    unsafe
-    {
-        return cast<const T[*]>( &a[0] );
-    }
-}
 
-// `at( a[j], b[j] )` summed for `j = k * stride`, `k` in `0..n`, pairwise as numpy adds: a run of up to
-// 128 in eight running totals joined as a tree, a longer one as its halves' totals, split at a multiple
-// of 8. Each of `a` and `b` holds the `n` elements it reads; one range check per run, by the caller, stands
-// for the eight a turn would make.
-private T pairwise<T, F>( const T[*] a, const T[*] b, u64 stride, u64 n, F at ) where T : numeric, where F : fn( T, T ) -> T
-{
-    unsafe
+    T   total = 0;
+    u64 k     = begin;
+    if( n >= 8 )
     {
-        if( n > 128 )
+        T r0 = at( k );
+        T r1 = at( k + 1 );
+        T r2 = at( k + 2 );
+        T r3 = at( k + 3 );
+        T r4 = at( k + 4 );
+        T r5 = at( k + 5 );
+        T r6 = at( k + 6 );
+        T r7 = at( k + 7 );
+        for( k = begin + 8; k + 8 <= end; k += 8 )
         {
-            u64 half = n / 2 - n / 2 % 8;
-            return pairwise( a, b, stride, half, at ) + pairwise( a + half * stride, b + half * stride, stride, n - half, at );
+            r0 += at( k );
+            r1 += at( k + 1 );
+            r2 += at( k + 2 );
+            r3 += at( k + 3 );
+            r4 += at( k + 4 );
+            r5 += at( k + 5 );
+            r6 += at( k + 6 );
+            r7 += at( k + 7 );
         }
-
-        T   total = 0;
-        u64 k     = 0;
-        if( n >= 8 )
-        {
-            T r0 = at( a[0], b[0] );
-            T r1 = at( a[stride], b[stride] );
-            T r2 = at( a[2 * stride], b[2 * stride] );
-            T r3 = at( a[3 * stride], b[3 * stride] );
-            T r4 = at( a[4 * stride], b[4 * stride] );
-            T r5 = at( a[5 * stride], b[5 * stride] );
-            T r6 = at( a[6 * stride], b[6 * stride] );
-            T r7 = at( a[7 * stride], b[7 * stride] );
-            for( k = 8; k + 8 <= n; k += 8 )
-            {
-                u64 j = k * stride;
-                r0 += at( a[j], b[j] );
-                r1 += at( a[j + stride], b[j + stride] );
-                r2 += at( a[j + 2 * stride], b[j + 2 * stride] );
-                r3 += at( a[j + 3 * stride], b[j + 3 * stride] );
-                r4 += at( a[j + 4 * stride], b[j + 4 * stride] );
-                r5 += at( a[j + 5 * stride], b[j + 5 * stride] );
-                r6 += at( a[j + 6 * stride], b[j + 6 * stride] );
-                r7 += at( a[j + 7 * stride], b[j + 7 * stride] );
-            }
-            total = ( ( r0 + r1 ) + ( r2 + r3 ) ) + ( ( r4 + r5 ) + ( r6 + r7 ) );
-        }
-        for( ; k < n; k += 1 )
-        {
-            total += at( a[k * stride], b[k * stride] );
-        }
-        return total;
+        total = ( ( r0 + r1 ) + ( r2 + r3 ) ) + ( ( r4 + r5 ) + ( r6 + r7 ) );
     }
+    for( ; k < end; k += 1 )
+    {
+        total += at( k );
+    }
+    return total;
 }

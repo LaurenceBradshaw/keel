@@ -562,7 +562,8 @@ Type_id field_type( const Ast& ast, Type_table& table, Type_id aggregate, Node_i
 bool copies_capture( const Ast& ast, Type_table& table, Node_id capture, Type_id held, std::span<const Type_id> recorded )
 {
     return ast.kind( ast.captured( capture ) ) != Node_kind::Marker_expr &&
-           ast.name( capture ) != Interner::keyword( Keyword::This ) && !instance_owns( ast, table, held, recorded );
+           ast.name( capture ) != Interner::keyword( Keyword::This ) && !table.is_run( held ) &&
+           !instance_owns( ast, table, held, recorded );
 }
 
 std::vector<Node_id>
