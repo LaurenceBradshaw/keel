@@ -115,6 +115,18 @@ product, and <code>v.matmul( m )</code> reads <code>v</code> as a row.</p>
 <p>This vector's elements, then <code>b</code>'s.</p>
 </div>
 </div>
+<div class="group" id="vec.segment">
+<pre class="signature"><a class="anchor" href="#vec.segment" aria-label="Link to segment">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, M&gt; <span class="fn">segment</span>&lt;<a class="prim" href="prelude.html#u64">u64</a> M&gt;( <a class="prim" href="prelude.html#u64">u64</a> i ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A copy of the <code>M</code> elements from <code>i</code>: <code>v.segment&lt;2&gt;( 1 )</code>. Panics when they pass the end.</p>
+</div>
+</div>
+<div class="group" id="vec.set_segment">
+<pre class="signature"><a class="anchor" href="#vec.set_segment" aria-label="Link to set_segment">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">set_segment</span>&lt;<a class="prim" href="prelude.html#u64">u64</a> M&gt;( <a class="prim" href="prelude.html#u64">u64</a> i, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, M&gt; s )</code></pre>
+<div class="doc">
+<p>Writes <code>s</code> over the <code>M</code> elements from <code>i</code>. Panics when they pass the end.</p>
+</div>
+</div>
 <h3>Arithmetic</h3>
 <div class="group" id="vec.operator+">
 <pre class="signature"><a class="anchor" href="#vec.operator+" aria-label="Link to operator+">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">operator+</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; o ) <span class="kw">const</span></code></pre>
@@ -624,6 +636,20 @@ matrix product, and <code>m.matmul( v )</code> reads <code>v</code> as a column.
 <pre class="signature"><a class="anchor" href="#mat.flattened" aria-label="Link to flattened">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, ?&gt; <span class="fn">flattened</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>The elements row after row, as a vector.</p>
+</div>
+</div>
+<div class="group" id="mat.block">
+<pre class="signature"><a class="anchor" href="#mat.block" aria-label="Link to block">#</a><code><span class="kw">public</span> <a class="type" href="#mat">mat</a>&lt;T, P, Q&gt; <span class="fn">block</span>&lt;<a class="prim" href="prelude.html#u64">u64</a> P, <a class="prim" href="prelude.html#u64">u64</a> Q&gt;( <a class="prim" href="prelude.html#u64">u64</a> i, <a class="prim" href="prelude.html#u64">u64</a> j ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A copy of the <code>P</code> by <code>Q</code> block whose top left is row <code>i</code>, column <code>j</code>:
+<code>m.block&lt;2, 2&gt;( 1, 0 )</code>. Panics when it passes an edge.</p>
+</div>
+</div>
+<div class="group" id="mat.set_block">
+<pre class="signature"><a class="anchor" href="#mat.set_block" aria-label="Link to set_block">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">set_block</span>&lt;<a class="prim" href="prelude.html#u64">u64</a> P, <a class="prim" href="prelude.html#u64">u64</a> Q&gt;( <a class="prim" href="prelude.html#u64">u64</a> i, <a class="prim" href="prelude.html#u64">u64</a> j, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, P, Q&gt; b )</code></pre>
+<div class="doc">
+<p>Writes <code>b</code> over the block whose top left is row <code>i</code>, column <code>j</code>. Panics when it passes an
+edge.</p>
 </div>
 </div>
 <h3>Arithmetic</h3>

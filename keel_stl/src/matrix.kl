@@ -99,6 +99,28 @@ class vec<T, u64 N> implements iterable<T> where T : numeric
         return r;
     }
 
+    /// A copy of the `M` elements from `i`: `v.segment<2>( 1 )`. Panics when they pass the end.
+    public vec<T, M> segment<u64 M>( u64 i ) const
+    {
+        fits( i, M );
+        vec<T, M> r = vec<T, M>::zeros();
+        for( u64 k : 0..M )
+        {
+            r.e_[k] = e_[i + k];
+        }
+        return r;
+    }
+
+    /// Writes `s` over the `M` elements from `i`. Panics when they pass the end.
+    public void set_segment<u64 M>( u64 i, const ref vec<T, M> s )
+    {
+        fits( i, M );
+        for( u64 k : 0..M )
+        {
+            e_[i + k] = s.e_[k];
+        }
+    }
+
     /// --- Arithmetic ---
 
     /// The element-wise sum with `o`.
@@ -684,6 +706,16 @@ class vec<T, u64 N> implements iterable<T> where T : numeric
         return r;
     }
 
+    /// --- Internals ---
+
+    // Panics unless the `m` elements from `i` are inside.
+    private void fits( u64 i, u64 m ) const
+    {
+        if( m > N || i > N - m )
+        {
+            panic( "the segment passes the end" );
+        }
+    }
 };
 
 /// `R` rows of `C` numbers held inline, row after row: a matrix of rank 2.
@@ -799,6 +831,36 @@ class mat<T, u64 R, u64 C> implements iterable<T> where T : numeric
     public vec<T, (R * C)> flattened() const
     {
         return vec<T, (R * C)>( e_ );
+    }
+
+    /// A copy of the `P` by `Q` block whose top left is row `i`, column `j`:
+    /// `m.block<2, 2>( 1, 0 )`. Panics when it passes an edge.
+    public mat<T, P, Q> block<u64 P, u64 Q>( u64 i, u64 j ) const
+    {
+        fits( i, j, P, Q );
+        mat<T, P, Q> r = mat<T, P, Q>::zeros();
+        for( u64 p : 0..P )
+        {
+            for( u64 q : 0..Q )
+            {
+                r.e_[p * Q + q] = e_[( i + p ) * C + j + q];
+            }
+        }
+        return r;
+    }
+
+    /// Writes `b` over the block whose top left is row `i`, column `j`. Panics when it passes an
+    /// edge.
+    public void set_block<u64 P, u64 Q>( u64 i, u64 j, const ref mat<T, P, Q> b )
+    {
+        fits( i, j, P, Q );
+        for( u64 p : 0..P )
+        {
+            for( u64 q : 0..Q )
+            {
+                e_[( i + p ) * C + j + q] = b.e_[p * Q + q];
+            }
+        }
     }
 
     /// --- Arithmetic ---
@@ -1423,6 +1485,15 @@ class mat<T, u64 R, u64 C> implements iterable<T> where T : numeric
             panic( "axis out of range" );
         }
         return r;
+    }
+
+    // Panics unless the `p` by `q` block from row `i`, column `j` is inside.
+    private void fits( u64 i, u64 j, u64 p, u64 q ) const
+    {
+        if( p > R || i > R - p || q > C || j > C - q )
+        {
+            panic( "the block passes an edge" );
+        }
     }
 };
 

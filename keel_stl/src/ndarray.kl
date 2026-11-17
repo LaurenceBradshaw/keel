@@ -256,18 +256,7 @@ class ndarray<T> implements iterable<T> where T : numeric
             panic( "the axis count differs from the rank" );
         }
 
-        list<u64> stride = list<u64>::with_capacity( rank() );
-        u64       step   = 1;
-        for( u64 k : 0..rank() )
-        {
-            stride.push( 0 );
-        }
-        for( u64 k : 0..rank() )
-        {
-            stride[rank() - 1 - k] = step;
-            step *= shape_[rank() - 1 - k];
-        }
-
+        list<u64> stride = strides();
         list<u64> s    = list<u64>::with_capacity( rank() );
         list<u64> from = list<u64>::with_capacity( rank() );
         for( u64 k : 0..rank() )
@@ -424,6 +413,80 @@ class ndarray<T> implements iterable<T> where T : numeric
         {
             yield( ref e_[i] );
         }
+    }
+
+    /// --- Slices ---
+
+    /// A copy of `region`, one range per dimension: `a.sliced( 1..3, 0..a.shape()[1] )`. Panics on
+    /// another count, a backwards range, or one past its dimension.
+    public ndarray<T> sliced( range... region ) const
+    {
+        list<u64>  s = lengths( region );
+        ndarray<T> r = ndarray<T>::zeros( s.as_run() );
+        if( r.size() != 0 )
+        {
+            kernel::gather( ref r.e_.as_run(), e_.as_run()[start( region )..size()], s.as_run(), strides().as_run() );
+        }
+        return r;
+    }
+
+    /// Writes `src` into `region`, whose lengths must be `src`'s shape. Panics as `sliced` does,
+    /// or when the shapes differ.
+    public void assign( const ref ndarray<T> src, range... region )
+    {
+        list<u64> s = lengths( region );
+        if( !kernel::equal( s.as_run(), src.shape_.as_run() ) )
+        {
+            panic( "the shapes differ" );
+        }
+        if( src.size() != 0 )
+        {
+            kernel::scatter( ref e_.as_run()[start( region )..size()], src.e_.as_run(), s.as_run(), strides().as_run() );
+        }
+    }
+
+    /// Sets every element of `region` to `x`. Panics as `sliced` does.
+    public void fill( T x, range... region )
+    {
+        list<u64> s = lengths( region );
+        if( count( s.as_run() ) != 0 )
+        {
+            kernel::fill_strided( ref e_.as_run()[start( region )..size()], x, s.as_run(), strides().as_run() );
+        }
+    }
+
+    /// Row `i` of a matrix, as a run writable where the array is. Panics unless the rank is 2, or
+    /// when `i` is outside the first dimension.
+    public ref T[] row( u64 i ) const
+    {
+        if( rank() != 2 )
+        {
+            panic( "the rank is not 2" );
+        }
+        return block( i );
+    }
+
+    /// The elements under the leading indices `at`, as a run writable where the array is:
+    /// `a.block( i, j )` of a rank 3 array is its `[i, j, ..]` row. Panics on more indices than
+    /// dimensions, or an index outside its dimension.
+    public ref T[] block( u64... at ) const
+    {
+        if( at.size > shape_.size() )
+        {
+            panic( "the index count exceeds the rank" );
+        }
+
+        u64 flat = 0;
+        for( u64 k : 0..at.size )
+        {
+            if( at[k] >= shape_[k] )
+            {
+                panic( "index out of range" );
+            }
+            flat = flat * shape_[k] + at[k];
+        }
+        u64 n = span( at.size, rank() );
+        return e_.as_run()[flat * n..flat * n + n];
     }
 
     /// --- Arithmetic ---
@@ -1241,6 +1304,58 @@ class ndarray<T> implements iterable<T> where T : numeric
         ndarray<T> r = copy();
         kernel::scan_axis( ref r.e_.as_run(), span( 0, axis ), n, span( axis + 1, rank() ), op );
         return r;
+    }
+
+    // The step between neighbours along each dimension.
+    private list<u64> strides() const
+    {
+        list<u64> r    = list<u64>::with_capacity( rank() );
+        u64       step = 1;
+        for( u64 k : 0..rank() )
+        {
+            r.push( 0 );
+        }
+        for( u64 k : 0..rank() )
+        {
+            r[rank() - 1 - k] = step;
+            step *= shape_[rank() - 1 - k];
+        }
+        return r;
+    }
+
+    // The lengths of `region`. Panics on another count, a backwards range, or one past its dimension.
+    private list<u64> lengths( const ref range[] region ) const
+    {
+        if( region.size != shape_.size() )
+        {
+            panic( "the range count differs from the rank" );
+        }
+
+        list<u64> s = list<u64>::with_capacity( region.size );
+        for( u64 k : 0..region.size )
+        {
+            if( region[k].from > region[k].to )
+            {
+                panic( "the range is backwards" );
+            }
+            if( region[k].to > shape_[k] )
+            {
+                panic( "the range is past its dimension" );
+            }
+            s.push( region[k].to - region[k].from );
+        }
+        return s;
+    }
+
+    // Where `region`'s first element is, counted row-major.
+    private u64 start( const ref range[] region ) const
+    {
+        u64 flat = 0;
+        for( u64 k : 0..region.size )
+        {
+            flat = flat * shape_[k] + region[k].from;
+        }
+        return flat;
     }
 
     private mask compared<F>( const ref ndarray<T> o, F p ) const where F : fn( T, T ) -> bool

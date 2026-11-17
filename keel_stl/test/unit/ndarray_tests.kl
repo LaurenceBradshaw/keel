@@ -1,7 +1,7 @@
 // `kl::ndarray`: building in a shape, indexing at any rank, the element-wise operators with a
 // scalar either side, the integer operators and element-wise functions, the products, comparing,
-// reducing, converting, reshaping and walking, the scalar maths over each element, and the masks
-// the comparisons answer.
+// reducing, converting, reshaping and walking, the scalar maths over each element, the masks
+// the comparisons answer, and slices.
 import kl::mask;
 import kl::math;
 import kl::ndarray;
@@ -365,4 +365,42 @@ private void masks( ref kl::test::context c )
 
     c.expect_panic( "the shapes differ", fn[]() { _ = kl::ndarray<i32>::zeros( 2 ).less( kl::ndarray<i32>::zeros( 3 ) ); } );
     c.expect_panic( "the shapes differ", fn[]() { _ = kl::ndarray<i32>::zeros( 2 ).selected( kl::mask( 3 ) ); } );
+}
+
+private void slices( ref kl::test::context c )
+{
+    kl::ndarray<i32> a = kl::ndarray<i32>::arange( 0, 12 ).reshaped( 3, 4 );
+    c.check( a.sliced( 1..3, 1..3 ) == kl::ndarray<i32>( [ 5, 6, 9, 10 ], 2, 2 ) );
+    c.check( a.sliced( 0..3, 3..4 ) == kl::ndarray<i32>( [ 3, 7, 11 ], 3, 1 ) );
+    c.check_eq( a.sliced( 3..3, 0..4 ).size(), 0 );
+    c.check_eq( a.sliced( 3..3, 4..4 ).size(), 0 );
+
+    kl::ndarray<i32> b = a.copy();
+    b.assign( kl::ndarray<i32>::filled( -1, 2, 1 ), 1..3, 0..1 );
+    c.check( b.sliced( 0..3, 0..1 ) == kl::ndarray<i32>( [ 0, -1, -1 ], 3, 1 ) );
+    c.check_eq( b.sum(), a.sum() - 4 - 8 - 2 );
+    b.fill( 7, 0..1, 1..4 );
+    c.check( b.sliced( 0..1, 0..4 ) == kl::ndarray<i32>( [ 0, 7, 7, 7 ], 1, 4 ) );
+
+    c.check_eq( a.row( 2 )[1], 9 );
+    a.row( 0 )[3] = 30;
+    c.check_eq( a[0, 3], 30 );
+    c.check_eq( a.block().size, 12 );
+
+    kl::ndarray<i32> t = kl::ndarray<i32>::arange( 0, 24 ).reshaped( 2, 3, 4 );
+    c.check_eq( t.block( 1 ).size, 12 );
+    c.check_eq( t.block( 1, 2 )[0], 20 );
+    c.check_eq( t.block( 1, 2, 3 ).size, 1 );
+    c.check( t.sliced( 1..2, 0..3, 2..3 ) == kl::ndarray<i32>( [ 14, 18, 22 ], 1, 3, 1 ) );
+
+    range r = 0..2;
+    c.check_eq( t.sliced( r, r, r ).sum(), 0 + 1 + 4 + 5 + 12 + 13 + 16 + 17 );
+
+    c.expect_panic( "the range count differs from the rank", fn[]() { _ = kl::ndarray<i32>::zeros( 2, 2 ).sliced( 0..1 ); } );
+    c.expect_panic( "the range is past its dimension", fn[]() { _ = kl::ndarray<i32>::zeros( 2, 2 ).sliced( 0..1, 0..3 ); } );
+    c.expect_panic( "the range is backwards", fn[]() { u64 n = 1; _ = kl::ndarray<i32>::zeros( 2 ).sliced( 2..n ); } );
+    c.expect_panic( "the shapes differ", fn[]() { kl::ndarray<i32> z = kl::ndarray<i32>::zeros( 2, 2 ); z.assign( kl::ndarray<i32>::zeros( 2 ), 0..2, 0..1 ); } );
+    c.expect_panic( "the rank is not 2", fn[]() { _ = kl::ndarray<i32>::zeros( 2 ).row( 0 ); } );
+    c.expect_panic( "the index count exceeds the rank", fn[]() { _ = kl::ndarray<i32>::zeros( 2 ).block( 0, 0 ); } );
+    c.expect_panic( "index out of range", fn[]() { _ = kl::ndarray<i32>::zeros( 2, 2 ).block( 2 ); } );
 }
