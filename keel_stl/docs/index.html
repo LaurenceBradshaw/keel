@@ -124,6 +124,17 @@ end of input. A read error is also <code>false</code>; the careful path is <code
 </dl>
 </section>
 <section class="module">
+<h3><a href="mask.html">mask</a></h3>
+<dl class="summaries">
+<dt><a href="mask.html#mask"><code>mask</code></a> <span class="kind">class</span></dt>
+<dd>One bit per element of an <code>ndarray</code>, in a shape set at run time, held row-major.</dd>
+<dt><a href="mask.html#vec_mask"><code>vec_mask</code></a> <span class="kind">struct</span></dt>
+<dd>One bit per element of a <code>vec&lt;T, N&gt;</code>: what its comparisons answer.</dd>
+<dt><a href="mask.html#mat_mask"><code>mat_mask</code></a> <span class="kind">struct</span></dt>
+<dd>One bit per element of a <code>mat&lt;T, R, C&gt;</code>, row after row: what its comparisons answer.</dd>
+</dl>
+</section>
+<section class="module">
 <h3><a href="math.html">math</a></h3>
 <dl class="summaries">
 </dl>
@@ -243,6 +254,12 @@ negative <code>x</code> and a <code>y</code> that is not whole; and an odd whole
 <dd>The smallest of each set of matching elements, as <code>kl::min</code>: <code>kl::minimum( a, b, c )</code>.</dd>
 <dt><a href="matrix.html#maximum"><code>maximum</code></a> <span class="kind">function</span></dt>
 <dd>The largest of each set of matching elements, as <code>kl::max</code>: <code>kl::maximum( a, b, c )</code>.</dd>
+<dt><a href="matrix.html#select"><code>select</code></a> <span class="kind">function</span></dt>
+<dd><code>a</code>'s element where <code>m</code> is set, and <code>b</code>'s where it is clear.</dd>
+<dt><a href="matrix.html#is_nan"><code>is_nan</code></a> <span class="kind">function</span></dt>
+<dd>Where each element is a NaN, as <code>kl::is_nan</code>.</dd>
+<dt><a href="matrix.html#is_inf"><code>is_inf</code></a> <span class="kind">function</span></dt>
+<dd>Where each element is an infinity, as <code>kl::is_inf</code>.</dd>
 <dt><a href="matrix.html#sqrt"><code>sqrt</code></a> <span class="kind">function</span></dt>
 <dd><code>kl::sqrt</code> of each element.</dd>
 <dt><a href="matrix.html#exp"><code>exp</code></a> <span class="kind">function</span></dt>
@@ -300,6 +317,12 @@ negative <code>x</code> and a <code>y</code> that is not whole; and an odd whole
 <dd>The smaller of each pair of matching elements, as <code>kl::min</code>: <code>kl::minimum( a, b )</code>.</dd>
 <dt><a href="ndarray.html#maximum"><code>maximum</code></a> <span class="kind">function</span></dt>
 <dd>The larger of each pair of matching elements, as <code>kl::max</code>: <code>kl::maximum( a, b )</code>.</dd>
+<dt><a href="ndarray.html#select"><code>select</code></a> <span class="kind">function</span></dt>
+<dd><code>a</code>'s element where <code>m</code> is set, and <code>b</code>'s where it is clear. Panics when the shapes differ.</dd>
+<dt><a href="ndarray.html#is_nan"><code>is_nan</code></a> <span class="kind">function</span></dt>
+<dd>Where each element is a NaN, as <code>kl::is_nan</code>.</dd>
+<dt><a href="ndarray.html#is_inf"><code>is_inf</code></a> <span class="kind">function</span></dt>
+<dd>Where each element is an infinity, as <code>kl::is_inf</code>.</dd>
 <dt><a href="ndarray.html#sqrt"><code>sqrt</code></a> <span class="kind">function</span></dt>
 <dd><code>kl::sqrt</code> of each element.</dd>
 <dt><a href="ndarray.html#exp"><code>exp</code></a> <span class="kind">function</span></dt>

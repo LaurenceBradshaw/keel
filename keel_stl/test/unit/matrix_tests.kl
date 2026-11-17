@@ -1,6 +1,8 @@
 // `kl::vec` and `kl::mat`: building, indexing, the element-wise operators with a scalar either
 // side, the integer operators and element-wise functions, the products, comparing, reducing,
-// converting and walking, and the scalar maths over each element.
+// converting and walking, the scalar maths over each element, and the masks the comparisons
+// answer.
+import kl::mask;
 import kl::math;
 import kl::matrix;
 import kl::test::context;
@@ -244,4 +246,30 @@ private void elementwise_maths( ref kl::test::context c )
     c.check( kl::is_inf( e[0, 1] ) );
     c.check( kl::pow( m, cast<f32>( 2.0 ) ) == kl::mat<f32, 1, 2>( [ 0.0, 10000.0 ] ) );
     c.check_eq( kl::atan2( m, kl::mat<f32, 1, 2>::ones() )[0, 0], cast<f32>( 0.0 ) );
+}
+
+private void masks( ref kl::test::context c )
+{
+    kl::vec<i32, 3> v = kl::vec<i32, 3>( [ 1, 5, 3 ] );
+    kl::vec<i32, 3> w = kl::vec<i32, 3>::filled( 3 );
+    c.check( v.less( w ).at( 0 ) && v.less( w ).count() == 1 );
+    c.check_eq( v.greater( 2 ).count(), 2 );
+    c.check_eq( v.less_equal( w ).count(), 2 );
+    c.check_eq( v.greater_equal( 3 ).count(), 2 );
+    c.check( v.equal_each( w ).at( 2 ) );
+    c.check( v.differs( 3 ) == ~v.equal_each( 3 ) );
+    c.check( kl::select( v.greater( 2 ), v, w ) == kl::vec<i32, 3>( [ 3, 5, 3 ] ) );
+
+    kl::mat<f64, 2, 3>  m  = kl::mat<f64, 2, 3>( [ [ 1.0, 2.0, 3.0 ], [ 4.0, 5.0, 6.0 ] ] );
+    kl::mat_mask<2, 3> big = m.greater( 2.5 );
+    c.check( big.at( 0, 2 ) && !big.at( 0, 1 ) && big.count() == 4 );
+    c.check( ( big & m.less( 5.0 ) ).count() == 2 );
+    c.check( kl::select( big, m, kl::mat<f64, 2, 3>::zeros() ).sum() == 18.0 );
+    c.check( m.equal_each( m ).all() && !m.differs( m ).any() );
+
+    f64                nan = kl::from_bits( 0x7FF8000000000000 );
+    kl::mat<f64, 1, 3> f   = kl::mat<f64, 1, 3>( [ nan, 1.0, kl::exp( 1000.0 ) ] );
+    c.check( kl::is_nan( f ).at( 0, 0 ) && kl::is_nan( f ).count() == 1 );
+    c.check( kl::is_inf( f ).at( 0, 2 ) && kl::is_inf( f ).count() == 1 );
+    c.check( kl::is_nan( kl::vec<f32, 2>( [ 1.0, 2.0 ] ) ) == kl::vec_mask<2> {} );
 }

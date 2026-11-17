@@ -1,0 +1,143 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// The word loops behind `kl::bitset` and the masks: `bits` bits, 64 to a word from bit 0 of the
+// first. The last word's bits past `bits` are spare: every reader here ignores them.
+
+/// The bits of the last word that are in use.
+u64 last_word_mask( u64 bits )
+{
+    if( bits % 64 == 0 )
+    {
+        return ~0;
+    }
+
+    return ( cast<u64>( 1 ) << ( bits % 64 ) ) - 1;
+}
+
+/// The number of bits set.
+u64 count( const ref u64[] words, u64 bits )
+{
+    u64 result = 0;
+    for( u64 w : 0..words.size )
+    {
+        u64 word = w == words.size - 1 ? words[w] & last_word_mask( bits ) : words[w];
+        while( word != 0 )
+        {
+            word &= word - 1;
+            result++;
+        }
+    }
+
+    return result;
+}
+
+/// Whether any bit is set.
+bool any( const ref u64[] words, u64 bits )
+{
+    for( u64 w : 0..words.size )
+    {
+        u64 word = w == words.size - 1 ? words[w] & last_word_mask( bits ) : words[w];
+        if( word != 0 )
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/// Whether every bit is set.
+bool all( const ref u64[] words, u64 bits )
+{
+    for( u64 w : 0..words.size )
+    {
+        u64 full = w == words.size - 1 ? last_word_mask( bits ) : ~cast<u64>( 0 );
+        if( ( words[w] & full ) != full )
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/// Whether the same bits are set in `a` and `b`, of one size.
+bool equal( const ref u64[] a, const ref u64[] b, u64 bits )
+{
+    for( u64 w : 0..a.size )
+    {
+        u64 full = w == a.size - 1 ? last_word_mask( bits ) : ~cast<u64>( 0 );
+        if( ( a[w] & full ) != ( b[w] & full ) )
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/// Whether bit `i` is set; `i` is not checked against the size.
+bool test( const ref u64[] words, u64 i )
+{
+    return ( words[i / 64] & ( cast<u64>( 1 ) << ( i % 64 ) ) ) != 0;
+}
+
+/// Sets bit `i` if `on`, and clears it otherwise; `i` is not checked against the size.
+void assign( ref u64[] words, u64 i, bool on )
+{
+    u64 bit = cast<u64>( 1 ) << ( i % 64 );
+    if( on )
+    {
+        words[i / 64] |= bit;
+    }
+    else
+    {
+        words[i / 64] &= ~bit;
+    }
+}
+
+/// Bit `i` is `p( a[i] )`, for every element of `a`.
+void mark<T, F>( ref u64[] words, const ref T[] a, F p ) where T : copyable, where F : fn( T ) -> bool
+{
+    for( u64 i : 0..a.size )
+    {
+        assign( ref words, i, p( a[i] ) );
+    }
+}
+
+/// Bit `i` is `p( a[i], b[i] )`.
+///
+/// ### Panics
+///
+/// If the sizes differ.
+void mark_pairs<T, F>( ref u64[] words, const ref T[] a, const ref T[] b, F p ) where T : copyable, where F : fn( T, T ) -> bool
+{
+    if( a.size != b.size )
+    {
+        panic( "the sizes differ" );
+    }
+
+    for( u64 i : 0..a.size )
+    {
+        assign( ref words, i, p( a[i], b[i] ) );
+    }
+}
+
+/// `dest[i]` is `a[i]` where bit `i` is set, and `b[i]` where it is clear.
+///
+/// ### Panics
+///
+/// If the three sizes differ.
+void select<T>( ref T[] dest, const ref u64[] words, const ref T[] a, const ref T[] b ) where T : copyable
+{
+    if( a.size != dest.size || b.size != dest.size )
+    {
+        panic( "the sizes differ" );
+    }
+
+    for( u64 i : 0..dest.size )
+    {
+        dest[i] = test( words, i ) ? a[i] : b[i];
+    }
+}

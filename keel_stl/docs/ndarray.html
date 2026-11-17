@@ -16,6 +16,9 @@
 <li><a href="#diag"><code>diag</code></a> <span class="kind">function</span></li>
 <li><a href="#minimum"><code>minimum</code></a> <span class="kind">function</span></li>
 <li><a href="#maximum"><code>maximum</code></a> <span class="kind">function</span></li>
+<li><a href="#select"><code>select</code></a> <span class="kind">function</span></li>
+<li><a href="#is_nan"><code>is_nan</code></a> <span class="kind">function</span></li>
+<li><a href="#is_inf"><code>is_inf</code></a> <span class="kind">function</span></li>
 <li><a href="#sqrt"><code>sqrt</code></a> <span class="kind">function</span></li>
 <li><a href="#exp"><code>exp</code></a> <span class="kind">function</span></li>
 <li><a href="#expm1"><code>expm1</code></a> <span class="kind">function</span></li>
@@ -504,6 +507,72 @@ column on the right, and that dimension is dropped from the result, so two of th
 element. A NaN is close to nothing, and an infinity only to itself.</p>
 </div>
 </div>
+<div class="group" id="ndarray.less">
+<pre class="signature"><a class="anchor" href="#ndarray.less" aria-label="Link to less">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">less</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each element is less than the matching one of <code>o</code>. Panics when the shapes differ.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.less" aria-label="Link to less">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">less</span>( T s ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each element is less than <code>s</code>.</p>
+</div>
+</div>
+<div class="group" id="ndarray.greater">
+<pre class="signature"><a class="anchor" href="#ndarray.greater" aria-label="Link to greater">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">greater</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each element is greater than the matching one of <code>o</code>. Panics when the shapes differ.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.greater" aria-label="Link to greater">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">greater</span>( T s ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each element is greater than <code>s</code>.</p>
+</div>
+</div>
+<div class="group" id="ndarray.less_equal">
+<pre class="signature"><a class="anchor" href="#ndarray.less_equal" aria-label="Link to less_equal">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">less_equal</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each element is at most the matching one of <code>o</code>. Panics when the shapes differ.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.less_equal" aria-label="Link to less_equal">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">less_equal</span>( T s ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each element is at most <code>s</code>.</p>
+</div>
+</div>
+<div class="group" id="ndarray.greater_equal">
+<pre class="signature"><a class="anchor" href="#ndarray.greater_equal" aria-label="Link to greater_equal">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">greater_equal</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each element is at least the matching one of <code>o</code>. Panics when the shapes differ.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.greater_equal" aria-label="Link to greater_equal">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">greater_equal</span>( T s ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each element is at least <code>s</code>.</p>
+</div>
+</div>
+<div class="group" id="ndarray.equal_each">
+<pre class="signature"><a class="anchor" href="#ndarray.equal_each" aria-label="Link to equal_each">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">equal_each</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each element is equal to the matching one of <code>o</code>. Panics when the shapes differ.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.equal_each" aria-label="Link to equal_each">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">equal_each</span>( T s ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each element is equal to <code>s</code>.</p>
+</div>
+</div>
+<div class="group" id="ndarray.differs">
+<pre class="signature"><a class="anchor" href="#ndarray.differs" aria-label="Link to differs">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">differs</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each element is not equal to the matching one of <code>o</code>. Panics when the shapes differ.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.differs" aria-label="Link to differs">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">differs</span>( T s ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each element is not equal to <code>s</code>.</p>
+</div>
+</div>
+<div class="group" id="ndarray.selected">
+<pre class="signature"><a class="anchor" href="#ndarray.selected" aria-label="Link to selected">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">selected</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="mask.html#mask">mask</a> m ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The elements <code>m</code> sets, row-major, as rank 1. Panics when the shapes differ.</p>
+</div>
+</div>
 <h3>Reducing</h3>
 <div class="group" id="ndarray.sum">
 <pre class="signature"><a class="anchor" href="#ndarray.sum" aria-label="Link to sum">#</a><code><span class="kw">public</span> T <span class="fn">sum</span>() <span class="kw">const</span></code></pre>
@@ -676,6 +745,33 @@ integer needs a rounding: <code>truncated</code>, <code>rounded</code>, <code>fl
 <pre class="signature"><a class="anchor" href="#maximum" aria-label="Link to maximum">#</a><code><a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">maximum</span>&lt;T&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; a, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; b ) <span class="kw">where</span> T : numeric</code></pre>
 <div class="doc">
 <p>The larger of each pair of matching elements, as <code>kl::max</code>: <code>kl::maximum( a, b )</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">select</span></h2>
+<div class="group" id="select">
+<pre class="signature"><a class="anchor" href="#select" aria-label="Link to select">#</a><code><a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">select</span>&lt;T&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="mask.html#mask">mask</a> m, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; a, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; b ) <span class="kw">where</span> T : numeric</code></pre>
+<div class="doc">
+<p><code>a</code>'s element where <code>m</code> is set, and <code>b</code>'s where it is clear. Panics when the shapes differ.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">is_nan</span></h2>
+<div class="group" id="is_nan">
+<pre class="signature"><a class="anchor" href="#is_nan" aria-label="Link to is_nan">#</a><code><a class="type" href="mask.html#mask">mask</a> <span class="fn">is_nan</span>&lt;T&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>Where each element is a NaN, as <code>kl::is_nan</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">is_inf</span></h2>
+<div class="group" id="is_inf">
+<pre class="signature"><a class="anchor" href="#is_inf" aria-label="Link to is_inf">#</a><code><a class="type" href="mask.html#mask">mask</a> <span class="fn">is_inf</span>&lt;T&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>Where each element is an infinity, as <code>kl::is_inf</code>.</p>
 </div>
 </div>
 </section>

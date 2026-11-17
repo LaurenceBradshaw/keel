@@ -1,18 +1,8 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+import kl::_core::bits as kernel;
 import kl::_core::elementwise as kernel;
-
-// The bits of the last word that are in use.
-private u64 last_word_mask( u64 bits )
-{
-    if( bits % 64 == 0 )
-    {
-        return ~0;
-    }
-
-    return ( cast<u64>( 1 ) << ( bits % 64 ) ) - 1;
-}
 
 /// A fixed set of `N` bits, indexed from 0.
 ///
@@ -114,85 +104,25 @@ struct bitset<u64 N> implements equatable, hashable
     /// The number of bits set.
     u64 count() const
     {
-        u64 result = 0;
-        for( u64 w : 0..words.size() )
-        {
-            u64 word = words[w];
-            if( w == words.size() - 1 )
-            {
-                word &= last_word_mask( N );
-            }
-
-            while( word != 0 )
-            {
-                word &= word - 1;
-                result++;
-            }
-        }
-
-        return result;
+        return kernel::count( words, N );
     }
 
     /// Whether any bit is set.
     bool any() const
     {
-        for( u64 w : 0..words.size() )
-        {
-            u64 word = words[w];
-            if( w == words.size() - 1 )
-            {
-                word &= last_word_mask( N );
-            }
-
-            if( word != 0 )
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return kernel::any( words, N );
     }
 
     /// Whether no bit is set.
     bool none() const
     {
-        for( u64 w : 0..words.size() )
-        {
-            u64 word = words[w];
-            if( w == words.size() - 1 )
-            {
-                word &= last_word_mask( N );
-            }
-
-            if( word != 0 )
-            {
-                return false;
-            }
-        }
-
-        return true;
+        return !kernel::any( words, N );
     }
 
     /// Whether every bit is set.
     bool all() const
     {
-        for( u64 w : 0..words.size() )
-        {
-            u64 word = words[w];
-            if( w == words.size() - 1 )
-            {
-                if( ( word & last_word_mask( N ) ) != last_word_mask( N ) )
-                {
-                    return false;
-                }
-            }
-            else if( word != ~cast<u64>( 0 ) )
-            {
-                return false;
-            }
-        }
-
-        return true;
+        return kernel::all( words, N );
     }
 
     /// Sets every bit.
@@ -218,16 +148,7 @@ struct bitset<u64 N> implements equatable, hashable
     /// Two bitsets are equal when the same bits are set.
     bool operator==( const ref bitset<N> other ) const
     {
-        const u64 last = words.size() - 1;
-        for( u64 w : 0..last )
-        {
-            if( words[w] != other.words[w] )
-            {
-                return false;
-            }
-        }
-
-        return ( words[last] & last_word_mask( N ) ) == ( other.words[last] & last_word_mask( N ) );
+        return kernel::equal( words, other.words, N );
     }
 
     /// Clears every bit that is clear in `other`.
@@ -289,6 +210,6 @@ struct bitset<u64 N> implements equatable, hashable
             h.write( words[w] );
         }
 
-        h.write( words[last] & last_word_mask( N ) );
+        h.write( words[last] & kernel::last_word_mask( N ) );
     }
 };

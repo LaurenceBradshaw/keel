@@ -4,12 +4,14 @@
 // Fixed-shape vectors and matrices, over kl::_core's kernels. One module, as each type's `matmul`
 // takes the other.
 
+import kl::_core::bits as kernel;
 import kl::_core::compare as kernel;
 import kl::_core::elementwise as kernel;
 import kl::_core::exponential as kernel;
 import kl::_core::linear as kernel;
 import kl::_core::reduce as kernel;
 import iterable;
+import mask;
 import math;
 
 /// `N` numbers held inline: a vector of rank 1, neither a row nor a column.
@@ -469,6 +471,102 @@ class vec<T, u64 N> implements iterable<T> where T : numeric
     public bool approx_equal( const ref vec<T, N> o, T rtol = 1e-5, T atol = 1e-8 ) const where T : floating
     {
         return kernel::approx_equal( e_, o.e_, rtol, atol );
+    }
+
+    /// Where each element is less than the matching one of `o`.
+    public vec_mask<N> less( const ref vec<T, N> o ) const
+    {
+        vec_mask<N> r = vec_mask<N> {};
+        kernel::mark_pairs( ref r.bits.words, e_, o.e_, fn[]( T x, T y ) { return x < y; } );
+        return r;
+    }
+
+    /// Where each element is less than `s`.
+    public vec_mask<N> less( T s ) const
+    {
+        vec_mask<N> r = vec_mask<N> {};
+        kernel::mark( ref r.bits.words, e_, fn[ s ]( T x ) { return x < s; } );
+        return r;
+    }
+
+    /// Where each element is greater than the matching one of `o`.
+    public vec_mask<N> greater( const ref vec<T, N> o ) const
+    {
+        vec_mask<N> r = vec_mask<N> {};
+        kernel::mark_pairs( ref r.bits.words, e_, o.e_, fn[]( T x, T y ) { return x > y; } );
+        return r;
+    }
+
+    /// Where each element is greater than `s`.
+    public vec_mask<N> greater( T s ) const
+    {
+        vec_mask<N> r = vec_mask<N> {};
+        kernel::mark( ref r.bits.words, e_, fn[ s ]( T x ) { return x > s; } );
+        return r;
+    }
+
+    /// Where each element is at most the matching one of `o`.
+    public vec_mask<N> less_equal( const ref vec<T, N> o ) const
+    {
+        vec_mask<N> r = vec_mask<N> {};
+        kernel::mark_pairs( ref r.bits.words, e_, o.e_, fn[]( T x, T y ) { return x <= y; } );
+        return r;
+    }
+
+    /// Where each element is at most `s`.
+    public vec_mask<N> less_equal( T s ) const
+    {
+        vec_mask<N> r = vec_mask<N> {};
+        kernel::mark( ref r.bits.words, e_, fn[ s ]( T x ) { return x <= s; } );
+        return r;
+    }
+
+    /// Where each element is at least the matching one of `o`.
+    public vec_mask<N> greater_equal( const ref vec<T, N> o ) const
+    {
+        vec_mask<N> r = vec_mask<N> {};
+        kernel::mark_pairs( ref r.bits.words, e_, o.e_, fn[]( T x, T y ) { return x >= y; } );
+        return r;
+    }
+
+    /// Where each element is at least `s`.
+    public vec_mask<N> greater_equal( T s ) const
+    {
+        vec_mask<N> r = vec_mask<N> {};
+        kernel::mark( ref r.bits.words, e_, fn[ s ]( T x ) { return x >= s; } );
+        return r;
+    }
+
+    /// Where each element is equal to the matching one of `o`.
+    public vec_mask<N> equal_each( const ref vec<T, N> o ) const
+    {
+        vec_mask<N> r = vec_mask<N> {};
+        kernel::mark_pairs( ref r.bits.words, e_, o.e_, fn[]( T x, T y ) { return x == y; } );
+        return r;
+    }
+
+    /// Where each element is equal to `s`.
+    public vec_mask<N> equal_each( T s ) const
+    {
+        vec_mask<N> r = vec_mask<N> {};
+        kernel::mark( ref r.bits.words, e_, fn[ s ]( T x ) { return x == s; } );
+        return r;
+    }
+
+    /// Where each element is not equal to the matching one of `o`.
+    public vec_mask<N> differs( const ref vec<T, N> o ) const
+    {
+        vec_mask<N> r = vec_mask<N> {};
+        kernel::mark_pairs( ref r.bits.words, e_, o.e_, fn[]( T x, T y ) { return x != y; } );
+        return r;
+    }
+
+    /// Where each element is not equal to `s`.
+    public vec_mask<N> differs( T s ) const
+    {
+        vec_mask<N> r = vec_mask<N> {};
+        kernel::mark( ref r.bits.words, e_, fn[ s ]( T x ) { return x != s; } );
+        return r;
     }
 
     /// --- Reducing ---
@@ -1087,6 +1185,102 @@ class mat<T, u64 R, u64 C> implements iterable<T> where T : numeric
         return kernel::approx_equal( e_, o.e_, rtol, atol );
     }
 
+    /// Where each element is less than the matching one of `o`.
+    public mat_mask<R, C> less( const ref mat<T, R, C> o ) const
+    {
+        mat_mask<R, C> r = mat_mask<R, C> {};
+        kernel::mark_pairs( ref r.bits.words, e_, o.e_, fn[]( T x, T y ) { return x < y; } );
+        return r;
+    }
+
+    /// Where each element is less than `s`.
+    public mat_mask<R, C> less( T s ) const
+    {
+        mat_mask<R, C> r = mat_mask<R, C> {};
+        kernel::mark( ref r.bits.words, e_, fn[ s ]( T x ) { return x < s; } );
+        return r;
+    }
+
+    /// Where each element is greater than the matching one of `o`.
+    public mat_mask<R, C> greater( const ref mat<T, R, C> o ) const
+    {
+        mat_mask<R, C> r = mat_mask<R, C> {};
+        kernel::mark_pairs( ref r.bits.words, e_, o.e_, fn[]( T x, T y ) { return x > y; } );
+        return r;
+    }
+
+    /// Where each element is greater than `s`.
+    public mat_mask<R, C> greater( T s ) const
+    {
+        mat_mask<R, C> r = mat_mask<R, C> {};
+        kernel::mark( ref r.bits.words, e_, fn[ s ]( T x ) { return x > s; } );
+        return r;
+    }
+
+    /// Where each element is at most the matching one of `o`.
+    public mat_mask<R, C> less_equal( const ref mat<T, R, C> o ) const
+    {
+        mat_mask<R, C> r = mat_mask<R, C> {};
+        kernel::mark_pairs( ref r.bits.words, e_, o.e_, fn[]( T x, T y ) { return x <= y; } );
+        return r;
+    }
+
+    /// Where each element is at most `s`.
+    public mat_mask<R, C> less_equal( T s ) const
+    {
+        mat_mask<R, C> r = mat_mask<R, C> {};
+        kernel::mark( ref r.bits.words, e_, fn[ s ]( T x ) { return x <= s; } );
+        return r;
+    }
+
+    /// Where each element is at least the matching one of `o`.
+    public mat_mask<R, C> greater_equal( const ref mat<T, R, C> o ) const
+    {
+        mat_mask<R, C> r = mat_mask<R, C> {};
+        kernel::mark_pairs( ref r.bits.words, e_, o.e_, fn[]( T x, T y ) { return x >= y; } );
+        return r;
+    }
+
+    /// Where each element is at least `s`.
+    public mat_mask<R, C> greater_equal( T s ) const
+    {
+        mat_mask<R, C> r = mat_mask<R, C> {};
+        kernel::mark( ref r.bits.words, e_, fn[ s ]( T x ) { return x >= s; } );
+        return r;
+    }
+
+    /// Where each element is equal to the matching one of `o`.
+    public mat_mask<R, C> equal_each( const ref mat<T, R, C> o ) const
+    {
+        mat_mask<R, C> r = mat_mask<R, C> {};
+        kernel::mark_pairs( ref r.bits.words, e_, o.e_, fn[]( T x, T y ) { return x == y; } );
+        return r;
+    }
+
+    /// Where each element is equal to `s`.
+    public mat_mask<R, C> equal_each( T s ) const
+    {
+        mat_mask<R, C> r = mat_mask<R, C> {};
+        kernel::mark( ref r.bits.words, e_, fn[ s ]( T x ) { return x == s; } );
+        return r;
+    }
+
+    /// Where each element is not equal to the matching one of `o`.
+    public mat_mask<R, C> differs( const ref mat<T, R, C> o ) const
+    {
+        mat_mask<R, C> r = mat_mask<R, C> {};
+        kernel::mark_pairs( ref r.bits.words, e_, o.e_, fn[]( T x, T y ) { return x != y; } );
+        return r;
+    }
+
+    /// Where each element is not equal to `s`.
+    public mat_mask<R, C> differs( T s ) const
+    {
+        mat_mask<R, C> r = mat_mask<R, C> {};
+        kernel::mark( ref r.bits.words, e_, fn[ s ]( T x ) { return x != s; } );
+        return r;
+    }
+
     /// --- Reducing ---
 
     /// The total of every element, added in index order.
@@ -1292,6 +1486,54 @@ mat<T, R, C> maximum<T, u64 R, u64 C>( const ref mat<T, R, C> first, mat<T, R, C
     {
         kernel::zip_into( ref r.as_run(), b.as_run(), fn[]( T x, T y ) { return kl::max( x, y ); } );
     }
+    return r;
+}
+
+/// `a`'s element where `m` is set, and `b`'s where it is clear.
+vec<T, N> select<T, u64 N>( const ref vec_mask<N> m, const ref vec<T, N> a, const ref vec<T, N> b ) where T : numeric
+{
+    vec<T, N> r = b;
+    kernel::select( ref r.as_run(), m.bits.words, a.as_run(), b.as_run() );
+    return r;
+}
+
+/// Where each element is a NaN, as `kl::is_nan`.
+vec_mask<N> is_nan<T, u64 N>( const ref vec<T, N> a ) where T : floating
+{
+    vec_mask<N> r = vec_mask<N> {};
+    kernel::mark( ref r.bits.words, a.as_run(), fn[]( T x ) { return kl::is_nan( cast<f64>( x ) ); } );
+    return r;
+}
+
+/// Where each element is an infinity, as `kl::is_inf`.
+vec_mask<N> is_inf<T, u64 N>( const ref vec<T, N> a ) where T : floating
+{
+    vec_mask<N> r = vec_mask<N> {};
+    kernel::mark( ref r.bits.words, a.as_run(), fn[]( T x ) { return kl::is_inf( cast<f64>( x ) ); } );
+    return r;
+}
+
+/// `a`'s element where `m` is set, and `b`'s where it is clear.
+mat<T, R, C> select<T, u64 R, u64 C>( const ref mat_mask<R, C> m, const ref mat<T, R, C> a, const ref mat<T, R, C> b ) where T : numeric
+{
+    mat<T, R, C> r = b;
+    kernel::select( ref r.as_run(), m.bits.words, a.as_run(), b.as_run() );
+    return r;
+}
+
+/// Where each element is a NaN, as `kl::is_nan`.
+mat_mask<R, C> is_nan<T, u64 R, u64 C>( const ref mat<T, R, C> a ) where T : floating
+{
+    mat_mask<R, C> r = mat_mask<R, C> {};
+    kernel::mark( ref r.bits.words, a.as_run(), fn[]( T x ) { return kl::is_nan( cast<f64>( x ) ); } );
+    return r;
+}
+
+/// Where each element is an infinity, as `kl::is_inf`.
+mat_mask<R, C> is_inf<T, u64 R, u64 C>( const ref mat<T, R, C> a ) where T : floating
+{
+    mat_mask<R, C> r = mat_mask<R, C> {};
+    kernel::mark( ref r.bits.words, a.as_run(), fn[]( T x ) { return kl::is_inf( cast<f64>( x ) ); } );
     return r;
 }
 

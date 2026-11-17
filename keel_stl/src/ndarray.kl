@@ -8,6 +8,7 @@ import kl::_core::linear as kernel;
 import kl::_core::reduce as kernel;
 import iterable;
 import list;
+import mask;
 import math;
 
 /// Numbers of any rank with a shape set at run time, held row-major: the last index moves fastest.
@@ -874,6 +875,98 @@ class ndarray<T> implements iterable<T> where T : numeric
         return kernel::equal( shape_.as_run(), o.shape_.as_run() ) && kernel::approx_equal( e_.as_run(), o.e_.as_run(), rtol, atol );
     }
 
+    /// Where each element is less than the matching one of `o`. Panics when the shapes differ.
+    public mask less( const ref ndarray<T> o ) const
+    {
+        return compared( o, fn[]( T x, T y ) { return x < y; } );
+    }
+
+    /// Where each element is less than `s`.
+    public mask less( T s ) const
+    {
+        return marked( fn[ s ]( T x ) { return x < s; } );
+    }
+
+    /// Where each element is greater than the matching one of `o`. Panics when the shapes differ.
+    public mask greater( const ref ndarray<T> o ) const
+    {
+        return compared( o, fn[]( T x, T y ) { return x > y; } );
+    }
+
+    /// Where each element is greater than `s`.
+    public mask greater( T s ) const
+    {
+        return marked( fn[ s ]( T x ) { return x > s; } );
+    }
+
+    /// Where each element is at most the matching one of `o`. Panics when the shapes differ.
+    public mask less_equal( const ref ndarray<T> o ) const
+    {
+        return compared( o, fn[]( T x, T y ) { return x <= y; } );
+    }
+
+    /// Where each element is at most `s`.
+    public mask less_equal( T s ) const
+    {
+        return marked( fn[ s ]( T x ) { return x <= s; } );
+    }
+
+    /// Where each element is at least the matching one of `o`. Panics when the shapes differ.
+    public mask greater_equal( const ref ndarray<T> o ) const
+    {
+        return compared( o, fn[]( T x, T y ) { return x >= y; } );
+    }
+
+    /// Where each element is at least `s`.
+    public mask greater_equal( T s ) const
+    {
+        return marked( fn[ s ]( T x ) { return x >= s; } );
+    }
+
+    /// Where each element is equal to the matching one of `o`. Panics when the shapes differ.
+    public mask equal_each( const ref ndarray<T> o ) const
+    {
+        return compared( o, fn[]( T x, T y ) { return x == y; } );
+    }
+
+    /// Where each element is equal to `s`.
+    public mask equal_each( T s ) const
+    {
+        return marked( fn[ s ]( T x ) { return x == s; } );
+    }
+
+    /// Where each element is not equal to the matching one of `o`. Panics when the shapes differ.
+    public mask differs( const ref ndarray<T> o ) const
+    {
+        return compared( o, fn[]( T x, T y ) { return x != y; } );
+    }
+
+    /// Where each element is not equal to `s`.
+    public mask differs( T s ) const
+    {
+        return marked( fn[ s ]( T x ) { return x != s; } );
+    }
+
+    /// The elements `m` sets, row-major, as rank 1. Panics when the shapes differ.
+    public ndarray<T> selected( const ref mask m ) const
+    {
+        if( !kernel::equal( shape_.as_run(), m.shape() ) )
+        {
+            panic( "the shapes differ" );
+        }
+
+        list<T> e = list<T>::with_capacity( m.count() );
+        for( u64 i : 0..e_.size() )
+        {
+            if( m.test( i ) )
+            {
+                e.push( e_[i] );
+            }
+        }
+        u64 n = e.size();
+        return ndarray<T>( move e, [ n ] );
+    }
+
     /// --- Reducing ---
 
     /// The total of every element, added in index order; 0 when there are none.
@@ -1150,6 +1243,27 @@ class ndarray<T> implements iterable<T> where T : numeric
         return r;
     }
 
+    private mask compared<F>( const ref ndarray<T> o, F p ) const where F : fn( T, T ) -> bool
+    {
+        same_shape( o );
+        mask r = mask( shape_.as_run() );
+        for( u64 i : 0..e_.size() )
+        {
+            r.assign( i, p( e_[i], o.e_[i] ) );
+        }
+        return r;
+    }
+
+    private mask marked<F>( F p ) const where F : fn( T ) -> bool
+    {
+        mask r = mask( shape_.as_run() );
+        for( u64 i : 0..e_.size() )
+        {
+            r.assign( i, p( e_[i] ) );
+        }
+        return r;
+    }
+
     private void same_shape( const ref ndarray<T> o ) const
     {
         if( !kernel::equal( shape_.as_run(), o.shape_.as_run() ) )
@@ -1199,6 +1313,47 @@ ndarray<T> maximum<T>( const ref ndarray<T> a, const ref ndarray<T> b ) where T 
 
     ndarray<T> r = a.copy();
     kernel::zip_into( ref r.as_run(), b.as_run(), fn[]( T x, T y ) { return kl::max( x, y ); } );
+    return r;
+}
+
+/// `a`'s element where `m` is set, and `b`'s where it is clear. Panics when the shapes differ.
+ndarray<T> select<T>( const ref mask m, const ref ndarray<T> a, const ref ndarray<T> b ) where T : numeric
+{
+    if( !kernel::equal( m.shape(), a.shape() ) || !kernel::equal( m.shape(), b.shape() ) )
+    {
+        panic( "the shapes differ" );
+    }
+
+    ndarray<T> r = b.copy();
+    for( u64 i : 0..r.size() )
+    {
+        if( m.test( i ) )
+        {
+            r.as_run()[i] = a.as_run()[i];
+        }
+    }
+    return r;
+}
+
+/// Where each element is a NaN, as `kl::is_nan`.
+mask is_nan<T>( const ref ndarray<T> a ) where T : floating
+{
+    mask r = mask( a.shape() );
+    for( u64 i : 0..a.size() )
+    {
+        r.assign( i, kl::is_nan( cast<f64>( a.as_run()[i] ) ) );
+    }
+    return r;
+}
+
+/// Where each element is an infinity, as `kl::is_inf`.
+mask is_inf<T>( const ref ndarray<T> a ) where T : floating
+{
+    mask r = mask( a.shape() );
+    for( u64 i : 0..a.size() )
+    {
+        r.assign( i, kl::is_inf( cast<f64>( a.as_run()[i] ) ) );
+    }
     return r;
 }
 
