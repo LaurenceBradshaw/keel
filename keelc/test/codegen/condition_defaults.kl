@@ -1,0 +1,25 @@
+// A parameter's default is checked under its method's conditions, so `T tolerance = 1e-9` holds
+// where the method needs `T : floating`. Exits with the failing check.
+struct pair<T> where T : numeric
+{
+    T a;
+    T b;
+
+    bool near( T tolerance = 1e-9 ) const where T : floating
+    {
+        T d = a > b ? a - b : b - a;
+        return d <= tolerance;
+    }
+};
+
+i32 main( const ref str[] _ )
+{
+    pair<f64> p = pair<f64> { 1.0, 1.0 + 1e-12 };
+    pair<f32> q = pair<f32> { 1.0, 1.5 };
+
+    if( !p.near() ) { return 1; }
+    if( q.near() ) { return 2; }
+    if( !q.near( 1.0 ) ) { return 3; }
+
+    return 0;
+}

@@ -465,9 +465,17 @@ std::optional<Argument_shape> Expressions::literal_shape( Node_id value )
         return shape;
     }
 
+    // Any count, so its value's shape alone ranks it: `[0, ..]` is no `T[C][R]`.
+    if( ast_.kind( value ) == Node_kind::Array_fill )
+    {
+        shape = Argument_shape { .kind = Argument_kind::Array, .fill = true };
+        shape.elements.push_back( fill_element_shape( ast_.children( value )[0] ) );
+        return shape;
+    }
+
     // `nullptr`, which every pointer accepts; a lambda, typed against the parameter chosen
-    if( ast_.kind( value ) == Node_kind::Null_literal || ast_.kind( value ) == Node_kind::Array_fill ||
-        ast_.kind( value ) == Node_kind::Lambda_expr || is_open_address( value ) )
+    if( ast_.kind( value ) == Node_kind::Null_literal || ast_.kind( value ) == Node_kind::Lambda_expr ||
+        is_open_address( value ) )
     {
         return shape;
     }
@@ -513,6 +521,29 @@ Argument_shape Expressions::array_shape( Node_id literal )
     }
 
     return shape;
+}
+
+// A fill's value, untyped as the fill is: a literal's shape, or a named local's declared type.
+Argument_shape Expressions::fill_element_shape( Node_id value )
+{
+    if( std::optional<Argument_shape> literal = literal_shape( value ) )
+    {
+        return *literal;
+    }
+
+    if( ast_.kind( value ) == Node_kind::Name_expr )
+    {
+        const Node_id declaration = resolution_.declaration_of( value );
+        const Type_id type        = declaration.is_valid() ? types_.type_of( declaration ) : Type_id {};
+
+        if( type.is_valid() && !table_.is_error( type ) &&
+            ( ast_.kind( declaration ) == Node_kind::Var_decl || ast_.kind( declaration ) == Node_kind::Param_decl ) )
+        {
+            return Argument_shape { .kind = Argument_kind::Typed, .type = type };
+        }
+    }
+
+    return Argument_shape {};
 }
 
 bool Expressions::is_open_address( Node_id value ) const
@@ -5949,7 +5980,7 @@ Node_id Expressions::enter_function( Node_id id, Node_id owner )
     const Node_id enclosing = current_function_;
     current_function_       = id;
     default_owner_          = owner;
-    bounds_.enter_conditions( home_function() );
+    bounds_.enter_conditions( owner.is_valid() ? owner : home_function() ); // a default sees its method's conditions
 
     return enclosing;
 }

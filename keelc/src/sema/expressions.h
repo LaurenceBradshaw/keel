@@ -164,6 +164,7 @@ private:
     Argument_shape                argument_shape( Node_id argument );
     std::optional<Argument_shape> literal_shape( Node_id value );
     Argument_shape                array_shape( Node_id literal );
+    Argument_shape                fill_element_shape( Node_id value );
     // `&f` of an overloaded or generic `f`: only the parameter it is passed to can name one function.
     bool is_open_address( Node_id value ) const;
 

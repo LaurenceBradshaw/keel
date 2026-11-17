@@ -8,6 +8,7 @@ import hash_control_tests;
 import kernels_tests;
 import map_tests;
 import math_tests;
+import matrix_tests;
 import os_tests;
 import ordered_map_tests;
 import ordered_set_tests;

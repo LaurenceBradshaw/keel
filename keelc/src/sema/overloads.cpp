@@ -647,22 +647,27 @@ bool Overloads::accepts( Node_id param, const Argument_shape& shape, Type_id exp
     case Argument_kind::Instance:
         return table_.get( expected ).declaration == shape.declaration;
 
+    // A `T` whose bounds make it a number takes an integer literal; a float one needs `floating`.
     case Argument_kind::Integer:
-        return table_.is_integer( expected ) && !( shape.valued && !table_.fits( shape.magnitude, shape.negative, expected ) );
+        return ( table_.is_integer( expected ) && !( shape.valued && !table_.fits( shape.magnitude, shape.negative, expected ) )
+               ) ||
+               bounds_.has_bound( expected, Bound::Numeric );
 
     case Argument_kind::Floating:
-        return table_.is_float( expected );
+        return table_.is_float( expected ) || bounds_.has_bound( expected, Bound::Floating );
 
     case Argument_kind::Array:
     {
         const Type& array = table_.get( expected );
 
+        // An open parameter may be an array, unless its bounds make it a number.
         if( table_.is_parameter( expected ) )
         {
-            return true;
+            return !bounds_.has_bound( expected, Bound::Numeric );
         }
 
-        if( array.kind != Type_kind::Array || array.raw || ( array.count != 0 && array.count != shape.magnitude ) )
+        if( array.kind != Type_kind::Array || array.raw ||
+            ( !shape.fill && array.count != 0 && array.count != shape.magnitude ) )
         {
             return false;
         }

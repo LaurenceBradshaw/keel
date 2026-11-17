@@ -53,6 +53,7 @@ struct Argument_shape
     Keyword                     marker      = Keyword::Count;
     bool                        recorded    = false; // whether infer() has already run over it
     std::vector<Argument_shape> elements {};         // Array: each element's shape
+    bool                        fill = false;        // Array: `[x, ..]`, any count, `elements` its one value
 };
 
 // One argument the caller still has to walk. Returned rather than walked here, which is the whole

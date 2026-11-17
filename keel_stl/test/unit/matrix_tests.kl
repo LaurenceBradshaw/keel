@@ -1,0 +1,138 @@
+// `kl::vec` and `kl::mat`: building, indexing, the element-wise operators with a scalar either
+// side, the products, comparing, reducing and converting.
+import kl::matrix;
+import kl::test::context;
+
+private void building( ref kl::test::context c )
+{
+    kl::vec<i32, 3> v = kl::vec<i32, 3>( [ 1, 2, 3 ] );
+    c.check_eq( v.size(), 3 );
+    c.check( v[0] == 1 && v[2] == 3 );
+    c.check( kl::vec<i32, 3>::zeros() == kl::vec<i32, 3>( [ 0, 0, 0 ] ) );
+    c.check( kl::vec<i32, 3>::filled( 7 ) == kl::vec<i32, 3>( [ 7, 7, 7 ] ) );
+
+    // Flat and nested literals both read row after row.
+    kl::mat<f64, 2, 3> flat = kl::mat<f64, 2, 3>( [ 1.0, 2.0, 3.0, 4.0, 5.0, 6.0 ] );
+    kl::mat<f64, 2, 3> rows = kl::mat<f64, 2, 3>( [ [ 1.0, 2.0, 3.0 ], [ 4.0, 5.0, 6.0 ] ] );
+    c.check( flat == rows );
+    c.check_eq( rows.rows(), 2 );
+    c.check_eq( rows.cols(), 3 );
+    c.check_eq( rows.size(), 6 );
+    c.check_eq( rows[1, 0], 4.0 );
+    c.check( kl::mat<f64, 2, 2>::filled( 0.5 ) == kl::mat<f64, 2, 2>( [ 0.5, 0.5, 0.5, 0.5 ] ) );
+
+    kl::mat<i32, 3, 3> eye = kl::identity();
+    c.check( eye == kl::mat<i32, 3, 3>( [ [ 1, 0, 0 ], [ 0, 1, 0 ], [ 0, 0, 1 ] ] ) );
+}
+
+private void writing( ref kl::test::context c )
+{
+    kl::vec<i32, 2> v = kl::vec<i32, 2>::zeros();
+    v[1] = 5;
+    v.as_run()[0] = 4;
+    c.check( v == kl::vec<i32, 2>( [ 4, 5 ] ) );
+
+    kl::mat<i32, 2, 2> m = kl::mat<i32, 2, 2>::zeros();
+    m[0, 1] = 3;
+    m[1, 0] += 2;
+    c.check( m == kl::mat<i32, 2, 2>( [ 0, 3, 2, 0 ] ) );
+
+    c.expect_panic(
+        "index out of range",
+        fn[]()
+        {
+            kl::mat<i32, 2, 2> m = kl::mat<i32, 2, 2>::zeros();
+            m[0, 2] = 1;
+        }
+    );
+}
+
+private void arithmetic( ref kl::test::context c )
+{
+    kl::vec<i32, 3> a = kl::vec<i32, 3>( [ 1, 2, 3 ] );
+    kl::vec<i32, 3> b = kl::vec<i32, 3>( [ 10, 20, 30 ] );
+    c.check( a + b == kl::vec<i32, 3>( [ 11, 22, 33 ] ) );
+    c.check( b - a == kl::vec<i32, 3>( [ 9, 18, 27 ] ) );
+    c.check( a * b == kl::vec<i32, 3>( [ 10, 40, 90 ] ) );
+    c.check( b / a == kl::vec<i32, 3>( [ 10, 10, 10 ] ) );
+
+    // A scalar on either side; `s - a` and `s / a` are element-wise too.
+    c.check( a * 2 == kl::vec<i32, 3>( [ 2, 4, 6 ] ) );
+    c.check( 2 * a == a * 2 );
+    c.check( 10 - a == kl::vec<i32, 3>( [ 9, 8, 7 ] ) );
+    c.check( 60 / b == kl::vec<i32, 3>( [ 6, 3, 2 ] ) );
+
+    kl::vec<i32, 3> s = a;
+    s += b;
+    s -= a;
+    s *= 2;
+    s /= b;
+    c.check( s == kl::vec<i32, 3>( [ 2, 2, 2 ] ) );
+    s += s;
+    c.check( s == kl::vec<i32, 3>( [ 4, 4, 4 ] ) );
+
+    kl::mat<f64, 2, 2> m = kl::mat<f64, 2, 2>( [ 1.0, -2.0, 3.0, -4.0 ] );
+    c.check( -m == m * -1.0 );
+    c.check( 1.0 - m == kl::mat<f64, 2, 2>( [ 0.0, 3.0, -2.0, 5.0 ] ) );
+    m /= 2.0;
+    c.check_eq( m[1, 1], -2.0 );
+}
+
+private void products( ref kl::test::context c )
+{
+    kl::mat<i32, 2, 3> a = kl::mat<i32, 2, 3>( [ [ 1, 2, 3 ], [ 4, 5, 6 ] ] );
+    kl::mat<i32, 3, 2> b = kl::mat<i32, 3, 2>( [ [ 7, 8 ], [ 9, 10 ], [ 11, 12 ] ] );
+    c.check( a.matmul( b ) == kl::mat<i32, 2, 2>( [ 58, 64, 139, 154 ] ) );
+    c.check( a.transposed() == kl::mat<i32, 3, 2>( [ 1, 4, 2, 5, 3, 6 ] ) );
+
+    kl::mat<i32, 3, 3> eye = kl::identity();
+    c.check( a.matmul( eye ) == a );
+
+    // `m.matmul( v )` reads `v` as a column, `v.matmul( m )` as a row.
+    kl::vec<i32, 3> ones = kl::vec<i32, 3>::filled( 1 );
+    c.check( a.matmul( ones ) == kl::vec<i32, 2>( [ 6, 15 ] ) );
+    c.check( ones.matmul( b ) == kl::vec<i32, 2>( [ 27, 30 ] ) );
+
+    kl::vec<i32, 3> v = kl::vec<i32, 3>( [ 1, 2, 3 ] );
+    c.check_eq( v.dot( v ), 14 );
+    c.check_eq( v.sum(), 6 );
+    c.check_eq( a.sum(), 21 );
+}
+
+private void comparing( ref kl::test::context c )
+{
+    kl::vec<f64, 2> x = kl::vec<f64, 2>( [ 1.0, 1000.0 ] );
+    kl::vec<f64, 2> y = kl::vec<f64, 2>( [ 1.0 + 1e-10, 1000.0 + 1e-6 ] );
+    c.check( !( x == y ) );
+    c.check( x.approx_equal( y ) );
+    c.check( !x.approx_equal( y, 0.0, 1e-9 ) );
+
+    kl::mat<f32, 1, 2> f = kl::mat<f32, 1, 2>( [ 0.5, 0.25 ] );
+    c.check( f.approx_equal( f * 1.0 ) );
+}
+
+private void converting( ref kl::test::context c )
+{
+    kl::vec<i32, 3> v = kl::vec<i32, 3>( [ -1, 0, 300 ] );
+    c.check( v.to<f64>() == kl::vec<f64, 3>( [ -1.0, 0.0, 300.0 ] ) );
+    c.check( v.to<i64>() == kl::vec<i64, 3>( [ -1, 0, 300 ] ) );
+
+    kl::vec<f64, 4> r = kl::vec<f64, 4>( [ -2.5, -0.5, 0.5, 2.7 ] );
+    c.check( r.truncated<i32>() == kl::vec<i32, 4>( [ -2, 0, 0, 2 ] ) );
+    c.check( r.rounded<i32>() == kl::vec<i32, 4>( [ -3, -1, 1, 3 ] ) );
+    c.check( r.floored<i32>() == kl::vec<i32, 4>( [ -3, -1, 0, 2 ] ) );
+    c.check( r.ceiled<i32>() == kl::vec<i32, 4>( [ -2, 0, 1, 3 ] ) );
+
+    kl::mat<f32, 1, 2> m = kl::mat<f32, 1, 2>( [ 1.5, -1.5 ] );
+    c.check( m.to<f64>() == kl::mat<f64, 1, 2>( [ 1.5, -1.5 ] ) );
+    c.check( m.rounded<i8>() == kl::mat<i8, 1, 2>( [ 2, -2 ] ) );
+
+    c.expect_panic(
+        "cast out of range",
+        fn[]()
+        {
+            kl::vec<i32, 1> big = kl::vec<i32, 1>( [ 300 ] );
+            _ = big.to<u8>();
+        }
+    );
+}

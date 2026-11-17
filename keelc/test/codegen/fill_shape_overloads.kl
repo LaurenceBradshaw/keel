@@ -1,0 +1,26 @@
+// A fill ranks by its value's shape, as an array literal does by its elements': `[0, ..]` is no
+// `T[C][R]`. A literal element ranks against a bounded `T` as against a number. Exits with the
+// failing check.
+class grid<T, u64 R, u64 C> where T : numeric
+{
+    public i32 shape;
+
+    public grid( T[R * C] _ ) { shape = 1; }
+    public grid( T[C][R] _ ) { shape = 2; }
+
+    // In the generic body: a literal fill, a named one, and a nested literal of literals.
+    public static grid<T, R, C> zeros() { return grid<T, R, C>( [0, ..] ); }
+    public static grid<T, R, C> filled( T x ) { return grid<T, R, C>( [x, ..] ); }
+    public static grid<T, R, C> row_of_fills() { return grid<T, R, C>( [[1, ..], ..] ); }
+};
+
+i32 main( const ref str[] _ )
+{
+    if( grid<f64, 2, 2>::zeros().shape != 1 ) { return 1; }
+    if( grid<i32, 2, 2>::filled( 3 ).shape != 1 ) { return 2; }
+    if( grid<i32, 2, 3>::row_of_fills().shape != 2 ) { return 3; }
+    if( grid<i32, 2, 2>( [0, ..] ).shape != 1 ) { return 4; }
+    if( grid<f64, 2, 2>( [[0.5, ..], [1.5, ..]] ).shape != 2 ) { return 5; }
+
+    return 0;
+}

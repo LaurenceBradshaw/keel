@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kl::matrix</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+</head>
+<body>
+<header><nav><a href="index.html"><img src="logo.svg" alt="">The Keel standard library</a></nav></header>
+<main>
+<h1><span class="kind">module</span> <a class="package" href="index.html">kl</a>::matrix</h1>
+<ul class="contents">
+<li><a href="#vec"><code>vec</code></a> <span class="kind">class</span></li>
+<li><a href="#mat"><code>mat</code></a> <span class="kind">class</span></li>
+<li><a href="#identity"><code>identity</code></a> <span class="kind">function</span></li>
+</ul>
+<section class="entry">
+<h2><span class="kind">class</span> <span class="type">vec</span></h2>
+<div class="group" id="vec">
+<pre class="signature"><a class="anchor" href="#vec" aria-label="Link to vec">#</a><code><span class="kw">class</span> <span class="type">vec</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt; <span class="kw">where</span> T : numeric</code></pre>
+<div class="doc">
+<p><code>N</code> numbers held inline: a vector of rank 1, neither a row nor a column.</p>
+<p>The operators work element by element, with a scalar on either side. <code>v.dot( w )</code> is the inner
+product, and <code>v.matmul( m )</code> reads <code>v</code> as a row.</p>
+</div>
+</div>
+<h3>Constructors</h3>
+<div class="group" id="vec.vec">
+<pre class="signature"><a class="anchor" href="#vec.vec" aria-label="Link to vec">#</a><code><span class="kw">public</span> <span class="type">vec</span>( T[N] elements )</code></pre>
+<div class="doc">
+<p>The elements in order: <code>vec&lt;f64, 3&gt;( [1.0, 2.0, 3.0] )</code>.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="vec.zeros">
+<pre class="signature"><a class="anchor" href="#vec.zeros" aria-label="Link to zeros">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">zeros</span>()</code></pre>
+<div class="doc">
+<p>Every element 0.</p>
+</div>
+</div>
+<div class="group" id="vec.filled">
+<pre class="signature"><a class="anchor" href="#vec.filled" aria-label="Link to filled">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">filled</span>( T x )</code></pre>
+<div class="doc">
+<p>Every element <code>x</code>.</p>
+</div>
+</div>
+<h3>Shape and elements</h3>
+<div class="group" id="vec.size">
+<pre class="signature"><a class="anchor" href="#vec.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">size</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The number of elements, <code>N</code>.</p>
+</div>
+</div>
+<div class="group" id="vec.operator[]">
+<pre class="signature"><a class="anchor" href="#vec.operator[]" aria-label="Link to operator[]">#</a><code><span class="kw">public</span> <span class="kw">ref</span> T <span class="fn">operator[]</span>( <a class="prim" href="prelude.html#u64">u64</a> i ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The element at <code>i</code>, which panics outside <code>size()</code>.</p>
+</div>
+</div>
+<div class="group" id="vec.as_run">
+<pre class="signature"><a class="anchor" href="#vec.as_run" aria-label="Link to as_run">#</a><code><span class="kw">public</span> <span class="kw">ref</span> T[] <span class="fn">as_run</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The elements as a run, writable where the vector is.</p>
+</div>
+</div>
+<h3>Arithmetic</h3>
+<div class="group" id="vec.operator+">
+<pre class="signature"><a class="anchor" href="#vec.operator+" aria-label="Link to operator+">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">operator+</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The element-wise sum with <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#vec.operator+" aria-label="Link to operator+">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">operator+</span>( T s ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each element + <code>s</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#vec.operator+" aria-label="Link to operator+">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">operator+</span>( T s, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; a )</code></pre>
+<div class="doc">
+<p><code>s</code> + each element.</p>
+</div>
+</div>
+<div class="group" id="vec.operator-">
+<pre class="signature"><a class="anchor" href="#vec.operator-" aria-label="Link to operator-">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">operator-</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The element-wise difference with <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#vec.operator-" aria-label="Link to operator-">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">operator-</span>( T s ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each element - <code>s</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#vec.operator-" aria-label="Link to operator-">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">operator-</span>( T s, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; a )</code></pre>
+<div class="doc">
+<p><code>s</code> - each element.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#vec.operator-" aria-label="Link to operator-">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">operator-</span>() <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>Each element negated.</p>
+</div>
+</div>
+<div class="group" id="vec.operator*">
+<pre class="signature"><a class="anchor" href="#vec.operator*" aria-label="Link to operator*">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">operator*</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The element-wise product with <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#vec.operator*" aria-label="Link to operator*">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">operator*</span>( T s ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each element * <code>s</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#vec.operator*" aria-label="Link to operator*">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">operator*</span>( T s, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; a )</code></pre>
+<div class="doc">
+<p><code>s</code> * each element.</p>
+</div>
+</div>
+<div class="group" id="vec.operator/">
+<pre class="signature"><a class="anchor" href="#vec.operator/" aria-label="Link to operator/">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">operator/</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The element-wise quotient with <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#vec.operator/" aria-label="Link to operator/">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">operator/</span>( T s ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each element / <code>s</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#vec.operator/" aria-label="Link to operator/">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">operator/</span>( T s, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; a )</code></pre>
+<div class="doc">
+<p><code>s</code> / each element.</p>
+</div>
+</div>
+<div class="group" id="vec.operator+=">
+<pre class="signature"><a class="anchor" href="#vec.operator+=" aria-label="Link to operator+=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator+=</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; o )</code></pre>
+<div class="doc">
+<p>Each element += the matching one of <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#vec.operator+=" aria-label="Link to operator+=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator+=</span>( T s )</code></pre>
+<div class="doc">
+<p>Each element += <code>s</code>.</p>
+</div>
+</div>
+<div class="group" id="vec.operator-=">
+<pre class="signature"><a class="anchor" href="#vec.operator-=" aria-label="Link to operator-=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator-=</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; o )</code></pre>
+<div class="doc">
+<p>Each element -= the matching one of <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#vec.operator-=" aria-label="Link to operator-=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator-=</span>( T s )</code></pre>
+<div class="doc">
+<p>Each element -= <code>s</code>.</p>
+</div>
+</div>
+<div class="group" id="vec.operator*=">
+<pre class="signature"><a class="anchor" href="#vec.operator*=" aria-label="Link to operator*=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator*=</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; o )</code></pre>
+<div class="doc">
+<p>Each element *= the matching one of <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#vec.operator*=" aria-label="Link to operator*=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator*=</span>( T s )</code></pre>
+<div class="doc">
+<p>Each element *= <code>s</code>.</p>
+</div>
+</div>
+<div class="group" id="vec.operator/=">
+<pre class="signature"><a class="anchor" href="#vec.operator/=" aria-label="Link to operator/=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator/=</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; o )</code></pre>
+<div class="doc">
+<p>Each element /= the matching one of <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#vec.operator/=" aria-label="Link to operator/=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator/=</span>( T s )</code></pre>
+<div class="doc">
+<p>Each element /= <code>s</code>.</p>
+</div>
+</div>
+<h3>Products</h3>
+<div class="group" id="vec.dot">
+<pre class="signature"><a class="anchor" href="#vec.dot" aria-label="Link to dot">#</a><code><span class="kw">public</span> T <span class="fn">dot</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The inner product with <code>o</code>.</p>
+</div>
+</div>
+<div class="group" id="vec.matmul">
+<pre class="signature"><a class="anchor" href="#vec.matmul" aria-label="Link to matmul">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, K&gt; <span class="fn">matmul</span>&lt;<a class="prim" href="prelude.html#u64">u64</a> K&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, N, K&gt; m ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>This vector, as a row, times <code>m</code>.</p>
+</div>
+</div>
+<h3>Comparing</h3>
+<div class="group" id="vec.operator==">
+<pre class="signature"><a class="anchor" href="#vec.operator==" aria-label="Link to operator==">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">operator==</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether every element equals the matching one of <code>o</code>.</p>
+</div>
+</div>
+<div class="group" id="vec.approx_equal">
+<pre class="signature"><a class="anchor" href="#vec.approx_equal" aria-label="Link to approx_equal">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">approx_equal</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; o, T rtol = 1e-5, T atol = 1e-8 ) <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>Whether every <code>|a - b| &lt;= atol + rtol * |b|</code>, <code>b</code> being <code>o</code>'s element. A NaN is close to
+nothing, and an infinity only to itself.</p>
+</div>
+</div>
+<h3>Reducing</h3>
+<div class="group" id="vec.sum">
+<pre class="signature"><a class="anchor" href="#vec.sum" aria-label="Link to sum">#</a><code><span class="kw">public</span> T <span class="fn">sum</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The total of every element, added in index order.</p>
+</div>
+</div>
+<h3>Converting</h3>
+<div class="group" id="vec.to">
+<pre class="signature"><a class="anchor" href="#vec.to" aria-label="Link to to">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;U, N&gt; <span class="fn">to</span>&lt;U&gt;() <span class="kw">const</span> <span class="kw">where</span> U : numeric, <span class="kw">where</span> T : <a class="type" href="prelude.html#converts_to">converts_to</a>&lt;U&gt;</code></pre>
+<div class="doc">
+<p>Each element converted by <code>cast</code>, which panics on a value <code>U</code> cannot hold. A float to an
+integer needs a rounding: <code>truncated</code>, <code>rounded</code>, <code>floored</code> or <code>ceiled</code>.</p>
+</div>
+</div>
+<div class="group" id="vec.truncated">
+<pre class="signature"><a class="anchor" href="#vec.truncated" aria-label="Link to truncated">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;U, N&gt; <span class="fn">truncated</span>&lt;U&gt;() <span class="kw">const</span> <span class="kw">where</span> U : integral, <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>Each element toward zero, as a <code>U</code>. Panics on an infinity, a NaN, or a value <code>U</code> cannot hold.</p>
+</div>
+</div>
+<div class="group" id="vec.rounded">
+<pre class="signature"><a class="anchor" href="#vec.rounded" aria-label="Link to rounded">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;U, N&gt; <span class="fn">rounded</span>&lt;U&gt;() <span class="kw">const</span> <span class="kw">where</span> U : integral, <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>Each element to the nearest, a half away from zero, as a <code>U</code>. Panics on an infinity, a NaN, or a value <code>U</code> cannot hold.</p>
+</div>
+</div>
+<div class="group" id="vec.floored">
+<pre class="signature"><a class="anchor" href="#vec.floored" aria-label="Link to floored">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;U, N&gt; <span class="fn">floored</span>&lt;U&gt;() <span class="kw">const</span> <span class="kw">where</span> U : integral, <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>Each element down, as a <code>U</code>. Panics on an infinity, a NaN, or a value <code>U</code> cannot hold.</p>
+</div>
+</div>
+<div class="group" id="vec.ceiled">
+<pre class="signature"><a class="anchor" href="#vec.ceiled" aria-label="Link to ceiled">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;U, N&gt; <span class="fn">ceiled</span>&lt;U&gt;() <span class="kw">const</span> <span class="kw">where</span> U : integral, <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>Each element up, as a <code>U</code>. Panics on an infinity, a NaN, or a value <code>U</code> cannot hold.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">class</span> <span class="type">mat</span></h2>
+<div class="group" id="mat">
+<pre class="signature"><a class="anchor" href="#mat" aria-label="Link to mat">#</a><code><span class="kw">class</span> <span class="type">mat</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> R, <a class="prim" href="prelude.html#u64">u64</a> C&gt; <span class="kw">where</span> T : numeric</code></pre>
+<div class="doc">
+<p><code>R</code> rows of <code>C</code> numbers held inline, row after row: a matrix of rank 2.</p>
+<p>The operators work element by element, with a scalar on either side; <code>m.matmul( b )</code> is the
+matrix product, and <code>m.matmul( v )</code> reads <code>v</code> as a column. <code>m[r, c]</code> is row <code>r</code>, column <code>c</code>.</p>
+</div>
+</div>
+<h3>Constructors</h3>
+<div class="group" id="mat.mat">
+<pre class="signature"><a class="anchor" href="#mat.mat" aria-label="Link to mat">#</a><code><span class="kw">public</span> <span class="type">mat</span>( T[R * C] elements )</code></pre>
+<div class="doc">
+<p>The elements row after row: <code>mat&lt;f64, 2, 2&gt;( [1.0, 2.0, 3.0, 4.0] )</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#mat.mat" aria-label="Link to mat">#</a><code><span class="kw">public</span> <span class="type">mat</span>( T[C][R] rows )</code></pre>
+<div class="doc">
+<p>The rows: <code>mat&lt;f64, 2, 2&gt;( [[1.0, 2.0], [3.0, 4.0]] )</code>.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="mat.zeros">
+<pre class="signature"><a class="anchor" href="#mat.zeros" aria-label="Link to zeros">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">zeros</span>()</code></pre>
+<div class="doc">
+<p>Every element 0.</p>
+</div>
+</div>
+<div class="group" id="mat.filled">
+<pre class="signature"><a class="anchor" href="#mat.filled" aria-label="Link to filled">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">filled</span>( T x )</code></pre>
+<div class="doc">
+<p>Every element <code>x</code>.</p>
+</div>
+</div>
+<h3>Shape and elements</h3>
+<div class="group" id="mat.rows">
+<pre class="signature"><a class="anchor" href="#mat.rows" aria-label="Link to rows">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">rows</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The number of rows, <code>R</code>.</p>
+</div>
+</div>
+<div class="group" id="mat.cols">
+<pre class="signature"><a class="anchor" href="#mat.cols" aria-label="Link to cols">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">cols</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The number of columns, <code>C</code>.</p>
+</div>
+</div>
+<div class="group" id="mat.size">
+<pre class="signature"><a class="anchor" href="#mat.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">size</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The number of elements, <code>R * C</code>.</p>
+</div>
+</div>
+<div class="group" id="mat.operator[]">
+<pre class="signature"><a class="anchor" href="#mat.operator[]" aria-label="Link to operator[]">#</a><code><span class="kw">public</span> <span class="kw">ref</span> T <span class="fn">operator[]</span>( <a class="prim" href="prelude.html#u64">u64</a> r, <a class="prim" href="prelude.html#u64">u64</a> c ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The element in row <code>r</code>, column <code>c</code>, which panics outside the shape.</p>
+</div>
+</div>
+<div class="group" id="mat.as_run">
+<pre class="signature"><a class="anchor" href="#mat.as_run" aria-label="Link to as_run">#</a><code><span class="kw">public</span> <span class="kw">ref</span> T[] <span class="fn">as_run</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The elements row after row, as a run writable where the matrix is.</p>
+</div>
+</div>
+<h3>Arithmetic</h3>
+<div class="group" id="mat.operator+">
+<pre class="signature"><a class="anchor" href="#mat.operator+" aria-label="Link to operator+">#</a><code><span class="kw">public</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">operator+</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The element-wise sum with <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#mat.operator+" aria-label="Link to operator+">#</a><code><span class="kw">public</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">operator+</span>( T s ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each element + <code>s</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#mat.operator+" aria-label="Link to operator+">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">operator+</span>( T s, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; a )</code></pre>
+<div class="doc">
+<p><code>s</code> + each element.</p>
+</div>
+</div>
+<div class="group" id="mat.operator-">
+<pre class="signature"><a class="anchor" href="#mat.operator-" aria-label="Link to operator-">#</a><code><span class="kw">public</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">operator-</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The element-wise difference with <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#mat.operator-" aria-label="Link to operator-">#</a><code><span class="kw">public</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">operator-</span>( T s ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each element - <code>s</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#mat.operator-" aria-label="Link to operator-">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">operator-</span>( T s, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; a )</code></pre>
+<div class="doc">
+<p><code>s</code> - each element.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#mat.operator-" aria-label="Link to operator-">#</a><code><span class="kw">public</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">operator-</span>() <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>Each element negated.</p>
+</div>
+</div>
+<div class="group" id="mat.operator*">
+<pre class="signature"><a class="anchor" href="#mat.operator*" aria-label="Link to operator*">#</a><code><span class="kw">public</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">operator*</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The element-wise product with <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#mat.operator*" aria-label="Link to operator*">#</a><code><span class="kw">public</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">operator*</span>( T s ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each element * <code>s</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#mat.operator*" aria-label="Link to operator*">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">operator*</span>( T s, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; a )</code></pre>
+<div class="doc">
+<p><code>s</code> * each element.</p>
+</div>
+</div>
+<div class="group" id="mat.operator/">
+<pre class="signature"><a class="anchor" href="#mat.operator/" aria-label="Link to operator/">#</a><code><span class="kw">public</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">operator/</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The element-wise quotient with <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#mat.operator/" aria-label="Link to operator/">#</a><code><span class="kw">public</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">operator/</span>( T s ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each element / <code>s</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#mat.operator/" aria-label="Link to operator/">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">operator/</span>( T s, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; a )</code></pre>
+<div class="doc">
+<p><code>s</code> / each element.</p>
+</div>
+</div>
+<div class="group" id="mat.operator+=">
+<pre class="signature"><a class="anchor" href="#mat.operator+=" aria-label="Link to operator+=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator+=</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; o )</code></pre>
+<div class="doc">
+<p>Each element += the matching one of <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#mat.operator+=" aria-label="Link to operator+=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator+=</span>( T s )</code></pre>
+<div class="doc">
+<p>Each element += <code>s</code>.</p>
+</div>
+</div>
+<div class="group" id="mat.operator-=">
+<pre class="signature"><a class="anchor" href="#mat.operator-=" aria-label="Link to operator-=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator-=</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; o )</code></pre>
+<div class="doc">
+<p>Each element -= the matching one of <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#mat.operator-=" aria-label="Link to operator-=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator-=</span>( T s )</code></pre>
+<div class="doc">
+<p>Each element -= <code>s</code>.</p>
+</div>
+</div>
+<div class="group" id="mat.operator*=">
+<pre class="signature"><a class="anchor" href="#mat.operator*=" aria-label="Link to operator*=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator*=</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; o )</code></pre>
+<div class="doc">
+<p>Each element *= the matching one of <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#mat.operator*=" aria-label="Link to operator*=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator*=</span>( T s )</code></pre>
+<div class="doc">
+<p>Each element *= <code>s</code>.</p>
+</div>
+</div>
+<div class="group" id="mat.operator/=">
+<pre class="signature"><a class="anchor" href="#mat.operator/=" aria-label="Link to operator/=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator/=</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; o )</code></pre>
+<div class="doc">
+<p>Each element /= the matching one of <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#mat.operator/=" aria-label="Link to operator/=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator/=</span>( T s )</code></pre>
+<div class="doc">
+<p>Each element /= <code>s</code>.</p>
+</div>
+</div>
+<h3>Products</h3>
+<div class="group" id="mat.matmul">
+<pre class="signature"><a class="anchor" href="#mat.matmul" aria-label="Link to matmul">#</a><code><span class="kw">public</span> <a class="type" href="#mat">mat</a>&lt;T, R, K&gt; <span class="fn">matmul</span>&lt;<a class="prim" href="prelude.html#u64">u64</a> K&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, C, K&gt; b ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>This matrix times <code>b</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#mat.matmul" aria-label="Link to matmul">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, R&gt; <span class="fn">matmul</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, C&gt; v ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>This matrix times <code>v</code>, read as a column.</p>
+</div>
+</div>
+<div class="group" id="mat.transposed">
+<pre class="signature"><a class="anchor" href="#mat.transposed" aria-label="Link to transposed">#</a><code><span class="kw">public</span> <a class="type" href="#mat">mat</a>&lt;T, C, R&gt; <span class="fn">transposed</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The rows as columns.</p>
+</div>
+</div>
+<h3>Comparing</h3>
+<div class="group" id="mat.operator==">
+<pre class="signature"><a class="anchor" href="#mat.operator==" aria-label="Link to operator==">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">operator==</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether every element equals the matching one of <code>o</code>.</p>
+</div>
+</div>
+<div class="group" id="mat.approx_equal">
+<pre class="signature"><a class="anchor" href="#mat.approx_equal" aria-label="Link to approx_equal">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">approx_equal</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; o, T rtol = 1e-5, T atol = 1e-8 ) <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>Whether every <code>|a - b| &lt;= atol + rtol * |b|</code>, <code>b</code> being <code>o</code>'s element. A NaN is close to
+nothing, and an infinity only to itself.</p>
+</div>
+</div>
+<h3>Reducing</h3>
+<div class="group" id="mat.sum">
+<pre class="signature"><a class="anchor" href="#mat.sum" aria-label="Link to sum">#</a><code><span class="kw">public</span> T <span class="fn">sum</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The total of every element, added in index order.</p>
+</div>
+</div>
+<h3>Converting</h3>
+<div class="group" id="mat.to">
+<pre class="signature"><a class="anchor" href="#mat.to" aria-label="Link to to">#</a><code><span class="kw">public</span> <a class="type" href="#mat">mat</a>&lt;U, R, C&gt; <span class="fn">to</span>&lt;U&gt;() <span class="kw">const</span> <span class="kw">where</span> U : numeric, <span class="kw">where</span> T : <a class="type" href="prelude.html#converts_to">converts_to</a>&lt;U&gt;</code></pre>
+<div class="doc">
+<p>Each element converted by <code>cast</code>, which panics on a value <code>U</code> cannot hold. A float to an
+integer needs a rounding: <code>truncated</code>, <code>rounded</code>, <code>floored</code> or <code>ceiled</code>.</p>
+</div>
+</div>
+<div class="group" id="mat.truncated">
+<pre class="signature"><a class="anchor" href="#mat.truncated" aria-label="Link to truncated">#</a><code><span class="kw">public</span> <a class="type" href="#mat">mat</a>&lt;U, R, C&gt; <span class="fn">truncated</span>&lt;U&gt;() <span class="kw">const</span> <span class="kw">where</span> U : integral, <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>Each element toward zero, as a <code>U</code>. Panics on an infinity, a NaN, or a value <code>U</code> cannot hold.</p>
+</div>
+</div>
+<div class="group" id="mat.rounded">
+<pre class="signature"><a class="anchor" href="#mat.rounded" aria-label="Link to rounded">#</a><code><span class="kw">public</span> <a class="type" href="#mat">mat</a>&lt;U, R, C&gt; <span class="fn">rounded</span>&lt;U&gt;() <span class="kw">const</span> <span class="kw">where</span> U : integral, <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>Each element to the nearest, a half away from zero, as a <code>U</code>. Panics on an infinity, a NaN, or a value <code>U</code> cannot hold.</p>
+</div>
+</div>
+<div class="group" id="mat.floored">
+<pre class="signature"><a class="anchor" href="#mat.floored" aria-label="Link to floored">#</a><code><span class="kw">public</span> <a class="type" href="#mat">mat</a>&lt;U, R, C&gt; <span class="fn">floored</span>&lt;U&gt;() <span class="kw">const</span> <span class="kw">where</span> U : integral, <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>Each element down, as a <code>U</code>. Panics on an infinity, a NaN, or a value <code>U</code> cannot hold.</p>
+</div>
+</div>
+<div class="group" id="mat.ceiled">
+<pre class="signature"><a class="anchor" href="#mat.ceiled" aria-label="Link to ceiled">#</a><code><span class="kw">public</span> <a class="type" href="#mat">mat</a>&lt;U, R, C&gt; <span class="fn">ceiled</span>&lt;U&gt;() <span class="kw">const</span> <span class="kw">where</span> U : integral, <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>Each element up, as a <code>U</code>. Panics on an infinity, a NaN, or a value <code>U</code> cannot hold.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">identity</span></h2>
+<div class="group" id="identity">
+<pre class="signature"><a class="anchor" href="#identity" aria-label="Link to identity">#</a><code><a class="type" href="#mat">mat</a>&lt;T, N, N&gt; <span class="fn">identity</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;() <span class="kw">where</span> T : numeric</code></pre>
+<div class="doc">
+<p>The <code>N</code> by <code>N</code> identity: <code>mat&lt;f64, 3, 3&gt; i = kl::identity();</code>.</p>
+</div>
+</div>
+</section>
+</main>
+<footer>Copyright 2026 Laurence Bradshaw. Licensed under Apache-2.0 WITH LLVM-exception.</footer>
+</body>
+</html>
