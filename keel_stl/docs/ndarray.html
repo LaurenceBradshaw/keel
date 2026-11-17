@@ -641,6 +641,32 @@ element. A NaN is close to nothing, and an infinity only to itself.</p>
 <p>The elements <code>m</code> sets, row-major, as rank 1. Panics when the shapes differ.</p>
 </div>
 </div>
+<h3>Sorting and searching</h3>
+<div class="group" id="ndarray.sorted">
+<pre class="signature"><a class="anchor" href="#ndarray.sorted" aria-label="Link to sorted">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">sorted</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>These take rank 1 and panic on any other. A NaN orders after every number.
+The elements from least to greatest.</p>
+</div>
+</div>
+<div class="group" id="ndarray.argsort">
+<pre class="signature"><a class="anchor" href="#ndarray.argsort" aria-label="Link to argsort">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#u64">u64</a>&gt; <span class="fn">argsort</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The indices that would sort the elements, equal ones in index order.</p>
+</div>
+</div>
+<div class="group" id="ndarray.unique">
+<pre class="signature"><a class="anchor" href="#ndarray.unique" aria-label="Link to unique">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">unique</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>One of each distinct element, from least to greatest; the NaNs count as one.</p>
+</div>
+</div>
+<div class="group" id="ndarray.nonzero">
+<pre class="signature"><a class="anchor" href="#ndarray.nonzero" aria-label="Link to nonzero">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#u64">u64</a>&gt; <span class="fn">nonzero</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The indices of the elements that are not 0, in order; a NaN is not 0.</p>
+</div>
+</div>
 <h3>Reducing</h3>
 <div class="group" id="ndarray.sum">
 <pre class="signature"><a class="anchor" href="#ndarray.sum" aria-label="Link to sum">#</a><code><span class="kw">public</span> T <span class="fn">sum</span>() <span class="kw">const</span></code></pre>

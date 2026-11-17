@@ -10,6 +10,7 @@ import kl::_core::elementwise as kernel;
 import kl::_core::exponential as kernel;
 import kl::_core::linear as kernel;
 import kl::_core::reduce as kernel;
+import algorithm;
 import iterable;
 import mask;
 import math;
@@ -609,6 +610,28 @@ class vec<T, u64 N> implements iterable<T> where T : numeric
     {
         vec_mask<N> r = vec_mask<N> {};
         kernel::mark( ref r.bits.words, e_, fn[ s ]( T x ) { return x != s; } );
+        return r;
+    }
+
+    /// --- Sorting ---
+
+    /// The elements from least to greatest, NaNs last.
+    public vec<T, N> sorted() const
+    {
+        vec<T, N> r = this;
+        kl::sort( ref r.e_, fn[]( x, y ) { return kernel::before( x, y ); } );
+        return r;
+    }
+
+    /// The indices that would sort the elements, NaNs last and equal ones in index order.
+    public vec<u64, N> argsort() const
+    {
+        vec<u64, N> r = vec<u64, N>::zeros();
+        for( u64 i : 0..N )
+        {
+            r[i] = i;
+        }
+        kl::sort( ref r.e_, fn[ this ]( i, j ) { return kernel::before( e_[i], e_[j] ) || ( !kernel::before( e_[j], e_[i] ) && i < j ); } );
         return r;
     }
 

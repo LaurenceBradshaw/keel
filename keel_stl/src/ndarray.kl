@@ -6,6 +6,7 @@ import kl::_core::elementwise as kernel;
 import kl::_core::exponential as kernel;
 import kl::_core::linear as kernel;
 import kl::_core::reduce as kernel;
+import algorithm;
 import iterable;
 import list;
 import mask;
@@ -1055,6 +1056,69 @@ class ndarray<T> implements iterable<T> where T : numeric
         return ndarray<T>( move e, [ n ] );
     }
 
+    /// --- Sorting and searching ---
+    ///
+    /// These take rank 1 and panic on any other. A NaN orders after every number.
+
+    /// The elements from least to greatest.
+    public ndarray<T> sorted() const
+    {
+        needs_rank_one( "sorted takes an array of rank 1" );
+        ndarray<T> r = copy();
+        kl::sort( ref r.e_, fn[]( x, y ) { return kernel::before( x, y ); } );
+        return r;
+    }
+
+    /// The indices that would sort the elements, equal ones in index order.
+    public ndarray<u64> argsort() const
+    {
+        needs_rank_one( "argsort takes an array of rank 1" );
+        list<u64> r = list<u64>::with_capacity( size() );
+        for( u64 i : 0..size() )
+        {
+            r.push( i );
+        }
+        kl::sort( ref r, fn[ this ]( i, j ) { return kernel::before( e_[i], e_[j] ) || ( !kernel::before( e_[j], e_[i] ) && i < j ); } );
+        u64 n = r.size();
+        return ndarray<u64>( move r, [ n ] );
+    }
+
+    /// One of each distinct element, from least to greatest; the NaNs count as one.
+    public ndarray<T> unique() const
+    {
+        needs_rank_one( "unique takes an array of rank 1" );
+        list<T> e = elements();
+        kl::sort( ref e, fn[]( x, y ) { return kernel::before( x, y ); } );
+
+        list<T> r = list<T>::with_capacity( e.size() );
+        for( T x : e.as_run() )
+        {
+            T last = r.size() == 0 ? x : r[r.size() - 1];
+            if( r.size() == 0 || !( x == last || ( x != x && last != last ) ) )
+            {
+                r.push( x );
+            }
+        }
+        u64 n = r.size();
+        return ndarray<T>( move r, [ n ] );
+    }
+
+    /// The indices of the elements that are not 0, in order; a NaN is not 0.
+    public ndarray<u64> nonzero() const
+    {
+        needs_rank_one( "nonzero takes an array of rank 1" );
+        list<u64> r = list<u64>::with_capacity( size() );
+        for( u64 i : 0..size() )
+        {
+            if( e_[i] != 0 )
+            {
+                r.push( i );
+            }
+        }
+        u64 n = r.size();
+        return ndarray<u64>( move r, [ n ] );
+    }
+
     /// --- Reducing ---
 
     /// The total of every element, added in index order; 0 when there are none.
@@ -1276,6 +1340,14 @@ class ndarray<T> implements iterable<T> where T : numeric
             e.push( x );
         }
         return e;
+    }
+
+    private void needs_rank_one( str message ) const
+    {
+        if( rank() != 1 )
+        {
+            panic( message );
+        }
     }
 
     // The length of `axis`. Panics when there is no such axis.

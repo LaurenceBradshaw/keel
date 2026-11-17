@@ -1,7 +1,7 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// Whole-array equality, exact and within a tolerance.
+// Whole-array equality, exact and within a tolerance, and ordering with NaNs last.
 
 /// Whether `a` and `b` are the same size with every element equal.
 bool equal<T>( const ref T[] a, const ref T[] b ) where T : equatable
@@ -47,4 +47,10 @@ bool approx_equal<T>( const ref T[] a, const ref T[] b, T rtol, T atol ) where T
     }
 
     return true;
+}
+
+/// Whether `a` orders before `b`: by `<`, with every NaN after every number.
+bool before<T>( T a, T b ) where T : numeric
+{
+    return a < b || ( a == a && b != b );
 }

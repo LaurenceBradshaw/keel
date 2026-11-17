@@ -467,6 +467,19 @@ nothing, and an infinity only to itself.</p>
 <p>Where each element is not equal to <code>s</code>.</p>
 </div>
 </div>
+<h3>Sorting</h3>
+<div class="group" id="vec.sorted">
+<pre class="signature"><a class="anchor" href="#vec.sorted" aria-label="Link to sorted">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">sorted</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The elements from least to greatest, NaNs last.</p>
+</div>
+</div>
+<div class="group" id="vec.argsort">
+<pre class="signature"><a class="anchor" href="#vec.argsort" aria-label="Link to argsort">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;<a class="prim" href="prelude.html#u64">u64</a>, N&gt; <span class="fn">argsort</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The indices that would sort the elements, NaNs last and equal ones in index order.</p>
+</div>
+</div>
 <h3>Reducing</h3>
 <div class="group" id="vec.sum">
 <pre class="signature"><a class="anchor" href="#vec.sum" aria-label="Link to sum">#</a><code><span class="kw">public</span> T <span class="fn">sum</span>() <span class="kw">const</span></code></pre>

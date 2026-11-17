@@ -1,7 +1,7 @@
 // `kl::vec` and `kl::mat`: building, indexing, the element-wise operators with a scalar either
 // side, the integer operators and element-wise functions, the products, comparing, reducing,
 // converting and walking, the scalar maths over each element, the masks the comparisons
-// answer, fixed-size slices, and linear algebra.
+// answer, fixed-size slices, linear algebra, and sorting.
 import kl::mask;
 import kl::optional;
 import kl::math;
@@ -321,4 +321,15 @@ private void linear_algebra( ref kl::test::context c )
     c.check_eq( kl::determinant( singular ), 0.0 );
     c.check( kl::is_none( kl::inverse( singular ) ) );
     c.check( kl::is_none( kl::solve( singular, kl::vec<f64, 2>::ones() ) ) );
+}
+
+private void sorting( ref kl::test::context c )
+{
+    kl::vec<i32, 5> v = kl::vec<i32, 5>( [ 4, -1, 4, 0, 2 ] );
+    c.check( v.sorted() == kl::vec<i32, 5>( [ -1, 0, 2, 4, 4 ] ) );
+    c.check( v.argsort() == kl::vec<u64, 5>( [ 1, 3, 4, 0, 2 ] ) );
+
+    f32 nan = kl::from_bits( 0x7FC00000 );
+    kl::vec<f32, 3> f = kl::vec<f32, 3>( [ nan, 2.0, 1.0 ] ).sorted();
+    c.check( f[0] == 1.0 && f[1] == 2.0 && kl::is_nan( f[2] ) );
 }
