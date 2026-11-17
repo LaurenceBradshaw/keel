@@ -61,6 +61,11 @@ void Ast::set_located( Node_id decl )
     located_.insert( decl.v );
 }
 
+void Ast::set_variadic( Node_id param )
+{
+    variadic_.insert( param.v );
+}
+
 void Ast::set_intrinsic( Node_id decl )
 {
     intrinsic_.insert( decl.v );
@@ -151,6 +156,17 @@ Node_id Ast::panic_location( Node_id id ) const
 bool Ast::is_located( Node_id decl ) const
 {
     return located_.contains( decl.v );
+}
+
+bool Ast::is_variadic( Node_id param ) const
+{
+    return variadic_.contains( param.v );
+}
+
+bool Ast::takes_variadic( Node_id fn ) const
+{
+    const std::span<const Node_id> all = explicit_params( fn );
+    return !all.empty() && is_variadic( all.back() );
 }
 
 bool Ast::is_intrinsic( Node_id decl ) const
@@ -329,7 +345,10 @@ std::size_t Ast::required_params( Node_id fn ) const
 {
     const std::span<const Node_id> all = explicit_params( fn );
 
-    return std::size_t( std::ranges::find_if( all, [&]( Node_id p ) { return default_value( p ).is_valid(); } ) - all.begin() );
+    return std::size_t(
+        std::ranges::find_if( all, [&]( Node_id p ) { return default_value( p ).is_valid() || is_variadic( p ); } ) -
+        all.begin()
+    );
 }
 
 Node_id Ast::body( Node_id id ) const

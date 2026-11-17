@@ -1,0 +1,67 @@
+error: a variadic parameter takes no mode
+ --> sema/errors_variadic.kl:4:12
+  |
+4 | u64 moded( const ref u64... xs ) { return xs.size; }
+  |            ^^^^^^^^^^^^^ it is always a `const ref` run of its arguments
+
+error: a variadic parameter takes no default
+ --> sema/errors_variadic.kl:5:28
+  |
+5 | u64 defaulted( u64... xs = 1 ) { return xs.size; }
+  |                            ^ it is empty when no argument is left
+
+error: a variadic parameter comes last
+ --> sema/errors_variadic.kl:6:12
+  |
+6 | u64 early( u64... xs, u64 y ) { return xs.size + y; }
+  |            ^^^^^^^^^ it takes every argument left
+
+error: an interface's method cannot be variadic
+  --> sema/errors_variadic.kl:10:16
+   |
+10 |     void grow( f64... by );
+   |                ^^^^^^^^^ take a `const ref T[]` instead
+
+error: `Square`'s `size` cannot be variadic, since it answers `sized`
+  --> sema/errors_variadic.kl:18:26
+   |
+18 | struct Square implements sized
+   |                          ^^^^^ a call through `sized` passes a run; take a `const ref` run instead
+
+error: only `operator[]` takes a variadic parameter
+  --> sema/errors_variadic.kl:29:18
+   |
+29 |     P operator+( P... o ) const { return this; }
+   |                  ^^^^^^ an operator's operands are written, not listed
+
+error: `at_least` takes at least 1 argument, but 0 were given
+  --> sema/errors_variadic.kl:38:13
+   |
+38 |     at_least();
+   |             ^^
+
+error: expected `u64`, but got `i32`
+  --> sema/errors_variadic.kl:40:18
+   |
+40 |     at_least( 1, i );
+   |                  ^
+
+error: `words` takes ownership of this argument
+  --> sema/errors_variadic.kl:42:12
+   |
+42 |     words( t );
+   |            ^ write `move`
+
+error: an array literal cannot become `u64[]`
+  --> sema/errors_variadic.kl:43:10
+   |
+43 |     run( [0, ..] );
+   |          ^^^^^^^ a fill needs a length; list the values
+
+error: a lambda's parameter cannot be variadic
+  --> sema/errors_variadic.kl:44:20
+   |
+44 |     auto l = fn[]( u64... a ) -> u64 { return a.size; };
+   |                    ^^^^^^^^ take a `const ref T[]`
+
+11 errors generated

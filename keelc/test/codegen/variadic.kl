@@ -1,0 +1,139 @@
+// `T... xs`: the trailing arguments are one `const ref T[]`, and a lone run passes whole.
+import kl::console;
+import kl::string;
+
+u64 total( u64... xs )
+{
+    u64 s = 0;
+    for( u64 x : xs )
+    {
+        s += x;
+    }
+    return s;
+}
+
+// A lone run is passed on as the run.
+u64 forward( u64 first, u64... rest )
+{
+    return first * 100 + total( rest );
+}
+
+T largest<T>( T first, T... rest ) where T : comparable & copyable
+{
+    T best = first;
+    for( const ref T x : rest )
+    {
+        if( x > best )
+        {
+            best = x;
+        }
+    }
+    return best;
+}
+
+// An owning element is moved in, and dropped at the end of the statement.
+u64 lengths( kl::string... words )
+{
+    u64 n = 0;
+    for( const ref kl::string w : words )
+    {
+        n += w.size();
+    }
+    return n;
+}
+
+// One taking its arguments by count beats a variadic.
+i32 pick( i32 _ )
+{
+    return 1;
+}
+i32 pick( i32... _ )
+{
+    return 2;
+}
+
+// A default before the list is used only when the list is empty.
+i32 scaled( i32 by = 10, i32... _ )
+{
+    return by;
+}
+
+class Sum<T>
+{
+    T held;
+
+    public Sum( move T h )
+    {
+        held = move h;
+    }
+
+    public T with( T... more ) const where T : numeric
+    {
+        T s = held;
+        for( T m : more )
+        {
+            s += m;
+        }
+        return s;
+    }
+};
+
+class Grid
+{
+    u64[4] counts = [10, 11, 12, 13];
+    u64    one    = 1;
+
+    public ref u64 operator[]( u64... at ) const
+    {
+        return counts[at.size];
+    }
+
+    public ref u64 operator[]( u64 _ ) const
+    {
+        return one;
+    }
+};
+
+// An array literal is lent as a run of its own length.
+u64 sum( const ref u64[] xs )
+{
+    return total( xs );
+}
+
+i32 main()
+{
+    kl::print( total() );
+    kl::print( total( 1 ) );
+    kl::print( total( 1, 2, 3 ) );
+    kl::print( forward( 7, 1, 2 ) );
+    kl::print( forward( 7 ) );
+
+    i32 a = 3;
+    i32 b = 9;
+    i32 c = 4;
+    kl::print( largest( a, b, c ) );
+    kl::print( largest<f64>( 2.5 ) );
+
+    kl::string word = "abc";
+    kl::print( lengths( "xy", move word, kl::string( "q" ) ) );
+
+    kl::print( pick( 5 ) );
+    kl::print( pick() );
+    kl::print( pick( 5, 6 ) );
+    kl::print( scaled() );
+    kl::print( scaled( 3, 4 ) );
+
+    Sum<f64> s = Sum<f64>( 1.5 );
+    kl::print( s.with( 2.0, 3.0 ) );
+    kl::print( s.with() );
+
+    Grid g = Grid();
+    kl::print( g[5] );
+    kl::print( g[5, 6] );
+    kl::print( g[5, 6, 7] );
+
+    u64[3] held = [4, 5, 6];
+    kl::print( total( held[0..3] ) );
+    kl::print( sum( [1, 2, 3, 4] ) );
+    return 0;
+}

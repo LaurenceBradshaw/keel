@@ -218,6 +218,7 @@ private:
     );
     Operand              lower_interface_call( Node_id id, Node_id requirement );
     Operand              lower_static_interface_call( Node_id id, Node_id requirement );
+    Operand              lower_variadic( std::span<const Node_id> arguments, Node_id parameter, const Bindings& callee_bound );
     std::vector<Operand> lower_call_arguments(
         std::span<const Node_id> arguments, std::span<const Node_id> parameters, const Bindings& callee_bound
     );
@@ -3264,6 +3265,17 @@ std::vector<Operand> Lowering::lower_call_arguments(
     std::span<const Node_id> arguments, std::span<const Node_id> parameters, const Bindings& callee_bound
 )
 {
+    // `T... xs`: the trailing arguments become one run, unless a lone run is passed whole.
+    if( !parameters.empty() && ast_.is_variadic( parameters.back() ) &&
+        !( arguments.size() == parameters.size() && types_.table().is_run( type_of( arguments.back() ) ) ) )
+    {
+        const std::size_t    fixed = std::min( arguments.size(), parameters.size() - 1 );
+        std::vector<Operand> operands =
+            lower_call_arguments( arguments.first( fixed ), parameters.first( parameters.size() - 1 ), callee_bound );
+        operands.push_back( lower_variadic( arguments.subspan( fixed ), parameters.back(), callee_bound ) );
+        return operands;
+    }
+
     // All lowered before any is converted, so statements come out in written order (§7.1), except
     // that an owning `out` comes last.
     std::vector<Operand> operands;
@@ -3320,6 +3332,52 @@ std::vector<Operand> Lowering::lower_call_arguments(
     }
 
     return operands;
+}
+
+// Copied into an array living to the end of the statement, and borrowed as the run; none is an empty run.
+Operand Lowering::lower_variadic( std::span<const Node_id> arguments, Node_id parameter, const Bindings& callee_bound )
+{
+    Type_table&   table   = types_.table();
+    const Type_id address = binding_type_under( parameter, callee_bound );
+    const Type_id element = table.get( table.get( address ).element ).element;
+    const Type_id u64     = table.integer( 64, false );
+    const Span    span    = arguments.empty() ? ast_.span( parameter )
+                                              : Span::merge( ast_.span( arguments.front() ), ast_.span( arguments.back() ) );
+
+    if( arguments.empty() )
+    {
+        const Type_id data = table.many_pointer_to( element );
+        return temporary(
+            run_of(
+                constant( literal_pool_.add_integer( 0 ), data ), constant( literal_pool_.add_integer( 0 ), u64 ), address
+            ),
+            address,
+            span
+        );
+    }
+
+    const Type_id  array = table.array_of( element, arguments.size(), false );
+    const Local_id temp  = builder_.add_local( array, span );
+
+    builder_.storage_live( temp, span );
+
+    std::vector<Operand> values;
+    for( const Node_id value : arguments )
+    {
+        values.push_back( converted( lower_expression( value ), element, ast_.span( value ) ) );
+    }
+
+    for( std::size_t k = 0; k < values.size(); ++k )
+    {
+        const Local_id at = builder_.into_temp( use( constant( literal_pool_.add_integer( k ), u64 ) ), u64, span );
+        builder_.assign(
+            builder_.index( builder_.place( temp ), at ), use( moved_if_owning( values[k] ) ), ast_.span( arguments[k] )
+        );
+    }
+
+    drops_.own_temporary( temp );
+
+    return temporary( borrow_of( builder_.place( temp ), array, address, Address_purpose::Read, span ), address, span );
 }
 
 Operand Lowering::emit_call(

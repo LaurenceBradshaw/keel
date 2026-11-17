@@ -1091,7 +1091,11 @@ std::vector<Node_id> Places::borrowed_arguments( Node_id call ) const
 
     for( std::size_t i = 0; i < shared; ++i )
     {
-        const Param_mode mode = declared ? parameter_mode_of( ast_, params[i] ) : modes[i];
+        // A variadic's trailing arguments are moved into its run, unless a lone run is passed whole.
+        const bool element = declared && ast_.is_variadic( params[i] ) &&
+                             !( args.size() == params.size() && types_.type_of( args[i] ).is_valid() &&
+                                table_.is_run( types_.type_of( args[i] ) ) );
+        const Param_mode mode = element ? Param_mode::Move : declared ? parameter_mode_of( ast_, params[i] ) : modes[i];
 
         // A refused argument was reported where it stands.
         if( borrows( mode, types_.type_of( args[i] ) ) && !table_.is_error( types_.type_of( args[i] ) ) )

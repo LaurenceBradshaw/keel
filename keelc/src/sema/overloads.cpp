@@ -119,7 +119,7 @@ bool Overloads::deduce_for_candidate(
     Node_id callable, u32 implicit_params, std::span<const Argument_shape> shapes, std::vector<Type_id>& resolved
 )
 {
-    const std::span<const Node_id> params = ast_.params( callable ).subspan( implicit_params );
+    const std::vector<Slot> params = slots( callable, implicit_params, shapes );
 
     Bindings bindings;
 
@@ -131,7 +131,7 @@ bool Overloads::deduce_for_candidate(
         // argument does not have the parameter's type.
         Bindings deduced;
 
-        if( !deduce_shape( types_.type_of( params[i] ), shapes[i], deduced ) )
+        if( !deduce_shape( params[i].type, shapes[i], deduced ) )
         {
             continue;
         }
@@ -187,13 +187,13 @@ bool Overloads::bind_own_parameters( Node_id call, Node_id method, std::span<con
         open.insert_or_assign( types_.type_of( parameter ).v, types_.type_of( parameter ) );
     }
 
-    const std::span<const Node_id> params = ast_.params( method ).subspan( receiver_params( method ) );
-    Bindings                       deduced;
+    const std::vector<Slot> params = slots( method, receiver_params( method ), shapes );
+    Bindings                deduced;
 
     for( std::size_t i = 0; i < params.size() && i < shapes.size(); ++i )
     {
         Bindings found;
-        if( deduce_shape( table_.substitute( types_.type_of( params[i] ), open ), shapes[i], found ) )
+        if( deduce_shape( table_.substitute( params[i].type, open ), shapes[i], found ) )
         {
             deduced.insert( found.begin(), found.end() );
         }
@@ -364,7 +364,57 @@ bool Overloads::deduce_shape( Type_id pattern, const Argument_shape& shape, Bind
 // D79: whether `count` arguments fill `candidate`'s parameters, its defaults taking the rest.
 bool Overloads::takes( Node_id candidate, std::size_t count ) const
 {
-    return count >= ast_.required_params( candidate ) && count <= ast_.explicit_params( candidate ).size();
+    return count >= ast_.required_params( candidate ) &&
+           ( ast_.takes_variadic( candidate ) || count <= ast_.explicit_params( candidate ).size() );
+}
+
+std::vector<Overloads::Slot> Overloads::slots( Node_id callable, u32 implicit_params, std::size_t count, bool lone_run ) const
+{
+    const std::span<const Node_id> params = ast_.params( callable ).subspan( implicit_params );
+    std::vector<Slot>              result;
+
+    for( const Node_id param : params )
+    {
+        result.push_back( { param, types_.type_of( param ), ast_.parameter_mode( param ), ast_.call_marker( param ) } );
+    }
+
+    if( params.empty() || !ast_.is_variadic( params.back() ) || ( lone_run && count == params.size() ) )
+    {
+        return result;
+    }
+
+    // Each trailing argument is one element, moved into the run as a `move` parameter would be.
+    const Slot    variadic = result.back();
+    const Type_id element  = table_.is_run( variadic.type ) ? table_.get( variadic.type ).element : variadic.type;
+    result.pop_back();
+
+    for( std::size_t i = result.size(); i < count; ++i )
+    {
+        result.push_back( { variadic.param, element, Keyword::Move, Keyword::Move, true } );
+    }
+
+    return result;
+}
+
+std::vector<Overloads::Slot>
+Overloads::slots( Node_id callable, u32 implicit_params, std::span<const Argument_shape> shapes ) const
+{
+    const std::size_t last = ast_.params( callable ).size() - implicit_params;
+    const bool        lone = shapes.size() == last && last != 0 && shapes[last - 1].kind == Argument_kind::Typed &&
+                      table_.is_run( shapes[last - 1].type );
+
+    return slots( callable, implicit_params, shapes.size(), lone );
+}
+
+std::vector<Overloads::Slot>
+Overloads::slots_after_walk( Node_id callable, u32 implicit_params, std::span<const Node_id> arguments ) const
+{
+    const std::size_t last = ast_.params( callable ).size() - implicit_params;
+    const bool        lone = ast_.takes_variadic( callable ) && arguments.size() == last && last != 0 &&
+                      types_.type_of( arguments[last - 1] ).is_valid() &&
+                      table_.is_run( types_.type_of( arguments[last - 1] ) );
+
+    return slots( callable, implicit_params, arguments.size(), lone );
 }
 
 // Whether `candidate` takes as many arguments and type arguments as the call wrote.
@@ -397,7 +447,7 @@ std::optional<Deduction> Overloads::deduce_type_arguments(
     Type_id                         expectation
 )
 {
-    const std::span<const Node_id> params    = ast_.params( callable ).subspan( site.implicit_params );
+    const std::vector<Slot>        params    = slots( callable, site.implicit_params, shapes );
     const std::span<const Node_id> arguments = ast_.arguments( site.call );
 
     Bindings                         bindings;
@@ -409,7 +459,7 @@ std::optional<Deduction> Overloads::deduce_type_arguments(
         // behind that no argument actually justified.
         Bindings deduced;
 
-        if( !deduce_shape( types_.type_of( params[i] ), shapes[i], deduced ) )
+        if( !deduce_shape( params[i].type, shapes[i], deduced ) )
         {
             continue; // the argument does not match the parameter's shape; check() reports that
         }
@@ -583,10 +633,8 @@ std::optional<Deduction> Overloads::deduce_type_arguments(
 // D31's marker is part of what the call says, so it selects as much as the type does. The exemption
 // is the one the diagnostic applies too: on a non-owning type `move` is the caller's own assertion
 // about its variable, which the callee never sees.
-bool Overloads::marker_accepts( Node_id param, Keyword given, Type_id expected )
+bool Overloads::marker_accepts( Keyword wanted, Keyword given, Type_id expected )
 {
-    const Keyword wanted = ast_.call_marker( param );
-
     if( wanted == given )
     {
         return true;
@@ -603,11 +651,11 @@ bool Overloads::candidate_accepts(
     Node_id callable, u32 implicit_params, std::span<const Argument_shape> shapes, const Bindings& bindings, Tier tier
 )
 {
-    const std::span<const Node_id> params = ast_.params( callable ).subspan( implicit_params );
+    const std::vector<Slot> params = slots( callable, implicit_params, shapes );
 
     for( std::size_t i = 0; i < params.size() && i < shapes.size(); ++i )
     {
-        const Type_id expected = table_.substitute( types_.type_of( params[i] ), bindings );
+        const Type_id expected = table_.substitute( params[i].type, bindings );
 
         // A parameter whose own type failed to resolve accepts anything: the error is already
         // reported, and refusing here would answer it with a second one about the call.
@@ -616,12 +664,12 @@ bool Overloads::candidate_accepts(
             continue;
         }
 
-        if( !marker_accepts( params[i], shapes[i].marker, expected ) )
+        if( !marker_accepts( params[i].marker, shapes[i].marker, expected ) )
         {
             return false;
         }
 
-        if( !accepts( params[i], shapes[i], expected, tier ) )
+        if( !accepts( params[i].mode, shapes[i], expected, tier ) )
         {
             return false;
         }
@@ -632,16 +680,16 @@ bool Overloads::candidate_accepts(
 
 // One argument's shape against its parameter's type. An array literal goes only to an array, or to a
 // parameter still open.
-bool Overloads::accepts( Node_id param, const Argument_shape& shape, Type_id expected, Tier tier )
+bool Overloads::accepts( Keyword mode, const Argument_shape& shape, Type_id expected, Tier tier )
 {
     switch( shape.kind )
     {
     case Argument_kind::Typed:
-        return shape.type == expected || ( tier != Tier::Exact && widens( param, shape.type, expected ) ) ||
+        return shape.type == expected || ( tier != Tier::Exact && widens( mode, shape.type, expected ) ) ||
                ( tier == Tier::Adopted && bounds_.adopts_joined( expected, shape.type ) );
 
     case Argument_kind::Text:
-        return shape.type == expected || ( tier != Tier::Exact && widens( param, shape.type, expected ) ) ||
+        return shape.type == expected || ( tier != Tier::Exact && widens( mode, shape.type, expected ) ) ||
                ( tier == Tier::Adopted && bounds_.adopts_text( expected, shape.type ) );
 
     case Argument_kind::Instance:
@@ -666,8 +714,10 @@ bool Overloads::accepts( Node_id param, const Argument_shape& shape, Type_id exp
             return !bounds_.has_bound( expected, Bound::Numeric );
         }
 
-        if( array.kind != Type_kind::Array || array.raw ||
-            ( !shape.fill && array.count != 0 && array.count != shape.magnitude ) )
+        // A run takes a literal of any length, though never a fill, which needs one.
+        const bool run = table_.is_run( expected );
+        if( ( run && shape.fill ) || ( !run && ( array.kind != Type_kind::Array || array.raw ||
+                                                 ( !shape.fill && array.count != 0 && array.count != shape.magnitude ) ) ) )
         {
             return false;
         }
@@ -675,7 +725,7 @@ bool Overloads::accepts( Node_id param, const Argument_shape& shape, Type_id exp
         return std::ranges::all_of(
             shape.elements,
             [&]( const Argument_shape& element )
-            { return table_.is_error( array.element ) || accepts( param, element, array.element, tier ); }
+            { return table_.is_error( array.element ) || accepts( mode, element, array.element, tier ); }
         );
     }
 
@@ -690,10 +740,9 @@ bool Overloads::accepts( Node_id param, const Argument_shape& shape, Type_id exp
 // A `move` of a number is a copy too, so `from( move i64 )` takes an `i32`. An integer reaches a
 // float that holds it, as it does through one candidate; distance() ranks it behind every integer.
 // An implementer also reaches its interface, which a parameter only borrows.
-bool Overloads::widens( Node_id param, Type_id from, Type_id to ) const
+bool Overloads::widens( Keyword mode, Type_id from, Type_id to ) const
 {
-    const auto    numeric = [&]( Type_id type ) { return table_.is_integer( type ) || table_.is_float( type ); };
-    const Keyword mode    = ast_.parameter_mode( param );
+    const auto numeric = [&]( Type_id type ) { return table_.is_integer( type ) || table_.is_float( type ); };
 
     return ( ( mode == Keyword::Count || mode == Keyword::Move ) && numeric( from ) && numeric( to ) &&
              types_.conformances().holds( table_, from, to ) ) ||
@@ -729,12 +778,14 @@ u32 Overloads::distance( Type_id from, Type_id to ) const
     return ( kind << 8 ) | ( width << 1 ) | sign;
 }
 
-std::vector<Type_id> Overloads::parameter_types( Node_id callable, u32 implicit_params, const Bindings& bindings )
+std::vector<Type_id> Overloads::parameter_types(
+    Node_id callable, u32 implicit_params, std::span<const Argument_shape> shapes, const Bindings& bindings
+)
 {
     std::vector<Type_id> result;
-    for( const Node_id param : ast_.params( callable ).subspan( implicit_params ) )
+    for( const Slot& slot : slots( callable, implicit_params, shapes ) )
     {
-        result.push_back( table_.substitute( types_.type_of( param ), bindings ) );
+        result.push_back( table_.substitute( slot.type, bindings ) );
     }
 
     return result;
@@ -790,7 +841,7 @@ std::optional<u32> Overloads::reach( const Argument_shape& shape, Type_id to ) c
         return distance( table_.default_float(), to );
 
     case Argument_kind::Array:
-        if( table_.get( to ).kind == Type_kind::Array )
+        if( table_.get( to ).kind == Type_kind::Array || table_.is_run( to ) )
         {
             for( const Argument_shape& element : shape.elements )
             {
@@ -887,17 +938,17 @@ std::vector<Node_id> Overloads::matching(
         if( candidate_accepts( candidate, site.implicit_params, shapes, bindings, Tier::Exact ) )
         {
             matching_candidates.push_back( candidate );
-            exact_targets.push_back( parameter_types( candidate, site.implicit_params, bindings ) );
+            exact_targets.push_back( parameter_types( candidate, site.implicit_params, shapes, bindings ) );
         }
         else if( candidate_accepts( candidate, site.implicit_params, shapes, bindings, Tier::Widened ) )
         {
             widened_candidates.push_back( candidate );
-            targets.push_back( parameter_types( candidate, site.implicit_params, bindings ) );
+            targets.push_back( parameter_types( candidate, site.implicit_params, shapes, bindings ) );
         }
         else if( candidate_accepts( candidate, site.implicit_params, shapes, bindings, Tier::Adopted ) )
         {
             adopted_candidates.push_back( candidate );
-            adopted_targets.push_back( parameter_types( candidate, site.implicit_params, bindings ) );
+            adopted_targets.push_back( parameter_types( candidate, site.implicit_params, shapes, bindings ) );
         }
     }
 
@@ -980,6 +1031,12 @@ Node_id Overloads::select_overload(
     }
 
     std::vector<Node_id> matching_candidates = matching( site, viable, shapes, resolved );
+
+    // One taking the arguments by count beats a variadic one.
+    if( std::ranges::any_of( matching_candidates, [&]( Node_id c ) { return !ast_.takes_variadic( c ); } ) )
+    {
+        std::erase_if( matching_candidates, [&]( Node_id c ) { return ast_.takes_variadic( c ); } );
+    }
 
     // A non-generic candidate beats a generic one, and two generics are ambiguous: read off the
     // declarations, and settling ties among exact matches or among equally close widenings.
@@ -1163,17 +1220,17 @@ Node_id Overloads::
         if( candidate_accepts( candidate, receiver_params( candidate ), shapes, bindings[i], Tier::Exact ) )
         {
             matching.push_back( i );
-            exact_targets.push_back( parameter_types( candidate, receiver_params( candidate ), bindings[i] ) );
+            exact_targets.push_back( parameter_types( candidate, receiver_params( candidate ), shapes, bindings[i] ) );
         }
         else if( candidate_accepts( candidate, receiver_params( candidate ), shapes, bindings[i], Tier::Widened ) )
         {
             widened.push_back( i );
-            targets.push_back( parameter_types( candidate, receiver_params( candidate ), bindings[i] ) );
+            targets.push_back( parameter_types( candidate, receiver_params( candidate ), shapes, bindings[i] ) );
         }
         else if( candidate_accepts( candidate, receiver_params( candidate ), shapes, bindings[i], Tier::Adopted ) )
         {
             adopted.push_back( i );
-            adopted_targets.push_back( parameter_types( candidate, receiver_params( candidate ), bindings[i] ) );
+            adopted_targets.push_back( parameter_types( candidate, receiver_params( candidate ), shapes, bindings[i] ) );
         }
     }
 
@@ -1194,6 +1251,11 @@ Node_id Overloads::
     else if( matching.size() > 1 )
     {
         matching = pick( matching, exact_targets );
+    }
+
+    if( std::ranges::any_of( matching, [&]( std::size_t i ) { return !ast_.takes_variadic( candidates[i] ); } ) )
+    {
+        std::erase_if( matching, [&]( std::size_t i ) { return ast_.takes_variadic( candidates[i] ); } );
     }
 
     // As for a function, the one without type parameters of its own beats the generics.
@@ -1277,7 +1339,7 @@ Node_id Overloads::select_operator(
         {
             if( candidate_accepts( candidate, implicit, operands, bindings[i], tier ) )
             {
-                std::vector<Type_id> types = parameter_types( candidate, implicit, bindings[i] );
+                std::vector<Type_id> types = parameter_types( candidate, implicit, operands, bindings[i] );
                 if( implicit != 0 )
                 {
                     types.insert( types.begin(), shapes[0].type );
@@ -1349,22 +1411,25 @@ std::vector<Argument_work> Overloads::check_call_arguments(
     const Call_site& site, Node_id callable, const Bindings& bindings, std::span<const Argument_shape> shapes
 )
 {
-    const std::span<const Node_id> declared  = ast_.params( callable );
-    const std::span<const Node_id> params    = declared.subspan( site.implicit_params );
+    const std::span<const Node_id> declared  = ast_.params( callable ).subspan( site.implicit_params );
     const std::span<const Node_id> arguments = ast_.arguments( site.call );
+    const std::vector<Slot>        params    = slots( callable, site.implicit_params, shapes );
     std::vector<Argument_work>     work;
 
     if( !takes( callable, arguments.size() ) )
     {
         const std::size_t least = ast_.required_params( callable );
+        const std::size_t most  = declared.size();
 
         reporter_.error_at(
             ast_.span( ast_.arg_list( site.call ) ),
             fmt::format(
                 "`{}` takes {} argument{}, but {} {} given",
                 site.name,
-                least == params.size() ? fmt::format( "{}", least ) : fmt::format( "{} to {}", least, params.size() ),
-                params.size() == 1 ? "" : "s",
+                ast_.takes_variadic( callable ) ? fmt::format( "at least {}", least )
+                : least == most                 ? fmt::format( "{}", least )
+                                                : fmt::format( "{} to {}", least, most ),
+                ( ast_.takes_variadic( callable ) ? least : most ) == 1 ? "" : "s",
                 arguments.size(),
                 arguments.size() == 1 ? "was" : "were"
             )
@@ -1382,7 +1447,7 @@ std::vector<Argument_work> Overloads::check_call_arguments(
         // rather than of the declared type: the declared one may be `T`, which the caller never
         // wrote and which no diagnostic should name. An empty map makes this the identity, so the
         // ordinary path needs no branch.
-        const Type_id expected = table_.substitute( types_.type_of( params[i] ), bindings );
+        const Type_id expected = table_.substitute( params[i].type, bindings );
 
         // Already typed, by selection or by deduction, both of which had to know what the argument
         // was before they could use it. Typing it again would report a mistake inside it twice -
@@ -1418,14 +1483,15 @@ std::vector<Argument_work> Overloads::check_call_arguments(
 // until the walk this class handed back has run.
 void Overloads::check_argument_markers( const Call_site& site, Node_id callable, const Bindings& bindings )
 {
-    const std::span<const Node_id> params    = ast_.params( callable ).subspan( site.implicit_params );
     const std::span<const Node_id> arguments = ast_.arguments( site.call );
+    const std::vector<Slot>        params    = slots_after_walk( callable, site.implicit_params, arguments );
 
     for( std::size_t i = 0; i < std::min( params.size(), arguments.size() ); ++i )
     {
-        const Type_id expected = table_.substitute( types_.type_of( params[i] ), bindings );
+        const Type_id    expected = table_.substitute( params[i].type, bindings );
+        const Param_mode mode     = params[i].element ? Param_mode::Move : parameter_mode_of( ast_, params[i].param );
 
-        check_one_argument_marker( arguments[i], parameter_mode_of( ast_, params[i] ), expected, site.name );
+        check_one_argument_marker( arguments[i], mode, expected, site.name );
     }
 }
 
@@ -1632,8 +1698,8 @@ std::optional<Conflict> Overloads::conflict( Node_id first, Node_id second, bool
 
     const bool exact = parameters_collide( first, second, false );
 
-    // D79: with defaults, a call of some count might fill either.
-    if( !exact )
+    // D79: with defaults, a call of some count might fill either. One taking it by count beats a variadic.
+    if( !exact && ast_.takes_variadic( first ) == ast_.takes_variadic( second ) )
     {
         const std::size_t least = std::max( ast_.required_params( first ), ast_.required_params( second ) );
         const std::size_t most  = std::min( ast_.explicit_params( first ).size(), ast_.explicit_params( second ).size() );
@@ -1938,11 +2004,15 @@ std::string Overloads::signature_of( Node_id callable, const Bindings& bindings 
     {
         const Keyword marker = ast_.call_marker( params[i] );
 
+        const bool    variadic = ast_.is_variadic( params[i] );
+        const Type_id declared = variadic ? table_.get( types_.type_of( params[i] ) ).element : types_.type_of( params[i] );
+
         text += fmt::format(
-            "{}{}{}",
+            "{}{}{}{}",
             i == 0 ? "" : ", ",
             marker == Keyword::Count ? "" : fmt::format( "{} ", interner_.text( Interner::keyword( marker ) ) ),
-            table_.name( bound ? table_.substitute( types_.type_of( params[i] ), bindings ) : types_.type_of( params[i] ) )
+            table_.name( bound ? table_.substitute( declared, bindings ) : declared ),
+            variadic ? "..." : ""
         );
 
         if( const Node_id value = ast_.default_value( params[i] ); value.is_valid() )
@@ -2118,12 +2188,12 @@ bool Overloads::applies(
 std::vector<Argument_shape>
 Overloads::unmarked( Node_id candidate, u32 implicit_params, std::span<const Argument_shape> shapes ) const
 {
-    std::vector<Argument_shape>    unmarked( shapes.begin(), shapes.end() );
-    const std::span<const Node_id> params = ast_.params( candidate ).subspan( implicit_params );
+    std::vector<Argument_shape> unmarked( shapes.begin(), shapes.end() );
+    const std::vector<Slot>     params = slots( candidate, implicit_params, shapes );
 
     for( std::size_t i = 0; i < unmarked.size() && i < params.size(); ++i )
     {
-        unmarked[i].marker = ast_.call_marker( params[i] );
+        unmarked[i].marker = params[i].marker;
     }
 
     return unmarked;

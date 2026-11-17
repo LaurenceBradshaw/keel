@@ -166,8 +166,12 @@ std::string Signature_printer::declaration( Node_id decl ) const
 // none to read.
 std::string Signature_printer::binding( Node_id decl ) const
 {
-    const Node_id     annotation = ast_.kind( decl ) == Node_kind::Binding_decl ? Node_id {} : ast_.annotation( decl );
-    const std::string written    = annotation.is_valid() ? type( annotation ) : recorded_type( decl );
+    const Node_id annotation = ast_.kind( decl ) == Node_kind::Binding_decl ? Node_id {} : ast_.annotation( decl );
+    // `T...` is held as `const ref T[]`, and written as declared.
+    const bool        variadic = ast_.kind( decl ) == Node_kind::Param_decl && ast_.is_variadic( decl );
+    const std::string written  = variadic ? type( ast_.inner_type( ast_.inner_type( ast_.inner_type( annotation ) ) ) ) + "..."
+                                 : annotation.is_valid() ? type( annotation )
+                                                         : recorded_type( decl );
     // A payload's field, as in `held( i32 )`, has no name.
     return ast_.name( decl ).is_valid() ? fmt::format( "{} {}", written, text( ast_.name( decl ) ) ) : written;
 }

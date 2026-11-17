@@ -1311,15 +1311,26 @@ Node_id Parser::parse_param_list( Node_id leading )
     return ast_.add( Node_kind::Param_list, Span::merge( start, cursor_.previous().span ), 0, params );
 }
 
-// D79: defaults come last, since a call fills its arguments from the left.
+// D79: defaults come last, since a call fills its arguments from the left; a variadic after them.
 void Parser::refuse_gap_after_default( std::span<const Node_id> params )
 {
     Node_id defaulted;
 
-    for( const Node_id param : params )
+    for( std::size_t i = 0; i < params.size(); ++i )
     {
+        const Node_id param = params[i];
         if( ast_.kind( param ) != Node_kind::Param_decl )
         {
+            continue;
+        }
+
+        if( ast_.is_variadic( param ) )
+        {
+            if( i + 1 != params.size() )
+            {
+                recovery_.error_at( ast_.span( param ), "a variadic parameter comes last", "it takes every argument left" );
+                return;
+            }
             continue;
         }
 
@@ -2799,6 +2810,28 @@ Node_id Parser::parse_param()
     // D31: the mode wraps the type, since aux holds the name.
     Node_id type = parse_type_with_mode();
 
+    // `T... name` is a `const ref T[]` holding the trailing arguments.
+    const bool variadic = cursor_.check( Token_kind::Dot_dot ) && cursor_.peek( 1 ).kind == Token_kind::Dot;
+    if( variadic )
+    {
+        const Node_kind written = ast_.kind( type );
+        if( written == Node_kind::Mode_type || written == Node_kind::Const_type )
+        {
+            recovery_.error_at(
+                ast_.span( type ), "a variadic parameter takes no mode", "it is always a `const ref` run of its arguments"
+            );
+            type = ast_.inner_type( type );
+            if( ast_.kind( type ) == Node_kind::Mode_type )
+            {
+                type = ast_.inner_type( type );
+            }
+        }
+
+        type = adjacent_suffix( type, start, 2, "...", Node_kind::Run_type );
+        type = ast_.add( Node_kind::Mode_type, ast_.span( type ), static_cast<u32>( Keyword::Ref ), { type } );
+        type = ast_.add( Node_kind::Const_type, ast_.span( type ), 0, { type } );
+    }
+
     // The name goes in aux, as Function_decl's does. A `_` or nameless parameter still counts towards
     // the signature, and nothing can refer to it.
     Symbol_id name {};
@@ -2819,10 +2852,22 @@ Node_id Parser::parse_param()
         value = parse_expression( 0 );
     }
 
+    if( variadic && value.is_valid() )
+    {
+        recovery_.error_at(
+            ast_.span( value ), "a variadic parameter takes no default", "it is empty when no argument is left"
+        );
+        value = Node_id {};
+    }
+
     const Span    span = Span::merge( start, cursor_.previous().span );
     const Node_id node = value.is_valid() ? ast_.add( Node_kind::Param_decl, span, name.v, { type, value } )
                                           : ast_.add( Node_kind::Param_decl, span, name.v, { type } );
     ast_.set_name_span( node, name_span );
+    if( variadic )
+    {
+        ast_.set_variadic( node );
+    }
     return node;
 }
 
@@ -4488,6 +4533,11 @@ Node_id Parser::parse_lambda_param()
     if( ast_.default_value( param ).is_valid() )
     {
         recovery_.error_at( ast_.span( ast_.default_value( param ) ), "a lambda's parameter takes no default" );
+    }
+
+    if( ast_.is_variadic( param ) )
+    {
+        recovery_.error_at( ast_.span( param ), "a lambda's parameter cannot be variadic", "take a `const ref T[]`" );
     }
 
     return param;

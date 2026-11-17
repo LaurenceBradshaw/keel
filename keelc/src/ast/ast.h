@@ -40,6 +40,7 @@ public:
     void set_root( Node_id id );
     void set_access( Node_id id, Access access );
     void set_located( Node_id decl );
+    void set_variadic( Node_id param );
     void set_intrinsic( Node_id decl );
     void set_real_arithmetic( Node_id decl );
     void set_trig( Node_id decl, Trig trig, Span directive );
@@ -66,6 +67,10 @@ public:
 
     // D69: written `@located`, so it receives its caller's location.
     bool is_located( Node_id decl ) const;
+    // `T... name`: the last parameter, a `const ref T[]` taking the call's trailing arguments.
+    bool is_variadic( Node_id param ) const;
+    // Its last explicit parameter is variadic.
+    bool takes_variadic( Node_id fn ) const;
 
     // Written `@intrinsic`: the compiler gives its body, and lowers a call to the operation.
     bool is_intrinsic( Node_id decl ) const;
@@ -116,7 +121,7 @@ public:
     Node_id                  param_list( Node_id id ) const;
     std::span<const Node_id> params( Node_id id ) const;          // the Param_decls, receiver included
     std::span<const Node_id> explicit_params( Node_id fn ) const; // past the receiver, when there is one
-    std::size_t              required_params( Node_id fn ) const; // the explicit ones before the first default
+    std::size_t              required_params( Node_id fn ) const; // the explicit ones before the first default or variadic
     Node_id                  body( Node_id id ) const;            // also the loops and Case_arm; invalid for `extern`
 
     // Type parameters and arguments.
@@ -246,6 +251,7 @@ private:
 
     std::unordered_map<u32, Access>                access_; // absence means public
     std::unordered_set<u32>                        located_;
+    std::unordered_set<u32>                        variadic_;
     std::unordered_set<u32>                        intrinsic_;
     std::unordered_set<u32>                        real_arithmetic_;
     std::unordered_map<u32, std::pair<Trig, Span>> trig_;

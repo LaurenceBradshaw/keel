@@ -43,6 +43,7 @@ enum class Conformance_problem : u8
     Unrefined,   // an implied interface a block answers only under a `where` this type does not meet
     Located,     // the implementer's receives a location the interface's callers cannot pass
     Defaulted,   // the implementer's has a default the interface's callers would not see
+    Variadic,    // the implementer's takes a variadic list the interface's callers would not pack
 };
 
 struct Conformance_error

@@ -211,19 +211,35 @@ public:
     void refuse_both( Node_id call, std::string_view name, std::span<const Node_id> own, std::span<const Node_id> prelude );
 
 private:
-    bool marker_accepts( Node_id param, Keyword given, Type_id expected );
+    // What one argument meets: its parameter, the type it is checked against, and the parameter's
+    // mode and marker. A variadic parameter is met once per trailing argument, as a `move` of its
+    // element type, or once whole by a lone run.
+    struct Slot
+    {
+        Node_id param;
+        Type_id type;
+        Keyword mode;
+        Keyword marker;
+        bool    element = false;
+    };
+    std::vector<Slot> slots( Node_id callable, u32 implicit_params, std::size_t count, bool lone_run ) const;
+    std::vector<Slot> slots( Node_id callable, u32 implicit_params, std::span<const Argument_shape> shapes ) const;
+    std::vector<Slot> slots_after_walk( Node_id callable, u32 implicit_params, std::span<const Node_id> arguments ) const;
+
+    bool marker_accepts( Keyword wanted, Keyword given, Type_id expected );
     // `shapes` with each marker the one its parameter in `candidate` wants.
     std::vector<Argument_shape>
          unmarked( Node_id candidate, u32 implicit_params, std::span<const Argument_shape> shapes ) const;
     bool candidate_accepts(
         Node_id callable, u32 implicit_params, std::span<const Argument_shape> shapes, const Bindings& bindings, Tier tier
     );
-    bool accepts( Node_id param, const Argument_shape& shape, Type_id expected, Tier tier );
-    bool widens( Node_id param, Type_id from, Type_id to ) const;
+    bool accepts( Keyword mode, const Argument_shape& shape, Type_id expected, Tier tier );
+    bool widens( Keyword mode, Type_id from, Type_id to ) const;
     u32  distance( Type_id from, Type_id to ) const;
     // How far `shape` travels to reach `to`, or nothing where it says nothing.
-    std::optional<u32>   reach( const Argument_shape& shape, Type_id to ) const;
-    std::vector<Type_id> parameter_types( Node_id callable, u32 implicit_params, const Bindings& bindings );
+    std::optional<u32> reach( const Argument_shape& shape, Type_id to ) const;
+    std::vector<Type_id>
+    parameter_types( Node_id callable, u32 implicit_params, std::span<const Argument_shape> shapes, const Bindings& bindings );
     bool beats( std::span<const Type_id> first, std::span<const Type_id> second, std::span<const Argument_shape> shapes ) const;
     // Indices into `targets`.
     std::vector<std::size_t>

@@ -809,6 +809,12 @@ Type_id Expressions::infer_call( Node_id id )
         return refuse_call( id, shapes );
     }
 
+    // A variadic tail is paired by what its lone argument is.
+    if( ast_.takes_variadic( callable ) )
+    {
+        shape_arguments( id, shapes );
+    }
+
     // `Overloads` answers what each argument still needs and the walk is done here, because the
     // walk is the one thing a class below may not re-enter.
     for( const Argument_work& work : overloads_.check_call_arguments( site, callable, *bindings, shapes ) )
@@ -1400,6 +1406,12 @@ Type_id Expressions::
     for( std::size_t i = 0; i < own.size() && i < own_arguments->size(); ++i )
     {
         bindings.insert_or_assign( types_.type_of( own[i] ).v, ( *own_arguments )[i] );
+    }
+
+    // A variadic tail is paired by what its lone argument is.
+    if( ast_.takes_variadic( method ) )
+    {
+        shape_arguments( id, shaped );
     }
 
     // The same walk a function call does. An argument deduction typed is checked here too, which
@@ -3031,9 +3043,39 @@ Type_id Expressions::infer_index_operator( Node_id id, Type_id object_type )
     const std::span<const Node_id> params   = ast_.params( method );
     const Type_id                  returned = table_.substitute( types_.type_of( method ), bindings );
 
+    // `u64... at`: each trailing index is one element, unless a lone run is passed whole.
+    const bool                  variadic = ast_.takes_variadic( method );
+    const std::size_t           fixed    = params.size() - ( variadic ? 2 : 1 );
+    std::vector<Argument_shape> shapes;
+    if( variadic )
+    {
+        for( const Node_id index : indices )
+        {
+            shapes.push_back( argument_shape( index ) );
+        }
+    }
+    const bool lone = variadic && indices.size() == fixed + 1 && shapes.back().kind == Argument_kind::Typed &&
+                      table_.is_run( shapes.back().type );
+
     for( std::size_t k = 0; k < indices.size(); ++k )
     {
-        check( indices[k], table_.substitute( types_.type_of( params[k + 1] ), bindings ) );
+        const bool    element  = variadic && k >= fixed && !lone;
+        const Type_id declared = element ? table_.get( types_.type_of( params.back() ) ).element
+                                         : types_.type_of( params[std::min( k + 1, params.size() - 1 )] );
+        const Type_id expected = table_.substitute( declared, bindings );
+
+        if( !variadic || !shapes[k].recorded )
+        {
+            check( indices[k], expected );
+        }
+        else if( !table_.is_error( shapes[k].type ) && !bounds_.reaches( shapes[k].type, expected ) )
+        {
+            reporter_.error_at(
+                ast_.span( indices[k] ),
+                fmt::format( "expected `{}`, but got `{}`", table_.name( expected ), table_.name( shapes[k].type ) ),
+                mismatch_hint( table_, expected, shapes[k].type )
+            );
+        }
     }
 
     // A malformed return was reported where it was written.
@@ -4368,9 +4410,19 @@ Type_id Expressions::expected_array( Node_id id )
         return {};
     }
 
+    // Lent as a run: an array of its own length, living to the end of the statement.
+    if( table_.is_run( expectation ) && ast_.kind( id ) == Node_kind::Array_literal )
+    {
+        return table_.array_of( table_.get( expectation ).element, elements.size(), false );
+    }
+
     if( !table_.is_array( expectation ) )
     {
-        reporter_.error_at( ast_.span( id ), fmt::format( "an array literal cannot become `{}`", table_.name( expectation ) ) );
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format( "an array literal cannot become `{}`", table_.name( expectation ) ),
+            table_.is_run( expectation ) ? "a fill needs a length; list the values" : std::string {}
+        );
         absorb_all();
         return {};
     }

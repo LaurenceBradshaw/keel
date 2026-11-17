@@ -271,6 +271,15 @@ void Signatures::declare_interface_requirements()
                     "a call through the interface has no caller to pass on"
                 );
             }
+
+            if( ast_.takes_variadic( member ) )
+            {
+                reporter_.error_at(
+                    ast_.span( ast_.explicit_params( member ).back() ),
+                    "an interface's method cannot be variadic",
+                    "take a `const ref T[]` instead"
+                );
+            }
         }
 
         const Type_id interface = types_.type_of( child );
@@ -1427,7 +1436,12 @@ void Signatures::check_operators()
             if( op == Operator_name::Index )
             {
                 const auto same = std::ranges::find_if(
-                    indexes, [&]( Node_id other ) { return ast_.params( other ).size() == ast_.params( member ).size(); }
+                    indexes,
+                    [&]( Node_id other )
+                    {
+                        return ast_.params( other ).size() == ast_.params( member ).size() &&
+                               ast_.takes_variadic( other ) == ast_.takes_variadic( member );
+                    }
                 );
                 seen = same == indexes.end() ? Node_id {} : *same;
                 if( !seen.is_valid() )
@@ -1468,6 +1482,16 @@ void Signatures::check_operators()
                     ast_.span( ast_.own_type_param_list( member ) ),
                     "an operator cannot have type parameters of its own",
                     "it is called without any, so nothing could say what they are"
+                );
+                continue;
+            }
+
+            if( op != Operator_name::Index && ast_.takes_variadic( member ) )
+            {
+                reporter_.error_at(
+                    ast_.span( ast_.explicit_params( member ).back() ),
+                    "only `operator[]` takes a variadic parameter",
+                    "an operator's operands are written, not listed"
                 );
                 continue;
             }

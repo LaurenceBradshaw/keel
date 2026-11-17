@@ -313,7 +313,7 @@
                 },
                 {
                     "name": "entity.name.type.keel",
-                    "match": "\\b[A-Za-z_]\\w*(?=\\s*(?:<[\\w\\s,:*|\\[\\]<>]*>)?(?:\\[\\*?\\])?\\s+[A-Za-z_]\\w*\\b)"
+                    "match": "\\b[A-Za-z_]\\w*(?=\\s*(?:<[\\w\\s,:*|\\[\\]<>]*>)?(?:\\[\\*?\\]|\\.\\.\\.)?\\s+[A-Za-z_]\\w*\\b)"
                 },
                 {
                     "name": "entity.name.type.keel",
@@ -346,6 +346,10 @@
                 {
                     "name": "punctuation.separator.scope-resolution.keel",
                     "match": "::"
+                },
+                {
+                    "name": "keyword.operator.variadic.keel",
+                    "match": "\\.\\.\\."
                 },
                 {
                     "name": "keyword.operator.range.keel",

@@ -1,0 +1,46 @@
+// Where `T... xs` is refused, and what its calls may not pass.
+import kl::string;
+
+u64 moded( const ref u64... xs ) { return xs.size; }
+u64 defaulted( u64... xs = 1 ) { return xs.size; }
+u64 early( u64... xs, u64 y ) { return xs.size + y; }
+
+interface shape
+{
+    void grow( f64... by );
+};
+
+interface sized
+{
+    u64 size( const ref u64[] extra ) const;
+};
+
+struct Square implements sized
+{
+    u64 side;
+
+    u64 size( u64... extra ) const { return side + extra.size; }
+};
+
+struct P
+{
+    i32 x;
+
+    P operator+( P... o ) const { return this; }
+};
+
+u64 at_least( u64 a, u64... xs ) { return a + xs.size; }
+u64 words( kl::string... s ) { return s.size; }
+u64 run( const ref u64[] xs ) { return xs.size; }
+
+i32 main()
+{
+    at_least();
+    i32 i = 1;
+    at_least( 1, i );
+    kl::string t = "a";
+    words( t );
+    run( [0, ..] );
+    auto l = fn[]( u64... a ) -> u64 { return a.size; };
+    return 0;
+}

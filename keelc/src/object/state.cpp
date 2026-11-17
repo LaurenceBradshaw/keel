@@ -182,6 +182,7 @@ std::string write_state(
         [&]( Node_id id ) { tree.put_u8( u8( ast.access( id ) ) ); }
     );
     write_table( tree, refs, nodes_where( refs, [&]( Node_id id ) { return ast.is_located( id ); } ), []( Node_id ) {} );
+    write_table( tree, refs, nodes_where( refs, [&]( Node_id id ) { return ast.is_variadic( id ); } ), []( Node_id ) {} );
     write_table(
         tree, refs, nodes_where( refs, [&]( Node_id id ) { return ast.is_real_arithmetic( id ); } ), []( Node_id ) {}
     );
@@ -416,6 +417,7 @@ std::optional<Loaded_state> read_state(
 
     read_table( in, refs, [&]( Node_id id ) { ast.set_access( id, Access( in.get_u8() ) ); } );
     read_table( in, refs, [&]( Node_id id ) { ast.set_located( id ); } );
+    read_table( in, refs, [&]( Node_id id ) { ast.set_variadic( id ); } );
     read_table( in, refs, [&]( Node_id id ) { ast.set_real_arithmetic( id ); } );
     read_table(
         in,
@@ -506,6 +508,7 @@ std::optional<Loaded_state> read_state(
 #include <fmt/format.h>
 #include <algorithm>
 #include <catch2/catch_test_macros.hpp>
+#include <ranges>
 #include <sstream>
 #include "codegen/parts.h"
 #include "common/temp_dir.h"
@@ -553,13 +556,15 @@ f64 twice( f64 x ) { return x * 2.0; }
 
 private i32 hidden( i32 x ) { return x; }
 
+i32 counted( i32... xs ) { return cast<i32>( xs.size ); }
+
 i32 helper( i32 x )
 {
     shelf<i32> s = shelf { x, 0 };
     s.put( x );
     s.put( x, 2 );
     _ = Colour::Wide( twice( 1.5 ) );
-    return twice( x ) + pick_first( x ) + s.size() + limit + hidden( 1 );
+    return twice( x ) + pick_first( x ) + s.size() + limit + hidden( 1 ) + counted( x, x );
 }
 )";
 
@@ -732,6 +737,7 @@ TEST_CASE( "state_round_trips_a_module_through_another_compile", "[object][state
         REQUIRE( a.access( x ) == b.access( y ) );
         REQUIRE( a.doc_span( x ).is_valid() == b.doc_span( y ).is_valid() );
         REQUIRE( a.is_real_arithmetic( x ) == b.is_real_arithmetic( y ) );
+        REQUIRE( a.is_variadic( x ) == b.is_variadic( y ) );
         REQUIRE( a.trig( x ) == b.trig( y ) );
         REQUIRE( a.trig_span( x ).start == b.trig_span( y ).start );
 
@@ -789,6 +795,12 @@ TEST_CASE( "state_round_trips_a_module_through_another_compile", "[object][state
         named = named || types.table().name( type ) == "kl::shelf<i32>";
     }
     REQUIRE( named );
+
+    // `counted`'s list stays variadic.
+    REQUIRE(
+        std::ranges::count_if( std::views::iota( to, to + count ), [&]( u32 n ) { return b.is_variadic( Node_id { n } ); } ) ==
+        1
+    );
 
     // `twice( f64 )` keeps both marks.
     REQUIRE( std::ranges::count_if( loaded->functions, []( const Function& f ) { return f.trig == Trig::Cos; } ) == 1 );

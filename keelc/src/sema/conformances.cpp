@@ -140,6 +140,11 @@ std::optional<Conformance_problem> answer(
             return Conformance_problem::Located;
         }
 
+        if( ast.takes_variadic( member ) )
+        {
+            return Conformance_problem::Variadic;
+        }
+
         if( ast.required_params( member ) != ast.explicit_params( member ).size() )
         {
             return Conformance_problem::Defaulted;
@@ -1099,6 +1104,13 @@ void report_conformance_errors(
                 error.at,
                 fmt::format( "`{}`'s `{}` cannot have a default, since it answers `{}`", type, method, interface ),
                 fmt::format( "a call through `{}` would not see it; pass the value at each call instead", interface )
+            );
+            break;
+        case Conformance_problem::Variadic:
+            reporter.error_at(
+                error.at,
+                fmt::format( "`{}`'s `{}` cannot be variadic, since it answers `{}`", type, method, interface ),
+                fmt::format( "a call through `{}` passes a run; take a `const ref` run instead", interface )
             );
             break;
         case Conformance_problem::Private:

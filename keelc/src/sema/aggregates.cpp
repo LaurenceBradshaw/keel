@@ -319,6 +319,7 @@ bool Aggregates::names_constructor( Node_id aggregate, Symbol_id name ) const
 Node_id Aggregates::find_operator( Node_id decl, Symbol_id name, std::size_t operands, bool& malformed ) const
 {
     malformed = false;
+    Node_id variadic;
 
     for( const Node_id member : ast_.members( decl ) )
     {
@@ -330,9 +331,16 @@ Node_id Aggregates::find_operator( Node_id decl, Symbol_id name, std::size_t ope
 
         const std::size_t count = ast_.params( member ).size();
 
-        if( count == operands + 1 )
+        if( count == operands + 1 && !ast_.takes_variadic( member ) )
         {
             return member;
+        }
+
+        // `[]` taking `u64... at`, when no overload takes this many by count.
+        if( ast_.takes_variadic( member ) && operands + 2 >= count && !variadic.is_valid() )
+        {
+            variadic = member;
+            continue;
         }
 
         malformed = malformed || ( name == Interner::operator_name( Operator_name::Index )
@@ -340,7 +348,11 @@ Node_id Aggregates::find_operator( Node_id decl, Symbol_id name, std::size_t ope
                                        : name != Interner::operator_name( Operator_name::Minus ) || count > 2 );
     }
 
-    return Node_id {};
+    if( variadic.is_valid() )
+    {
+        malformed = false;
+    }
+    return variadic;
 }
 
 void Aggregates::report_private( Node_id at, Node_id member ) const
