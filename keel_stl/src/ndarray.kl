@@ -13,8 +13,11 @@ import math;
 
 /// Numbers of any rank with a shape set at run time, held row-major: the last index moves fastest.
 ///
-/// The operators work element by element, with a scalar on either side, and two arrays of
-/// different shapes panic. `a[i, j, k]` takes one index per dimension. An array owns its elements,
+/// The operators work element by element, with a scalar on either side. Two arrays broadcast:
+/// their shapes line up from the right, and a dimension of 1 or a missing one stretches to the
+/// other's, so a `(3, 4)` array plus a `(4)` adds the row to each row. Other shapes panic, as does
+/// a compound assignment whose result would not keep the left side's shape. `a[i, j, k]` takes one
+/// index per dimension. An array owns its elements,
 /// so `copy()` is the way to a second one. `for( T x : a )` walks the elements in that order.
 class ndarray<T> implements iterable<T> where T : numeric
 {
@@ -494,7 +497,7 @@ class ndarray<T> implements iterable<T> where T : numeric
     /// The element-wise sum with `o`.
     public ndarray<T> operator+( const ref ndarray<T> o ) const
     {
-        ndarray<T> r = copy();
+        ndarray<T> r = stretched( o );
         r += o;
         return r;
     }
@@ -518,7 +521,7 @@ class ndarray<T> implements iterable<T> where T : numeric
     /// The element-wise difference with `o`.
     public ndarray<T> operator-( const ref ndarray<T> o ) const
     {
-        ndarray<T> r = copy();
+        ndarray<T> r = stretched( o );
         r -= o;
         return r;
     }
@@ -542,7 +545,7 @@ class ndarray<T> implements iterable<T> where T : numeric
     /// The element-wise product with `o`.
     public ndarray<T> operator*( const ref ndarray<T> o ) const
     {
-        ndarray<T> r = copy();
+        ndarray<T> r = stretched( o );
         r *= o;
         return r;
     }
@@ -566,7 +569,7 @@ class ndarray<T> implements iterable<T> where T : numeric
     /// The element-wise quotient with `o`.
     public ndarray<T> operator/( const ref ndarray<T> o ) const
     {
-        ndarray<T> r = copy();
+        ndarray<T> r = stretched( o );
         r /= o;
         return r;
     }
@@ -590,8 +593,7 @@ class ndarray<T> implements iterable<T> where T : numeric
     /// Each element += the matching one of `o`.
     public void operator+=( const ref ndarray<T> o )
     {
-        same_shape( o );
-        kernel::zip_into( ref e_.as_run(), o.e_.as_run(), fn[]( T x, T y ) { return x + y; } );
+        combine( o, fn[]( T x, T y ) { return x + y; } );
     }
 
     /// Each element += `s`.
@@ -603,8 +605,7 @@ class ndarray<T> implements iterable<T> where T : numeric
     /// Each element -= the matching one of `o`.
     public void operator-=( const ref ndarray<T> o )
     {
-        same_shape( o );
-        kernel::zip_into( ref e_.as_run(), o.e_.as_run(), fn[]( T x, T y ) { return x - y; } );
+        combine( o, fn[]( T x, T y ) { return x - y; } );
     }
 
     /// Each element -= `s`.
@@ -616,8 +617,7 @@ class ndarray<T> implements iterable<T> where T : numeric
     /// Each element *= the matching one of `o`.
     public void operator*=( const ref ndarray<T> o )
     {
-        same_shape( o );
-        kernel::zip_into( ref e_.as_run(), o.e_.as_run(), fn[]( T x, T y ) { return x * y; } );
+        combine( o, fn[]( T x, T y ) { return x * y; } );
     }
 
     /// Each element *= `s`.
@@ -629,8 +629,7 @@ class ndarray<T> implements iterable<T> where T : numeric
     /// Each element /= the matching one of `o`.
     public void operator/=( const ref ndarray<T> o )
     {
-        same_shape( o );
-        kernel::zip_into( ref e_.as_run(), o.e_.as_run(), fn[]( T x, T y ) { return x / y; } );
+        combine( o, fn[]( T x, T y ) { return x / y; } );
     }
 
     /// Each element /= `s`.
@@ -652,7 +651,7 @@ class ndarray<T> implements iterable<T> where T : numeric
     /// The element-wise remainder after dividing by `o`.
     public ndarray<T> operator%( const ref ndarray<T> o ) const where T : integral
     {
-        ndarray<T> r = copy();
+        ndarray<T> r = stretched( o );
         r %= o;
         return r;
     }
@@ -676,7 +675,7 @@ class ndarray<T> implements iterable<T> where T : numeric
     /// The element-wise bitwise and with `o`.
     public ndarray<T> operator&( const ref ndarray<T> o ) const where T : integral
     {
-        ndarray<T> r = copy();
+        ndarray<T> r = stretched( o );
         r &= o;
         return r;
     }
@@ -700,7 +699,7 @@ class ndarray<T> implements iterable<T> where T : numeric
     /// The element-wise bitwise or with `o`.
     public ndarray<T> operator|( const ref ndarray<T> o ) const where T : integral
     {
-        ndarray<T> r = copy();
+        ndarray<T> r = stretched( o );
         r |= o;
         return r;
     }
@@ -724,7 +723,7 @@ class ndarray<T> implements iterable<T> where T : numeric
     /// The element-wise bitwise exclusive or with `o`.
     public ndarray<T> operator^( const ref ndarray<T> o ) const where T : integral
     {
-        ndarray<T> r = copy();
+        ndarray<T> r = stretched( o );
         r ^= o;
         return r;
     }
@@ -748,8 +747,7 @@ class ndarray<T> implements iterable<T> where T : numeric
     /// Each element %= the matching one of `o`.
     public void operator%=( const ref ndarray<T> o ) where T : integral
     {
-        same_shape( o );
-        kernel::zip_into( ref e_.as_run(), o.e_.as_run(), fn[]( T x, T y ) { return x % y; } );
+        combine( o, fn[]( T x, T y ) { return x % y; } );
     }
 
     /// Each element %= `s`.
@@ -761,8 +759,7 @@ class ndarray<T> implements iterable<T> where T : numeric
     /// Each element &= the matching one of `o`.
     public void operator&=( const ref ndarray<T> o ) where T : integral
     {
-        same_shape( o );
-        kernel::zip_into( ref e_.as_run(), o.e_.as_run(), fn[]( T x, T y ) { return x & y; } );
+        combine( o, fn[]( T x, T y ) { return x & y; } );
     }
 
     /// Each element &= `s`.
@@ -774,8 +771,7 @@ class ndarray<T> implements iterable<T> where T : numeric
     /// Each element |= the matching one of `o`.
     public void operator|=( const ref ndarray<T> o ) where T : integral
     {
-        same_shape( o );
-        kernel::zip_into( ref e_.as_run(), o.e_.as_run(), fn[]( T x, T y ) { return x | y; } );
+        combine( o, fn[]( T x, T y ) { return x | y; } );
     }
 
     /// Each element |= `s`.
@@ -787,8 +783,7 @@ class ndarray<T> implements iterable<T> where T : numeric
     /// Each element ^= the matching one of `o`.
     public void operator^=( const ref ndarray<T> o ) where T : integral
     {
-        same_shape( o );
-        kernel::zip_into( ref e_.as_run(), o.e_.as_run(), fn[]( T x, T y ) { return x ^ y; } );
+        combine( o, fn[]( T x, T y ) { return x ^ y; } );
     }
 
     /// Each element ^= `s`.
@@ -1375,6 +1370,74 @@ class ndarray<T> implements iterable<T> where T : numeric
         for( u64 i : 0..e_.size() )
         {
             r.assign( i, p( e_[i] ) );
+        }
+        return r;
+    }
+
+    // `op` over each element and `o`'s, `o` stretched to this shape. Panics unless it stretches.
+    private void combine<F>( const ref ndarray<T> o, F op ) where F : fn( T, T ) -> T
+    {
+        if( kernel::equal( shape_.as_run(), o.shape_.as_run() ) )
+        {
+            kernel::zip_into( ref e_.as_run(), o.e_.as_run(), op );
+            return;
+        }
+        kernel::zip_strided_into( ref e_.as_run(), o.e_.as_run(), shape_.as_run(), o.strides_to( shape_.as_run() ).as_run(), op );
+    }
+
+    // A copy in the shape this and `o` broadcast to.
+    private ndarray<T> stretched( const ref ndarray<T> o ) const
+    {
+        if( kernel::equal( shape_.as_run(), o.shape_.as_run() ) )
+        {
+            return copy();
+        }
+
+        // Lined up from the right, a dimension of 1 or a missing one stretches.
+        u64       n = rank() > o.rank() ? rank() : o.rank();
+        list<u64> s = list<u64>::with_capacity( n );
+        for( u64 k : 0..n )
+        {
+            u64 a = k + rank() < n ? 1 : shape_[k + rank() - n];
+            u64 b = k + o.rank() < n ? 1 : o.shape_[k + o.rank() - n];
+            if( a != b && a != 1 && b != 1 )
+            {
+                panic( "the shapes do not broadcast" );
+            }
+            s.push( a == 1 ? b : a );
+        }
+
+        ndarray<T> r = ndarray<T>::zeros( s.as_run() );
+        kernel::gather( ref r.e_.as_run(), e_.as_run(), s.as_run(), strides_to( s.as_run() ).as_run() );
+        return r;
+    }
+
+    // This array's strides when read in `shape`, 0 along each stretched dimension. Panics unless
+    // this shape stretches to `shape`.
+    private list<u64> strides_to( const ref u64[] shape ) const
+    {
+        if( rank() > shape.size )
+        {
+            panic( "the shapes do not broadcast" );
+        }
+
+        list<u64> own = strides();
+        list<u64> r   = list<u64>::with_capacity( shape.size );
+        u64       pad = shape.size - rank();
+        for( u64 k : 0..shape.size )
+        {
+            if( k < pad || shape_[k - pad] == 1 )
+            {
+                r.push( 0 );
+            }
+            else if( shape_[k - pad] == shape[k] )
+            {
+                r.push( own[k - pad] );
+            }
+            else
+            {
+                panic( "the shapes do not broadcast" );
+            }
         }
         return r;
     }

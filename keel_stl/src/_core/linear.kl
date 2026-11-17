@@ -187,6 +187,42 @@ void fill_strided<T>( ref T[] dest, T x, const ref u64[] shape, const ref u64[] 
     }
 }
 
+/// `dest[i] = op( dest[i], x )`, `dest` row-major over `shape` and `x` read from `a` at
+/// `strides`, as `gather` reads it. A stride of 0 repeats an element along its axis, which is how
+/// a smaller array broadcasts.
+///
+/// ### Panics
+///
+/// If `shape` and `strides` differ in length, `dest` does not hold `shape`, or a read falls
+/// outside `a`.
+void zip_strided_into<T, F>( ref T[] dest, const ref T[] a, const ref u64[] shape, const ref u64[] strides, F op ) where T : copyable, where F : fn( T, T ) -> T
+{
+    if( strided_count( shape, strides ) != dest.size )
+    {
+        panic( "the shapes differ" );
+    }
+    if( dest.size == 0 )
+    {
+        return;
+    }
+    if( shape.size == 0 )
+    {
+        dest[0] = op( dest[0], a[0] );
+        return;
+    }
+
+    u64 inner  = shape[shape.size - 1];
+    u64 stride = strides[shape.size - 1];
+    for( u64 row : 0..dest.size / inner )
+    {
+        u64 base = strided_base( row, shape, strides );
+        for( u64 j : 0..inner )
+        {
+            dest[row * inner + j] = op( dest[row * inner + j], a[base + j * stride] );
+        }
+    }
+}
+
 // The product of `shape`. Panics when `strides` differs in length.
 private u64 strided_count( const ref u64[] shape, const ref u64[] strides )
 {

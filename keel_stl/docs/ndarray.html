@@ -48,8 +48,11 @@
 <pre class="signature"><a class="anchor" href="#ndarray" aria-label="Link to ndarray">#</a><code><span class="kw">class</span> <span class="type">ndarray</span>&lt;T&gt; <span class="kw">implements</span> <a class="type" href="iterable.html#iterable">iterable</a>&lt;T&gt; <span class="kw">where</span> T : numeric</code></pre>
 <div class="doc">
 <p>Numbers of any rank with a shape set at run time, held row-major: the last index moves fastest.</p>
-<p>The operators work element by element, with a scalar on either side, and two arrays of
-different shapes panic. <code>a[i, j, k]</code> takes one index per dimension. An array owns its elements,
+<p>The operators work element by element, with a scalar on either side. Two arrays broadcast:
+their shapes line up from the right, and a dimension of 1 or a missing one stretches to the
+other's, so a <code>(3, 4)</code> array plus a <code>(4)</code> adds the row to each row. Other shapes panic, as does
+a compound assignment whose result would not keep the left side's shape. <code>a[i, j, k]</code> takes one
+index per dimension. An array owns its elements,
 so <code>copy()</code> is the way to a second one. <code>for( T x : a )</code> walks the elements in that order.</p>
 </div>
 </div>

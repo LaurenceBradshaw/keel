@@ -1,7 +1,7 @@
 // `kl::ndarray`: building in a shape, indexing at any rank, the element-wise operators with a
 // scalar either side, the integer operators and element-wise functions, the products, comparing,
 // reducing, converting, reshaping and walking, the scalar maths over each element, the masks
-// the comparisons answer, and slices.
+// the comparisons answer, slices, and broadcasting.
 import kl::mask;
 import kl::math;
 import kl::ndarray;
@@ -94,9 +94,9 @@ private void arithmetic( ref kl::test::context c )
     m /= 2.0;
     c.check_eq( m[1, 1], -2.0 );
 
-    // Equal sizes are not enough: the shapes must match.
+    // Equal sizes are not enough: the shapes must broadcast.
     c.expect_panic(
-        "the shapes differ",
+        "the shapes do not broadcast",
         fn[]()
         {
             _ = kl::ndarray<i32>::zeros( 2, 3 ) + kl::ndarray<i32>::zeros( 3, 2 );
@@ -249,7 +249,7 @@ private void integer_operators_and_functions( ref kl::test::context c )
     a |= kl::ndarray<i64>::ones( 2, 2 );
     a &= 3;
     c.check( a == kl::ndarray<i64>( [ 1, 3, 3, 3 ], 2, 2 ) );
-    c.expect_panic( "the shapes differ", fn[]() { kl::ndarray<i64> b = kl::ndarray<i64>::ones( 2, 2 ); b %= kl::ndarray<i64>::ones( 4 ); } );
+    c.expect_panic( "the shapes do not broadcast", fn[]() { kl::ndarray<i64> b = kl::ndarray<i64>::ones( 2, 2 ); b %= kl::ndarray<i64>::ones( 4 ); } );
 
     kl::ndarray<f64> f = kl::ndarray<f64>( [ -1.5, 0.0, 2.0 ] );
     c.check( f.abs() == kl::ndarray<f64>( [ 1.5, 0.0, 2.0 ] ) );
@@ -403,4 +403,35 @@ private void slices( ref kl::test::context c )
     c.expect_panic( "the rank is not 2", fn[]() { _ = kl::ndarray<i32>::zeros( 2 ).row( 0 ); } );
     c.expect_panic( "the index count exceeds the rank", fn[]() { _ = kl::ndarray<i32>::zeros( 2 ).block( 0, 0 ); } );
     c.expect_panic( "index out of range", fn[]() { _ = kl::ndarray<i32>::zeros( 2, 2 ).block( 2 ); } );
+}
+
+private void broadcasting( ref kl::test::context c )
+{
+    kl::ndarray<i32> a   = kl::ndarray<i32>::arange( 0, 6 ).reshaped( 2, 3 );
+    kl::ndarray<i32> row = kl::ndarray<i32>( [ 10, 20, 30 ] );
+    kl::ndarray<i32> col = kl::ndarray<i32>( [ 100, 200 ], 2, 1 );
+    c.check( a + row == kl::ndarray<i32>( [ 10, 21, 32, 13, 24, 35 ], 2, 3 ) );
+    c.check( row + a == a + row );
+    c.check( a * col == kl::ndarray<i32>( [ 0, 100, 200, 600, 800, 1000 ], 2, 3 ) );
+    c.check( col - row == kl::ndarray<i32>( [ 90, 80, 70, 190, 180, 170 ], 2, 3 ) );
+    c.check( a + kl::ndarray<i32>::filled( 1 ) == a + 1 );
+    c.check( ( a % kl::ndarray<i32>( [ 2 ] ) ).sum() == 3 );
+
+    // A stretch inside the shape: (2, 1, 2) and (3, 1) give (2, 3, 2).
+    kl::ndarray<i32> t = kl::ndarray<i32>( [ 1, 2, 3, 4 ], 2, 1, 2 ) + kl::ndarray<i32>( [ 0, 10, 20 ], 3, 1 );
+    c.check_eq( t.rank(), 3 );
+    c.check_eq( t.shape()[1], 3 );
+    c.check_eq( t[1, 2, 1], 24 );
+    c.check_eq( t.sum(), 3 * 10 + 4 * 30 );
+
+    kl::ndarray<i32> b = a.copy();
+    b += row;
+    c.check( b == a + row );
+    b -= col;
+    c.check_eq( b[1, 0], 3 + 10 - 200 );
+    c.check_eq( ( kl::ndarray<i32>::zeros( 0, 3 ) + row ).size(), 0 );
+
+    c.expect_panic( "the shapes do not broadcast", fn[]() { _ = kl::ndarray<i32>::zeros( 2, 3 ) + kl::ndarray<i32>::zeros( 2 ); } );
+    c.expect_panic( "the shapes do not broadcast", fn[]() { kl::ndarray<i32> r = kl::ndarray<i32>::zeros( 3 ); r += kl::ndarray<i32>::zeros( 2, 3 ); } );
+    c.expect_panic( "the shapes do not broadcast", fn[]() { kl::ndarray<i32> r = kl::ndarray<i32>::zeros( 2, 1 ); r += kl::ndarray<i32>::zeros( 2, 3 ); } );
 }
