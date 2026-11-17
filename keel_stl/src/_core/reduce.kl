@@ -1,17 +1,23 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// Reductions. Each adds in index order with one accumulator, so a float answer is exact to that order.
+// Reductions. A sum adds pairwise, as numpy does, so a float's rounding error grows with log n, not n;
+// the other reductions run in index order.
 
 /// The total of every element; 0 when there are none.
 T sum<T>( const ref T[] a ) where T : numeric
 {
-    T total = 0;
-    for( u64 i : 0..a.size )
+    // Inline below 8, where pairwise adds in order too, so a small vector's sum is not a call.
+    if( a.size < 8 )
     {
-        total += a[i];
+        T total = 0;
+        for( u64 i : 0..a.size )
+        {
+            total += a[i];
+        }
+        return total;
     }
-    return total;
+    return pairwise( start( a ), start( a ), 1, a.size, fn[]( T x, T _ ) -> T { return x; } );
 }
 
 /// The sum of `a[i] * b[i]`.
@@ -26,12 +32,16 @@ T dot<T>( const ref T[] a, const ref T[] b ) where T : numeric
         panic( "the shapes differ" );
     }
 
-    T total = 0;
-    for( u64 i : 0..a.size )
+    if( a.size < 8 )
     {
-        total += a[i] * b[i];
+        T total = 0;
+        for( u64 i : 0..a.size )
+        {
+            total += a[i] * b[i];
+        }
+        return total;
     }
-    return total;
+    return pairwise( start( a ), start( b ), 1, a.size, fn[]( T x, T y ) -> T { return x * y; } );
 }
 
 /// The product of every element; 1 when there are none.
@@ -185,23 +195,28 @@ void variance_axis<T>( ref T[] dest, const ref T[] a, u64 outer, u64 n, u64 inne
         panic( "the shapes differ" );
     }
 
+    const T[*] base = start( a );
     for( u64 o : 0..outer )
     {
         for( u64 i : 0..inner )
         {
-            T mean = 0;
-            for( u64 k : 0..n )
+            const T[*] first;
+            unsafe
             {
-                mean += a[( o * n + k ) * inner + i];
+                first = base + ( o * n * inner + i );
             }
-            mean /= cast<T>( n );
-
-            T total = 0;
-            for( u64 k : 0..n )
-            {
-                T d = a[( o * n + k ) * inner + i] - mean;
-                total += d * d;
-            }
+            T mean  = pairwise( first, first, inner, n, fn[]( T x, T _ ) -> T { return x; } ) / cast<T>( n );
+            T total = pairwise(
+                first,
+                first,
+                inner,
+                n,
+                fn[mean]( T x, T _ ) -> T
+                {
+                    T d = x - mean;
+                    return d * d;
+                }
+            );
             dest[o * inner + i] = total / cast<T>( n );
         }
     }
@@ -213,4 +228,66 @@ T variance<T>( const ref T[] a ) where T : floating
     T[1] d = [0];
     variance_axis( ref d, a, 1, a.size, 1 );
     return d[0];
+}
+
+// The first element's address, through which `pairwise` reads with the size already checked; null for an
+// empty run.
+private const T[*] start<T>( const ref T[] a )
+{
+    if( a.size == 0 )
+    {
+        return nullptr;
+    }
+    unsafe
+    {
+        return cast<const T[*]>( &a[0] );
+    }
+}
+
+// `at( a[j], b[j] )` summed for `j = k * stride`, `k` in `0..n`, pairwise as numpy adds: a run of up to
+// 128 in eight running totals joined as a tree, a longer one as its halves' totals, split at a multiple
+// of 8. Each of `a` and `b` holds the `n` elements it reads; one range check per run, by the caller, stands
+// for the eight a turn would make.
+private T pairwise<T, F>( const T[*] a, const T[*] b, u64 stride, u64 n, F at ) where T : numeric, where F : fn( T, T ) -> T
+{
+    unsafe
+    {
+        if( n > 128 )
+        {
+            u64 half = n / 2 - n / 2 % 8;
+            return pairwise( a, b, stride, half, at ) + pairwise( a + half * stride, b + half * stride, stride, n - half, at );
+        }
+
+        T   total = 0;
+        u64 k     = 0;
+        if( n >= 8 )
+        {
+            T r0 = at( a[0], b[0] );
+            T r1 = at( a[stride], b[stride] );
+            T r2 = at( a[2 * stride], b[2 * stride] );
+            T r3 = at( a[3 * stride], b[3 * stride] );
+            T r4 = at( a[4 * stride], b[4 * stride] );
+            T r5 = at( a[5 * stride], b[5 * stride] );
+            T r6 = at( a[6 * stride], b[6 * stride] );
+            T r7 = at( a[7 * stride], b[7 * stride] );
+            for( k = 8; k + 8 <= n; k += 8 )
+            {
+                u64 j = k * stride;
+                r0 += at( a[j], b[j] );
+                r1 += at( a[j + stride], b[j + stride] );
+                r2 += at( a[j + 2 * stride], b[j + 2 * stride] );
+                r3 += at( a[j + 3 * stride], b[j + 3 * stride] );
+                r4 += at( a[j + 4 * stride], b[j + 4 * stride] );
+                r5 += at( a[j + 5 * stride], b[j + 5 * stride] );
+                r6 += at( a[j + 6 * stride], b[j + 6 * stride] );
+                r7 += at( a[j + 7 * stride], b[j + 7 * stride] );
+            }
+            total = ( ( r0 + r1 ) + ( r2 + r3 ) ) + ( ( r4 + r5 ) + ( r6 + r7 ) );
+        }
+        for( ; k < n; k += 1 )
+        {
+            total += at( a[k * stride], b[k * stride] );
+        }
+        return total;
+    }
 }

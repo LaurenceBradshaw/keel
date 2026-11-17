@@ -127,6 +127,23 @@ private void reductions( ref kl::test::context c )
     f64[3] f = [ 1e16, 1.0, 1.0 ];
     c.check_eq( kernel::sum( f ), 1e16 );
 
+    // Pairwise, as numpy adds: in order, a thousand tenths are 99.9999999999986.
+    kl::list<f64> tenths = kl::list<f64>::filled( 1000, 0.1 );
+    kl::list<f64> ones = kl::list<f64>::filled( 1000, 1.0 );
+    c.check_eq( kernel::sum( tenths.as_run() ), 100.00000000000001 );
+    c.check_eq( kernel::dot( tenths.as_run(), ones.as_run() ), 100.00000000000001 );
+
+    // Down a strided axis as along a run: column 0 is 0, 0.1, ..., 99.9, column 1 is all 1.
+    kl::list<f64> columns = kl::list<f64>::filled( 2000, 1.0 );
+    for( u64 i : 0..1000 )
+    {
+        columns[2 * i] = cast<f64>( i ) * 0.1;
+    }
+    f64[2] spread = [ -1.0, -1.0 ];
+    kernel::variance_axis( ref spread, columns.as_run(), 1, 1000, 2 );
+    c.check_eq( spread[0], 833.3325000000001 );
+    c.check_eq( spread[1], 0.0 );
+
     c.expect_panic(
         "the shapes differ",
         fn[]()
