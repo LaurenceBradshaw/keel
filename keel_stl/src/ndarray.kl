@@ -875,10 +875,154 @@ class ndarray<T> implements iterable<T> where T : numeric
 
     /// --- Reducing ---
 
-    /// The total of every element, added in index order.
+    /// The total of every element, added in index order; 0 when there are none.
     public T sum() const
     {
         return kernel::sum( e_.as_run() );
+    }
+
+    /// The totals along `axis`, dropped from the shape: a 2 by 3 array's `sum( 0 )` has 3 elements.
+    public ndarray<T> sum( u64 axis ) const
+    {
+        if( length( axis ) == 0 )
+        {
+            return ndarray<T>::zeros( without( axis ).as_run() );
+        }
+        return folded( axis, fn[]( T x, T y ) { return x + y; } );
+    }
+
+    /// The product of every element, in index order; 1 when there are none.
+    public T prod() const
+    {
+        return kernel::prod( e_.as_run() );
+    }
+
+    /// The products along `axis`, dropped from the shape.
+    public ndarray<T> prod( u64 axis ) const
+    {
+        if( length( axis ) == 0 )
+        {
+            return ndarray<T>::ones( without( axis ).as_run() );
+        }
+        return folded( axis, fn[]( T x, T y ) { return x * y; } );
+    }
+
+    /// The smallest element, as `kl::min`. Panics when there are none.
+    public T min() const
+    {
+        return kernel::fold( e_.as_run(), fn[]( T x, T y ) { return kl::min( x, y ); } );
+    }
+
+    /// The smallest along `axis`, dropped from the shape. Panics when the axis is empty.
+    public ndarray<T> min( u64 axis ) const
+    {
+        return folded( axis, fn[]( T x, T y ) { return kl::min( x, y ); } );
+    }
+
+    /// The largest element, as `kl::max`. Panics when there are none.
+    public T max() const
+    {
+        return kernel::fold( e_.as_run(), fn[]( T x, T y ) { return kl::max( x, y ); } );
+    }
+
+    /// The largest along `axis`, dropped from the shape. Panics when the axis is empty.
+    public ndarray<T> max( u64 axis ) const
+    {
+        return folded( axis, fn[]( T x, T y ) { return kl::max( x, y ); } );
+    }
+
+    /// The row-major index of the first smallest element, or of the first NaN. Panics when there
+    /// are none.
+    public u64 argmin() const
+    {
+        return kernel::arg_best( e_.as_run(), fn[]( T x, T m ) { return m == m && ( x < m || x != x ); } );
+    }
+
+    /// The index along `axis` of each first smallest, or first NaN, `axis` dropped from the shape.
+    /// Panics when the axis is empty.
+    public ndarray<u64> argmin( u64 axis ) const
+    {
+        return arg_best( axis, fn[]( T x, T m ) { return m == m && ( x < m || x != x ); } );
+    }
+
+    /// The row-major index of the first largest element, or of the first NaN. Panics when there
+    /// are none.
+    public u64 argmax() const
+    {
+        return kernel::arg_best( e_.as_run(), fn[]( T x, T m ) { return m == m && ( x > m || x != x ); } );
+    }
+
+    /// The index along `axis` of each first largest, or first NaN, `axis` dropped from the shape.
+    /// Panics when the axis is empty.
+    public ndarray<u64> argmax( u64 axis ) const
+    {
+        return arg_best( axis, fn[]( T x, T m ) { return m == m && ( x > m || x != x ); } );
+    }
+
+    /// The running totals of the elements, as rank 1.
+    public ndarray<T> cumsum() const
+    {
+        return flattened().cumsum( 0 );
+    }
+
+    /// The running totals along `axis`, in the same shape.
+    public ndarray<T> cumsum( u64 axis ) const
+    {
+        return scanned( axis, fn[]( T x, T y ) { return x + y; } );
+    }
+
+    /// The running products of the elements, as rank 1.
+    public ndarray<T> cumprod() const
+    {
+        return flattened().cumprod( 0 );
+    }
+
+    /// The running products along `axis`, in the same shape.
+    public ndarray<T> cumprod( u64 axis ) const
+    {
+        return scanned( axis, fn[]( T x, T y ) { return x * y; } );
+    }
+
+    /// The mean of the elements; a NaN when there are none.
+    public T mean() const where T : floating
+    {
+        return sum() / cast<T>( size() );
+    }
+
+    /// The means along `axis`, dropped from the shape.
+    public ndarray<T> mean( u64 axis ) const where T : floating
+    {
+        ndarray<T> r = sum( axis );
+        r /= cast<T>( shape_[axis] );
+        return r;
+    }
+
+    /// The mean square distance of the elements from their mean; a NaN when there are none.
+    public T var() const where T : floating
+    {
+        return kernel::variance( e_.as_run() );
+    }
+
+    /// The variances along `axis`, dropped from the shape.
+    public ndarray<T> var( u64 axis ) const where T : floating
+    {
+        ndarray<T> r = ndarray<T>::zeros( without( axis ).as_run() );
+        kernel::variance_axis( ref r.e_.as_run(), e_.as_run(), span( 0, axis ), shape_[axis], span( axis + 1, rank() ) );
+        return r;
+    }
+
+    /// The standard deviation, the square root of `var()`.
+    public T std() const where T : floating
+    {
+        return cast<T>( kl::sqrt( cast<f64>( var() ) ) );
+    }
+
+    /// The standard deviations along `axis`, dropped from the shape.
+    public ndarray<T> std( u64 axis ) const where T : floating
+    {
+        ndarray<T> r = var( axis );
+        kernel::map_into( ref r.e_.as_run(), fn[]( T x ) { return cast<T>( kl::sqrt( cast<f64>( x ) ) ); } );
+        return r;
     }
 
     /// --- Converting ---
@@ -950,6 +1094,59 @@ class ndarray<T> implements iterable<T> where T : numeric
             e.push( x );
         }
         return e;
+    }
+
+    // The length of `axis`. Panics when there is no such axis.
+    private u64 length( u64 axis ) const
+    {
+        if( axis >= rank() )
+        {
+            panic( "axis out of range" );
+        }
+        return shape_[axis];
+    }
+
+    // The shape without `axis`.
+    private list<u64> without( u64 axis ) const
+    {
+        _ = length( axis );
+        list<u64> s = list<u64>::with_capacity( rank() - 1 );
+        for( u64 k : 0..rank() )
+        {
+            if( k != axis )
+            {
+                s.push( shape_[k] );
+            }
+        }
+        return s;
+    }
+
+    // The number of elements in dimensions `from` up to `to`.
+    private u64 span( u64 from, u64 to ) const
+    {
+        return count( shape_.as_run()[from..to] );
+    }
+
+    private ndarray<T> folded<F>( u64 axis, F op ) const where F : fn( T, T ) -> T
+    {
+        ndarray<T> r = ndarray<T>::zeros( without( axis ).as_run() );
+        kernel::fold_axis( ref r.e_.as_run(), e_.as_run(), span( 0, axis ), shape_[axis], span( axis + 1, rank() ), op );
+        return r;
+    }
+
+    private ndarray<u64> arg_best<F>( u64 axis, F better ) const where F : fn( T, T ) -> bool
+    {
+        ndarray<u64> r = ndarray<u64>::zeros( without( axis ).as_run() );
+        kernel::arg_best_axis( ref r.as_run(), e_.as_run(), span( 0, axis ), shape_[axis], span( axis + 1, rank() ), better );
+        return r;
+    }
+
+    private ndarray<T> scanned<F>( u64 axis, F op ) const where F : fn( T, T ) -> T
+    {
+        u64        n = length( axis );
+        ndarray<T> r = copy();
+        kernel::scan_axis( ref r.e_.as_run(), span( 0, axis ), n, span( axis + 1, rank() ), op );
+        return r;
     }
 
     private void same_shape( const ref ndarray<T> o ) const

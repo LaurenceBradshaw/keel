@@ -478,6 +478,70 @@ class vec<T, u64 N> implements iterable<T> where T : numeric
         return kernel::sum( e_ );
     }
 
+    /// The product of every element, in index order.
+    public T prod() const
+    {
+        return kernel::prod( e_ );
+    }
+
+    /// The smallest element, as `kl::min`.
+    public T min() const
+    {
+        return kernel::fold( e_, fn[]( T x, T y ) { return kl::min( x, y ); } );
+    }
+
+    /// The largest element, as `kl::max`.
+    public T max() const
+    {
+        return kernel::fold( e_, fn[]( T x, T y ) { return kl::max( x, y ); } );
+    }
+
+    /// The index of the first smallest element, or of the first NaN.
+    public u64 argmin() const
+    {
+        return kernel::arg_best( e_, fn[]( T x, T m ) { return m == m && ( x < m || x != x ); } );
+    }
+
+    /// The index of the first largest element, or of the first NaN.
+    public u64 argmax() const
+    {
+        return kernel::arg_best( e_, fn[]( T x, T m ) { return m == m && ( x > m || x != x ); } );
+    }
+
+    /// The running totals of the elements.
+    public vec<T, N> cumsum() const
+    {
+        vec<T, N> r = this;
+        kernel::scan_axis( ref r.e_, 1, N, 1, fn[]( T x, T y ) { return x + y; } );
+        return r;
+    }
+
+    /// The running products of the elements.
+    public vec<T, N> cumprod() const
+    {
+        vec<T, N> r = this;
+        kernel::scan_axis( ref r.e_, 1, N, 1, fn[]( T x, T y ) { return x * y; } );
+        return r;
+    }
+
+    /// The mean of the elements.
+    public T mean() const where T : floating
+    {
+        return sum() / cast<T>( N );
+    }
+
+    /// The mean square distance of the elements from their mean.
+    public T var() const where T : floating
+    {
+        return kernel::variance( e_ );
+    }
+
+    /// The standard deviation, the square root of `var()`.
+    public T std() const where T : floating
+    {
+        return cast<T>( kl::sqrt( cast<f64>( var() ) ) );
+    }
+
     /// --- Converting ---
 
     /// Each element converted by `cast`, which panics on a value `U` cannot hold. A float to an
@@ -1030,6 +1094,78 @@ class mat<T, u64 R, u64 C> implements iterable<T> where T : numeric
         return kernel::sum( e_ );
     }
 
+    /// The product of every element, in index order.
+    public T prod() const
+    {
+        return kernel::prod( e_ );
+    }
+
+    /// The smallest element, as `kl::min`.
+    public T min() const
+    {
+        return kernel::fold( e_, fn[]( T x, T y ) { return kl::min( x, y ); } );
+    }
+
+    /// The largest element, as `kl::max`.
+    public T max() const
+    {
+        return kernel::fold( e_, fn[]( T x, T y ) { return kl::max( x, y ); } );
+    }
+
+    /// The row-major index of the first smallest element, or of the first NaN.
+    public u64 argmin() const
+    {
+        return kernel::arg_best( e_, fn[]( T x, T m ) { return m == m && ( x < m || x != x ); } );
+    }
+
+    /// The row-major index of the first largest element, or of the first NaN.
+    public u64 argmax() const
+    {
+        return kernel::arg_best( e_, fn[]( T x, T m ) { return m == m && ( x > m || x != x ); } );
+    }
+
+    /// The running totals of the elements, row after row, as a vector.
+    public vec<T, (R * C)> cumsum() const
+    {
+        return flattened().cumsum();
+    }
+
+    /// The running totals down each column (`axis` 0) or along each row (1).
+    public mat<T, R, C> cumsum( u64 axis ) const
+    {
+        return scanned( axis, fn[]( T x, T y ) { return x + y; } );
+    }
+
+    /// The running products of the elements, row after row, as a vector.
+    public vec<T, (R * C)> cumprod() const
+    {
+        return flattened().cumprod();
+    }
+
+    /// The running products down each column (`axis` 0) or along each row (1).
+    public mat<T, R, C> cumprod( u64 axis ) const
+    {
+        return scanned( axis, fn[]( T x, T y ) { return x * y; } );
+    }
+
+    /// The mean of the elements.
+    public T mean() const where T : floating
+    {
+        return sum() / cast<T>( R * C );
+    }
+
+    /// The mean square distance of the elements from their mean.
+    public T var() const where T : floating
+    {
+        return kernel::variance( e_ );
+    }
+
+    /// The standard deviation, the square root of `var()`.
+    public T std() const where T : floating
+    {
+        return cast<T>( kl::sqrt( cast<f64>( var() ) ) );
+    }
+
     /// --- Converting ---
 
     /// Each element converted by `cast`, which panics on a value `U` cannot hold. A float to an
@@ -1073,6 +1209,26 @@ class mat<T, u64 R, u64 C> implements iterable<T> where T : numeric
         return r;
     }
 
+    /// --- Internals ---
+
+    // Panics unless `axis` is 0 or 1.
+    private mat<T, R, C> scanned<F>( u64 axis, F op ) const where F : fn( T, T ) -> T
+    {
+        mat<T, R, C> r = this;
+        if( axis == 0 )
+        {
+            kernel::scan_axis( ref r.e_, 1, R, C, op );
+        }
+        else if( axis == 1 )
+        {
+            kernel::scan_axis( ref r.e_, R, C, 1, op );
+        }
+        else
+        {
+            panic( "axis out of range" );
+        }
+        return r;
+    }
 };
 
 /// The `N` by `N` identity: `mat<f64, 3, 3> i = kl::identity();`.

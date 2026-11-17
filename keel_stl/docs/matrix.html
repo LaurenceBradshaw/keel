@@ -354,6 +354,66 @@ nothing, and an infinity only to itself.</p>
 <p>The total of every element, added in index order.</p>
 </div>
 </div>
+<div class="group" id="vec.prod">
+<pre class="signature"><a class="anchor" href="#vec.prod" aria-label="Link to prod">#</a><code><span class="kw">public</span> T <span class="fn">prod</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The product of every element, in index order.</p>
+</div>
+</div>
+<div class="group" id="vec.min">
+<pre class="signature"><a class="anchor" href="#vec.min" aria-label="Link to min">#</a><code><span class="kw">public</span> T <span class="fn">min</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The smallest element, as <code>kl::min</code>.</p>
+</div>
+</div>
+<div class="group" id="vec.max">
+<pre class="signature"><a class="anchor" href="#vec.max" aria-label="Link to max">#</a><code><span class="kw">public</span> T <span class="fn">max</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The largest element, as <code>kl::max</code>.</p>
+</div>
+</div>
+<div class="group" id="vec.argmin">
+<pre class="signature"><a class="anchor" href="#vec.argmin" aria-label="Link to argmin">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">argmin</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The index of the first smallest element, or of the first NaN.</p>
+</div>
+</div>
+<div class="group" id="vec.argmax">
+<pre class="signature"><a class="anchor" href="#vec.argmax" aria-label="Link to argmax">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">argmax</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The index of the first largest element, or of the first NaN.</p>
+</div>
+</div>
+<div class="group" id="vec.cumsum">
+<pre class="signature"><a class="anchor" href="#vec.cumsum" aria-label="Link to cumsum">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">cumsum</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The running totals of the elements.</p>
+</div>
+</div>
+<div class="group" id="vec.cumprod">
+<pre class="signature"><a class="anchor" href="#vec.cumprod" aria-label="Link to cumprod">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">cumprod</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The running products of the elements.</p>
+</div>
+</div>
+<div class="group" id="vec.mean">
+<pre class="signature"><a class="anchor" href="#vec.mean" aria-label="Link to mean">#</a><code><span class="kw">public</span> T <span class="fn">mean</span>() <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The mean of the elements.</p>
+</div>
+</div>
+<div class="group" id="vec.var">
+<pre class="signature"><a class="anchor" href="#vec.var" aria-label="Link to var">#</a><code><span class="kw">public</span> T <span class="fn">var</span>() <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The mean square distance of the elements from their mean.</p>
+</div>
+</div>
+<div class="group" id="vec.std">
+<pre class="signature"><a class="anchor" href="#vec.std" aria-label="Link to std">#</a><code><span class="kw">public</span> T <span class="fn">std</span>() <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The standard deviation, the square root of <code>var()</code>.</p>
+</div>
+</div>
 <h3>Converting</h3>
 <div class="group" id="vec.to">
 <pre class="signature"><a class="anchor" href="#vec.to" aria-label="Link to to">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;U, N&gt; <span class="fn">to</span>&lt;U&gt;() <span class="kw">const</span> <span class="kw">where</span> U : numeric, <span class="kw">where</span> T : <a class="type" href="prelude.html#converts_to">converts_to</a>&lt;U&gt;</code></pre>
@@ -747,6 +807,74 @@ nothing, and an infinity only to itself.</p>
 <pre class="signature"><a class="anchor" href="#mat.sum" aria-label="Link to sum">#</a><code><span class="kw">public</span> T <span class="fn">sum</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>The total of every element, added in index order.</p>
+</div>
+</div>
+<div class="group" id="mat.prod">
+<pre class="signature"><a class="anchor" href="#mat.prod" aria-label="Link to prod">#</a><code><span class="kw">public</span> T <span class="fn">prod</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The product of every element, in index order.</p>
+</div>
+</div>
+<div class="group" id="mat.min">
+<pre class="signature"><a class="anchor" href="#mat.min" aria-label="Link to min">#</a><code><span class="kw">public</span> T <span class="fn">min</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The smallest element, as <code>kl::min</code>.</p>
+</div>
+</div>
+<div class="group" id="mat.max">
+<pre class="signature"><a class="anchor" href="#mat.max" aria-label="Link to max">#</a><code><span class="kw">public</span> T <span class="fn">max</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The largest element, as <code>kl::max</code>.</p>
+</div>
+</div>
+<div class="group" id="mat.argmin">
+<pre class="signature"><a class="anchor" href="#mat.argmin" aria-label="Link to argmin">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">argmin</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The row-major index of the first smallest element, or of the first NaN.</p>
+</div>
+</div>
+<div class="group" id="mat.argmax">
+<pre class="signature"><a class="anchor" href="#mat.argmax" aria-label="Link to argmax">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">argmax</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The row-major index of the first largest element, or of the first NaN.</p>
+</div>
+</div>
+<div class="group" id="mat.cumsum">
+<pre class="signature"><a class="anchor" href="#mat.cumsum" aria-label="Link to cumsum">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, ?&gt; <span class="fn">cumsum</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The running totals of the elements, row after row, as a vector.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#mat.cumsum" aria-label="Link to cumsum">#</a><code><span class="kw">public</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">cumsum</span>( <a class="prim" href="prelude.html#u64">u64</a> axis ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The running totals down each column (<code>axis</code> 0) or along each row (1).</p>
+</div>
+</div>
+<div class="group" id="mat.cumprod">
+<pre class="signature"><a class="anchor" href="#mat.cumprod" aria-label="Link to cumprod">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, ?&gt; <span class="fn">cumprod</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The running products of the elements, row after row, as a vector.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#mat.cumprod" aria-label="Link to cumprod">#</a><code><span class="kw">public</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">cumprod</span>( <a class="prim" href="prelude.html#u64">u64</a> axis ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The running products down each column (<code>axis</code> 0) or along each row (1).</p>
+</div>
+</div>
+<div class="group" id="mat.mean">
+<pre class="signature"><a class="anchor" href="#mat.mean" aria-label="Link to mean">#</a><code><span class="kw">public</span> T <span class="fn">mean</span>() <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The mean of the elements.</p>
+</div>
+</div>
+<div class="group" id="mat.var">
+<pre class="signature"><a class="anchor" href="#mat.var" aria-label="Link to var">#</a><code><span class="kw">public</span> T <span class="fn">var</span>() <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The mean square distance of the elements from their mean.</p>
+</div>
+</div>
+<div class="group" id="mat.std">
+<pre class="signature"><a class="anchor" href="#mat.std" aria-label="Link to std">#</a><code><span class="kw">public</span> T <span class="fn">std</span>() <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The standard deviation, the square root of <code>var()</code>.</p>
 </div>
 </div>
 <h3>Converting</h3>

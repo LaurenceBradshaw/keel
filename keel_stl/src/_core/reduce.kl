@@ -33,3 +33,184 @@ T dot<T>( const ref T[] a, const ref T[] b ) where T : numeric
     }
     return total;
 }
+
+/// The product of every element; 1 when there are none.
+T prod<T>( const ref T[] a ) where T : numeric
+{
+    T total = 1;
+    for( u64 i : 0..a.size )
+    {
+        total *= a[i];
+    }
+    return total;
+}
+
+// The axis kernels read `a` as `outer` by `n` by `inner`, row-major; `dest` is `outer` by `inner`.
+
+/// `dest[o, i]` is `a[o, 0, i]`, `a[o, 1, i]`, ... joined by `op` in index order.
+///
+/// ### Panics
+///
+/// If `n` is 0 or the sizes differ.
+void fold_axis<T, F>( ref T[] dest, const ref T[] a, u64 outer, u64 n, u64 inner, F op ) where T : copyable, where F : fn( T, T ) -> T
+{
+    if( n == 0 )
+    {
+        panic( "the axis is empty" );
+    }
+    if( a.size != outer * n * inner || dest.size != outer * inner )
+    {
+        panic( "the shapes differ" );
+    }
+
+    for( u64 o : 0..outer )
+    {
+        for( u64 i : 0..inner )
+        {
+            dest[o * inner + i] = a[o * n * inner + i];
+        }
+        for( u64 k : 1..n )
+        {
+            for( u64 i : 0..inner )
+            {
+                dest[o * inner + i] = op( dest[o * inner + i], a[( o * n + k ) * inner + i] );
+            }
+        }
+    }
+}
+
+/// Every element joined by `op` in index order.
+///
+/// ### Panics
+///
+/// If `a` is empty.
+T fold<T, F>( const ref T[] a, F op ) where T : copyable, where F : fn( T, T ) -> T
+{
+    if( a.size == 0 )
+    {
+        panic( "the array is empty" );
+    }
+
+    T[1] d = [a[0]];
+    fold_axis( ref d, a, 1, a.size, 1, op );
+    return d[0];
+}
+
+/// `dest[o, i]` is the first `k` whose `a[o, k, i]` no later element is `better` than.
+///
+/// ### Panics
+///
+/// If `n` is 0 or the sizes differ.
+void arg_best_axis<T, F>( ref u64[] dest, const ref T[] a, u64 outer, u64 n, u64 inner, F better ) where T : copyable, where F : fn( T, T ) -> bool
+{
+    if( n == 0 )
+    {
+        panic( "the axis is empty" );
+    }
+    if( a.size != outer * n * inner || dest.size != outer * inner )
+    {
+        panic( "the shapes differ" );
+    }
+
+    for( u64 o : 0..outer )
+    {
+        for( u64 i : 0..inner )
+        {
+            u64 at = 0;
+            for( u64 k : 1..n )
+            {
+                if( better( a[( o * n + k ) * inner + i], a[( o * n + at ) * inner + i] ) )
+                {
+                    at = k;
+                }
+            }
+            dest[o * inner + i] = at;
+        }
+    }
+}
+
+/// The index of the first element no later one is `better` than.
+///
+/// ### Panics
+///
+/// If `a` is empty.
+u64 arg_best<T, F>( const ref T[] a, F better ) where T : copyable, where F : fn( T, T ) -> bool
+{
+    if( a.size == 0 )
+    {
+        panic( "the array is empty" );
+    }
+
+    u64[1] d = [0];
+    arg_best_axis( ref d, a, 1, a.size, 1, better );
+    return d[0];
+}
+
+/// `a[o, k, i] = op( a[o, k - 1, i], a[o, k, i] )` for each `k` from 1, in place: the running
+/// totals for `+`.
+///
+/// ### Panics
+///
+/// If the size differs.
+void scan_axis<T, F>( ref T[] a, u64 outer, u64 n, u64 inner, F op ) where T : copyable, where F : fn( T, T ) -> T
+{
+    if( a.size != outer * n * inner )
+    {
+        panic( "the shapes differ" );
+    }
+
+    for( u64 o : 0..outer )
+    {
+        for( u64 k : 1..n )
+        {
+            for( u64 i : 0..inner )
+            {
+                u64 at = ( o * n + k ) * inner + i;
+                a[at]  = op( a[at - inner], a[at] );
+            }
+        }
+    }
+}
+
+/// `dest[o, i]` is the mean square distance of `a[o, k, i]` from their mean, which is taken
+/// first; a NaN when `n` is 0.
+///
+/// ### Panics
+///
+/// If the sizes differ.
+void variance_axis<T>( ref T[] dest, const ref T[] a, u64 outer, u64 n, u64 inner ) where T : floating
+{
+    if( a.size != outer * n * inner || dest.size != outer * inner )
+    {
+        panic( "the shapes differ" );
+    }
+
+    for( u64 o : 0..outer )
+    {
+        for( u64 i : 0..inner )
+        {
+            T mean = 0;
+            for( u64 k : 0..n )
+            {
+                mean += a[( o * n + k ) * inner + i];
+            }
+            mean /= cast<T>( n );
+
+            T total = 0;
+            for( u64 k : 0..n )
+            {
+                T d = a[( o * n + k ) * inner + i] - mean;
+                total += d * d;
+            }
+            dest[o * inner + i] = total / cast<T>( n );
+        }
+    }
+}
+
+/// The mean square distance of the elements from their mean; a NaN when there are none.
+T variance<T>( const ref T[] a ) where T : floating
+{
+    T[1] d = [0];
+    variance_axis( ref d, a, 1, a.size, 1 );
+    return d[0];
+}

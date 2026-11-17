@@ -198,3 +198,33 @@ private void integer_operators_and_functions( ref kl::test::context c )
     c.check( f.abs() == kl::mat<f64, 1, 2>( [ 1.5, 2.0 ] ) );
     c.check( kl::maximum( f, kl::mat<f64, 1, 2>::zeros() ) == kl::mat<f64, 1, 2>( [ 0.0, 2.0 ] ) );
 }
+
+private void reducing( ref kl::test::context c )
+{
+    kl::vec<i32, 4> v = kl::vec<i32, 4>( [ 3, -1, 4, -1 ] );
+    c.check_eq( v.prod(), 12 );
+    c.check_eq( v.min(), -1 );
+    c.check_eq( v.max(), 4 );
+    c.check_eq( v.argmin(), 1 );
+    c.check_eq( v.argmax(), 2 );
+    c.check( v.cumsum() == kl::vec<i32, 4>( [ 3, 2, 6, 5 ] ) );
+    c.check( v.cumprod() == kl::vec<i32, 4>( [ 3, -3, -12, 12 ] ) );
+
+    kl::vec<f64, 2> f = kl::vec<f64, 2>( [ 1.0, 3.0 ] );
+    c.check_eq( f.mean(), 2.0 );
+    c.check_eq( f.var(), 1.0 );
+    c.check_eq( f.std(), 1.0 );
+
+    kl::mat<i32, 2, 3> m = kl::mat<i32, 2, 3>( [ [ 1, 5, 3 ], [ 4, 2, 6 ] ] );
+    c.check_eq( m.prod(), 720 );
+    c.check_eq( m.min(), 1 );
+    c.check_eq( m.argmax(), 5 );
+    c.check( m.cumsum() == kl::vec<i32, 6>( [ 1, 6, 9, 13, 15, 21 ] ) );
+    c.check( m.cumsum( 0 ) == kl::mat<i32, 2, 3>( [ [ 1, 5, 3 ], [ 5, 7, 9 ] ] ) );
+    c.check( m.cumprod( 1 ) == kl::mat<i32, 2, 3>( [ [ 1, 5, 15 ], [ 4, 8, 48 ] ] ) );
+    c.expect_panic( "axis out of range", fn[]() { _ = kl::mat<i32, 2, 2>::ones().cumsum( 2 ); } );
+
+    kl::mat<f32, 1, 2> g = kl::mat<f32, 1, 2>( [ 1.0, 3.0 ] );
+    c.check_eq( g.mean(), 2.0 );
+    c.check_eq( g.std(), 1.0 );
+}

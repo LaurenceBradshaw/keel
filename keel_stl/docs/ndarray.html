@@ -486,7 +486,115 @@ element. A NaN is close to nothing, and an infinity only to itself.</p>
 <div class="group" id="ndarray.sum">
 <pre class="signature"><a class="anchor" href="#ndarray.sum" aria-label="Link to sum">#</a><code><span class="kw">public</span> T <span class="fn">sum</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
-<p>The total of every element, added in index order.</p>
+<p>The total of every element, added in index order; 0 when there are none.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.sum" aria-label="Link to sum">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">sum</span>( <a class="prim" href="prelude.html#u64">u64</a> axis ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The totals along <code>axis</code>, dropped from the shape: a 2 by 3 array's <code>sum( 0 )</code> has 3 elements.</p>
+</div>
+</div>
+<div class="group" id="ndarray.prod">
+<pre class="signature"><a class="anchor" href="#ndarray.prod" aria-label="Link to prod">#</a><code><span class="kw">public</span> T <span class="fn">prod</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The product of every element, in index order; 1 when there are none.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.prod" aria-label="Link to prod">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">prod</span>( <a class="prim" href="prelude.html#u64">u64</a> axis ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The products along <code>axis</code>, dropped from the shape.</p>
+</div>
+</div>
+<div class="group" id="ndarray.min">
+<pre class="signature"><a class="anchor" href="#ndarray.min" aria-label="Link to min">#</a><code><span class="kw">public</span> T <span class="fn">min</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The smallest element, as <code>kl::min</code>. Panics when there are none.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.min" aria-label="Link to min">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">min</span>( <a class="prim" href="prelude.html#u64">u64</a> axis ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The smallest along <code>axis</code>, dropped from the shape. Panics when the axis is empty.</p>
+</div>
+</div>
+<div class="group" id="ndarray.max">
+<pre class="signature"><a class="anchor" href="#ndarray.max" aria-label="Link to max">#</a><code><span class="kw">public</span> T <span class="fn">max</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The largest element, as <code>kl::max</code>. Panics when there are none.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.max" aria-label="Link to max">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">max</span>( <a class="prim" href="prelude.html#u64">u64</a> axis ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The largest along <code>axis</code>, dropped from the shape. Panics when the axis is empty.</p>
+</div>
+</div>
+<div class="group" id="ndarray.argmin">
+<pre class="signature"><a class="anchor" href="#ndarray.argmin" aria-label="Link to argmin">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">argmin</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The row-major index of the first smallest element, or of the first NaN. Panics when there
+are none.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.argmin" aria-label="Link to argmin">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#u64">u64</a>&gt; <span class="fn">argmin</span>( <a class="prim" href="prelude.html#u64">u64</a> axis ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The index along <code>axis</code> of each first smallest, or first NaN, <code>axis</code> dropped from the shape.
+Panics when the axis is empty.</p>
+</div>
+</div>
+<div class="group" id="ndarray.argmax">
+<pre class="signature"><a class="anchor" href="#ndarray.argmax" aria-label="Link to argmax">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">argmax</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The row-major index of the first largest element, or of the first NaN. Panics when there
+are none.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.argmax" aria-label="Link to argmax">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#u64">u64</a>&gt; <span class="fn">argmax</span>( <a class="prim" href="prelude.html#u64">u64</a> axis ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The index along <code>axis</code> of each first largest, or first NaN, <code>axis</code> dropped from the shape.
+Panics when the axis is empty.</p>
+</div>
+</div>
+<div class="group" id="ndarray.cumsum">
+<pre class="signature"><a class="anchor" href="#ndarray.cumsum" aria-label="Link to cumsum">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">cumsum</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The running totals of the elements, as rank 1.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.cumsum" aria-label="Link to cumsum">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">cumsum</span>( <a class="prim" href="prelude.html#u64">u64</a> axis ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The running totals along <code>axis</code>, in the same shape.</p>
+</div>
+</div>
+<div class="group" id="ndarray.cumprod">
+<pre class="signature"><a class="anchor" href="#ndarray.cumprod" aria-label="Link to cumprod">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">cumprod</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The running products of the elements, as rank 1.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.cumprod" aria-label="Link to cumprod">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">cumprod</span>( <a class="prim" href="prelude.html#u64">u64</a> axis ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The running products along <code>axis</code>, in the same shape.</p>
+</div>
+</div>
+<div class="group" id="ndarray.mean">
+<pre class="signature"><a class="anchor" href="#ndarray.mean" aria-label="Link to mean">#</a><code><span class="kw">public</span> T <span class="fn">mean</span>() <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The mean of the elements; a NaN when there are none.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.mean" aria-label="Link to mean">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">mean</span>( <a class="prim" href="prelude.html#u64">u64</a> axis ) <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The means along <code>axis</code>, dropped from the shape.</p>
+</div>
+</div>
+<div class="group" id="ndarray.var">
+<pre class="signature"><a class="anchor" href="#ndarray.var" aria-label="Link to var">#</a><code><span class="kw">public</span> T <span class="fn">var</span>() <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The mean square distance of the elements from their mean; a NaN when there are none.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.var" aria-label="Link to var">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">var</span>( <a class="prim" href="prelude.html#u64">u64</a> axis ) <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The variances along <code>axis</code>, dropped from the shape.</p>
+</div>
+</div>
+<div class="group" id="ndarray.std">
+<pre class="signature"><a class="anchor" href="#ndarray.std" aria-label="Link to std">#</a><code><span class="kw">public</span> T <span class="fn">std</span>() <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The standard deviation, the square root of <code>var()</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.std" aria-label="Link to std">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">std</span>( <a class="prim" href="prelude.html#u64">u64</a> axis ) <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The standard deviations along <code>axis</code>, dropped from the shape.</p>
 </div>
 </div>
 <h3>Converting</h3>
