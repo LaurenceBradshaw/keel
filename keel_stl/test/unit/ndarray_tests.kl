@@ -1,5 +1,7 @@
 // `kl::ndarray`: building in a shape, indexing at any rank, the element-wise operators with a
-// scalar either side, the products, comparing, reducing, converting, reshaping and walking.
+// scalar either side, the integer operators and element-wise functions, the products, comparing,
+// reducing, converting, reshaping and walking.
+import kl::math;
 import kl::ndarray;
 import kl::test::context;
 
@@ -232,4 +234,31 @@ private void walking( ref kl::test::context c )
         x *= 2;
     }
     c.check( a == kl::ndarray<i32>( [ 2, 4, 6, 8 ], 2, 2 ) );
+}
+
+private void integer_operators_and_functions( ref kl::test::context c )
+{
+    kl::ndarray<i64> a = kl::ndarray<i64>( [ 12, 10, -6, 7 ], 2, 2 );
+    c.check( a % 5 == kl::ndarray<i64>( [ 2, 0, -1, 2 ], 2, 2 ) );
+    c.check( 20 % kl::ndarray<i64>( [ 3, 6 ] ) == kl::ndarray<i64>( [ 2, 2 ] ) );
+    c.check( ( a & 6 ) == kl::ndarray<i64>( [ 4, 2, 2, 6 ], 2, 2 ) );
+    c.check( ( a ^ a ) == kl::ndarray<i64>::zeros( 2, 2 ) );
+    c.check( ~a == kl::ndarray<i64>( [ -13, -11, 5, -8 ], 2, 2 ) );
+    a |= kl::ndarray<i64>::ones( 2, 2 );
+    a &= 3;
+    c.check( a == kl::ndarray<i64>( [ 1, 3, 3, 3 ], 2, 2 ) );
+    c.expect_panic( "the shapes differ", fn[]() { kl::ndarray<i64> b = kl::ndarray<i64>::ones( 2, 2 ); b %= kl::ndarray<i64>::ones( 4 ); } );
+
+    kl::ndarray<f64> f = kl::ndarray<f64>( [ -1.5, 0.0, 2.0 ] );
+    c.check( f.abs() == kl::ndarray<f64>( [ 1.5, 0.0, 2.0 ] ) );
+    c.check( f.sign() == kl::ndarray<f64>( [ -1.0, 0.0, 1.0 ] ) );
+    c.check( f.clip( -1.0, 1.0 ) == kl::ndarray<f64>( [ -1.0, 0.0, 1.0 ] ) );
+    kl::ndarray<f64> g = kl::ndarray<f64>( [ 1.0, -1.0, 3.0 ] );
+    c.check( kl::minimum( f, g ) == kl::ndarray<f64>( [ -1.5, -1.0, 2.0 ] ) );
+    c.check( kl::maximum( f, g ) == kl::ndarray<f64>( [ 1.0, 0.0, 3.0 ] ) );
+    c.expect_panic( "the shapes differ", fn[]() { _ = kl::minimum( kl::ndarray<f64>::ones( 3 ), kl::ndarray<f64>::ones( 3, 1 ) ); } );
+
+    kl::ndarray<i32> n = f.map( fn[]( f64 x ) { return kl::rounded<i32>( x * 2.0 ); } );
+    c.check( n == kl::ndarray<i32>( [ -3, 0, 4 ] ) );
+    c.check_eq( n.shape()[0], 3 );
 }

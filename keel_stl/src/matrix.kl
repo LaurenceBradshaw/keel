@@ -250,6 +250,195 @@ class vec<T, u64 N> implements iterable<T> where T : numeric
         return r;
     }
 
+    /// --- Integer operators ---
+
+    /// The element-wise remainder after dividing by `o`.
+    public vec<T, N> operator%( const ref vec<T, N> o ) const where T : integral
+    {
+        vec<T, N> r = this;
+        kernel::zip_into( ref r.e_, o.e_, fn[]( T x, T y ) { return x % y; } );
+        return r;
+    }
+
+    /// Each element % `s`.
+    public vec<T, N> operator%( T s ) const where T : integral
+    {
+        vec<T, N> r = this;
+        kernel::map_into( ref r.e_, fn[ s ]( T x ) { return x % s; } );
+        return r;
+    }
+
+    /// `s` % each element.
+    public static vec<T, N> operator%( T s, const ref vec<T, N> a ) where T : integral
+    {
+        vec<T, N> r = a;
+        kernel::map_into( ref r.e_, fn[ s ]( T x ) { return s % x; } );
+        return r;
+    }
+
+    /// The element-wise bitwise and with `o`.
+    public vec<T, N> operator&( const ref vec<T, N> o ) const where T : integral
+    {
+        vec<T, N> r = this;
+        kernel::zip_into( ref r.e_, o.e_, fn[]( T x, T y ) { return x & y; } );
+        return r;
+    }
+
+    /// Each element & `s`.
+    public vec<T, N> operator&( T s ) const where T : integral
+    {
+        vec<T, N> r = this;
+        kernel::map_into( ref r.e_, fn[ s ]( T x ) { return x & s; } );
+        return r;
+    }
+
+    /// `s` & each element.
+    public static vec<T, N> operator&( T s, const ref vec<T, N> a ) where T : integral
+    {
+        vec<T, N> r = a;
+        kernel::map_into( ref r.e_, fn[ s ]( T x ) { return s & x; } );
+        return r;
+    }
+
+    /// The element-wise bitwise or with `o`.
+    public vec<T, N> operator|( const ref vec<T, N> o ) const where T : integral
+    {
+        vec<T, N> r = this;
+        kernel::zip_into( ref r.e_, o.e_, fn[]( T x, T y ) { return x | y; } );
+        return r;
+    }
+
+    /// Each element | `s`.
+    public vec<T, N> operator|( T s ) const where T : integral
+    {
+        vec<T, N> r = this;
+        kernel::map_into( ref r.e_, fn[ s ]( T x ) { return x | s; } );
+        return r;
+    }
+
+    /// `s` | each element.
+    public static vec<T, N> operator|( T s, const ref vec<T, N> a ) where T : integral
+    {
+        vec<T, N> r = a;
+        kernel::map_into( ref r.e_, fn[ s ]( T x ) { return s | x; } );
+        return r;
+    }
+
+    /// The element-wise bitwise exclusive or with `o`.
+    public vec<T, N> operator^( const ref vec<T, N> o ) const where T : integral
+    {
+        vec<T, N> r = this;
+        kernel::zip_into( ref r.e_, o.e_, fn[]( T x, T y ) { return x ^ y; } );
+        return r;
+    }
+
+    /// Each element ^ `s`.
+    public vec<T, N> operator^( T s ) const where T : integral
+    {
+        vec<T, N> r = this;
+        kernel::map_into( ref r.e_, fn[ s ]( T x ) { return x ^ s; } );
+        return r;
+    }
+
+    /// `s` ^ each element.
+    public static vec<T, N> operator^( T s, const ref vec<T, N> a ) where T : integral
+    {
+        vec<T, N> r = a;
+        kernel::map_into( ref r.e_, fn[ s ]( T x ) { return s ^ x; } );
+        return r;
+    }
+
+    /// Each element %= the matching one of `o`.
+    public void operator%=( const ref vec<T, N> o ) where T : integral
+    {
+        kernel::zip_into( ref e_, o.e_, fn[]( T x, T y ) { return x % y; } );
+    }
+
+    /// Each element %= `s`.
+    public void operator%=( T s ) where T : integral
+    {
+        kernel::map_into( ref e_, fn[ s ]( T x ) { return x % s; } );
+    }
+
+    /// Each element &= the matching one of `o`.
+    public void operator&=( const ref vec<T, N> o ) where T : integral
+    {
+        kernel::zip_into( ref e_, o.e_, fn[]( T x, T y ) { return x & y; } );
+    }
+
+    /// Each element &= `s`.
+    public void operator&=( T s ) where T : integral
+    {
+        kernel::map_into( ref e_, fn[ s ]( T x ) { return x & s; } );
+    }
+
+    /// Each element |= the matching one of `o`.
+    public void operator|=( const ref vec<T, N> o ) where T : integral
+    {
+        kernel::zip_into( ref e_, o.e_, fn[]( T x, T y ) { return x | y; } );
+    }
+
+    /// Each element |= `s`.
+    public void operator|=( T s ) where T : integral
+    {
+        kernel::map_into( ref e_, fn[ s ]( T x ) { return x | s; } );
+    }
+
+    /// Each element ^= the matching one of `o`.
+    public void operator^=( const ref vec<T, N> o ) where T : integral
+    {
+        kernel::zip_into( ref e_, o.e_, fn[]( T x, T y ) { return x ^ y; } );
+    }
+
+    /// Each element ^= `s`.
+    public void operator^=( T s ) where T : integral
+    {
+        kernel::map_into( ref e_, fn[ s ]( T x ) { return x ^ s; } );
+    }
+
+    /// Each element with its bits flipped.
+    public vec<T, N> operator~() const where T : integral
+    {
+        vec<T, N> r = this;
+        kernel::map_into( ref r.e_, fn[]( T x ) { return ~x; } );
+        return r;
+    }
+
+    /// --- Element-wise functions ---
+
+    /// Each element without its sign, as `kl::abs`.
+    public vec<T, N> abs() const
+    {
+        vec<T, N> r = this;
+        kernel::map_into( ref r.e_, fn[]( T x ) { return kl::abs( x ); } );
+        return r;
+    }
+
+    /// Each element's sign, as `kl::sign`: -1, 0 or 1.
+    public vec<T, N> sign() const
+    {
+        vec<T, N> r = this;
+        kernel::map_into( ref r.e_, fn[]( T x ) { return kl::sign( x ); } );
+        return r;
+    }
+
+    /// Each element held between `lo` and `hi`; `hi` wins when they cross.
+    public vec<T, N> clip( T lo, T hi ) const
+    {
+        vec<T, N> r = this;
+        kernel::map_into( ref r.e_, fn[ lo, hi ]( T x ) { return kl::min( kl::max( x, lo ), hi ); } );
+        return r;
+    }
+
+    /// `f` of each element, in the same shape: `a.map( fn[]( f64 x ) { return x * x; } )`. `U`
+    /// comes from where the result goes: `vec<i32, N> n = a.map( ... );`.
+    public vec<U, N> map<U, F>( F f ) const where F : fn( T ) -> U, where U : numeric
+    {
+        vec<U, N> r = vec<U, N>::zeros();
+        kernel::map( ref r.e_, e_, f );
+        return r;
+    }
+
     /// --- Products ---
 
     /// The inner product with `o`.
@@ -603,6 +792,195 @@ class mat<T, u64 R, u64 C> implements iterable<T> where T : numeric
         return r;
     }
 
+    /// --- Integer operators ---
+
+    /// The element-wise remainder after dividing by `o`.
+    public mat<T, R, C> operator%( const ref mat<T, R, C> o ) const where T : integral
+    {
+        mat<T, R, C> r = this;
+        kernel::zip_into( ref r.e_, o.e_, fn[]( T x, T y ) { return x % y; } );
+        return r;
+    }
+
+    /// Each element % `s`.
+    public mat<T, R, C> operator%( T s ) const where T : integral
+    {
+        mat<T, R, C> r = this;
+        kernel::map_into( ref r.e_, fn[ s ]( T x ) { return x % s; } );
+        return r;
+    }
+
+    /// `s` % each element.
+    public static mat<T, R, C> operator%( T s, const ref mat<T, R, C> a ) where T : integral
+    {
+        mat<T, R, C> r = a;
+        kernel::map_into( ref r.e_, fn[ s ]( T x ) { return s % x; } );
+        return r;
+    }
+
+    /// The element-wise bitwise and with `o`.
+    public mat<T, R, C> operator&( const ref mat<T, R, C> o ) const where T : integral
+    {
+        mat<T, R, C> r = this;
+        kernel::zip_into( ref r.e_, o.e_, fn[]( T x, T y ) { return x & y; } );
+        return r;
+    }
+
+    /// Each element & `s`.
+    public mat<T, R, C> operator&( T s ) const where T : integral
+    {
+        mat<T, R, C> r = this;
+        kernel::map_into( ref r.e_, fn[ s ]( T x ) { return x & s; } );
+        return r;
+    }
+
+    /// `s` & each element.
+    public static mat<T, R, C> operator&( T s, const ref mat<T, R, C> a ) where T : integral
+    {
+        mat<T, R, C> r = a;
+        kernel::map_into( ref r.e_, fn[ s ]( T x ) { return s & x; } );
+        return r;
+    }
+
+    /// The element-wise bitwise or with `o`.
+    public mat<T, R, C> operator|( const ref mat<T, R, C> o ) const where T : integral
+    {
+        mat<T, R, C> r = this;
+        kernel::zip_into( ref r.e_, o.e_, fn[]( T x, T y ) { return x | y; } );
+        return r;
+    }
+
+    /// Each element | `s`.
+    public mat<T, R, C> operator|( T s ) const where T : integral
+    {
+        mat<T, R, C> r = this;
+        kernel::map_into( ref r.e_, fn[ s ]( T x ) { return x | s; } );
+        return r;
+    }
+
+    /// `s` | each element.
+    public static mat<T, R, C> operator|( T s, const ref mat<T, R, C> a ) where T : integral
+    {
+        mat<T, R, C> r = a;
+        kernel::map_into( ref r.e_, fn[ s ]( T x ) { return s | x; } );
+        return r;
+    }
+
+    /// The element-wise bitwise exclusive or with `o`.
+    public mat<T, R, C> operator^( const ref mat<T, R, C> o ) const where T : integral
+    {
+        mat<T, R, C> r = this;
+        kernel::zip_into( ref r.e_, o.e_, fn[]( T x, T y ) { return x ^ y; } );
+        return r;
+    }
+
+    /// Each element ^ `s`.
+    public mat<T, R, C> operator^( T s ) const where T : integral
+    {
+        mat<T, R, C> r = this;
+        kernel::map_into( ref r.e_, fn[ s ]( T x ) { return x ^ s; } );
+        return r;
+    }
+
+    /// `s` ^ each element.
+    public static mat<T, R, C> operator^( T s, const ref mat<T, R, C> a ) where T : integral
+    {
+        mat<T, R, C> r = a;
+        kernel::map_into( ref r.e_, fn[ s ]( T x ) { return s ^ x; } );
+        return r;
+    }
+
+    /// Each element %= the matching one of `o`.
+    public void operator%=( const ref mat<T, R, C> o ) where T : integral
+    {
+        kernel::zip_into( ref e_, o.e_, fn[]( T x, T y ) { return x % y; } );
+    }
+
+    /// Each element %= `s`.
+    public void operator%=( T s ) where T : integral
+    {
+        kernel::map_into( ref e_, fn[ s ]( T x ) { return x % s; } );
+    }
+
+    /// Each element &= the matching one of `o`.
+    public void operator&=( const ref mat<T, R, C> o ) where T : integral
+    {
+        kernel::zip_into( ref e_, o.e_, fn[]( T x, T y ) { return x & y; } );
+    }
+
+    /// Each element &= `s`.
+    public void operator&=( T s ) where T : integral
+    {
+        kernel::map_into( ref e_, fn[ s ]( T x ) { return x & s; } );
+    }
+
+    /// Each element |= the matching one of `o`.
+    public void operator|=( const ref mat<T, R, C> o ) where T : integral
+    {
+        kernel::zip_into( ref e_, o.e_, fn[]( T x, T y ) { return x | y; } );
+    }
+
+    /// Each element |= `s`.
+    public void operator|=( T s ) where T : integral
+    {
+        kernel::map_into( ref e_, fn[ s ]( T x ) { return x | s; } );
+    }
+
+    /// Each element ^= the matching one of `o`.
+    public void operator^=( const ref mat<T, R, C> o ) where T : integral
+    {
+        kernel::zip_into( ref e_, o.e_, fn[]( T x, T y ) { return x ^ y; } );
+    }
+
+    /// Each element ^= `s`.
+    public void operator^=( T s ) where T : integral
+    {
+        kernel::map_into( ref e_, fn[ s ]( T x ) { return x ^ s; } );
+    }
+
+    /// Each element with its bits flipped.
+    public mat<T, R, C> operator~() const where T : integral
+    {
+        mat<T, R, C> r = this;
+        kernel::map_into( ref r.e_, fn[]( T x ) { return ~x; } );
+        return r;
+    }
+
+    /// --- Element-wise functions ---
+
+    /// Each element without its sign, as `kl::abs`.
+    public mat<T, R, C> abs() const
+    {
+        mat<T, R, C> r = this;
+        kernel::map_into( ref r.e_, fn[]( T x ) { return kl::abs( x ); } );
+        return r;
+    }
+
+    /// Each element's sign, as `kl::sign`: -1, 0 or 1.
+    public mat<T, R, C> sign() const
+    {
+        mat<T, R, C> r = this;
+        kernel::map_into( ref r.e_, fn[]( T x ) { return kl::sign( x ); } );
+        return r;
+    }
+
+    /// Each element held between `lo` and `hi`; `hi` wins when they cross.
+    public mat<T, R, C> clip( T lo, T hi ) const
+    {
+        mat<T, R, C> r = this;
+        kernel::map_into( ref r.e_, fn[ lo, hi ]( T x ) { return kl::min( kl::max( x, lo ), hi ); } );
+        return r;
+    }
+
+    /// `f` of each element, in the same shape: `a.map( fn[]( f64 x ) { return x * x; } )`. `U`
+    /// comes from where the result goes: `mat<i32, R, C> n = a.map( ... );`.
+    public mat<U, R, C> map<U, F>( F f ) const where F : fn( T ) -> U, where U : numeric
+    {
+        mat<U, R, C> r = mat<U, R, C>::zeros();
+        kernel::map( ref r.e_, e_, f );
+        return r;
+    }
+
     /// --- Products ---
 
     /// This matrix times `b`.
@@ -712,6 +1090,50 @@ mat<T, N, N> diag<T, u64 N>( const ref vec<T, N> v ) where T : numeric
     for( u64 i : 0..N )
     {
         r[i, i] = v[i];
+    }
+    return r;
+}
+
+/// The smallest of each set of matching elements, as `kl::min`: `kl::minimum( a, b, c )`.
+vec<T, N> minimum<T, u64 N>( const ref vec<T, N> first, vec<T, N>... rest ) where T : numeric
+{
+    vec<T, N> r = first;
+    for( const ref vec<T, N> b : rest )
+    {
+        kernel::zip_into( ref r.as_run(), b.as_run(), fn[]( T x, T y ) { return kl::min( x, y ); } );
+    }
+    return r;
+}
+
+/// The largest of each set of matching elements, as `kl::max`: `kl::maximum( a, b, c )`.
+vec<T, N> maximum<T, u64 N>( const ref vec<T, N> first, vec<T, N>... rest ) where T : numeric
+{
+    vec<T, N> r = first;
+    for( const ref vec<T, N> b : rest )
+    {
+        kernel::zip_into( ref r.as_run(), b.as_run(), fn[]( T x, T y ) { return kl::max( x, y ); } );
+    }
+    return r;
+}
+
+/// The smallest of each set of matching elements, as `kl::min`: `kl::minimum( a, b, c )`.
+mat<T, R, C> minimum<T, u64 R, u64 C>( const ref mat<T, R, C> first, mat<T, R, C>... rest ) where T : numeric
+{
+    mat<T, R, C> r = first;
+    for( const ref mat<T, R, C> b : rest )
+    {
+        kernel::zip_into( ref r.as_run(), b.as_run(), fn[]( T x, T y ) { return kl::min( x, y ); } );
+    }
+    return r;
+}
+
+/// The largest of each set of matching elements, as `kl::max`: `kl::maximum( a, b, c )`.
+mat<T, R, C> maximum<T, u64 R, u64 C>( const ref mat<T, R, C> first, mat<T, R, C>... rest ) where T : numeric
+{
+    mat<T, R, C> r = first;
+    for( const ref mat<T, R, C> b : rest )
+    {
+        kernel::zip_into( ref r.as_run(), b.as_run(), fn[]( T x, T y ) { return kl::max( x, y ); } );
     }
     return r;
 }

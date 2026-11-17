@@ -582,6 +582,199 @@ class ndarray<T> implements iterable<T> where T : numeric
         return r;
     }
 
+    /// --- Integer operators ---
+
+    /// The element-wise remainder after dividing by `o`.
+    public ndarray<T> operator%( const ref ndarray<T> o ) const where T : integral
+    {
+        ndarray<T> r = copy();
+        r %= o;
+        return r;
+    }
+
+    /// Each element % `s`.
+    public ndarray<T> operator%( T s ) const where T : integral
+    {
+        ndarray<T> r = copy();
+        r %= s;
+        return r;
+    }
+
+    /// `s` % each element.
+    public static ndarray<T> operator%( T s, const ref ndarray<T> a ) where T : integral
+    {
+        ndarray<T> r = a.copy();
+        kernel::map_into( ref r.e_.as_run(), fn[ s ]( T x ) { return s % x; } );
+        return r;
+    }
+
+    /// The element-wise bitwise and with `o`.
+    public ndarray<T> operator&( const ref ndarray<T> o ) const where T : integral
+    {
+        ndarray<T> r = copy();
+        r &= o;
+        return r;
+    }
+
+    /// Each element & `s`.
+    public ndarray<T> operator&( T s ) const where T : integral
+    {
+        ndarray<T> r = copy();
+        r &= s;
+        return r;
+    }
+
+    /// `s` & each element.
+    public static ndarray<T> operator&( T s, const ref ndarray<T> a ) where T : integral
+    {
+        ndarray<T> r = a.copy();
+        kernel::map_into( ref r.e_.as_run(), fn[ s ]( T x ) { return s & x; } );
+        return r;
+    }
+
+    /// The element-wise bitwise or with `o`.
+    public ndarray<T> operator|( const ref ndarray<T> o ) const where T : integral
+    {
+        ndarray<T> r = copy();
+        r |= o;
+        return r;
+    }
+
+    /// Each element | `s`.
+    public ndarray<T> operator|( T s ) const where T : integral
+    {
+        ndarray<T> r = copy();
+        r |= s;
+        return r;
+    }
+
+    /// `s` | each element.
+    public static ndarray<T> operator|( T s, const ref ndarray<T> a ) where T : integral
+    {
+        ndarray<T> r = a.copy();
+        kernel::map_into( ref r.e_.as_run(), fn[ s ]( T x ) { return s | x; } );
+        return r;
+    }
+
+    /// The element-wise bitwise exclusive or with `o`.
+    public ndarray<T> operator^( const ref ndarray<T> o ) const where T : integral
+    {
+        ndarray<T> r = copy();
+        r ^= o;
+        return r;
+    }
+
+    /// Each element ^ `s`.
+    public ndarray<T> operator^( T s ) const where T : integral
+    {
+        ndarray<T> r = copy();
+        r ^= s;
+        return r;
+    }
+
+    /// `s` ^ each element.
+    public static ndarray<T> operator^( T s, const ref ndarray<T> a ) where T : integral
+    {
+        ndarray<T> r = a.copy();
+        kernel::map_into( ref r.e_.as_run(), fn[ s ]( T x ) { return s ^ x; } );
+        return r;
+    }
+
+    /// Each element %= the matching one of `o`.
+    public void operator%=( const ref ndarray<T> o ) where T : integral
+    {
+        same_shape( o );
+        kernel::zip_into( ref e_.as_run(), o.e_.as_run(), fn[]( T x, T y ) { return x % y; } );
+    }
+
+    /// Each element %= `s`.
+    public void operator%=( T s ) where T : integral
+    {
+        kernel::map_into( ref e_.as_run(), fn[ s ]( T x ) { return x % s; } );
+    }
+
+    /// Each element &= the matching one of `o`.
+    public void operator&=( const ref ndarray<T> o ) where T : integral
+    {
+        same_shape( o );
+        kernel::zip_into( ref e_.as_run(), o.e_.as_run(), fn[]( T x, T y ) { return x & y; } );
+    }
+
+    /// Each element &= `s`.
+    public void operator&=( T s ) where T : integral
+    {
+        kernel::map_into( ref e_.as_run(), fn[ s ]( T x ) { return x & s; } );
+    }
+
+    /// Each element |= the matching one of `o`.
+    public void operator|=( const ref ndarray<T> o ) where T : integral
+    {
+        same_shape( o );
+        kernel::zip_into( ref e_.as_run(), o.e_.as_run(), fn[]( T x, T y ) { return x | y; } );
+    }
+
+    /// Each element |= `s`.
+    public void operator|=( T s ) where T : integral
+    {
+        kernel::map_into( ref e_.as_run(), fn[ s ]( T x ) { return x | s; } );
+    }
+
+    /// Each element ^= the matching one of `o`.
+    public void operator^=( const ref ndarray<T> o ) where T : integral
+    {
+        same_shape( o );
+        kernel::zip_into( ref e_.as_run(), o.e_.as_run(), fn[]( T x, T y ) { return x ^ y; } );
+    }
+
+    /// Each element ^= `s`.
+    public void operator^=( T s ) where T : integral
+    {
+        kernel::map_into( ref e_.as_run(), fn[ s ]( T x ) { return x ^ s; } );
+    }
+
+    /// Each element with its bits flipped.
+    public ndarray<T> operator~() const where T : integral
+    {
+        ndarray<T> r = copy();
+        kernel::map_into( ref r.e_.as_run(), fn[]( T x ) { return ~x; } );
+        return r;
+    }
+
+    /// --- Element-wise functions ---
+
+    /// Each element without its sign, as `kl::abs`.
+    public ndarray<T> abs() const
+    {
+        ndarray<T> r = copy();
+        kernel::map_into( ref r.e_.as_run(), fn[]( T x ) { return kl::abs( x ); } );
+        return r;
+    }
+
+    /// Each element's sign, as `kl::sign`: -1, 0 or 1.
+    public ndarray<T> sign() const
+    {
+        ndarray<T> r = copy();
+        kernel::map_into( ref r.e_.as_run(), fn[]( T x ) { return kl::sign( x ); } );
+        return r;
+    }
+
+    /// Each element held between `lo` and `hi`; `hi` wins when they cross.
+    public ndarray<T> clip( T lo, T hi ) const
+    {
+        ndarray<T> r = copy();
+        kernel::map_into( ref r.e_.as_run(), fn[ lo, hi ]( T x ) { return kl::min( kl::max( x, lo ), hi ); } );
+        return r;
+    }
+
+    /// `f` of each element, in the same shape: `a.map( fn[]( f64 x ) { return x * x; } )`. `U`
+    /// comes from where the result goes: `ndarray<i32> n = a.map( ... );`.
+    public ndarray<U> map<U, F>( F f ) const where F : fn( T ) -> U, where U : numeric
+    {
+        ndarray<U> r = ndarray<U>::zeros( shape_.as_run() );
+        kernel::map( ref r.as_run(), e_.as_run(), f );
+        return r;
+    }
+
     /// --- Products ---
 
     /// The inner product with `o`, both of rank 1 and one length.
@@ -782,6 +975,32 @@ ndarray<T> diag<T>( const ref ndarray<T> v ) where T : numeric
     {
         r[i, i] = v[i];
     }
+    return r;
+}
+
+/// The smaller of each pair of matching elements, as `kl::min`: `kl::minimum( a, b )`.
+ndarray<T> minimum<T>( const ref ndarray<T> a, const ref ndarray<T> b ) where T : numeric
+{
+    if( !kernel::equal( a.shape(), b.shape() ) )
+    {
+        panic( "the shapes differ" );
+    }
+
+    ndarray<T> r = a.copy();
+    kernel::zip_into( ref r.as_run(), b.as_run(), fn[]( T x, T y ) { return kl::min( x, y ); } );
+    return r;
+}
+
+/// The larger of each pair of matching elements, as `kl::max`: `kl::maximum( a, b )`.
+ndarray<T> maximum<T>( const ref ndarray<T> a, const ref ndarray<T> b ) where T : numeric
+{
+    if( !kernel::equal( a.shape(), b.shape() ) )
+    {
+        panic( "the shapes differ" );
+    }
+
+    ndarray<T> r = a.copy();
+    kernel::zip_into( ref r.as_run(), b.as_run(), fn[]( T x, T y ) { return kl::max( x, y ); } );
     return r;
 }
 

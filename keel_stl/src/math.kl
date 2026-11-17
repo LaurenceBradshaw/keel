@@ -108,6 +108,61 @@ bool is_inf( f32 x )
     return ( bits_of( x ) & 0x7fff_ffff ) == 0x7f80_0000;
 }
 
+/// --- Sign and order ---
+
+/// `x` without its sign: `-0.0` gives `0.0`, and a NaN stays one. The most negative integer
+/// overflows, as `0 - x` does.
+T abs<T>( T x ) where T : numeric
+{
+    if( x <= 0 )
+    {
+        return 0 - x;
+    }
+    return x;
+}
+
+/// -1, 0 or 1 as `x` is below, at or above zero. A NaN stays one, and `-0.0` stays `-0.0`.
+T sign<T>( T x ) where T : numeric
+{
+    if( x > 0 )
+    {
+        return 1;
+    }
+    if( x < 0 )
+    {
+        return 0 - 1;
+    }
+    return x;
+}
+
+/// The smallest of `first` and `rest`, or a NaN when any is one: `kl::min( a, b, c )`.
+T min<T>( T first, T... rest ) where T : numeric
+{
+    T m = first;
+    for( T x : rest )
+    {
+        if( m == m && ( x < m || x != x ) )
+        {
+            m = x;
+        }
+    }
+    return m;
+}
+
+/// The largest of `first` and `rest`, or a NaN when any is one: `kl::max( a, b, c )`.
+T max<T>( T first, T... rest ) where T : numeric
+{
+    T m = first;
+    for( T x : rest )
+    {
+        if( m == m && ( x > m || x != x ) )
+        {
+            m = x;
+        }
+    }
+    return m;
+}
+
 /// --- Rounding ---
 
 /// `x` toward zero, as a `U`: `truncated<i32>( -2.7 )` is `-2`.

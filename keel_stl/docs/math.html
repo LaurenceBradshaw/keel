@@ -20,6 +20,11 @@
 <li class="divider">Classes</li>
 <li><a href="#is_nan"><code>is_nan</code></a> <span class="kind">function</span></li>
 <li><a href="#is_inf"><code>is_inf</code></a> <span class="kind">function</span></li>
+<li class="divider">Sign and order</li>
+<li><a href="#abs"><code>abs</code></a> <span class="kind">function</span></li>
+<li><a href="#sign"><code>sign</code></a> <span class="kind">function</span></li>
+<li><a href="#min"><code>min</code></a> <span class="kind">function</span></li>
+<li><a href="#max"><code>max</code></a> <span class="kind">function</span></li>
 <li class="divider">Rounding</li>
 <li><a href="#truncated"><code>truncated</code></a> <span class="kind">function</span></li>
 <li><a href="#rounded"><code>rounded</code></a> <span class="kind">function</span></li>
@@ -100,6 +105,44 @@
 <pre class="signature"><a class="anchor" href="#is_inf" aria-label="Link to is_inf">#</a><code><a class="prim" href="prelude.html#bool">bool</a> <span class="fn">is_inf</span>( <a class="prim" href="prelude.html#f32">f32</a> x )</code></pre>
 <div class="doc">
 <p>Whether <code>x</code> is positive or negative infinity.</p>
+</div>
+</div>
+</section>
+<h2 class="divider">Sign and order</h2>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">abs</span></h2>
+<div class="group" id="abs">
+<pre class="signature"><a class="anchor" href="#abs" aria-label="Link to abs">#</a><code>T <span class="fn">abs</span>&lt;T&gt;( T x ) <span class="kw">where</span> T : numeric</code></pre>
+<div class="doc">
+<p><code>x</code> without its sign: <code>-0.0</code> gives <code>0.0</code>, and a NaN stays one. The most negative integer
+overflows, as <code>0 - x</code> does.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">sign</span></h2>
+<div class="group" id="sign">
+<pre class="signature"><a class="anchor" href="#sign" aria-label="Link to sign">#</a><code>T <span class="fn">sign</span>&lt;T&gt;( T x ) <span class="kw">where</span> T : numeric</code></pre>
+<div class="doc">
+<p>-1, 0 or 1 as <code>x</code> is below, at or above zero. A NaN stays one, and <code>-0.0</code> stays <code>-0.0</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">min</span></h2>
+<div class="group" id="min">
+<pre class="signature"><a class="anchor" href="#min" aria-label="Link to min">#</a><code>T <span class="fn">min</span>&lt;T&gt;( T first, T... rest ) <span class="kw">where</span> T : numeric</code></pre>
+<div class="doc">
+<p>The smallest of <code>first</code> and <code>rest</code>, or a NaN when any is one: <code>kl::min( a, b, c )</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">max</span></h2>
+<div class="group" id="max">
+<pre class="signature"><a class="anchor" href="#max" aria-label="Link to max">#</a><code>T <span class="fn">max</span>&lt;T&gt;( T first, T... rest ) <span class="kw">where</span> T : numeric</code></pre>
+<div class="doc">
+<p>The largest of <code>first</code> and <code>rest</code>, or a NaN when any is one: <code>kl::max( a, b, c )</code>.</p>
 </div>
 </div>
 </section>

@@ -1,5 +1,5 @@
-// `kl::math`: the bits of a float, both ways, for each width, the square root, the classes and
-// the roundings.
+// `kl::math`: the bits of a float, both ways, for each width, the square root, the classes, the
+// roundings, and `abs`, `sign`, `min` and `max`.
 import kl::math;
 import kl::test::context;
 
@@ -124,4 +124,39 @@ private void classes_of_floats( ref kl::test::context c )
     f32 one = 1.0;
     c.check( kl::is_inf( wide ) && kl::is_inf( -wide ) && !kl::is_inf( odd ) && !kl::is_inf( one ) );
     c.check( kl::is_nan( odd ) && !kl::is_nan( wide ) && !kl::is_nan( one ) );
+}
+
+// `-0.0` loses its sign under `abs`, and a NaN wins `min` and `max` from either side.
+private void sign_and_order( ref kl::test::context c )
+{
+    i32 neg   = -3;
+    u8  small = 3;
+    f64 zero  = -0.0;
+    f64 half  = -2.5;
+    c.check_eq( kl::abs( neg ), 3 );
+    c.check_eq( cast<u64>( kl::abs( small ) ), 3 );
+    c.check_eq( kl::bits_of( kl::abs( zero ) ), 0 );
+    c.check_eq( kl::abs( half ), 2.5 );
+
+    u32 seven = 7;
+    i32 none  = 0;
+    c.check_eq( kl::sign( neg ), -1 );
+    c.check_eq( cast<u64>( kl::sign( seven ) ), 1 );
+    c.check_eq( kl::sign( none ), 0 );
+    c.check_eq( kl::sign( half ), -1.0 );
+    c.check_eq( kl::bits_of( kl::sign( zero ) ), 0x8000000000000000 );
+
+    f64 nan = kl::from_bits( 0x7ff8000000000000 );
+    f64 one = 1.0;
+    c.check_eq( kl::min( neg, none ), -3 );
+    c.check_eq( kl::max( neg, none ), 0 );
+    c.check( kl::is_nan( kl::sign( nan ) ) );
+    c.check( kl::is_nan( kl::abs( nan ) ) );
+    c.check( kl::is_nan( kl::min( nan, one ) ) && kl::is_nan( kl::min( one, nan ) ) );
+    c.check( kl::is_nan( kl::max( nan, one ) ) && kl::is_nan( kl::max( one, nan ) ) );
+    i32 four = 4;
+    c.check_eq( kl::min( none, neg, four ), -3 );
+    c.check_eq( kl::max( neg, four, none ), 4 );
+    c.check_eq( kl::max( neg ), -3 );
+    c.check( kl::is_nan( kl::min( one, nan, half ) ) && kl::is_nan( kl::max( one, half, nan ) ) );
 }

@@ -14,6 +14,8 @@
 <ul class="contents">
 <li><a href="#ndarray"><code>ndarray</code></a> <span class="kind">class</span></li>
 <li><a href="#diag"><code>diag</code></a> <span class="kind">function</span></li>
+<li><a href="#minimum"><code>minimum</code></a> <span class="kind">function</span></li>
+<li><a href="#maximum"><code>maximum</code></a> <span class="kind">function</span></li>
 </ul>
 <section class="entry">
 <h2><span class="kind">class</span> <span class="type">ndarray</span></h2>
@@ -308,6 +310,135 @@ its dimension.</p>
 <p>Each element /= <code>s</code>.</p>
 </div>
 </div>
+<h3>Integer operators</h3>
+<div class="group" id="ndarray.operator%">
+<pre class="signature"><a class="anchor" href="#ndarray.operator%" aria-label="Link to operator%">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">operator%</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; o ) <span class="kw">const</span> <span class="kw">where</span> T : integral</code></pre>
+<div class="doc">
+<p>The element-wise remainder after dividing by <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.operator%" aria-label="Link to operator%">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">operator%</span>( T s ) <span class="kw">const</span> <span class="kw">where</span> T : integral</code></pre>
+<div class="doc">
+<p>Each element % <code>s</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.operator%" aria-label="Link to operator%">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">operator%</span>( T s, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; a ) <span class="kw">where</span> T : integral</code></pre>
+<div class="doc">
+<p><code>s</code> % each element.</p>
+</div>
+</div>
+<div class="group" id="ndarray.operator&amp;">
+<pre class="signature"><a class="anchor" href="#ndarray.operator&amp;" aria-label="Link to operator&amp;">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">operator&amp;</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; o ) <span class="kw">const</span> <span class="kw">where</span> T : integral</code></pre>
+<div class="doc">
+<p>The element-wise bitwise and with <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.operator&amp;" aria-label="Link to operator&amp;">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">operator&amp;</span>( T s ) <span class="kw">const</span> <span class="kw">where</span> T : integral</code></pre>
+<div class="doc">
+<p>Each element &amp; <code>s</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.operator&amp;" aria-label="Link to operator&amp;">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">operator&amp;</span>( T s, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; a ) <span class="kw">where</span> T : integral</code></pre>
+<div class="doc">
+<p><code>s</code> &amp; each element.</p>
+</div>
+</div>
+<div class="group" id="ndarray.operator|">
+<pre class="signature"><a class="anchor" href="#ndarray.operator|" aria-label="Link to operator|">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">operator|</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; o ) <span class="kw">const</span> <span class="kw">where</span> T : integral</code></pre>
+<div class="doc">
+<p>The element-wise bitwise or with <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.operator|" aria-label="Link to operator|">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">operator|</span>( T s ) <span class="kw">const</span> <span class="kw">where</span> T : integral</code></pre>
+<div class="doc">
+<p>Each element | <code>s</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.operator|" aria-label="Link to operator|">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">operator|</span>( T s, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; a ) <span class="kw">where</span> T : integral</code></pre>
+<div class="doc">
+<p><code>s</code> | each element.</p>
+</div>
+</div>
+<div class="group" id="ndarray.operator^">
+<pre class="signature"><a class="anchor" href="#ndarray.operator^" aria-label="Link to operator^">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">operator^</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; o ) <span class="kw">const</span> <span class="kw">where</span> T : integral</code></pre>
+<div class="doc">
+<p>The element-wise bitwise exclusive or with <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.operator^" aria-label="Link to operator^">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">operator^</span>( T s ) <span class="kw">const</span> <span class="kw">where</span> T : integral</code></pre>
+<div class="doc">
+<p>Each element ^ <code>s</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.operator^" aria-label="Link to operator^">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">operator^</span>( T s, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; a ) <span class="kw">where</span> T : integral</code></pre>
+<div class="doc">
+<p><code>s</code> ^ each element.</p>
+</div>
+</div>
+<div class="group" id="ndarray.operator%=">
+<pre class="signature"><a class="anchor" href="#ndarray.operator%=" aria-label="Link to operator%=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator%=</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; o ) <span class="kw">where</span> T : integral</code></pre>
+<div class="doc">
+<p>Each element %= the matching one of <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.operator%=" aria-label="Link to operator%=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator%=</span>( T s ) <span class="kw">where</span> T : integral</code></pre>
+<div class="doc">
+<p>Each element %= <code>s</code>.</p>
+</div>
+</div>
+<div class="group" id="ndarray.operator&amp;=">
+<pre class="signature"><a class="anchor" href="#ndarray.operator&amp;=" aria-label="Link to operator&amp;=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator&amp;=</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; o ) <span class="kw">where</span> T : integral</code></pre>
+<div class="doc">
+<p>Each element &amp;= the matching one of <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.operator&amp;=" aria-label="Link to operator&amp;=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator&amp;=</span>( T s ) <span class="kw">where</span> T : integral</code></pre>
+<div class="doc">
+<p>Each element &amp;= <code>s</code>.</p>
+</div>
+</div>
+<div class="group" id="ndarray.operator|=">
+<pre class="signature"><a class="anchor" href="#ndarray.operator|=" aria-label="Link to operator|=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator|=</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; o ) <span class="kw">where</span> T : integral</code></pre>
+<div class="doc">
+<p>Each element |= the matching one of <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.operator|=" aria-label="Link to operator|=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator|=</span>( T s ) <span class="kw">where</span> T : integral</code></pre>
+<div class="doc">
+<p>Each element |= <code>s</code>.</p>
+</div>
+</div>
+<div class="group" id="ndarray.operator^=">
+<pre class="signature"><a class="anchor" href="#ndarray.operator^=" aria-label="Link to operator^=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator^=</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; o ) <span class="kw">where</span> T : integral</code></pre>
+<div class="doc">
+<p>Each element ^= the matching one of <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.operator^=" aria-label="Link to operator^=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator^=</span>( T s ) <span class="kw">where</span> T : integral</code></pre>
+<div class="doc">
+<p>Each element ^= <code>s</code>.</p>
+</div>
+</div>
+<div class="group" id="ndarray.operator~">
+<pre class="signature"><a class="anchor" href="#ndarray.operator~" aria-label="Link to operator~">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">operator~</span>() <span class="kw">const</span> <span class="kw">where</span> T : integral</code></pre>
+<div class="doc">
+<p>Each element with its bits flipped.</p>
+</div>
+</div>
+<h3>Element-wise functions</h3>
+<div class="group" id="ndarray.abs">
+<pre class="signature"><a class="anchor" href="#ndarray.abs" aria-label="Link to abs">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">abs</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each element without its sign, as <code>kl::abs</code>.</p>
+</div>
+</div>
+<div class="group" id="ndarray.sign">
+<pre class="signature"><a class="anchor" href="#ndarray.sign" aria-label="Link to sign">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">sign</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each element's sign, as <code>kl::sign</code>: -1, 0 or 1.</p>
+</div>
+</div>
+<div class="group" id="ndarray.clip">
+<pre class="signature"><a class="anchor" href="#ndarray.clip" aria-label="Link to clip">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">clip</span>( T lo, T hi ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each element held between <code>lo</code> and <code>hi</code>; <code>hi</code> wins when they cross.</p>
+</div>
+</div>
+<div class="group" id="ndarray.map">
+<pre class="signature"><a class="anchor" href="#ndarray.map" aria-label="Link to map">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;U&gt; <span class="fn">map</span>&lt;U, F&gt;( F f ) <span class="kw">const</span> <span class="kw">where</span> F : <span class="kw">fn</span>( T ) -&gt; U, <span class="kw">where</span> U : numeric</code></pre>
+<div class="doc">
+<p><code>f</code> of each element, in the same shape: <code>a.map( fn[]( f64 x ) { return x * x; } )</code>. <code>U</code>
+comes from where the result goes: <code>ndarray&lt;i32&gt; n = a.map( ... );</code>.</p>
+</div>
+</div>
 <h3>Products</h3>
 <div class="group" id="ndarray.dot">
 <pre class="signature"><a class="anchor" href="#ndarray.dot" aria-label="Link to dot">#</a><code><span class="kw">public</span> T <span class="fn">dot</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; o ) <span class="kw">const</span></code></pre>
@@ -397,6 +528,24 @@ integer needs a rounding: <code>truncated</code>, <code>rounded</code>, <code>fl
 <pre class="signature"><a class="anchor" href="#diag" aria-label="Link to diag">#</a><code><a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">diag</span>&lt;T&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; v ) <span class="kw">where</span> T : numeric</code></pre>
 <div class="doc">
 <p>The square matrix with <code>v</code>, of rank 1, on its diagonal: <code>kl::diag( v )</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">minimum</span></h2>
+<div class="group" id="minimum">
+<pre class="signature"><a class="anchor" href="#minimum" aria-label="Link to minimum">#</a><code><a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">minimum</span>&lt;T&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; a, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; b ) <span class="kw">where</span> T : numeric</code></pre>
+<div class="doc">
+<p>The smaller of each pair of matching elements, as <code>kl::min</code>: <code>kl::minimum( a, b )</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">maximum</span></h2>
+<div class="group" id="maximum">
+<pre class="signature"><a class="anchor" href="#maximum" aria-label="Link to maximum">#</a><code><a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">maximum</span>&lt;T&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; a, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; b ) <span class="kw">where</span> T : numeric</code></pre>
+<div class="doc">
+<p>The larger of each pair of matching elements, as <code>kl::max</code>: <code>kl::maximum( a, b )</code>.</p>
 </div>
 </div>
 </section>

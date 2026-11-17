@@ -1,5 +1,6 @@
 // `kl::vec` and `kl::mat`: building, indexing, the element-wise operators with a scalar either
-// side, the products, comparing, reducing, converting and walking.
+// side, the integer operators and element-wise functions, the products, comparing, reducing,
+// converting and walking.
 import kl::matrix;
 import kl::test::context;
 
@@ -164,4 +165,37 @@ private void building_and_walking( ref kl::test::context c )
         x += 1;
     }
     c.check( w == kl::vec<i32, 5>( [ 2, 3, 4, 5, 6 ] ) );
+}
+
+private void integer_operators_and_functions( ref kl::test::context c )
+{
+    kl::vec<i32, 3> v = kl::vec<i32, 3>( [ 12, 10, -6 ] );
+    c.check( v % 5 == kl::vec<i32, 3>( [ 2, 0, -1 ] ) );
+    c.check( 20 % kl::vec<i32, 3>( [ 3, 6, 7 ] ) == kl::vec<i32, 3>( [ 2, 2, 6 ] ) );
+    c.check( ( v & 6 ) == kl::vec<i32, 3>( [ 4, 2, 2 ] ) );
+    c.check( ( v | kl::vec<i32, 3>( [ 1, 1, 1 ] ) ) == kl::vec<i32, 3>( [ 13, 11, -5 ] ) );
+    c.check( ( v ^ v ) == kl::vec<i32, 3>::zeros() );
+    c.check( ~v == kl::vec<i32, 3>( [ -13, -11, 5 ] ) );
+    v %= 4;
+    v |= kl::vec<i32, 3>( [ 1, 0, 0 ] );
+    c.check( v == kl::vec<i32, 3>( [ 1, 2, -2 ] ) );
+
+    c.check( v.abs() == kl::vec<i32, 3>( [ 1, 2, 2 ] ) );
+    c.check( v.sign() == kl::vec<i32, 3>( [ 1, 1, -1 ] ) );
+    c.check( v.clip( -1, 1 ) == kl::vec<i32, 3>( [ 1, 1, -1 ] ) );
+    kl::vec<i32, 3> w = kl::vec<i32, 3>( [ 0, 5, -3 ] );
+    c.check( kl::minimum( v, w ) == kl::vec<i32, 3>( [ 0, 2, -3 ] ) );
+    c.check( kl::maximum( v, w ) == kl::vec<i32, 3>( [ 1, 5, -2 ] ) );
+    c.check( kl::minimum( v, w, kl::vec<i32, 3>( [ -9, 9, 9 ] ) ) == kl::vec<i32, 3>( [ -9, 2, -3 ] ) );
+    kl::vec<f64, 3> halves = v.map( fn[]( i32 x ) { return cast<f64>( x ) * 0.5; } );
+    c.check( halves == kl::vec<f64, 3>( [ 0.5, 1.0, -1.0 ] ) );
+
+    kl::mat<u8, 2, 2> m = kl::mat<u8, 2, 2>( [ [ 1, 2 ], [ 3, 4 ] ] );
+    c.check( ( m & 1 ) == kl::mat<u8, 2, 2>( [ 1, 0, 1, 0 ] ) );
+    c.check( ~m == kl::mat<u8, 2, 2>( [ 254, 253, 252, 251 ] ) );
+    m ^= m;
+    c.check( m == kl::mat<u8, 2, 2>::zeros() );
+    kl::mat<f64, 1, 2> f = kl::mat<f64, 1, 2>( [ -1.5, 2.0 ] );
+    c.check( f.abs() == kl::mat<f64, 1, 2>( [ 1.5, 2.0 ] ) );
+    c.check( kl::maximum( f, kl::mat<f64, 1, 2>::zeros() ) == kl::mat<f64, 1, 2>( [ 0.0, 2.0 ] ) );
 }
