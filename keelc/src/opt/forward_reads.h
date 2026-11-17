@@ -4,13 +4,15 @@
 #pragma once
 #include "ir/initialised.h"
 #include "ir/kir.h"
+#include "sema/type.h"
 
 namespace keel
 {
 // In -O3's loop phase: a read of a place through a pointer, where every path to it copied the place to a
 // local that still holds it, reads that local; a call, a drop, or a store through a pointer or to an
-// addressed local between them keeps the read. Whether it changed anything.
-bool forward_reads( Function& func );
+// addressed local between them keeps the read, but a store of one scalar kind keeps no read of another
+// (D89). Whether it changed anything.
+bool forward_reads( Function& func, const Type_table& table );
 
 // Shared with the other loop passes.
 // Whether `place` is rooted at `local` or indexes by it.
@@ -26,4 +28,7 @@ bool      is_addressed( const Local_set& addressed, Local_id local );
 // Whether `statement` may change what a pointer reaches: a call, a drop, or a store through a pointer,
 // to a global, or to a local a pointer reaches.
 bool clobbers( const Function& func, const Local_set& addressed, const Statement& statement );
+// Whether memory a store of `stored` writes is never read as `read` (D89): each is a number, `bool` or
+// a thin pointer, of different kinds.
+bool distinct_memory( const Type_table& table, Type_id stored, Type_id read );
 } // namespace keel

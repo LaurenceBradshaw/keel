@@ -67,6 +67,7 @@ bool observed( const Function& func, const Statement& statement )
 struct Scope
 {
     const Function&                         func;
+    const Type_table&                       table;
     const Loops&                            found;
     const Loop&                             loop;
     const Local_set&                        addressed;
@@ -76,11 +77,15 @@ struct Scope
     std::vector<u32>                        sets;    // by local: the same over the whole function
     std::vector<std::vector<const Rvalue*>> sources; // by local: the rvalues assigned to all of it
     std::vector<Place>                      stores;  // stores in the loop through a pointer
+    std::vector<Type_id>                    stored;  // what each of `stores` writes
     bool everything = false;                         // a call, drop, release, or store to a global or an addressed local
     bool anywhere   = false;                         // a store through a pointer that may reach memory from before it
 
-    Scope( const Function& f, const Loops& l, u32 index, const std::vector<u32>& innermost, const Local_set& a )
+    Scope(
+        const Function& f, const Type_table& t, const Loops& l, u32 index, const std::vector<u32>& innermost, const Local_set& a
+    )
         : func( f ),
+          table( t ),
           found( l ),
           loop( l.loops[index] ),
           addressed( a ),
@@ -127,6 +132,7 @@ struct Scope
                 else
                 {
                     stores.push_back( statement.place );
+                    stored.push_back( func.rvalue( statement ).type );
                     anywhere |= !through_one( func, statement.place ) || origin( statement.place.local ).kind != Origin::Fresh;
                 }
             }
@@ -235,9 +241,14 @@ struct Scope
         return all;
     }
 
-    // Whether a store to `store`, through a pointer, may change `read`, read through one.
-    bool reaches( const Place& store, const Place& read ) const
+    // Whether a store of `stored_type` to `store`, through a pointer, may change `read`, read through one
+    // as `read_type`.
+    bool reaches( const Place& store, Type_id stored_type, const Place& read, Type_id read_type ) const
     {
+        if( distinct_memory( table, stored_type, read_type ) )
+        {
+            return false;
+        }
         if( !through_one( func, store ) || !through_one( func, read ) )
         {
             return true;
@@ -265,9 +276,21 @@ struct Scope
                ( from.kind == Origin::Fresh && from.fresh == to.fresh );
     }
 
-    bool reached( const Place& read ) const
+    // `read_type` unknown, any store may reach it.
+    bool reached( const Place& read, Type_id read_type = {} ) const
     {
-        return everything || std::ranges::any_of( stores, [&]( const Place& store ) { return reaches( store, read ); } );
+        if( everything )
+        {
+            return true;
+        }
+        for( u32 i = 0; i < stores.size(); ++i )
+        {
+            if( reaches( stores[i], stored[i], read, read_type ) )
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     bool invariant( Local_id local ) const
@@ -292,15 +315,15 @@ struct Scope
         return true;
     }
 
-    bool invariant( const Place& place ) const
+    bool invariant( const Place& place, Type_id type = {} ) const
     {
-        return fixed( place ) && ( !has_deref_projection( func, place ) || !reached( place ) );
+        return fixed( place ) && ( !has_deref_projection( func, place ) || !reached( place, type ) );
     }
 
     bool invariant( const Operand& operand ) const
     {
         return operand.kind == Operand_kind::Constant || operand.kind == Operand_kind::Debug ||
-               ( operand.kind == Operand_kind::Copy && invariant( operand.place ) );
+               ( operand.kind == Operand_kind::Copy && invariant( operand.place, operand.type ) );
     }
 
     bool invariant( const Rvalue& value ) const
@@ -520,7 +543,7 @@ bool hoist_one( Function& func, const Scope& scope, bool pin_named )
             for( Operand* operand : operands )
             {
                 if( operand->kind != Operand_kind::Copy || !has_deref_projection( func, operand->place ) ||
-                    !scope.invariant( operand->place ) || !scope.runs_unobserved( b, s ) )
+                    !scope.invariant( operand->place, operand->type ) || !scope.runs_unobserved( b, s ) )
                 {
                     continue;
                 }
@@ -727,10 +750,11 @@ std::vector<u32> innermost_of( const Function& func, const Loops& found )
 }
 } // namespace
 
-std::optional<std::vector<Blocked_read>> blocked_reads( const Function& func, const Loops& found, u32 index )
+std::optional<std::vector<Blocked_read>>
+blocked_reads( const Function& func, const Type_table& table, const Loops& found, u32 index )
 {
     const Local_set addressed = addressed_locals_of( func );
-    const Scope     scope( func, found, index, innermost_of( func, found ), addressed );
+    const Scope     scope( func, table, found, index, innermost_of( func, found ), addressed );
     if( scope.everything || scope.stores.empty() ||
         std::ranges::any_of( scope.loop.blocks, [&]( Block_id b ) { return !scope.own[b.v]; } ) )
     {
@@ -755,7 +779,10 @@ std::optional<std::vector<Blocked_read>> blocked_reads( const Function& func, co
             }
         }
         reads.push_back( Blocked_read {
-            .place = operand.place, .type = operand.type, .early = early, .reached = scope.reached( operand.place )
+            .place   = operand.place,
+            .type    = operand.type,
+            .early   = early,
+            .reached = scope.reached( operand.place, operand.type )
         } );
     };
     for( const Block_id b : scope.loop.blocks )
@@ -777,7 +804,7 @@ std::optional<std::vector<Blocked_read>> blocked_reads( const Function& func, co
     return reads;
 }
 
-bool hoist_invariants( Function& func, const Literal_pool& literals, bool pin_named )
+bool hoist_invariants( Function& func, const Type_table& table, const Literal_pool& literals, bool pin_named )
 {
     bool changed = false;
     for( bool again = true; again; )
@@ -794,12 +821,12 @@ bool hoist_invariants( Function& func, const Literal_pool& literals, bool pin_na
             {
                 continue;
             }
-            while( hoist_one( func, Scope( func, found, l, innermost, addressed ), pin_named ) )
+            while( hoist_one( func, Scope( func, table, found, l, innermost, addressed ), pin_named ) )
             {
                 changed = true;
             }
             // After the reads, so its bound is a local.
-            again = hoist_range_check( func, Scope( func, found, l, innermost, addressed ), literals, pin_named );
+            again = hoist_range_check( func, Scope( func, table, found, l, innermost, addressed ), literals, pin_named );
             changed |= again;
         }
     }
@@ -821,6 +848,7 @@ namespace
 
 constexpr std::string_view k_types = "struct Pair { i32 a; i32 b; };\n"
                                      "struct Buf { i64[*] data; u64 count; i64 last; };\n"
+                                     "struct Reals { f64[*] data; u64 count; };\n"
                                      "i32 g = 0;\n"
                                      "void touch() { g += 1; }\n"
                                      "extern void ticked();\n"
@@ -996,13 +1024,26 @@ TEST_CASE( "hoist_invariants_hoists_a_header_past_a_store_to_fresh_memory", "[op
     REQUIRE( Hoisted( source, 3, std::nullopt ).reads_through() == 3 );
 }
 
-// `ys.data` may point at `xs` or at `ys` itself, so both headers are read each turn.
+// `ys.data` may point at `xs.count`, a `u64` the `i64` store may change, so it is read each turn; the
+// pointers are not (D89).
 TEST_CASE( "hoist_invariants_keeps_a_header_a_store_through_a_reference_may_reach", "[opt][hoist_invariants]" )
 {
     const Hoisted f( "void f( ref Buf ys, const ref Buf xs ) { for( u64 i = 0; i < xs.count; i += 1 ) "
                      "{ unsafe { ys.data[ i ] = xs.data[ i ]; } } }\n" );
     INFO( f.kir() );
-    REQUIRE( f.reads_through() == 4 );
+    REQUIRE( f.reads_through() == 2 );
+}
+
+// The store writes an `f64`, which cannot change a pointer or a `u64` (D89): both headers are read once,
+// and only `xs.data[ i ]` each turn.
+TEST_CASE( "hoist_invariants_hoists_a_header_past_a_store_of_another_kind", "[opt][hoist_invariants]" )
+{
+    constexpr std::string_view source = "void f( ref Reals ys, const ref Reals xs ) { for( u64 i = 0; i < xs.count; i += 1 ) "
+                                        "{ unsafe { ys.data[ i ] = xs.data[ i ]; } } }\n";
+    const Hoisted              f( source );
+    INFO( f.kir() );
+    REQUIRE( f.reads_through() == 1 );
+    REQUIRE( Hoisted( source, 3, std::nullopt ).reads_through() == 4 );
 }
 
 // `i < len` is not the loop's test, and the body only stores, so one check before the loop takes its

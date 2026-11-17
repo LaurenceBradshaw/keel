@@ -123,7 +123,7 @@ bool version(
         return false;
     }
 
-    const std::optional<std::vector<Blocked_read>> blocked = blocked_reads( func, found, index );
+    const std::optional<std::vector<Blocked_read>> blocked = blocked_reads( func, types, found, index );
     if( !blocked )
     {
         return false;
@@ -493,10 +493,11 @@ constexpr std::string_view k_moved = "void f( ref Buf ys, const ref Buf xs ) { f
 } // namespace
 
 // The copy taken when no header lies in `ys.data[ 0 .. xs.count ]` reads only `xs.data[ i ]`; the
-// other reads both headers each turn, as before.
+// other reads `xs.count` each turn too, which the `i64` store may change. Neither reads a pointer
+// again, which no `i64` store changes (D89).
 TEST_CASE( "version_loops_copies_a_loop_storing_through_one_reference_and_reading_another", "[opt][version_loops]" )
 {
-    REQUIRE( reads_by_loop( k_moved ) == std::vector<std::size_t> { 1, 4 } );
+    REQUIRE( reads_by_loop( k_moved ) == std::vector<std::size_t> { 1, 2 } );
 }
 
 // One header both read and stored through: the check fails at run time only if the buffer holds it.
@@ -504,7 +505,7 @@ TEST_CASE( "version_loops_copies_a_loop_reading_and_storing_one_reference", "[op
 {
     REQUIRE(
         reads_by_loop( "void f( ref Buf b ) { for( u64 i = 0; i < b.count; i += 1 ) "
-                       "{ unsafe { b.data[ i ] = b.data[ i ] * 2; } } }\n" ) == std::vector<std::size_t> { 1, 3 }
+                       "{ unsafe { b.data[ i ] = b.data[ i ] * 2; } } }\n" ) == std::vector<std::size_t> { 1, 2 }
     );
 }
 
@@ -515,18 +516,18 @@ TEST_CASE( "version_loops_follows_a_store_address_taken_before_a_check", "[opt][
         reads_by_loop( "void f( ref Buf ys, const ref Buf xs ) { for( u64 i = 0; i < xs.count; i += 1 ) "
                        "{ unsafe { ys.data[ i ] = at( xs, i ) + 1; } } }\n"
                        "i64 at( const ref Buf b, u64 i ) { if( i >= b.count ) { panic( \"short\" ); } "
-                       "unsafe { return b.data[ i ]; } }\n" ) == std::vector<std::size_t> { 1, 5 }
+                       "unsafe { return b.data[ i ]; } }\n" ) == std::vector<std::size_t> { 1, 4 }
     );
 }
 
 TEST_CASE( "version_loops_keeps_a_loop_over_its_budget", "[opt][version_loops]" )
 {
-    REQUIRE( reads_by_loop( k_moved, 0 ) == std::vector<std::size_t> { 4 } );
+    REQUIRE( reads_by_loop( k_moved, 0 ) == std::vector<std::size_t> { 2 } );
 }
 
 TEST_CASE( "version_loops_keeps_a_loop_below_O3", "[opt][version_loops]" )
 {
-    REQUIRE( reads_by_loop( k_moved, Loop_weights {}.versioning, 2 ) == std::vector<std::size_t> { 4 } );
+    REQUIRE( reads_by_loop( k_moved, Loop_weights {}.versioning, 2 ) == std::vector<std::size_t> { 2 } );
 }
 
 // A call may write anything, so no range check covers it.
@@ -543,7 +544,7 @@ TEST_CASE( "version_loops_keeps_a_loop_storing_at_another_index", "[opt][version
 {
     REQUIRE(
         reads_by_loop( "void f( ref Buf ys, const ref Buf xs, u64 j ) { for( u64 i = 0; i < xs.count; i += 1 ) "
-                       "{ unsafe { ys.data[ j ] = xs.data[ i ] + 1; } } }\n" ) == std::vector<std::size_t> { 4 }
+                       "{ unsafe { ys.data[ j ] = xs.data[ i ] + 1; } } }\n" ) == std::vector<std::size_t> { 2 }
     );
 }
 

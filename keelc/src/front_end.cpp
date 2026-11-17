@@ -501,7 +501,7 @@ Front_end run_front_end(
                     bool shaped = rotate_loops( current(), *build.loops );
                     verified( current(), "rotate_loops" );
                     // After rotation, so the guard's read and the latch's both reach the body.
-                    if( forward_reads( current() ) )
+                    if( forward_reads( current(), front.types.table() ) )
                     {
                         verified( current(), "forward_reads" );
                         shaped = true;
@@ -512,7 +512,7 @@ Front_end run_front_end(
                         optimise_round( current() );
                     }
                     // After the round folds the checks that would exit before an invariant.
-                    if( hoist_invariants( current(), literals, pin_named ) )
+                    if( hoist_invariants( current(), front.types.table(), literals, pin_named ) )
                     {
                         verified( current(), "hoist_invariants" );
                     }
@@ -522,7 +522,7 @@ Front_end run_front_end(
                     {
                         verified( current(), "version_loops" );
                         // The copy reads its bounds once, so its checks can leave it.
-                        hoist_invariants( current(), literals, pin_named );
+                        hoist_invariants( current(), front.types.table(), literals, pin_named );
                         verified( current(), "hoist_invariants" );
                     }
                     // After hoisting, so `i * n` has an invariant `n`.

@@ -110,6 +110,43 @@ bool clobbers( const Function& func, const Local_set& addressed, const Statement
 
 namespace
 {
+// A scalar's kind of memory: an integer's or `bool`'s width, a float's width beside it, or a thin
+// pointer; 0 for anything else.
+u32 memory_kind( const Type_table& table, Type_id type )
+{
+    if( !type.is_valid() )
+    {
+        return 0;
+    }
+    const Type& t = table.get( type );
+    switch( t.kind )
+    {
+    case Type_kind::Bool:
+        return 8;
+    case Type_kind::Int:
+        return t.width;
+    case Type_kind::Float:
+        return 1000 + t.width;
+    case Type_kind::Pointer:
+        return table.is_interface_pointer( type ) || table.is_run_pointer( type ) ? 0 : 2000; // a fat pointer is two values
+    case Type_kind::Many_pointer:
+    case Type_kind::Function:
+        return 2000;
+    default:
+        return 0;
+    }
+}
+} // namespace
+
+bool distinct_memory( const Type_table& table, Type_id stored, Type_id read )
+{
+    const u32 a = memory_kind( table, stored );
+    const u32 b = memory_kind( table, read );
+    return a != 0 && b != 0 && a != b;
+}
+
+namespace
+{
 struct Place_traits
 {
     const Function& func;
@@ -145,9 +182,26 @@ const Local_id* held( const Reads& reads, const Place& place )
     return e ? &e->local : nullptr;
 }
 
-void step( const Function& func, const Local_set& addressed, const Statement& statement, Reads& reads )
+// Whether `statement` stores through a pointer and does nothing else that may change memory.
+bool stores_through( const Function& func, const Statement& statement )
 {
-    if( clobbers( func, addressed, statement ) )
+    if( statement.kind != Statement_kind::Assign || !has_deref_projection( func, statement.place ) )
+    {
+        return false;
+    }
+    const Rvalue_kind kind = func.rvalue( statement ).kind;
+    return kind != Rvalue_kind::Call && kind != Rvalue_kind::Indirect_call && kind != Rvalue_kind::Release;
+}
+
+void step( const Function& func, const Type_table& table, const Local_set& addressed, const Statement& statement, Reads& reads )
+{
+    if( stores_through( func, statement ) )
+    {
+        const Type_id stored = func.rvalue( statement ).type;
+        reads.erase_if( [&]( const Reads::Entry& read )
+                        { return !distinct_memory( table, stored, func.locals[read.local].type ); } );
+    }
+    else if( clobbers( func, addressed, statement ) )
     {
         reads.clear();
     }
@@ -172,7 +226,8 @@ void step( const Function& func, const Local_set& addressed, const Statement& st
     }
 }
 
-std::vector<std::optional<Reads>> reads_on_entry( const Function& func, const Local_set& addressed, const Place_traits& traits )
+std::vector<std::optional<Reads>>
+reads_on_entry( const Function& func, const Type_table& table, const Local_set& addressed, const Place_traits& traits )
 {
     std::vector<std::optional<Reads>> entry( func.blocks.size(), std::nullopt );
     entry[0].emplace( traits );
@@ -198,7 +253,7 @@ std::vector<std::optional<Reads>> reads_on_entry( const Function& func, const Lo
             reads              = *entry[b.v];
             for( const Statement& statement : func.statements_of( block ) )
             {
-                step( func, addressed, statement, reads );
+                step( func, table, addressed, statement, reads );
             }
 
             targets.clear();
@@ -253,11 +308,11 @@ bool rewrite( const Function& func, const Reads& reads, Operand& operand )
 }
 } // namespace
 
-bool forward_reads( Function& func )
+bool forward_reads( Function& func, const Type_table& table )
 {
     const Local_set                         addressed = addressed_locals_of( func );
     const Place_traits                      traits { func };
-    const std::vector<std::optional<Reads>> entry   = reads_on_entry( func, addressed, traits );
+    const std::vector<std::optional<Reads>> entry   = reads_on_entry( func, table, addressed, traits );
     bool                                    changed = false;
     std::vector<bool>                       deleted( func.statements.size(), false );
 
@@ -295,7 +350,7 @@ bool forward_reads( Function& func )
                 }
             }
 
-            step( func, addressed, statement, reads );
+            step( func, table, addressed, statement, reads );
         }
 
         changed |= rewrite( func, reads, block.terminator.condition );
@@ -324,6 +379,7 @@ namespace
 {
 
 constexpr std::string_view k_types = "struct Pair { i32 a; i32 b; i32 size() const { return a; } };\n"
+                                     "struct Real { f64 f; u32 u; };\n"
                                      "i32 g = 0;\n"
                                      "void touch() { g += 1; }\n"
                                      "i32 main() { return 0; }\n";
@@ -373,6 +429,22 @@ TEST_CASE( "forward_reads_keeps_a_read_a_global_store_separates", "[opt][forward
 TEST_CASE( "forward_reads_keeps_a_read_a_store_through_a_pointer_separates", "[opt][forward_reads]" )
 {
     const Forwarded f( "i32 f( const ref Pair p, ref Pair q, i32 i ) { if( i < p.size() ) { q.a = 0; if( i >= p.a ) { "
+                       "return -1; } return 1; } return 0; }\n" );
+    REQUIRE( f.branches() == 2 );
+}
+
+// `q.f` is an `f64` and `p.a` an `i32`, which no store of the one may change (D89).
+TEST_CASE( "forward_reads_folds_a_test_past_a_store_of_another_kind", "[opt][forward_reads]" )
+{
+    const Forwarded f( "i32 f( const ref Pair p, ref Real q, i32 i ) { if( i < p.size() ) { q.f = 0.0; if( i >= p.a ) { "
+                       "return -1; } return 1; } return 0; }\n" );
+    REQUIRE( f.branches() == 1 );
+}
+
+// `u32` and `i32` are one kind, signed or not.
+TEST_CASE( "forward_reads_keeps_a_read_a_store_of_the_other_sign_separates", "[opt][forward_reads]" )
+{
+    const Forwarded f( "i32 f( const ref Pair p, ref Real q, i32 i ) { if( i < p.size() ) { q.u = 0; if( i >= p.a ) { "
                        "return -1; } return 1; } return 0; }\n" );
     REQUIRE( f.branches() == 2 );
 }
