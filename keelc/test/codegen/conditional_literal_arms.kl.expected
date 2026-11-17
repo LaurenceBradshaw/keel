@@ -1,0 +1,183 @@
+// codegen/conditional_literal_arms.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+int32_t kl_7codegen_4main__( void );
+uint64_t kl_7codegen_6second__I3f64E__3f64_3u64( double*, uint64_t );
+
+#line 9 "codegen/conditional_literal_arms.kl"
+int32_t kl_7codegen_4main__( void )
+{
+    int32_t kl_t0;
+    uint64_t kl_n_1;
+    double kl_x_2;
+    bool kl_odd_3;
+    uint64_t kl_t4;
+    bool kl_t5;
+    uint64_t kl_a_6;
+    uint64_t kl_t7;
+    double kl_b_8;
+    double kl_t9;
+    uint64_t kl_c_10;
+    double* kl_t11;
+    uint64_t kl_t12;
+    uint64_t kl_t13;
+    uint8_t kl_byte_14;
+    uint8_t kl_d_15;
+    uint8_t kl_t16;
+    int32_t kl_t17;
+    bool kl_t18;
+    bool kl_t19;
+    bool kl_t20;
+    bool kl_t21;
+    bool kl_t22;
+    bool kl_t23;
+    bool kl_t24;
+#line 11 "codegen/conditional_literal_arms.kl"
+    kl_n_1 = 7;
+    kl_x_2 = 2.5;
+    kl_t4 = kl_n_1 % 2;
+#line 13 "codegen/conditional_literal_arms.kl"
+    kl_t5 = kl_t4 == 1;
+#line 13 "codegen/conditional_literal_arms.kl"
+    kl_odd_3 = kl_t5;
+    if ( kl_odd_3 ) goto bb1; else goto bb2;
+    bb1:
+#line 14 "codegen/conditional_literal_arms.kl"
+    kl_t7 = kl_n_1;
+#line 14 "codegen/conditional_literal_arms.kl"
+    goto bb3;
+    bb2:
+#line 14 "codegen/conditional_literal_arms.kl"
+    kl_t7 = 1;
+#line 14 "codegen/conditional_literal_arms.kl"
+    goto bb3;
+    bb3:
+#line 14 "codegen/conditional_literal_arms.kl"
+    kl_a_6 = kl_t7;
+    if ( kl_odd_3 ) goto bb4; else goto bb5;
+    bb4:
+#line 15 "codegen/conditional_literal_arms.kl"
+    kl_t9 = 0.5;
+#line 15 "codegen/conditional_literal_arms.kl"
+    goto bb6;
+    bb5:
+#line 15 "codegen/conditional_literal_arms.kl"
+    kl_t9 = kl_x_2;
+#line 15 "codegen/conditional_literal_arms.kl"
+    goto bb6;
+    bb6:
+#line 15 "codegen/conditional_literal_arms.kl"
+    kl_b_8 = kl_t9;
+    kl_t11 = &kl_x_2;
+#line 16 "codegen/conditional_literal_arms.kl"
+    if ( kl_odd_3 ) goto bb7; else goto bb8;
+    bb7:
+#line 16 "codegen/conditional_literal_arms.kl"
+    kl_t12 = 1;
+#line 16 "codegen/conditional_literal_arms.kl"
+    goto bb9;
+    bb8:
+#line 16 "codegen/conditional_literal_arms.kl"
+    kl_t12 = kl_n_1;
+#line 16 "codegen/conditional_literal_arms.kl"
+    goto bb9;
+    bb9:
+#line 16 "codegen/conditional_literal_arms.kl"
+    kl_t13 = kl_7codegen_6second__I3f64E__3f64_3u64( kl_t11, kl_t12 );
+#line 16 "codegen/conditional_literal_arms.kl"
+    kl_c_10 = kl_t13;
+    kl_byte_14 = 200;
+    if ( kl_odd_3 ) goto bb10; else goto bb11;
+    bb10:
+#line 18 "codegen/conditional_literal_arms.kl"
+    kl_t16 = kl_byte_14;
+#line 18 "codegen/conditional_literal_arms.kl"
+    goto bb12;
+    bb11:
+#line 18 "codegen/conditional_literal_arms.kl"
+    kl_t16 = 255;
+#line 18 "codegen/conditional_literal_arms.kl"
+    goto bb12;
+    bb12:
+#line 18 "codegen/conditional_literal_arms.kl"
+    kl_d_15 = kl_t16;
+#line 20 "codegen/conditional_literal_arms.kl"
+    kl_t21 = kl_a_6 == 7;
+#line 20 "codegen/conditional_literal_arms.kl"
+    kl_t20 = kl_t21;
+#line 20 "codegen/conditional_literal_arms.kl"
+    if ( kl_t20 ) goto bb16; else goto bb17;
+    bb13:
+#line 20 "codegen/conditional_literal_arms.kl"
+    kl_t17 = 0;
+#line 20 "codegen/conditional_literal_arms.kl"
+    goto bb15;
+    bb14:
+#line 20 "codegen/conditional_literal_arms.kl"
+    kl_t17 = 1;
+#line 20 "codegen/conditional_literal_arms.kl"
+    goto bb15;
+    bb15:
+#line 20 "codegen/conditional_literal_arms.kl"
+    kl_t0 = kl_t17;
+#line 20 "codegen/conditional_literal_arms.kl"
+    return kl_t0;
+    bb16:
+#line 20 "codegen/conditional_literal_arms.kl"
+    kl_t22 = kl_b_8 == 0.5;
+#line 20 "codegen/conditional_literal_arms.kl"
+    kl_t20 = kl_t22;
+#line 20 "codegen/conditional_literal_arms.kl"
+    goto bb17;
+    bb17:
+#line 20 "codegen/conditional_literal_arms.kl"
+    kl_t19 = kl_t20;
+#line 20 "codegen/conditional_literal_arms.kl"
+    if ( kl_t19 ) goto bb18; else goto bb19;
+    bb18:
+#line 20 "codegen/conditional_literal_arms.kl"
+    kl_t23 = kl_c_10 == 1;
+#line 20 "codegen/conditional_literal_arms.kl"
+    kl_t19 = kl_t23;
+#line 20 "codegen/conditional_literal_arms.kl"
+    goto bb19;
+    bb19:
+#line 20 "codegen/conditional_literal_arms.kl"
+    kl_t18 = kl_t19;
+#line 20 "codegen/conditional_literal_arms.kl"
+    if ( kl_t18 ) goto bb20; else goto bb21;
+    bb20:
+#line 20 "codegen/conditional_literal_arms.kl"
+    kl_t24 = kl_d_15 == 200;
+#line 20 "codegen/conditional_literal_arms.kl"
+    kl_t18 = kl_t24;
+#line 20 "codegen/conditional_literal_arms.kl"
+    goto bb21;
+    bb21:
+#line 20 "codegen/conditional_literal_arms.kl"
+    if ( kl_t18 ) goto bb13; else goto bb14;
+}
+
+#line 4 "codegen/conditional_literal_arms.kl"
+uint64_t kl_7codegen_6second__I3f64E__3f64_3u64( double* kl_t1, uint64_t kl_k_2 )
+{
+    uint64_t kl_t0;
+    ( void ) kl_t1;
+#line 6 "codegen/conditional_literal_arms.kl"
+    kl_t0 = kl_k_2;
+#line 6 "codegen/conditional_literal_arms.kl"
+    return kl_t0;
+}
+
+int main( void )
+{
+    int32_t kl_t0;
+#line 9 "codegen/conditional_literal_arms.kl"
+    kl_t0 = kl_7codegen_4main__(  );
+#line 9 "codegen/conditional_literal_arms.kl"
+    return kl_t0;
+#line 9 "codegen/conditional_literal_arms.kl"
+}
+

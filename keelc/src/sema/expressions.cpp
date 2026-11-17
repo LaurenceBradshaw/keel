@@ -3583,8 +3583,32 @@ Type_id Expressions::infer_variant_construction( Node_id id )
 Type_id Expressions::infer_conditional( Node_id id )
 {
     check_condition( ast_.condition( id ) );
-    const Type_id then_type = infer( ast_.then_branch( id ) );
-    const Type_id else_type = infer( ast_.else_branch( id ) );
+
+    // A literal arm takes a number type from the other arm, as an operator's literal operand does:
+    // `b ? n : 1` is `n`'s type. A generic call infers its arguments, so it relies on this.
+    const Node_id then_branch  = ast_.then_branch( id );
+    const Node_id else_branch  = ast_.else_branch( id );
+    const bool    then_literal = literals_.adoption( then_branch ) != Adoption::None;
+    const bool    else_literal = literals_.adoption( else_branch ) != Adoption::None;
+
+    Type_id then_type;
+    Type_id else_type;
+
+    if( then_literal != else_literal )
+    {
+        const Node_id literal_arm = then_literal ? then_branch : else_branch;
+        const Type_id known       = infer( then_literal ? else_branch : then_branch );
+        const Type_id adopted =
+            table_.is_integer( known ) || table_.is_float( known ) ? check( literal_arm, known ) : infer( literal_arm );
+
+        then_type = then_literal ? adopted : known;
+        else_type = then_literal ? known : adopted;
+    }
+    else
+    {
+        then_type = infer( then_branch );
+        else_type = infer( else_branch );
+    }
 
     if( table_.is_error( then_type ) || table_.is_error( else_type ) )
     {

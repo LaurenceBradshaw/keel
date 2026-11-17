@@ -13,6 +13,7 @@ import kl::_core::reduce as kernel;
 import iterable;
 import mask;
 import math;
+import optional;
 
 /// `N` numbers held inline: a vector of rank 1, neither a row nor a column.
 ///
@@ -478,6 +479,26 @@ class vec<T, u64 N> implements iterable<T> where T : numeric
         vec<T, K> r = vec<T, K>::zeros();
         kernel::matmul( ref r.e_, e_, m.as_run(), 1, N, K );
         return r;
+    }
+
+    /// Each element of this vector times each of `b`: row `i` is `b` times element `i`.
+    public mat<T, N, M> outer<u64 M>( const ref vec<T, M> b ) const
+    {
+        mat<T, N, M> r = mat<T, N, M>::zeros();
+        kernel::outer( ref r.as_run(), e_, b.e_ );
+        return r;
+    }
+
+    /// The length, the square root of the sum of squares, which overflows only when the length does.
+    public T norm() const where T : floating
+    {
+        return cast<T>( kernel::norm( e_ ) );
+    }
+
+    /// This vector over its `norm()`; every element NaN when that is 0.
+    public vec<T, N> normalised() const where T : floating
+    {
+        return this / norm();
     }
 
     /// --- Comparing ---
@@ -1232,6 +1253,30 @@ class mat<T, u64 R, u64 C> implements iterable<T> where T : numeric
         return r;
     }
 
+    /// The sum of the diagonal, `[0, 0]` to the last row or column.
+    public T trace() const
+    {
+        T r = 0;
+        for( u64 i : 0..( R < C ? R : C ) )
+        {
+            r += e_[i * C + i];
+        }
+        return r;
+    }
+
+    /// The Frobenius norm, the square root of the sum of squares, which overflows only when the norm
+    /// does.
+    public T norm() const where T : floating
+    {
+        return cast<T>( kernel::norm( e_ ) );
+    }
+
+    /// This matrix over its `norm()`; every element NaN when that is 0.
+    public mat<T, R, C> normalised() const where T : floating
+    {
+        return this / norm();
+    }
+
     /// --- Comparing ---
 
     /// Whether every element equals the matching one of `o`.
@@ -1514,6 +1559,67 @@ mat<T, N, N> diag<T, u64 N>( const ref vec<T, N> v ) where T : numeric
         r[i, i] = v[i];
     }
     return r;
+}
+
+/// The diagonal of a square matrix: `kl::diagonal( m )`.
+vec<T, N> diagonal<T, u64 N>( const ref mat<T, N, N> m ) where T : numeric
+{
+    vec<T, N> r = vec<T, N>::zeros();
+    for( u64 i : 0..N )
+    {
+        r[i] = m[i, i];
+    }
+    return r;
+}
+
+/// The cross product `a` x `b`: `kl::cross( a, b )`.
+vec<T, 3> cross<T>( const ref vec<T, 3> a, const ref vec<T, 3> b ) where T : numeric
+{
+    vec<T, 3> r = vec<T, 3>::zeros();
+    kernel::cross( ref r.as_run(), a.as_run(), b.as_run() );
+    return r;
+}
+
+/// The determinant of a square matrix, through LU with partial pivoting: `kl::determinant( m )`.
+/// 0 when a pivot is exactly zero.
+T determinant<T, u64 N>( const ref mat<T, N, N> m ) where T : floating
+{
+    mat<T, N, N> f    = m;
+    u64[N]       perm = [0, ..];
+    T            sign = kernel::lu( ref f.as_run(), ref perm, N );
+    return kernel::lu_determinant( f.as_run(), N, sign );
+}
+
+/// The inverse of a square matrix, `none` when a pivot is exactly zero: `kl::inverse( m )`. A
+/// nearly singular matrix gives large elements.
+optional<mat<T, N, N>> inverse<T, u64 N>( const ref mat<T, N, N> m ) where T : floating
+{
+    mat<T, N, N> f    = m;
+    u64[N]       perm = [0, ..];
+    if( kernel::lu( ref f.as_run(), ref perm, N ) == 0 )
+    {
+        return optional::none;
+    }
+
+    mat<T, N, N> r = mat<T, N, N>::zeros();
+    kernel::lu_solve( ref r.as_run(), f.as_run(), perm, mat<T, N, N>::eye().as_run(), N, N );
+    return optional::some( r );
+}
+
+/// The `x` with `a.matmul( x ) == b`, `none` when a pivot of `a` is exactly zero:
+/// `kl::solve( a, b )`.
+optional<vec<T, N>> solve<T, u64 N>( const ref mat<T, N, N> a, const ref vec<T, N> b ) where T : floating
+{
+    mat<T, N, N> f    = a;
+    u64[N]       perm = [0, ..];
+    if( kernel::lu( ref f.as_run(), ref perm, N ) == 0 )
+    {
+        return optional::none;
+    }
+
+    vec<T, N> r = vec<T, N>::zeros();
+    kernel::lu_solve( ref r.as_run(), f.as_run(), perm, b.as_run(), N, 1 );
+    return optional::some( r );
 }
 
 /// The smallest of each set of matching elements, as `kl::min`: `kl::minimum( a, b, c )`.

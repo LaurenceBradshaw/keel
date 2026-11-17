@@ -87,6 +87,210 @@ void eye<T>( ref T[] dest, u64 rows, u64 cols ) where T : numeric
     }
 }
 
+/// Factors `a`, `n` by `n`, in place with partial pivoting: U on and above the diagonal, and below
+/// it L's multipliers, L's diagonal being 1. Row `i` of the factors is row `perm[i]` of `a`.
+/// Answers the permutation's sign, or 0 when a pivot is exactly zero, the factors then unfinished.
+///
+/// ### Panics
+///
+/// If `a` does not hold `n` by `n`, or `perm` does not hold `n`.
+T lu<T>( ref T[] a, ref u64[] perm, u64 n ) where T : floating
+{
+    if( a.size != n * n || perm.size != n )
+    {
+        panic( "the shapes differ" );
+    }
+
+    for( u64 i : 0..n )
+    {
+        perm[i] = i;
+    }
+
+    T sign = 1;
+    for( u64 j : 0..n )
+    {
+        u64 p = j;
+        for( u64 i : j + 1..n )
+        {
+            if( magnitude( a[i * n + j] ) > magnitude( a[p * n + j] ) )
+            {
+                p = i;
+            }
+        }
+        if( a[p * n + j] == 0 )
+        {
+            return 0;
+        }
+
+        if( p != j )
+        {
+            for( u64 c : 0..n )
+            {
+                T t          = a[j * n + c];
+                a[j * n + c] = a[p * n + c];
+                a[p * n + c] = t;
+            }
+            u64 t   = perm[j];
+            perm[j] = perm[p];
+            perm[p] = t;
+            sign    = -sign;
+        }
+
+        for( u64 i : j + 1..n )
+        {
+            T f          = a[i * n + j] / a[j * n + j];
+            a[i * n + j] = f;
+            for( u64 c : j + 1..n )
+            {
+                a[i * n + c] -= f * a[j * n + c];
+            }
+        }
+    }
+    return sign;
+}
+
+/// `dest`, `n` by `k`, = the `x` with `A x = b`, for `b` `n` by `k`, from `lu`'s factors of `A`
+/// and its `perm`.
+///
+/// ### Panics
+///
+/// If a size is not its shape's.
+void lu_solve<T>( ref T[] dest, const ref T[] factors, const ref u64[] perm, const ref T[] b, u64 n, u64 k ) where T : floating
+{
+    if( factors.size != n * n || perm.size != n || b.size != n * k || dest.size != n * k )
+    {
+        panic( "the shapes differ" );
+    }
+
+    for( u64 i : 0..n )
+    {
+        for( u64 c : 0..k )
+        {
+            dest[i * k + c] = b[perm[i] * k + c];
+        }
+    }
+
+    // L y = P b, then U x = y.
+    for( u64 i : 0..n )
+    {
+        for( u64 j : 0..i )
+        {
+            T f = factors[i * n + j];
+            for( u64 c : 0..k )
+            {
+                dest[i * k + c] -= f * dest[j * k + c];
+            }
+        }
+    }
+    for( u64 m : 0..n )
+    {
+        u64 i = n - 1 - m;
+        for( u64 j : i + 1..n )
+        {
+            T f = factors[i * n + j];
+            for( u64 c : 0..k )
+            {
+                dest[i * k + c] -= f * dest[j * k + c];
+            }
+        }
+        for( u64 c : 0..k )
+        {
+            dest[i * k + c] /= factors[i * n + i];
+        }
+    }
+}
+
+/// The determinant from `lu`'s factors and the sign it answered.
+T lu_determinant<T>( const ref T[] factors, u64 n, T sign ) where T : floating
+{
+    if( sign == 0 )
+    {
+        return 0;
+    }
+
+    T d = sign;
+    for( u64 i : 0..n )
+    {
+        d *= factors[i * n + i];
+    }
+    return d;
+}
+
+/// The square root of the sum of squares, scaled as LAPACK's `nrm2` is so that no square
+/// overflows or underflows: a NaN answers NaN, else an infinity infinity.
+f64 norm<T>( const ref T[] a ) where T : floating
+{
+    f64 scale    = 0;
+    f64 sum      = 1;
+    f64 infinite = 0;
+    for( T e : a )
+    {
+        f64 x = cast<f64>( e );
+        if( x != x )
+        {
+            return x;
+        }
+
+        f64 m = x < 0 ? -x : x;
+        if( m == 0 )
+        {
+            continue;
+        }
+        if( m - m != 0 )
+        {
+            infinite = m;
+        }
+        else if( m > scale )
+        {
+            sum   = 1 + sum * ( scale / m ) * ( scale / m );
+            scale = m;
+        }
+        else
+        {
+            sum += ( m / scale ) * ( m / scale );
+        }
+    }
+    return infinite != 0 ? infinite : scale * sqrt_f64( sum );
+}
+
+/// `dest` = `a` x `b`, each of size 3.
+///
+/// ### Panics
+///
+/// If a size is not 3.
+void cross<T>( ref T[] dest, const ref T[] a, const ref T[] b ) where T : numeric
+{
+    if( a.size != 3 || b.size != 3 || dest.size != 3 )
+    {
+        panic( "cross takes vectors of size 3" );
+    }
+
+    dest[0] = a[1] * b[2] - a[2] * b[1];
+    dest[1] = a[2] * b[0] - a[0] * b[2];
+    dest[2] = a[0] * b[1] - a[1] * b[0];
+}
+
+/// `dest`, `a.size` by `b.size`, = each element of `a` times each of `b`.
+///
+/// ### Panics
+///
+/// If `dest` is not that size.
+void outer<T>( ref T[] dest, const ref T[] a, const ref T[] b ) where T : numeric
+{
+    if( dest.size != a.size * b.size )
+    {
+        panic( "the shapes differ" );
+    }
+
+    for( u64 i : 0..a.size )
+    {
+        for( u64 j : 0..b.size )
+        {
+            dest[i * b.size + j] = a[i] * b[j];
+        }
+    }
+}
+
 /// `dest`, row-major over `shape`, = `a` read at `strides`: the element at index `(i0, i1, ...)`
 /// is `a[i0 * strides[0] + i1 * strides[1] + ...]`. A permuted array reads its source's strides
 /// in the new order, and a slice its source's from the slice's first element.
@@ -221,6 +425,11 @@ void zip_strided_into<T, F>( ref T[] dest, const ref T[] a, const ref u64[] shap
             dest[row * inner + j] = op( dest[row * inner + j], a[base + j * stride] );
         }
     }
+}
+
+private T magnitude<T>( T x ) where T : floating
+{
+    return x < 0 ? -x : x;
 }
 
 // The product of `shape`. Panics when `strides` differs in length.

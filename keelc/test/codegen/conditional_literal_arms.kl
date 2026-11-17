@@ -1,0 +1,21 @@
+// A literal arm of `?:` takes the other arm's number type, as a literal operand of an operator
+// does, so the conditional is typed on its own: in `auto`, and as an argument to a generic call,
+// which infers its arguments to deduce from them.
+u64 second<T>( T _, u64 k )
+{
+    return k;
+}
+
+i32 main()
+{
+    u64  n    = 7;
+    f64  x    = 2.5;
+    bool odd  = n % 2 == 1;
+    auto a    = odd ? n : 1;
+    auto b    = odd ? 0.5 : x;
+    u64  c    = second( x, odd ? 1 : n );
+    u8   byte = 200;
+    auto d    = odd ? byte : 255;
+
+    return a == 7 && b == 0.5 && c == 1 && d == 200 ? 0 : 1;
+}

@@ -1,0 +1,16 @@
+// A literal arm adopts the other arm's type, so it must fit it: 256 is no `u8`. A struct arm gives
+// a literal nothing to adopt, so the two arms still differ.
+struct point
+{
+    i32 x;
+};
+
+i32 main()
+{
+    u8    byte = 1;
+    bool  b    = true;
+    auto  d    = b ? byte : 256;
+    point p    = point { 1 };
+    auto  e    = b ? p : 1;
+    return 0;
+}

@@ -10,6 +10,7 @@ import iterable;
 import list;
 import mask;
 import math;
+import optional;
 
 /// Numbers of any rank with a shape set at run time, held row-major: the last index moves fastest.
 ///
@@ -309,7 +310,7 @@ class ndarray<T> implements iterable<T> where T : numeric
         }
 
         list<u64> s     = list<u64>::with_capacity( rank() );
-        u64       outer = 1;
+        u64       lead  = 1;
         u64       inner = 1;
         for( u64 k : 0..rank() )
         {
@@ -320,7 +321,7 @@ class ndarray<T> implements iterable<T> where T : numeric
             s.push( k == axis ? shape_[k] + b.shape_[k] : shape_[k] );
             if( k < axis )
             {
-                outer *= shape_[k];
+                lead *= shape_[k];
             }
             if( k > axis )
             {
@@ -328,11 +329,11 @@ class ndarray<T> implements iterable<T> where T : numeric
             }
         }
 
-        // Each outer index takes a block from this array, then one from `b`.
+        // Each leading index takes a block from this array, then one from `b`.
         u64     ra = shape_[axis] * inner;
         u64     rb = b.shape_[axis] * inner;
         list<T> e  = list<T>::with_capacity( size() + b.size() );
-        for( u64 o : 0..outer )
+        for( u64 o : 0..lead )
         {
             for( u64 i : 0..ra )
             {
@@ -918,6 +919,35 @@ class ndarray<T> implements iterable<T> where T : numeric
         return ndarray<T>( move e, [n] );
     }
 
+    /// The sum of the diagonal of a rank 2 array.
+    public T trace() const
+    {
+        return diagonal().sum();
+    }
+
+    /// Each element times each of `b`, both read flat: an `a.size()` by `b.size()` array.
+    public ndarray<T> outer( const ref ndarray<T> b ) const
+    {
+        ndarray<T> r = ndarray<T>::zeros( size(), b.size() );
+        kernel::outer( ref r.e_.as_run(), e_.as_run(), b.e_.as_run() );
+        return r;
+    }
+
+    /// The square root of the sum of squares: the length at rank 1, the Frobenius norm at rank 2.
+    /// It overflows only when the norm does.
+    public T norm() const where T : floating
+    {
+        return cast<T>( kernel::norm( e_.as_run() ) );
+    }
+
+    /// This array over its `norm()`; every element NaN when that is 0.
+    public ndarray<T> normalised() const where T : floating
+    {
+        ndarray<T> r = copy();
+        r /= norm();
+        return r;
+    }
+
     /// --- Comparing ---
 
     /// Whether `o` has this shape and every element equals the matching one.
@@ -1450,6 +1480,70 @@ class ndarray<T> implements iterable<T> where T : numeric
         }
     }
 };
+
+/// The cross product `a` x `b`, each of rank 1 and size 3: `kl::cross( a, b )`.
+ndarray<T> cross<T>( const ref ndarray<T> a, const ref ndarray<T> b ) where T : numeric
+{
+    if( a.rank() != 1 || b.rank() != 1 )
+    {
+        panic( "cross takes vectors of size 3" );
+    }
+
+    ndarray<T> r = ndarray<T>::zeros( 3 );
+    kernel::cross( ref r.as_run(), a.as_run(), b.as_run() );
+    return r;
+}
+
+/// The determinant of a square rank 2 array, through LU with partial pivoting:
+/// `kl::determinant( a )`. 0 when a pivot is exactly zero.
+T determinant<T>( const ref ndarray<T> a ) where T : floating
+{
+    u64          n    = square( a );
+    ndarray<T>   f    = a.copy();
+    ndarray<u64> perm = ndarray<u64>::zeros( n );
+    T            sign = kernel::lu( ref f.as_run(), ref perm.as_run(), n );
+    return kernel::lu_determinant( f.as_run(), n, sign );
+}
+
+/// The inverse of a square rank 2 array, `none` when a pivot is exactly zero:
+/// `kl::inverse( a )`. A nearly singular array gives large elements.
+optional<ndarray<T>> inverse<T>( const ref ndarray<T> a ) where T : floating
+{
+    return solve( a, ndarray<T>::identity( square( a ) ) );
+}
+
+/// The `x` with `a.matmul( x ) == b`, for a square rank 2 `a` and a `b` of rank 1 or 2 whose first
+/// dimension is `a`'s, `none` when a pivot of `a` is exactly zero: `kl::solve( a, b )`.
+optional<ndarray<T>> solve<T>( const ref ndarray<T> a, const ref ndarray<T> b ) where T : floating
+{
+    u64 n = square( a );
+    if( b.rank() < 1 || b.rank() > 2 || b.shape()[0] != n )
+    {
+        panic( "the shapes differ" );
+    }
+
+    ndarray<T>   f    = a.copy();
+    ndarray<u64> perm = ndarray<u64>::zeros( n );
+    if( kernel::lu( ref f.as_run(), ref perm.as_run(), n ) == 0 )
+    {
+        return optional::none;
+    }
+
+    u64        k = b.size() / n;
+    ndarray<T> r = ndarray<T>::zeros( b.shape() );
+    kernel::lu_solve( ref r.as_run(), f.as_run(), perm.as_run(), b.as_run(), n, k );
+    return optional::some( move r );
+}
+
+// The size of square rank 2 `a`. Panics on any other.
+private u64 square<T>( const ref ndarray<T> a ) where T : numeric
+{
+    if( a.rank() != 2 || a.shape()[0] != a.shape()[1] )
+    {
+        panic( "the matrix is not square" );
+    }
+    return a.shape()[0];
+}
 
 /// The square matrix with `v`, of rank 1, on its diagonal: `kl::diag( v )`.
 ndarray<T> diag<T>( const ref ndarray<T> v ) where T : numeric

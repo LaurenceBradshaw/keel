@@ -13,6 +13,10 @@
 <h1><span class="kind">module</span> <a class="package" href="index.html">kl</a>::ndarray</h1>
 <ul class="contents">
 <li><a href="#ndarray"><code>ndarray</code></a> <span class="kind">class</span></li>
+<li><a href="#cross"><code>cross</code></a> <span class="kind">function</span></li>
+<li><a href="#determinant"><code>determinant</code></a> <span class="kind">function</span></li>
+<li><a href="#inverse"><code>inverse</code></a> <span class="kind">function</span></li>
+<li><a href="#solve"><code>solve</code></a> <span class="kind">function</span></li>
 <li><a href="#diag"><code>diag</code></a> <span class="kind">function</span></li>
 <li><a href="#minimum"><code>minimum</code></a> <span class="kind">function</span></li>
 <li><a href="#maximum"><code>maximum</code></a> <span class="kind">function</span></li>
@@ -532,6 +536,31 @@ column on the right, and that dimension is dropped from the result, so two of th
 <p>The diagonal of a rank 2 array, as rank 1.</p>
 </div>
 </div>
+<div class="group" id="ndarray.trace">
+<pre class="signature"><a class="anchor" href="#ndarray.trace" aria-label="Link to trace">#</a><code><span class="kw">public</span> T <span class="fn">trace</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The sum of the diagonal of a rank 2 array.</p>
+</div>
+</div>
+<div class="group" id="ndarray.outer">
+<pre class="signature"><a class="anchor" href="#ndarray.outer" aria-label="Link to outer">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">outer</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; b ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each element times each of <code>b</code>, both read flat: an <code>a.size()</code> by <code>b.size()</code> array.</p>
+</div>
+</div>
+<div class="group" id="ndarray.norm">
+<pre class="signature"><a class="anchor" href="#ndarray.norm" aria-label="Link to norm">#</a><code><span class="kw">public</span> T <span class="fn">norm</span>() <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The square root of the sum of squares: the length at rank 1, the Frobenius norm at rank 2.
+It overflows only when the norm does.</p>
+</div>
+</div>
+<div class="group" id="ndarray.normalised">
+<pre class="signature"><a class="anchor" href="#ndarray.normalised" aria-label="Link to normalised">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">normalised</span>() <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>This array over its <code>norm()</code>; every element NaN when that is 0.</p>
+</div>
+</div>
 <h3>Comparing</h3>
 <div class="group" id="ndarray.operator==">
 <pre class="signature"><a class="anchor" href="#ndarray.operator==" aria-label="Link to operator==">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">operator==</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; o ) <span class="kw">const</span></code></pre>
@@ -757,6 +786,45 @@ integer needs a rounding: <code>truncated</code>, <code>rounded</code>, <code>fl
 <pre class="signature"><a class="anchor" href="#ndarray.ceiled" aria-label="Link to ceiled">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;U&gt; <span class="fn">ceiled</span>&lt;U&gt;() <span class="kw">const</span> <span class="kw">where</span> U : integral, <span class="kw">where</span> T : floating</code></pre>
 <div class="doc">
 <p>Each element up, as a <code>U</code>. Panics on an infinity, a NaN, or a value <code>U</code> cannot hold.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">cross</span></h2>
+<div class="group" id="cross">
+<pre class="signature"><a class="anchor" href="#cross" aria-label="Link to cross">#</a><code><a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">cross</span>&lt;T&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; a, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; b ) <span class="kw">where</span> T : numeric</code></pre>
+<div class="doc">
+<p>The cross product <code>a</code> x <code>b</code>, each of rank 1 and size 3: <code>kl::cross( a, b )</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">determinant</span></h2>
+<div class="group" id="determinant">
+<pre class="signature"><a class="anchor" href="#determinant" aria-label="Link to determinant">#</a><code>T <span class="fn">determinant</span>&lt;T&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The determinant of a square rank 2 array, through LU with partial pivoting:
+<code>kl::determinant( a )</code>. 0 when a pivot is exactly zero.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">inverse</span></h2>
+<div class="group" id="inverse">
+<pre class="signature"><a class="anchor" href="#inverse" aria-label="Link to inverse">#</a><code><a class="type" href="optional.html#optional">optional</a>&lt;<a class="type" href="#ndarray">ndarray</a>&lt;T&gt;&gt; <span class="fn">inverse</span>&lt;T&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The inverse of a square rank 2 array, <code>none</code> when a pivot is exactly zero:
+<code>kl::inverse( a )</code>. A nearly singular array gives large elements.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">solve</span></h2>
+<div class="group" id="solve">
+<pre class="signature"><a class="anchor" href="#solve" aria-label="Link to solve">#</a><code><a class="type" href="optional.html#optional">optional</a>&lt;<a class="type" href="#ndarray">ndarray</a>&lt;T&gt;&gt; <span class="fn">solve</span>&lt;T&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; a, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; b ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The <code>x</code> with <code>a.matmul( x ) == b</code>, for a square rank 2 <code>a</code> and a <code>b</code> of rank 1 or 2 whose first
+dimension is <code>a</code>'s, <code>none</code> when a pivot of <code>a</code> is exactly zero: <code>kl::solve( a, b )</code>.</p>
 </div>
 </div>
 </section>

@@ -16,6 +16,11 @@
 <li><a href="#mat"><code>mat</code></a> <span class="kind">class</span></li>
 <li><a href="#identity"><code>identity</code></a> <span class="kind">function</span></li>
 <li><a href="#diag"><code>diag</code></a> <span class="kind">function</span></li>
+<li><a href="#diagonal"><code>diagonal</code></a> <span class="kind">function</span></li>
+<li><a href="#cross"><code>cross</code></a> <span class="kind">function</span></li>
+<li><a href="#determinant"><code>determinant</code></a> <span class="kind">function</span></li>
+<li><a href="#inverse"><code>inverse</code></a> <span class="kind">function</span></li>
+<li><a href="#solve"><code>solve</code></a> <span class="kind">function</span></li>
 <li><a href="#minimum"><code>minimum</code></a> <span class="kind">function</span></li>
 <li><a href="#maximum"><code>maximum</code></a> <span class="kind">function</span></li>
 <li><a href="#select"><code>select</code></a> <span class="kind">function</span></li>
@@ -368,6 +373,24 @@ product, and <code>v.matmul( m )</code> reads <code>v</code> as a row.</p>
 <pre class="signature"><a class="anchor" href="#vec.matmul" aria-label="Link to matmul">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, K&gt; <span class="fn">matmul</span>&lt;<a class="prim" href="prelude.html#u64">u64</a> K&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, N, K&gt; m ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>This vector, as a row, times <code>m</code>.</p>
+</div>
+</div>
+<div class="group" id="vec.outer">
+<pre class="signature"><a class="anchor" href="#vec.outer" aria-label="Link to outer">#</a><code><span class="kw">public</span> <a class="type" href="#mat">mat</a>&lt;T, N, M&gt; <span class="fn">outer</span>&lt;<a class="prim" href="prelude.html#u64">u64</a> M&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, M&gt; b ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each element of this vector times each of <code>b</code>: row <code>i</code> is <code>b</code> times element <code>i</code>.</p>
+</div>
+</div>
+<div class="group" id="vec.norm">
+<pre class="signature"><a class="anchor" href="#vec.norm" aria-label="Link to norm">#</a><code><span class="kw">public</span> T <span class="fn">norm</span>() <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The length, the square root of the sum of squares, which overflows only when the length does.</p>
+</div>
+</div>
+<div class="group" id="vec.normalised">
+<pre class="signature"><a class="anchor" href="#vec.normalised" aria-label="Link to normalised">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">normalised</span>() <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>This vector over its <code>norm()</code>; every element NaN when that is 0.</p>
 </div>
 </div>
 <h3>Comparing</h3>
@@ -899,6 +922,25 @@ edge.</p>
 <p>The rows as columns.</p>
 </div>
 </div>
+<div class="group" id="mat.trace">
+<pre class="signature"><a class="anchor" href="#mat.trace" aria-label="Link to trace">#</a><code><span class="kw">public</span> T <span class="fn">trace</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The sum of the diagonal, <code>[0, 0]</code> to the last row or column.</p>
+</div>
+</div>
+<div class="group" id="mat.norm">
+<pre class="signature"><a class="anchor" href="#mat.norm" aria-label="Link to norm">#</a><code><span class="kw">public</span> T <span class="fn">norm</span>() <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The Frobenius norm, the square root of the sum of squares, which overflows only when the norm
+does.</p>
+</div>
+</div>
+<div class="group" id="mat.normalised">
+<pre class="signature"><a class="anchor" href="#mat.normalised" aria-label="Link to normalised">#</a><code><span class="kw">public</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">normalised</span>() <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>This matrix over its <code>norm()</code>; every element NaN when that is 0.</p>
+</div>
+</div>
 <h3>Comparing</h3>
 <div class="group" id="mat.operator==">
 <pre class="signature"><a class="anchor" href="#mat.operator==" aria-label="Link to operator==">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">operator==</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; o ) <span class="kw">const</span></code></pre>
@@ -1096,6 +1138,54 @@ integer needs a rounding: <code>truncated</code>, <code>rounded</code>, <code>fl
 <pre class="signature"><a class="anchor" href="#diag" aria-label="Link to diag">#</a><code><a class="type" href="#mat">mat</a>&lt;T, N, N&gt; <span class="fn">diag</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; v ) <span class="kw">where</span> T : numeric</code></pre>
 <div class="doc">
 <p>The square matrix with <code>v</code> on its diagonal: <code>kl::diag( v )</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">diagonal</span></h2>
+<div class="group" id="diagonal">
+<pre class="signature"><a class="anchor" href="#diagonal" aria-label="Link to diagonal">#</a><code><a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">diagonal</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, N, N&gt; m ) <span class="kw">where</span> T : numeric</code></pre>
+<div class="doc">
+<p>The diagonal of a square matrix: <code>kl::diagonal( m )</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">cross</span></h2>
+<div class="group" id="cross">
+<pre class="signature"><a class="anchor" href="#cross" aria-label="Link to cross">#</a><code><a class="type" href="#vec">vec</a>&lt;T, ?&gt; <span class="fn">cross</span>&lt;T&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, ?&gt; a, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, ?&gt; b ) <span class="kw">where</span> T : numeric</code></pre>
+<div class="doc">
+<p>The cross product <code>a</code> x <code>b</code>: <code>kl::cross( a, b )</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">determinant</span></h2>
+<div class="group" id="determinant">
+<pre class="signature"><a class="anchor" href="#determinant" aria-label="Link to determinant">#</a><code>T <span class="fn">determinant</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, N, N&gt; m ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The determinant of a square matrix, through LU with partial pivoting: <code>kl::determinant( m )</code>.
+0 when a pivot is exactly zero.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">inverse</span></h2>
+<div class="group" id="inverse">
+<pre class="signature"><a class="anchor" href="#inverse" aria-label="Link to inverse">#</a><code><a class="type" href="optional.html#optional">optional</a>&lt;<a class="type" href="#mat">mat</a>&lt;T, N, N&gt;&gt; <span class="fn">inverse</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, N, N&gt; m ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The inverse of a square matrix, <code>none</code> when a pivot is exactly zero: <code>kl::inverse( m )</code>. A
+nearly singular matrix gives large elements.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">solve</span></h2>
+<div class="group" id="solve">
+<pre class="signature"><a class="anchor" href="#solve" aria-label="Link to solve">#</a><code><a class="type" href="optional.html#optional">optional</a>&lt;<a class="type" href="#vec">vec</a>&lt;T, N&gt;&gt; <span class="fn">solve</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, N, N&gt; a, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; b ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The <code>x</code> with <code>a.matmul( x ) == b</code>, <code>none</code> when a pivot of <code>a</code> is exactly zero:
+<code>kl::solve( a, b )</code>.</p>
 </div>
 </div>
 </section>

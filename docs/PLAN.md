@@ -1071,7 +1071,9 @@ elsewhere would break a function that compiled yesterday.
 `integral` admit unsigned types, which have no negation.
 
 **The conditional expression is `?:`, and `if` has no value.** An expectation reaches both arms;
-with none, the arms must match exactly, with no widening between them. It may be the root of a
+with none, the arms must match exactly, with no widening between them, except that a literal arm
+takes the other arm's number type, as an operator's literal operand does: `b ? n : 1` is `n`'s
+type, so it can stand in `auto` or as an argument a generic call deduces from. It may be the root of a
 place that is read, `( c ? a : b ).t`.
 
 **Writing into a temporary is refused.** `g().t = 1;` and `( c ? a : b ).t = 1;` on by-value

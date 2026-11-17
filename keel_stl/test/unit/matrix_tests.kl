@@ -1,8 +1,9 @@
 // `kl::vec` and `kl::mat`: building, indexing, the element-wise operators with a scalar either
 // side, the integer operators and element-wise functions, the products, comparing, reducing,
 // converting and walking, the scalar maths over each element, the masks the comparisons
-// answer, and fixed-size slices.
+// answer, fixed-size slices, and linear algebra.
 import kl::mask;
+import kl::optional;
 import kl::math;
 import kl::matrix;
 import kl::test::context;
@@ -291,4 +292,33 @@ private void slices( ref kl::test::context c )
     c.expect_panic( "the segment passes the end", fn[]() { _ = kl::vec<i32, 2>::zeros().segment<3>( 0 ); } );
     c.expect_panic( "the block passes an edge", fn[]() { _ = kl::mat<i32, 2, 2>::zeros().block<2, 1>( 1, 0 ); } );
     c.expect_panic( "the block passes an edge", fn[]() { kl::mat<i32, 2, 2> z = kl::mat<i32, 2, 2>::zeros(); z.set_block( 0, 2, kl::mat<i32, 1, 1>( [ 1 ] ) ); } );
+}
+
+private void linear_algebra( ref kl::test::context c )
+{
+    kl::vec<f64, 2> v = kl::vec<f64, 2>( [ 3.0, 4.0 ] );
+    c.check_eq( v.norm(), 5.0 );
+    c.check( kl::abs( kl::vec<f32, 2>( [ 3e30, 4e30 ] ).norm() / 5e30 - 1.0 ) < 1e-6 );
+    c.check( kl::abs( kl::mat<f64, 1, 2>( [ 3e-200, 4e-200 ] ).norm() / 5e-200 - 1.0 ) < 1e-15 );
+    c.check( v.normalised() == kl::vec<f64, 2>( [ 0.6, 0.8 ] ) );
+    c.check( kl::vec<i32, 2>( [ 1, 2 ] ).outer( kl::vec<i32, 3>( [ 1, 10, 100 ] ) ) == kl::mat<i32, 2, 3>( [ 1, 10, 100, 2, 20, 200 ] ) );
+    c.check( kl::cross( kl::vec<i32, 3>( [ 0, 1, 0 ] ), kl::vec<i32, 3>( [ 0, 0, 1 ] ) ) == kl::vec<i32, 3>( [ 1, 0, 0 ] ) );
+
+    kl::mat<i32, 2, 3> r = kl::mat<i32, 2, 3>( [ 1, 2, 3, 4, 5, 6 ] );
+    c.check_eq( r.trace(), 6 );
+    c.check( kl::diagonal( kl::mat<i32, 2, 2>( [ 1, 2, 3, 4 ] ) ) == kl::vec<i32, 2>( [ 1, 4 ] ) );
+    c.check_eq( kl::mat<f64, 1, 2>( [ 3.0, 4.0 ] ).norm(), 5.0 );
+    c.check_eq( kl::mat<f64, 1, 2>( [ 3.0, 4.0 ] ).normalised()[0, 1], 0.8 );
+
+    kl::mat<f64, 3, 3> p = kl::mat<f64, 3, 3>( [ 0.0, 1.0, 2.0, 1.0, 0.0, 3.0, 4.0, -3.0, 8.0 ] );
+    c.check_eq( kl::determinant( p ), -2.0 );
+    c.check( p.matmul( kl::unwrap( kl::inverse( p ) ) ).approx_equal( kl::mat<f64, 3, 3>::eye() ) );
+
+    kl::mat<f64, 2, 2> a = kl::mat<f64, 2, 2>( [ 2.0, 1.0, 1.0, 3.0 ] );
+    c.check( kl::unwrap( kl::solve( a, kl::vec<f64, 2>( [ 3.0, 4.0 ] ) ) ).approx_equal( kl::vec<f64, 2>( [ 1.0, 1.0 ] ) ) );
+
+    kl::mat<f64, 2, 2> singular = kl::mat<f64, 2, 2>( [ 1.0, 2.0, 2.0, 4.0 ] );
+    c.check_eq( kl::determinant( singular ), 0.0 );
+    c.check( kl::is_none( kl::inverse( singular ) ) );
+    c.check( kl::is_none( kl::solve( singular, kl::vec<f64, 2>::ones() ) ) );
 }

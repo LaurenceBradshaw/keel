@@ -1,0 +1,13 @@
+error: `256` does not fit in `u8`
+  --> sema/errors_conditional_literal_arms.kl:12:29
+   |
+12 |     auto  d    = b ? byte : 256;
+   |                             ^^^
+
+error: ternary branches have different types: `point` and `i32`
+  --> sema/errors_conditional_literal_arms.kl:14:18
+   |
+14 |     auto  e    = b ? p : 1;
+   |                  ^^^^^^^^^
+
+2 errors generated
