@@ -168,11 +168,46 @@ overflows, as <code>0 - x</code> does.</dd>
 <dd><code>x</code> down to a whole value, as a <code>U</code>: <code>floored&lt;i32&gt;( -2.5 )</code> is <code>-3</code>.</dd>
 <dt><a href="math.html#ceiled"><code>ceiled</code></a> <span class="kind">function</span></dt>
 <dd><code>x</code> up to a whole value, as a <code>U</code>: <code>ceiled&lt;i32&gt;( 2.1 )</code> is <code>3</code>.</dd>
+<dt><a href="math.html#floor"><code>floor</code></a> <span class="kind">function</span></dt>
+<dd><code>x</code> down to a whole value: <code>floor( -2.5 )</code> is <code>-3.0</code>. An infinity or a NaN stays one.</dd>
+<dt><a href="math.html#ceil"><code>ceil</code></a> <span class="kind">function</span></dt>
+<dd><code>x</code> up to a whole value: <code>ceil( -0.5 )</code> is <code>-0.0</code>. An infinity or a NaN stays one.</dd>
+<dt><a href="math.html#trunc"><code>trunc</code></a> <span class="kind">function</span></dt>
+<dd><code>x</code> toward zero, to a whole value: <code>trunc( -2.7 )</code> is <code>-2.0</code>. An infinity or a NaN stays one.</dd>
+<dt><a href="math.html#round"><code>round</code></a> <span class="kind">function</span></dt>
+<dd><code>x</code> to the nearest whole value, a half away from zero: <code>round( 2.5 )</code> is <code>3.0</code>. An infinity or a NaN stays one.</dd>
 </dl>
 <h4 class="divider">Constants</h4>
 <dl class="summaries">
 <dt><a href="math.html#pi"><code>pi</code></a> <span class="kind">global</span></dt>
 <dd>The <code>f64</code> nearest to the ratio of a circle's circumference to its diameter.</dd>
+</dl>
+<h4 class="divider">Exponentials and logarithms</h4>
+<dl class="summaries">
+<dt><a href="math.html#exp"><code>exp</code></a> <span class="kind">function</span></dt>
+<dd>e to the power <code>x</code>: an infinity above 709.78, and 0 below -745.13. Within an ulp.</dd>
+<dt><a href="math.html#expm1"><code>expm1</code></a> <span class="kind">function</span></dt>
+<dd>e^x - 1, exact near 0 where <code>exp( x ) - 1.0</code> loses digits: -1 below -38. Within an ulp.</dd>
+<dt><a href="math.html#log"><code>log</code></a> <span class="kind">function</span></dt>
+<dd>The natural logarithm: <code>-inf</code> at 0, and a NaN below. Within an ulp.</dd>
+<dt><a href="math.html#log1p"><code>log1p</code></a> <span class="kind">function</span></dt>
+<dd>log(1 + x), exact near 0 where <code>log( 1.0 + x )</code> loses digits: <code>-inf</code> at -1, and a NaN below. Within an ulp.</dd>
+<dt><a href="math.html#log2"><code>log2</code></a> <span class="kind">function</span></dt>
+<dd>The base 2 logarithm, exact at powers of 2: <code>-inf</code> at 0, and a NaN below. Within an ulp.</dd>
+<dt><a href="math.html#log10"><code>log10</code></a> <span class="kind">function</span></dt>
+<dd>The base 10 logarithm: <code>-inf</code> at 0, and a NaN below. Within an ulp.</dd>
+<dt><a href="math.html#pow"><code>pow</code></a> <span class="kind">function</span></dt>
+<dd><code>x</code> to the power <code>y</code>. As C's <code>pow</code>: 1 when <code>y</code> is 0 or <code>x</code> is 1, even beside a NaN; a NaN for a
+negative <code>x</code> and a <code>y</code> that is not whole; and an odd whole <code>y</code> keeps <code>x</code>'s sign. Within an ulp.</dd>
+</dl>
+<h4 class="divider">Hyperbolic functions</h4>
+<dl class="summaries">
+<dt><a href="math.html#sinh"><code>sinh</code></a> <span class="kind">function</span></dt>
+<dd>The hyperbolic sine. Within 2 ulps.</dd>
+<dt><a href="math.html#cosh"><code>cosh</code></a> <span class="kind">function</span></dt>
+<dd>The hyperbolic cosine. Within 2 ulps.</dd>
+<dt><a href="math.html#tanh"><code>tanh</code></a> <span class="kind">function</span></dt>
+<dd>The hyperbolic tangent, -1 to 1. Within 2 ulps.</dd>
 </dl>
 <h4 class="divider">Trigonometry</h4>
 <dl class="summaries">
@@ -188,6 +223,9 @@ overflows, as <code>0 - x</code> does.</dd>
 <dd>The angle in [0, pi] whose cosine is given.</dd>
 <dt><a href="math.html#atan"><code>atan</code></a> <span class="kind">function</span></dt>
 <dd>The angle in [-pi/2, pi/2] whose tangent is given.</dd>
+<dt><a href="math.html#atan2"><code>atan2</code></a> <span class="kind">function</span></dt>
+<dd>The angle in [-pi, pi] of the point (<code>x</code>, <code>y</code>) from the positive x axis: <code>atan2( 1.0, -1.0 )</code> is
+3 pi / 4. Each zero's sign picks the side, as C's <code>atan2</code>. Within an ulp.</dd>
 </dl>
 </section>
 <section class="module">
@@ -205,6 +243,50 @@ overflows, as <code>0 - x</code> does.</dd>
 <dd>The smallest of each set of matching elements, as <code>kl::min</code>: <code>kl::minimum( a, b, c )</code>.</dd>
 <dt><a href="matrix.html#maximum"><code>maximum</code></a> <span class="kind">function</span></dt>
 <dd>The largest of each set of matching elements, as <code>kl::max</code>: <code>kl::maximum( a, b, c )</code>.</dd>
+<dt><a href="matrix.html#sqrt"><code>sqrt</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::sqrt</code> of each element.</dd>
+<dt><a href="matrix.html#exp"><code>exp</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::exp</code> of each element.</dd>
+<dt><a href="matrix.html#expm1"><code>expm1</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::expm1</code> of each element.</dd>
+<dt><a href="matrix.html#log"><code>log</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::log</code> of each element.</dd>
+<dt><a href="matrix.html#log1p"><code>log1p</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::log1p</code> of each element.</dd>
+<dt><a href="matrix.html#log2"><code>log2</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::log2</code> of each element.</dd>
+<dt><a href="matrix.html#log10"><code>log10</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::log10</code> of each element.</dd>
+<dt><a href="matrix.html#sin"><code>sin</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::sin</code> of each element.</dd>
+<dt><a href="matrix.html#cos"><code>cos</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::cos</code> of each element.</dd>
+<dt><a href="matrix.html#tan"><code>tan</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::tan</code> of each element.</dd>
+<dt><a href="matrix.html#asin"><code>asin</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::asin</code> of each element.</dd>
+<dt><a href="matrix.html#acos"><code>acos</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::acos</code> of each element.</dd>
+<dt><a href="matrix.html#atan"><code>atan</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::atan</code> of each element.</dd>
+<dt><a href="matrix.html#sinh"><code>sinh</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::sinh</code> of each element.</dd>
+<dt><a href="matrix.html#cosh"><code>cosh</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::cosh</code> of each element.</dd>
+<dt><a href="matrix.html#tanh"><code>tanh</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::tanh</code> of each element.</dd>
+<dt><a href="matrix.html#floor"><code>floor</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::floor</code> of each element.</dd>
+<dt><a href="matrix.html#ceil"><code>ceil</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::ceil</code> of each element.</dd>
+<dt><a href="matrix.html#trunc"><code>trunc</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::trunc</code> of each element.</dd>
+<dt><a href="matrix.html#round"><code>round</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::round</code> of each element.</dd>
+<dt><a href="matrix.html#pow"><code>pow</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::pow</code> of each element of <code>a</code> and the matching one of <code>b</code>.</dd>
+<dt><a href="matrix.html#atan2"><code>atan2</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::atan2</code> of each element of <code>y</code> and the matching one of <code>x</code>.</dd>
 </dl>
 </section>
 <section class="module">
@@ -218,6 +300,50 @@ overflows, as <code>0 - x</code> does.</dd>
 <dd>The smaller of each pair of matching elements, as <code>kl::min</code>: <code>kl::minimum( a, b )</code>.</dd>
 <dt><a href="ndarray.html#maximum"><code>maximum</code></a> <span class="kind">function</span></dt>
 <dd>The larger of each pair of matching elements, as <code>kl::max</code>: <code>kl::maximum( a, b )</code>.</dd>
+<dt><a href="ndarray.html#sqrt"><code>sqrt</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::sqrt</code> of each element.</dd>
+<dt><a href="ndarray.html#exp"><code>exp</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::exp</code> of each element.</dd>
+<dt><a href="ndarray.html#expm1"><code>expm1</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::expm1</code> of each element.</dd>
+<dt><a href="ndarray.html#log"><code>log</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::log</code> of each element.</dd>
+<dt><a href="ndarray.html#log1p"><code>log1p</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::log1p</code> of each element.</dd>
+<dt><a href="ndarray.html#log2"><code>log2</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::log2</code> of each element.</dd>
+<dt><a href="ndarray.html#log10"><code>log10</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::log10</code> of each element.</dd>
+<dt><a href="ndarray.html#sin"><code>sin</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::sin</code> of each element.</dd>
+<dt><a href="ndarray.html#cos"><code>cos</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::cos</code> of each element.</dd>
+<dt><a href="ndarray.html#tan"><code>tan</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::tan</code> of each element.</dd>
+<dt><a href="ndarray.html#asin"><code>asin</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::asin</code> of each element.</dd>
+<dt><a href="ndarray.html#acos"><code>acos</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::acos</code> of each element.</dd>
+<dt><a href="ndarray.html#atan"><code>atan</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::atan</code> of each element.</dd>
+<dt><a href="ndarray.html#sinh"><code>sinh</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::sinh</code> of each element.</dd>
+<dt><a href="ndarray.html#cosh"><code>cosh</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::cosh</code> of each element.</dd>
+<dt><a href="ndarray.html#tanh"><code>tanh</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::tanh</code> of each element.</dd>
+<dt><a href="ndarray.html#floor"><code>floor</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::floor</code> of each element.</dd>
+<dt><a href="ndarray.html#ceil"><code>ceil</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::ceil</code> of each element.</dd>
+<dt><a href="ndarray.html#trunc"><code>trunc</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::trunc</code> of each element.</dd>
+<dt><a href="ndarray.html#round"><code>round</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::round</code> of each element.</dd>
+<dt><a href="ndarray.html#pow"><code>pow</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::pow</code> of each element of <code>a</code> and the matching one of <code>b</code>.</dd>
+<dt><a href="ndarray.html#atan2"><code>atan2</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::atan2</code> of each element of <code>y</code> and the matching one of <code>x</code>.</dd>
 </dl>
 </section>
 <section class="module">

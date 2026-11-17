@@ -6,6 +6,7 @@
 
 import kl::_core::compare as kernel;
 import kl::_core::elementwise as kernel;
+import kl::_core::exponential as kernel;
 import kl::_core::linear as kernel;
 import kl::_core::reduce as kernel;
 import iterable;
@@ -1291,5 +1292,291 @@ mat<T, R, C> maximum<T, u64 R, u64 C>( const ref mat<T, R, C> first, mat<T, R, C
     {
         kernel::zip_into( ref r.as_run(), b.as_run(), fn[]( T x, T y ) { return kl::max( x, y ); } );
     }
+    return r;
+}
+
+// The scalar maths of `kl::math` over each element, for float elements: `kl::exp( a )`.
+
+/// `kl::sqrt` of each element.
+vec<T, N> sqrt<T, u64 N>( const ref vec<T, N> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::sqrt( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::exp` of each element.
+vec<T, N> exp<T, u64 N>( const ref vec<T, N> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::exp( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::expm1` of each element.
+vec<T, N> expm1<T, u64 N>( const ref vec<T, N> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::expm1( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::log` of each element.
+vec<T, N> log<T, u64 N>( const ref vec<T, N> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::log( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::log1p` of each element.
+vec<T, N> log1p<T, u64 N>( const ref vec<T, N> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::log1p( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::log2` of each element.
+vec<T, N> log2<T, u64 N>( const ref vec<T, N> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::log2( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::log10` of each element.
+vec<T, N> log10<T, u64 N>( const ref vec<T, N> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::log10( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::sin` of each element.
+vec<T, N> sin<T, u64 N>( const ref vec<T, N> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::sin( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::cos` of each element.
+vec<T, N> cos<T, u64 N>( const ref vec<T, N> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::cos( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::tan` of each element.
+vec<T, N> tan<T, u64 N>( const ref vec<T, N> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::tan( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::asin` of each element.
+vec<T, N> asin<T, u64 N>( const ref vec<T, N> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::asin( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::acos` of each element.
+vec<T, N> acos<T, u64 N>( const ref vec<T, N> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::acos( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::atan` of each element.
+vec<T, N> atan<T, u64 N>( const ref vec<T, N> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::atan( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::sinh` of each element.
+vec<T, N> sinh<T, u64 N>( const ref vec<T, N> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::sinh( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::cosh` of each element.
+vec<T, N> cosh<T, u64 N>( const ref vec<T, N> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::cosh( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::tanh` of each element.
+vec<T, N> tanh<T, u64 N>( const ref vec<T, N> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::tanh( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::floor` of each element.
+vec<T, N> floor<T, u64 N>( const ref vec<T, N> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::floor( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::ceil` of each element.
+vec<T, N> ceil<T, u64 N>( const ref vec<T, N> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::ceil( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::trunc` of each element.
+vec<T, N> trunc<T, u64 N>( const ref vec<T, N> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::trunc( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::round` of each element.
+vec<T, N> round<T, u64 N>( const ref vec<T, N> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::round( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::pow` of each element of `a` and the matching one of `b`.
+vec<T, N> pow<T, u64 N>( const ref vec<T, N> a, const ref vec<T, N> b ) where T : floating
+{
+    vec<T, N> r = a;
+    kernel::zip_into( ref r.as_run(), b.as_run(), fn[]( T x, T y ) { return kernel::narrowed<T>( kl::pow( cast<f64>( x ), cast<f64>( y ) ) ); } );
+    return r;
+}
+
+/// `kl::pow` of each element and `s`: `kl::pow( a, 2.0 )`.
+vec<T, N> pow<T, u64 N>( const ref vec<T, N> a, T s ) where T : floating
+{
+    return a.map( fn[ s ]( T x ) { return kernel::narrowed<T>( kl::pow( cast<f64>( x ), cast<f64>( s ) ) ); } );
+}
+
+/// `kl::atan2` of each element of `y` and the matching one of `x`.
+vec<T, N> atan2<T, u64 N>( const ref vec<T, N> y, const ref vec<T, N> x ) where T : floating
+{
+    vec<T, N> r = y;
+    kernel::zip_into( ref r.as_run(), x.as_run(), fn[]( T b, T a ) { return kernel::narrowed<T>( kl::atan2( cast<f64>( b ), cast<f64>( a ) ) ); } );
+    return r;
+}
+
+/// `kl::sqrt` of each element.
+mat<T, R, C> sqrt<T, u64 R, u64 C>( const ref mat<T, R, C> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::sqrt( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::exp` of each element.
+mat<T, R, C> exp<T, u64 R, u64 C>( const ref mat<T, R, C> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::exp( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::expm1` of each element.
+mat<T, R, C> expm1<T, u64 R, u64 C>( const ref mat<T, R, C> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::expm1( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::log` of each element.
+mat<T, R, C> log<T, u64 R, u64 C>( const ref mat<T, R, C> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::log( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::log1p` of each element.
+mat<T, R, C> log1p<T, u64 R, u64 C>( const ref mat<T, R, C> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::log1p( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::log2` of each element.
+mat<T, R, C> log2<T, u64 R, u64 C>( const ref mat<T, R, C> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::log2( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::log10` of each element.
+mat<T, R, C> log10<T, u64 R, u64 C>( const ref mat<T, R, C> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::log10( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::sin` of each element.
+mat<T, R, C> sin<T, u64 R, u64 C>( const ref mat<T, R, C> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::sin( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::cos` of each element.
+mat<T, R, C> cos<T, u64 R, u64 C>( const ref mat<T, R, C> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::cos( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::tan` of each element.
+mat<T, R, C> tan<T, u64 R, u64 C>( const ref mat<T, R, C> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::tan( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::asin` of each element.
+mat<T, R, C> asin<T, u64 R, u64 C>( const ref mat<T, R, C> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::asin( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::acos` of each element.
+mat<T, R, C> acos<T, u64 R, u64 C>( const ref mat<T, R, C> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::acos( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::atan` of each element.
+mat<T, R, C> atan<T, u64 R, u64 C>( const ref mat<T, R, C> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::atan( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::sinh` of each element.
+mat<T, R, C> sinh<T, u64 R, u64 C>( const ref mat<T, R, C> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::sinh( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::cosh` of each element.
+mat<T, R, C> cosh<T, u64 R, u64 C>( const ref mat<T, R, C> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::cosh( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::tanh` of each element.
+mat<T, R, C> tanh<T, u64 R, u64 C>( const ref mat<T, R, C> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::tanh( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::floor` of each element.
+mat<T, R, C> floor<T, u64 R, u64 C>( const ref mat<T, R, C> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::floor( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::ceil` of each element.
+mat<T, R, C> ceil<T, u64 R, u64 C>( const ref mat<T, R, C> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::ceil( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::trunc` of each element.
+mat<T, R, C> trunc<T, u64 R, u64 C>( const ref mat<T, R, C> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::trunc( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::round` of each element.
+mat<T, R, C> round<T, u64 R, u64 C>( const ref mat<T, R, C> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::round( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::pow` of each element of `a` and the matching one of `b`.
+mat<T, R, C> pow<T, u64 R, u64 C>( const ref mat<T, R, C> a, const ref mat<T, R, C> b ) where T : floating
+{
+    mat<T, R, C> r = a;
+    kernel::zip_into( ref r.as_run(), b.as_run(), fn[]( T x, T y ) { return kernel::narrowed<T>( kl::pow( cast<f64>( x ), cast<f64>( y ) ) ); } );
+    return r;
+}
+
+/// `kl::pow` of each element and `s`: `kl::pow( a, 2.0 )`.
+mat<T, R, C> pow<T, u64 R, u64 C>( const ref mat<T, R, C> a, T s ) where T : floating
+{
+    return a.map( fn[ s ]( T x ) { return kernel::narrowed<T>( kl::pow( cast<f64>( x ), cast<f64>( s ) ) ); } );
+}
+
+/// `kl::atan2` of each element of `y` and the matching one of `x`.
+mat<T, R, C> atan2<T, u64 R, u64 C>( const ref mat<T, R, C> y, const ref mat<T, R, C> x ) where T : floating
+{
+    mat<T, R, C> r = y;
+    kernel::zip_into( ref r.as_run(), x.as_run(), fn[]( T b, T a ) { return kernel::narrowed<T>( kl::atan2( cast<f64>( b ), cast<f64>( a ) ) ); } );
     return r;
 }

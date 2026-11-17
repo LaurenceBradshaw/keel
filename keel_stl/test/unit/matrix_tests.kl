@@ -1,6 +1,7 @@
 // `kl::vec` and `kl::mat`: building, indexing, the element-wise operators with a scalar either
 // side, the integer operators and element-wise functions, the products, comparing, reducing,
-// converting and walking.
+// converting and walking, and the scalar maths over each element.
+import kl::math;
 import kl::matrix;
 import kl::test::context;
 
@@ -227,4 +228,20 @@ private void reducing( ref kl::test::context c )
     kl::mat<f32, 1, 2> g = kl::mat<f32, 1, 2>( [ 1.0, 3.0 ] );
     c.check_eq( g.mean(), 2.0 );
     c.check_eq( g.std(), 1.0 );
+}
+
+private void elementwise_maths( ref kl::test::context c )
+{
+    kl::vec<f64, 3> v = kl::vec<f64, 3>( [ 1.0, 4.0, 9.0 ] );
+    c.check( kl::sqrt( v ) == kl::vec<f64, 3>( [ 1.0, 2.0, 3.0 ] ) );
+    c.check( kl::log2( kl::vec<f64, 2>( [ 1.0, 8.0 ] ) ) == kl::vec<f64, 2>( [ 0.0, 3.0 ] ) );
+    c.check( kl::pow( v, v ) == kl::vec<f64, 3>( [ 1.0, 256.0, 387420489.0 ] ) );
+    c.check( kl::trunc( kl::vec<f64, 2>( [ -1.5, 2.5 ] ) ) == kl::vec<f64, 2>( [ -1.0, 2.0 ] ) );
+
+    kl::mat<f32, 1, 2> m = kl::mat<f32, 1, 2>( [ 0.0, 100.0 ] );
+    kl::mat<f32, 1, 2> e = kl::exp( m );
+    c.check_eq( e[0, 0], cast<f32>( 1.0 ) );
+    c.check( kl::is_inf( e[0, 1] ) );
+    c.check( kl::pow( m, cast<f32>( 2.0 ) ) == kl::mat<f32, 1, 2>( [ 0.0, 10000.0 ] ) );
+    c.check_eq( kl::atan2( m, kl::mat<f32, 1, 2>::ones() )[0, 0], cast<f32>( 0.0 ) );
 }

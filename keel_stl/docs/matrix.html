@@ -18,6 +18,28 @@
 <li><a href="#diag"><code>diag</code></a> <span class="kind">function</span></li>
 <li><a href="#minimum"><code>minimum</code></a> <span class="kind">function</span></li>
 <li><a href="#maximum"><code>maximum</code></a> <span class="kind">function</span></li>
+<li><a href="#sqrt"><code>sqrt</code></a> <span class="kind">function</span></li>
+<li><a href="#exp"><code>exp</code></a> <span class="kind">function</span></li>
+<li><a href="#expm1"><code>expm1</code></a> <span class="kind">function</span></li>
+<li><a href="#log"><code>log</code></a> <span class="kind">function</span></li>
+<li><a href="#log1p"><code>log1p</code></a> <span class="kind">function</span></li>
+<li><a href="#log2"><code>log2</code></a> <span class="kind">function</span></li>
+<li><a href="#log10"><code>log10</code></a> <span class="kind">function</span></li>
+<li><a href="#sin"><code>sin</code></a> <span class="kind">function</span></li>
+<li><a href="#cos"><code>cos</code></a> <span class="kind">function</span></li>
+<li><a href="#tan"><code>tan</code></a> <span class="kind">function</span></li>
+<li><a href="#asin"><code>asin</code></a> <span class="kind">function</span></li>
+<li><a href="#acos"><code>acos</code></a> <span class="kind">function</span></li>
+<li><a href="#atan"><code>atan</code></a> <span class="kind">function</span></li>
+<li><a href="#sinh"><code>sinh</code></a> <span class="kind">function</span></li>
+<li><a href="#cosh"><code>cosh</code></a> <span class="kind">function</span></li>
+<li><a href="#tanh"><code>tanh</code></a> <span class="kind">function</span></li>
+<li><a href="#floor"><code>floor</code></a> <span class="kind">function</span></li>
+<li><a href="#ceil"><code>ceil</code></a> <span class="kind">function</span></li>
+<li><a href="#trunc"><code>trunc</code></a> <span class="kind">function</span></li>
+<li><a href="#round"><code>round</code></a> <span class="kind">function</span></li>
+<li><a href="#pow"><code>pow</code></a> <span class="kind">function</span></li>
+<li><a href="#atan2"><code>atan2</code></a> <span class="kind">function</span></li>
 </ul>
 <section class="entry">
 <h2><span class="kind">class</span> <span class="type">vec</span></h2>
@@ -951,6 +973,300 @@ integer needs a rounding: <code>truncated</code>, <code>rounded</code>, <code>fl
 <pre class="signature"><a class="anchor" href="#maximum" aria-label="Link to maximum">#</a><code><a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">maximum</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> R, <a class="prim" href="prelude.html#u64">u64</a> C&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; first, <a class="type" href="#mat">mat</a>&lt;T, R, C&gt;... rest ) <span class="kw">where</span> T : numeric</code></pre>
 <div class="doc">
 <p>The largest of each set of matching elements, as <code>kl::max</code>: <code>kl::maximum( a, b, c )</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">sqrt</span></h2>
+<div class="group" id="sqrt">
+<pre class="signature"><a class="anchor" href="#sqrt" aria-label="Link to sqrt">#</a><code><a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">sqrt</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::sqrt</code> of each element.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#sqrt" aria-label="Link to sqrt">#</a><code><a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">sqrt</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> R, <a class="prim" href="prelude.html#u64">u64</a> C&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::sqrt</code> of each element.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">exp</span></h2>
+<div class="group" id="exp">
+<pre class="signature"><a class="anchor" href="#exp" aria-label="Link to exp">#</a><code><a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">exp</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::exp</code> of each element.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#exp" aria-label="Link to exp">#</a><code><a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">exp</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> R, <a class="prim" href="prelude.html#u64">u64</a> C&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::exp</code> of each element.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">expm1</span></h2>
+<div class="group" id="expm1">
+<pre class="signature"><a class="anchor" href="#expm1" aria-label="Link to expm1">#</a><code><a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">expm1</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::expm1</code> of each element.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#expm1" aria-label="Link to expm1">#</a><code><a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">expm1</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> R, <a class="prim" href="prelude.html#u64">u64</a> C&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::expm1</code> of each element.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">log</span></h2>
+<div class="group" id="log">
+<pre class="signature"><a class="anchor" href="#log" aria-label="Link to log">#</a><code><a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">log</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::log</code> of each element.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#log" aria-label="Link to log">#</a><code><a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">log</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> R, <a class="prim" href="prelude.html#u64">u64</a> C&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::log</code> of each element.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">log1p</span></h2>
+<div class="group" id="log1p">
+<pre class="signature"><a class="anchor" href="#log1p" aria-label="Link to log1p">#</a><code><a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">log1p</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::log1p</code> of each element.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#log1p" aria-label="Link to log1p">#</a><code><a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">log1p</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> R, <a class="prim" href="prelude.html#u64">u64</a> C&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::log1p</code> of each element.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">log2</span></h2>
+<div class="group" id="log2">
+<pre class="signature"><a class="anchor" href="#log2" aria-label="Link to log2">#</a><code><a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">log2</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::log2</code> of each element.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#log2" aria-label="Link to log2">#</a><code><a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">log2</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> R, <a class="prim" href="prelude.html#u64">u64</a> C&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::log2</code> of each element.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">log10</span></h2>
+<div class="group" id="log10">
+<pre class="signature"><a class="anchor" href="#log10" aria-label="Link to log10">#</a><code><a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">log10</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::log10</code> of each element.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#log10" aria-label="Link to log10">#</a><code><a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">log10</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> R, <a class="prim" href="prelude.html#u64">u64</a> C&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::log10</code> of each element.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">sin</span></h2>
+<div class="group" id="sin">
+<pre class="signature"><a class="anchor" href="#sin" aria-label="Link to sin">#</a><code><a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">sin</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::sin</code> of each element.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#sin" aria-label="Link to sin">#</a><code><a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">sin</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> R, <a class="prim" href="prelude.html#u64">u64</a> C&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::sin</code> of each element.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">cos</span></h2>
+<div class="group" id="cos">
+<pre class="signature"><a class="anchor" href="#cos" aria-label="Link to cos">#</a><code><a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">cos</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::cos</code> of each element.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#cos" aria-label="Link to cos">#</a><code><a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">cos</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> R, <a class="prim" href="prelude.html#u64">u64</a> C&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::cos</code> of each element.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">tan</span></h2>
+<div class="group" id="tan">
+<pre class="signature"><a class="anchor" href="#tan" aria-label="Link to tan">#</a><code><a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">tan</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::tan</code> of each element.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#tan" aria-label="Link to tan">#</a><code><a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">tan</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> R, <a class="prim" href="prelude.html#u64">u64</a> C&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::tan</code> of each element.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">asin</span></h2>
+<div class="group" id="asin">
+<pre class="signature"><a class="anchor" href="#asin" aria-label="Link to asin">#</a><code><a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">asin</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::asin</code> of each element.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#asin" aria-label="Link to asin">#</a><code><a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">asin</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> R, <a class="prim" href="prelude.html#u64">u64</a> C&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::asin</code> of each element.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">acos</span></h2>
+<div class="group" id="acos">
+<pre class="signature"><a class="anchor" href="#acos" aria-label="Link to acos">#</a><code><a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">acos</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::acos</code> of each element.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#acos" aria-label="Link to acos">#</a><code><a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">acos</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> R, <a class="prim" href="prelude.html#u64">u64</a> C&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::acos</code> of each element.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">atan</span></h2>
+<div class="group" id="atan">
+<pre class="signature"><a class="anchor" href="#atan" aria-label="Link to atan">#</a><code><a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">atan</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::atan</code> of each element.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#atan" aria-label="Link to atan">#</a><code><a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">atan</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> R, <a class="prim" href="prelude.html#u64">u64</a> C&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::atan</code> of each element.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">sinh</span></h2>
+<div class="group" id="sinh">
+<pre class="signature"><a class="anchor" href="#sinh" aria-label="Link to sinh">#</a><code><a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">sinh</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::sinh</code> of each element.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#sinh" aria-label="Link to sinh">#</a><code><a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">sinh</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> R, <a class="prim" href="prelude.html#u64">u64</a> C&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::sinh</code> of each element.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">cosh</span></h2>
+<div class="group" id="cosh">
+<pre class="signature"><a class="anchor" href="#cosh" aria-label="Link to cosh">#</a><code><a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">cosh</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::cosh</code> of each element.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#cosh" aria-label="Link to cosh">#</a><code><a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">cosh</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> R, <a class="prim" href="prelude.html#u64">u64</a> C&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::cosh</code> of each element.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">tanh</span></h2>
+<div class="group" id="tanh">
+<pre class="signature"><a class="anchor" href="#tanh" aria-label="Link to tanh">#</a><code><a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">tanh</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::tanh</code> of each element.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#tanh" aria-label="Link to tanh">#</a><code><a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">tanh</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> R, <a class="prim" href="prelude.html#u64">u64</a> C&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::tanh</code> of each element.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">floor</span></h2>
+<div class="group" id="floor">
+<pre class="signature"><a class="anchor" href="#floor" aria-label="Link to floor">#</a><code><a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">floor</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::floor</code> of each element.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#floor" aria-label="Link to floor">#</a><code><a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">floor</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> R, <a class="prim" href="prelude.html#u64">u64</a> C&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::floor</code> of each element.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">ceil</span></h2>
+<div class="group" id="ceil">
+<pre class="signature"><a class="anchor" href="#ceil" aria-label="Link to ceil">#</a><code><a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">ceil</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::ceil</code> of each element.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ceil" aria-label="Link to ceil">#</a><code><a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">ceil</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> R, <a class="prim" href="prelude.html#u64">u64</a> C&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::ceil</code> of each element.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">trunc</span></h2>
+<div class="group" id="trunc">
+<pre class="signature"><a class="anchor" href="#trunc" aria-label="Link to trunc">#</a><code><a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">trunc</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::trunc</code> of each element.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#trunc" aria-label="Link to trunc">#</a><code><a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">trunc</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> R, <a class="prim" href="prelude.html#u64">u64</a> C&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::trunc</code> of each element.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">round</span></h2>
+<div class="group" id="round">
+<pre class="signature"><a class="anchor" href="#round" aria-label="Link to round">#</a><code><a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">round</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::round</code> of each element.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#round" aria-label="Link to round">#</a><code><a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">round</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> R, <a class="prim" href="prelude.html#u64">u64</a> C&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::round</code> of each element.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">pow</span></h2>
+<div class="group" id="pow">
+<pre class="signature"><a class="anchor" href="#pow" aria-label="Link to pow">#</a><code><a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">pow</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; a, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; b ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::pow</code> of each element of <code>a</code> and the matching one of <code>b</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#pow" aria-label="Link to pow">#</a><code><a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">pow</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; a, T s ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::pow</code> of each element and <code>s</code>: <code>kl::pow( a, 2.0 )</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#pow" aria-label="Link to pow">#</a><code><a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">pow</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> R, <a class="prim" href="prelude.html#u64">u64</a> C&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; a, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; b ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::pow</code> of each element of <code>a</code> and the matching one of <code>b</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#pow" aria-label="Link to pow">#</a><code><a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">pow</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> R, <a class="prim" href="prelude.html#u64">u64</a> C&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; a, T s ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::pow</code> of each element and <code>s</code>: <code>kl::pow( a, 2.0 )</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">atan2</span></h2>
+<div class="group" id="atan2">
+<pre class="signature"><a class="anchor" href="#atan2" aria-label="Link to atan2">#</a><code><a class="type" href="#vec">vec</a>&lt;T, N&gt; <span class="fn">atan2</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; y, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, N&gt; x ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::atan2</code> of each element of <code>y</code> and the matching one of <code>x</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#atan2" aria-label="Link to atan2">#</a><code><a class="type" href="#mat">mat</a>&lt;T, R, C&gt; <span class="fn">atan2</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> R, <a class="prim" href="prelude.html#u64">u64</a> C&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; y, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; x ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p><code>kl::atan2</code> of each element of <code>y</code> and the matching one of <code>x</code>.</p>
 </div>
 </div>
 </section>

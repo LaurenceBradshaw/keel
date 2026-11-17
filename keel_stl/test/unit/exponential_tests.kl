@@ -1,0 +1,244 @@
+// `kl::math`'s exponentials, logarithms, powers, hyperbolic functions, `atan2` and float roundings:
+// each against C's, and at its special values.
+import kl::math;
+import kl::test::context;
+
+// Against C's, within an ulp but where `ALLOWED` says; the roundings exactly.
+extern f64 exp( f64 x );
+extern f64 expm1( f64 x );
+extern f64 log( f64 x );
+extern f64 log1p( f64 x );
+extern f64 log2( f64 x );
+extern f64 log10( f64 x );
+extern f64 sinh( f64 x );
+extern f64 cosh( f64 x );
+extern f64 tanh( f64 x );
+extern f64 pow( f64 x, f64 y );
+extern f64 atan2( f64 y, f64 x );
+extern f64 floor( f64 x );
+extern f64 ceil( f64 x );
+extern f64 trunc( f64 x );
+extern f64 round( f64 x );
+
+private const u64 UNARY = 9;
+
+// How many ulps each may be from C's: glibc's log10 is itself up to 1.5 ulps out, and its builds
+// of the hyperbolic functions with fused multiplies round differently from msun's, which is within
+// 2 ulps.
+private const i64[9] ALLOWED = [ 1, 1, 1, 1, 1, 2, 2, 2, 3 ];
+
+private f64 ours( u64 which, f64 x )
+{
+    f64[9] y = [ kl::exp( x ), kl::expm1( x ), kl::log( x ), kl::log1p( x ), kl::log2( x ), kl::log10( x ), kl::sinh( x ), kl::cosh( x ), kl::tanh( x ) ];
+    return y[which];
+}
+
+private f64 theirs( u64 which, f64 x )
+{
+    unsafe
+    {
+        f64[9] y = [ exp( x ), expm1( x ), log( x ), log1p( x ), log2( x ), log10( x ), sinh( x ), cosh( x ), tanh( x ) ];
+        return y[which];
+    }
+}
+
+// Each float's place in order, so that neighbours differ by one.
+private i64 ordinal( f64 x )
+{
+    u64 b = kl::bits_of( x );
+    return ( b >> 63 ) == 0 ? wrap<i64>( b ) : wrap<i64>( 0x8000000000000000 - b );
+}
+
+// 1 when `a` is more than `allowed` ulps from `b`, or differs in NaN or a zero's sign.
+private u64 apart( f64 a, f64 b, i64 allowed )
+{
+    if( a != a || b != b )
+    {
+        return a != a && b != b ? 0 : 1;
+    }
+    if( a == 0.0 && b == 0.0 )
+    {
+        return kl::bits_of( a ) == kl::bits_of( b ) ? 0 : 1;
+    }
+    i64 d = ordinal( a ) - ordinal( b );
+    return d >= -allowed && d <= allowed ? 0 : 1;
+}
+
+private u64 miss( u64 which, f64 x )
+{
+    return apart( ours( which, x ), theirs( which, x ), ALLOWED[which] );
+}
+
+private u64 pow_miss( f64 x, f64 y )
+{
+    unsafe
+    {
+        return apart( kl::pow( x, y ), pow( x, y ), 1 );
+    }
+}
+
+private u64 atan2_miss( f64 y, f64 x )
+{
+    unsafe
+    {
+        return apart( kl::atan2( y, x ), atan2( y, x ), 1 );
+    }
+}
+
+private u64 next_random( ref u64 seed )
+{
+    seed = wrap<u64>( seed * 6364136223846793005 + 1442695040888963407 );
+    return seed;
+}
+
+// A random float with |x| from 2^-1022 to 2^`top - 1023`.
+private f64 random_float( ref u64 seed, u64 top )
+{
+    u64 b = next_random( ref seed );
+    u64 e = 1 + ( b >> 1 ) % top;
+    return kl::from_bits( ( b & 0x8000_0000_0000_0000 ) | ( e << 52 ) | ( next_random( ref seed ) & 0x000f_ffff_ffff_ffff ) );
+}
+
+private void exponentials_match_libm( ref kl::test::context c )
+{
+    u64 seed = 3;
+    for( u64 which = 0; which < UNARY; which++ )
+    {
+        u64 missed = 0;
+        for( i64 i = -20000; i <= 20000; i++ )
+        {
+            missed += miss( which, cast<f64>( i ) / 25.6 );
+            missed += miss( which, cast<f64>( i ) / 20000.0 );
+        }
+        for( u64 n = 0; n < 10000; n++ )
+        {
+            missed += miss( which, random_float( ref seed, 2046 ) );
+            missed += miss( which, random_float( ref seed, 1033 ) );
+        }
+        // Near 1, where the logarithms cancel, and each path's edges.
+        f64[10] edges = [ 1.0, 0.34657359027997264, 1.0397207708399179, 709.782712893384, 710.4758600739439, -745.1332191019411, 22.0, 0.7071067811865476, 1.4142135623730951, 38.816242111356935 ];
+        for( u64 i = 0; i < 10; i++ )
+        {
+            for( i64 d = -64; d <= 64; d++ )
+            {
+                missed += miss( which, kl::from_bits( wrap<u64>( wrap<i64>( kl::bits_of( edges[i] ) ) + d ) ) );
+                missed += miss( which, -kl::from_bits( wrap<u64>( wrap<i64>( kl::bits_of( edges[i] ) ) + d ) ) );
+            }
+        }
+        c.check_eq( missed, 0 );
+    }
+}
+
+private void pow_and_atan2_match_libm( ref kl::test::context c )
+{
+    u64 seed = 4;
+    u64 missed = 0;
+    for( u64 n = 0; n < 40000; n++ )
+    {
+        f64 x = random_float( ref seed, 1043 );
+        f64 y = random_float( ref seed, 1030 );
+        missed += pow_miss( kl::abs( x ), y );
+        missed += pow_miss( x, kl::round( y ) );
+        missed += atan2_miss( x, y );
+        missed += atan2_miss( random_float( ref seed, 2046 ), random_float( ref seed, 2046 ) );
+    }
+    for( i64 i = -120; i <= 120; i++ )
+    {
+        for( i64 j = -40; j <= 40; j++ )
+        {
+            missed += pow_miss( cast<f64>( i ) / 16.0, cast<f64>( j ) / 4.0 );
+            missed += atan2_miss( cast<f64>( i ), cast<f64>( j ) );
+        }
+    }
+    // Close to 1 with a large power, and to overflow and underflow.
+    for( i64 d = -200; d <= 200; d++ )
+    {
+        missed += pow_miss( 1.0 + cast<f64>( d ) * 5e-12, 1e12 );
+        missed += pow_miss( 2.0, 1023.0 + cast<f64>( d ) / 200.0 );
+        missed += pow_miss( 2.0, -1074.0 + cast<f64>( d ) / 200.0 );
+    }
+    c.check_eq( missed, 0 );
+}
+
+// Signed zeros, infinities, NaN and subnormals, in every pair for the two-argument ones.
+private void exponential_special_values( ref kl::test::context c )
+{
+    f64 infinity = kl::from_bits( 0x7ff0000000000000 );
+    f64 nan = kl::from_bits( 0x7ff8000000000000 );
+    f64[13] inputs = [ 0.0, -0.0, infinity, -infinity, nan, kl::from_bits( 1 ), -kl::from_bits( 1 ), 1.0, -1.0, 2.0, -2.0, 0.5, -3.0 ];
+    u64 missed = 0;
+    for( u64 i = 0; i < 13; i++ )
+    {
+        for( u64 which = 0; which < UNARY; which++ )
+        {
+            missed += miss( which, inputs[i] );
+        }
+        for( u64 j = 0; j < 13; j++ )
+        {
+            missed += pow_miss( inputs[i], inputs[j] );
+            missed += atan2_miss( inputs[i], inputs[j] );
+        }
+    }
+    c.check_eq( missed, 0 );
+
+    c.check_eq( kl::exp( 0.0 ), 1.0 );
+    c.check_eq( kl::log( 1.0 ), 0.0 );
+    c.check_eq( kl::log2( 1024.0 ), 10.0 );
+    c.check_eq( kl::log10( 1000.0 ), 3.0 );
+    c.check_eq( kl::pow( nan, 0.0 ), 1.0 );
+    c.check_eq( kl::pow( -2.0, 3.0 ), -8.0 );
+    c.check( kl::is_nan( kl::pow( -2.0, 0.5 ) ) );
+    c.check_eq( kl::atan2( 1.0, -1.0 ), 3.0 * kl::pi / 4.0 );
+    c.check_eq( kl::bits_of( kl::atan2( -0.0, 1.0 ) ), 0x8000000000000000 );
+    c.check_eq( kl::tanh( infinity ), 1.0 );
+}
+
+// The f32 forms are the f64 ones, rounded, and overflow to an infinity.
+private void exponential_f32_forms( ref kl::test::context c )
+{
+    c.check_eq( kl::exp( cast<f32>( 0.0 ) ), cast<f32>( 1.0 ) );
+    c.check_eq( kl::log2( cast<f32>( 8.0 ) ), cast<f32>( 3.0 ) );
+    c.check_eq( kl::pow( cast<f32>( 2.0 ), cast<f32>( 10.0 ) ), cast<f32>( 1024.0 ) );
+    c.check( kl::is_inf( kl::exp( cast<f32>( 100.0 ) ) ) );
+    c.check( kl::is_inf( kl::cosh( cast<f32>( -100.0 ) ) ) );
+    c.check( kl::sinh( cast<f32>( -100.0 ) ) < cast<f32>( 0.0 ) );
+    c.check_eq( kl::exp( cast<f32>( -200.0 ) ), cast<f32>( 0.0 ) );
+    c.check_eq( kl::atan2( cast<f32>( 0.0 ), cast<f32>( -1.0 ) ), cast<f32>( kl::pi ) );
+}
+
+private u64 rounding_miss( f64 x )
+{
+    unsafe
+    {
+        u64 missed = 0;
+        missed += kl::bits_of( kl::floor( x ) ) == kl::bits_of( floor( x ) ) ? 0 : 1;
+        missed += kl::bits_of( kl::ceil( x ) ) == kl::bits_of( ceil( x ) ) ? 0 : 1;
+        missed += kl::bits_of( kl::trunc( x ) ) == kl::bits_of( trunc( x ) ) ? 0 : 1;
+        missed += kl::bits_of( kl::round( x ) ) == kl::bits_of( round( x ) ) ? 0 : 1;
+        return missed;
+    }
+}
+
+private void roundings_match_libm( ref kl::test::context c )
+{
+    u64 seed = 5;
+    u64 missed = 0;
+    for( i64 i = -2000; i <= 2000; i++ )
+    {
+        missed += rounding_miss( cast<f64>( i ) / 4.0 );
+    }
+    for( u64 n = 0; n < 20000; n++ )
+    {
+        missed += rounding_miss( random_float( ref seed, 1076 ) );
+    }
+    f64[5] edges = [ 0.49999999999999994, 4503599627370496.0, 4503599627370497.0, 2251799813685248.5, kl::from_bits( 1 ) ];
+    for( u64 i = 0; i < 5; i++ )
+    {
+        missed += rounding_miss( edges[i] ) + rounding_miss( -edges[i] );
+    }
+    missed += rounding_miss( kl::from_bits( 0x7ff0000000000000 ) ) + rounding_miss( -0.0 );
+    c.check_eq( missed, 0 );
+    c.check( kl::is_nan( kl::round( kl::from_bits( 0x7ff8000000000000 ) ) ) );
+    c.check_eq( kl::floor( cast<f32>( -2.5 ) ), cast<f32>( -3.0 ) );
+    c.check_eq( kl::round( cast<f32>( 2.5 ) ), cast<f32>( 3.0 ) );
+}

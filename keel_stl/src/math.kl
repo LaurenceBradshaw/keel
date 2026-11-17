@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 // The trigonometry below is ported from FreeBSD's msun: lib/msun/src/s_sin.c, s_cos.c, s_tan.c,
-// e_asin.c, e_acos.c and s_atan.c. Those files carry the notices below, reproduced as they appear
-// there.
+// e_asin.c, e_acos.c, s_atan.c and e_atan2.c. Those files carry the notices below, reproduced as
+// they appear there.
 //
-// e_asin.c and e_acos.c:
+// e_asin.c, e_acos.c and e_atan2.c:
 //
 // ====================================================
 // Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
@@ -28,6 +28,7 @@
 // ====================================================
 
 // Numbers beyond the operators.
+import kl::_core::exponential as exponential;
 import kl::_core::trig as trig;
 
 /// --- Bits ---
@@ -229,10 +230,183 @@ U ceiled<U>( f32 x ) where U : integral
     return integer_of<U>( -below( -cast<f64>( x ) ) );
 }
 
+/// `x` down to a whole value: `floor( -2.5 )` is `-3.0`. An infinity or a NaN stays one.
+f64 floor( f64 x )
+{
+    return below( x );
+}
+
+/// `x` down to a whole value: `floor( -2.5 )` is `-3.0`. An infinity or a NaN stays one.
+f32 floor( f32 x )
+{
+    return cast<f32>( below( cast<f64>( x ) ) );
+}
+
+/// `x` up to a whole value: `ceil( -0.5 )` is `-0.0`. An infinity or a NaN stays one.
+f64 ceil( f64 x )
+{
+    return -below( -x );
+}
+
+/// `x` up to a whole value: `ceil( -0.5 )` is `-0.0`. An infinity or a NaN stays one.
+f32 ceil( f32 x )
+{
+    return cast<f32>( -below( -cast<f64>( x ) ) );
+}
+
+/// `x` toward zero, to a whole value: `trunc( -2.7 )` is `-2.0`. An infinity or a NaN stays one.
+f64 trunc( f64 x )
+{
+    return chopped( x );
+}
+
+/// `x` toward zero, to a whole value: `trunc( -2.7 )` is `-2.0`. An infinity or a NaN stays one.
+f32 trunc( f32 x )
+{
+    return cast<f32>( chopped( cast<f64>( x ) ) );
+}
+
+/// `x` to the nearest whole value, a half away from zero: `round( 2.5 )` is `3.0`. An infinity or a NaN stays one.
+f64 round( f64 x )
+{
+    return nearest( x );
+}
+
+/// `x` to the nearest whole value, a half away from zero: `round( 2.5 )` is `3.0`. An infinity or a NaN stays one.
+f32 round( f32 x )
+{
+    return cast<f32>( nearest( cast<f64>( x ) ) );
+}
+
 /// --- Constants ---
 
 /// The `f64` nearest to the ratio of a circle's circumference to its diameter.
 const f64 pi = 3.14159265358979311600e+00;
+
+/// --- Exponentials and logarithms ---
+
+/// e to the power `x`: an infinity above 709.78, and 0 below -745.13. Within an ulp.
+f64 exp( f64 x )
+{
+    return exponential::exp( x );
+}
+
+/// e to the power `x`: an infinity above 709.78, and 0 below -745.13. Within an ulp.
+f32 exp( f32 x )
+{
+    return exponential::narrowed<f32>( exponential::exp( cast<f64>( x ) ) );
+}
+
+/// e^x - 1, exact near 0 where `exp( x ) - 1.0` loses digits: -1 below -38. Within an ulp.
+f64 expm1( f64 x )
+{
+    return exponential::expm1( x );
+}
+
+/// e^x - 1, exact near 0 where `exp( x ) - 1.0` loses digits: -1 below -38. Within an ulp.
+f32 expm1( f32 x )
+{
+    return exponential::narrowed<f32>( exponential::expm1( cast<f64>( x ) ) );
+}
+
+/// The natural logarithm: `-inf` at 0, and a NaN below. Within an ulp.
+f64 log( f64 x )
+{
+    return exponential::log( x );
+}
+
+/// The natural logarithm: `-inf` at 0, and a NaN below. Within an ulp.
+f32 log( f32 x )
+{
+    return exponential::narrowed<f32>( exponential::log( cast<f64>( x ) ) );
+}
+
+/// log(1 + x), exact near 0 where `log( 1.0 + x )` loses digits: `-inf` at -1, and a NaN below. Within an ulp.
+f64 log1p( f64 x )
+{
+    return exponential::log1p( x );
+}
+
+/// log(1 + x), exact near 0 where `log( 1.0 + x )` loses digits: `-inf` at -1, and a NaN below. Within an ulp.
+f32 log1p( f32 x )
+{
+    return exponential::narrowed<f32>( exponential::log1p( cast<f64>( x ) ) );
+}
+
+/// The base 2 logarithm, exact at powers of 2: `-inf` at 0, and a NaN below. Within an ulp.
+f64 log2( f64 x )
+{
+    return exponential::log2( x );
+}
+
+/// The base 2 logarithm, exact at powers of 2: `-inf` at 0, and a NaN below. Within an ulp.
+f32 log2( f32 x )
+{
+    return exponential::narrowed<f32>( exponential::log2( cast<f64>( x ) ) );
+}
+
+/// The base 10 logarithm: `-inf` at 0, and a NaN below. Within an ulp.
+f64 log10( f64 x )
+{
+    return exponential::log10( x );
+}
+
+/// The base 10 logarithm: `-inf` at 0, and a NaN below. Within an ulp.
+f32 log10( f32 x )
+{
+    return exponential::narrowed<f32>( exponential::log10( cast<f64>( x ) ) );
+}
+
+/// `x` to the power `y`. As C's `pow`: 1 when `y` is 0 or `x` is 1, even beside a NaN; a NaN for a
+/// negative `x` and a `y` that is not whole; and an odd whole `y` keeps `x`'s sign. Within an ulp.
+f64 pow( f64 x, f64 y )
+{
+    return exponential::pow( x, y );
+}
+
+/// `x` to the power `y`, as the `f64` form, rounded.
+f32 pow( f32 x, f32 y )
+{
+    return exponential::narrowed<f32>( exponential::pow( cast<f64>( x ), cast<f64>( y ) ) );
+}
+
+/// --- Hyperbolic functions ---
+
+/// The hyperbolic sine. Within 2 ulps.
+f64 sinh( f64 x )
+{
+    return exponential::sinh( x );
+}
+
+/// The hyperbolic sine. Within 2 ulps.
+f32 sinh( f32 x )
+{
+    return exponential::narrowed<f32>( exponential::sinh( cast<f64>( x ) ) );
+}
+
+/// The hyperbolic cosine. Within 2 ulps.
+f64 cosh( f64 x )
+{
+    return exponential::cosh( x );
+}
+
+/// The hyperbolic cosine. Within 2 ulps.
+f32 cosh( f32 x )
+{
+    return exponential::narrowed<f32>( exponential::cosh( cast<f64>( x ) ) );
+}
+
+/// The hyperbolic tangent, -1 to 1. Within 2 ulps.
+f64 tanh( f64 x )
+{
+    return exponential::tanh( x );
+}
+
+/// The hyperbolic tangent, -1 to 1. Within 2 ulps.
+f32 tanh( f32 x )
+{
+    return exponential::narrowed<f32>( exponential::tanh( cast<f64>( x ) ) );
+}
 
 /// --- Trigonometry ---
 
@@ -473,6 +647,81 @@ f64 atan( f64 x )
     return negative ? -angle : angle;
 }
 
+/// The angle in [-pi, pi] of the point (`x`, `y`) from the positive x axis: `atan2( 1.0, -1.0 )` is
+/// 3 pi / 4. Each zero's sign picks the side, as C's `atan2`. Within an ulp.
+f64 atan2( f64 y, f64 x )
+{
+    u32 hx = trig::high_word( x );
+    u32 lx = trig::low_word( x );
+    u32 hy = trig::high_word( y );
+    u32 ly = trig::low_word( y );
+    u32 ix = hx & 0x7fffffff;
+    u32 iy = hy & 0x7fffffff;
+    if( ix > 0x7ff00000 || ( ix == 0x7ff00000 && lx != 0 ) || iy > 0x7ff00000 || ( iy == 0x7ff00000 && ly != 0 ) )
+    {
+        return x + y;
+    }
+    if( hx == 0x3ff00000 && lx == 0 )
+    {
+        return atan( y );
+    }
+
+    // 2 * sign(x) + sign(y).
+    u32 m = ( hy >> 31 ) | ( ( hx >> 30 ) & 2 );
+    if( ( iy | ly ) == 0 )
+    {
+        return m < 2 ? y : m == 2 ? PI : -PI;
+    }
+    if( ( ix | lx ) == 0 )
+    {
+        return ( hy >> 31 ) != 0 ? -PIO2_HI : PIO2_HI;
+    }
+    if( ix == 0x7ff00000 )
+    {
+        if( iy == 0x7ff00000 )
+        {
+            return m == 0 ? PIO4_HI : m == 1 ? -PIO4_HI : m == 2 ? 3.0 * PIO4_HI : -3.0 * PIO4_HI;
+        }
+        return m == 0 ? 0.0 : m == 1 ? -0.0 : m == 2 ? PI : -PI;
+    }
+    if( iy == 0x7ff00000 )
+    {
+        return ( hy >> 31 ) != 0 ? -PIO2_HI : PIO2_HI;
+    }
+
+    // The exponents' difference, to tell when y/x is beyond 2^60 either way.
+    i32 d = wrap<i32>( iy ) - wrap<i32>( ix );
+    f64 z = 0.0;
+    if( d >= 61 * 0x100000 )
+    {
+        z = PIO2_HI + 0.5 * PI_LO;
+        m &= 1;
+    }
+    else if( ( hx >> 31 ) == 0 || d >= -60 * 0x100000 )
+    {
+        z = atan( trig::magnitude( y / x ) );
+    }
+    if( m == 0 )
+    {
+        return z;
+    }
+    if( m == 1 )
+    {
+        return -z;
+    }
+    if( m == 2 )
+    {
+        return PI - ( z - PI_LO );
+    }
+    return ( z - PI_LO ) - PI;
+}
+
+/// The angle of (`x`, `y`), as the `f64` form, rounded.
+f32 atan2( f32 y, f32 x )
+{
+    return cast<f32>( atan2( cast<f64>( y ), cast<f64>( x ) ) );
+}
+
 private i32 exponent_of( f64 x )
 {
     return wrap<i32>( ( bits_of( x ) >> 52 ) & 0x7ff );
@@ -546,6 +795,8 @@ private U integer_of<U>( f64 w ) where U : integral
 private const f64 PIO2_HI = 1.57079632679489655800e+00;
 private const f64 PIO2_LO = 6.12323399573676603587e-17;
 private const f64 PIO4_HI = 7.85398163397448278999e-01;
+private const f64 PI = 3.1415926535897931160e+00;
+private const f64 PI_LO = 1.2246467991473531772e-16;
 
 // atan at 0.5, 1, 1.5 and infinity, each as hi + lo.
 private const f64[4] ATANHI = [

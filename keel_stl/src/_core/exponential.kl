@@ -1,0 +1,925 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//
+// This file is ported from FreeBSD's msun: lib/msun/src/e_exp.c, s_expm1.c, e_log.c, k_log.h,
+// s_log1p.c, e_log2.c, e_log10.c, e_pow.c, e_sinh.c, e_cosh.c and s_tanh.c. Those files carry the
+// notices below, reproduced as they appear there.
+//
+// e_exp.c and e_pow.c:
+//
+// ====================================================
+// Copyright (C) 2004 by Sun Microsystems, Inc. All rights reserved.
+//
+// Permission to use, copy, modify, and distribute this
+// software is freely granted, provided that this notice
+// is preserved.
+// ====================================================
+//
+// e_log.c, k_log.h, e_log2.c, e_log10.c, e_sinh.c and e_cosh.c:
+//
+// ====================================================
+// Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
+//
+// Developed at SunSoft, a Sun Microsystems, Inc. business.
+// Permission to use, copy, modify, and distribute this
+// software is freely granted, provided that this notice
+// is preserved.
+// ====================================================
+//
+// s_expm1.c, s_log1p.c and s_tanh.c:
+//
+// ====================================================
+// Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
+//
+// Developed at SunPro, a Sun Microsystems, Inc. business.
+// Permission to use, copy, modify, and distribute this
+// software is freely granted, provided that this notice
+// is preserved.
+// ====================================================
+
+// The exponentials, logarithms, powers and hyperbolic functions behind `kl::math`: the hyperbolic
+// functions within 2 ulps of the true value, the rest within one.
+import trig;
+
+/// e^x times 2^s, `s` 0 or -1; -1 keeps e^x / 2 finite up to 710.47, where e^x is not.
+f64 exp_scaled( f64 x, i32 s )
+{
+    u32 hx = high_word( x );
+    bool negative = ( hx >> 31 ) != 0;
+    u64 xsb = negative ? 1 : 0;
+    hx &= 0x7fffffff;
+
+    if( hx >= 0x40862E42 )
+    {
+        if( hx >= 0x7ff00000 )
+        {
+            if( ( ( hx & 0xfffff ) | low_word( x ) ) != 0 )
+            {
+                return x + x;
+            }
+            return negative ? 0.0 : x;
+        }
+        if( s == 0 && x > O_THRESHOLD )
+        {
+            return infinity();
+        }
+        if( x < U_THRESHOLD )
+        {
+            return 0.0;
+        }
+    }
+
+    f64 hi = 0.0;
+    f64 lo = 0.0;
+    i32 k = 0;
+    if( hx > 0x3fd62e42 )
+    {
+        if( hx < 0x3FF0A2B2 )
+        {
+            hi = x - LN2HI[xsb];
+            lo = LN2LO[xsb];
+            k = negative ? -1 : 1;
+        }
+        else
+        {
+            k = truncated( INVLN2 * x + HALF[xsb] );
+            f64 t = cast<f64>( k );
+            hi = x - t * LN2HI[0];
+            lo = t * LN2LO[0];
+        }
+        x = hi - lo;
+    }
+    else if( hx < 0x3e300000 )
+    {
+        return times_power_of_two( 1.0 + x, s );
+    }
+
+    f64 t = x * x;
+    f64 c = x - t * ( P1 + t * ( P2 + t * ( P3 + t * ( P4 + t * P5 ) ) ) );
+    if( k == 0 )
+    {
+        return times_power_of_two( 1.0 - ( ( x * c ) / ( c - 2.0 ) - x ), s );
+    }
+    f64 y = 1.0 - ( ( lo - ( x * c ) / ( 2.0 - c ) ) - hi );
+    return times_power_of_two( y, k + s );
+}
+
+/// e^x.
+f64 exp( f64 x )
+{
+    return exp_scaled( x, 0 );
+}
+
+/// e^x - 1, exact near 0.
+f64 expm1( f64 x )
+{
+    u32 hx = high_word( x );
+    bool negative = ( hx >> 31 ) != 0;
+    hx &= 0x7fffffff;
+
+    if( hx >= 0x4043687A )
+    {
+        if( hx >= 0x40862E42 )
+        {
+            if( hx >= 0x7ff00000 )
+            {
+                if( ( ( hx & 0xfffff ) | low_word( x ) ) != 0 )
+                {
+                    return x + x;
+                }
+                return negative ? -1.0 : x;
+            }
+            if( x > O_THRESHOLD )
+            {
+                return infinity();
+            }
+        }
+        if( negative )
+        {
+            return -1.0;
+        }
+    }
+
+    f64 c = 0.0;
+    i32 k = 0;
+    if( hx > 0x3fd62e42 )
+    {
+        f64 hi = 0.0;
+        f64 lo = 0.0;
+        if( hx < 0x3FF0A2B2 )
+        {
+            hi = negative ? x + LN2HI[0] : x - LN2HI[0];
+            lo = negative ? -LN2LO[0] : LN2LO[0];
+            k = negative ? -1 : 1;
+        }
+        else
+        {
+            k = truncated( INVLN2 * x + ( negative ? -0.5 : 0.5 ) );
+            f64 t = cast<f64>( k );
+            hi = x - t * LN2HI[0];
+            lo = t * LN2LO[0];
+        }
+        x = hi - lo;
+        c = ( hi - x ) - lo;
+    }
+    else if( hx < 0x3c900000 )
+    {
+        return x;
+    }
+
+    f64 hfx = 0.5 * x;
+    f64 hxs = x * hfx;
+    f64 r1 = 1.0 + hxs * ( Q1 + hxs * ( Q2 + hxs * ( Q3 + hxs * ( Q4 + hxs * Q5 ) ) ) );
+    f64 t = 3.0 - r1 * hfx;
+    f64 e = hxs * ( ( r1 - t ) / ( 6.0 - x * t ) );
+    if( k == 0 )
+    {
+        return x - ( x * e - hxs );
+    }
+    e = x * ( e - c ) - c;
+    e -= hxs;
+    if( k == -1 )
+    {
+        return 0.5 * ( x - e ) - 0.5;
+    }
+    if( k == 1 )
+    {
+        if( x < -0.25 )
+        {
+            return -2.0 * ( e - ( x + 0.5 ) );
+        }
+        return 1.0 + 2.0 * ( x - e );
+    }
+    if( k <= -2 || k > 56 )
+    {
+        return times_power_of_two( 1.0 - ( e - x ), k ) - 1.0;
+    }
+    u32 bit = 0x200000;
+    if( k < 20 )
+    {
+        f64 one_less = from_words( 0x3ff00000 - ( bit >> wrap<u32>( k ) ), 0 ); // 1 - 2^-k
+        return times_power_of_two( one_less - ( e - x ), k );
+    }
+    f64 y = x - ( e + from_words( wrap<u32>( 0x3ff - k ) << 20, 0 ) ); // 2^-k
+    y += 1.0;
+    return times_power_of_two( y, k );
+}
+
+/// The natural logarithm: -inf at 0, NaN below.
+f64 log( f64 x )
+{
+    if( outside_log( x ) )
+    {
+        return log_outside( x );
+    }
+
+    parts p = split( x );
+    f64 f = p.f;
+    i32 k = p.k;
+    u32 hx = p.hx;
+    f64 dk = cast<f64>( k );
+    if( ( 0x000fffff & ( 2 + hx ) ) < 3 )
+    {
+        if( f == 0.0 )
+        {
+            return k == 0 ? 0.0 : dk * LN2HI[0] + dk * LN2LO[0];
+        }
+        f64 r = f * f * ( 0.5 - 0.33333333333333333 * f );
+        return k == 0 ? f - r : dk * LN2HI[0] - ( ( r - dk * LN2LO[0] ) - f );
+    }
+    f64 s = f / ( 2.0 + f );
+    f64 z = s * s;
+    f64 w = z * z;
+    f64 t1 = w * ( LG2 + w * ( LG4 + w * LG6 ) );
+    f64 t2 = z * ( LG1 + w * ( LG3 + w * ( LG5 + w * LG7 ) ) );
+    f64 r = t2 + t1;
+    if( hx >= 0x6147a && hx <= 0x6b851 )
+    {
+        f64 hfsq = 0.5 * f * f;
+        if( k == 0 )
+        {
+            return f - ( hfsq - s * ( hfsq + r ) );
+        }
+        return dk * LN2HI[0] - ( ( hfsq - ( s * ( hfsq + r ) + dk * LN2LO[0] ) ) - f );
+    }
+    if( k == 0 )
+    {
+        return f - s * ( f - r );
+    }
+    return dk * LN2HI[0] - ( ( s * ( f - r ) - dk * LN2LO[0] ) - f );
+}
+
+/// log(1 + x), exact near 0: -inf at -1, NaN below.
+f64 log1p( f64 x )
+{
+    u32 hx = high_word( x );
+    bool negative = ( hx >> 31 ) != 0;
+    u32 ax = hx & 0x7fffffff;
+
+    f64 f = 0.0;
+    f64 c = 0.0;
+    i32 k = 1;
+    u32 hu = 0;
+    if( negative || hx < 0x3FDA827A )
+    {
+        if( negative && ax >= 0x3ff00000 )
+        {
+            return x == -1.0 ? -infinity() : nan();
+        }
+        if( ax < 0x3e200000 )
+        {
+            return ax < 0x3c900000 ? x : x - x * x * 0.5;
+        }
+        if( !negative || ax <= 0x3fd2bec4 )
+        {
+            k = 0;
+            f = x;
+            hu = 1;
+        }
+    }
+    if( hx >= 0x7ff00000 && !negative )
+    {
+        return x + x;
+    }
+    if( k != 0 )
+    {
+        f64 u = x;
+        if( hx < 0x43400000 || negative )
+        {
+            u = 1.0 + x;
+            hu = high_word( u );
+            k = wrap<i32>( hu >> 20 ) - 1023;
+            c = k > 0 ? 1.0 - ( u - x ) : x - ( u - 1.0 );
+            c /= u;
+        }
+        else
+        {
+            hu = high_word( u );
+            k = wrap<i32>( hu >> 20 ) - 1023;
+        }
+        hu &= 0x000fffff;
+        if( hu < 0x6a09e )
+        {
+            u = with_high_word( u, hu | 0x3ff00000 );
+        }
+        else
+        {
+            k += 1;
+            u = with_high_word( u, hu | 0x3fe00000 );
+            hu = ( 0x00100000 - hu ) >> 2;
+        }
+        f = u - 1.0;
+    }
+
+    f64 dk = cast<f64>( k );
+    f64 hfsq = 0.5 * f * f;
+    if( hu == 0 )
+    {
+        if( f == 0.0 )
+        {
+            if( k == 0 )
+            {
+                return 0.0;
+            }
+            c += dk * LN2LO[0];
+            return dk * LN2HI[0] + c;
+        }
+        f64 r = hfsq * ( 1.0 - 0.66666666666666666 * f );
+        return k == 0 ? f - r : dk * LN2HI[0] - ( ( r - ( dk * LN2LO[0] + c ) ) - f );
+    }
+    f64 s = f / ( 2.0 + f );
+    f64 z = s * s;
+    f64 r = z * ( LG1 + z * ( LG2 + z * ( LG3 + z * ( LG4 + z * ( LG5 + z * ( LG6 + z * LG7 ) ) ) ) ) );
+    if( k == 0 )
+    {
+        return f - ( hfsq - s * ( hfsq + r ) );
+    }
+    return dk * LN2HI[0] - ( ( hfsq - ( s * ( hfsq + r ) + ( dk * LN2LO[0] + c ) ) ) - f );
+}
+
+/// The base 2 logarithm, exact at powers of 2.
+f64 log2( f64 x )
+{
+    if( outside_log( x ) )
+    {
+        return log_outside( x );
+    }
+    if( x == 1.0 )
+    {
+        return 0.0;
+    }
+
+    parts p = split( x );
+    f64 f = p.f;
+    f64 y = cast<f64>( p.k );
+    f64 hfsq = 0.5 * f * f;
+    f64 r = log1p_kernel( f );
+    f64 hi = low_word_cleared( f - hfsq );
+    f64 lo = ( f - hi ) - hfsq + r;
+    f64 val_hi = hi * IVLN2HI;
+    f64 val_lo = ( lo + hi ) * IVLN2LO + lo * IVLN2HI;
+    f64 w = y + val_hi;
+    val_lo += ( y - w ) + val_hi;
+    val_hi = w;
+    return val_lo + val_hi;
+}
+
+/// The base 10 logarithm.
+f64 log10( f64 x )
+{
+    if( outside_log( x ) )
+    {
+        return log_outside( x );
+    }
+    if( x == 1.0 )
+    {
+        return 0.0;
+    }
+
+    parts p = split( x );
+    f64 f = p.f;
+    f64 y = cast<f64>( p.k );
+    f64 hfsq = 0.5 * f * f;
+    f64 r = log1p_kernel( f );
+    f64 hi = low_word_cleared( f - hfsq );
+    f64 lo = ( f - hi ) - hfsq + r;
+    f64 val_hi = hi * IVLN10HI;
+    f64 y2 = y * LOG10_2HI;
+    f64 val_lo = y * LOG10_2LO + ( lo + hi ) * IVLN10LO + lo * IVLN10HI;
+    f64 w = y2 + val_hi;
+    val_lo += ( y2 - w ) + val_hi;
+    val_hi = w;
+    return val_lo + val_hi;
+}
+
+/// x^y, with C's special values: 1 when `y` is 0 or `x` is 1, even for a NaN.
+f64 pow( f64 x, f64 y )
+{
+    u32 hx = high_word( x );
+    u32 lx = low_word( x );
+    u32 hy = high_word( y );
+    u32 ly = low_word( y );
+    u32 ix = hx & 0x7fffffff;
+    u32 iy = hy & 0x7fffffff;
+    bool x_negative = ( hx >> 31 ) != 0;
+    bool y_negative = ( hy >> 31 ) != 0;
+
+    if( ( iy | ly ) == 0 || ( hx == 0x3ff00000 && lx == 0 ) )
+    {
+        return 1.0;
+    }
+    if( ix > 0x7ff00000 || ( ix == 0x7ff00000 && lx != 0 ) || iy > 0x7ff00000 || ( iy == 0x7ff00000 && ly != 0 ) )
+    {
+        return x + y;
+    }
+
+    // 0 when `y` is not a whole number, 1 when it is odd and 2 when even; only for a negative `x`.
+    i32 yisint = 0;
+    if( x_negative )
+    {
+        if( iy >= 0x43400000 )
+        {
+            yisint = 2;
+        }
+        else if( iy >= 0x3ff00000 )
+        {
+            u32 k = ( iy >> 20 ) - 0x3ff;
+            if( k > 20 )
+            {
+                u32 j = ly >> ( 52 - k );
+                if( ( j << ( 52 - k ) ) == ly )
+                {
+                    yisint = 2 - wrap<i32>( j & 1 );
+                }
+            }
+            else if( ly == 0 )
+            {
+                u32 j = iy >> ( 20 - k );
+                if( ( j << ( 20 - k ) ) == iy )
+                {
+                    yisint = 2 - wrap<i32>( j & 1 );
+                }
+            }
+        }
+    }
+
+    if( ly == 0 )
+    {
+        if( iy == 0x7ff00000 )
+        {
+            if( ix == 0x3ff00000 && lx == 0 )
+            {
+                return 1.0;
+            }
+            if( ix >= 0x3ff00000 )
+            {
+                return y_negative ? 0.0 : y;
+            }
+            return y_negative ? -y : 0.0;
+        }
+        if( iy == 0x3ff00000 )
+        {
+            return y_negative ? 1.0 / x : x;
+        }
+        if( hy == 0x40000000 )
+        {
+            return x * x;
+        }
+        if( hy == 0x3fe00000 && !x_negative )
+        {
+            return sqrt_f64( x );
+        }
+    }
+
+    f64 ax = magnitude( x );
+    if( lx == 0 && ( ix == 0x7ff00000 || ix == 0 || ix == 0x3ff00000 ) )
+    {
+        f64 z = y_negative ? 1.0 / ax : ax;
+        if( x_negative )
+        {
+            if( ix == 0x3ff00000 && yisint == 0 )
+            {
+                return nan();
+            }
+            if( yisint == 1 )
+            {
+                return -z;
+            }
+        }
+        return z;
+    }
+
+    if( x_negative && yisint == 0 )
+    {
+        return nan();
+    }
+    f64 s = x_negative && yisint == 1 ? -1.0 : 1.0;
+
+    // log2(|x|) as t1 + t2.
+    f64 t1 = 0.0;
+    f64 t2 = 0.0;
+    if( iy > 0x41e00000 )
+    {
+        if( iy > 0x43f00000 )
+        {
+            if( ix <= 0x3fefffff )
+            {
+                return y_negative ? infinity() : 0.0;
+            }
+            return y_negative ? 0.0 : infinity();
+        }
+        if( ix < 0x3fefffff )
+        {
+            return y_negative ? s * infinity() : s * 0.0;
+        }
+        if( ix > 0x3ff00000 )
+        {
+            return y_negative ? s * 0.0 : s * infinity();
+        }
+        f64 t = ax - 1.0;
+        f64 w = ( t * t ) * ( 0.5 - t * ( THIRD - t * 0.25 ) );
+        f64 u = IVLN2_H * t;
+        f64 v = t * IVLN2_L - w * IVLN2;
+        t1 = low_word_cleared( u + v );
+        t2 = v - ( t1 - u );
+    }
+    else
+    {
+        i32 n = 0;
+        if( ix < 0x00100000 )
+        {
+            ax *= TWO53;
+            n -= 53;
+            ix = high_word( ax );
+        }
+        n += wrap<i32>( ix >> 20 ) - 0x3ff;
+        u32 j = ix & 0x000fffff;
+        ix = j | 0x3ff00000;
+        u32 k = 0;
+        if( j > 0x3988E )
+        {
+            if( j < 0xBB67A )
+            {
+                k = 1;
+            }
+            else
+            {
+                n += 1;
+                ix -= 0x00100000;
+            }
+        }
+        ax = with_high_word( ax, ix );
+
+        f64 u = ax - BP[k];
+        f64 v = 1.0 / ( ax + BP[k] );
+        f64 ss = u * v;
+        f64 s_h = low_word_cleared( ss );
+        f64 t_h = from_words( ( ( ix >> 1 ) | 0x20000000 ) + 0x00080000 + ( k << 18 ), 0 );
+        f64 t_l = ax - ( t_h - BP[k] );
+        f64 s_l = v * ( ( u - s_h * t_h ) - s_h * t_l );
+        f64 s2 = ss * ss;
+        f64 r = s2 * s2 * ( L1 + s2 * ( L2 + s2 * ( L3 + s2 * ( L4 + s2 * ( L5 + s2 * L6 ) ) ) ) );
+        r += s_l * ( s_h + ss );
+        s2 = s_h * s_h;
+        t_h = low_word_cleared( 3.0 + s2 + r );
+        t_l = r - ( ( t_h - 3.0 ) - s2 );
+        u = s_h * t_h;
+        v = s_l * t_h + t_l * ss;
+        f64 p_h = low_word_cleared( u + v );
+        f64 p_l = v - ( p_h - u );
+        f64 z_h = CP_H * p_h;
+        f64 z_l = CP_L * p_h + p_l * CP + DP_L[k];
+        f64 t = cast<f64>( n );
+        t1 = low_word_cleared( ( ( z_h + z_l ) + DP_H[k] ) + t );
+        t2 = z_l - ( ( ( t1 - t ) - DP_H[k] ) - z_h );
+    }
+
+    // y * log2(|x|) as p_h + p_l, then 2 to that.
+    f64 y1 = low_word_cleared( y );
+    f64 p_l = ( y - y1 ) * t1 + y * t2;
+    f64 p_h = y1 * t1;
+    f64 z = p_l + p_h;
+    u32 j = high_word( z );
+    u32 i = low_word( z );
+    bool z_negative = ( j >> 31 ) != 0;
+    if( !z_negative && j >= 0x40900000 )
+    {
+        if( ( ( j - 0x40900000 ) | i ) != 0 || p_l + OVT > z - p_h )
+        {
+            return s * infinity();
+        }
+    }
+    else if( ( j & 0x7fffffff ) >= 0x4090cc00 )
+    {
+        if( ( ( j - 0xc090cc00 ) | i ) != 0 || p_l <= z - p_h )
+        {
+            return s * 0.0;
+        }
+    }
+
+    i = j & 0x7fffffff;
+    i32 k = wrap<i32>( i >> 20 ) - 0x3ff;
+    i32 n = 0;
+    if( i > 0x3fe00000 )
+    {
+        u32 half_bit = 0x00100000;
+        u32 m = j + ( half_bit >> wrap<u32>( k + 1 ) );
+        k = wrap<i32>( ( m & 0x7fffffff ) >> 20 ) - 0x3ff;
+        u32 fraction = 0x000fffff;
+        f64 t = from_words( m & ~( fraction >> wrap<u32>( k ) ), 0 );
+        n = wrap<i32>( ( ( m & 0x000fffff ) | 0x00100000 ) >> wrap<u32>( 20 - k ) );
+        if( z_negative )
+        {
+            n = -n;
+        }
+        p_h -= t;
+    }
+    f64 t = low_word_cleared( p_l + p_h );
+    f64 u = t * LN2_H;
+    f64 v = ( p_l - ( t - p_h ) ) * LN2 + t * LN2_L;
+    z = u + v;
+    f64 w = v - ( z - u );
+    t = z * z;
+    t1 = z - t * ( P1 + t * ( P2 + t * ( P3 + t * ( P4 + t * P5 ) ) ) );
+    f64 r = ( z * t1 ) / ( t1 - 2.0 ) - ( w + z * w );
+    z = 1.0 - ( r - z );
+    i32 e = wrap<i32>( high_word( z ) ) + n * 0x100000;
+    if( e < 0x100000 )
+    {
+        return s * times_power_of_two( z, n );
+    }
+    return s * with_high_word( z, wrap<u32>( e ) );
+}
+
+/// The hyperbolic sine.
+f64 sinh( f64 x )
+{
+    u32 jx = high_word( x );
+    u32 ix = jx & 0x7fffffff;
+    if( ix >= 0x7ff00000 )
+    {
+        return x + x;
+    }
+
+    f64 h = ( jx >> 31 ) != 0 ? -0.5 : 0.5;
+    f64 a = magnitude( x );
+    if( ix < 0x40360000 )
+    {
+        if( ix < 0x3e300000 )
+        {
+            return x;
+        }
+        f64 t = expm1( a );
+        if( ix < 0x3ff00000 )
+        {
+            return h * ( 2.0 * t - t * t / ( t + 1.0 ) );
+        }
+        return h * ( t + t / ( t + 1.0 ) );
+    }
+    if( ix < 0x40862E42 )
+    {
+        return h * exp( a );
+    }
+    if( ix <= 0x408633CE )
+    {
+        return h * 2.0 * exp_scaled( a, -1 );
+    }
+    return x * SHUGE;
+}
+
+/// The hyperbolic cosine.
+f64 cosh( f64 x )
+{
+    u32 ix = high_word( x ) & 0x7fffffff;
+    if( ix >= 0x7ff00000 )
+    {
+        return x * x;
+    }
+
+    f64 a = magnitude( x );
+    if( ix < 0x3fd62e43 )
+    {
+        f64 t = expm1( a );
+        f64 w = 1.0 + t;
+        if( ix < 0x3c800000 )
+        {
+            return w;
+        }
+        return 1.0 + ( t * t ) / ( w + w );
+    }
+    if( ix < 0x40360000 )
+    {
+        f64 t = exp( a );
+        return 0.5 * t + 0.5 / t;
+    }
+    if( ix < 0x40862E42 )
+    {
+        return 0.5 * exp( a );
+    }
+    if( ix <= 0x408633CE )
+    {
+        return exp_scaled( a, -1 );
+    }
+    return infinity();
+}
+
+/// The hyperbolic tangent.
+f64 tanh( f64 x )
+{
+    u32 jx = high_word( x );
+    u32 ix = jx & 0x7fffffff;
+    bool negative = ( jx >> 31 ) != 0;
+    if( ix >= 0x7ff00000 )
+    {
+        return negative ? 1.0 / x - 1.0 : 1.0 / x + 1.0;
+    }
+
+    f64 z = 1.0;
+    if( ix < 0x40360000 )
+    {
+        if( ix < 0x3e300000 )
+        {
+            return x;
+        }
+        if( ix >= 0x3ff00000 )
+        {
+            f64 t = expm1( 2.0 * magnitude( x ) );
+            z = 1.0 - 2.0 / ( t + 2.0 );
+        }
+        else
+        {
+            f64 t = expm1( -2.0 * magnitude( x ) );
+            z = -t / ( t + 2.0 );
+        }
+    }
+    return negative ? -z : z;
+}
+
+/// `y` rounded to `T`, or an infinity where it is beyond `T`'s range, as arithmetic in `T` gives;
+/// `cast` panics there.
+T narrowed<T>( f64 y ) where T : floating
+{
+    // Only f32 rounds 1 + 2^-30 to 1, and beyond 2^128 - 2^103 an f64 rounds to its infinity.
+    if( cast<T>( 1.000000000931322574615478515625 ) == 1.0 && ( y >= 3.4028235677973366e38 || y <= -3.4028235677973366e38 ) )
+    {
+        return cast<T>( y * 1.0e300 );
+    }
+    return cast<T>( y );
+}
+
+/// --- Internals ---
+
+// `x` as 2^k (1 + f), 1 + f in [sqrt(2)/2, sqrt(2)); `hx` the top of the fraction before.
+private struct parts
+{
+    f64 f;
+    i32 k;
+    u32 hx;
+};
+
+// A positive finite `x`, normal or not.
+private parts split( f64 x )
+{
+    i32 k = 0;
+    u32 hx = high_word( x );
+    if( hx < 0x00100000 )
+    {
+        k -= 54;
+        x *= TWO54;
+        hx = high_word( x );
+    }
+    k += wrap<i32>( hx >> 20 ) - 1023;
+    hx &= 0x000fffff;
+    u32 i = ( hx + 0x95f64 ) & 0x100000;
+    x = with_high_word( x, hx | ( i ^ 0x3ff00000 ) );
+    k += wrap<i32>( i >> 20 );
+    return parts { x - 1.0, k, hx };
+}
+
+// Whether `x` is not a positive finite number.
+private bool outside_log( f64 x )
+{
+    return !( x > 0.0 ) || high_word( x ) >= 0x7ff00000;
+}
+
+private f64 log_outside( f64 x )
+{
+    if( x == 0.0 )
+    {
+        return -infinity();
+    }
+    return x < 0.0 ? nan() : x + x;
+}
+
+// log(1 + f) - f + f^2 / 2, for 1 + f in [sqrt(2)/2, sqrt(2)).
+private f64 log1p_kernel( f64 f )
+{
+    f64 s = f / ( 2.0 + f );
+    f64 z = s * s;
+    f64 w = z * z;
+    f64 t1 = w * ( LG2 + w * ( LG4 + w * LG6 ) );
+    f64 t2 = z * ( LG1 + w * ( LG3 + w * ( LG5 + w * LG7 ) ) );
+    f64 hfsq = 0.5 * f * f;
+    return s * ( hfsq + ( t2 + t1 ) );
+}
+
+// `y` times 2^n, n from -1074 to 1024, rounded once.
+private f64 times_power_of_two( f64 y, i32 n )
+{
+    if( n > 1023 )
+    {
+        return y * from_bits( wrap<u64>( n ) << 52 ) * from_bits( 0x7fe0_0000_0000_0000 );
+    }
+    if( n >= -1021 )
+    {
+        return y * from_bits( wrap<u64>( n + 1023 ) << 52 );
+    }
+    return y * from_bits( wrap<u64>( n + 2023 ) << 52 ) * TWOM1000;
+}
+
+// `x` toward zero, |x| below 2^31.
+private i32 truncated( f64 x )
+{
+    f64 a = magnitude( x );
+    f64 t = ( a + TWO52 ) - TWO52;
+    i32 n = wrap<i32>( bits_of( ( t > a ? t - 1.0 : t ) + TWO52 ) );
+    return x < 0.0 ? -n : n;
+}
+
+private f64 infinity()
+{
+    return from_bits( 0x7ff0_0000_0000_0000 );
+}
+
+private f64 nan()
+{
+    return from_bits( 0x7ff8_0000_0000_0000 );
+}
+
+private f64 from_words( u32 high, u32 low )
+{
+    return from_bits( ( cast<u64>( high ) << 32 ) | cast<u64>( low ) );
+}
+
+private f64 with_high_word( f64 x, u32 high )
+{
+    return from_words( high, low_word( x ) );
+}
+
+// `kl::bits_of` and `kl::from_bits` again, since `kl::math` imports this module.
+private u64 bits_of( f64 x )
+{
+    unsafe
+    {
+        return *cast<u64*>( &x );
+    }
+}
+
+private f64 from_bits( u64 x )
+{
+    unsafe
+    {
+        return *cast<f64*>( &x );
+    }
+}
+
+private const f64 TWO52 = 4503599627370496.0;
+private const f64 TWO53 = 9007199254740992.0;
+private const f64 TWO54 = 1.80143985094819840000e+16;
+private const f64 TWOM1000 = 9.33263618503218878990e-302;
+private const f64 SHUGE = 1.0e307;
+
+private const f64 O_THRESHOLD = 7.09782712893383973096e+02;
+private const f64 U_THRESHOLD = -7.45133219101941108420e+02;
+private const f64[2] HALF = [ 0.5, -0.5 ];
+private const f64[2] LN2HI = [ 6.93147180369123816490e-01, -6.93147180369123816490e-01 ];
+private const f64[2] LN2LO = [ 1.90821492927058770002e-10, -1.90821492927058770002e-10 ];
+private const f64 INVLN2 = 1.44269504088896338700e+00;
+
+private const f64 P1 = 1.66666666666666019037e-01;
+private const f64 P2 = -2.77777777770155933842e-03;
+private const f64 P3 = 6.61375632143793436117e-05;
+private const f64 P4 = -1.65339022054652515390e-06;
+private const f64 P5 = 4.13813679705723846039e-08;
+
+private const f64 Q1 = -3.33333333333331316428e-02;
+private const f64 Q2 = 1.58730158725481460165e-03;
+private const f64 Q3 = -7.93650757867487942473e-05;
+private const f64 Q4 = 4.00821782732936239552e-06;
+private const f64 Q5 = -2.01099218183624371326e-07;
+
+private const f64 LG1 = 6.666666666666735130e-01;
+private const f64 LG2 = 3.999999999940941908e-01;
+private const f64 LG3 = 2.857142874366239149e-01;
+private const f64 LG4 = 2.222219843214978396e-01;
+private const f64 LG5 = 1.818357216161805012e-01;
+private const f64 LG6 = 1.531383769920937332e-01;
+private const f64 LG7 = 1.479819860511658591e-01;
+
+private const f64 IVLN2HI = 1.44269504072144627571e+00;
+private const f64 IVLN2LO = 1.67517131648865118353e-10;
+private const f64 IVLN10HI = 4.34294481878168880939e-01;
+private const f64 IVLN10LO = 2.50829467116452752298e-11;
+private const f64 LOG10_2HI = 3.01029995663611771306e-01;
+private const f64 LOG10_2LO = 3.69423907715893078616e-13;
+
+private const f64[2] BP = [ 1.0, 1.5 ];
+private const f64[2] DP_H = [ 0.0, 5.84962487220764160156e-01 ];
+private const f64[2] DP_L = [ 0.0, 1.35003920212974897128e-08 ];
+private const f64 THIRD = 3.3333333333333331e-01;
+private const f64 L1 = 5.99999999999994648725e-01;
+private const f64 L2 = 4.28571428578550184252e-01;
+private const f64 L3 = 3.33333329818377432918e-01;
+private const f64 L4 = 2.72728123808534006489e-01;
+private const f64 L5 = 2.30660745775561754067e-01;
+private const f64 L6 = 2.06975017800338417784e-01;
+private const f64 LN2 = 6.93147180559945286227e-01;
+private const f64 LN2_H = 6.93147182464599609375e-01;
+private const f64 LN2_L = -1.90465429995776804525e-09;
+private const f64 OVT = 8.0085662595372944372e-17;
+private const f64 CP = 9.61796693925975554329e-01;
+private const f64 CP_H = 9.61796700954437255859e-01;
+private const f64 CP_L = -7.02846165095275826516e-09;
+private const f64 IVLN2 = 1.44269504088896338700e+00;
+private const f64 IVLN2_H = 1.44269502162933349609e+00;
+private const f64 IVLN2_L = 1.92596299112661746887e-08;

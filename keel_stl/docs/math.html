@@ -30,8 +30,24 @@
 <li><a href="#rounded"><code>rounded</code></a> <span class="kind">function</span></li>
 <li><a href="#floored"><code>floored</code></a> <span class="kind">function</span></li>
 <li><a href="#ceiled"><code>ceiled</code></a> <span class="kind">function</span></li>
+<li><a href="#floor"><code>floor</code></a> <span class="kind">function</span></li>
+<li><a href="#ceil"><code>ceil</code></a> <span class="kind">function</span></li>
+<li><a href="#trunc"><code>trunc</code></a> <span class="kind">function</span></li>
+<li><a href="#round"><code>round</code></a> <span class="kind">function</span></li>
 <li class="divider">Constants</li>
 <li><a href="#pi"><code>pi</code></a> <span class="kind">global</span></li>
+<li class="divider">Exponentials and logarithms</li>
+<li><a href="#exp"><code>exp</code></a> <span class="kind">function</span></li>
+<li><a href="#expm1"><code>expm1</code></a> <span class="kind">function</span></li>
+<li><a href="#log"><code>log</code></a> <span class="kind">function</span></li>
+<li><a href="#log1p"><code>log1p</code></a> <span class="kind">function</span></li>
+<li><a href="#log2"><code>log2</code></a> <span class="kind">function</span></li>
+<li><a href="#log10"><code>log10</code></a> <span class="kind">function</span></li>
+<li><a href="#pow"><code>pow</code></a> <span class="kind">function</span></li>
+<li class="divider">Hyperbolic functions</li>
+<li><a href="#sinh"><code>sinh</code></a> <span class="kind">function</span></li>
+<li><a href="#cosh"><code>cosh</code></a> <span class="kind">function</span></li>
+<li><a href="#tanh"><code>tanh</code></a> <span class="kind">function</span></li>
 <li class="divider">Trigonometry</li>
 <li><a href="#sin"><code>sin</code></a> <span class="kind">function</span></li>
 <li><a href="#cos"><code>cos</code></a> <span class="kind">function</span></li>
@@ -39,6 +55,7 @@
 <li><a href="#asin"><code>asin</code></a> <span class="kind">function</span></li>
 <li><a href="#acos"><code>acos</code></a> <span class="kind">function</span></li>
 <li><a href="#atan"><code>atan</code></a> <span class="kind">function</span></li>
+<li><a href="#atan2"><code>atan2</code></a> <span class="kind">function</span></li>
 </ul>
 <h2 class="divider">Bits</h2>
 <section class="entry">
@@ -207,6 +224,58 @@ overflows, as <code>0 - x</code> does.</p>
 </div>
 </div>
 </section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">floor</span></h2>
+<div class="group" id="floor">
+<pre class="signature"><a class="anchor" href="#floor" aria-label="Link to floor">#</a><code><a class="prim" href="prelude.html#f64">f64</a> <span class="fn">floor</span>( <a class="prim" href="prelude.html#f64">f64</a> x )</code></pre>
+<div class="doc">
+<p><code>x</code> down to a whole value: <code>floor( -2.5 )</code> is <code>-3.0</code>. An infinity or a NaN stays one.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#floor" aria-label="Link to floor">#</a><code><a class="prim" href="prelude.html#f32">f32</a> <span class="fn">floor</span>( <a class="prim" href="prelude.html#f32">f32</a> x )</code></pre>
+<div class="doc">
+<p><code>x</code> down to a whole value: <code>floor( -2.5 )</code> is <code>-3.0</code>. An infinity or a NaN stays one.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">ceil</span></h2>
+<div class="group" id="ceil">
+<pre class="signature"><a class="anchor" href="#ceil" aria-label="Link to ceil">#</a><code><a class="prim" href="prelude.html#f64">f64</a> <span class="fn">ceil</span>( <a class="prim" href="prelude.html#f64">f64</a> x )</code></pre>
+<div class="doc">
+<p><code>x</code> up to a whole value: <code>ceil( -0.5 )</code> is <code>-0.0</code>. An infinity or a NaN stays one.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ceil" aria-label="Link to ceil">#</a><code><a class="prim" href="prelude.html#f32">f32</a> <span class="fn">ceil</span>( <a class="prim" href="prelude.html#f32">f32</a> x )</code></pre>
+<div class="doc">
+<p><code>x</code> up to a whole value: <code>ceil( -0.5 )</code> is <code>-0.0</code>. An infinity or a NaN stays one.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">trunc</span></h2>
+<div class="group" id="trunc">
+<pre class="signature"><a class="anchor" href="#trunc" aria-label="Link to trunc">#</a><code><a class="prim" href="prelude.html#f64">f64</a> <span class="fn">trunc</span>( <a class="prim" href="prelude.html#f64">f64</a> x )</code></pre>
+<div class="doc">
+<p><code>x</code> toward zero, to a whole value: <code>trunc( -2.7 )</code> is <code>-2.0</code>. An infinity or a NaN stays one.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#trunc" aria-label="Link to trunc">#</a><code><a class="prim" href="prelude.html#f32">f32</a> <span class="fn">trunc</span>( <a class="prim" href="prelude.html#f32">f32</a> x )</code></pre>
+<div class="doc">
+<p><code>x</code> toward zero, to a whole value: <code>trunc( -2.7 )</code> is <code>-2.0</code>. An infinity or a NaN stays one.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">round</span></h2>
+<div class="group" id="round">
+<pre class="signature"><a class="anchor" href="#round" aria-label="Link to round">#</a><code><a class="prim" href="prelude.html#f64">f64</a> <span class="fn">round</span>( <a class="prim" href="prelude.html#f64">f64</a> x )</code></pre>
+<div class="doc">
+<p><code>x</code> to the nearest whole value, a half away from zero: <code>round( 2.5 )</code> is <code>3.0</code>. An infinity or a NaN stays one.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#round" aria-label="Link to round">#</a><code><a class="prim" href="prelude.html#f32">f32</a> <span class="fn">round</span>( <a class="prim" href="prelude.html#f32">f32</a> x )</code></pre>
+<div class="doc">
+<p><code>x</code> to the nearest whole value, a half away from zero: <code>round( 2.5 )</code> is <code>3.0</code>. An infinity or a NaN stays one.</p>
+</div>
+</div>
+</section>
 <h2 class="divider">Constants</h2>
 <section class="entry">
 <h2><span class="kind">global</span> <span class="">pi</span></h2>
@@ -214,6 +283,139 @@ overflows, as <code>0 - x</code> does.</p>
 <pre class="signature"><a class="anchor" href="#pi" aria-label="Link to pi">#</a><code><span class="kw">const</span> <a class="prim" href="prelude.html#f64">f64</a> pi</code></pre>
 <div class="doc">
 <p>The <code>f64</code> nearest to the ratio of a circle's circumference to its diameter.</p>
+</div>
+</div>
+</section>
+<h2 class="divider">Exponentials and logarithms</h2>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">exp</span></h2>
+<div class="group" id="exp">
+<pre class="signature"><a class="anchor" href="#exp" aria-label="Link to exp">#</a><code><a class="prim" href="prelude.html#f64">f64</a> <span class="fn">exp</span>( <a class="prim" href="prelude.html#f64">f64</a> x )</code></pre>
+<div class="doc">
+<p>e to the power <code>x</code>: an infinity above 709.78, and 0 below -745.13. Within an ulp.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#exp" aria-label="Link to exp">#</a><code><a class="prim" href="prelude.html#f32">f32</a> <span class="fn">exp</span>( <a class="prim" href="prelude.html#f32">f32</a> x )</code></pre>
+<div class="doc">
+<p>e to the power <code>x</code>: an infinity above 709.78, and 0 below -745.13. Within an ulp.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">expm1</span></h2>
+<div class="group" id="expm1">
+<pre class="signature"><a class="anchor" href="#expm1" aria-label="Link to expm1">#</a><code><a class="prim" href="prelude.html#f64">f64</a> <span class="fn">expm1</span>( <a class="prim" href="prelude.html#f64">f64</a> x )</code></pre>
+<div class="doc">
+<p>e^x - 1, exact near 0 where <code>exp( x ) - 1.0</code> loses digits: -1 below -38. Within an ulp.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#expm1" aria-label="Link to expm1">#</a><code><a class="prim" href="prelude.html#f32">f32</a> <span class="fn">expm1</span>( <a class="prim" href="prelude.html#f32">f32</a> x )</code></pre>
+<div class="doc">
+<p>e^x - 1, exact near 0 where <code>exp( x ) - 1.0</code> loses digits: -1 below -38. Within an ulp.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">log</span></h2>
+<div class="group" id="log">
+<pre class="signature"><a class="anchor" href="#log" aria-label="Link to log">#</a><code><a class="prim" href="prelude.html#f64">f64</a> <span class="fn">log</span>( <a class="prim" href="prelude.html#f64">f64</a> x )</code></pre>
+<div class="doc">
+<p>The natural logarithm: <code>-inf</code> at 0, and a NaN below. Within an ulp.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#log" aria-label="Link to log">#</a><code><a class="prim" href="prelude.html#f32">f32</a> <span class="fn">log</span>( <a class="prim" href="prelude.html#f32">f32</a> x )</code></pre>
+<div class="doc">
+<p>The natural logarithm: <code>-inf</code> at 0, and a NaN below. Within an ulp.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">log1p</span></h2>
+<div class="group" id="log1p">
+<pre class="signature"><a class="anchor" href="#log1p" aria-label="Link to log1p">#</a><code><a class="prim" href="prelude.html#f64">f64</a> <span class="fn">log1p</span>( <a class="prim" href="prelude.html#f64">f64</a> x )</code></pre>
+<div class="doc">
+<p>log(1 + x), exact near 0 where <code>log( 1.0 + x )</code> loses digits: <code>-inf</code> at -1, and a NaN below. Within an ulp.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#log1p" aria-label="Link to log1p">#</a><code><a class="prim" href="prelude.html#f32">f32</a> <span class="fn">log1p</span>( <a class="prim" href="prelude.html#f32">f32</a> x )</code></pre>
+<div class="doc">
+<p>log(1 + x), exact near 0 where <code>log( 1.0 + x )</code> loses digits: <code>-inf</code> at -1, and a NaN below. Within an ulp.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">log2</span></h2>
+<div class="group" id="log2">
+<pre class="signature"><a class="anchor" href="#log2" aria-label="Link to log2">#</a><code><a class="prim" href="prelude.html#f64">f64</a> <span class="fn">log2</span>( <a class="prim" href="prelude.html#f64">f64</a> x )</code></pre>
+<div class="doc">
+<p>The base 2 logarithm, exact at powers of 2: <code>-inf</code> at 0, and a NaN below. Within an ulp.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#log2" aria-label="Link to log2">#</a><code><a class="prim" href="prelude.html#f32">f32</a> <span class="fn">log2</span>( <a class="prim" href="prelude.html#f32">f32</a> x )</code></pre>
+<div class="doc">
+<p>The base 2 logarithm, exact at powers of 2: <code>-inf</code> at 0, and a NaN below. Within an ulp.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">log10</span></h2>
+<div class="group" id="log10">
+<pre class="signature"><a class="anchor" href="#log10" aria-label="Link to log10">#</a><code><a class="prim" href="prelude.html#f64">f64</a> <span class="fn">log10</span>( <a class="prim" href="prelude.html#f64">f64</a> x )</code></pre>
+<div class="doc">
+<p>The base 10 logarithm: <code>-inf</code> at 0, and a NaN below. Within an ulp.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#log10" aria-label="Link to log10">#</a><code><a class="prim" href="prelude.html#f32">f32</a> <span class="fn">log10</span>( <a class="prim" href="prelude.html#f32">f32</a> x )</code></pre>
+<div class="doc">
+<p>The base 10 logarithm: <code>-inf</code> at 0, and a NaN below. Within an ulp.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">pow</span></h2>
+<div class="group" id="pow">
+<pre class="signature"><a class="anchor" href="#pow" aria-label="Link to pow">#</a><code><a class="prim" href="prelude.html#f64">f64</a> <span class="fn">pow</span>( <a class="prim" href="prelude.html#f64">f64</a> x, <a class="prim" href="prelude.html#f64">f64</a> y )</code></pre>
+<div class="doc">
+<p><code>x</code> to the power <code>y</code>. As C's <code>pow</code>: 1 when <code>y</code> is 0 or <code>x</code> is 1, even beside a NaN; a NaN for a
+negative <code>x</code> and a <code>y</code> that is not whole; and an odd whole <code>y</code> keeps <code>x</code>'s sign. Within an ulp.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#pow" aria-label="Link to pow">#</a><code><a class="prim" href="prelude.html#f32">f32</a> <span class="fn">pow</span>( <a class="prim" href="prelude.html#f32">f32</a> x, <a class="prim" href="prelude.html#f32">f32</a> y )</code></pre>
+<div class="doc">
+<p><code>x</code> to the power <code>y</code>, as the <code>f64</code> form, rounded.</p>
+</div>
+</div>
+</section>
+<h2 class="divider">Hyperbolic functions</h2>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">sinh</span></h2>
+<div class="group" id="sinh">
+<pre class="signature"><a class="anchor" href="#sinh" aria-label="Link to sinh">#</a><code><a class="prim" href="prelude.html#f64">f64</a> <span class="fn">sinh</span>( <a class="prim" href="prelude.html#f64">f64</a> x )</code></pre>
+<div class="doc">
+<p>The hyperbolic sine. Within 2 ulps.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#sinh" aria-label="Link to sinh">#</a><code><a class="prim" href="prelude.html#f32">f32</a> <span class="fn">sinh</span>( <a class="prim" href="prelude.html#f32">f32</a> x )</code></pre>
+<div class="doc">
+<p>The hyperbolic sine. Within 2 ulps.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">cosh</span></h2>
+<div class="group" id="cosh">
+<pre class="signature"><a class="anchor" href="#cosh" aria-label="Link to cosh">#</a><code><a class="prim" href="prelude.html#f64">f64</a> <span class="fn">cosh</span>( <a class="prim" href="prelude.html#f64">f64</a> x )</code></pre>
+<div class="doc">
+<p>The hyperbolic cosine. Within 2 ulps.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#cosh" aria-label="Link to cosh">#</a><code><a class="prim" href="prelude.html#f32">f32</a> <span class="fn">cosh</span>( <a class="prim" href="prelude.html#f32">f32</a> x )</code></pre>
+<div class="doc">
+<p>The hyperbolic cosine. Within 2 ulps.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">tanh</span></h2>
+<div class="group" id="tanh">
+<pre class="signature"><a class="anchor" href="#tanh" aria-label="Link to tanh">#</a><code><a class="prim" href="prelude.html#f64">f64</a> <span class="fn">tanh</span>( <a class="prim" href="prelude.html#f64">f64</a> x )</code></pre>
+<div class="doc">
+<p>The hyperbolic tangent, -1 to 1. Within 2 ulps.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#tanh" aria-label="Link to tanh">#</a><code><a class="prim" href="prelude.html#f32">f32</a> <span class="fn">tanh</span>( <a class="prim" href="prelude.html#f32">f32</a> x )</code></pre>
+<div class="doc">
+<p>The hyperbolic tangent, -1 to 1. Within 2 ulps.</p>
 </div>
 </div>
 </section>
@@ -275,6 +477,20 @@ overflows, as <code>0 - x</code> does.</p>
 <div class="doc">
 <p>The angle in [-pi/2, pi/2] whose tangent is given.</p>
 <p>Within an ulp of the true value. NaN gives NaN, and <code>-0.0</code> stays <code>-0.0</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">atan2</span></h2>
+<div class="group" id="atan2">
+<pre class="signature"><a class="anchor" href="#atan2" aria-label="Link to atan2">#</a><code><a class="prim" href="prelude.html#f64">f64</a> <span class="fn">atan2</span>( <a class="prim" href="prelude.html#f64">f64</a> y, <a class="prim" href="prelude.html#f64">f64</a> x )</code></pre>
+<div class="doc">
+<p>The angle in [-pi, pi] of the point (<code>x</code>, <code>y</code>) from the positive x axis: <code>atan2( 1.0, -1.0 )</code> is
+3 pi / 4. Each zero's sign picks the side, as C's <code>atan2</code>. Within an ulp.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#atan2" aria-label="Link to atan2">#</a><code><a class="prim" href="prelude.html#f32">f32</a> <span class="fn">atan2</span>( <a class="prim" href="prelude.html#f32">f32</a> y, <a class="prim" href="prelude.html#f32">f32</a> x )</code></pre>
+<div class="doc">
+<p>The angle of (<code>x</code>, <code>y</code>), as the <code>f64</code> form, rounded.</p>
 </div>
 </div>
 </section>
