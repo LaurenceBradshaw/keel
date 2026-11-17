@@ -261,4 +261,5 @@ private void integer_operators_and_functions( ref kl::test::context c )
     kl::ndarray<i32> n = f.map( fn[]( f64 x ) { return kl::rounded<i32>( x * 2.0 ); } );
     c.check( n == kl::ndarray<i32>( [ -3, 0, 4 ] ) );
     c.check_eq( n.shape()[0], 3 );
+    c.check( f.map( fn[]( f64 x ) -> i32 { return kl::rounded<i32>( x ); } ) == kl::ndarray<i32>( [ -2, 0, 2 ] ) );
 }

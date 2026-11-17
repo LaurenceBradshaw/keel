@@ -55,6 +55,7 @@ public:
           coverage_( coverage ),
           reporter_( reporter )
     {
+        expressions_.set_lambda_body( [this]( Node_id lambda ) { return infer_lambda_return( lambda ); } );
     }
 
     // The entry point for the statement and declaration walk. The expression half is
@@ -68,17 +69,18 @@ public:
 
 private:
     // One per construct, dispatched from visit - the shape parse_*() uses next door.
-    void visit_function( Node_id id );
-    void visit_lambdas(); // the bodies of the lambdas typed so far, and of any inside them
-    void visit_return( Node_id id );
-    void visit_var( Node_id id );
-    void visit_assign( Node_id id );
-    void visit_if( Node_id id );
-    void visit_switch( Node_id id );
-    void visit_while( Node_id id );
-    void visit_for( Node_id id );
-    void visit_count( Node_id id );
-    void visit_walk( Node_id id );
+    void    visit_function( Node_id id );
+    void    visit_lambdas();                       // the bodies of the lambdas typed so far, and of any inside them
+    Type_id infer_lambda_return( Node_id lambda ); // its body now, its first `return` saying the type
+    void    visit_return( Node_id id );
+    void    visit_var( Node_id id );
+    void    visit_assign( Node_id id );
+    void    visit_if( Node_id id );
+    void    visit_switch( Node_id id );
+    void    visit_while( Node_id id );
+    void    visit_for( Node_id id );
+    void    visit_count( Node_id id );
+    void    visit_walk( Node_id id );
     // The type one binding of `loop` takes from the walk's `param`, or the error type.
     Type_id check_walk_binding( Node_id entry, Type_id given, Node_id param );
     bool    check_ref_initialiser( Node_id id, Node_id value, Type_id type ); // false once reported
@@ -109,6 +111,7 @@ private:
     Reporter&         reporter_;
 
     Type_id current_return_;
+    bool    inferring_return_ = false; // an invalid current_return_ is set by the first `return`
 
     // A walk's loop over another walk, at the loop: the edges check_walk_cycles follows.
     struct Walk_edge

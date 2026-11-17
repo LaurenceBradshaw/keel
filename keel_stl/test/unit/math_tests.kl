@@ -154,6 +154,9 @@ private void sign_and_order( ref kl::test::context c )
     c.check( kl::is_nan( kl::abs( nan ) ) );
     c.check( kl::is_nan( kl::min( nan, one ) ) && kl::is_nan( kl::min( one, nan ) ) );
     c.check( kl::is_nan( kl::max( nan, one ) ) && kl::is_nan( kl::max( one, nan ) ) );
+    // Literals alone take the type `auto` would: `i32`, or `f64` beside a float.
+    c.check_eq( kl::abs( -3 ), 3 );
+    c.check_eq( kl::max( 1, 2.5, 0.5 ), 2.5 );
     i32 four = 4;
     c.check_eq( kl::min( none, neg, four ), -3 );
     c.check_eq( kl::max( neg, four, none ), 4 );

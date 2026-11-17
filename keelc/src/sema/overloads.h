@@ -258,6 +258,15 @@ private:
     bool bind_own_parameters( Node_id call, Node_id method, std::span<const Argument_shape> shapes, Bindings& bindings );
     // `T` from `C`'s one conformance to `C : fixed_memory<T>`, repeated until nothing is added.
     std::vector<Bound_gap> deduce_through_bounds( std::span<const Node_id> parameters, Bindings& bindings );
+    // A numeric `T` only literals reach takes the type `auto` would give them.
+    void default_literals(
+        std::span<const Node_id>        parameters,
+        std::span<const Slot>           params,
+        std::span<const Argument_shape> shapes,
+        Bindings&                       bindings
+    ) const;
+    // Whether `parameter` is named by the return of an fn bound still open, which its argument settles.
+    bool returned_by_open_fn( std::span<const Node_id> parameters, Type_id parameter, const Bindings& bindings ) const;
     // `f<i32, 4>`'s list: each parameter's binding in `known`, or a placeholder.
     std::string example_arguments( std::span<const Node_id> parameters, const Bindings& known ) const;
     Type_id     placeholders( Type_id type, const Bindings& known );

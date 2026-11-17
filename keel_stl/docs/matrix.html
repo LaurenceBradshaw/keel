@@ -316,8 +316,8 @@ product, and <code>v.matmul( m )</code> reads <code>v</code> as a row.</p>
 <div class="group" id="vec.map">
 <pre class="signature"><a class="anchor" href="#vec.map" aria-label="Link to map">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;U, N&gt; <span class="fn">map</span>&lt;U, F&gt;( F f ) <span class="kw">const</span> <span class="kw">where</span> F : <span class="kw">fn</span>( T ) -&gt; U, <span class="kw">where</span> U : numeric</code></pre>
 <div class="doc">
-<p><code>f</code> of each element, in the same shape: <code>a.map( fn[]( f64 x ) { return x * x; } )</code>. <code>U</code>
-comes from where the result goes: <code>vec&lt;i32, N&gt; n = a.map( ... );</code>.</p>
+<p><code>f</code> of each element, in the same shape, <code>U</code> being what <code>f</code> returns:
+<code>a.map( fn[]( f64 x ) { return x * x; } )</code>.</p>
 </div>
 </div>
 <h3>Products</h3>
@@ -707,8 +707,8 @@ matrix product, and <code>m.matmul( v )</code> reads <code>v</code> as a column.
 <div class="group" id="mat.map">
 <pre class="signature"><a class="anchor" href="#mat.map" aria-label="Link to map">#</a><code><span class="kw">public</span> <a class="type" href="#mat">mat</a>&lt;U, R, C&gt; <span class="fn">map</span>&lt;U, F&gt;( F f ) <span class="kw">const</span> <span class="kw">where</span> F : <span class="kw">fn</span>( T ) -&gt; U, <span class="kw">where</span> U : numeric</code></pre>
 <div class="doc">
-<p><code>f</code> of each element, in the same shape: <code>a.map( fn[]( f64 x ) { return x * x; } )</code>. <code>U</code>
-comes from where the result goes: <code>mat&lt;i32, R, C&gt; n = a.map( ... );</code>.</p>
+<p><code>f</code> of each element, in the same shape, <code>U</code> being what <code>f</code> returns:
+<code>a.map( fn[]( f64 x ) { return x * x; } )</code>.</p>
 </div>
 </div>
 <h3>Products</h3>

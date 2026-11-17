@@ -144,6 +144,7 @@ bool Overloads::deduce_for_candidate(
 
     const std::vector<Node_id> parameters = ast_.type_parameters( ast_.type_param_list( callable ) );
     deduce_through_bounds( parameters, bindings );
+    default_literals( parameters, params, shapes, bindings );
 
     for( const Node_id parameter : parameters )
     {
@@ -212,6 +213,84 @@ bool Overloads::bind_own_parameters( Node_id call, Node_id method, std::span<con
     }
 
     return true;
+}
+
+// f64 when one is a float or `T` is `floating`; otherwise the first of `i32`, `i64` and `u64`
+// holding every value. After the arguments and the expectation, so either of them wins.
+void Overloads::default_literals(
+    std::span<const Node_id>        parameters,
+    std::span<const Slot>           params,
+    std::span<const Argument_shape> shapes,
+    Bindings&                       bindings
+) const
+{
+    for( const Node_id parameter : parameters )
+    {
+        const Type_id open = types_.type_of( parameter );
+
+        if( bindings.contains( open.v ) || !bounds_.has_bound( open, Bound::Numeric ) )
+        {
+            continue;
+        }
+
+        bool                               reached  = false;
+        bool                               floating = bounds_.has_bound( open, Bound::Floating );
+        std::vector<const Argument_shape*> integers;
+
+        for( std::size_t i = 0; i < params.size() && i < shapes.size(); ++i )
+        {
+            if( params[i].type != open ||
+                ( shapes[i].kind != Argument_kind::Integer && shapes[i].kind != Argument_kind::Floating ) )
+            {
+                continue;
+            }
+
+            reached  = true;
+            floating = floating || shapes[i].kind == Argument_kind::Floating;
+            integers.push_back( &shapes[i] );
+        }
+
+        if( !reached )
+        {
+            continue;
+        }
+
+        if( floating )
+        {
+            bindings.emplace( open.v, table_.default_float() );
+            continue;
+        }
+
+        for( const Type_id candidate : { table_.default_integer(), table_.integer( 64, true ), table_.integer( 64, false ) } )
+        {
+            const auto fits = [&]( const Argument_shape* shape )
+            { return !shape->valued || table_.fits( shape->magnitude, shape->negative, candidate ); };
+
+            if( std::ranges::all_of( integers, fits ) )
+            {
+                bindings.emplace( open.v, candidate );
+                break;
+            }
+        }
+    }
+}
+
+bool Overloads::returned_by_open_fn( std::span<const Node_id> parameters, Type_id parameter, const Bindings& bindings ) const
+{
+    return std::ranges::any_of(
+        parameters,
+        [&]( Node_id each )
+        {
+            const Type_id other     = types_.type_of( each );
+            const Type_id signature = bounds_.signature_of( other );
+
+            return signature.is_valid() && !bindings.contains( other.v ) &&
+                   mentions( table_, table_.get( signature ).element, parameter ) &&
+                   std::ranges::none_of(
+                       table_.get( signature ).arguments, [&]( Type_id taken ) { return mentions( table_, taken, parameter ); }
+                   );
+        }
+    );
 }
 
 std::vector<Bound_gap> Overloads::deduce_through_bounds( std::span<const Node_id> parameters, Bindings& bindings )
@@ -525,6 +604,8 @@ std::optional<Deduction> Overloads::deduce_type_arguments(
         }
     }
 
+    default_literals( parameters, params, shapes, bindings );
+
     // All or nothing: a partial list is a rule nobody can recite, so one parameter left open sends
     // the author to the explicit form for the whole call.
     Deduction deduction;
@@ -535,7 +616,8 @@ std::optional<Deduction> Overloads::deduce_type_arguments(
     {
         const auto found = bindings.find( types_.type_of( parameter ).v );
 
-        if( found == bindings.end() && bounds_.signature_of( types_.type_of( parameter ) ).is_valid() )
+        if( found == bindings.end() && ( bounds_.signature_of( types_.type_of( parameter ) ).is_valid() ||
+                                         returned_by_open_fn( parameters, types_.type_of( parameter ), bindings ) ) )
         {
             deduction.resolved.push_back( {} );
             deduction.bound_by.push_back( {} );
@@ -603,15 +685,20 @@ std::optional<Deduction> Overloads::deduce_type_arguments(
         {
             // `count( 2, Wrap { x } )`: the literal is what has no instance, so its type arguments are the fix.
             const auto literal = std::ranges::find( shapes, Argument_kind::Instance, &Argument_shape::kind );
+            // A lambda's type cannot be written, so a list naming one is no fix.
+            const bool unwritable = std::ranges::any_of(
+                parameters, [&]( Node_id each ) { return bounds_.signature_of( types_.type_of( each ) ).is_valid(); }
+            );
 
             reporter_.error_at(
                 site.at,
                 fmt::format( "nothing here says what `{}` is in `{}`", interner_.text( ast_.name( parameter ) ), site.name ),
-                literal != shapes.end()
-                    ? fmt::format(
-                          "write the literal's type arguments, as in `{}<i32> {{ ... }}`",
-                          interner_.text( ast_.name( literal->declaration ) )
-                      )
+                literal != shapes.end() ? fmt::format(
+                                              "write the literal's type arguments, as in `{}<i32> {{ ... }}`",
+                                              interner_.text( ast_.name( literal->declaration ) )
+                                          )
+                : unwritable
+                    ? std::string( "give the result a type, or pass an argument that says it" )
                     : fmt::format(
                           "write the type arguments, as in `{}<{}>(...)`", site.name, example_arguments( parameters, {} )
                       )

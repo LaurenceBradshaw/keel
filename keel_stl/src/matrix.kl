@@ -430,8 +430,8 @@ class vec<T, u64 N> implements iterable<T> where T : numeric
         return r;
     }
 
-    /// `f` of each element, in the same shape: `a.map( fn[]( f64 x ) { return x * x; } )`. `U`
-    /// comes from where the result goes: `vec<i32, N> n = a.map( ... );`.
+    /// `f` of each element, in the same shape, `U` being what `f` returns:
+    /// `a.map( fn[]( f64 x ) { return x * x; } )`.
     public vec<U, N> map<U, F>( F f ) const where F : fn( T ) -> U, where U : numeric
     {
         vec<U, N> r = vec<U, N>::zeros();
@@ -972,8 +972,8 @@ class mat<T, u64 R, u64 C> implements iterable<T> where T : numeric
         return r;
     }
 
-    /// `f` of each element, in the same shape: `a.map( fn[]( f64 x ) { return x * x; } )`. `U`
-    /// comes from where the result goes: `mat<i32, R, C> n = a.map( ... );`.
+    /// `f` of each element, in the same shape, `U` being what `f` returns:
+    /// `a.map( fn[]( f64 x ) { return x * x; } )`.
     public mat<U, R, C> map<U, F>( F f ) const where F : fn( T ) -> U, where U : numeric
     {
         mat<U, R, C> r = mat<U, R, C>::zeros();

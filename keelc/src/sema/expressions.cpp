@@ -1767,9 +1767,26 @@ bool Expressions::bind_fn_parameters(
     const std::span<const Node_id> arguments = ast_.arguments( site.call );
     const std::size_t              shared    = std::min( { params.size(), arguments.size(), shapes.size() } );
 
+    // A parameter deduction left open for an fn bound's return to settle, as `U` in `fn( T ) -> U`.
+    const auto left_for = [&]( std::size_t k )
+    { return !resolved[k].is_valid() && !bounds_.signature_of( types_.type_of( parameters[k] ) ).is_valid(); };
+    const auto names_left = [&]( Type_id type )
+    {
+        Bindings named;
+        table_.deduce( type, type, named );
+        for( std::size_t k = 0; k < parameters.size(); ++k )
+        {
+            if( left_for( k ) && named.contains( types_.type_of( parameters[k] ).v ) )
+            {
+                return true;
+            }
+        }
+        return false;
+    };
+
     for( std::size_t i = 0; i < parameters.size(); ++i )
     {
-        if( resolved[i].is_valid() )
+        if( resolved[i].is_valid() || !bounds_.signature_of( types_.type_of( parameters[i] ) ).is_valid() )
         {
             continue;
         }
@@ -1793,15 +1810,25 @@ bool Expressions::bind_fn_parameters(
             return false;
         }
 
-        const Node_id   argument = arguments[j];
-        const Type_id   expected = table_.substitute( bounds_.signature_of( open ), bindings );
-        Argument_shape& shape    = shapes[j];
+        const Node_id argument = arguments[j];
+        Bindings      kept     = bindings; // an open parameter stays itself, for the argument to settle
+        for( std::size_t k = 0; k < parameters.size(); ++k )
+        {
+            if( left_for( k ) )
+            {
+                kept.emplace( types_.type_of( parameters[k] ).v, types_.type_of( parameters[k] ) );
+            }
+        }
+        const Type_id   expected    = table_.substitute( bounds_.signature_of( open ), kept );
+        const bool      open_return = names_left( table_.get( expected ).element );
+        Argument_shape& shape       = shapes[j];
 
         if( !shape.recorded )
         {
-            shape.type     = ast_.kind( argument ) == Node_kind::Lambda_expr ? infer_lambda( argument, expected, true )
-                                                                             : check( argument, expected );
-            shape.kind     = table_.is_error( shape.type ) ? Argument_kind::Anything : Argument_kind::Typed;
+            shape.type = ast_.kind( argument ) == Node_kind::Lambda_expr ? infer_lambda( argument, expected, true, open_return )
+                         : open_return                                   ? infer( argument )
+                                                                         : check( argument, expected );
+            shape.kind = table_.is_error( shape.type ) ? Argument_kind::Anything : Argument_kind::Typed;
             shape.recorded = true;
         }
         else if( !table_.is_error( shape.type ) && shape.type != expected && bounds_.signature_of( shape.type ) != expected )
@@ -1817,6 +1844,36 @@ bool Expressions::bind_fn_parameters(
         if( table_.is_error( shape.type ) )
         {
             return false;
+        }
+
+        // What the argument returns settles the parameters its bound's return names.
+        if( open_return )
+        {
+            const Type_id given = table_.is_closure( shape.type ) ? table_.get( shape.type ).element : shape.type;
+            Bindings      found;
+            table_.deduce( expected, given, found );
+
+            for( std::size_t k = 0; k < parameters.size(); ++k )
+            {
+                const auto settled = found.find( types_.type_of( parameters[k] ).v );
+                if( left_for( k ) && settled != found.end() )
+                {
+                    resolved[k] = settled->second;
+                    bound_by[k] = argument;
+                    bindings.insert_or_assign( settled->first, settled->second );
+                }
+            }
+
+            const Type_id wanted = table_.substitute( bounds_.signature_of( open ), bindings );
+            if( wanted != given )
+            {
+                reporter_.error_at(
+                    ast_.span( argument ),
+                    fmt::format( "expected `{}`, but got `{}`", table_.name( wanted ), table_.name( given ) ),
+                    mismatch_hint( table_, wanted, given )
+                );
+                return false;
+            }
         }
 
         // `&f` gets a type of its own, so the instance calls `f` directly.
@@ -1839,6 +1896,18 @@ bool Expressions::bind_fn_parameters(
         resolved[i] = shape.type;
         bound_by[i] = argument;
         bindings.insert_or_assign( open.v, shape.type );
+    }
+
+    for( std::size_t k = 0; k < parameters.size(); ++k )
+    {
+        if( left_for( k ) )
+        {
+            reporter_.error_at(
+                site.at,
+                fmt::format( "nothing here says what `{}` is in `{}`", interner_.text( ast_.name( parameters[k] ) ), site.name )
+            );
+            return false;
+        }
     }
 
     return true;
@@ -5041,11 +5110,11 @@ Type_id Expressions::infer_cast( Node_id id )
     return is_cast ? constant_folder_.record_constant( id, result.type ) : types_.record( id, result.type );
 }
 
-// A lambda is typed where it is written; its body waits for Statements (take_lambdas).
-Type_id Expressions::infer_lambda( Node_id id, Type_id expected, bool slot )
+// A lambda is typed where it is written. Its body waits for Statements (take_lambdas), unless
+// only the body can say what it returns.
+Type_id Expressions::infer_lambda( Node_id id, Type_id expected, bool slot, bool open_return )
 {
     lambda_homes_[id.v] = home_function();
-    lambdas_.push_back( id );
 
     const bool                     fn_expected = expected.is_valid() && table_.is_function( expected );
     const std::span<const Node_id> params      = ast_.params( id );
@@ -5124,15 +5193,20 @@ Type_id Expressions::infer_lambda( Node_id id, Type_id expected, bool slot )
     }
 
     const Node_id written_return = ast_.return_type( id );
-    const Type_id return_type    = written_return.is_valid() ? annotations_.resolve( written_return )
+    const bool    from_body      = !written_return.is_valid() && ( !fn_expected || open_return ) && !absorbing && !poisoned;
+    Type_id       return_type    = written_return.is_valid() ? annotations_.resolve( written_return )
                                    : fn_expected             ? table_.get( expected ).element
                                                              : table_.builtin( Type_kind::Void );
 
-    lambda_returns_[id.v] = return_type;
-    if( !written_return.is_valid() && !fn_expected )
+    if( from_body )
     {
-        lambda_left_out_.insert( id.v );
+        return_type = body_return( id );
     }
+    else
+    {
+        lambdas_.push_back( id );
+    }
+    lambda_returns_[id.v] = return_type;
 
     if( absorbing || poisoned || table_.is_error( return_type ) )
     {
@@ -5143,7 +5217,7 @@ Type_id Expressions::infer_lambda( Node_id id, Type_id expected, bool slot )
 
     if( slot )
     {
-        if( signature != expected )
+        if( !open_return && signature != expected )
         {
             reporter_.error_at(
                 ast_.span( id ), fmt::format( "expected `{}`, but got `{}`", table_.name( expected ), table_.name( signature ) )
@@ -5256,9 +5330,28 @@ Type_id Expressions::returned_by( Node_id function ) const
     return types_.type_of( function );
 }
 
-bool Expressions::return_left_out( Node_id lambda ) const
+// The body is walked mid-expression, so what this walk holds for the expression around it is set
+// aside, and the body starts as a deferred one would: outside any `unsafe` block.
+Type_id Expressions::body_return( Node_id lambda )
 {
-    return lambda_left_out_.contains( lambda.v );
+    const Type_id expected  = std::exchange( expected_, {} );
+    const Node_id argument  = std::exchange( call_argument_, {} );
+    const Node_id owner     = default_owner_;
+    const Node_id discarded = std::exchange( discarded_, {} );
+    const bool    naming    = std::exchange( naming_variant_, false );
+    const u32     depth     = std::exchange( unsafe_depth_, 0 );
+    const bool    used      = std::exchange( unsafe_used_, false );
+
+    const Type_id returned = lambda_body_( lambda );
+
+    expected_       = expected;
+    call_argument_  = argument;
+    default_owner_  = owner;
+    discarded_      = discarded;
+    naming_variant_ = naming;
+    unsafe_depth_   = depth;
+    unsafe_used_    = used;
+    return returned;
 }
 
 Type_id Expressions::infer_marker( Node_id id )
@@ -12421,6 +12514,43 @@ TEST_CASE( "expressions_type_what_a_located_function_reads", "[sema][directive]"
     }
 }
 
+// D81 and D82: a bound's open return settled by the lambda passed for it, and a numeric `T` only
+// literals reach taking the type `auto` would give them.
+TEST_CASE( "expressions_deduce_from_a_lambda_and_literals", "[sema][lambda]" )
+{
+    SECTION( "an fn bound's return, from the lambda's `-> R` or its body" )
+    {
+        const Typed p( "U apply<U, F>( F f ) where F : fn( i32 ) -> U { return f( 1 ); }\n"
+                       "i32 main() { auto a = apply( fn[]( x ) { return x * 2; } );\n"
+                       "auto b = apply( fn[]( x ) -> i64 { return cast<i64>( x ); } );\n"
+                       "return a + cast<i32>( b ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Var_decl, 0 ) ) == "i32" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Var_decl, 1 ) ) == "i64" );
+    }
+
+    SECTION( "a parameter only literals reach" )
+    {
+        const Typed p( "T twice<T>( T x ) where T : numeric { return x + x; }\n"
+                       "T half<T>( T x ) where T : floating { return x / 2; }\n"
+                       "T first<T>( T x, T... rest ) where T : numeric { return rest.size > 0 ? rest[0] : x; }\n"
+                       "i32 main() { auto a = twice( 3 ); auto b = twice( 3000000000 ); auto c = twice( 1.5 );\n"
+                       "auto d = half( 3 ); auto e = first( 1, 2.5 ); i64 f = twice( 2 );\n"
+                       "return c + d + e > 0.0 ? a + cast<i32>( b + f ) : 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Var_decl, 0 ) ) == "i32" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Var_decl, 1 ) ) == "i64" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Var_decl, 2 ) ) == "f64" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Var_decl, 3 ) ) == "f64" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Var_decl, 4 ) ) == "f64" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Var_decl, 5 ) ) == "i64" );
+    }
+}
+
 TEST_CASE( "expressions_check_a_lambda", "[sema][lambda]" )
 {
     const auto refuses = []( std::string_view body, std::string_view message, std::size_t errors = 1 )
@@ -12454,7 +12584,25 @@ TEST_CASE( "expressions_check_a_lambda", "[sema][lambda]" )
         refuses( "auto b = fn[]( x ) -> i32 { return x; };", "`x` has no type" );
         refuses( "fn( i32 ) -> i32 d = fn[]( i32 p, i32 q ) -> i32 { return p; };", "this lambda takes 2 parameters" );
         refuses( "fn( i32 ) -> i32 f = fn[]( i64 p ) -> i32 { return 0; };", "expected `fn(i32) -> i32`, but got" );
-        refuses( "auto c = fn[]() { return 3; };", "say what it returns: `-> i32` after its parameters" );
+    }
+
+    SECTION( "with no `-> R` and nothing expected, its first `return` says what it returns" )
+    {
+        const Typed p( "i32 main() { auto c = fn[]() { return 3; };\n"
+                       "auto d = fn[]( bool b ) { if( b ) { return 1.5; } return 2; };\n"
+                       "auto e = fn[]() { return; };\n"
+                       "auto f = fn[]( i32 x ) { x++; };\n"
+                       "e(); f( 1 ); return d( true ) == 1.5 ? c() : 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Lambda_expr, 0 ) ) == "fn() -> i32" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Lambda_expr, 1 ) ) == "fn(bool) -> f64" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Lambda_expr, 2 ) ) == "fn() -> void" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Lambda_expr, 3 ) ) == "fn(i32) -> void" );
+
+        refuses( "auto g = fn[]( bool b, i64 v ) { if( b ) { return v; } return b; };", "expected `i64`, but got `bool`" );
+        refuses( "auto h = fn[]( bool b ) { if( b ) { return; } return 1; };", "this lambda returns `void`" );
     }
 
     SECTION( "a capturing one only as a call's argument" )

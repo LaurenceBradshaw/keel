@@ -2,7 +2,7 @@ error: nothing here says what `T` is in `first`
  --> sema/errors_fn_bounds.kl:7:19
   |
 7 | i32 undeduced() { first( 1, fn[]( x ) { } ); return 0; }
-  |                   ^^^^^ write the type arguments, as in `first<i32, i32>(...)`
+  |                   ^^^^^ give the result a type, or pass an argument that says it
 
 error: expected `fn(i32) -> i32`, but got `fn(i32) -> bool`
  --> sema/errors_fn_bounds.kl:8:31

@@ -1,0 +1,13 @@
+// A parameter nothing deduces, beside one a lambda binds: a written list cannot name the lambda's
+// type, so the help points at the result instead.
+T make<T, F>( F f ) where F : fn() -> void, where T : numeric
+{
+    f();
+    return 0;
+}
+
+i32 main()
+{
+    auto x = make( fn[]() { } );
+    return 0;
+}

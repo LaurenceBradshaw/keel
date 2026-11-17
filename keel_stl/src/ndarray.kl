@@ -766,8 +766,8 @@ class ndarray<T> implements iterable<T> where T : numeric
         return r;
     }
 
-    /// `f` of each element, in the same shape: `a.map( fn[]( f64 x ) { return x * x; } )`. `U`
-    /// comes from where the result goes: `ndarray<i32> n = a.map( ... );`.
+    /// `f` of each element, in the same shape, `U` being what `f` returns:
+    /// `a.map( fn[]( f64 x ) { return x * x; } )`.
     public ndarray<U> map<U, F>( F f ) const where F : fn( T ) -> U, where U : numeric
     {
         ndarray<U> r = ndarray<U>::zeros( shape_.as_run() );

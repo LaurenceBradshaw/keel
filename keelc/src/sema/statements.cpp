@@ -279,6 +279,27 @@ void Statements::visit_lambdas()
     current_return_ = {};
 }
 
+// D81: a lambda with no `-> R` and nothing to give one, walked where it is written. Its body is
+// a function's, as in visit_lambdas; with no `return`, or a bare one first, it returns `void`.
+Type_id Statements::infer_lambda_return( Node_id lambda )
+{
+    const Type_id enclosing_return     = std::exchange( current_return_, {} );
+    const bool    enclosing_inferring  = std::exchange( inferring_return_, true );
+    const u32     enclosing_loops      = std::exchange( loop_depth_, 0 );
+    const u32     enclosing_breakables = std::exchange( breakable_depth_, 0 );
+    const Node_id enclosing            = expressions_.enter_function( lambda );
+
+    visit( ast_.body( lambda ) );
+    const Type_id returned = current_return_.is_valid() ? current_return_ : table_.builtin( Type_kind::Void );
+
+    expressions_.leave_function( enclosing );
+    current_return_   = enclosing_return;
+    inferring_return_ = enclosing_inferring;
+    loop_depth_       = enclosing_loops;
+    breakable_depth_  = enclosing_breakables;
+    return returned;
+}
+
 void Statements::visit_return( Node_id id )
 {
     const Node_id value      = ast_.value( id );
@@ -291,6 +312,14 @@ void Statements::visit_return( Node_id id )
             ast_.span( id ), "a `never` function cannot return", "end it in `panic`, or a call of another `never` function"
         );
 
+        return;
+    }
+
+    const bool first_return = inferring_return_ && !current_return_.is_valid();
+
+    if( first_return && !value.is_valid() )
+    {
+        current_return_ = void_type;
         return;
     }
 
@@ -310,22 +339,6 @@ void Statements::visit_return( Node_id id )
     if( current_return_ == void_type )
     {
         const Node_id function = expressions_.current_function();
-
-        // `-> R` left out: inferred, a literal too, for the help to name what it returns.
-        if( ast_.kind( function ) == Node_kind::Lambda_expr && expressions_.return_left_out( function ) )
-        {
-            const Type_id returned = expressions_.infer( value );
-
-            if( !table_.is_error( returned ) )
-            {
-                reporter_.error_at(
-                    ast_.span( value ),
-                    "this lambda returns `void`, so `return` cannot take a value",
-                    fmt::format( "say what it returns: `-> {}` after its parameters", table_.name( returned ) )
-                );
-            }
-            return;
-        }
 
         // Typed anyway: a mistake inside the expression is still a mistake worth reporting, and
         // then the only one.
@@ -347,7 +360,14 @@ void Statements::visit_return( Node_id id )
     {
         places_.lend( value ); // D75: a returned conditional is the arm chosen, not a copy
     }
-    expressions_.check( value, current_return_ );
+    if( first_return )
+    {
+        current_return_ = expressions_.infer( value ); // a literal takes its default, as `auto` does
+    }
+    else
+    {
+        expressions_.check( value, current_return_ );
+    }
 
     // The `T*` half of §8's rule, for a local whose storage ends here.
     check_returned_address( value );

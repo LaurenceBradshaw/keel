@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #pragma once
+#include <functional>
 #include <optional>
 #include <span>
 #include <string>
@@ -119,8 +120,13 @@ public:
     {
         return std::exchange( lambdas_, {} );
     }
-    Type_id returned_by( Node_id function ) const;   // a function's return type, or a lambda's
-    bool    return_left_out( Node_id lambda ) const; // no `-> R`, and no `fn` type expected to give one
+    Type_id returned_by( Node_id function ) const; // a function's return type, or a lambda's
+    // Statements' walk of a lambda's body where it is written, answering what its first `return`
+    // gives, for a lambda nothing else gives a return type (D81).
+    void set_lambda_body( std::function<Type_id( Node_id )> visit )
+    {
+        lambda_body_ = std::move( visit );
+    }
 
     bool is_result( Type_id type ) const; // an instance of the prelude's `result`
 
@@ -280,8 +286,10 @@ private:
     Type_id infer_cast( Node_id id ); // D35's unsafe gate is here rather than in Operators::convert
     Type_id infer_marker( Node_id id );
     // `slot`: `expected` is an fn bound's signature, and the lambda gets a closure type of its own.
-    Type_id              infer_lambda( Node_id id, Type_id expected, bool slot = false );
-    std::vector<Type_id> open_parameters() const; // the type parameters the home function sees
+    // `open_return`: that signature's return names a parameter still open, so the body says it.
+    Type_id              infer_lambda( Node_id id, Type_id expected, bool slot = false, bool open_return = false );
+    Type_id              body_return( Node_id lambda ); // lambda_body_, with this walk's state set aside
+    std::vector<Type_id> open_parameters() const;       // the type parameters the home function sees
     Type_id              lambda_parameter( Node_id param, std::size_t index, Type_id expected, Param_mode& mode );
     // The function a lambda is written in, through any enclosing lambda: the generic its calls belong to.
     Node_id home_function() const;
@@ -371,10 +379,10 @@ private:
     Node_id default_owner_;    // the function whose parameter's default is being checked
     Node_id discarded_ {};     // set by infer_discarded while it runs
 
-    std::vector<Node_id>             lambdas_;         // typed, body not yet checked
-    std::unordered_map<u32, Node_id> lambda_homes_;    // Lambda_expr -> home_function where it is written
-    std::unordered_map<u32, Type_id> lambda_returns_;  // Lambda_expr -> what its body returns
-    std::unordered_set<u32>          lambda_left_out_; // Lambda_expr whose `void` no one said
+    std::vector<Node_id>              lambdas_;        // typed, body not yet checked
+    std::unordered_map<u32, Node_id>  lambda_homes_;   // Lambda_expr -> home_function where it is written
+    std::unordered_map<u32, Type_id>  lambda_returns_; // Lambda_expr -> what its body returns
+    std::function<Type_id( Node_id )> lambda_body_;
 
     // The markers a call or `yield` passes: the only places `ref` and `out` mean something.
     std::unordered_set<u32> received_;

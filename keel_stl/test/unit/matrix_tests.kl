@@ -187,8 +187,7 @@ private void integer_operators_and_functions( ref kl::test::context c )
     c.check( kl::minimum( v, w ) == kl::vec<i32, 3>( [ 0, 2, -3 ] ) );
     c.check( kl::maximum( v, w ) == kl::vec<i32, 3>( [ 1, 5, -2 ] ) );
     c.check( kl::minimum( v, w, kl::vec<i32, 3>( [ -9, 9, 9 ] ) ) == kl::vec<i32, 3>( [ -9, 2, -3 ] ) );
-    kl::vec<f64, 3> halves = v.map( fn[]( i32 x ) { return cast<f64>( x ) * 0.5; } );
-    c.check( halves == kl::vec<f64, 3>( [ 0.5, 1.0, -1.0 ] ) );
+    c.check( v.map( fn[]( i32 x ) { return cast<f64>( x ) * 0.5; } ) == kl::vec<f64, 3>( [ 0.5, 1.0, -1.0 ] ) );
 
     kl::mat<u8, 2, 2> m = kl::mat<u8, 2, 2>( [ [ 1, 2 ], [ 3, 4 ] ] );
     c.check( ( m & 1 ) == kl::mat<u8, 2, 2>( [ 1, 0, 1, 0 ] ) );

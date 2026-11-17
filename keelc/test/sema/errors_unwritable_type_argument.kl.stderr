@@ -1,0 +1,7 @@
+error: nothing here says what `T` is in `make`
+  --> sema/errors_unwritable_type_argument.kl:11:14
+   |
+11 |     auto x = make( fn[]() { } );
+   |              ^^^^ give the result a type, or pass an argument that says it
+
+1 error generated
