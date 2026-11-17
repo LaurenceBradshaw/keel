@@ -270,13 +270,17 @@ Program load_program(
         add_nested_packages( package_id, package.root, modules, package_roots, sm, interner, diags );
     }
 
+    // An input in a package's folder is that package's module, never a program: so the editor
+    // checks `kl/list.kl` alone as `kl::list`.
+    bool in_package = false;
     for( const auto& [package_id, root] : package_roots )
     {
         std::error_code same;
-        if( as_module && std::filesystem::equivalent( program_folder, root, same ) )
+        if( std::filesystem::equivalent( program_folder, root, same ) )
         {
             modules.place( input, Symbol_id { package_id } );
-            package_docs[package_id] = read_package_info( root, sm, interner, literals, diags ).doc;
+            package_docs[package_id] = program_info.doc; // the same folder's, already read
+            in_package               = true;
         }
     }
 
@@ -312,7 +316,7 @@ Program load_program(
     const std::string below_program = program_package.is_valid() ? std::string( interner.text( program_package ) ) + "::" : "";
     std::unordered_set<u32> program_packages;
 
-    if( !as_module )
+    if( !as_module && !in_package )
     {
         modules.set_program( input );
     }
@@ -344,6 +348,13 @@ Program load_program(
     {
         const File_id current = pending.back();
         pending.pop_back();
+
+        // `packageinfo.kl` as the input: read_package_info has checked it, and it declares nothing.
+        if( current == input && std::filesystem::path( sm.file( input ).path ).filename() == "packageinfo.kl" )
+        {
+            prog.first_node[current.v] = narrow_cast<u32>( ast.node_count() );
+            continue;
+        }
 
         const std::vector<Token> tokens       = lex( current, sm, interner, literals, diags );
         prog.first_node[current.v]            = narrow_cast<u32>( ast.node_count() );
@@ -778,6 +789,11 @@ public:
     bool is_package( std::string_view name )
     {
         return program_.modules.is_package( interner_.intern( name ) );
+    }
+
+    bool has_program() const
+    {
+        return program_.modules.has_program();
     }
 
     // The package's `//!` documentation; empty names the program's own package.
@@ -1269,6 +1285,44 @@ TEST_CASE( "loader_quiets_a_package_outside_the_program's_folder", "[parse][load
         INFO( p.rendered() );
         REQUIRE( p.errors() == 0 );
         REQUIRE( p.warns_in( "kl/geom.kl" ) );
+    }
+}
+
+// The editor checks a library file alone: it is its package's module, never a program.
+TEST_CASE( "loader_reads_an_input_in_a_package's_folder_as_its_module", "[parse][loader][packages]" )
+{
+    SECTION( "a module, which reaches its siblings through its package" )
+    {
+        Loaded p(
+            {
+                { "kl/geom.kl", "import shape;\ni32 area() { return kl::side() * 2; }\n" },
+                { "kl/shape.kl", "i32 side() { return 2; }\n" },
+                { "kl/packageinfo.kl", "//! The kl package.\n@package( kl );\n" },
+            },
+            {},
+            "kl/geom.kl"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.package_of( "kl/geom.kl" ) == "kl" );
+        REQUIRE_FALSE( p.has_program() );
+    }
+
+    SECTION( "its `packageinfo.kl`, which declares nothing" )
+    {
+        Loaded p( { { "kl/packageinfo.kl", "//! The kl package.\n@package( kl );\n" } }, {}, "kl/packageinfo.kl" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+    }
+
+    SECTION( "and a broken one is still reported" )
+    {
+        Loaded p( { { "kl/packageinfo.kl", "//! The kl package.\n@package( );\n" } }, {}, "kl/packageinfo.kl" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
     }
 }
 
