@@ -448,9 +448,14 @@ A bounds check the loop's test does not cover becomes one range check before the
 to step by 1 to the latch's `i < n`, and the loop's only other exit has to be a panic on `i >= len`,
 `len` invariant, from a block that dominates the latch. The loop must be innermost, with no call,
 drop or `release`. The preheader then panics, with the check's own message, when `a >= len` or
-`n > len`, `a` the index on entry. The turns this skips only store to memory. A loop with a second
-check keeps both, as which one fails first can depend on the turn. LICM runs again after versioning,
-so the copy that reads the preheader's values loses its checks too.
+`n > len`, `a` the index on entry. The turns this skips only store to memory. From `-O2`, a `u64`
+loop that steps by `s` to the latch's `i + d < n` (or `<=`), or has several checks `i + c < len`, is
+copied instead, under the versioning budget: which check fails first, on which turn, cannot be
+known before the loop once arithmetic may wrap, so a range check cannot stand for them. The preheader
+proves that none can fail, from `a <= n <= max - s - max( d, c )`, each `a + c < len`, and each
+`n + c + [<=] <= len + d` for the last turn, each written so neither side wraps. When that holds the
+loop runs without its checks; otherwise a copy with them runs, which is never versioned again. LICM
+runs again after versioning, so the copy that reads the preheader's values loses its checks too.
 Where neither proof holds, `-O3` checks at run time instead. The loop has to be rotated and innermost, with at
 most 200 statements, and its index has to step by 1 to the latch's `i < n`. It may store only into
 `*( b + i )`, with one base `b` for every store, and must have no call, drop or `release`. If a store

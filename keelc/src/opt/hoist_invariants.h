@@ -13,10 +13,12 @@ namespace keel
 // In the loop phase, innermost loop first: a statement whose operands the loop never changes, into a
 // local written only there and read in the loop only after it, moves to the preheader; so does such a
 // read through a pointer inside any statement, into a new local; so does a bounds check the loop's
-// test does not cover, as one range check. A store of one scalar kind does not reach a read of another
-// (D89). Under `pin_named` a named local's statement stays, and what
-// moves takes the loop test's span. Whether it changed the function, normalising the loops included.
-bool hoist_invariants( Function& func, const Type_table& table, const Literal_pool& literals, bool pin_named );
+// test does not cover, as one range check, or, for a loop of at most `copying` statements, as a test
+// that none can fail choosing between the loop without them and a copy with them. A store of one
+// scalar kind does not reach a read of another (D89). Under `pin_named` a named local's statement
+// stays, and what moves takes the loop test's span. Whether it changed the function, normalising the
+// loops included.
+bool hoist_invariants( Function& func, const Type_table& table, Literal_pool& literals, bool pin_named, u32 copying );
 
 // A read through a pointer whose place names no local the loop writes.
 struct Blocked_read

@@ -572,6 +572,69 @@ bool is_local( const Operand& operand, Local_id local )
     return operand.kind == Operand_kind::Copy && operand.place.is_whole_local() && operand.place.local == local;
 }
 
+// `local`'s one write in the loop, at an index in `block`.
+std::optional<u32> assigned( const Function& func, const Scope& scope, Local_id local, Block_id block )
+{
+    if( scope.writes[local.v] != 1 || is_addressed( scope.addressed, local ) )
+    {
+        return std::nullopt;
+    }
+    const Run<const Statement> statements = func.statements_of( block );
+    for( u32 s = 0; s < statements.size(); ++s )
+    {
+        if( statements[s].kind == Statement_kind::Assign && statements[s].place.is_whole_local() &&
+            statements[s].place.local == local )
+        {
+            return s;
+        }
+    }
+    return std::nullopt;
+}
+
+const Rvalue& value_at( const Function& func, Block_id block, u32 s )
+{
+    return func.rvalue( func.statements_of( block )[s] );
+}
+
+// A value the preheader can read as the loop does.
+bool fixed( const Scope& scope, const Operand& operand )
+{
+    return operand.kind == Operand_kind::Constant ||
+           ( operand.kind == Operand_kind::Copy && operand.place.is_whole_local() && scope.invariant( operand ) );
+}
+
+// Through the empty blocks normalising gives each exit.
+bool panics( const Function& func, Block_id target )
+{
+    for( u32 hops = 0;
+         hops < 4 && func.blocks[target].statement_count == 0 && func.blocks[target].terminator.kind == Terminator_kind::Goto;
+         ++hops )
+    {
+        target = func.blocks[target].terminator.targets[0];
+    }
+    return func.blocks[target].terminator.kind == Terminator_kind::Panic;
+}
+
+// The latch's `x < n`, at `tested_at`: `n`, or what the latch copied into it before the test.
+std::optional<Operand> bound_of( const Function& func, const Scope& scope, const Rvalue& tested, u32 tested_at )
+{
+    if( fixed( scope, tested.b ) )
+    {
+        return tested.b;
+    }
+    const Block_id latch = scope.loop.latch;
+    if( tested.b.kind == Operand_kind::Copy && tested.b.place.is_whole_local() )
+    {
+        const std::optional<u32> at = assigned( func, scope, tested.b.place.local, latch );
+        if( at && *at < tested_at && value_at( func, latch, *at ).kind == Rvalue_kind::Use &&
+            fixed( scope, value_at( func, latch, *at ).a ) )
+        {
+            return value_at( func, latch, *at ).a;
+        }
+    }
+    return std::nullopt;
+}
+
 // A loop whose index `i` runs from `a` by 1 while the latch's `i < n` holds, and whose only other exit
 // is a panic on `i >= len`, `len` invariant, with no call, drop or release anywhere in it: the panic
 // moves to the preheader, on `a >= len || n > len`. The turns it skips store only to memory.
@@ -605,74 +668,26 @@ bool hoist_range_check( Function& func, const Scope& scope, const Literal_pool& 
     }
     const bool     fails_on_true = !loop.contains( branch.targets[0] );
     const Block_id stays         = branch.targets[fails_on_true ? 1 : 0];
-    // Through the empty blocks normalising gives each exit.
-    Block_id panic = branch.targets[fails_on_true ? 0 : 1];
-    for( u32 hops = 0;
-         hops < 4 && func.blocks[panic].statement_count == 0 && func.blocks[panic].terminator.kind == Terminator_kind::Goto;
-         ++hops )
-    {
-        panic = func.blocks[panic].terminator.targets[0];
-    }
-    if( func.blocks[panic].terminator.kind != Terminator_kind::Panic || !loop.contains( stays ) ||
+    if( !panics( func, branch.targets[fails_on_true ? 0 : 1] ) || !loop.contains( stays ) ||
         !scope.found.dominators.dominates( check, latch ) )
     {
         return false;
     }
 
-    // `local`'s one write in the loop, at an index in `block`.
-    const auto assigned = [&]( Local_id local, Block_id block ) -> std::optional<u32>
-    {
-        if( scope.writes[local.v] != 1 || is_addressed( scope.addressed, local ) )
-        {
-            return std::nullopt;
-        }
-        const Run<const Statement> statements = func.statements_of( block );
-        for( u32 s = 0; s < statements.size(); ++s )
-        {
-            if( statements[s].kind == Statement_kind::Assign && statements[s].place.is_whole_local() &&
-                statements[s].place.local == local )
-            {
-                return s;
-            }
-        }
-        return std::nullopt;
-    };
-    const auto value_at = [&]( Block_id block, u32 s ) -> const Rvalue&
-    { return func.rvalue( func.statements_of( block )[s] ); };
-    // A value the preheader can read as the loop does.
-    const auto fixed = [&]( const Operand& operand )
-    {
-        return operand.kind == Operand_kind::Constant ||
-               ( operand.kind == Operand_kind::Copy && operand.place.is_whole_local() && scope.invariant( operand ) );
-    };
-
     // The latch steps `i` by 1, then tests `i < n`; the check, before the latch, reads `i` as the turn began.
-    const std::optional<u32> tested_at   = assigned( test.condition.place.local, latch );
-    const std::optional<u32> compared_at = assigned( branch.condition.place.local, check );
+    const std::optional<u32> tested_at   = assigned( func, scope, test.condition.place.local, latch );
+    const std::optional<u32> compared_at = assigned( func, scope, branch.condition.place.local, check );
     if( !tested_at || !compared_at )
     {
         return false;
     }
-    const Rvalue& tested   = value_at( latch, *tested_at );
-    const Rvalue& compared = value_at( check, *compared_at );
+    const Rvalue& tested   = value_at( func, latch, *tested_at );
+    const Rvalue& compared = value_at( func, check, *compared_at );
     if( tested.kind != Rvalue_kind::Binary || tested.op != Token_kind::Less || compared.kind != Rvalue_kind::Binary )
     {
         return false;
     }
-    // `n`, or what the latch copied into it before the test.
-    std::optional<Operand> n;
-    if( fixed( tested.b ) )
-    {
-        n = tested.b;
-    }
-    else if( tested.b.kind == Operand_kind::Copy && tested.b.place.is_whole_local() )
-    {
-        const std::optional<u32> at = assigned( tested.b.place.local, latch );
-        if( at && *at < *tested_at && value_at( latch, *at ).kind == Rvalue_kind::Use && fixed( value_at( latch, *at ).a ) )
-        {
-            n = value_at( latch, *at ).a;
-        }
-    }
+    const std::optional<Operand> n = bound_of( func, scope, tested, *tested_at );
     if( !n )
     {
         return false;
@@ -701,7 +716,7 @@ bool hoist_range_check( Function& func, const Scope& scope, const Literal_pool& 
             break;
         }
     }
-    if( !len || !fixed( *len ) )
+    if( !len || !fixed( scope, *len ) )
     {
         return false;
     }
@@ -730,6 +745,222 @@ bool hoist_range_check( Function& func, const Scope& scope, const Literal_pool& 
     };
     func.blocks[preheader].terminator.targets[fails_on_true ? 1 : 0] = loop.header;
     func.blocks[check].terminator = Terminator { .kind = Terminator_kind::Goto, .span = span, .targets = { stays } };
+    return true;
+}
+
+// `c` where `operand`, read in `block` before statement `before`, is `i + c` for a constant `c`, or `i`.
+std::optional<u64> offset_of(
+    const Function&     func,
+    const Scope&        scope,
+    const Literal_pool& literals,
+    const Operand&      operand,
+    Local_id            i,
+    Block_id            block,
+    u32                 before
+)
+{
+    if( is_local( operand, i ) )
+    {
+        return 0;
+    }
+    if( operand.kind != Operand_kind::Copy || !operand.place.is_whole_local() )
+    {
+        return std::nullopt;
+    }
+    const std::optional<u32> at = assigned( func, scope, operand.place.local, block );
+    if( !at || *at >= before )
+    {
+        return std::nullopt;
+    }
+    const Rvalue& value = value_at( func, block, *at );
+    if( value.kind != Rvalue_kind::Binary || value.op != Token_kind::Plus )
+    {
+        return std::nullopt;
+    }
+    const Operand& c = is_local( value.a, i ) ? value.b : value.a;
+    if( ( !is_local( value.a, i ) && !is_local( value.b, i ) ) || c.kind != Operand_kind::Constant ||
+        literals.kind( c.constant ) != Literal_kind::Integer )
+    {
+        return std::nullopt;
+    }
+    return literals.integer( c.constant );
+}
+
+// A `u64` loop the range check cannot take exactly: its index `i` runs from `a` by `s` while the latch's
+// `i + d < n` (or `<=`) holds, and its bounds checks are `i + c < len`, any number of them. Wrapping
+// makes the turn a check would fail on unknowable before the loop, so the preheader proves none can
+// fail instead, from `a <= n <= max - s - max( d, c )`, `a + c < len` and the last turn's `i + c < len`;
+// the loop runs without them when it holds and as it was, in a copy never versioned again, when not.
+bool version_range_checks( Function& func, const Scope& scope, Literal_pool& literals, u32 budget )
+{
+    const Loop&    loop      = scope.loop;
+    const Block_id preheader = loop.preheader;
+    const Block_id latch     = loop.latch;
+    if( budget == 0 || !latch.is_valid() || func.blocks[loop.header].versioned ||
+        func.blocks[preheader].terminator.kind != Terminator_kind::Goto ||
+        std::ranges::any_of( loop.blocks, [&]( Block_id b ) { return !scope.own[b.v]; } ) )
+    {
+        return false;
+    }
+    u32 size = 0;
+    for( const Block_id b : loop.blocks )
+    {
+        for( const Statement& statement : func.statements_of( b ) )
+        {
+            size += statement.kind == Statement_kind::Assign || statement.kind == Statement_kind::Drop;
+        }
+    }
+    const Terminator& test = func.blocks[latch].terminator;
+    if( size > budget || test.kind != Terminator_kind::Branch || test.targets[0] != loop.header ||
+        loop.contains( test.targets[1] ) || test.condition.kind != Operand_kind::Copy ||
+        !test.condition.place.is_whole_local() )
+    {
+        return false;
+    }
+    const std::optional<u32> tested_at = assigned( func, scope, test.condition.place.local, latch );
+    if( !tested_at )
+    {
+        return false;
+    }
+    const Rvalue& tested = value_at( func, latch, *tested_at );
+    if( tested.kind != Rvalue_kind::Binary || ( tested.op != Token_kind::Less && tested.op != Token_kind::Less_equal ) )
+    {
+        return false;
+    }
+    const std::optional<Operand> n = bound_of( func, scope, tested, *tested_at );
+    if( !n )
+    {
+        return false;
+    }
+
+    // The index, stepped in the latch before its test reads `i + d`.
+    const Type_id      word = scope.table.integer( 64, false );
+    std::optional<u64> step;
+    std::optional<u64> d;
+    Local_id           i;
+    for( const Induction& induction : inductions_of( func, loop, scope.addressed ) )
+    {
+        if( induction.block != latch || induction.index >= *tested_at || func.locals[induction.local].type != word ||
+            induction.step.kind != Operand_kind::Constant || literals.kind( induction.step.constant ) != Literal_kind::Integer )
+        {
+            continue;
+        }
+        const std::optional<u64> at = offset_of( func, scope, literals, tested.a, induction.local, latch, *tested_at );
+        if( at && ( is_local( tested.a, induction.local ) ||
+                    *assigned( func, scope, tested.a.place.local, latch ) > induction.index ) )
+        {
+            step = literals.integer( induction.step.constant );
+            d    = at;
+            i    = induction.local;
+            break;
+        }
+    }
+    constexpr u64 k_small = u64( 1 ) << 32;
+    if( !step || *step == 0 || *step >= k_small || *d >= k_small )
+    {
+        return false;
+    }
+
+    struct Check
+    {
+        Block_id block;
+        Block_id stays;
+        u64      c;
+        Operand  len;
+    };
+    std::vector<Check> checks;
+    for( const Block_id b : scope.exiting )
+    {
+        const Terminator& branch = func.blocks[b].terminator;
+        if( b == latch || branch.kind != Terminator_kind::Branch || branch.condition.kind != Operand_kind::Copy ||
+            !branch.condition.place.is_whole_local() )
+        {
+            continue;
+        }
+        const bool               fails_on_true = !loop.contains( branch.targets[0] );
+        const Block_id           stays         = branch.targets[fails_on_true ? 1 : 0];
+        const std::optional<u32> compared_at   = assigned( func, scope, branch.condition.place.local, b );
+        if( !loop.contains( stays ) || !panics( func, branch.targets[fails_on_true ? 0 : 1] ) || !compared_at )
+        {
+            continue;
+        }
+        // As `i + c op len`, failing on true: `i + c >= len`.
+        const Rvalue& compared = value_at( func, b, *compared_at );
+        if( compared.kind != Rvalue_kind::Binary )
+        {
+            continue;
+        }
+        for( const bool flipped : { false, true } )
+        {
+            const Operand&           index = flipped ? compared.b : compared.a;
+            const Operand&           len   = flipped ? compared.a : compared.b;
+            const Token_kind         fails = flipped ? Token_kind::Less_equal : Token_kind::Greater_equal;
+            const Token_kind         holds = flipped ? Token_kind::Greater : Token_kind::Less;
+            const std::optional<u64> c     = offset_of( func, scope, literals, index, i, b, *compared_at );
+            if( c && *c < k_small && fixed( scope, len ) && compared.op == ( fails_on_true ? fails : holds ) )
+            {
+                checks.push_back( Check { .block = b, .stays = stays, .c = *c, .len = len } );
+                break;
+            }
+        }
+    }
+    if( checks.empty() )
+    {
+        return false;
+    }
+
+    // In the preheader, `i` holds `a`. A later turn has `i + d < n`, so `i + c < len` when
+    // `n + c + [<=] <= len + d`, written without wrapping either side past the other.
+    const Span    span      = test.span;
+    const Type_id boolean   = func.locals[test.condition.place.local].type;
+    const auto    temporary = [&]( Type_id type, Rvalue value )
+    {
+        const Local_id local = func.locals.push_back( Local { .type = type, .span = span } );
+        append(
+            func,
+            preheader,
+            Statement { .span = span, .place = Place { .local = local }, .value = func.add_rvalue( std::move( value ) ) }
+        );
+        return copy( Place { .local = local }, type );
+    };
+    const auto number = [&]( u64 value ) { return constant( literals.add_integer( value ), word ); };
+    const auto both   = [&]( const Operand& x, const Operand& y )
+    { return temporary( boolean, binary( Token_kind::Amp, x, y, boolean ) ); };
+    const Operand a      = copy( Place { .local = i }, word );
+    u64           widest = *d;
+    for( const Check& check : checks )
+    {
+        widest = std::max( widest, check.c );
+    }
+    Operand holds = both(
+        temporary( boolean, binary( Token_kind::Less_equal, a, *n, boolean ) ),
+        temporary( boolean, binary( Token_kind::Less_equal, *n, number( ~u64( 0 ) - *step - widest ), boolean ) )
+    );
+    const u64 inclusive = tested.op == Token_kind::Less_equal;
+    for( const Check& check : checks )
+    {
+        const Operand first = check.c == 0 ? a : temporary( word, binary( Token_kind::Plus, a, number( check.c ), word ) );
+        holds               = both( holds, temporary( boolean, binary( Token_kind::Less, first, check.len, boolean ) ) );
+        const u64     more  = check.c + inclusive;
+        const Operand left  = more > *d ? temporary( word, binary( Token_kind::Plus, *n, number( more - *d ), word ) ) : *n;
+        const Operand right =
+            more < *d ? temporary( word, binary( Token_kind::Plus, check.len, number( *d - more ), word ) ) : check.len;
+        holds = both( holds, temporary( boolean, binary( Token_kind::Less_equal, left, right, boolean ) ) );
+    }
+    remove_statements( func, std::vector<bool>( func.statements.size(), false ) );
+
+    std::vector<Block_id> copies;
+    clone_blocks( func, loop, copies );
+    func.blocks[copies[loop.header.v]].versioned = true;
+    func.blocks[preheader].terminator            = Terminator {
+                   .kind = Terminator_kind::Branch, .span = span, .condition = holds, .targets = { loop.header, copies[loop.header.v] }
+    };
+    for( const Check& check : checks )
+    {
+        func.blocks[check.block].terminator = Terminator {
+            .kind = Terminator_kind::Goto, .span = func.blocks[check.block].terminator.span, .targets = { check.stays }
+        };
+    }
     return true;
 }
 
@@ -804,7 +1035,7 @@ blocked_reads( const Function& func, const Type_table& table, const Loops& found
     return reads;
 }
 
-bool hoist_invariants( Function& func, const Type_table& table, const Literal_pool& literals, bool pin_named )
+bool hoist_invariants( Function& func, const Type_table& table, Literal_pool& literals, bool pin_named, u32 copying )
 {
     bool changed = false;
     for( bool again = true; again; )
@@ -826,7 +1057,8 @@ bool hoist_invariants( Function& func, const Type_table& table, const Literal_po
                 changed = true;
             }
             // After the reads, so its bound is a local.
-            again = hoist_range_check( func, Scope( func, table, found, l, innermost, addressed ), literals, pin_named );
+            again = hoist_range_check( func, Scope( func, table, found, l, innermost, addressed ), literals, pin_named ) ||
+                    version_range_checks( func, Scope( func, table, found, l, innermost, addressed ), literals, copying );
             changed |= again;
         }
     }
@@ -1067,6 +1299,20 @@ TEST_CASE( "hoist_invariants_hoists_a_range_check_the_loop_test_does_not_cover",
     INFO( f.kir() );
     REQUIRE( f.exits() == 1 );
     REQUIRE( Hoisted( source, 3, std::nullopt ).exits() == 2 );
+}
+
+// Two checks a turn and a step of 2: the preheader chooses the loop without them, one exit, or the
+// copy with them, three.
+TEST_CASE( "hoist_invariants_versions_a_loop_with_several_range_checks", "[opt][hoist_invariants]" )
+{
+    constexpr std::string_view source = "void f( i64[*] d, u64 len, u64 n ) { for( u64 i = 0; i + 2 <= n; i += 2 ) "
+                                        "{ if( i >= len ) { panic( \"short\" ); } if( i + 1 >= len ) { panic( \"short\" ); } "
+                                        "unsafe { d[ i ] = 1; d[ i + 1 ] = 1; } } }\n";
+    const Hoisted              f( source, 2, Loop_weights {} );
+    INFO( f.kir() );
+    REQUIRE( f.exits() == 1 + 3 );
+    REQUIRE( Hoisted( source, 2 ).exits() == 3 );
+    REQUIRE( Hoisted( source, 1, Loop_weights {} ).exits() == 3 );
 }
 
 // `tick` runs before the check on each turn, and a panic before the loop would skip it.

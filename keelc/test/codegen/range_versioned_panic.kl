@@ -1,0 +1,22 @@
+// The checked copy of a loop with several bounds checks fails at the first check that fails, as written:
+// the turn at 8 reads `a[8]` and `a[9]`, then stops at `a[i + 2]`.
+import t::console;
+
+i32 quads( const ref i32[] a, u64 n )
+{
+    i32 total = 0;
+    for( u64 i = 0; i + 4 <= n; i += 4 )
+    {
+        total += a[i] + a[i + 1] + a[i + 2] + a[i + 3];
+    }
+    return total;
+}
+
+i32 main()
+{
+    i32[10] a = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ];
+    t::print( quads( a, 8 ) );
+    t::print( quads( a, 12 ) );
+    t::print( "unreached" );
+    return 0;
+}

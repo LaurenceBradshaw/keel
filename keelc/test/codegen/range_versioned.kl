@@ -1,0 +1,32 @@
+// A loop stepping by 4 with four bounds checks a turn runs without them when the preheader shows
+// none can fail, and with them when it cannot: here because 4 does not divide the turns' reach.
+i32 quads( const ref i32[] a, u64 n )
+{
+    i32 total = 0;
+    for( u64 i = 0; i + 4 <= n; i += 4 )
+    {
+        total += a[i] + a[i + 1] * 10 + a[i + 2] * 100 + a[i + 3] * 1000;
+    }
+    return total;
+}
+
+i32 main()
+{
+    i32[10] a = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ];
+    // Every check holds and the test shows it: the turns end at 8.
+    if( quads( a, 8 ) != 4321 + 8765 )
+    {
+        return 1;
+    }
+    // n + 4 passes the size, yet the last turn reads only up to 7.
+    if( quads( a, 11 ) != 4321 + 8765 )
+    {
+        return 2;
+    }
+    // No turn at all.
+    if( quads( a, 3 ) != 0 )
+    {
+        return 3;
+    }
+    return 0;
+}

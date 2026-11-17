@@ -1,0 +1,2 @@
+36
+codegen/range_versioned_panic.kl:10: out of bounds: a[i + 2]

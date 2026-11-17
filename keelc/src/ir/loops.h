@@ -11,9 +11,10 @@ namespace keel
 // How far `-O3`'s loop passes may grow a function; each budget arrives with its pass.
 struct Loop_weights
 {
-    u32 rotation   = 8;   // the most statements a loop's test may hold, storage markers aside, to be copied
-    u32 unrolling  = 200; // the most statements a fully unrolled loop may hold, its trip count times its body (-O3)
-    u32 versioning = 200; // the most statements a loop may hold to be copied behind a run-time overlap check (-O3)
+    u32 rotation  = 8;   // the most statements a loop's test may hold, storage markers aside, to be copied
+    u32 unrolling = 200; // the most statements a fully unrolled loop may hold, its trip count times its body (-O3)
+    u32 versioning =
+        200; // the most statements a loop may hold to be copied behind a run-time overlap (-O3) or range (-O2) check
 };
 
 // Each block's immediate dominator, Cooper–Harvey–Kennedy over reverse postorder.
