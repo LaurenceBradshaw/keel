@@ -1002,6 +1002,21 @@ TEST_CASE( "inline_calls_prices_an_element_address_as_free", "[opt][inline]" )
 
 // `pass` keeps its call of `mixed`, too dear outside a loop; spliced into `f`'s loop, the call is offered
 // again at the loop's limit and goes too.
+// `total`'s checks read `i * cols` as an induction stepped by `cols`; called with constant sizes in a loop,
+// they fold against its counter, which leaves it cheap enough.
+TEST_CASE( "inline_calls_prices_a_reduced_index_as_its_counter_bounds_it", "[opt][inline]" )
+{
+    const std::string source =
+        "i64 f( const ref i64[16] m, u64 n ) { i64 t = 0; for( u64 r = 0; r < n; r += 1 ) { t += total( m, 4, 4 ); } return t; "
+        "}\n"
+        "i64 total( const ref i64[] a, u64 rows, u64 cols ) { if( a.size != rows * cols ) { panic( \"shape\" ); } i64 s = 0;"
+        " for( u64 i : 0..rows ) { for( u64 j : 0..cols ) { s += a[i * cols + j]; } } return s; }\n";
+    const Inlined p( source, Inline_weights { .threshold = 13, .in_loop = 0 } );
+    REQUIRE( p.clean() );
+    REQUIRE( verify( p.first() ).empty() );
+    REQUIRE( p.calls() == 0 );
+}
+
 TEST_CASE( "inline_calls_offers_a_spliced_call_again_at_its_new_site", "[opt][inline]" )
 {
     const std::string passing = "i32 pass( i32 x, i32 y ) { return mixed( x, y ); }\n";

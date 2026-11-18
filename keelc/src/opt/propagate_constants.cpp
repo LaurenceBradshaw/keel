@@ -914,9 +914,10 @@ std::optional<Relation> relation( const Analysis& analysis, const Block& block, 
     return r;
 }
 
-// What `block`'s branch tells its `taken` edge of `x`, when the branch reads `x op const k` (either way round) written
-// in the block and `x` is unchanged after; nullopt otherwise.
-std::optional<Narrowing> narrowing( const Analysis& analysis, const Block& block, bool taken )
+// What `block`'s branch tells its `taken` edge of `x`, when the branch reads `x op k` (either way round) written in the
+// block, `k` a constant or a local `values`, those leaving the block, hold one number of, and `x` and `k` are unchanged
+// after; nullopt otherwise.
+std::optional<Narrowing> narrowing( const Analysis& analysis, const Block& block, bool taken, const Values& values )
 {
     const std::optional<u32> at = deciding_test( analysis, block );
     if( !at )
@@ -929,11 +930,19 @@ std::optional<Narrowing> narrowing( const Analysis& analysis, const Block& block
     const u32      s          = *at;
     const Rvalue&  test       = analysis.func.rvalue( statements[s - 1] );
 
-    const bool     flipped = test.a.kind == Operand_kind::Constant;
-    const Operand& x       = flipped ? test.b : test.a;
-    const Operand& k       = flipped ? test.a : test.b;
+    const auto known = [&]( const Operand& k ) -> std::optional<Value>
+    {
+        const Value value = read( analysis, k, values );
+        const bool  still = k.kind != Operand_kind::Copy || unchanged_after( analysis, block, s, k.place.local );
+        return value.state == Value::State::Constant && still ? std::optional( value ) : std::nullopt;
+    };
+
+    const bool                 flipped = !known( test.b ).has_value();
+    const Operand&             x       = flipped ? test.b : test.a;
+    const Operand&             k       = flipped ? test.a : test.b;
+    const std::optional<Value> number  = known( k );
     if( x.kind != Operand_kind::Copy || !whole_tracked( analysis, x.place ) || x.place.local == condition.place.local ||
-        k.kind != Operand_kind::Constant || !k.constant.is_valid() || x.type != k.type )
+        !number || x.type != k.type )
     {
         return std::nullopt;
     }
@@ -964,11 +973,7 @@ std::optional<Narrowing> narrowing( const Analysis& analysis, const Block& block
     }
 
     const Bounds all = *limits( analysis.types, x.type );
-    const Wide   n =
-        bounds(
-            Value { .state = Value::State::Constant, .bits = analysis.literals.integer( k.constant ) }, x.type, analysis.types
-        )
-            ->lo;
+    const Wide   n   = bounds( *number, x.type, analysis.types )->lo;
 
     switch( op )
     {
@@ -988,37 +993,40 @@ std::optional<Narrowing> narrowing( const Analysis& analysis, const Block& block
 }
 
 // Each side of every comparison with a constant `k`, as `k - 1`, `k` and `k + 1`, sorted.
-std::vector<Wide> stops_of( const Analysis& analysis )
+// With `known`, an earlier analysis's entries, a local it holds one number in counts as a constant.
+std::vector<Wide> stops_of( const Analysis& analysis, const std::vector<std::optional<State>>* known )
 {
     std::vector<Wide> stops;
-    for( const Block& block : analysis.func.blocks )
+    State             state;
+    for( const Block_id b : analysis.func.blocks.ids() )
     {
-        for( const Statement& statement : analysis.func.statements_of( block ) )
+        const bool stepped = known && ( *known )[b.v];
+        if( stepped )
         {
-            if( statement.kind != Statement_kind::Assign )
-            {
-                continue;
-            }
+            state = *( *known )[b.v];
+        }
+        for( const Statement& statement : analysis.func.statements_of( b ) )
+        {
             const Rvalue& test = analysis.func.rvalue( statement );
-            if( test.kind != Rvalue_kind::Binary || !is_comparison( test.op ) )
+            if( statement.kind == Statement_kind::Assign && test.kind == Rvalue_kind::Binary && is_comparison( test.op ) )
             {
-                continue;
+                for( const Operand* k : { &test.a, &test.b } )
+                {
+                    const Value value = k->kind == Operand_kind::Constant || stepped ? read( analysis, *k, state.values )
+                                                                                     : Value { .state = Value::State::Varying };
+                    const std::optional<Bounds> n =
+                        value.state == Value::State::Constant && is_integer( analysis.types, k->type )
+                            ? bounds( value, k->type, analysis.types )
+                            : std::nullopt;
+                    if( n )
+                    {
+                        stops.insert( stops.end(), { n->lo - 1, n->lo, n->lo + 1 } );
+                    }
+                }
             }
-            for( const Operand* k : { &test.a, &test.b } )
+            if( stepped )
             {
-                if( k->kind != Operand_kind::Constant || !k->constant.is_valid() || !is_integer( analysis.types, k->type ) )
-                {
-                    continue;
-                }
-                const std::optional<Bounds> n = bounds(
-                    Value { .state = Value::State::Constant, .bits = analysis.literals.integer( k->constant ) },
-                    k->type,
-                    analysis.types
-                );
-                if( n )
-                {
-                    stops.insert( stops.end(), { n->lo - 1, n->lo, n->lo + 1 } );
-                }
+                step( analysis, statement, state );
             }
         }
     }
@@ -1044,7 +1052,159 @@ Value widened( Value old, Value now, const std::vector<Wide>& stops, Type_id typ
     return of_bounds( b, type, types );
 }
 
-std::vector<std::optional<State>> values_on_entry( const Analysis& analysis )
+// `v` stepped by `c` in the block that steps a counter `i` by 1, neither written elsewhere in loop `loop`: so
+// entering any block of it `v` is `c * i + d`, `d` from what both hold leaving the preheader. alignas as Bounds'.
+struct alignas( 16 ) Lockstep
+{
+    Wide     c;
+    Wide     d;
+    Local_id v;
+    Local_id i;
+    u32      loop;
+};
+
+// A number `value` holds exactly, of a magnitude a product of two cannot overflow a Wide.
+std::optional<Wide> exact( const Analysis& analysis, const Value& value, Type_id type )
+{
+    const std::optional<Bounds> b =
+        value.state == Value::State::Constant ? bounds( value, type, analysis.types ) : std::nullopt;
+    const Wide big = Wide( 1 ) << 62;
+    return b && b->lo > -big && b->lo < big ? std::optional( b->lo ) : std::nullopt;
+}
+
+// Each loop's lockstep pairs, from what the analysis without them gave.
+std::vector<Lockstep> locksteps( const Analysis& analysis, const Loops& loops, const std::vector<std::optional<State>>& entry )
+{
+    const Function&       func = analysis.func;
+    std::vector<Lockstep> pairs;
+    State                 state;
+
+    struct Step
+    {
+        Local_id local;
+        Wide     by;
+    };
+
+    for( u32 l = 0; l < loops.loops.size(); ++l )
+    {
+        const Loop& loop = loops.loops[l];
+        if( !loop.preheader.is_valid() || !entry[loop.preheader.v] )
+        {
+            continue;
+        }
+
+        std::vector<u32> written( func.locals.size(), 0 );
+        for( const Block_id b : loop.blocks )
+        {
+            for( const Statement& statement : func.statements_of( b ) )
+            {
+                if( statement.kind != Statement_kind::Assign )
+                {
+                    continue;
+                }
+                const Rvalue& value = func.rvalue( statement );
+                if( !statement.place.is_global() )
+                {
+                    ++written[statement.place.local.v];
+                }
+                // `&init x` writes `x` too.
+                if( value.kind == Rvalue_kind::Address_of && value.address_purpose == Address_purpose::Initialise &&
+                    !value.a.place.is_global() && value.a.place.local != statement.place.local )
+                {
+                    ++written[value.a.place.local.v];
+                }
+            }
+        }
+
+        state = *entry[loop.preheader.v];
+        for( const Statement& statement : func.statements_of( loop.preheader ) )
+        {
+            step( analysis, statement, state );
+        }
+        const Values before = state.values;
+
+        for( const Block_id b : loop.blocks )
+        {
+            if( !entry[b.v] )
+            {
+                continue;
+            }
+
+            std::vector<Step> steps;
+            state = *entry[b.v];
+            for( const Statement& statement : func.statements_of( b ) )
+            {
+                const Rvalue& value = func.rvalue( statement );
+                if( statement.kind == Statement_kind::Assign && whole_tracked( analysis, statement.place ) &&
+                    written[statement.place.local.v] == 1 && value.kind == Rvalue_kind::Binary &&
+                    value.op == Token_kind::Plus && value.a.kind == Operand_kind::Copy && value.a.place.is_whole_local() &&
+                    value.a.place.local == statement.place.local && value.type == func.locals[statement.place.local].type )
+                {
+                    if( const std::optional<Wide> by = exact( analysis, read( analysis, value.b, state.values ), value.type ) )
+                    {
+                        steps.push_back( Step { statement.place.local, *by } );
+                    }
+                }
+                step( analysis, statement, state );
+            }
+
+            for( const Step& counter : steps )
+            {
+                const Type_id             counted = func.locals[counter.local].type;
+                const std::optional<Wide> i0      = exact( analysis, before[counter.local.v], counted );
+                if( counter.by != 1 || !i0 )
+                {
+                    continue;
+                }
+                for( const Step& other : steps )
+                {
+                    const std::optional<Wide> v0 = exact( analysis, before[other.local.v], func.locals[other.local].type );
+                    if( other.local != counter.local && v0 )
+                    {
+                        pairs.push_back( Lockstep { other.by, *v0 - other.by * *i0, other.local, counter.local, l } );
+                    }
+                }
+            }
+        }
+    }
+
+    return pairs;
+}
+
+// `values` entering `block`, with each lockstep `v` its loop holds within `c * i + d`.
+void tighten( const Analysis& analysis, const Loops& loops, const std::vector<Lockstep>& pairs, Block_id block, Values& values )
+{
+    const Wide big = Wide( 1 ) << 62;
+    for( const Lockstep& p : pairs )
+    {
+        const Type_id               type = analysis.func.locals[p.v].type;
+        const std::optional<Bounds> i    = bounds( values[p.i.v], analysis.func.locals[p.i].type, analysis.types );
+        const std::optional<Bounds> v    = bounds( values[p.v.v], type, analysis.types );
+        if( !loops.loops[p.loop].contains( block ) || !i || !v || i->lo <= -big || i->hi >= big )
+        {
+            continue;
+        }
+
+        const Wide   a = p.c * i->lo + p.d;
+        const Wide   b = p.c * i->hi + p.d;
+        const Bounds image { std::min( a, b ), std::max( a, b ) };
+        const Bounds within { std::max( image.lo, v->lo ), std::min( image.hi, v->hi ) };
+        if( fits( image, analysis.types, type ) && within.lo <= within.hi )
+        {
+            values[p.v.v] = of_bounds( within, type, analysis.types );
+        }
+    }
+}
+
+// What a second analysis knows from the first: its entries, and the lockstep pairs they gave.
+struct Inductions
+{
+    const Loops&                             loops;
+    std::vector<Lockstep>                    pairs;
+    const std::vector<std::optional<State>>& first;
+};
+
+std::vector<std::optional<State>> values_on_entry( const Analysis& analysis, const Inductions* inductions = nullptr )
 {
     const Function& func = analysis.func;
 
@@ -1064,7 +1224,7 @@ std::vector<std::optional<State>> values_on_entry( const Analysis& analysis )
 
     // Values only rise, a range that grows again at a join is widened to the next stop (every cycle has one),
     // relations only weaken, and a block is reached once, so this ends; a block with one way in keeps exact ranges.
-    const std::vector<Wide> stops   = stops_of( analysis );
+    const std::vector<Wide> stops   = stops_of( analysis, inductions ? &inductions->first : nullptr );
     const std::vector<u32>  ways_in = predecessor_counts( func );
     bool                    changed = true;
     std::vector<Edge>       targets;
@@ -1111,7 +1271,7 @@ std::vector<std::optional<State>> values_on_entry( const Analysis& analysis )
                     {
                         targets.push_back( Edge {
                             terminator.targets[taken ? 0 : 1],
-                            narrowing( analysis, block, taken ),
+                            narrowing( analysis, block, taken, state.values ),
                             relation( analysis, block, taken ),
                         } );
                     }
@@ -1150,6 +1310,10 @@ std::vector<std::optional<State>> values_on_entry( const Analysis& analysis )
 
                 if( !entry )
                 {
+                    if( inductions )
+                    {
+                        tighten( analysis, inductions->loops, inductions->pairs, edge.target, arriving.values );
+                    }
                     entry                = arriving;
                     changed              = true;
                     dirty[edge.target.v] = true;
@@ -1159,21 +1323,27 @@ std::vector<std::optional<State>> values_on_entry( const Analysis& analysis )
                 // Before the values join, so a pair one path does not relate is ordered by that path's bounds.
                 Relations relations = joined( analysis, *entry, arriving );
 
+                Values next = entry->values;
                 for( const Local_id l : func.locals.ids() )
                 {
                     const Value old    = entry->values[l.v];
                     Value       joined = join( old, arriving.values[l.v], func.locals[l].type, analysis.types );
-                    if( joined != old )
+                    if( joined != old && ways_in[edge.target.v] > 1 && old.state == Value::State::Range &&
+                        joined.state == Value::State::Range )
                     {
-                        if( ways_in[edge.target.v] > 1 && old.state == Value::State::Range &&
-                            joined.state == Value::State::Range )
-                        {
-                            joined = widened( old, joined, stops, func.locals[l].type, analysis.types );
-                        }
-                        entry->values[l.v]   = joined;
-                        changed              = true;
-                        dirty[edge.target.v] = true;
+                        joined = widened( old, joined, stops, func.locals[l].type, analysis.types );
                     }
+                    next[l.v] = joined;
+                }
+                if( inductions )
+                {
+                    tighten( analysis, inductions->loops, inductions->pairs, edge.target, next );
+                }
+                if( next != entry->values )
+                {
+                    entry->values        = std::move( next );
+                    changed              = true;
+                    dirty[edge.target.v] = true;
                 }
 
                 if( relations != entry->relations )
@@ -1318,7 +1488,17 @@ void propagate_constants( Function& func, const Type_table& types, Literal_pool&
         }
     }
     const Analysis analysis { func, types, literals, std::move( tracked ), relating, std::move( same ) };
-    const auto     entry = values_on_entry( analysis );
+    auto           entry = values_on_entry( analysis );
+    // Again, holding each induction that strength reduction left within its counter's range.
+    if( relating )
+    {
+        const Loops      loops = find_loops( func );
+        const Inductions inductions { loops, locksteps( analysis, loops, entry ), entry };
+        if( !inductions.pairs.empty() )
+        {
+            entry = values_on_entry( analysis, &inductions );
+        }
+    }
 
     Links links( func.locals.size() );
 
@@ -1707,6 +1887,21 @@ TEST_CASE( "propagate_constants_widens_only_at_a_join", "[opt][constants]" )
     const Propagated p( "void f( ref f64[4096] a ) { for( u64 i = 0; i < 1024; i += 1 ) "
                         "{ const u64 t = 4 * i; a[t] = cast<f64>( i % 32 ); a[t + 3] = 1.0; } }\n" );
     REQUIRE( p.branches() == 3 );
+}
+
+// `v` steps by 4 beside `i`, so it is `4 * i` in the inner loop and `v + j` stays under 16; by 5 it may not.
+TEST_CASE( "propagate_constants_bounds_an_induction_by_its_counter", "[opt][constants]" )
+{
+    const auto source = []( int step )
+    {
+        return "i64 f( const ref i64[16] a ) { i64 s = 0; u64 v = 0; for( u64 i = 0; i < 4; i += 1 ) "
+               "{ for( u64 j = 0; j < 4; j += 1 ) { s += a[v + j]; } v += " +
+               std::to_string( step ) + "; } return s; }\n";
+    };
+    const Propagated lockstep( source( 4 ) );
+    CHECK( lockstep.branches() == 2 );
+    const Propagated past( source( 5 ) );
+    CHECK( past.branches() == 3 );
 }
 
 } // namespace keel
