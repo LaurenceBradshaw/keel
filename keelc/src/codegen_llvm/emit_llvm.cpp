@@ -1056,8 +1056,9 @@ llvm::DIType* Llvm_emitter::debug_type( Type_id type )
     return made;
 }
 
-// A scalar nothing takes the address of, though what it points at may be; under --debug, only a
-// temporary, so a debugger finds every named local.
+// A scalar or a run or interface reference nothing takes the address of, though what a scalar points
+// at may be; not one arriving or returned through memory; under --debug, only a temporary, so a
+// debugger finds every named local.
 void Llvm_emitter::promote( const Function& function )
 {
     promoted_.assign( function.locals.size(), false );
@@ -1065,7 +1066,10 @@ void Llvm_emitter::promote( const Function& function )
     for( const Local_id i : function.locals.ids() )
     {
         const Local& local = function.locals[i];
-        promoted_[i.v]     = held( local.type ) == Held::Scalar && !( debug_ && level_ <= 1 && local.name.is_valid() );
+        const Held   kind  = held( local.type );
+        const bool   in    = i.v >= 1 && i.v <= function.parameter_count && by_reference( local.type );
+        promoted_[i.v]     = ( kind == Held::Scalar || kind == Held::Pair ) && !in && locals_[i.v] == nullptr &&
+                         !( debug_ && level_ <= 1 && local.name.is_valid() );
     }
 
     const auto check = [&]( const Place& place, bool addressed )
@@ -1074,7 +1078,9 @@ void Llvm_emitter::promote( const Function& function )
         {
             return;
         }
-        if( place.num_projections == 0 ? addressed : function.projections_of( place )[0].kind != Projection_kind::Deref )
+        if( place.num_projections == 0 ? addressed
+                                       : function.projections_of( place )[0].kind != Projection_kind::Deref ||
+                                             held( function.locals[place.local].type ) == Held::Pair )
         {
             promoted_[place.local.v] = false;
         }
@@ -2739,6 +2745,26 @@ TEST_CASE( "vectorise_widens_a_float_sum_only_under_real_arithmetic", "[codegen]
     INFO( widened );
     REQUIRE( kept.find( "fadd <" ) == std::string::npos );
     REQUIRE( widened.find( "fadd reassoc contract <" ) != std::string::npos );
+}
+
+// A run is a `{ ptr, i64 }` value, as a scalar is its own: no slot to store it in and load it back from.
+TEST_CASE( "emit_llvm_promotes_a_run_local", "[codegen][llvm]" )
+{
+    Compiled p(
+        "i32 total( const ref i32[] a ) { i32 n = 0; for( u64 i : 0..a.size ) { n += a[i]; } return n; }\n"
+        "i32 main() { i32[3] a = [ 1, 2, 3 ]; return total( a ) - 6; }\n",
+        Stage::Elaborated
+    );
+    REQUIRE( p.clean() );
+
+    const Description program = describe( p.ast, p.types, p.interner );
+    const Llvm_output promoted =
+        emit_llvm( p.functions, program, p.types, p.literals, p.sm, p.interner, p.modules, { .print = true } );
+    INFO( promoted.ir );
+    REQUIRE( promoted.error.empty() );
+    REQUIRE( promoted.ir.find( "extractvalue { ptr, i64 }" ) != std::string::npos );
+    REQUIRE( promoted.ir.find( "alloca { ptr, i64 }" ) == std::string::npos );
+    REQUIRE( promoted.ir.find( "load { ptr, i64 }" ) == std::string::npos );
 }
 
 TEST_CASE( "emit_llvm_promotes_a_scalar_local_unless_debug_at_O1_names_it", "[codegen][llvm]" )

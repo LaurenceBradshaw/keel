@@ -152,8 +152,10 @@ dynamic dispatch lands, and bounds-check elimination. M11 is the first of this l
 
 **How promotion is done (2026-10-22).** In the LLVM backend, while it emits, since KIR stays non-SSA
 (§3.1). A local is promoted when nothing takes its address, no `&init` hands it to a call, it is a
-scalar (an integer, `bool`, float, pointer or payload-free `enum`) and no write goes through a
-projection, however many times it is assigned. SSA is built block by block with Braun et al.'s
+scalar (an integer, `bool`, float, pointer or payload-free `enum`) or a run or interface reference,
+a `{ ptr, i64 }` or `{ ptr, ptr }` value read with `extractvalue`, and no write goes through a
+projection, however many times it is assigned. A reference that arrives by a pointer to the caller's
+copy (an interface reference on Win64) or returns through `sret` keeps its memory. SSA is built block by block with Braun et al.'s
 algorithm ("Simple and Efficient Construction of SSA Form", 2013), as Cranelift's frontend builds it:
 a read takes the local's current value in its block, asks the predecessors only when there is none,
 and places a phi where they differ, removing it again when it proves trivial, so no dominator tree is
