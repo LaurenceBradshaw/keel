@@ -21,7 +21,7 @@ struct Site
 };
 
 // Calls and drops dominate; storage markers, gotos and returns are free.
-u32 inline_cost( const Function& callee, const Inline_weights& weights )
+u32 inline_cost( const Function& callee, const Type_table& types, const Inline_weights& weights )
 {
     u32 cost      = 0;
     u32 call_like = 0;
@@ -32,9 +32,16 @@ u32 inline_cost( const Function& callee, const Inline_weights& weights )
         {
         case Statement_kind::Assign:
         {
-            const Rvalue_kind kind = callee.rvalue( statement ).kind;
-            if( kind == Rvalue_kind::Call || kind == Rvalue_kind::Indirect_call || kind == Rvalue_kind::Allocate ||
-                kind == Rvalue_kind::Release )
+            const Rvalue&     value = callee.rvalue( statement );
+            const Rvalue_kind kind  = value.kind;
+            if( kind == Rvalue_kind::Run_data ||
+                ( kind == Rvalue_kind::Binary && value.op == Token_kind::Plus && value.b.kind == Operand_kind::Constant &&
+                  ( types.is_pointer( value.type ) || types.is_many_pointer( value.type ) ) ) )
+            {
+                cost += weights.address;
+            }
+            else if( kind == Rvalue_kind::Call || kind == Rvalue_kind::Indirect_call || kind == Rvalue_kind::Allocate ||
+                     kind == Rvalue_kind::Release )
             {
                 cost += weights.call;
                 call_like++;
@@ -278,7 +285,7 @@ u32 folded_cost(
     propagate_constants( copy, types, literals, true );
     remove_dead_stores( copy, false, purity );
     simplify( copy, literals );
-    const u32 cost = inline_cost( copy, weights );
+    const u32 cost = inline_cost( copy, types, weights );
     return cost - std::min( cost, bound * weights.statement );
 }
 
@@ -621,15 +628,17 @@ const Rvalue* known_function( const Function& caller, const Operand& callee )
     return nullptr;
 }
 
-// Splices whatever `pick` chooses, then rescans the continuation for more. A spliced body was
-// inlined into already, so only its indirect calls are offered again: one may now be known. `pick`
-// is told the call's block and which of the caller's first blocks it came from.
+// Splices whatever `pick` chooses, then rescans the continuation for more. A spliced body's calls are
+// offered again, priced at this site: it may be in a loop, or pass constants, and an indirect one may
+// now be known; a call of a callee whose splice it came from is not, nor of one that calls itself, so a
+// recursive function is still inlined once. `pick` is told the call's block and which of the caller's
+// first blocks it came from.
 template <typename Pick>
 void inline_each( Function& caller, const Literal_pool& literals, Pick pick )
 {
-    std::vector<Block_id> worklist( caller.blocks.size() );
-    std::vector<bool>     spliced( caller.blocks.size(), false );
-    std::vector<Block_id> origin( caller.blocks.size() );
+    std::vector<Block_id>                     worklist( caller.blocks.size() );
+    std::vector<Block_id>                     origin( caller.blocks.size() );
+    std::vector<std::vector<const Function*>> within( caller.blocks.size() ); // the splices a block came from
 
     for( const Block_id i : caller.blocks.ids() )
     {
@@ -646,22 +655,19 @@ void inline_each( Function& caller, const Literal_pool& literals, Pick pick )
 
         for( u32 s = 0; s < block.statement_count; ++s )
         {
-            const Statement& statement = caller.statements_of( block )[s];
-            if( spliced[at.v] && ( statement.kind != Statement_kind::Assign ||
-                                   std::as_const( caller ).rvalue( statement ).kind != Rvalue_kind::Indirect_call ) )
+            const Site site      = pick( at, s, origin[at.v] );
+            const auto recursive = [&]( const Function& f )
+            { return std::ranges::any_of( f.statements, [&]( const Statement& t ) { return calls( f, t, f ); } ); };
+            if( site.callee && std::ranges::find( within[at.v], site.callee ) == within[at.v].end() &&
+                ( within[at.v].empty() || !recursive( *site.callee ) ) )
             {
-                continue;
-            }
-
-            const Site site = pick( at, s, origin[at.v] );
-            if( site.callee )
-            {
-                const bool inner      = spliced[at.v];
-                const u32  block_base = narrow_cast<u32>( caller.blocks.size() );
+                const u32 block_base = narrow_cast<u32>( caller.blocks.size() );
                 splice( caller, at, s, *site.callee, site.receiver );
-                spliced.resize( caller.blocks.size(), true );
-                spliced.back() = inner;
                 origin.resize( caller.blocks.size(), origin[at.v] );
+                std::vector<const Function*> inner = within[at.v];
+                inner.push_back( site.callee );
+                within.resize( caller.blocks.size(), inner );
+                within.back() = within[at.v]; // the continuation is the caller's own
                 for( u32 b = block_base; b < caller.blocks.size(); ++b )
                 {
                     worklist.push_back( Block_id { b } );
@@ -738,7 +744,7 @@ void inline_calls(
                     std::optional<Place> receiver;
                     bool                 fits = !( keep_trig && callee.trig != Trig::None ) && inlinable( callee );
                     // Priced first as it stands, then as this call's constants fold it.
-                    fits = fits && ( inline_cost( finished, weights ) <= limit ||
+                    fits = fits && ( inline_cost( finished, types, weights ) <= limit ||
                                      folded_cost( finished, caller, at, s, types, literals, purity, weights ) <= limit );
                     if( fits && callee.constructed.is_valid() )
                     {
@@ -770,6 +776,7 @@ void inline_drops(
     Function&                    caller,
     const std::vector<Function>& functions,
     const std::vector<bool>&     finished,
+    const Type_table&            types,
     const Literal_pool&          literals,
     const Inline_weights&        weights
 )
@@ -797,8 +804,8 @@ void inline_drops(
 
                 if( calls( caller, statement, functions[j] ) )
                 {
-                    if( replaceable_receiver( functions[j] ) &&
-                        inline_cost( functions[j], weights ) <= threshold( statement_count, functions[j], weights, false ) )
+                    if( replaceable_receiver( functions[j] ) && inline_cost( functions[j], types, weights ) <=
+                                                                    threshold( statement_count, functions[j], weights, false ) )
                     {
                         return Site { .callee = &functions[j], .receiver = statement.place };
                     }
@@ -972,6 +979,42 @@ TEST_CASE( "inline_calls_prices_a_callee_as_a_run_of_known_size_folds_it", "[opt
     const Inlined unknown( "i32 f( const ref i32[] r ) { return sized( r ); }\n" + sized );
     REQUIRE( unknown.clean() );
     REQUIRE( unknown.calls() == 1 );
+}
+
+// `cross3`'s element addresses are addressing modes, so only its arithmetic counts and it fits.
+TEST_CASE( "inline_calls_prices_an_element_address_as_free", "[opt][inline]" )
+{
+    const std::string source =
+        "i32 f( i32 x ) { i32[3] a = [ x, 2, 3 ]; i32[3] b = [ 3, x, 1 ]; i32[3] d = [ 0, 0, 0 ];"
+        " cross3( ref d, a, b ); return d[0] + d[1] + d[2]; }\n"
+        "void cross3( ref i32[] d, const ref i32[] a, const ref i32[] b ) {"
+        " if( a.size != 3 || b.size != 3 || d.size != 3 ) { panic( \"size\" ); }"
+        " d[0] = a[1] * b[2] - a[2] * b[1]; d[1] = a[2] * b[0] - a[0] * b[2]; d[2] = a[0] * b[1] - a[1] * b[0]; }\n";
+
+    const Inlined free( source );
+    REQUIRE( free.clean() );
+    REQUIRE( verify( free.first() ).empty() );
+    REQUIRE( free.calls() == 0 );
+
+    const Inlined counted( source, Inline_weights { .address = 1 } );
+    REQUIRE( counted.calls() == 1 );
+}
+
+// `pass` keeps its call of `mixed`, too dear outside a loop; spliced into `f`'s loop, the call is offered
+// again at the loop's limit and goes too.
+TEST_CASE( "inline_calls_offers_a_spliced_call_again_at_its_new_site", "[opt][inline]" )
+{
+    const std::string passing = "i32 pass( i32 x, i32 y ) { return mixed( x, y ); }\n";
+    const Inlined     looped(
+        "i32 f( i32 n, i32 y ) { i32 t = 0; for( i32 i = 0; i < n; i++ ) { t = t + pass( i, y ); } return t; }\n" + passing
+    );
+    REQUIRE( looped.clean() );
+    REQUIRE( verify( looped.first() ).empty() );
+    REQUIRE( looped.calls() == 0 );
+
+    const Inlined once( "i32 f( i32 n, i32 y ) { return pass( n, y ); }\n" + passing );
+    REQUIRE( once.clean() );
+    REQUIRE( once.calls() == 1 );
 }
 
 // Both are reached through `&init`, whose pointer the passes trust to die with its call.

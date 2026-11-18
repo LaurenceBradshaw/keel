@@ -416,7 +416,7 @@ Front_end run_front_end(
                 verified( current(), "settle_drops" );
                 if( build.level >= 2 && build.inlining )
                 {
-                    inline_drops( current(), front.functions, finished, literals, *build.inlining );
+                    inline_drops( current(), front.functions, finished, front.types.table(), literals, *build.inlining );
                     verified( current(), "inline_drops" );
                 }
                 // Twice by default, as a late pass uncovers work for an earlier one; a third round finds none.

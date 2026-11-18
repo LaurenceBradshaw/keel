@@ -16,6 +16,7 @@ namespace keel
 struct Inline_weights
 {
     u32 statement            = 1; // an assignment
+    u32 address              = 0; // `data( r )`, or a pointer plus a constant: an addressing mode
     u32 call                 = 5; // a call, drop, allocation or release; a lone one is free
     u32 branch               = 1;
     u32 panic                = 1;    // cheap, so a check does not keep a body out
@@ -48,6 +49,7 @@ void inline_drops(
     Function&                    caller,
     const std::vector<Function>& functions,
     const std::vector<bool>&     finished,
+    const Type_table&            types,
     const Literal_pool&          literals,
     const Inline_weights&        weights = {}
 );
