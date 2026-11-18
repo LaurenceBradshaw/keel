@@ -4,6 +4,7 @@
 #include "opt/forward_borrows.h"
 #include <algorithm>
 #include <cassert>
+#include "ir/live.h"
 #include "ir/simplify.h"
 
 namespace keel
@@ -120,10 +121,254 @@ std::vector<Local_id> forwarded_to( const Function& func, const Type_table& tabl
 
     return to;
 }
+
+// Where a write of a pointer into a local array gets its element: `&a[i]`, or the pointer it copies,
+// runs over, takes the data of, or offsets by `step`.
+struct Offset
+{
+    Local_id array {}; // `&a[i]`'s `a`
+    Local_id from {};  // else the pointer it derives from
+    Local_id index {}; // `&a[i]`'s `i`
+    Operand  step {};  // `from + step`, where `plus`
+    bool     plus = false;
+};
+
+std::optional<Offset> offset_of( const Function& func, const Type_table& table, const Rvalue& value )
+{
+    const auto whole = []( const Operand& o ) { return o.has_place() && o.place.is_whole_local(); };
+    if( value.kind == Rvalue_kind::Address_of &&
+        ( value.address_purpose == Address_purpose::Borrow || value.address_purpose == Address_purpose::Read ) &&
+        !value.a.place.is_global() && value.a.place.local.is_valid() && value.a.place.num_projections == 1 &&
+        func.projections[value.a.place.first_projection].kind == Projection_kind::Index &&
+        table.is_array( func.locals[value.a.place.local].type ) )
+    {
+        return Offset { .array = value.a.place.local, .index = func.projections[value.a.place.first_projection].index };
+    }
+    if( ( value.kind == Rvalue_kind::Run_of || value.kind == Rvalue_kind::Run_data || value.kind == Rvalue_kind::Use ) &&
+        whole( value.a ) )
+    {
+        return Offset { .from = value.a.place.local };
+    }
+    const auto u64 = [&]( Type_id t )
+    {
+        const Type& type = table.get( t );
+        return type.kind == Type_kind::Int && type.width == 64 && !type.is_signed;
+    };
+    if( value.kind == Rvalue_kind::Binary && value.op == Token_kind::Plus && whole( value.a ) &&
+        table.is_many_pointer( value.a.type ) && u64( value.b.type ) )
+    {
+        return Offset { .from = value.a.place.local, .step = value.b, .plus = true };
+    }
+    return std::nullopt;
+}
+
+// `(*q)` becomes `a[k]` where every write of `q` derives it from `&a[i]`: `k` is a new local written
+// beside each of them, so it always holds the element `q` points at.
+void forward_offsets( Function& func, const Type_table& table )
+{
+    const u32 n = narrow_cast<u32>( func.locals.size() );
+    struct Write
+    {
+        Block_id block;
+        u32      index;
+        Offset   offset;
+    };
+    std::vector<std::vector<Write>> writes( n );
+    std::vector<bool>               refused( n, false );
+    const Local_set                 addressed = addressed_locals( func );
+    for( const Block_id b : func.blocks.ids() )
+    {
+        const auto statements = func.statements_of( func.blocks[b] );
+        for( u32 s = 0; s < statements.size(); ++s )
+        {
+            const Statement& st = statements[s];
+            if( ( st.kind != Statement_kind::Assign && st.kind != Statement_kind::Drop ) || st.place.is_global() ||
+                !st.place.local.is_valid() || st.place.num_projections > 0 )
+            {
+                continue;
+            }
+            const u32                   p = st.place.local.v;
+            const std::optional<Offset> offset =
+                st.kind == Statement_kind::Assign ? offset_of( func, table, func.rvalue( st ) ) : std::nullopt;
+            if( offset )
+            {
+                writes[p].push_back( Write { b, s, *offset } );
+            }
+            refused[p] = refused[p] || !offset;
+        }
+    }
+
+    // The array each pointer points into, where every write agrees on one.
+    std::vector<Local_id> array( n );
+    for( bool changed = true; changed; )
+    {
+        changed = false;
+        for( u32 p = 0; p < n; ++p )
+        {
+            if( refused[p] || writes[p].empty() )
+            {
+                continue;
+            }
+            Local_id a {};
+            bool     known = true;
+            for( const Write& w : writes[p] )
+            {
+                const Offset& o = w.offset;
+                if( !o.array.is_valid() && refused[o.from.v] )
+                {
+                    refused[p] = true;
+                    break;
+                }
+                const Local_id got = o.array.is_valid() ? o.array : array[o.from.v];
+                if( !got.is_valid() )
+                {
+                    known = o.from.v == p && known; // its own last value, `q = q + 1`
+                    continue;
+                }
+                if( a.is_valid() && a != got )
+                {
+                    refused[p] = true;
+                    break;
+                }
+                a = got;
+            }
+            refused[p] = refused[p] || addressed[p] || p == k_return_slot.v;
+            if( refused[p] )
+            {
+                array[p] = Local_id {};
+                changed  = true;
+                continue;
+            }
+            if( known && a.is_valid() && array[p] != a )
+            {
+                array[p] = a;
+                changed  = true;
+            }
+        }
+    }
+
+    // Only the chains behind a pointer dereferenced to an element of its array.
+    const auto element = [&]( u32 q )
+    {
+        const Type_id type = func.locals[Local_id { q }].type;
+        return array[q].is_valid() && !refused[q] && table.is_many_pointer( type ) &&
+               table.get( type ).element == table.get( func.locals[array[q]].type ).element;
+    };
+    std::vector<bool> needed( n, false );
+    for_each_place(
+        func,
+        [&]( const Place& place, const Statement* )
+        {
+            if( !place.is_global() && place.local.is_valid() && place.num_projections > 0 && element( place.local.v ) )
+            {
+                needed[place.local.v] = true;
+            }
+        }
+    );
+    if( std::ranges::none_of( needed, []( bool b ) { return b; } ) )
+    {
+        return;
+    }
+    for( bool changed = true; changed; )
+    {
+        changed = false;
+        for( u32 p = 0; p < n; ++p )
+        {
+            for( const Write& w : writes[p] )
+            {
+                if( needed[p] && w.offset.from.is_valid() && !needed[w.offset.from.v] )
+                {
+                    needed[w.offset.from.v] = changed = true;
+                }
+            }
+        }
+    }
+
+    Type_id u64 {};
+    for( u32 p = 0; p < n && !u64.is_valid(); ++p )
+    {
+        for( const Write& w : writes[p] )
+        {
+            u64 = w.offset.array.is_valid() ? func.locals[w.offset.index].type : u64;
+        }
+    }
+    std::vector<Local_id> index( n );
+    for( u32 p = 0; p < n; ++p )
+    {
+        if( needed[p] )
+        {
+            index[p] = func.locals.push_back( Local { .type = u64, .span = func.locals[Local_id { p }].span } );
+        }
+    }
+
+    // Each write's element first, so both read what the write reads; a statement writes one pointer.
+    std::vector<std::optional<Statement>> before( func.statements.size() );
+    for( u32 p = 0; p < n; ++p )
+    {
+        for( const Write& w : writes[p] )
+        {
+            if( !needed[p] )
+            {
+                continue;
+            }
+            const Offset& o     = w.offset;
+            const Operand from  = copy( Place { .local = o.array.is_valid() ? o.index : index[o.from.v] }, u64 );
+            const Rvalue  value = o.plus ? binary( Token_kind::Plus, from, o.step, u64 ) : use( from );
+            const u32     at    = func.blocks[w.block].first_statement + w.index;
+            before[at]          = Statement {
+                         .span = func.statements[at].span, .place = Place { .local = index[p] }, .value = func.add_rvalue( value )
+            };
+        }
+    }
+    std::vector<Statement> statements;
+    statements.reserve( func.statements.size() );
+    for( Block& block : func.blocks )
+    {
+        const u32 first = narrow_cast<u32>( statements.size() );
+        for( u32 s = block.first_statement; s < block.first_statement + block.statement_count; ++s )
+        {
+            if( before[s] )
+            {
+                statements.push_back( std::move( *before[s] ) );
+            }
+            statements.push_back( std::move( func.statements[s] ) );
+        }
+        block.first_statement = first;
+        block.statement_count = narrow_cast<u32>( statements.size() ) - first;
+    }
+    func.statements = std::move( statements );
+
+    // `(*q).rest` is `a[k].rest`.
+    for_each_place(
+        func,
+        [&]( Place& place, const Statement* )
+        {
+            if( place.is_global() || !place.local.is_valid() || place.num_projections == 0 || !element( place.local.v ) ||
+                !index[place.local.v].is_valid() )
+            {
+                return;
+            }
+            assert( func.projections[place.first_projection].kind == Projection_kind::Deref );
+            const u32 first = narrow_cast<u32>( func.projections.size() );
+            func.projections.push_back( Projection { .kind = Projection_kind::Index, .index = index[place.local.v] } );
+            for( u32 k = 1; k < place.num_projections; ++k )
+            {
+                const Projection next = func.projections[place.first_projection + k];
+                func.projections.push_back( next );
+            }
+            place.local            = array[place.local.v];
+            place.first_projection = first;
+        }
+    );
+}
 } // namespace
 
 void forward_borrows( Function& func, const Type_table& table, bool pin_named )
 {
+    if( !pin_named )
+    {
+        forward_offsets( func, table );
+    }
     const std::vector<Local_id> to = forwarded_to( func, table, pin_named );
 
     if( std::ranges::none_of( to, []( Local_id k ) { return k.is_valid(); } ) )
@@ -256,6 +501,29 @@ TEST_CASE( "forward_borrows_names_the_field_splitting_made_a_local", "[opt][forw
     REQUIRE( verify( p.first() ).empty() );
     REQUIRE( p.addresses() == 0 );
     REQUIRE( p.derefs() == 0 );
+}
+
+// The inlined loop writes through a run of `a`, and each element it reaches is `a`'s own, so `a` keeps no address.
+TEST_CASE( "forward_borrows_names_the_element_a_run_of_a_local_reaches", "[opt][forward]" )
+{
+    const Forwarded p( "u64 f( u64 x ) { u64[4] a = [ x, x, x, x ]; twice( ref a[0..4] ); return a[1] + a[2]; }\n"
+                       "void twice( ref u64[] r ) { for( u64 i : 0..r.size ) { r[i] = r[i] * 2; } }\n" );
+    REQUIRE( p.clean() );
+    REQUIRE( verify( p.first() ).empty() );
+    REQUIRE( p.addresses() == 0 );
+    REQUIRE( p.derefs() == 0 );
+}
+
+// A run of one array or another may reach either, so it keeps its address.
+TEST_CASE( "forward_borrows_keeps_a_run_of_one_of_two_arrays", "[opt][forward]" )
+{
+    const Forwarded p( "u64 f( u64 x, bool c ) { u64[4] a = [ x, x, x, x ]; u64[4] b = [ x, x, x, x ];"
+                       " put( ref pick( c, ref a, ref b ), x ); return a[1] + b[2]; }\n"
+                       "ref u64[] pick( bool c, ref u64[4] a, ref u64[4] b ) { if( c ) { return a[0..4]; } return b[0..4]; }\n"
+                       "void put( ref u64[] r, u64 x ) { r[x % 4] = 5; }\n" );
+    REQUIRE( p.clean() );
+    REQUIRE( verify( p.first() ).empty() );
+    REQUIRE( p.addresses() > 0 );
 }
 
 // Pointing at one of two, or passed on: each keeps its address.

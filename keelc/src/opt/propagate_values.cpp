@@ -211,16 +211,35 @@ std::vector<std::optional<Values>> values_on_entry( const Function& func, const 
 
 // Follows whole-local copies while the operand can take the next fact. A whole-local copy keeps the
 // operand's projections and takes its local; a field copy or a constant replaces only a whole-local
-// read.
-void rewrite( Operand& operand, const Values& values )
+// read. An element of an array only replaces a whole `x = copy y`, so a read of a scalar in an expression
+// never becomes a read of memory.
+void rewrite( const Function& func, Operand& operand, const Values& values, bool plain )
 {
     if( operand.kind != Operand_kind::Copy || operand.place.is_global() || !values[operand.place.local.v] )
     {
         return;
     }
 
+    const auto indexed = [&]( const Operand& fact )
+    {
+        for( u32 k = 0; fact.kind == Operand_kind::Copy && k < fact.place.num_projections; ++k )
+        {
+            if( func.projections[fact.place.first_projection + k].kind == Projection_kind::Index )
+            {
+                return true;
+            }
+        }
+        return false;
+    };
     const auto takes = [&]( const Operand& fact )
-    { return operand.place.num_projections == 0 || ( fact.kind == Operand_kind::Copy && fact.place.num_projections == 0 ); };
+    {
+        return ( plain || !indexed( fact ) ) &&
+               ( operand.place.num_projections == 0 || ( fact.kind == Operand_kind::Copy && fact.place.num_projections == 0 ) );
+    };
+    if( !plain && indexed( *values[operand.place.local.v] ) )
+    {
+        return;
+    }
 
     Operand known = *values[operand.place.local.v];
     while( known.kind == Operand_kind::Copy && known.place.num_projections == 0 && values[known.place.local.v] &&
@@ -271,12 +290,13 @@ void propagate_values( Function& func, const Type_table& types, Literal_pool& li
             // Constant by default, so an address never moves.
             if( statement.kind == Statement_kind::Assign )
             {
-                rewrite( func.rvalue( statement ).a, values );
-                rewrite( func.rvalue( statement ).b, values );
+                const bool plain = func.rvalue( statement ).kind == Rvalue_kind::Use;
+                rewrite( func, func.rvalue( statement ).a, values, plain );
+                rewrite( func, func.rvalue( statement ).b, values, false );
 
                 for( Operand& argument : func.rvalue( statement ).arguments )
                 {
-                    rewrite( argument, values );
+                    rewrite( func, argument, values, false );
                 }
 
                 // Before the step, so `_3 = copy _45 + const 0` records a copy and `_3 = const 1 + const 2` a constant.
@@ -293,9 +313,9 @@ void propagate_values( Function& func, const Type_table& types, Literal_pool& li
             step( func, types, addressed, statement, values );
         }
 
-        rewrite( block.terminator.condition, values );
-        rewrite( block.terminator.message, values );
-        rewrite( block.terminator.at, values );
+        rewrite( func, block.terminator.condition, values, false );
+        rewrite( func, block.terminator.message, values, false );
+        rewrite( func, block.terminator.at, values, false );
     }
 }
 
@@ -449,6 +469,15 @@ TEST_CASE( "propagate_values_keeps_an_element_copy_its_index_changed", "[opt][pr
     REQUIRE( p.clean() );
     REQUIRE( verify( p.first() ).empty() );
     REQUIRE( p.reads( "a" ) == 1 );
+}
+
+// `a` holds `p[i]`, but each expression reads `a`, never the element again.
+TEST_CASE( "propagate_values_reads_an_element_copy_in_an_expression", "[opt][propagate]" )
+{
+    const Propagated p( "i64 f( i64[4] p, u64 i ) { i64 a = p[ i % 4 ]; return a * a + a; }\n" );
+    REQUIRE( p.clean() );
+    REQUIRE( verify( p.first() ).empty() );
+    REQUIRE( p.reads( "a" ) == 3 );
 }
 
 // `w` widens `n`, so `w * w` stays an `i64` multiply of `w`.
