@@ -422,8 +422,29 @@ int32_t kl_3opt_6passed__3i32( int32_t kl_a_1 )
 int32_t kl_3opt_4main__( void )
 {
     int32_t kl_t0;
-#line 138 "opt/scalars_copied.kl"
-    kl_t0 = kl_3opt_6passed__3i32( 5 );
+    struct kl_3opt_Point kl_p_1;
+    int32_t kl_t2;
+    bool kl_t3;
+#line 113 "opt/scalars_copied.kl"
+    kl_p_1.kl_x = 5;
+#line 113 "opt/scalars_copied.kl"
+    kl_p_1.kl_y = 1;
+    kl_t2 = kl_3opt_6spread__Q3opt5Point( kl_p_1 );
+#line 114 "opt/scalars_copied.kl"
+    kl_t3 = kl_t2 == 1031;
+#line 114 "opt/scalars_copied.kl"
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 114 "opt/scalars_copied.kl"
+    kl_t0 = 0;
+#line 114 "opt/scalars_copied.kl"
+    goto bb3;
+    bb2:
+#line 114 "opt/scalars_copied.kl"
+    kl_t0 = 6;
+#line 114 "opt/scalars_copied.kl"
+    goto bb3;
+    bb3:
 #line 141 "opt/scalars_copied.kl"
     return kl_t0;
 }

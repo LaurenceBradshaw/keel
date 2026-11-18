@@ -360,13 +360,17 @@ Front_end run_front_end(
                 {
                     // Recognition reads a trig call inside `@real_arithmetic`.
                     const bool keep_trig = build.level >= 3 && function.real_arithmetic;
-                    inline_calls( function, saved, front.functions, literals, keep_trig, *build.inlining );
+                    inline_calls(
+                        function, saved, front.functions, front.types.table(), literals, purity, keep_trig, *build.inlining
+                    );
                     verified( function, "inline_calls" );
                     // An inlined body's dispatch may now see its implementer.
                     if( devirtualise_calls( function, ast, front.types ) )
                     {
                         verified( function, "devirtualise_calls" );
-                        inline_calls( function, saved, front.functions, literals, keep_trig, *build.inlining );
+                        inline_calls(
+                            function, saved, front.functions, front.types.table(), literals, purity, keep_trig, *build.inlining
+                        );
                         verified( function, "inline_calls" );
                     }
                 }

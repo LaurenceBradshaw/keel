@@ -152,10 +152,10 @@ int32_t kl_10pure_calls_4main__( void )
     int32_t kl_t0;
     int64_t kl_t1;
     int64_t kl_t2;
-    bool kl_t3;
-    int64_t kl_kept_4;
-    bool kl_t5;
-    int64_t kl_t6;
+    int64_t kl_t3;
+    bool kl_t4;
+    int64_t kl_kept_5;
+    bool kl_t6;
     int64_t kl_t7;
     int64_t kl_t8;
     int64_t kl_t9;
@@ -164,47 +164,91 @@ int32_t kl_10pure_calls_4main__( void )
     int64_t kl_t12;
     int64_t kl_t13;
     int64_t kl_t14;
+    int64_t kl_t15;
+    uint64_t kl_i_16;
+    bool kl_t17;
+    int64_t kl_t18;
+    uint64_t kl_t19;
+    int64_t kl_t20;
+    int64_t kl_t21;
+    int64_t kl_t22;
+    int64_t kl_t23;
+    int64_t kl_t24;
+    int64_t kl_t25;
+    int64_t kl_t26;
+    int64_t kl_t27;
+    int64_t kl_t28;
+    uint64_t kl_i_29;
+    bool kl_t30;
+    int64_t kl_t31;
+    uint64_t kl_t32;
+    int64_t kl_t33;
+    int64_t kl_t34;
+    int64_t kl_t35;
+    int64_t kl_t36;
+    int64_t kl_t37;
+    int64_t kl_t38;
+    int64_t kl_t39;
+    int64_t kl_t40;
+    int64_t kl_t41;
+    uint64_t kl_i_42;
+    bool kl_t43;
+    int64_t kl_t44;
+    uint64_t kl_t45;
+    int64_t kl_t46;
+    int64_t kl_t47;
+    int64_t kl_t48;
+    int64_t kl_t49;
+    int64_t kl_t50;
+    int64_t kl_t51;
+    int64_t kl_t52;
+    int64_t kl_t53;
+    int64_t kl_t54;
+    int64_t kl_t55;
+    uint64_t kl_i_56;
+    bool kl_t57;
+    int64_t kl_t58;
+    uint64_t kl_t59;
+    int64_t kl_t60;
+    int64_t kl_t61;
+    int64_t kl_t62;
+    int64_t kl_t63;
+    int64_t kl_t64;
+    int64_t kl_t65;
+    int64_t kl_t66;
+    int64_t kl_t67;
+    int64_t kl_t68;
+    ( void ) kl_t19;
+    ( void ) kl_t32;
+    ( void ) kl_t45;
+    ( void ) kl_t59;
 #line 44 "opt/pure_calls/main.kl"
-    kl_t14 = kl_10pure_calls_3mix__3i64( 27 );
+    kl_t55 = kl_10pure_calls_3mix__3i64( 27 );
 #line 44 "opt/pure_calls/main.kl"
-    kl_t1 = kl_t14 + kl_t14;
-#line 60 "opt/pure_calls/main.kl"
-    kl_t2 = 2 * kl_t14;
-#line 60 "opt/pure_calls/main.kl"
-    kl_t3 = kl_t1 != kl_t2;
-#line 60 "opt/pure_calls/main.kl"
-    if ( kl_t3 ) goto bb1; else goto bb2;
+    kl_t1 = kl_t55 + kl_t55;
+#line 12 "opt/pure_calls/main.kl"
+    kl_t2 = 27;
+    kl_i_56 = 0;
+#line 13 "opt/pure_calls/main.kl"
+    goto bb12;
     bb1:
+#line 62 "opt/pure_calls/main.kl"
     kl_t0 = 1;
 #line 62 "opt/pure_calls/main.kl"
     return kl_t0;
     bb2:
-    kl_kept_4 = kl_10pure_calls_10twice_kept__3i64( -3 );
-    kl_t5 = kl_10pure_calls_total__G != -5;
+    kl_kept_5 = kl_10pure_calls_10twice_kept__3i64( -3 );
+    kl_t6 = kl_10pure_calls_total__G != -5;
 #line 65 "opt/pure_calls/main.kl"
-    if ( kl_t5 ) goto bb4; else goto bb3;
+    if ( kl_t6 ) goto bb4; else goto bb3;
     bb3:
-#line 65 "opt/pure_calls/main.kl"
-    kl_t6 = kl_10pure_calls_3mix__3i64( -3 );
-#line 65 "opt/pure_calls/main.kl"
-    kl_t7 = 2 * kl_t6;
-#line 65 "opt/pure_calls/main.kl"
-    kl_t8 = kl_t7 + 8;
-#line 65 "opt/pure_calls/main.kl"
-    kl_t9 = kl_t8 + kl_t6;
-#line 65 "opt/pure_calls/main.kl"
-    kl_t10 = kl_t9 - 3;
-#line 65 "opt/pure_calls/main.kl"
-    kl_t11 = kl_10pure_calls_3mix__3i64( -2 );
-#line 65 "opt/pure_calls/main.kl"
-    kl_t12 = kl_t10 + kl_t11;
-#line 65 "opt/pure_calls/main.kl"
-    kl_t13 = kl_t12 - 3;
-#line 65 "opt/pure_calls/main.kl"
-    kl_t5 = kl_kept_4 != kl_t13;
-#line 65 "opt/pure_calls/main.kl"
-    if ( kl_t5 ) goto bb4; else goto bb5;
+#line 12 "opt/pure_calls/main.kl"
+    kl_t7 = -3;
+    kl_i_16 = 0;
+#line 13 "opt/pure_calls/main.kl"
+    goto bb6;
     bb4:
+#line 67 "opt/pure_calls/main.kl"
     kl_t0 = 2;
 #line 67 "opt/pure_calls/main.kl"
     return kl_t0;
@@ -212,6 +256,201 @@ int32_t kl_10pure_calls_4main__( void )
     kl_t0 = 0;
 #line 69 "opt/pure_calls/main.kl"
     return kl_t0;
+    bb6:
+#line 15 "opt/pure_calls/main.kl"
+    kl_t18 = kl_t7 * 31;
+#line 15 "opt/pure_calls/main.kl"
+    kl_t19 = kl_i_16 & 3;
+#line 15 "opt/pure_calls/main.kl"
+    kl_t7 = kl_t18 + kl_10pure_calls_primes__G.e[kl_t19];
+    kl_t20 = kl_t7 >> 7;
+#line 16 "opt/pure_calls/main.kl"
+    kl_t7 = kl_t7 ^ kl_t20;
+    kl_t21 = kl_t7 * 17;
+#line 17 "opt/pure_calls/main.kl"
+    kl_t7 = kl_t21 + 5;
+    kl_t22 = kl_t7 >> 11;
+#line 18 "opt/pure_calls/main.kl"
+    kl_t7 = kl_t7 ^ kl_t22;
+    kl_t23 = kl_t7 * 13;
+#line 19 "opt/pure_calls/main.kl"
+    kl_t7 = kl_t23 + 3;
+    kl_t24 = kl_t7 >> 5;
+#line 20 "opt/pure_calls/main.kl"
+    kl_t7 = kl_t7 ^ kl_t24;
+    kl_t25 = kl_t7 * 29;
+#line 21 "opt/pure_calls/main.kl"
+    kl_t7 = kl_t25 + 7;
+    kl_t26 = kl_t7 >> 13;
+#line 22 "opt/pure_calls/main.kl"
+    kl_t7 = kl_t7 ^ kl_t26;
+    kl_t27 = kl_t7 * 19;
+#line 23 "opt/pure_calls/main.kl"
+    kl_t7 = kl_t27 + 1;
+    kl_t28 = kl_t7 >> 3;
+#line 24 "opt/pure_calls/main.kl"
+    kl_t7 = kl_t7 ^ kl_t28;
+#line 13 "opt/pure_calls/main.kl"
+    kl_i_16 = kl_i_16 + 1;
+#line 13 "opt/pure_calls/main.kl"
+    kl_t17 = kl_i_16 < 13;
+#line 13 "opt/pure_calls/main.kl"
+    if ( kl_t17 ) goto bb6; else goto bb7;
+    bb7:
+#line 65 "opt/pure_calls/main.kl"
+    kl_t8 = 2 * kl_t7;
+#line 65 "opt/pure_calls/main.kl"
+    kl_t9 = kl_t8 + 8;
+#line 12 "opt/pure_calls/main.kl"
+    kl_t10 = -3;
+    kl_i_29 = 0;
+#line 13 "opt/pure_calls/main.kl"
+    goto bb8;
+    bb8:
+    kl_t31 = kl_t10 * 31;
+#line 15 "opt/pure_calls/main.kl"
+    kl_t32 = kl_i_29 & 3;
+#line 15 "opt/pure_calls/main.kl"
+    kl_t10 = kl_t31 + kl_10pure_calls_primes__G.e[kl_t32];
+    kl_t33 = kl_t10 >> 7;
+#line 16 "opt/pure_calls/main.kl"
+    kl_t10 = kl_t10 ^ kl_t33;
+    kl_t34 = kl_t10 * 17;
+#line 17 "opt/pure_calls/main.kl"
+    kl_t10 = kl_t34 + 5;
+    kl_t35 = kl_t10 >> 11;
+#line 18 "opt/pure_calls/main.kl"
+    kl_t10 = kl_t10 ^ kl_t35;
+    kl_t36 = kl_t10 * 13;
+#line 19 "opt/pure_calls/main.kl"
+    kl_t10 = kl_t36 + 3;
+    kl_t37 = kl_t10 >> 5;
+#line 20 "opt/pure_calls/main.kl"
+    kl_t10 = kl_t10 ^ kl_t37;
+    kl_t38 = kl_t10 * 29;
+#line 21 "opt/pure_calls/main.kl"
+    kl_t10 = kl_t38 + 7;
+    kl_t39 = kl_t10 >> 13;
+#line 22 "opt/pure_calls/main.kl"
+    kl_t10 = kl_t10 ^ kl_t39;
+    kl_t40 = kl_t10 * 19;
+#line 23 "opt/pure_calls/main.kl"
+    kl_t10 = kl_t40 + 1;
+    kl_t41 = kl_t10 >> 3;
+#line 24 "opt/pure_calls/main.kl"
+    kl_t10 = kl_t10 ^ kl_t41;
+#line 13 "opt/pure_calls/main.kl"
+    kl_i_29 = kl_i_29 + 1;
+#line 13 "opt/pure_calls/main.kl"
+    kl_t30 = kl_i_29 < 13;
+#line 13 "opt/pure_calls/main.kl"
+    if ( kl_t30 ) goto bb8; else goto bb9;
+    bb9:
+#line 65 "opt/pure_calls/main.kl"
+    kl_t11 = kl_t9 + kl_t10;
+#line 65 "opt/pure_calls/main.kl"
+    kl_t12 = kl_t11 - 3;
+#line 12 "opt/pure_calls/main.kl"
+    kl_t13 = -2;
+    kl_i_42 = 0;
+#line 13 "opt/pure_calls/main.kl"
+    goto bb10;
+    bb10:
+    kl_t44 = kl_t13 * 31;
+#line 15 "opt/pure_calls/main.kl"
+    kl_t45 = kl_i_42 & 3;
+#line 15 "opt/pure_calls/main.kl"
+    kl_t13 = kl_t44 + kl_10pure_calls_primes__G.e[kl_t45];
+    kl_t46 = kl_t13 >> 7;
+#line 16 "opt/pure_calls/main.kl"
+    kl_t13 = kl_t13 ^ kl_t46;
+    kl_t47 = kl_t13 * 17;
+#line 17 "opt/pure_calls/main.kl"
+    kl_t13 = kl_t47 + 5;
+    kl_t48 = kl_t13 >> 11;
+#line 18 "opt/pure_calls/main.kl"
+    kl_t13 = kl_t13 ^ kl_t48;
+    kl_t49 = kl_t13 * 13;
+#line 19 "opt/pure_calls/main.kl"
+    kl_t13 = kl_t49 + 3;
+    kl_t50 = kl_t13 >> 5;
+#line 20 "opt/pure_calls/main.kl"
+    kl_t13 = kl_t13 ^ kl_t50;
+    kl_t51 = kl_t13 * 29;
+#line 21 "opt/pure_calls/main.kl"
+    kl_t13 = kl_t51 + 7;
+    kl_t52 = kl_t13 >> 13;
+#line 22 "opt/pure_calls/main.kl"
+    kl_t13 = kl_t13 ^ kl_t52;
+    kl_t53 = kl_t13 * 19;
+#line 23 "opt/pure_calls/main.kl"
+    kl_t13 = kl_t53 + 1;
+    kl_t54 = kl_t13 >> 3;
+#line 24 "opt/pure_calls/main.kl"
+    kl_t13 = kl_t13 ^ kl_t54;
+#line 13 "opt/pure_calls/main.kl"
+    kl_i_42 = kl_i_42 + 1;
+#line 13 "opt/pure_calls/main.kl"
+    kl_t43 = kl_i_42 < 14;
+#line 13 "opt/pure_calls/main.kl"
+    if ( kl_t43 ) goto bb10; else goto bb11;
+    bb11:
+#line 65 "opt/pure_calls/main.kl"
+    kl_t14 = kl_t12 + kl_t13;
+#line 65 "opt/pure_calls/main.kl"
+    kl_t15 = kl_t14 - 3;
+#line 65 "opt/pure_calls/main.kl"
+    kl_t6 = kl_kept_5 != kl_t15;
+#line 65 "opt/pure_calls/main.kl"
+    if ( kl_t6 ) goto bb4; else goto bb5;
+    bb12:
+#line 15 "opt/pure_calls/main.kl"
+    kl_t58 = kl_t2 * 31;
+#line 15 "opt/pure_calls/main.kl"
+    kl_t59 = kl_i_56 & 3;
+#line 15 "opt/pure_calls/main.kl"
+    kl_t2 = kl_t58 + kl_10pure_calls_primes__G.e[kl_t59];
+    kl_t60 = kl_t2 >> 7;
+#line 16 "opt/pure_calls/main.kl"
+    kl_t2 = kl_t2 ^ kl_t60;
+    kl_t61 = kl_t2 * 17;
+#line 17 "opt/pure_calls/main.kl"
+    kl_t2 = kl_t61 + 5;
+    kl_t62 = kl_t2 >> 11;
+#line 18 "opt/pure_calls/main.kl"
+    kl_t2 = kl_t2 ^ kl_t62;
+    kl_t63 = kl_t2 * 13;
+#line 19 "opt/pure_calls/main.kl"
+    kl_t2 = kl_t63 + 3;
+    kl_t64 = kl_t2 >> 5;
+#line 20 "opt/pure_calls/main.kl"
+    kl_t2 = kl_t2 ^ kl_t64;
+    kl_t65 = kl_t2 * 29;
+#line 21 "opt/pure_calls/main.kl"
+    kl_t2 = kl_t65 + 7;
+    kl_t66 = kl_t2 >> 13;
+#line 22 "opt/pure_calls/main.kl"
+    kl_t2 = kl_t2 ^ kl_t66;
+    kl_t67 = kl_t2 * 19;
+#line 23 "opt/pure_calls/main.kl"
+    kl_t2 = kl_t67 + 1;
+    kl_t68 = kl_t2 >> 3;
+#line 24 "opt/pure_calls/main.kl"
+    kl_t2 = kl_t2 ^ kl_t68;
+#line 13 "opt/pure_calls/main.kl"
+    kl_i_56 = kl_i_56 + 1;
+#line 13 "opt/pure_calls/main.kl"
+    kl_t57 = kl_i_56 < 11;
+#line 13 "opt/pure_calls/main.kl"
+    if ( kl_t57 ) goto bb12; else goto bb13;
+    bb13:
+#line 60 "opt/pure_calls/main.kl"
+    kl_t3 = 2 * kl_t2;
+#line 60 "opt/pure_calls/main.kl"
+    kl_t4 = kl_t1 != kl_t3;
+#line 60 "opt/pure_calls/main.kl"
+    if ( kl_t4 ) goto bb1; else goto bb2;
+#line 70 "opt/pure_calls/main.kl"
 }
 
 int main( void )

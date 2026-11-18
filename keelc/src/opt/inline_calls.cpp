@@ -5,6 +5,8 @@
 #include "ir/call_graph.h"
 #include "ir/loops.h"
 #include "ir/simplify.h"
+#include "opt/propagate_constants.h"
+#include "opt/remove_dead_stores.h"
 
 namespace keel
 {
@@ -103,11 +105,11 @@ bool inlinable( const Function& callee )
     return true;
 }
 
-// The offset in `block`, before `index`, of the `&init` that last wrote `pointer`'s local; none if
-// another write comes between, or the `&init` is in an earlier block.
-std::optional<u32> initialised( const Function& caller, const Block& block, u32 index, const Operand& pointer )
+// The offset in `block`, before `index`, of the last whole write to `operand`'s local; none if the
+// write is in an earlier block.
+std::optional<u32> last_write( const Function& caller, const Block& block, u32 index, const Operand& operand )
 {
-    if( pointer.kind != Operand_kind::Copy || pointer.place.is_global() || pointer.place.num_projections != 0 )
+    if( operand.kind != Operand_kind::Copy || operand.place.is_global() || operand.place.num_projections != 0 )
     {
         return std::nullopt;
     }
@@ -115,23 +117,169 @@ std::optional<u32> initialised( const Function& caller, const Block& block, u32 
     for( u32 s = index; s-- > 0; )
     {
         const Statement& statement = caller.statements_of( block )[s];
-
-        if( statement.kind != Statement_kind::Assign || statement.place.is_global() || statement.place.num_projections != 0 ||
-            statement.place.local != pointer.place.local )
-        {
-            continue;
-        }
-
-        const Rvalue& value = caller.rvalue( statement );
-        if( value.kind == Rvalue_kind::Address_of && value.address_purpose == Address_purpose::Initialise )
+        if( statement.kind == Statement_kind::Assign && !statement.place.is_global() && statement.place.num_projections == 0 &&
+            statement.place.local == operand.place.local )
         {
             return s;
         }
-
-        return std::nullopt;
     }
 
     return std::nullopt;
+}
+
+// The offset in `block`, before `index`, of the `&init` that last wrote `pointer`'s local; none if
+// another write comes between, or the `&init` is in an earlier block.
+std::optional<u32> initialised( const Function& caller, const Block& block, u32 index, const Operand& pointer )
+{
+    const std::optional<u32> s = last_write( caller, block, index, pointer );
+    if( !s )
+    {
+        return std::nullopt;
+    }
+
+    const Rvalue& value = caller.rvalue( caller.statements_of( block )[*s] );
+    if( value.kind == Rvalue_kind::Address_of && value.address_purpose == Address_purpose::Initialise )
+    {
+        return s;
+    }
+
+    return std::nullopt;
+}
+
+// The constant count of the `run( p, const n )` that `operand` holds at `index` of `at`, through whole
+// copies, reborrows and back from a lone predecessor's goto, so through a spliced `as_run`; none past
+// a few hops.
+std::optional<Operand> run_count( const Function& caller, Block_id at, u32 index, Operand operand )
+{
+    for( u32 hops = 0; hops < 8; ++hops )
+    {
+        operand.kind               = operand.kind == Operand_kind::Move ? Operand_kind::Copy : operand.kind;
+        const std::optional<u32> s = last_write( caller, caller.blocks[at], index, operand );
+        if( !s )
+        {
+            std::optional<Block_id> from;
+            u32                     entries = 0;
+            for( const Block_id b : caller.blocks.ids() )
+            {
+                const Terminator& end = caller.blocks[b].terminator;
+                if( end.kind == Terminator_kind::Goto && end.targets[0] == at )
+                {
+                    from = b;
+                    ++entries;
+                }
+                else if( end.kind == Terminator_kind::Branch && ( end.targets[0] == at || end.targets[1] == at ) )
+                {
+                    ++entries;
+                }
+            }
+            if( entries != 1 || !from || at == Block_id { 0 } )
+            {
+                return std::nullopt;
+            }
+            at    = *from;
+            index = caller.blocks[at].statement_count;
+            continue;
+        }
+
+        const Rvalue& value = caller.rvalue( caller.statements_of( at )[*s] );
+        if( value.kind == Rvalue_kind::Run_of && value.b.kind == Operand_kind::Constant )
+        {
+            return value.b;
+        }
+        // `&(*p)` is `p`, as collapse_borrows will make it.
+        const bool reborrow = value.kind == Rvalue_kind::Address_of && !value.a.place.is_global() &&
+                              value.a.place.num_projections == 1 &&
+                              caller.projections[value.a.place.first_projection].kind == Projection_kind::Deref;
+        if( reborrow )
+        {
+            operand = copy( Place { .local = value.a.place.local }, value.type );
+        }
+        else if( value.kind == Rvalue_kind::Use && value.a.has_place() && value.a.place.is_whole_local() )
+        {
+            operand = value.a;
+        }
+        else
+        {
+            return std::nullopt;
+        }
+        index = *s;
+    }
+
+    return std::nullopt;
+}
+
+// `callee` priced as the call at `index` of `at` leaves it: a constant argument assigned to its
+// parameter at entry, `size` of a run argument of constant count read as that count, then folded.
+// Each assignment stands for the one splicing makes, which `inline_cost` never sees, so is not counted.
+u32 folded_cost(
+    const Function&       callee,
+    const Function&       caller,
+    Block_id              at,
+    u32                   index,
+    const Type_table&     types,
+    Literal_pool&         literals,
+    const Purity&         purity,
+    const Inline_weights& weights
+)
+{
+    Function                            copy  = callee;
+    const Statement&                    site  = caller.statements_of( at )[index];
+    const Rvalue&                       call  = caller.rvalue( site );
+    u32                                 bound = 0;
+    std::vector<bool>                   written( copy.locals.size(), false );
+    std::vector<std::optional<Operand>> counts( copy.locals.size() );
+
+    for( const Statement& statement : copy.statements )
+    {
+        if( ( statement.kind == Statement_kind::Assign || statement.kind == Statement_kind::Drop ) &&
+            !statement.place.is_global() && statement.place.local.is_valid() )
+        {
+            written[statement.place.local.v] = true;
+        }
+    }
+
+    for( u32 i = 0; i < copy.parameter_count && i < call.arguments.size(); ++i )
+    {
+        const Local_id parameter { i + 1 };
+        const Operand& argument = call.arguments[i];
+        if( argument.kind == Operand_kind::Constant )
+        {
+            insert_statement(
+                copy,
+                Block_id { 0 },
+                0,
+                Statement {
+                    .span = site.span, .place = Place { .local = parameter }, .value = copy.add_rvalue( use( argument ) )
+                }
+            );
+            ++bound;
+        }
+        else if( !written[parameter.v] )
+        {
+            counts[parameter.v] = run_count( caller, at, index, argument );
+        }
+    }
+
+    for( Statement& statement : copy.statements )
+    {
+        if( statement.kind != Statement_kind::Assign )
+        {
+            continue;
+        }
+        const Rvalue& value = std::as_const( copy ).rvalue( statement );
+        if( value.kind == Rvalue_kind::Run_size && value.a.kind == Operand_kind::Copy && value.a.place.is_whole_local() &&
+            counts[value.a.place.local.v] )
+        {
+            copy.rvalue( statement ) = use( *counts[value.a.place.local.v] );
+        }
+    }
+
+    remove_statements( copy, std::vector<bool>( copy.statements.size(), false ) );
+    propagate_constants( copy, types, literals, true );
+    remove_dead_stores( copy, false, purity );
+    simplify( copy, literals );
+    const u32 cost = inline_cost( copy, weights );
+    return cost - std::min( cost, bound * weights.statement );
 }
 
 // The call at statement `index` of block `at` becomes: `at` up to the call, then the parameters
@@ -475,7 +623,7 @@ const Rvalue* known_function( const Function& caller, const Operand& callee )
 
 // Splices whatever `pick` chooses, then rescans the continuation for more. A spliced body was
 // inlined into already, so only its indirect calls are offered again: one may now be known. `pick`
-// is told which of the caller's first blocks the call's block came from.
+// is told the call's block and which of the caller's first blocks it came from.
 template <typename Pick>
 void inline_each( Function& caller, const Literal_pool& literals, Pick pick )
 {
@@ -505,7 +653,7 @@ void inline_each( Function& caller, const Literal_pool& literals, Pick pick )
                 continue;
             }
 
-            const Site site = pick( block, s, origin[at.v] );
+            const Site site = pick( at, s, origin[at.v] );
             if( site.callee )
             {
                 const bool inner      = spliced[at.v];
@@ -533,7 +681,9 @@ void inline_calls(
     Function&                                   caller,
     const std::vector<std::optional<Function>>& saved,
     const std::vector<Function>&                functions,
-    const Literal_pool&                         literals,
+    const Type_table&                           types,
+    Literal_pool&                               literals,
+    const Purity&                               purity,
     bool                                        keep_trig,
     const Inline_weights&                       weights
 )
@@ -553,8 +703,9 @@ void inline_calls(
     inline_each(
         caller,
         literals,
-        [&]( const Block& block, u32 s, Block_id from ) -> Site
+        [&]( Block_id at, u32 s, Block_id from ) -> Site
         {
+            const Block&     block     = caller.blocks[at];
             const Statement& statement = caller.statements_of( block )[s];
             const Rvalue&    value     = std::as_const( caller ).rvalue( statement );
 
@@ -583,10 +734,12 @@ void inline_calls(
                 {
                     const Function&      callee   = *saved[j];
                     const Function&      finished = functions[j];
+                    const u32            limit    = threshold( statement_count, finished, weights, looped[from.v] );
                     std::optional<Place> receiver;
-                    bool                 fits =
-                        !( keep_trig && callee.trig != Trig::None ) && inlinable( callee ) &&
-                        inline_cost( finished, weights ) <= threshold( statement_count, finished, weights, looped[from.v] );
+                    bool                 fits = !( keep_trig && callee.trig != Trig::None ) && inlinable( callee );
+                    // Priced first as it stands, then as this call's constants fold it.
+                    fits = fits && ( inline_cost( finished, weights ) <= limit ||
+                                     folded_cost( finished, caller, at, s, types, literals, purity, weights ) <= limit );
                     if( fits && callee.constructed.is_valid() )
                     {
                         assert( callee.constructed == Local_id { 1 } );
@@ -625,8 +778,9 @@ void inline_drops(
     inline_each(
         caller,
         literals,
-        [&]( const Block& block, u32 s, Block_id ) -> Site
+        [&]( Block_id at, u32 s, Block_id ) -> Site
         {
+            const Block&     block     = caller.blocks[at];
             const Statement& statement = caller.statements_of( block )[s];
             if( statement.kind != Statement_kind::Drop || statement.drop_flag.is_valid() ||
                 !caller.rvalue( statement ).callee.is_valid() )
@@ -678,7 +832,7 @@ constexpr std::string_view k_types = "class Box { public i64 value; public Box( 
                                      "i32 mixed( i32 a, i32 b ) { i32 c = a * b + a; i32 d = c - b * 3; i32 e = d * d + c;"
                                      " i32 f = e / 7 + d; i32 g = f * a - e; i32 h = g * b + f * c; i32 i = h * h + g;"
                                      " i32 j = i / 5 - h; i32 k = j * c + i; i32 l = k - j * d; i32 m = l * e + k;"
-                                     " return m + h * i - l; }\n"
+                                     " i32 n = m * f + l; i32 o = n - m * g; return o + h * i - l; }\n"
                                      "i32 main() { return 0; }\n";
 
 // Optimised and elaborated, as a release build emits it. The function under test is always the first.
@@ -782,6 +936,44 @@ TEST_CASE( "inline_calls_takes_a_dearer_callee_in_a_loop", "[opt][inline]" )
     REQUIRE( looped.calls() == 0 );
 }
 
+// `mixed`'s body behind a test of `k`: dear as it stands, cheap once a constant `k` folds the test.
+constexpr std::string_view k_chosen =
+    "i32 chosen( i32 k, i32 a ) { if( k == 0 ) { return a + 1; }"
+    " i32 c = a * k + a; i32 d = c - k * 3; i32 e = d * d + c; i32 f = e / 7 + d;"
+    " i32 g = f * a - e; i32 h = g * k + f * c; i32 i = h * h + g; i32 j = i / 5 - h;"
+    " i32 l = j * c + i; i32 m = l * e + j; i32 n = m * f + l; i32 o = n - m * g; return o + h * i - l; }\n";
+
+TEST_CASE( "inline_calls_prices_a_callee_as_its_constant_arguments_fold_it", "[opt][inline]" )
+{
+    const Inlined folded( "i32 f( i32 a ) { return chosen( 0, a ); }\n" + std::string( k_chosen ) );
+    REQUIRE( folded.clean() );
+    REQUIRE( verify( folded.first() ).empty() );
+    REQUIRE( folded.calls() == 0 );
+
+    const Inlined unknown( "i32 f( i32 a, i32 k ) { return chosen( k, a ); }\n" + std::string( k_chosen ) );
+    REQUIRE( unknown.clean() );
+    REQUIRE( unknown.calls() == 1 );
+}
+
+// The same for a run's size: `v` makes a run of 3, so the dear arm never runs.
+TEST_CASE( "inline_calls_prices_a_callee_as_a_run_of_known_size_folds_it", "[opt][inline]" )
+{
+    const std::string sized = "i32 sized( const ref i32[] r ) { if( r.size == 3 ) { return r[0]; }"
+                              " i32 a = r[0]; i32 k = r[1]; i32 c = a * k + a; i32 d = c - k * 3; i32 e = d * d + c;"
+                              " i32 f = e / 7 + d; i32 g = f * a - e; i32 h = g * k + f * c; i32 i = h * h + g;"
+                              " i32 j = i / 5 - h; i32 l = j * c + i; i32 m = l * e + j; i32 n = m * f + l; i32 o = n - m * g;"
+                              " return o + h * i - l; }\n";
+
+    const Inlined known( "i32 f( i32 a ) { i32[3] v = [ a, 2, 3 ]; return sized( v ); }\n" + sized );
+    REQUIRE( known.clean() );
+    REQUIRE( verify( known.first() ).empty() );
+    REQUIRE( known.calls() == 0 );
+
+    const Inlined unknown( "i32 f( const ref i32[] r ) { return sized( r ); }\n" + sized );
+    REQUIRE( unknown.clean() );
+    REQUIRE( unknown.calls() == 1 );
+}
+
 // Both are reached through `&init`, whose pointer the passes trust to die with its call.
 TEST_CASE( "inline_calls_keeps_a_call_that_initialises_through_out", "[opt][inline]" )
 {
@@ -846,8 +1038,8 @@ TEST_CASE( "inline_calls_keeps_a_constructor_that_passes_this_on", "[opt][inline
 {
     const Inlined p( "i32 f() { Reg r = Reg( 4 ); return r.value; }\n"
                      "class Reg { public i32 value; public Reg( i32 v ) { value = v; fill(); }"
-                     " void fill() { value = mixed( 1, 2 ) + mixed( 3, 4 ) + mixed( 5, 6 ) + mixed( 7, 8 ) + mixed( 9, 1 )"
-                     " + mixed( 2, 3 ); } };\n" );
+                     " void fill() { value = mixed( value, 2 ) + mixed( value, 4 ) + mixed( value, 6 ) + mixed( value, 8 )"
+                     " + mixed( value, 1 ) + mixed( value, 3 ); } };\n" );
     REQUIRE( p.clean() );
     REQUIRE( verify( p.first() ).empty() );
     REQUIRE( p.calls() == 1 );

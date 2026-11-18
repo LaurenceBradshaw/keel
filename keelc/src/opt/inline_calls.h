@@ -6,6 +6,8 @@
 #include <vector>
 #include "common/literal_pool.h"
 #include "ir/kir.h"
+#include "ir/purity.h"
+#include "sema/type.h"
 
 namespace keel
 {
@@ -26,13 +28,16 @@ struct Inline_weights
 
 // Release only: a call to a small saved body becomes that body. A body not saved yet, as one in the
 // caller's own group, is never taken, which is what stops recursion. Small is measured on the callee
-// as `functions` holds it, finished, since the saved body is what its passes have yet to shrink.
+// as `functions` holds it, finished, since the saved body is what its passes have yet to shrink;
+// one over the threshold is priced again with the call's constants folded in.
 // With `keep_trig`, a call to a `@trig_` function stays a call.
 void inline_calls(
     Function&                                   caller,
     const std::vector<std::optional<Function>>& saved,
     const std::vector<Function>&                functions,
-    const Literal_pool&                         literals,
+    const Type_table&                           types,
+    Literal_pool&                               literals,
+    const Purity&                               purity,
     bool                                        keep_trig,
     const Inline_weights&                       weights = {}
 );
