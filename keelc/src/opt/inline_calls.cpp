@@ -283,7 +283,7 @@ u32 folded_cost(
 
     remove_statements( copy, std::vector<bool>( copy.statements.size(), false ) );
     propagate_constants( copy, types, literals, true );
-    remove_dead_stores( copy, false, purity );
+    remove_dead_stores( copy, false, purity, types, literals );
     simplify( copy, literals );
     const u32 cost = inline_cost( copy, types, weights );
     return cost - std::min( cost, bound * weights.statement );

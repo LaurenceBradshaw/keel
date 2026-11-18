@@ -291,7 +291,7 @@ Front_end run_front_end(
         // Again, as a join SCCP left fewer paths into may now agree.
         propagate_values( function, front.types.table(), literals );
         verified( function, "propagate_values" );
-        remove_dead_stores( function, pin_named, purity );
+        remove_dead_stores( function, pin_named, purity, front.types.table(), literals );
         verified( function, "remove_dead_stores" );
         // Dead store removal can empty a block, so threading goes first.
         simplify( function, literals );
@@ -553,6 +553,12 @@ Front_end run_front_end(
                     if( moved )
                     {
                         optimise_round( current() );
+                        // The round can empty a loop, once unrolling made its stores redundant.
+                        if( unroll_loops( current(), front.types.table(), literals, *build.loops, false ) )
+                        {
+                            verified( current(), "unroll_loops" );
+                            optimise_round( current() );
+                        }
                     }
                     // Else only the empty blocks normalising added and a hoist went through are left.
                     else
