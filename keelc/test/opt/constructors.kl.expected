@@ -354,110 +354,107 @@ int32_t kl_3opt_8in_place__( void )
     if ( kl_t2 ) goto bb2; else goto bb3;
 }
 
-#line 99 "opt/constructors.kl"
+#line 100 "opt/constructors.kl"
 int32_t kl_3opt_8branched__4bool( bool kl_c_1 )
 {
     int32_t kl_t0;
-    struct kl_3opt_Box kl_b_2;
-    struct kl_3opt_Box* kl_t3;
-    int32_t kl_t4;
+    int32_t kl_t2;
+    bool kl_t3;
+    bool kl_t4;
+    int32_t kl_b_5;
     int32_t kl_t6;
-    bool kl_t7;
-    bool kl_t8;
-    int32_t kl_t9;
-#line 102 "opt/constructors.kl"
-    kl_t3 = &kl_b_2;
-#line 102 "opt/constructors.kl"
+#line 103 "opt/constructors.kl"
     if ( kl_c_1 ) goto bb1; else goto bb2;
     bb1:
-#line 102 "opt/constructors.kl"
-    kl_t4 = 7;
-#line 102 "opt/constructors.kl"
-    goto bb3;
+#line 103 "opt/constructors.kl"
+    kl_b_5 = 7;
+#line 103 "opt/constructors.kl"
+    goto bb10;
     bb2:
-#line 102 "opt/constructors.kl"
-    kl_t4 = 8;
-#line 102 "opt/constructors.kl"
-    goto bb3;
+#line 103 "opt/constructors.kl"
+    kl_b_5 = 8;
+#line 103 "opt/constructors.kl"
+    goto bb10;
     bb3:
-#line 102 "opt/constructors.kl"
-    kl_3opt_3Box__RQ3opt3Box_3i32__ctor( kl_t3, kl_t4 );
-    if ( kl_c_1 ) goto bb4; else goto bb5;
+#line 104 "opt/constructors.kl"
+    kl_t2 = 7;
+#line 104 "opt/constructors.kl"
+    goto bb5;
     bb4:
-#line 103 "opt/constructors.kl"
-    kl_t6 = 7;
-#line 103 "opt/constructors.kl"
-    goto bb6;
+#line 104 "opt/constructors.kl"
+    kl_t2 = 8;
+#line 104 "opt/constructors.kl"
+    goto bb5;
     bb5:
-#line 103 "opt/constructors.kl"
-    kl_t6 = 8;
-#line 103 "opt/constructors.kl"
-    goto bb6;
+#line 104 "opt/constructors.kl"
+    kl_t3 = kl_b_5 != kl_t2;
+#line 104 "opt/constructors.kl"
+    if ( kl_t3 ) goto bb6; else goto bb11;
     bb6:
-#line 103 "opt/constructors.kl"
-    kl_t7 = kl_b_2.kl_value != kl_t6;
-#line 103 "opt/constructors.kl"
-    if ( kl_t7 ) goto bb7; else goto bb11;
-    bb7:
     kl_t0 = 3;
 #line 19 "opt/constructors.kl"
     kl_3opt_live__G = kl_3opt_live__G - 1;
-#line 105 "opt/constructors.kl"
+#line 106 "opt/constructors.kl"
     return kl_t0;
-    bb8:
-#line 109 "opt/constructors.kl"
+    bb7:
+#line 110 "opt/constructors.kl"
     kl_t0 = 0;
-#line 109 "opt/constructors.kl"
-    goto bb10;
-    bb9:
-#line 109 "opt/constructors.kl"
+#line 110 "opt/constructors.kl"
+    goto bb9;
+    bb8:
+#line 110 "opt/constructors.kl"
     kl_t0 = 3;
-#line 109 "opt/constructors.kl"
-    goto bb10;
-    bb10:
-#line 109 "opt/constructors.kl"
+#line 110 "opt/constructors.kl"
+    goto bb9;
+    bb9:
+#line 110 "opt/constructors.kl"
     return kl_t0;
+    bb10:
+#line 14 "opt/constructors.kl"
+    kl_3opt_live__G = kl_3opt_live__G + 1;
+#line 104 "opt/constructors.kl"
+    if ( kl_c_1 ) goto bb3; else goto bb4;
     bb11:
 #line 19 "opt/constructors.kl"
-    kl_t9 = kl_3opt_live__G - 1;
+    kl_t6 = kl_3opt_live__G - 1;
 #line 19 "opt/constructors.kl"
-    kl_3opt_live__G = kl_t9;
-#line 109 "opt/constructors.kl"
-    kl_t8 = kl_t9 == 0;
-#line 109 "opt/constructors.kl"
-    if ( kl_t8 ) goto bb8; else goto bb9;
+    kl_3opt_live__G = kl_t6;
+#line 110 "opt/constructors.kl"
+    kl_t4 = kl_t6 == 0;
+#line 110 "opt/constructors.kl"
+    if ( kl_t4 ) goto bb7; else goto bb8;
 }
 
-#line 112 "opt/constructors.kl"
+#line 113 "opt/constructors.kl"
 int32_t kl_3opt_6handed__( void )
 {
     int32_t kl_t0;
     struct kl_3opt_Logged kl_l_1;
     struct kl_3opt_Logged* kl_t2;
     bool kl_t4;
-#line 114 "opt/constructors.kl"
+#line 115 "opt/constructors.kl"
     kl_t2 = &kl_l_1;
-#line 114 "opt/constructors.kl"
+#line 115 "opt/constructors.kl"
     kl_3opt_6Logged__RQ3opt6Logged_3i32__ctor( kl_t2, 2 );
     kl_t4 = kl_l_1.kl_value == -43;
-#line 115 "opt/constructors.kl"
+#line 116 "opt/constructors.kl"
     if ( kl_t4 ) goto bb1; else goto bb2;
     bb1:
-#line 115 "opt/constructors.kl"
+#line 116 "opt/constructors.kl"
     kl_t0 = 0;
-#line 115 "opt/constructors.kl"
+#line 116 "opt/constructors.kl"
     goto bb3;
     bb2:
-#line 115 "opt/constructors.kl"
+#line 116 "opt/constructors.kl"
     kl_t0 = 4;
-#line 115 "opt/constructors.kl"
+#line 116 "opt/constructors.kl"
     goto bb3;
     bb3:
-#line 115 "opt/constructors.kl"
+#line 116 "opt/constructors.kl"
     return kl_t0;
 }
 
-#line 119 "opt/constructors.kl"
+#line 120 "opt/constructors.kl"
 int32_t kl_3opt_9sometimes__4bool( bool kl_c_1 )
 {
     int32_t kl_t0;
@@ -470,7 +467,7 @@ int32_t kl_3opt_9sometimes__4bool( bool kl_c_1 )
     kl_t5 = kl_3opt_live__G + 1;
 #line 14 "opt/constructors.kl"
     kl_3opt_live__G = kl_t5;
-#line 122 "opt/constructors.kl"
+#line 123 "opt/constructors.kl"
     kl_t4 = true;
     if ( kl_c_1 ) goto bb1; else goto bb2;
     bb1:
@@ -480,28 +477,28 @@ int32_t kl_3opt_9sometimes__4bool( bool kl_c_1 )
 #line 68 "opt/constructors.kl"
     goto bb2;
     bb2:
-#line 127 "opt/constructors.kl"
+#line 128 "opt/constructors.kl"
     if ( kl_t4 ) kl_3opt_3Box__dtor( &kl_b_2 );
-#line 129 "opt/constructors.kl"
+#line 130 "opt/constructors.kl"
     kl_t3 = kl_3opt_live__G == 0;
-#line 129 "opt/constructors.kl"
+#line 130 "opt/constructors.kl"
     if ( kl_t3 ) goto bb3; else goto bb4;
     bb3:
-#line 129 "opt/constructors.kl"
+#line 130 "opt/constructors.kl"
     kl_t0 = 0;
-#line 129 "opt/constructors.kl"
+#line 130 "opt/constructors.kl"
     goto bb5;
     bb4:
-#line 129 "opt/constructors.kl"
+#line 130 "opt/constructors.kl"
     kl_t0 = 5;
-#line 129 "opt/constructors.kl"
+#line 130 "opt/constructors.kl"
     goto bb5;
     bb5:
-#line 129 "opt/constructors.kl"
+#line 130 "opt/constructors.kl"
     return kl_t0;
 }
 
-#line 132 "opt/constructors.kl"
+#line 133 "opt/constructors.kl"
 int32_t kl_3opt_4main__( void )
 {
     int32_t kl_t0;
@@ -513,179 +510,111 @@ int32_t kl_3opt_4main__( void )
     struct kl_3opt_Logged kl_l_6;
     struct kl_3opt_Logged* kl_t7;
     bool kl_t9;
-    struct kl_3opt_Box kl_b_10;
-    struct kl_3opt_Box* kl_t11;
+    bool kl_t10;
+    bool kl_t11;
+    bool kl_t12;
     bool kl_t13;
-    bool kl_t14;
-    struct kl_3opt_Box kl_b_15;
-    struct kl_3opt_Box* kl_t16;
-    bool kl_t18;
-    bool kl_t19;
-    bool kl_t20;
-    bool kl_t21;
-    bool kl_t22;
-    bool kl_t23;
-    int32_t kl_t24;
-    int32_t kl_t25;
-    int32_t kl_t26;
-    int32_t kl_t27;
+    int32_t kl_t14;
+    int32_t kl_t15;
 #line 14 "opt/constructors.kl"
-    kl_t24 = kl_3opt_live__G + 1;
+    kl_t14 = kl_3opt_live__G + 1;
 #line 75 "opt/constructors.kl"
-    kl_t20 = kl_t24 != 1;
+    kl_t10 = kl_t14 != 1;
 #line 75 "opt/constructors.kl"
-    if ( kl_t20 ) goto bb16; else goto bb18;
+    if ( kl_t10 ) goto bb11; else goto bb13;
     bb1:
-#line 102 "opt/constructors.kl"
-    kl_t11 = &kl_b_10;
-#line 102 "opt/constructors.kl"
-    kl_3opt_3Box__RQ3opt3Box_3i32__ctor( kl_t11, 8 );
-    kl_t13 = kl_b_10.kl_value != 8;
-#line 103 "opt/constructors.kl"
-    if ( kl_t13 ) goto bb12; else goto bb21;
+#line 19 "opt/constructors.kl"
+    kl_3opt_live__G = 0;
+#line 115 "opt/constructors.kl"
+    kl_t7 = &kl_l_6;
+#line 115 "opt/constructors.kl"
+    kl_3opt_6Logged__RQ3opt6Logged_3i32__ctor( kl_t7, 2 );
+    kl_t9 = kl_l_6.kl_value == -43;
+#line 116 "opt/constructors.kl"
+    if ( kl_t9 ) goto bb8; else goto bb9;
     bb2:
 #line 13 "opt/constructors.kl"
     kl_b_4.kl_value = 9;
-#line 125 "opt/constructors.kl"
-    kl_t23 = false;
-#line 127 "opt/constructors.kl"
-    if ( kl_t23 ) kl_3opt_3Box__dtor( &kl_b_4 );
-#line 129 "opt/constructors.kl"
+#line 126 "opt/constructors.kl"
+    kl_t13 = false;
+#line 128 "opt/constructors.kl"
+    if ( kl_t13 ) kl_3opt_3Box__dtor( &kl_b_4 );
+#line 130 "opt/constructors.kl"
     kl_t5 = kl_3opt_live__G == 0;
-#line 129 "opt/constructors.kl"
+#line 130 "opt/constructors.kl"
     if ( kl_t5 ) goto bb3; else goto bb7;
     bb3:
 #line 13 "opt/constructors.kl"
     kl_b_2.kl_value = 9;
     kl_3opt_live__G = kl_3opt_live__G + 1;
-#line 122 "opt/constructors.kl"
-    kl_t22 = true;
-#line 127 "opt/constructors.kl"
-    if ( kl_t22 ) kl_3opt_3Box__dtor( &kl_b_2 );
-#line 129 "opt/constructors.kl"
+#line 123 "opt/constructors.kl"
+    kl_t12 = true;
+#line 128 "opt/constructors.kl"
+    if ( kl_t12 ) kl_3opt_3Box__dtor( &kl_b_2 );
+#line 130 "opt/constructors.kl"
     kl_t3 = kl_3opt_live__G == 0;
-#line 129 "opt/constructors.kl"
+#line 130 "opt/constructors.kl"
     if ( kl_t3 ) goto bb5; else goto bb6;
     bb4:
-#line 160 "opt/constructors.kl"
+#line 161 "opt/constructors.kl"
     return kl_t0;
     bb5:
-#line 129 "opt/constructors.kl"
+#line 130 "opt/constructors.kl"
     kl_t0 = 0;
-#line 129 "opt/constructors.kl"
+#line 130 "opt/constructors.kl"
     goto bb4;
     bb6:
-#line 129 "opt/constructors.kl"
+#line 130 "opt/constructors.kl"
     kl_t0 = 5;
-#line 129 "opt/constructors.kl"
+#line 130 "opt/constructors.kl"
     goto bb4;
     bb7:
-#line 129 "opt/constructors.kl"
+#line 130 "opt/constructors.kl"
     kl_t0 = 5;
-#line 155 "opt/constructors.kl"
+#line 156 "opt/constructors.kl"
     goto bb4;
     bb8:
-#line 114 "opt/constructors.kl"
-    kl_t7 = &kl_l_6;
-#line 114 "opt/constructors.kl"
-    kl_3opt_6Logged__RQ3opt6Logged_3i32__ctor( kl_t7, 2 );
-    kl_t9 = kl_l_6.kl_value == -43;
-#line 115 "opt/constructors.kl"
-    if ( kl_t9 ) goto bb9; else goto bb10;
-    bb9:
-#line 115 "opt/constructors.kl"
+#line 116 "opt/constructors.kl"
     kl_t0 = 0;
-#line 115 "opt/constructors.kl"
-    goto bb11;
-    bb10:
-#line 115 "opt/constructors.kl"
+#line 116 "opt/constructors.kl"
+    goto bb10;
+    bb9:
+#line 116 "opt/constructors.kl"
     kl_t0 = 4;
-#line 115 "opt/constructors.kl"
-    goto bb11;
-    bb11:
-#line 151 "opt/constructors.kl"
+#line 116 "opt/constructors.kl"
+    goto bb10;
+    bb10:
+#line 152 "opt/constructors.kl"
     kl_t1 = kl_t0 == 0;
-#line 151 "opt/constructors.kl"
+#line 152 "opt/constructors.kl"
     if ( kl_t1 ) goto bb2; else goto bb4;
-    bb12:
-#line 105 "opt/constructors.kl"
-    kl_t0 = 3;
-#line 19 "opt/constructors.kl"
-    kl_3opt_live__G = kl_3opt_live__G - 1;
-#line 151 "opt/constructors.kl"
-    goto bb4;
-    bb13:
-#line 109 "opt/constructors.kl"
-    kl_t0 = 3;
-#line 151 "opt/constructors.kl"
-    goto bb4;
-    bb14:
-#line 105 "opt/constructors.kl"
-    kl_t0 = 3;
-#line 19 "opt/constructors.kl"
-    kl_3opt_live__G = kl_3opt_live__G - 1;
-#line 151 "opt/constructors.kl"
-    goto bb4;
-    bb15:
-#line 109 "opt/constructors.kl"
-    kl_t0 = 3;
-#line 151 "opt/constructors.kl"
-    goto bb4;
-    bb16:
+    bb11:
 #line 77 "opt/constructors.kl"
     kl_t0 = 1;
-#line 151 "opt/constructors.kl"
+#line 152 "opt/constructors.kl"
     goto bb4;
-    bb17:
+    bb12:
 #line 81 "opt/constructors.kl"
     kl_t0 = 1;
-#line 151 "opt/constructors.kl"
+#line 152 "opt/constructors.kl"
     goto bb4;
-    bb18:
+    bb13:
 #line 19 "opt/constructors.kl"
-    kl_t25 = kl_3opt_live__G;
+    kl_t15 = kl_3opt_live__G;
 #line 81 "opt/constructors.kl"
-    kl_t21 = kl_t25 == 0;
+    kl_t11 = kl_t15 == 0;
 #line 81 "opt/constructors.kl"
-    if ( kl_t21 ) goto bb19; else goto bb17;
-    bb19:
-#line 19 "opt/constructors.kl"
-    kl_3opt_live__G = 0;
-#line 102 "opt/constructors.kl"
-    kl_t16 = &kl_b_15;
-#line 102 "opt/constructors.kl"
-    kl_3opt_3Box__RQ3opt3Box_3i32__ctor( kl_t16, 7 );
-    kl_t18 = kl_b_15.kl_value != 7;
-#line 103 "opt/constructors.kl"
-    if ( kl_t18 ) goto bb14; else goto bb20;
-    bb20:
-#line 19 "opt/constructors.kl"
-    kl_t26 = kl_3opt_live__G - 1;
-#line 19 "opt/constructors.kl"
-    kl_3opt_live__G = kl_t26;
-#line 109 "opt/constructors.kl"
-    kl_t19 = kl_t26 == 0;
-#line 109 "opt/constructors.kl"
-    if ( kl_t19 ) goto bb1; else goto bb15;
-    bb21:
-#line 19 "opt/constructors.kl"
-    kl_t27 = kl_3opt_live__G - 1;
-#line 19 "opt/constructors.kl"
-    kl_3opt_live__G = kl_t27;
-#line 109 "opt/constructors.kl"
-    kl_t14 = kl_t27 == 0;
-#line 109 "opt/constructors.kl"
-    if ( kl_t14 ) goto bb8; else goto bb13;
-#line 161 "opt/constructors.kl"
+    if ( kl_t11 ) goto bb1; else goto bb12;
+#line 162 "opt/constructors.kl"
 }
 
 int main( void )
 {
     int32_t kl_t0;
-#line 132 "opt/constructors.kl"
+#line 133 "opt/constructors.kl"
     kl_t0 = kl_3opt_4main__(  );
-#line 132 "opt/constructors.kl"
+#line 133 "opt/constructors.kl"
     return kl_t0;
-#line 132 "opt/constructors.kl"
+#line 133 "opt/constructors.kl"
 }
 

@@ -238,15 +238,15 @@ int32_t kl_7codegen_4main__( void )
     bool kl_t12;
     int64_t kl_drops_13;
     struct kl_7prelude_box__IQ7codegen7CountedE kl_b_14;
-    struct kl_7prelude_box__IQ7codegen7CountedE* kl_t15;
-    struct kl_7codegen_Counted kl_t16;
+    struct kl_7codegen_Counted kl_t15;
+    int64_t* kl_t16;
     struct kl_7codegen_Counted* kl_t17;
-    int64_t* kl_t18;
+    struct kl_7prelude_box__IQ7codegen7CountedE* kl_t19;
     struct kl_7codegen_Counted kl_old_21;
     struct kl_7prelude_box__IQ7codegen7CountedE* kl_t22;
     struct kl_7codegen_Counted kl_t23;
-    struct kl_7codegen_Counted* kl_t24;
-    int64_t* kl_t25;
+    int64_t* kl_t24;
+    struct kl_7codegen_Counted* kl_t25;
     struct kl_7codegen_Counted kl_t27;
     bool kl_t28;
     bool kl_t29;
@@ -374,36 +374,36 @@ int32_t kl_7codegen_4main__( void )
 #line 50 "codegen/box_replace.kl"
     kl_drops_13 = 0;
 #line 52 "codegen/box_replace.kl"
-    kl_t15 = &kl_b_14;
-#line 52 "codegen/box_replace.kl"
     kl_t34 = false;
 #line 52 "codegen/box_replace.kl"
-    kl_t17 = &kl_t16;
+    kl_t16 = &kl_drops_13;
+#line 52 "codegen/box_replace.kl"
+    kl_t17 = &kl_t15;
 #line 52 "codegen/box_replace.kl"
     kl_t34 = true;
 #line 52 "codegen/box_replace.kl"
-    kl_t18 = &kl_drops_13;
+    kl_7codegen_7Counted__RQ7codegen7Counted_P3i64__ctor( kl_t17, kl_t16 );
 #line 52 "codegen/box_replace.kl"
-    kl_7codegen_7Counted__RQ7codegen7Counted_P3i64__ctor( kl_t17, kl_t18 );
+    kl_t19 = &kl_b_14;
 #line 52 "codegen/box_replace.kl"
-    kl_7prelude_3box__IQ7codegen7CountedE__RQ7prelude3boxIQ7codegen7CountedE_MQ7codegen7Counted__ctor( kl_t15, kl_t16 );
+    kl_7prelude_3box__IQ7codegen7CountedE__RQ7prelude3boxIQ7codegen7CountedE_MQ7codegen7Counted__ctor( kl_t19, kl_t15 );
 #line 52 "codegen/box_replace.kl"
     kl_t34 = false;
 #line 52 "codegen/box_replace.kl"
-    if ( kl_t34 ) kl_7codegen_7Counted__dtor( &kl_t16 );
+    if ( kl_t34 ) kl_7codegen_7Counted__dtor( &kl_t15 );
 #line 52 "codegen/box_replace.kl"
     kl_t34 = false;
     kl_t22 = &kl_b_14;
 #line 53 "codegen/box_replace.kl"
     kl_t35 = false;
 #line 53 "codegen/box_replace.kl"
-    kl_t24 = &kl_t23;
+    kl_t24 = &kl_drops_13;
+#line 53 "codegen/box_replace.kl"
+    kl_t25 = &kl_t23;
 #line 53 "codegen/box_replace.kl"
     kl_t35 = true;
 #line 53 "codegen/box_replace.kl"
-    kl_t25 = &kl_drops_13;
-#line 53 "codegen/box_replace.kl"
-    kl_7codegen_7Counted__RQ7codegen7Counted_P3i64__ctor( kl_t24, kl_t25 );
+    kl_7codegen_7Counted__RQ7codegen7Counted_P3i64__ctor( kl_t25, kl_t24 );
 #line 53 "codegen/box_replace.kl"
     kl_t27 = kl_7prelude_7replace__IQ7codegen7CountedE__SQ7prelude3boxIQ7codegen7CountedE_MQ7codegen7Counted( kl_t22, kl_t23 );
 #line 53 "codegen/box_replace.kl"

@@ -515,9 +515,9 @@ void kl_7codegen_6Holder__RQ7codegen6Holder_3u64__ctor( struct kl_7codegen_Holde
     struct kl_7codegen_Buf kl_t3;
     struct kl_7codegen_Buf* kl_t4;
     struct kl_7codegen_Buf kl_t6;
-    struct kl_7codegen_Buf* kl_t7;
-    bool kl_t8;
-    uint64_t kl_t9;
+    bool kl_t7;
+    uint64_t kl_t8;
+    struct kl_7codegen_Buf* kl_t9;
     bool kl_t11;
     bool kl_t12;
     bool kl_t13;
@@ -552,21 +552,21 @@ void kl_7codegen_6Holder__RQ7codegen6Holder_3u64__ctor( struct kl_7codegen_Holde
     kl_t13 = false;
     kl_t14 = false;
 #line 77 "codegen/fields.kl"
-    kl_t7 = &kl_t6;
+    kl_t7 = __builtin_add_overflow( kl_n_2, 1, &( uint64_t ) { 0 } );
 #line 77 "codegen/fields.kl"
-    kl_t14 = true;
-#line 77 "codegen/fields.kl"
-    kl_t8 = __builtin_add_overflow( kl_n_2, 1, &( uint64_t ) { 0 } );
-#line 77 "codegen/fields.kl"
-    if ( kl_t8 ) goto bb1; else goto bb2;
+    if ( kl_t7 ) goto bb1; else goto bb2;
     bb1:
 #line 77 "codegen/fields.kl"
     kl_rt_panic( "codegen/fields.kl", 77, "arithmetic overflow: n + 1" );
     bb2:
 #line 77 "codegen/fields.kl"
-    kl_t9 = kl_n_2 + 1;
+    kl_t8 = kl_n_2 + 1;
 #line 77 "codegen/fields.kl"
-    kl_7codegen_3Buf__RQ7codegen3Buf_3u64__ctor( kl_t7, kl_t9 );
+    kl_t9 = &kl_t6;
+#line 77 "codegen/fields.kl"
+    kl_t14 = true;
+#line 77 "codegen/fields.kl"
+    kl_7codegen_3Buf__RQ7codegen3Buf_3u64__ctor( kl_t9, kl_t8 );
 #line 77 "codegen/fields.kl"
     if ( kl_t12 ) kl_7codegen_3Buf__dtor( &( *kl_this_1 ).kl_pair.kl_b );
 #line 77 "codegen/fields.kl"
@@ -951,9 +951,9 @@ void kl_7codegen_17moved_on_one_path__4bool_3u64( bool kl_early_1, uint64_t kl_n
     struct kl_7codegen_Buf kl_t4;
     struct kl_7codegen_Buf* kl_t5;
     struct kl_7codegen_Buf kl_t7;
-    struct kl_7codegen_Buf* kl_t8;
-    bool kl_t9;
-    uint64_t kl_t10;
+    bool kl_t8;
+    uint64_t kl_t9;
+    struct kl_7codegen_Buf* kl_t10;
     bool kl_t13;
     bool kl_t14;
     bool kl_t15;
@@ -991,21 +991,21 @@ void kl_7codegen_17moved_on_one_path__4bool_3u64( bool kl_early_1, uint64_t kl_n
     kl_t15 = false;
     kl_t16 = false;
 #line 130 "codegen/fields.kl"
-    kl_t8 = &kl_t7;
+    kl_t8 = __builtin_add_overflow( kl_n_2, 1, &( uint64_t ) { 0 } );
 #line 130 "codegen/fields.kl"
-    kl_t16 = true;
-#line 130 "codegen/fields.kl"
-    kl_t9 = __builtin_add_overflow( kl_n_2, 1, &( uint64_t ) { 0 } );
-#line 130 "codegen/fields.kl"
-    if ( kl_t9 ) goto bb1; else goto bb2;
+    if ( kl_t8 ) goto bb1; else goto bb2;
     bb1:
 #line 130 "codegen/fields.kl"
     kl_rt_panic( "codegen/fields.kl", 130, "arithmetic overflow: n + 1" );
     bb2:
 #line 130 "codegen/fields.kl"
-    kl_t10 = kl_n_2 + 1;
+    kl_t9 = kl_n_2 + 1;
 #line 130 "codegen/fields.kl"
-    kl_7codegen_3Buf__RQ7codegen3Buf_3u64__ctor( kl_t8, kl_t10 );
+    kl_t10 = &kl_t7;
+#line 130 "codegen/fields.kl"
+    kl_t16 = true;
+#line 130 "codegen/fields.kl"
+    kl_7codegen_3Buf__RQ7codegen3Buf_3u64__ctor( kl_t10, kl_t9 );
 #line 130 "codegen/fields.kl"
     if ( kl_t14 ) kl_7codegen_3Buf__dtor( &kl_p_3.kl_b );
 #line 130 "codegen/fields.kl"

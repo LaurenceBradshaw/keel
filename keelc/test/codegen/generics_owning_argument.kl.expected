@@ -75,9 +75,9 @@ void kl_7codegen_7Tracked__dtor( struct kl_7codegen_Tracked* kl_this_1 )
 void kl_7codegen_6Holder__RQ7codegen6Holder_3i32__ctor( struct kl_7codegen_Holder* kl_this_1, int32_t kl_m_2 )
 {
     struct kl_7codegen_Wrap__IQ7codegen7TrackedE kl_t3;
-    struct kl_7codegen_Wrap__IQ7codegen7TrackedE* kl_t4;
-    struct kl_7codegen_Tracked kl_t5;
-    struct kl_7codegen_Tracked* kl_t6;
+    struct kl_7codegen_Tracked kl_t4;
+    struct kl_7codegen_Tracked* kl_t5;
+    struct kl_7codegen_Wrap__IQ7codegen7TrackedE* kl_t7;
     bool kl_t9;
     bool kl_t10;
 #line 40 "codegen/generics_owning_argument.kl"
@@ -87,19 +87,19 @@ void kl_7codegen_6Holder__RQ7codegen6Holder_3i32__ctor( struct kl_7codegen_Holde
 #line 40 "codegen/generics_owning_argument.kl"
     kl_t9 = false;
 #line 40 "codegen/generics_owning_argument.kl"
-    kl_t4 = &kl_t3;
-#line 40 "codegen/generics_owning_argument.kl"
-    kl_t9 = true;
-#line 40 "codegen/generics_owning_argument.kl"
     kl_t10 = false;
 #line 40 "codegen/generics_owning_argument.kl"
-    kl_t6 = &kl_t5;
+    kl_t5 = &kl_t4;
 #line 40 "codegen/generics_owning_argument.kl"
     kl_t10 = true;
 #line 40 "codegen/generics_owning_argument.kl"
-    kl_7codegen_7Tracked__RQ7codegen7Tracked_3i32__ctor( kl_t6, kl_m_2 );
+    kl_7codegen_7Tracked__RQ7codegen7Tracked_3i32__ctor( kl_t5, kl_m_2 );
 #line 40 "codegen/generics_owning_argument.kl"
-    kl_7codegen_4Wrap__IQ7codegen7TrackedE__RQ7codegen4WrapIQ7codegen7TrackedE_MQ7codegen7Tracked__ctor( kl_t4, kl_t5 );
+    kl_t7 = &kl_t3;
+#line 40 "codegen/generics_owning_argument.kl"
+    kl_t9 = true;
+#line 40 "codegen/generics_owning_argument.kl"
+    kl_7codegen_4Wrap__IQ7codegen7TrackedE__RQ7codegen4WrapIQ7codegen7TrackedE_MQ7codegen7Tracked__ctor( kl_t7, kl_t4 );
 #line 40 "codegen/generics_owning_argument.kl"
     kl_t10 = false;
 #line 40 "codegen/generics_owning_argument.kl"
@@ -109,7 +109,7 @@ void kl_7codegen_6Holder__RQ7codegen6Holder_3i32__ctor( struct kl_7codegen_Holde
 #line 40 "codegen/generics_owning_argument.kl"
     if ( kl_t9 ) kl_7codegen_7Tracked__dtor( &kl_t3.kl_v );
 #line 40 "codegen/generics_owning_argument.kl"
-    if ( kl_t10 ) kl_7codegen_7Tracked__dtor( &kl_t5 );
+    if ( kl_t10 ) kl_7codegen_7Tracked__dtor( &kl_t4 );
 #line 40 "codegen/generics_owning_argument.kl"
     kl_t10 = false;
 #line 40 "codegen/generics_owning_argument.kl"
@@ -143,9 +143,9 @@ int32_t kl_7codegen_6borrow__( void )
 {
     int32_t kl_t0;
     struct kl_7codegen_Wrap__IQ7codegen7TrackedE kl_w_1;
-    struct kl_7codegen_Wrap__IQ7codegen7TrackedE* kl_t2;
-    struct kl_7codegen_Tracked kl_t3;
-    struct kl_7codegen_Tracked* kl_t4;
+    struct kl_7codegen_Tracked kl_t2;
+    struct kl_7codegen_Tracked* kl_t3;
+    struct kl_7codegen_Wrap__IQ7codegen7TrackedE* kl_t5;
     struct kl_7codegen_Holder kl_h_7;
     struct kl_7codegen_Holder* kl_t8;
     kl__fn__FQ7codegen4WrapIQ7codegen7TrackedEE3i32 kl_p_10;
@@ -167,21 +167,21 @@ int32_t kl_7codegen_6borrow__( void )
 #line 63 "codegen/generics_owning_argument.kl"
     kl_t25 = false;
 #line 63 "codegen/generics_owning_argument.kl"
-    kl_t2 = &kl_w_1;
-#line 63 "codegen/generics_owning_argument.kl"
     kl_t25 = false;
 #line 63 "codegen/generics_owning_argument.kl"
-    kl_t4 = &kl_t3;
+    kl_t3 = &kl_t2;
 #line 63 "codegen/generics_owning_argument.kl"
     kl_t25 = true;
 #line 63 "codegen/generics_owning_argument.kl"
-    kl_7codegen_7Tracked__RQ7codegen7Tracked_3i32__ctor( kl_t4, 7 );
+    kl_7codegen_7Tracked__RQ7codegen7Tracked_3i32__ctor( kl_t3, 7 );
 #line 63 "codegen/generics_owning_argument.kl"
-    kl_7codegen_4Wrap__IQ7codegen7TrackedE__RQ7codegen4WrapIQ7codegen7TrackedE_MQ7codegen7Tracked__ctor( kl_t2, kl_t3 );
+    kl_t5 = &kl_w_1;
+#line 63 "codegen/generics_owning_argument.kl"
+    kl_7codegen_4Wrap__IQ7codegen7TrackedE__RQ7codegen4WrapIQ7codegen7TrackedE_MQ7codegen7Tracked__ctor( kl_t5, kl_t2 );
 #line 63 "codegen/generics_owning_argument.kl"
     kl_t25 = false;
 #line 63 "codegen/generics_owning_argument.kl"
-    if ( kl_t25 ) kl_7codegen_7Tracked__dtor( &kl_t3 );
+    if ( kl_t25 ) kl_7codegen_7Tracked__dtor( &kl_t2 );
 #line 63 "codegen/generics_owning_argument.kl"
     kl_t25 = false;
     kl_t8 = &kl_h_7;

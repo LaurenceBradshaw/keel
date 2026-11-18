@@ -95,7 +95,8 @@ i32 in_place()
     return live == 0 ? 0 : 2;
 }
 
-// The argument is chosen by a branch, so the call is in a later block than `b`'s `&init`.
+// The argument is chosen by a branch; `b`'s `&init` is taken after it, in the call's block, so the
+// constructor still inlines.
 i32 branched( bool c )
 {
     {

@@ -263,8 +263,8 @@ int32_t kl_7codegen_4main__( void )
     double kl_t18;
     bool kl_t19;
     struct kl_7codegen_Built kl_built_20;
-    struct kl_7codegen_Built* kl_t21;
-    int64_t kl_t22;
+    int64_t kl_t21;
+    struct kl_7codegen_Built* kl_t22;
     bool kl_t24;
     struct kl_7codegen_Built* kl_t25;
     int64_t kl_t26;
@@ -346,11 +346,11 @@ int32_t kl_7codegen_4main__( void )
     return kl_t0;
     bb10:
 #line 96 "codegen/overload_widening.kl"
-    kl_t21 = &kl_built_20;
+    kl_t21 = ( int64_t ) kl_small_2;
 #line 96 "codegen/overload_widening.kl"
-    kl_t22 = ( int64_t ) kl_small_2;
+    kl_t22 = &kl_built_20;
 #line 96 "codegen/overload_widening.kl"
-    kl_7codegen_5Built__RQ7codegen5Built_3i64__ctor( kl_t21, kl_t22 );
+    kl_7codegen_5Built__RQ7codegen5Built_3i64__ctor( kl_t22, kl_t21 );
     kl_t24 = kl_built_20.kl_held != 7;
 #line 97 "codegen/overload_widening.kl"
     if ( kl_t24 ) goto bb11; else goto bb12;

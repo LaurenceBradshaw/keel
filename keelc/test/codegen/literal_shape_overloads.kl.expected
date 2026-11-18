@@ -193,23 +193,23 @@ int32_t kl_7codegen_4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, u
     int32_t kl_t44;
     bool kl_t45;
     struct kl_7codegen_grid__IV2__V2_E kl_flat_46;
-    struct kl_7codegen_grid__IV2__V2_E* kl_t47;
-    struct kl__A4_3i32 kl_t48;
+    struct kl__A4_3i32 kl_t47;
+    uint64_t kl_t48;
     uint64_t kl_t49;
     uint64_t kl_t50;
     uint64_t kl_t51;
-    uint64_t kl_t52;
+    struct kl_7codegen_grid__IV2__V2_E* kl_t52;
     struct kl_7codegen_grid__IV2__V2_E kl_rows_54;
-    struct kl_7codegen_grid__IV2__V2_E* kl_t55;
-    struct kl__A2_A2_3i32 kl_t56;
-    struct kl__A2_3i32 kl_t57;
+    struct kl__A2_A2_3i32 kl_t55;
+    struct kl__A2_3i32 kl_t56;
+    uint64_t kl_t57;
     uint64_t kl_t58;
-    uint64_t kl_t59;
-    struct kl__A2_3i32 kl_t60;
+    struct kl__A2_3i32 kl_t59;
+    uint64_t kl_t60;
     uint64_t kl_t61;
     uint64_t kl_t62;
     uint64_t kl_t63;
-    uint64_t kl_t64;
+    struct kl_7codegen_grid__IV2__V2_E* kl_t64;
     bool kl_t66;
     bool kl_t67;
     ( void ) kl_t1;
@@ -234,16 +234,16 @@ int32_t kl_7codegen_4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, u
     ( void ) kl_t41;
     ( void ) kl_t42;
     ( void ) kl_t43;
+    ( void ) kl_t48;
     ( void ) kl_t49;
     ( void ) kl_t50;
     ( void ) kl_t51;
-    ( void ) kl_t52;
+    ( void ) kl_t57;
     ( void ) kl_t58;
-    ( void ) kl_t59;
+    ( void ) kl_t60;
     ( void ) kl_t61;
     ( void ) kl_t62;
     ( void ) kl_t63;
-    ( void ) kl_t64;
 #line 22 "codegen/literal_shape_overloads.kl"
     kl_t3 = 0;
 #line 22 "codegen/literal_shape_overloads.kl"
@@ -412,52 +412,52 @@ int32_t kl_7codegen_4main__LQ7prelude3str( struct kl_7prelude_str* kl_t1_data, u
 #line 28 "codegen/literal_shape_overloads.kl"
     return kl_t0;
     bb14:
-    kl_t47 = &kl_flat_46;
+    kl_t48 = 0;
 #line 30 "codegen/literal_shape_overloads.kl"
-    kl_t49 = 0;
+    kl_t47.e[kl_t48] = 1;
 #line 30 "codegen/literal_shape_overloads.kl"
-    kl_t48.e[kl_t49] = 1;
+    kl_t49 = 1;
 #line 30 "codegen/literal_shape_overloads.kl"
-    kl_t50 = 1;
+    kl_t47.e[kl_t49] = 2;
 #line 30 "codegen/literal_shape_overloads.kl"
-    kl_t48.e[kl_t50] = 2;
+    kl_t50 = 2;
 #line 30 "codegen/literal_shape_overloads.kl"
-    kl_t51 = 2;
+    kl_t47.e[kl_t50] = 3;
 #line 30 "codegen/literal_shape_overloads.kl"
-    kl_t48.e[kl_t51] = 3;
+    kl_t51 = 3;
 #line 30 "codegen/literal_shape_overloads.kl"
-    kl_t52 = 3;
+    kl_t47.e[kl_t51] = 4;
 #line 30 "codegen/literal_shape_overloads.kl"
-    kl_t48.e[kl_t52] = 4;
+    kl_t52 = &kl_flat_46;
 #line 30 "codegen/literal_shape_overloads.kl"
-    kl_7codegen_4grid__IV2__V2_E__RQ7codegen4gridIV2__V2_E_A4_3i32__ctor( kl_t47, kl_t48 );
-    kl_t55 = &kl_rows_54;
+    kl_7codegen_4grid__IV2__V2_E__RQ7codegen4gridIV2__V2_E_A4_3i32__ctor( kl_t52, kl_t47 );
+    kl_t57 = 0;
 #line 31 "codegen/literal_shape_overloads.kl"
-    kl_t58 = 0;
+    kl_t56.e[kl_t57] = 1;
 #line 31 "codegen/literal_shape_overloads.kl"
-    kl_t57.e[kl_t58] = 1;
+    kl_t58 = 1;
 #line 31 "codegen/literal_shape_overloads.kl"
-    kl_t59 = 1;
+    kl_t56.e[kl_t58] = 2;
 #line 31 "codegen/literal_shape_overloads.kl"
-    kl_t57.e[kl_t59] = 2;
+    kl_t60 = 0;
 #line 31 "codegen/literal_shape_overloads.kl"
-    kl_t61 = 0;
+    kl_t59.e[kl_t60] = 3;
 #line 31 "codegen/literal_shape_overloads.kl"
-    kl_t60.e[kl_t61] = 3;
+    kl_t61 = 1;
 #line 31 "codegen/literal_shape_overloads.kl"
-    kl_t62 = 1;
+    kl_t59.e[kl_t61] = 4;
 #line 31 "codegen/literal_shape_overloads.kl"
-    kl_t60.e[kl_t62] = 4;
+    kl_t62 = 0;
 #line 31 "codegen/literal_shape_overloads.kl"
-    kl_t63 = 0;
+    kl_t55.e[kl_t62] = kl_t56;
 #line 31 "codegen/literal_shape_overloads.kl"
-    kl_t56.e[kl_t63] = kl_t57;
+    kl_t63 = 1;
 #line 31 "codegen/literal_shape_overloads.kl"
-    kl_t64 = 1;
+    kl_t55.e[kl_t63] = kl_t59;
 #line 31 "codegen/literal_shape_overloads.kl"
-    kl_t56.e[kl_t64] = kl_t60;
+    kl_t64 = &kl_rows_54;
 #line 31 "codegen/literal_shape_overloads.kl"
-    kl_7codegen_4grid__IV2__V2_E__RQ7codegen4gridIV2__V2_E_A2_A2_3i32__ctor( kl_t55, kl_t56 );
+    kl_7codegen_4grid__IV2__V2_E__RQ7codegen4gridIV2__V2_E_A2_A2_3i32__ctor( kl_t64, kl_t55 );
     kl_t66 = kl_flat_46.kl_shape != 1;
 #line 32 "codegen/literal_shape_overloads.kl"
     if ( kl_t66 ) goto bb15; else goto bb16;

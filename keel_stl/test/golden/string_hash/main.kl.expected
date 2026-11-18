@@ -432,24 +432,24 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_MQ7prelude3str( st
 {
     struct kl_2kl6string_string kl_t0;
     struct kl_2kl6string_string kl_t2;
-    struct kl_2kl6string_string* kl_t3;
-    struct kl_7prelude_str* kl_t4;
-    struct kl_7prelude_textual__ref kl_t5;
+    struct kl_7prelude_str* kl_t3;
+    struct kl_7prelude_textual__ref kl_t4;
+    struct kl_2kl6string_string* kl_t5;
     bool kl_t7;
 #line 91 "../../src/string.kl"
     kl_t7 = false;
 #line 91 "../../src/string.kl"
     kl_t7 = false;
 #line 91 "../../src/string.kl"
-    kl_t3 = &kl_t2;
+    kl_t3 = &kl_text_1;
+#line 91 "../../src/string.kl"
+    kl_t4 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 91 "../../src/string.kl"
+    kl_t5 = &kl_t2;
 #line 91 "../../src/string.kl"
     kl_t7 = true;
 #line 91 "../../src/string.kl"
-    kl_t4 = &kl_text_1;
-#line 91 "../../src/string.kl"
-    kl_t5 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t4, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 91 "../../src/string.kl"
-    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t3, kl_t5 );
+    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t5, kl_t4 );
 #line 91 "../../src/string.kl"
     kl_t0 = kl_t2;
 #line 91 "../../src/string.kl"
@@ -468,12 +468,12 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_M3u64( uint64_t kl
     struct kl_2kl6string_string kl_t0;
     bool kl_t2;
     struct kl_2kl6string_string kl_t3;
-    struct kl_2kl6string_string* kl_t4;
-    struct kl_7prelude_str kl_t5;
-    struct kl_7prelude_str* kl_t6;
-    uint8_t* kl_t7;
-    struct kl_7prelude_str* kl_t9;
-    struct kl_7prelude_textual__ref kl_t10;
+    struct kl_7prelude_str kl_t4;
+    struct kl_7prelude_str* kl_t5;
+    uint8_t* kl_t6;
+    struct kl_7prelude_str* kl_t8;
+    struct kl_7prelude_textual__ref kl_t9;
+    struct kl_2kl6string_string* kl_t10;
     struct kl_2kl6string_string kl_result_12;
     struct kl_2kl6string_string* kl_t13;
     bool kl_t15;
@@ -514,21 +514,21 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_M3u64( uint64_t kl
     bb1:
     kl_t41 = false;
 #line 99 "../../src/string.kl"
-    kl_t4 = &kl_t3;
+    kl_t5 = &kl_t4;
+#line 99 "../../src/string.kl"
+    kl_t6 = ( uint8_t* ) "0";
+#line 99 "../../src/string.kl"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 1 );
+#line 99 "../../src/string.kl"
+    kl_t8 = &kl_t4;
+#line 99 "../../src/string.kl"
+    kl_t9 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t8, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 99 "../../src/string.kl"
+    kl_t10 = &kl_t3;
 #line 99 "../../src/string.kl"
     kl_t41 = true;
 #line 99 "../../src/string.kl"
-    kl_t6 = &kl_t5;
-#line 99 "../../src/string.kl"
-    kl_t7 = ( uint8_t* ) "0";
-#line 99 "../../src/string.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t6, kl_t7, 1 );
-#line 99 "../../src/string.kl"
-    kl_t9 = &kl_t5;
-#line 99 "../../src/string.kl"
-    kl_t10 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t9, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 99 "../../src/string.kl"
-    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t4, kl_t10 );
+    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t10, kl_t9 );
 #line 99 "../../src/string.kl"
     kl_t0 = kl_t3;
 #line 99 "../../src/string.kl"
@@ -4155,12 +4155,12 @@ int32_t kl_11string_hash_4main__( void )
 {
     int32_t kl_t0;
     struct kl_2kl6string_string kl_hello_1;
-    struct kl_2kl6string_string* kl_t2;
-    struct kl_7prelude_str kl_t3;
-    struct kl_7prelude_str* kl_t4;
-    uint8_t* kl_t5;
-    struct kl_7prelude_str* kl_t7;
-    struct kl_7prelude_textual__ref kl_t8;
+    struct kl_7prelude_str kl_t2;
+    struct kl_7prelude_str* kl_t3;
+    uint8_t* kl_t4;
+    struct kl_7prelude_str* kl_t6;
+    struct kl_7prelude_textual__ref kl_t7;
+    struct kl_2kl6string_string* kl_t8;
     struct kl_2kl6string_string* kl_t10;
     uint64_t kl_t11;
     struct kl_7prelude_str kl_t12;
@@ -4169,20 +4169,20 @@ int32_t kl_11string_hash_4main__( void )
     uint64_t kl_t16;
     bool kl_t17;
     struct kl_2kl6string_string kl_built_18;
-    struct kl_2kl6string_string* kl_t19;
-    struct kl_7prelude_str kl_t20;
-    struct kl_7prelude_str* kl_t21;
-    uint8_t* kl_t22;
-    struct kl_7prelude_str* kl_t24;
-    struct kl_7prelude_textual__ref kl_t25;
+    struct kl_7prelude_str kl_t19;
+    struct kl_7prelude_str* kl_t20;
+    uint8_t* kl_t21;
+    struct kl_7prelude_str* kl_t23;
+    struct kl_7prelude_textual__ref kl_t24;
+    struct kl_2kl6string_string* kl_t25;
     struct kl_2kl6string_string* kl_t27;
     struct kl_2kl6string_string kl_t28;
-    struct kl_2kl6string_string* kl_t29;
-    struct kl_7prelude_str kl_t30;
-    struct kl_7prelude_str* kl_t31;
-    uint8_t* kl_t32;
-    struct kl_7prelude_str* kl_t34;
-    struct kl_7prelude_textual__ref kl_t35;
+    struct kl_7prelude_str kl_t29;
+    struct kl_7prelude_str* kl_t30;
+    uint8_t* kl_t31;
+    struct kl_7prelude_str* kl_t33;
+    struct kl_7prelude_textual__ref kl_t34;
+    struct kl_2kl6string_string* kl_t35;
     struct kl_2kl6string_string* kl_t37;
     struct kl_7prelude_textual__ref kl_t38;
     bool kl_t40;
@@ -4197,12 +4197,12 @@ int32_t kl_11string_hash_4main__( void )
     bool kl_t49;
     bool kl_t50;
     struct kl_2kl6string_string kl_t51;
-    struct kl_2kl6string_string* kl_t52;
-    struct kl_7prelude_str kl_t53;
-    struct kl_7prelude_str* kl_t54;
-    uint8_t* kl_t55;
-    struct kl_7prelude_str* kl_t57;
-    struct kl_7prelude_textual__ref kl_t58;
+    struct kl_7prelude_str kl_t52;
+    struct kl_7prelude_str* kl_t53;
+    uint8_t* kl_t54;
+    struct kl_7prelude_str* kl_t56;
+    struct kl_7prelude_textual__ref kl_t57;
+    struct kl_2kl6string_string* kl_t58;
     struct kl_2kl6string_string* kl_t60;
     uint64_t kl_t61;
     struct kl_7prelude_str kl_t62;
@@ -4213,12 +4213,12 @@ int32_t kl_11string_hash_4main__( void )
     struct kl_2kl6string_string* kl_t68;
     uint64_t kl_t69;
     struct kl_2kl6string_string kl_t70;
-    struct kl_2kl6string_string* kl_t71;
-    struct kl_7prelude_str kl_t72;
-    struct kl_7prelude_str* kl_t73;
-    uint8_t* kl_t74;
-    struct kl_7prelude_str* kl_t76;
-    struct kl_7prelude_textual__ref kl_t77;
+    struct kl_7prelude_str kl_t71;
+    struct kl_7prelude_str* kl_t72;
+    uint8_t* kl_t73;
+    struct kl_7prelude_str* kl_t75;
+    struct kl_7prelude_textual__ref kl_t76;
+    struct kl_2kl6string_string* kl_t77;
     struct kl_2kl6string_string* kl_t79;
     uint64_t kl_t80;
     bool kl_t81;
@@ -4226,19 +4226,19 @@ int32_t kl_11string_hash_4main__( void )
 #line 26 "string_hash/main.kl"
     kl_t82 = false;
 #line 26 "string_hash/main.kl"
-    kl_t2 = &kl_hello_1;
+    kl_t3 = &kl_t2;
 #line 26 "string_hash/main.kl"
-    kl_t4 = &kl_t3;
+    kl_t4 = ( uint8_t* ) "hello";
 #line 26 "string_hash/main.kl"
-    kl_t5 = ( uint8_t* ) "hello";
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t3, kl_t4, 5 );
 #line 26 "string_hash/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 5 );
+    kl_t6 = &kl_t2;
 #line 26 "string_hash/main.kl"
-    kl_t7 = &kl_t3;
+    kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t6, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 26 "string_hash/main.kl"
-    kl_t8 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t7, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t8 = &kl_hello_1;
 #line 26 "string_hash/main.kl"
-    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t2, kl_t8 );
+    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t8, kl_t7 );
 #line 28 "string_hash/main.kl"
     kl_t10 = &kl_hello_1;
 #line 28 "string_hash/main.kl"
@@ -4263,35 +4263,35 @@ int32_t kl_11string_hash_4main__( void )
     return kl_t0;
     bb2:
 #line 33 "string_hash/main.kl"
-    kl_t19 = &kl_built_18;
+    kl_t20 = &kl_t19;
 #line 33 "string_hash/main.kl"
-    kl_t21 = &kl_t20;
+    kl_t21 = ( uint8_t* ) "hel";
 #line 33 "string_hash/main.kl"
-    kl_t22 = ( uint8_t* ) "hel";
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t20, kl_t21, 3 );
 #line 33 "string_hash/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t21, kl_t22, 3 );
+    kl_t23 = &kl_t19;
 #line 33 "string_hash/main.kl"
-    kl_t24 = &kl_t20;
+    kl_t24 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t23, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 33 "string_hash/main.kl"
-    kl_t25 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t24, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t25 = &kl_built_18;
 #line 33 "string_hash/main.kl"
-    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t19, kl_t25 );
+    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t25, kl_t24 );
 #line 35 "string_hash/main.kl"
     kl_t27 = &kl_built_18;
 #line 35 "string_hash/main.kl"
-    kl_t29 = &kl_t28;
+    kl_t30 = &kl_t29;
 #line 35 "string_hash/main.kl"
-    kl_t31 = &kl_t30;
+    kl_t31 = ( uint8_t* ) "lo";
 #line 35 "string_hash/main.kl"
-    kl_t32 = ( uint8_t* ) "lo";
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t30, kl_t31, 2 );
 #line 35 "string_hash/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t31, kl_t32, 2 );
+    kl_t33 = &kl_t29;
 #line 35 "string_hash/main.kl"
-    kl_t34 = &kl_t30;
+    kl_t34 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t33, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 35 "string_hash/main.kl"
-    kl_t35 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t34, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t35 = &kl_t28;
 #line 35 "string_hash/main.kl"
-    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t29, kl_t35 );
+    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t35, kl_t34 );
 #line 35 "string_hash/main.kl"
     kl_t37 = &kl_t28;
 #line 35 "string_hash/main.kl"
@@ -4340,19 +4340,19 @@ int32_t kl_11string_hash_4main__( void )
     return kl_t0;
     bb6:
 #line 42 "string_hash/main.kl"
-    kl_t52 = &kl_t51;
+    kl_t53 = &kl_t52;
 #line 42 "string_hash/main.kl"
-    kl_t54 = &kl_t53;
+    kl_t54 = ( uint8_t* ) "";
 #line 42 "string_hash/main.kl"
-    kl_t55 = ( uint8_t* ) "";
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t53, kl_t54, 0 );
 #line 42 "string_hash/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t54, kl_t55, 0 );
+    kl_t56 = &kl_t52;
 #line 42 "string_hash/main.kl"
-    kl_t57 = &kl_t53;
+    kl_t57 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t56, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 42 "string_hash/main.kl"
-    kl_t58 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t57, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t58 = &kl_t51;
 #line 42 "string_hash/main.kl"
-    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t52, kl_t58 );
+    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t58, kl_t57 );
 #line 42 "string_hash/main.kl"
     kl_t60 = &kl_t51;
 #line 42 "string_hash/main.kl"
@@ -4379,21 +4379,21 @@ int32_t kl_11string_hash_4main__( void )
 #line 42 "string_hash/main.kl"
     kl_t82 = false;
 #line 42 "string_hash/main.kl"
-    kl_t71 = &kl_t70;
+    kl_t72 = &kl_t71;
+#line 42 "string_hash/main.kl"
+    kl_t73 = ( uint8_t* ) "help";
+#line 42 "string_hash/main.kl"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t72, kl_t73, 4 );
+#line 42 "string_hash/main.kl"
+    kl_t75 = &kl_t71;
+#line 42 "string_hash/main.kl"
+    kl_t76 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t75, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 42 "string_hash/main.kl"
+    kl_t77 = &kl_t70;
 #line 42 "string_hash/main.kl"
     kl_t82 = true;
 #line 42 "string_hash/main.kl"
-    kl_t73 = &kl_t72;
-#line 42 "string_hash/main.kl"
-    kl_t74 = ( uint8_t* ) "help";
-#line 42 "string_hash/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t73, kl_t74, 4 );
-#line 42 "string_hash/main.kl"
-    kl_t76 = &kl_t72;
-#line 42 "string_hash/main.kl"
-    kl_t77 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t76, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 42 "string_hash/main.kl"
-    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t71, kl_t77 );
+    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t77, kl_t76 );
 #line 42 "string_hash/main.kl"
     kl_t79 = &kl_t70;
 #line 42 "string_hash/main.kl"

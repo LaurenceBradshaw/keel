@@ -328,30 +328,30 @@ struct kl_7codegen_label kl_7codegen_12operator_add__SQ7codegen5label_Q7codegen5
 {
     struct kl_7codegen_label kl_t0;
     struct kl_7codegen_label kl_t3;
-    struct kl_7codegen_label* kl_t4;
-    bool kl_t5;
-    uint64_t kl_t6;
+    bool kl_t4;
+    uint64_t kl_t5;
+    struct kl_7codegen_label* kl_t6;
     bool kl_t8;
 #line 80 "codegen/operator_compound.kl"
     kl_t8 = false;
 #line 80 "codegen/operator_compound.kl"
     kl_t8 = false;
 #line 80 "codegen/operator_compound.kl"
-    kl_t4 = &kl_t3;
+    kl_t4 = __builtin_add_overflow( ( *kl_this_1 ).kl_length, ( *kl_other_2 ).kl_length, &( uint64_t ) { 0 } );
 #line 80 "codegen/operator_compound.kl"
-    kl_t8 = true;
-#line 80 "codegen/operator_compound.kl"
-    kl_t5 = __builtin_add_overflow( ( *kl_this_1 ).kl_length, ( *kl_other_2 ).kl_length, &( uint64_t ) { 0 } );
-#line 80 "codegen/operator_compound.kl"
-    if ( kl_t5 ) goto bb1; else goto bb2;
+    if ( kl_t4 ) goto bb1; else goto bb2;
     bb1:
 #line 80 "codegen/operator_compound.kl"
     kl_rt_panic( "codegen/operator_compound.kl", 80, "arithmetic overflow: length + other.length" );
     bb2:
 #line 80 "codegen/operator_compound.kl"
-    kl_t6 = ( *kl_this_1 ).kl_length + ( *kl_other_2 ).kl_length;
+    kl_t5 = ( *kl_this_1 ).kl_length + ( *kl_other_2 ).kl_length;
 #line 80 "codegen/operator_compound.kl"
-    kl_7codegen_5label__RQ7codegen5label_3u64__ctor( kl_t4, kl_t6 );
+    kl_t6 = &kl_t3;
+#line 80 "codegen/operator_compound.kl"
+    kl_t8 = true;
+#line 80 "codegen/operator_compound.kl"
+    kl_7codegen_5label__RQ7codegen5label_3u64__ctor( kl_t6, kl_t5 );
 #line 80 "codegen/operator_compound.kl"
     kl_t0 = kl_t3;
 #line 80 "codegen/operator_compound.kl"
@@ -422,9 +422,9 @@ int32_t kl_7codegen_4main__( void )
     bool kl_t37;
     bool kl_t38;
     struct kl_7codegen_shelf kl_s_39;
-    struct kl_7codegen_shelf* kl_t40;
+    struct kl_7codegen_only_binary kl_t40;
     struct kl_7codegen_only_binary kl_t41;
-    struct kl_7codegen_only_binary kl_t42;
+    struct kl_7codegen_shelf* kl_t42;
     int32_t kl_calls_44;
     struct kl_7codegen_shelf* kl_t45;
     int32_t* kl_t46;
@@ -591,13 +591,13 @@ int32_t kl_7codegen_4main__( void )
     return kl_t0;
     bb14:
 #line 141 "codegen/operator_compound.kl"
-    kl_t40 = &kl_s_39;
+    kl_t40.kl_x = 1;
 #line 141 "codegen/operator_compound.kl"
-    kl_t41.kl_x = 1;
+    kl_t41.kl_x = 20;
 #line 141 "codegen/operator_compound.kl"
-    kl_t42.kl_x = 20;
+    kl_t42 = &kl_s_39;
 #line 141 "codegen/operator_compound.kl"
-    kl_7codegen_5shelf__RQ7codegen5shelf_Q7codegen11only_binary_Q7codegen11only_binary__ctor( kl_t40, kl_t41, kl_t42 );
+    kl_7codegen_5shelf__RQ7codegen5shelf_Q7codegen11only_binary_Q7codegen11only_binary__ctor( kl_t42, kl_t40, kl_t41 );
     kl_calls_44 = 0;
     kl_t45 = &kl_s_39;
 #line 143 "codegen/operator_compound.kl"

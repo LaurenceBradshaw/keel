@@ -57,17 +57,17 @@ struct kl_7codegen_Window kl_7codegen_6around__SQ7codegen6Window_3f64_3f64( doub
 {
     struct kl_7codegen_Window kl_t0;
     struct kl_7codegen_Window kl_t3;
-    struct kl_7codegen_Window* kl_t4;
+    double kl_t4;
     double kl_t5;
-    double kl_t6;
+    struct kl_7codegen_Window* kl_t6;
 #line 27 "codegen/sample_m7.kl"
-    kl_t4 = &kl_t3;
+    kl_t4 = kl_centre_1 - kl_radius_2;
 #line 27 "codegen/sample_m7.kl"
-    kl_t5 = kl_centre_1 - kl_radius_2;
+    kl_t5 = kl_centre_1 + kl_radius_2;
 #line 27 "codegen/sample_m7.kl"
-    kl_t6 = kl_centre_1 + kl_radius_2;
+    kl_t6 = &kl_t3;
 #line 27 "codegen/sample_m7.kl"
-    kl_7codegen_6Window__RQ7codegen6Window_3f64_3f64__ctor( kl_t4, kl_t5, kl_t6 );
+    kl_7codegen_6Window__RQ7codegen6Window_3f64_3f64__ctor( kl_t6, kl_t4, kl_t5 );
 #line 27 "codegen/sample_m7.kl"
     kl_t0 = kl_t3;
 #line 27 "codegen/sample_m7.kl"

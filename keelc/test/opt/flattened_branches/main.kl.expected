@@ -313,17 +313,17 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_MQ7prelude11joined
 struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_MQ7prelude3str( struct kl_7prelude_str kl_text_1 )
 {
     struct kl_2kl6string_string kl_t0;
-    struct kl_2kl6string_string* kl_t2;
-    struct kl_7prelude_str* kl_t3;
-    struct kl_7prelude_textual__ref kl_t4;
+    struct kl_7prelude_str* kl_t2;
+    struct kl_7prelude_textual__ref kl_t3;
+    struct kl_2kl6string_string* kl_t4;
 #line 91 "<kl>/string.kl"
-    kl_t2 = &kl_t0;
+    kl_t2 = &kl_text_1;
 #line 91 "<kl>/string.kl"
-    kl_t3 = &kl_text_1;
+    kl_t3 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t2, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 91 "<kl>/string.kl"
-    kl_t4 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t4 = &kl_t0;
 #line 91 "<kl>/string.kl"
-    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t2, kl_t4 );
+    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t4, kl_t3 );
 #line 91 "<kl>/string.kl"
     return kl_t0;
 }
@@ -333,10 +333,10 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_M3u64( uint64_t kl
 {
     struct kl_2kl6string_string kl_t0;
     bool kl_t2;
-    struct kl_2kl6string_string* kl_t3;
-    struct kl_7prelude_str kl_t4;
-    struct kl_7prelude_str* kl_t5;
-    struct kl_7prelude_textual__ref kl_t6;
+    struct kl_7prelude_str kl_t3;
+    struct kl_7prelude_str* kl_t4;
+    struct kl_7prelude_textual__ref kl_t5;
+    struct kl_2kl6string_string* kl_t6;
     bool kl_t8;
     struct kl_2kl6string_string* kl_this_9;
     uint64_t kl_t10;
@@ -366,17 +366,17 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_M3u64( uint64_t kl
 #line 97 "<kl>/string.kl"
     if ( kl_t2 ) goto bb1; else goto bb8;
     bb1:
-    kl_t3 = &kl_t0;
+    kl_t3.kl_data = ( uint8_t* ) "0";
 #line 99 "<kl>/string.kl"
-    kl_t4.kl_data = ( uint8_t* ) "0";
+    kl_t3.kl_size = 1;
 #line 99 "<kl>/string.kl"
-    kl_t4.kl_size = 1;
+    kl_t4 = &kl_t3;
 #line 99 "<kl>/string.kl"
-    kl_t5 = &kl_t4;
+    kl_t5 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t4, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 99 "<kl>/string.kl"
-    kl_t6 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t5, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t6 = &kl_t0;
 #line 99 "<kl>/string.kl"
-    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t3, kl_t6 );
+    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t6, kl_t5 );
 #line 99 "<kl>/string.kl"
     return kl_t0;
     bb2:
@@ -3330,10 +3330,10 @@ int32_t kl_18flattened_branches_4main__( void )
 {
     int32_t kl_t0;
     struct kl_2kl6string_string kl_text_1;
-    struct kl_2kl6string_string* kl_t2;
-    struct kl_7prelude_str kl_t3;
-    struct kl_7prelude_str* kl_t4;
-    struct kl_7prelude_textual__ref kl_t5;
+    struct kl_7prelude_str kl_t2;
+    struct kl_7prelude_str* kl_t3;
+    struct kl_7prelude_textual__ref kl_t4;
+    struct kl_2kl6string_string* kl_t5;
     int64_t kl_t7;
     bool kl_t8;
     int64_t kl_t9;
@@ -3375,17 +3375,17 @@ int32_t kl_18flattened_branches_4main__( void )
     int64_t kl_t50;
     int64_t kl_t51;
 #line 86 "opt/flattened_branches/main.kl"
-    kl_t2 = &kl_text_1;
+    kl_t2.kl_data = ( uint8_t* ) "a banana bandana";
 #line 86 "opt/flattened_branches/main.kl"
-    kl_t3.kl_data = ( uint8_t* ) "a banana bandana";
+    kl_t2.kl_size = 16;
 #line 86 "opt/flattened_branches/main.kl"
-    kl_t3.kl_size = 16;
+    kl_t3 = &kl_t2;
 #line 86 "opt/flattened_branches/main.kl"
-    kl_t4 = &kl_t3;
+    kl_t4 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 86 "opt/flattened_branches/main.kl"
-    kl_t5 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t4, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t5 = &kl_text_1;
 #line 86 "opt/flattened_branches/main.kl"
-    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t2, kl_t5 );
+    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t5, kl_t4 );
 #line 9 "opt/flattened_branches/main.kl"
     kl_t7 = 0;
     kl_i_36 = 0;

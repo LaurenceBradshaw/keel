@@ -16,12 +16,13 @@ namespace keel
 namespace
 {
 
-// `_D = copy _S` or `move`, of a struct.
+// `_D = copy _S` or `move`, of a struct, into a place of its type: a void local discards it.
 bool copies_whole( const Function& func, const Statement& statement, const Type_table& table )
 {
     const Rvalue& value = func.rvalue( statement );
     return statement.kind == Statement_kind::Assign && value.kind == Rvalue_kind::Use && value.a.has_place() &&
-           table.is_struct( value.type );
+           table.is_struct( value.type ) &&
+           !( statement.place.is_whole_local() && table.is_void( func.locals[statement.place.local].type ) );
 }
 
 // `_P = &init _L`, building the whole of `_L`.

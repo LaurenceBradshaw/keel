@@ -271,30 +271,30 @@ struct kl_8list_map_owned kl_8list_map_3own__3i32( int32_t* kl_x_1 )
 {
     struct kl_8list_map_owned kl_t0;
     struct kl_8list_map_owned kl_t2;
-    struct kl_8list_map_owned* kl_t3;
-    uint64_t kl_t4;
-    bool kl_t5;
+    uint64_t kl_t3;
+    bool kl_t4;
+    struct kl_8list_map_owned* kl_t5;
     bool kl_t7;
 #line 51 "list_map/main.kl"
     kl_t7 = false;
 #line 51 "list_map/main.kl"
     kl_t7 = false;
 #line 51 "list_map/main.kl"
-    kl_t3 = &kl_t2;
+    kl_t3 = ( uint64_t ) ( *kl_x_1 );
 #line 51 "list_map/main.kl"
-    kl_t7 = true;
+    kl_t4 = ( *kl_x_1 ) >= 0;
 #line 51 "list_map/main.kl"
-    kl_t4 = ( uint64_t ) ( *kl_x_1 );
-#line 51 "list_map/main.kl"
-    kl_t5 = ( *kl_x_1 ) >= 0;
-#line 51 "list_map/main.kl"
-    if ( kl_t5 ) goto bb2; else goto bb1;
+    if ( kl_t4 ) goto bb2; else goto bb1;
     bb1:
 #line 51 "list_map/main.kl"
     kl_rt_panic( "list_map/main.kl", 51, "cast out of range: cast<u64>( x )" );
     bb2:
 #line 51 "list_map/main.kl"
-    kl_8list_map_5owned__RQ8list_map5owned_3u64__ctor( kl_t3, kl_t4 );
+    kl_t5 = &kl_t2;
+#line 51 "list_map/main.kl"
+    kl_t7 = true;
+#line 51 "list_map/main.kl"
+    kl_8list_map_5owned__RQ8list_map5owned_3u64__ctor( kl_t5, kl_t3 );
 #line 51 "list_map/main.kl"
     kl_t0 = kl_t2;
 #line 51 "list_map/main.kl"

@@ -85,20 +85,20 @@ int32_t kl_7codegen_4main__( void )
     int32_t kl_t0;
     int64_t kl_drops_1;
     struct kl_7prelude_box__IQ7codegen7CountedE kl_b_2;
-    struct kl_7prelude_box__IQ7codegen7CountedE* kl_t3;
-    struct kl_7codegen_Counted kl_t4;
+    struct kl_7codegen_Counted kl_t3;
+    int64_t* kl_t4;
     struct kl_7codegen_Counted* kl_t5;
-    int64_t* kl_t6;
+    struct kl_7prelude_box__IQ7codegen7CountedE* kl_t7;
     struct kl_7codegen_Counted kl_c_9;
     struct kl_7codegen_Counted kl_t10;
     bool kl_t11;
     bool kl_t12;
     struct kl_7prelude_box__IA3_3i32E kl_heaped_13;
-    struct kl_7prelude_box__IA3_3i32E* kl_t14;
-    struct kl__A3_3i32 kl_t15;
+    struct kl__A3_3i32 kl_t14;
+    uint64_t kl_t15;
     uint64_t kl_t16;
     uint64_t kl_t17;
-    uint64_t kl_t18;
+    struct kl_7prelude_box__IA3_3i32E* kl_t18;
     struct kl_7prelude_box__IA3_3i32E* kl_t20;
     struct kl__A3_3i32* kl_t21;
     uint64_t kl_t22;
@@ -116,9 +116,9 @@ int32_t kl_7codegen_4main__( void )
     bool kl_t34;
     bool kl_t35;
     bool kl_t36;
+    ( void ) kl_t15;
     ( void ) kl_t16;
     ( void ) kl_t17;
-    ( void ) kl_t18;
     ( void ) kl_t22;
     ( void ) kl_t25;
     ( void ) kl_t26;
@@ -136,25 +136,25 @@ int32_t kl_7codegen_4main__( void )
 #line 17 "codegen/box_take.kl"
     kl_t33 = false;
 #line 17 "codegen/box_take.kl"
-    kl_t3 = &kl_b_2;
-#line 17 "codegen/box_take.kl"
-    kl_t33 = true;
-#line 17 "codegen/box_take.kl"
     kl_t34 = false;
 #line 17 "codegen/box_take.kl"
-    kl_t5 = &kl_t4;
+    kl_t4 = &kl_drops_1;
+#line 17 "codegen/box_take.kl"
+    kl_t5 = &kl_t3;
 #line 17 "codegen/box_take.kl"
     kl_t34 = true;
 #line 17 "codegen/box_take.kl"
-    kl_t6 = &kl_drops_1;
+    kl_7codegen_7Counted__RQ7codegen7Counted_P3i64__ctor( kl_t5, kl_t4 );
 #line 17 "codegen/box_take.kl"
-    kl_7codegen_7Counted__RQ7codegen7Counted_P3i64__ctor( kl_t5, kl_t6 );
+    kl_t7 = &kl_b_2;
 #line 17 "codegen/box_take.kl"
-    kl_7prelude_3box__IQ7codegen7CountedE__RQ7prelude3boxIQ7codegen7CountedE_MQ7codegen7Counted__ctor( kl_t3, kl_t4 );
+    kl_t33 = true;
+#line 17 "codegen/box_take.kl"
+    kl_7prelude_3box__IQ7codegen7CountedE__RQ7prelude3boxIQ7codegen7CountedE_MQ7codegen7Counted__ctor( kl_t7, kl_t3 );
 #line 17 "codegen/box_take.kl"
     kl_t34 = false;
 #line 17 "codegen/box_take.kl"
-    if ( kl_t34 ) kl_7codegen_7Counted__dtor( &kl_t4 );
+    if ( kl_t34 ) kl_7codegen_7Counted__dtor( &kl_t3 );
 #line 17 "codegen/box_take.kl"
     kl_t34 = false;
     kl_t10 = kl_7prelude_4take__IQ7codegen7CountedE__SQ7prelude3boxIQ7codegen7CountedE_MQ7prelude3boxIQ7codegen7CountedE( kl_b_2 );
@@ -201,23 +201,23 @@ int32_t kl_7codegen_4main__( void )
 #line 31 "codegen/box_take.kl"
     kl_t36 = false;
 #line 31 "codegen/box_take.kl"
-    kl_t14 = &kl_heaped_13;
+    kl_t15 = 0;
+#line 31 "codegen/box_take.kl"
+    kl_t14.e[kl_t15] = 4;
+#line 31 "codegen/box_take.kl"
+    kl_t16 = 1;
+#line 31 "codegen/box_take.kl"
+    kl_t14.e[kl_t16] = 5;
+#line 31 "codegen/box_take.kl"
+    kl_t17 = 2;
+#line 31 "codegen/box_take.kl"
+    kl_t14.e[kl_t17] = 6;
+#line 31 "codegen/box_take.kl"
+    kl_t18 = &kl_heaped_13;
 #line 31 "codegen/box_take.kl"
     kl_t36 = true;
 #line 31 "codegen/box_take.kl"
-    kl_t16 = 0;
-#line 31 "codegen/box_take.kl"
-    kl_t15.e[kl_t16] = 4;
-#line 31 "codegen/box_take.kl"
-    kl_t17 = 1;
-#line 31 "codegen/box_take.kl"
-    kl_t15.e[kl_t17] = 5;
-#line 31 "codegen/box_take.kl"
-    kl_t18 = 2;
-#line 31 "codegen/box_take.kl"
-    kl_t15.e[kl_t18] = 6;
-#line 31 "codegen/box_take.kl"
-    kl_7prelude_3box__IA3_3i32E__RQ7prelude3boxIA3_3i32E_MA3_3i32__ctor( kl_t14, kl_t15 );
+    kl_7prelude_3box__IA3_3i32E__RQ7prelude3boxIA3_3i32E_MA3_3i32__ctor( kl_t18, kl_t14 );
     kl_t20 = &kl_heaped_13;
 #line 32 "codegen/box_take.kl"
     kl_t21 = kl_7prelude_3get__IA3_3i32E__SQ7prelude3boxIA3_3i32E( kl_t20 );

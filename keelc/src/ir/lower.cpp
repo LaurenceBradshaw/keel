@@ -1764,6 +1764,9 @@ void Lowering::lower_construction( Place target, Node_id call_expr )
 
     const Type_id receiver_type = binding_type_under( parameters[0], callee_bound );
 
+    // The arguments first, so the `&init` lands in the call's own block, where inlining finds it.
+    const std::vector<Operand> lowered = lower_call_arguments( arguments, parameters.subspan( 1 ), callee_bound );
+
     std::vector<Operand> operands;
 
     operands.reserve( arguments.size() + 1 );
@@ -1774,7 +1777,7 @@ void Lowering::lower_construction( Place target, Node_id call_expr )
         receiver_type
     ) );
 
-    for( const Operand& argument : lower_call_arguments( arguments, parameters.subspan( 1 ), callee_bound ) )
+    for( const Operand& argument : lowered )
     {
         operands.push_back( argument );
     }

@@ -820,10 +820,10 @@ int32_t kl_7codegen_4main__( void )
     struct kl_7prelude_str* kl_t86;
     struct kl_7prelude_textual__ref kl_t87;
     struct kl_7codegen_Keeper kl_k_89;
-    struct kl_7codegen_Keeper* kl_t90;
-    struct kl_7codegen_Holder kl_t91;
-    struct kl_7codegen_Buf kl_t92;
-    struct kl_7codegen_Buf* kl_t93;
+    struct kl_7codegen_Holder kl_t90;
+    struct kl_7codegen_Buf kl_t91;
+    struct kl_7codegen_Buf* kl_t92;
+    struct kl_7codegen_Keeper* kl_t94;
     struct kl_7prelude_str kl_t96;
     struct kl_7prelude_str* kl_t97;
     uint8_t* kl_t98;
@@ -1290,33 +1290,33 @@ int32_t kl_7codegen_4main__( void )
 #line 137 "codegen/owning_payloads.kl"
     kl_t124 = false;
 #line 139 "codegen/owning_payloads.kl"
-    kl_t90 = &kl_k_89;
-#line 139 "codegen/owning_payloads.kl"
     kl_t127 = false;
 #line 139 "codegen/owning_payloads.kl"
-    kl_t93 = &kl_t92;
+    kl_t92 = &kl_t91;
 #line 139 "codegen/owning_payloads.kl"
     kl_t127 = true;
 #line 139 "codegen/owning_payloads.kl"
-    kl_7codegen_3Buf__RQ7codegen3Buf_3u64__ctor( kl_t93, 11 );
+    kl_7codegen_3Buf__RQ7codegen3Buf_3u64__ctor( kl_t92, 11 );
 #line 139 "codegen/owning_payloads.kl"
-    kl_t91.tag = 0;
+    kl_t90.tag = 0;
 #line 139 "codegen/owning_payloads.kl"
     kl_t126 = true;
 #line 139 "codegen/owning_payloads.kl"
-    kl_t91.kl_4Full_b = kl_t92;
+    kl_t90.kl_4Full_b = kl_t91;
 #line 139 "codegen/owning_payloads.kl"
     kl_t127 = false;
 #line 139 "codegen/owning_payloads.kl"
     kl_t126 = true;
 #line 139 "codegen/owning_payloads.kl"
-    kl_7codegen_6Keeper__RQ7codegen6Keeper_MQ7codegen6Holder__ctor( kl_t90, kl_t91 );
+    kl_t94 = &kl_k_89;
+#line 139 "codegen/owning_payloads.kl"
+    kl_7codegen_6Keeper__RQ7codegen6Keeper_MQ7codegen6Holder__ctor( kl_t94, kl_t90 );
 #line 139 "codegen/owning_payloads.kl"
     kl_t126 = false;
 #line 139 "codegen/owning_payloads.kl"
-    if ( kl_t126 ) kl_7codegen_6Holder__dtor( &kl_t91 );
+    if ( kl_t126 ) kl_7codegen_6Holder__dtor( &kl_t90 );
 #line 139 "codegen/owning_payloads.kl"
-    if ( kl_t127 ) kl_7codegen_3Buf__dtor( &kl_t92 );
+    if ( kl_t127 ) kl_7codegen_3Buf__dtor( &kl_t91 );
 #line 139 "codegen/owning_payloads.kl"
     kl_t127 = false;
 #line 139 "codegen/owning_payloads.kl"

@@ -430,9 +430,9 @@ int32_t kl_7codegen_4main__( void )
     bool kl_t34;
     struct kl_7prelude_box__I4sinkI3i64EE kl_b_35;
     struct kl_7prelude_box__IQ7codegen4heldE kl_t36;
-    struct kl_7prelude_box__IQ7codegen4heldE* kl_t37;
-    struct kl_7codegen_held kl_t38;
-    struct kl_7codegen_held* kl_t39;
+    struct kl_7codegen_held kl_t37;
+    struct kl_7codegen_held* kl_t38;
+    struct kl_7prelude_box__IQ7codegen4heldE* kl_t40;
     struct kl_7prelude_box__IQ7codegen4heldE kl_t42;
     struct kl_7codegen_held* kl_t43;
     struct kl_7prelude_box__I4sinkI3i64EE kl_t44;
@@ -450,9 +450,9 @@ int32_t kl_7codegen_4main__( void )
     uint64_t kl_t58;
     bool kl_t59;
     struct kl_7prelude_box__IQ7codegen5tallyE kl_t60;
-    struct kl_7prelude_box__IQ7codegen5tallyE* kl_t61;
-    struct kl_7codegen_tally kl_t62;
-    struct kl_7codegen_tally* kl_t63;
+    struct kl_7codegen_tally kl_t61;
+    struct kl_7codegen_tally* kl_t62;
+    struct kl_7prelude_box__IQ7codegen5tallyE* kl_t64;
     struct kl_7prelude_box__IQ7codegen5tallyE kl_t66;
     struct kl_7codegen_tally* kl_t67;
     struct kl_7prelude_box__I4sinkI3i64EE kl_t68;
@@ -596,19 +596,19 @@ int32_t kl_7codegen_4main__( void )
 #line 89 "codegen/generic_interfaces_dynamic.kl"
     kl_t81 = false;
 #line 89 "codegen/generic_interfaces_dynamic.kl"
-    kl_t37 = &kl_t36;
-#line 89 "codegen/generic_interfaces_dynamic.kl"
-    kl_t81 = true;
-#line 89 "codegen/generic_interfaces_dynamic.kl"
     kl_t82 = false;
 #line 89 "codegen/generic_interfaces_dynamic.kl"
-    kl_t39 = &kl_t38;
+    kl_t38 = &kl_t37;
 #line 89 "codegen/generic_interfaces_dynamic.kl"
     kl_t82 = true;
 #line 89 "codegen/generic_interfaces_dynamic.kl"
-    kl_7codegen_4held__RQ7codegen4held__ctor( kl_t39 );
+    kl_7codegen_4held__RQ7codegen4held__ctor( kl_t38 );
 #line 89 "codegen/generic_interfaces_dynamic.kl"
-    kl_7prelude_3box__IQ7codegen4heldE__RQ7prelude3boxIQ7codegen4heldE_MQ7codegen4held__ctor( kl_t37, kl_t38 );
+    kl_t40 = &kl_t36;
+#line 89 "codegen/generic_interfaces_dynamic.kl"
+    kl_t81 = true;
+#line 89 "codegen/generic_interfaces_dynamic.kl"
+    kl_7prelude_3box__IQ7codegen4heldE__RQ7prelude3boxIQ7codegen4heldE_MQ7codegen4held__ctor( kl_t40, kl_t37 );
 #line 89 "codegen/generic_interfaces_dynamic.kl"
     kl_t82 = false;
 #line 89 "codegen/generic_interfaces_dynamic.kl"
@@ -626,7 +626,7 @@ int32_t kl_7codegen_4main__( void )
 #line 89 "codegen/generic_interfaces_dynamic.kl"
     if ( kl_t81 ) kl_7prelude_3box__IQ7codegen4heldE__dtor( &kl_t36 );
 #line 89 "codegen/generic_interfaces_dynamic.kl"
-    if ( kl_t82 ) kl_7codegen_4held__dtor( &kl_t38 );
+    if ( kl_t82 ) kl_7codegen_4held__dtor( &kl_t37 );
 #line 89 "codegen/generic_interfaces_dynamic.kl"
     kl_t82 = false;
 #line 89 "codegen/generic_interfaces_dynamic.kl"
@@ -680,15 +680,15 @@ int32_t kl_7codegen_4main__( void )
     bb12:
     kl_t83 = false;
 #line 94 "codegen/generic_interfaces_dynamic.kl"
-    kl_t61 = &kl_t60;
+    kl_t62 = &kl_t61;
+#line 94 "codegen/generic_interfaces_dynamic.kl"
+    kl_7codegen_5tally__RQ7codegen5tally__ctor( kl_t62 );
+#line 94 "codegen/generic_interfaces_dynamic.kl"
+    kl_t64 = &kl_t60;
 #line 94 "codegen/generic_interfaces_dynamic.kl"
     kl_t83 = true;
 #line 94 "codegen/generic_interfaces_dynamic.kl"
-    kl_t63 = &kl_t62;
-#line 94 "codegen/generic_interfaces_dynamic.kl"
-    kl_7codegen_5tally__RQ7codegen5tally__ctor( kl_t63 );
-#line 94 "codegen/generic_interfaces_dynamic.kl"
-    kl_7prelude_3box__IQ7codegen5tallyE__RQ7prelude3boxIQ7codegen5tallyE_MQ7codegen5tally__ctor( kl_t61, kl_t62 );
+    kl_7prelude_3box__IQ7codegen5tallyE__RQ7prelude3boxIQ7codegen5tallyE_MQ7codegen5tally__ctor( kl_t64, kl_t61 );
 #line 94 "codegen/generic_interfaces_dynamic.kl"
     kl_t66 = kl_t60;
 #line 94 "codegen/generic_interfaces_dynamic.kl"

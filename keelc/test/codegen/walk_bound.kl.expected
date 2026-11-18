@@ -45,11 +45,11 @@ int32_t kl_7codegen_4main__( void )
 {
     int32_t kl_t0;
     struct kl_7codegen_Bag__I3i32E kl_b_1;
-    struct kl_7codegen_Bag__I3i32E* kl_t2;
-    struct kl__A3_3i32 kl_t3;
+    struct kl__A3_3i32 kl_t2;
+    uint64_t kl_t3;
     uint64_t kl_t4;
     uint64_t kl_t5;
-    uint64_t kl_t6;
+    struct kl_7codegen_Bag__I3i32E* kl_t6;
     struct kl_7codegen_Bag__I3i32E* kl_t8;
     int32_t kl_t9;
     bool kl_t10;
@@ -66,36 +66,36 @@ int32_t kl_7codegen_4main__( void )
     int32_t kl_t21;
     bool kl_t22;
     struct kl_7codegen_Bag__I3f64E kl_f_23;
-    struct kl_7codegen_Bag__I3f64E* kl_t24;
-    struct kl__A3_3f64 kl_t25;
+    struct kl__A3_3f64 kl_t24;
+    uint64_t kl_t25;
     uint64_t kl_t26;
     uint64_t kl_t27;
-    uint64_t kl_t28;
+    struct kl_7codegen_Bag__I3f64E* kl_t28;
     struct kl_7codegen_Bag__I3f64E* kl_t30;
     double kl_t31;
     bool kl_t32;
+    ( void ) kl_t3;
     ( void ) kl_t4;
     ( void ) kl_t5;
-    ( void ) kl_t6;
+    ( void ) kl_t25;
     ( void ) kl_t26;
     ( void ) kl_t27;
-    ( void ) kl_t28;
 #line 65 "codegen/walk_bound.kl"
-    kl_t2 = &kl_b_1;
+    kl_t3 = 0;
 #line 65 "codegen/walk_bound.kl"
-    kl_t4 = 0;
+    kl_t2.e[kl_t3] = 1;
 #line 65 "codegen/walk_bound.kl"
-    kl_t3.e[kl_t4] = 1;
+    kl_t4 = 1;
 #line 65 "codegen/walk_bound.kl"
-    kl_t5 = 1;
+    kl_t2.e[kl_t4] = 2;
 #line 65 "codegen/walk_bound.kl"
-    kl_t3.e[kl_t5] = 2;
+    kl_t5 = 2;
 #line 65 "codegen/walk_bound.kl"
-    kl_t6 = 2;
+    kl_t2.e[kl_t5] = 3;
 #line 65 "codegen/walk_bound.kl"
-    kl_t3.e[kl_t6] = 3;
+    kl_t6 = &kl_b_1;
 #line 65 "codegen/walk_bound.kl"
-    kl_7codegen_3Bag__I3i32E__RQ7codegen3BagI3i32E_A3_3i32__ctor( kl_t2, kl_t3 );
+    kl_7codegen_3Bag__I3i32E__RQ7codegen3BagI3i32E_A3_3i32__ctor( kl_t6, kl_t2 );
 #line 67 "codegen/walk_bound.kl"
     kl_t8 = &kl_b_1;
 #line 67 "codegen/walk_bound.kl"
@@ -168,21 +168,21 @@ int32_t kl_7codegen_4main__( void )
     return kl_t0;
     bb12:
 #line 83 "codegen/walk_bound.kl"
-    kl_t24 = &kl_f_23;
+    kl_t25 = 0;
 #line 83 "codegen/walk_bound.kl"
-    kl_t26 = 0;
+    kl_t24.e[kl_t25] = 0.5;
 #line 83 "codegen/walk_bound.kl"
-    kl_t25.e[kl_t26] = 0.5;
+    kl_t26 = 1;
 #line 83 "codegen/walk_bound.kl"
-    kl_t27 = 1;
+    kl_t24.e[kl_t26] = 2.5;
 #line 83 "codegen/walk_bound.kl"
-    kl_t25.e[kl_t27] = 2.5;
+    kl_t27 = 2;
 #line 83 "codegen/walk_bound.kl"
-    kl_t28 = 2;
+    kl_t24.e[kl_t27] = 4.0;
 #line 83 "codegen/walk_bound.kl"
-    kl_t25.e[kl_t28] = 4.0;
+    kl_t28 = &kl_f_23;
 #line 83 "codegen/walk_bound.kl"
-    kl_7codegen_3Bag__I3f64E__RQ7codegen3BagI3f64E_A3_3f64__ctor( kl_t24, kl_t25 );
+    kl_7codegen_3Bag__I3f64E__RQ7codegen3BagI3f64E_A3_3f64__ctor( kl_t28, kl_t24 );
 #line 85 "codegen/walk_bound.kl"
     kl_t30 = &kl_f_23;
 #line 85 "codegen/walk_bound.kl"

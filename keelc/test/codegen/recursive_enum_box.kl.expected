@@ -92,10 +92,10 @@ struct kl_7codegen_List kl_7codegen_5build__3i64_P3i64( int64_t kl_n_1, int64_t*
     struct kl_7codegen_Counted kl_t6;
     struct kl_7codegen_Counted* kl_t7;
     struct kl_7prelude_box__IQ7codegen4ListE kl_t9;
-    struct kl_7prelude_box__IQ7codegen4ListE* kl_t10;
-    bool kl_t11;
-    int64_t kl_t12;
-    struct kl_7codegen_List kl_t13;
+    bool kl_t10;
+    int64_t kl_t11;
+    struct kl_7codegen_List kl_t12;
+    struct kl_7prelude_box__IQ7codegen4ListE* kl_t13;
     bool kl_t15;
     bool kl_t16;
     bool kl_t17;
@@ -140,25 +140,25 @@ struct kl_7codegen_List kl_7codegen_5build__3i64_P3i64( int64_t kl_n_1, int64_t*
 #line 24 "codegen/recursive_enum_box.kl"
     kl_t18 = false;
 #line 24 "codegen/recursive_enum_box.kl"
-    kl_t10 = &kl_t9;
+    kl_t10 = __builtin_sub_overflow( kl_n_1, 1, &( int64_t ) { 0 } );
 #line 24 "codegen/recursive_enum_box.kl"
-    kl_t18 = true;
-#line 24 "codegen/recursive_enum_box.kl"
-    kl_t11 = __builtin_sub_overflow( kl_n_1, 1, &( int64_t ) { 0 } );
-#line 24 "codegen/recursive_enum_box.kl"
-    if ( kl_t11 ) goto bb3; else goto bb4;
+    if ( kl_t10 ) goto bb3; else goto bb4;
     bb3:
 #line 24 "codegen/recursive_enum_box.kl"
     kl_rt_panic( "codegen/recursive_enum_box.kl", 24, "arithmetic overflow: n - 1" );
     bb4:
 #line 24 "codegen/recursive_enum_box.kl"
-    kl_t12 = kl_n_1 - 1;
+    kl_t11 = kl_n_1 - 1;
 #line 24 "codegen/recursive_enum_box.kl"
-    kl_t13 = kl_7codegen_5build__3i64_P3i64( kl_t12, kl_drops_2 );
+    kl_t12 = kl_7codegen_5build__3i64_P3i64( kl_t11, kl_drops_2 );
 #line 24 "codegen/recursive_enum_box.kl"
     kl_t19 = true;
 #line 24 "codegen/recursive_enum_box.kl"
-    kl_7prelude_3box__IQ7codegen4ListE__RQ7prelude3boxIQ7codegen4ListE_MQ7codegen4List__ctor( kl_t10, kl_t13 );
+    kl_t13 = &kl_t9;
+#line 24 "codegen/recursive_enum_box.kl"
+    kl_t18 = true;
+#line 24 "codegen/recursive_enum_box.kl"
+    kl_7prelude_3box__IQ7codegen4ListE__RQ7prelude3boxIQ7codegen4ListE_MQ7codegen4List__ctor( kl_t13, kl_t12 );
 #line 24 "codegen/recursive_enum_box.kl"
     kl_t19 = false;
 #line 24 "codegen/recursive_enum_box.kl"
@@ -190,7 +190,7 @@ struct kl_7codegen_List kl_7codegen_5build__3i64_P3i64( int64_t kl_n_1, int64_t*
 #line 24 "codegen/recursive_enum_box.kl"
     if ( kl_t18 ) kl_7prelude_3box__IQ7codegen4ListE__dtor( &kl_t9 );
 #line 24 "codegen/recursive_enum_box.kl"
-    if ( kl_t19 ) kl_7codegen_4List__dtor( &kl_t13 );
+    if ( kl_t19 ) kl_7codegen_4List__dtor( &kl_t12 );
 #line 24 "codegen/recursive_enum_box.kl"
     if ( kl_t17 ) kl_7codegen_7Counted__dtor( &kl_t6 );
 #line 24 "codegen/recursive_enum_box.kl"

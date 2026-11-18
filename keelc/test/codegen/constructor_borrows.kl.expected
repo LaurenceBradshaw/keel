@@ -144,9 +144,9 @@ int32_t kl_7codegen_4main__( void )
     struct kl_7codegen_Owned kl_o_4;
     struct kl_7codegen_Owned* kl_t5;
     struct kl_7codegen_holder kl_h_7;
-    struct kl_7codegen_holder* kl_t8;
-    struct kl_7codegen_big* kl_t9;
-    int32_t* kl_t10;
+    struct kl_7codegen_big* kl_t8;
+    int32_t* kl_t9;
+    struct kl_7codegen_holder* kl_t10;
     bool kl_t12;
     bool kl_t13;
     bool kl_t14;
@@ -173,13 +173,13 @@ int32_t kl_7codegen_4main__( void )
     kl_t18 = true;
 #line 48 "codegen/constructor_borrows.kl"
     kl_7codegen_5Owned__RQ7codegen5Owned_3u64__ctor( kl_t5, 7 );
-    kl_t8 = &kl_h_7;
+    kl_t8 = &kl_b_1;
 #line 49 "codegen/constructor_borrows.kl"
-    kl_t9 = &kl_b_1;
+    kl_t9 = &kl_n_3;
 #line 49 "codegen/constructor_borrows.kl"
-    kl_t10 = &kl_n_3;
+    kl_t10 = &kl_h_7;
 #line 49 "codegen/constructor_borrows.kl"
-    kl_7codegen_6holder__RQ7codegen6holder_Q7codegen3big_R3i32_MQ7codegen5Owned__ctor( kl_t8, kl_t9, kl_t10, kl_o_4 );
+    kl_7codegen_6holder__RQ7codegen6holder_Q7codegen3big_R3i32_MQ7codegen5Owned__ctor( kl_t10, kl_t8, kl_t9, kl_o_4 );
 #line 49 "codegen/constructor_borrows.kl"
     kl_t18 = false;
 #line 51 "codegen/constructor_borrows.kl"

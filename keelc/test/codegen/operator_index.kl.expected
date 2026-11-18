@@ -328,11 +328,11 @@ int32_t kl_7codegen_4main__( void )
     int32_t* kl_t77;
     bool kl_t78;
     struct kl_7codegen_view kl_first_79;
-    struct kl_7codegen_view* kl_t80;
-    struct kl_7codegen_buffer__I3i32E* kl_t81;
+    struct kl_7codegen_buffer__I3i32E* kl_t80;
+    int32_t* kl_t81;
     int32_t* kl_t82;
     int32_t* kl_t83;
-    int32_t* kl_t84;
+    struct kl_7codegen_view* kl_t84;
     bool kl_t86;
     struct kl_7codegen_view* kl_t87;
     int32_t* kl_t88;
@@ -608,17 +608,17 @@ int32_t kl_7codegen_4main__( void )
     return kl_t0;
     bb24:
 #line 150 "codegen/operator_index.kl"
-    kl_t80 = &kl_first_79;
+    kl_t80 = &kl_numbers_1;
 #line 150 "codegen/operator_index.kl"
-    kl_t81 = &kl_numbers_1;
+    kl_t81 = kl_7codegen_14operator_index__I3i32E__SQ7codegen6bufferI3i32E_3u64( kl_t80, 0 );
 #line 150 "codegen/operator_index.kl"
-    kl_t82 = kl_7codegen_14operator_index__I3i32E__SQ7codegen6bufferI3i32E_3u64( kl_t81, 0 );
+    kl_t82 = &( *kl_t81 );
 #line 150 "codegen/operator_index.kl"
-    kl_t83 = &( *kl_t82 );
+    kl_t83 = ( int32_t* ) kl_t82;
 #line 150 "codegen/operator_index.kl"
-    kl_t84 = ( int32_t* ) kl_t83;
+    kl_t84 = &kl_first_79;
 #line 150 "codegen/operator_index.kl"
-    kl_7codegen_4view__RQ7codegen4view_PK3i32__ctor( kl_t80, kl_t84 );
+    kl_7codegen_4view__RQ7codegen4view_PK3i32__ctor( kl_t84, kl_t83 );
 #line 152 "codegen/operator_index.kl"
     kl_t87 = &kl_first_79;
 #line 152 "codegen/operator_index.kl"

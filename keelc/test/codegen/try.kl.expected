@@ -593,11 +593,11 @@ struct kl_7prelude_result__IQ7codegen3Buf_Q7codegen3BadE kl_7codegen_4make__3u64
     struct kl_7prelude_result__IQ7codegen3Buf_Q7codegen3BadE kl_t0;
     struct kl_7prelude_result__IQ7codegen3Buf_Q7codegen3BadE kl_t2;
     struct kl_7codegen_Buf kl_t3;
-    struct kl_7codegen_Buf* kl_t4;
+    struct kl_7prelude_result__I3u64_Q7codegen3BadE kl_t4;
     struct kl_7prelude_result__I3u64_Q7codegen3BadE kl_t5;
-    struct kl_7prelude_result__I3u64_Q7codegen3BadE kl_t6;
-    bool kl_t7;
-    uint64_t kl_t8;
+    bool kl_t6;
+    uint64_t kl_t7;
+    struct kl_7codegen_Buf* kl_t8;
     bool kl_t10;
     bool kl_t11;
 #line 65 "codegen/try.kl"
@@ -607,22 +607,22 @@ struct kl_7prelude_result__IQ7codegen3Buf_Q7codegen3BadE kl_7codegen_4make__3u64
 #line 65 "codegen/try.kl"
     kl_t11 = false;
 #line 65 "codegen/try.kl"
-    kl_t4 = &kl_t3;
+    kl_t4 = kl_7codegen_4size__3u64( kl_n_1 );
+#line 65 "codegen/try.kl"
+    kl_t5 = kl_t4;
+#line 65 "codegen/try.kl"
+    kl_t6 = kl_t5.tag == 0;
+#line 65 "codegen/try.kl"
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb1:
+#line 65 "codegen/try.kl"
+    kl_t7 = kl_t5.kl_2ok_value;
+#line 65 "codegen/try.kl"
+    kl_t8 = &kl_t3;
 #line 65 "codegen/try.kl"
     kl_t11 = true;
 #line 65 "codegen/try.kl"
-    kl_t5 = kl_7codegen_4size__3u64( kl_n_1 );
-#line 65 "codegen/try.kl"
-    kl_t6 = kl_t5;
-#line 65 "codegen/try.kl"
-    kl_t7 = kl_t6.tag == 0;
-#line 65 "codegen/try.kl"
-    if ( kl_t7 ) goto bb1; else goto bb2;
-    bb1:
-#line 65 "codegen/try.kl"
-    kl_t8 = kl_t6.kl_2ok_value;
-#line 65 "codegen/try.kl"
-    kl_7codegen_3Buf__RQ7codegen3Buf_3u64__ctor( kl_t4, kl_t8 );
+    kl_7codegen_3Buf__RQ7codegen3Buf_3u64__ctor( kl_t8, kl_t7 );
 #line 65 "codegen/try.kl"
     kl_t2.tag = 0;
 #line 65 "codegen/try.kl"
@@ -651,7 +651,7 @@ struct kl_7prelude_result__IQ7codegen3Buf_Q7codegen3BadE kl_7codegen_4make__3u64
 #line 65 "codegen/try.kl"
     kl_t0.tag = 1;
 #line 65 "codegen/try.kl"
-    kl_t0.kl_3err_error = kl_t6.kl_3err_error;
+    kl_t0.kl_3err_error = kl_t5.kl_3err_error;
 #line 65 "codegen/try.kl"
     return kl_t0;
 }
@@ -720,9 +720,9 @@ struct kl_7prelude_result__I3u64_Q7codegen3BadE kl_7codegen_3one__3u64( uint64_t
 {
     struct kl_7prelude_result__I3u64_Q7codegen3BadE kl_t0;
     struct kl_7codegen_Buf kl_before_2;
-    struct kl_7codegen_Buf* kl_t3;
-    bool kl_t4;
-    uint64_t kl_t5;
+    bool kl_t3;
+    uint64_t kl_t4;
+    struct kl_7codegen_Buf* kl_t5;
     struct kl_7codegen_Buf kl_got_7;
     struct kl_7prelude_result__IQ7codegen3Buf_Q7codegen3BadE kl_t8;
     struct kl_7prelude_result__IQ7codegen3Buf_Q7codegen3BadE kl_t9;
@@ -742,19 +742,19 @@ struct kl_7prelude_result__I3u64_Q7codegen3BadE kl_7codegen_3one__3u64( uint64_t
 #line 82 "codegen/try.kl"
     kl_t20 = false;
 #line 82 "codegen/try.kl"
-    kl_t3 = &kl_before_2;
+    kl_t3 = __builtin_add_overflow( 100, kl_n_1, &( uint64_t ) { 0 } );
 #line 82 "codegen/try.kl"
-    kl_t4 = __builtin_add_overflow( 100, kl_n_1, &( uint64_t ) { 0 } );
-#line 82 "codegen/try.kl"
-    if ( kl_t4 ) goto bb1; else goto bb2;
+    if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
 #line 82 "codegen/try.kl"
     kl_rt_panic( "codegen/try.kl", 82, "arithmetic overflow: 100 + n" );
     bb2:
 #line 82 "codegen/try.kl"
-    kl_t5 = 100 + kl_n_1;
+    kl_t4 = 100 + kl_n_1;
 #line 82 "codegen/try.kl"
-    kl_7codegen_3Buf__RQ7codegen3Buf_3u64__ctor( kl_t3, kl_t5 );
+    kl_t5 = &kl_before_2;
+#line 82 "codegen/try.kl"
+    kl_7codegen_3Buf__RQ7codegen3Buf_3u64__ctor( kl_t5, kl_t4 );
     kl_t8 = kl_7codegen_4make__3u64( kl_n_1 );
 #line 83 "codegen/try.kl"
     kl_t19 = true;
@@ -1225,11 +1225,11 @@ struct kl_7prelude_result__I3u64_Q7codegen3BadE kl_7codegen_6chosen__3u64( uint6
     struct kl_7codegen_Buf kl_t5;
     struct kl_7codegen_Buf* kl_t6;
     struct kl_7codegen_Buf kl_t8;
-    struct kl_7codegen_Buf* kl_t9;
+    struct kl_7prelude_result__I3u64_Q7codegen3BadE kl_t9;
     struct kl_7prelude_result__I3u64_Q7codegen3BadE kl_t10;
-    struct kl_7prelude_result__I3u64_Q7codegen3BadE kl_t11;
-    bool kl_t12;
-    uint64_t kl_t13;
+    bool kl_t11;
+    uint64_t kl_t12;
+    struct kl_7codegen_Buf* kl_t13;
     struct kl_7prelude_result__I3u64_Q7codegen3BadE kl_t15;
     struct kl_7codegen_Buf* kl_t16;
     uint64_t kl_t17;
@@ -1267,17 +1267,13 @@ struct kl_7prelude_result__I3u64_Q7codegen3BadE kl_7codegen_6chosen__3u64( uint6
 #line 122 "codegen/try.kl"
     kl_t20 = false;
 #line 122 "codegen/try.kl"
-    kl_t9 = &kl_t8;
+    kl_t9 = kl_7codegen_4size__3u64( kl_n_1 );
 #line 122 "codegen/try.kl"
-    kl_t20 = true;
+    kl_t10 = kl_t9;
 #line 122 "codegen/try.kl"
-    kl_t10 = kl_7codegen_4size__3u64( kl_n_1 );
+    kl_t11 = kl_t10.tag == 0;
 #line 122 "codegen/try.kl"
-    kl_t11 = kl_t10;
-#line 122 "codegen/try.kl"
-    kl_t12 = kl_t11.tag == 0;
-#line 122 "codegen/try.kl"
-    if ( kl_t12 ) goto bb4; else goto bb5;
+    if ( kl_t11 ) goto bb4; else goto bb5;
     bb3:
 #line 122 "codegen/try.kl"
     kl_b_2 = kl_t3;
@@ -1310,9 +1306,13 @@ struct kl_7prelude_result__I3u64_Q7codegen3BadE kl_7codegen_6chosen__3u64( uint6
     return kl_t0;
     bb4:
 #line 122 "codegen/try.kl"
-    kl_t13 = kl_t11.kl_2ok_value;
+    kl_t12 = kl_t10.kl_2ok_value;
 #line 122 "codegen/try.kl"
-    kl_7codegen_3Buf__RQ7codegen3Buf_3u64__ctor( kl_t9, kl_t13 );
+    kl_t13 = &kl_t8;
+#line 122 "codegen/try.kl"
+    kl_t20 = true;
+#line 122 "codegen/try.kl"
+    kl_7codegen_3Buf__RQ7codegen3Buf_3u64__ctor( kl_t13, kl_t12 );
 #line 122 "codegen/try.kl"
     kl_t3 = kl_t8;
 #line 122 "codegen/try.kl"
@@ -1325,7 +1325,7 @@ struct kl_7prelude_result__I3u64_Q7codegen3BadE kl_7codegen_6chosen__3u64( uint6
 #line 122 "codegen/try.kl"
     kl_t0.tag = 1;
 #line 122 "codegen/try.kl"
-    kl_t0.kl_3err_error = kl_t11.kl_3err_error;
+    kl_t0.kl_3err_error = kl_t10.kl_3err_error;
 #line 122 "codegen/try.kl"
     if ( kl_t19 ) kl_7codegen_3Buf__dtor( &kl_t5 );
 #line 122 "codegen/try.kl"
@@ -1510,14 +1510,14 @@ struct kl_7prelude_result__IQ7codegen3Buf_Q7codegen3BadE kl_7codegen_4grow__MQ7c
     struct kl_7prelude_result__IQ7codegen3Buf_Q7codegen3BadE kl_t2;
     struct kl_7codegen_Buf kl_t3;
     struct kl_7codegen_Buf* kl_t4;
-    struct kl_7codegen_Buf* kl_t5;
-    uint64_t kl_t6;
-    bool kl_t7;
-    uint64_t kl_t8;
+    uint64_t kl_t5;
+    bool kl_t6;
+    uint64_t kl_t7;
+    struct kl_7prelude_result__I3u64_Q7codegen3BadE kl_t8;
     struct kl_7prelude_result__I3u64_Q7codegen3BadE kl_t9;
-    struct kl_7prelude_result__I3u64_Q7codegen3BadE kl_t10;
-    bool kl_t11;
-    uint64_t kl_t12;
+    bool kl_t10;
+    uint64_t kl_t11;
+    struct kl_7codegen_Buf* kl_t12;
     bool kl_t14;
     bool kl_t15;
 #line 146 "codegen/try.kl"
@@ -1527,36 +1527,36 @@ struct kl_7prelude_result__IQ7codegen3Buf_Q7codegen3BadE kl_7codegen_4grow__MQ7c
 #line 146 "codegen/try.kl"
     kl_t15 = false;
 #line 146 "codegen/try.kl"
-    kl_t4 = &kl_t3;
+    kl_t4 = &kl_b_1;
 #line 146 "codegen/try.kl"
-    kl_t15 = true;
+    kl_t5 = kl_7codegen_3get__SQ7codegen3Buf( kl_t4 );
 #line 146 "codegen/try.kl"
-    kl_t5 = &kl_b_1;
+    kl_t6 = __builtin_add_overflow( kl_t5, 1, &( uint64_t ) { 0 } );
 #line 146 "codegen/try.kl"
-    kl_t6 = kl_7codegen_3get__SQ7codegen3Buf( kl_t5 );
-#line 146 "codegen/try.kl"
-    kl_t7 = __builtin_add_overflow( kl_t6, 1, &( uint64_t ) { 0 } );
-#line 146 "codegen/try.kl"
-    if ( kl_t7 ) goto bb1; else goto bb2;
+    if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
 #line 146 "codegen/try.kl"
     kl_rt_panic( "codegen/try.kl", 146, "arithmetic overflow: b.get() + 1" );
     bb2:
 #line 146 "codegen/try.kl"
-    kl_t8 = kl_t6 + 1;
+    kl_t7 = kl_t5 + 1;
 #line 146 "codegen/try.kl"
-    kl_t9 = kl_7codegen_4size__3u64( kl_t8 );
+    kl_t8 = kl_7codegen_4size__3u64( kl_t7 );
 #line 146 "codegen/try.kl"
-    kl_t10 = kl_t9;
+    kl_t9 = kl_t8;
 #line 146 "codegen/try.kl"
-    kl_t11 = kl_t10.tag == 0;
+    kl_t10 = kl_t9.tag == 0;
 #line 146 "codegen/try.kl"
-    if ( kl_t11 ) goto bb3; else goto bb4;
+    if ( kl_t10 ) goto bb3; else goto bb4;
     bb3:
 #line 146 "codegen/try.kl"
-    kl_t12 = kl_t10.kl_2ok_value;
+    kl_t11 = kl_t9.kl_2ok_value;
 #line 146 "codegen/try.kl"
-    kl_7codegen_3Buf__RQ7codegen3Buf_3u64__ctor( kl_t4, kl_t12 );
+    kl_t12 = &kl_t3;
+#line 146 "codegen/try.kl"
+    kl_t15 = true;
+#line 146 "codegen/try.kl"
+    kl_7codegen_3Buf__RQ7codegen3Buf_3u64__ctor( kl_t12, kl_t11 );
 #line 146 "codegen/try.kl"
     kl_t2.tag = 0;
 #line 146 "codegen/try.kl"
@@ -1587,7 +1587,7 @@ struct kl_7prelude_result__IQ7codegen3Buf_Q7codegen3BadE kl_7codegen_4grow__MQ7c
 #line 146 "codegen/try.kl"
     kl_t0.tag = 1;
 #line 146 "codegen/try.kl"
-    kl_t0.kl_3err_error = kl_t10.kl_3err_error;
+    kl_t0.kl_3err_error = kl_t9.kl_3err_error;
 #line 146 "codegen/try.kl"
     kl_7codegen_3Buf__dtor( &kl_b_1 );
 #line 146 "codegen/try.kl"
@@ -1754,9 +1754,9 @@ struct kl_7prelude_result__I3u64_Q7codegen3BadE kl_7codegen_5total__3u64( uint64
     uint64_t kl_i_3;
     bool kl_t4;
     struct kl_7codegen_Buf kl_held_5;
-    struct kl_7codegen_Buf* kl_t6;
-    bool kl_t7;
-    uint64_t kl_t8;
+    bool kl_t6;
+    uint64_t kl_t7;
+    struct kl_7codegen_Buf* kl_t8;
     struct kl_7prelude_result__I3u64_Q7codegen3BadE kl_t10;
     struct kl_7prelude_result__I3u64_Q7codegen3BadE kl_t11;
     bool kl_t12;
@@ -1781,11 +1781,9 @@ struct kl_7prelude_result__I3u64_Q7codegen3BadE kl_7codegen_5total__3u64( uint64
 #line 162 "codegen/try.kl"
     if ( kl_t4 ) goto bb2; else goto bb3;
     bb2:
-    kl_t6 = &kl_held_5;
+    kl_t6 = __builtin_add_overflow( 10, kl_i_3, &( uint64_t ) { 0 } );
 #line 164 "codegen/try.kl"
-    kl_t7 = __builtin_add_overflow( 10, kl_i_3, &( uint64_t ) { 0 } );
-#line 164 "codegen/try.kl"
-    if ( kl_t7 ) goto bb4; else goto bb5;
+    if ( kl_t6 ) goto bb4; else goto bb5;
     bb3:
 #line 168 "codegen/try.kl"
     kl_t21.tag = 0;
@@ -1800,9 +1798,11 @@ struct kl_7prelude_result__I3u64_Q7codegen3BadE kl_7codegen_5total__3u64( uint64
     kl_rt_panic( "codegen/try.kl", 164, "arithmetic overflow: 10 + i" );
     bb5:
 #line 164 "codegen/try.kl"
-    kl_t8 = 10 + kl_i_3;
+    kl_t7 = 10 + kl_i_3;
 #line 164 "codegen/try.kl"
-    kl_7codegen_3Buf__RQ7codegen3Buf_3u64__ctor( kl_t6, kl_t8 );
+    kl_t8 = &kl_held_5;
+#line 164 "codegen/try.kl"
+    kl_7codegen_3Buf__RQ7codegen3Buf_3u64__ctor( kl_t8, kl_t7 );
     kl_t10 = kl_7codegen_4size__3u64( kl_i_3 );
 #line 165 "codegen/try.kl"
     kl_t11 = kl_t10;

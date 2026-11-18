@@ -432,24 +432,24 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_MQ7prelude3str( st
 {
     struct kl_2kl6string_string kl_t0;
     struct kl_2kl6string_string kl_t2;
-    struct kl_2kl6string_string* kl_t3;
-    struct kl_7prelude_str* kl_t4;
-    struct kl_7prelude_textual__ref kl_t5;
+    struct kl_7prelude_str* kl_t3;
+    struct kl_7prelude_textual__ref kl_t4;
+    struct kl_2kl6string_string* kl_t5;
     bool kl_t7;
 #line 91 "../../src/string.kl"
     kl_t7 = false;
 #line 91 "../../src/string.kl"
     kl_t7 = false;
 #line 91 "../../src/string.kl"
-    kl_t3 = &kl_t2;
+    kl_t3 = &kl_text_1;
+#line 91 "../../src/string.kl"
+    kl_t4 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 91 "../../src/string.kl"
+    kl_t5 = &kl_t2;
 #line 91 "../../src/string.kl"
     kl_t7 = true;
 #line 91 "../../src/string.kl"
-    kl_t4 = &kl_text_1;
-#line 91 "../../src/string.kl"
-    kl_t5 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t4, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 91 "../../src/string.kl"
-    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t3, kl_t5 );
+    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t5, kl_t4 );
 #line 91 "../../src/string.kl"
     kl_t0 = kl_t2;
 #line 91 "../../src/string.kl"
@@ -468,12 +468,12 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_M3u64( uint64_t kl
     struct kl_2kl6string_string kl_t0;
     bool kl_t2;
     struct kl_2kl6string_string kl_t3;
-    struct kl_2kl6string_string* kl_t4;
-    struct kl_7prelude_str kl_t5;
-    struct kl_7prelude_str* kl_t6;
-    uint8_t* kl_t7;
-    struct kl_7prelude_str* kl_t9;
-    struct kl_7prelude_textual__ref kl_t10;
+    struct kl_7prelude_str kl_t4;
+    struct kl_7prelude_str* kl_t5;
+    uint8_t* kl_t6;
+    struct kl_7prelude_str* kl_t8;
+    struct kl_7prelude_textual__ref kl_t9;
+    struct kl_2kl6string_string* kl_t10;
     struct kl_2kl6string_string kl_result_12;
     struct kl_2kl6string_string* kl_t13;
     bool kl_t15;
@@ -514,21 +514,21 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_M3u64( uint64_t kl
     bb1:
     kl_t41 = false;
 #line 99 "../../src/string.kl"
-    kl_t4 = &kl_t3;
+    kl_t5 = &kl_t4;
+#line 99 "../../src/string.kl"
+    kl_t6 = ( uint8_t* ) "0";
+#line 99 "../../src/string.kl"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 1 );
+#line 99 "../../src/string.kl"
+    kl_t8 = &kl_t4;
+#line 99 "../../src/string.kl"
+    kl_t9 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t8, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 99 "../../src/string.kl"
+    kl_t10 = &kl_t3;
 #line 99 "../../src/string.kl"
     kl_t41 = true;
 #line 99 "../../src/string.kl"
-    kl_t6 = &kl_t5;
-#line 99 "../../src/string.kl"
-    kl_t7 = ( uint8_t* ) "0";
-#line 99 "../../src/string.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t6, kl_t7, 1 );
-#line 99 "../../src/string.kl"
-    kl_t9 = &kl_t5;
-#line 99 "../../src/string.kl"
-    kl_t10 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t9, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 99 "../../src/string.kl"
-    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t4, kl_t10 );
+    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t10, kl_t9 );
 #line 99 "../../src/string.kl"
     kl_t0 = kl_t3;
 #line 99 "../../src/string.kl"
