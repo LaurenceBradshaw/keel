@@ -1665,10 +1665,15 @@ std::vector<llvm::Type*> Llvm_emitter::eightbytes( Type_id type ) const
     }
     std::array<bool, 2> integer {};
     classify( type, 0, integer );
+    // The last only as wide as what is left, as clang has it, so no part reads past the aggregate.
     std::vector<llvm::Type*> parts;
     for( u64 i = 0; i * 8 < size; ++i )
     {
-        parts.push_back( integer[i] ? builder_.getInt64Ty() : builder_.getDoubleTy() );
+        const u64 left = std::min<u64>( 8, size - i * 8 );
+        parts.push_back(
+            integer[i] ? builder_.getIntNTy( static_cast<u32>( 8 * left ) )
+                       : ( left == 4 ? builder_.getFloatTy() : builder_.getDoubleTy() )
+        );
     }
     return parts;
 }
@@ -2767,6 +2772,26 @@ TEST_CASE( "emit_llvm_promotes_a_run_local", "[codegen][llvm]" )
     REQUIRE( promoted.ir.find( "load { ptr, i64 }" ) == std::string::npos );
 }
 
+// Its last eightbyte is an `i32`, so neither side pads it out to 16 bytes through a temporary.
+TEST_CASE( "emit_llvm_passes_a_twelve_byte_struct_without_a_padded_copy", "[codegen][llvm]" )
+{
+    Compiled p(
+        "struct Trio { i32 a; i32 b; i32 c; };\n"
+        "Trio made( i32 v ) { return Trio { v, v + 1, v + 2 }; }\n"
+        "i32 main() { Trio t = made( 1 ); return t.c - 3; }\n",
+        Stage::Elaborated
+    );
+    REQUIRE( p.clean() );
+
+    const Description program = describe( p.ast, p.types, p.interner );
+    const Llvm_output emitted =
+        emit_llvm( p.functions, program, p.types, p.literals, p.sm, p.interner, p.modules, { .print = true } );
+    INFO( emitted.ir );
+    REQUIRE( emitted.error.empty() );
+    REQUIRE( emitted.ir.find( "define { i64, i32 } @" ) != std::string::npos );
+    REQUIRE( emitted.ir.find( "alloca [16 x i8]" ) == std::string::npos );
+}
+
 TEST_CASE( "emit_llvm_promotes_a_scalar_local_unless_debug_at_O1_names_it", "[codegen][llvm]" )
 {
     Compiled p(
@@ -2882,9 +2907,9 @@ TEST_CASE( "emit_llvm_follows_each_targets_c_abi", "[codegen][llvm]" )
     REQUIRE( sysv.ir.find( "target triple = \"x86_64-pc-linux-gnu\"" ) != std::string::npos );
     REQUIRE( win64.ir.find( "target triple = \"x86_64-pc-windows-msvc\"" ) != std::string::npos );
 
-    // SysV: eightbytes in registers, every narrow integer widened.
-    REQUIRE( defined( sysv.ir, "tiny" ).find( "i64 @" ) != std::string::npos );
-    REQUIRE( defined( sysv.ir, "three" ).find( "{ double, double } @" ) != std::string::npos );
+    // SysV: eightbytes in registers, the last only as wide as what is left; every narrow integer widened.
+    REQUIRE( defined( sysv.ir, "tiny" ).find( "i32 @" ) != std::string::npos );
+    REQUIRE( defined( sysv.ir, "three" ).find( "{ double, float } @" ) != std::string::npos );
     REQUIRE( defined( sysv.ir, "flip" ).find( "(i1 zeroext %0, i8 signext %1)" ) != std::string::npos );
     REQUIRE( defined( sysv.ir, "count" ).find( "({ ptr, i64 } %0)" ) != std::string::npos );
     REQUIRE( defined( sysv.ir, "echo" ).find( "{ ptr, i64 } @" ) != std::string::npos );

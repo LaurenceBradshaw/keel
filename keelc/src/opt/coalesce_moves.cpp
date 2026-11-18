@@ -394,11 +394,17 @@ bool interferes(
     const Local_set&              addressed
 )
 {
-    // A dead shell left in `kept`'s storage is fine; a value still wanted is not.
-    const auto clash = [&]( const Occupancy& s, const Local_set& alive, bool gone_written, bool kept_written )
+    // A dead shell left in `kept`'s storage is fine; a value still wanted is not. Outside its storage,
+    // `kept`'s `storage_live` would empty it; a call's temporary has none, so only its end counts.
+    const bool scoped = std::ranges::any_of(
+        func.statements,
+        [&]( const Statement& statement )
+        { return statement.kind == Statement_kind::Storage_live && names( statement.place, kept ); }
+    );
+    const auto clash = [&]( const Occupancy& s, const Local_set& alive, bool gone_written, bool kept_written, bool ends_kept )
     {
         return occupied( s, alive, addressed, gone, gone_written ) &&
-               ( occupied( s, alive, addressed, kept, kept_written ) || s.storage_dead[kept.v] );
+               ( occupied( s, alive, addressed, kept, kept_written ) || ( s.storage_dead[kept.v] && ( scoped || ends_kept ) ) );
     };
 
     for( const Block_id b : func.blocks.ids() )
@@ -406,7 +412,7 @@ bool interferes(
         const Block&     block = func.blocks[b];
         const Occupancy* state = &entry[b.v];
 
-        if( clash( *state, live.on_entry[b.v], false, false ) )
+        if( clash( *state, live.on_entry[b.v], false, false, false ) )
         {
             return true;
         }
@@ -427,7 +433,8 @@ bool interferes(
 
             state = &after[at];
 
-            if( clash( *state, live.after[at], writes( func, statement, gone ), writes( func, statement, kept ) ) )
+            const bool ends_kept = statement.kind == Statement_kind::Storage_dead && names( statement.place, kept );
+            if( clash( *state, live.after[at], writes( func, statement, gone ), writes( func, statement, kept ), ends_kept ) )
             {
                 return true;
             }
@@ -1320,6 +1327,26 @@ TEST_CASE( "coalesce_moves_keeps_a_call_result_where_it_lies", "[opt][coalesce]"
 {
     const Optimised p(
         "i32 f( i32 v ) { return open( shape( v ) ); }\n"
+        "Shape shape( i32 v ) { if( v == 0 ) { return Shape::empty; } return Shape::boxed( Box( v ) ); }\n"
+        "i32 open( move Shape s ) { switch( move s ) { case Shape::boxed( b ): return b.v; case Shape::empty: return 0; } }\n"
+        "enum Shape { boxed( Box b ), empty };\n",
+        Inline_weights {},
+        true,
+        2,
+        true,
+        false
+    );
+    REQUIRE( p.clean() );
+    REQUIRE( p.well_formed() );
+    REQUIRE( p.local_copies() == 0 );
+}
+
+// The call's temporary has no `storage_live`, so round the loop it is never inside its storage; only
+// its `storage_dead` bounds where another value may live in it.
+TEST_CASE( "coalesce_moves_keeps_a_call_result_where_it_lies_in_a_loop", "[opt][coalesce]" )
+{
+    const Optimised p(
+        "i32 f( i32 n ) { i32 t = 0; for( i32 v = 0; v < n; v++ ) { t += open( shape( v ) ); } return t; }\n"
         "Shape shape( i32 v ) { if( v == 0 ) { return Shape::empty; } return Shape::boxed( Box( v ) ); }\n"
         "i32 open( move Shape s ) { switch( move s ) { case Shape::boxed( b ): return b.v; case Shape::empty: return 0; } }\n"
         "enum Shape { boxed( Box b ), empty };\n",
