@@ -251,7 +251,7 @@ void forward_offsets( Function& func, const Type_table& table )
     const auto element = [&]( u32 q )
     {
         const Type_id type = func.locals[Local_id { q }].type;
-        return array[q].is_valid() && !refused[q] && table.is_many_pointer( type ) &&
+        return array[q].is_valid() && !refused[q] && ( table.is_pointer( type ) || table.is_many_pointer( type ) ) &&
                table.get( type ).element == table.get( func.locals[array[q]].type ).element;
     };
     std::vector<bool> needed( n, false );
@@ -508,6 +508,18 @@ TEST_CASE( "forward_borrows_names_the_element_a_run_of_a_local_reaches", "[opt][
 {
     const Forwarded p( "u64 f( u64 x ) { u64[4] a = [ x, x, x, x ]; twice( ref a[0..4] ); return a[1] + a[2]; }\n"
                        "void twice( ref u64[] r ) { for( u64 i : 0..r.size ) { r[i] = r[i] * 2; } }\n" );
+    REQUIRE( p.clean() );
+    REQUIRE( verify( p.first() ).empty() );
+    REQUIRE( p.addresses() == 0 );
+    REQUIRE( p.derefs() == 0 );
+}
+
+// An element borrowed by an accessor is a pointer to one element, not a run, and is `a`'s own too.
+TEST_CASE( "forward_borrows_names_the_element_an_accessor_borrows", "[opt][forward]" )
+{
+    const Forwarded p( "u64 f( u64 x ) { Four a = Four( x ); return a.at( x % 4 ) + a.at( 1 ); }\n"
+                       "class Four { u64[4] e; public Four( u64 x ) { e = [ x, x, x, x ]; }"
+                       " public const ref u64 at( u64 i ) const { return e[i]; } };\n" );
     REQUIRE( p.clean() );
     REQUIRE( verify( p.first() ).empty() );
     REQUIRE( p.addresses() == 0 );
