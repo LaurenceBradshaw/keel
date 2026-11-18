@@ -206,8 +206,10 @@ std::vector<u64> constant_indices( Function& func, const Literal_pool& literals 
 // The locals to split, from `first`. A local's storage markers don't count, nor does an `&init` of it
 // whose pointer nothing else names: an inlined constructor's, left after its body; and a whole copy
 // doesn't count on a side that is a whole local. An enum is never split at a whole copy, so only past the
-// parameters, whose split would add one; nor an array, which is never split at one.
-Local_set splittable( const Function& func, const Type_table& table, const std::vector<u64>& indices, u32 first )
+// parameters, whose split would add one; nor an array, which is never split at one. With `passing`, nor
+// does a whole local a call moves.
+Local_set
+splittable( const Function& func, const Type_table& table, const std::vector<u64>& indices, u32 first, bool passing = false )
 {
     Local_set        split( func.locals.size(), false );
     std::vector<u32> mentions( func.locals.size(), 0 );
@@ -275,11 +277,13 @@ Local_set splittable( const Function& func, const Type_table& table, const std::
 
         if( statement.kind == Statement_kind::Assign )
         {
+            const bool passed = passing && value.kind == Rvalue_kind::Call;
             for_each_operand(
                 value,
                 [&]( const Operand& operand )
                 {
-                    if( operand.has_place() )
+                    if( operand.has_place() &&
+                        !( passed && operand.kind == Operand_kind::Move && operand.place.is_whole_local() ) )
                     {
                         use( operand.place );
                     }
@@ -336,6 +340,57 @@ Local_set splittable( const Function& func, const Type_table& table, const std::
     }
 
     return split;
+}
+
+// Each struct local in `moved` that a call moves whole is moved into a fresh local just before, which the
+// call takes instead, so the local itself can split.
+void move_before_calls( Function& func, const Local_set& moved )
+{
+    std::vector<Statement> statements;
+    statements.reserve( func.statements.size() );
+
+    for( Block& block : func.blocks )
+    {
+        const u32 first       = block.first_statement;
+        const u32 count       = block.statement_count;
+        block.first_statement = narrow_cast<u32>( statements.size() );
+
+        for( u32 s = first; s < first + count; ++s )
+        {
+            Statement statement = std::move( func.statements[s] );
+
+            if( statement.kind == Statement_kind::Assign && func.rvalue( statement ).kind == Rvalue_kind::Call )
+            {
+                for( u32 a = 0; a < func.rvalue( statement ).arguments.size(); ++a )
+                {
+                    const Operand argument = func.rvalue( statement ).arguments[a];
+                    if( argument.kind != Operand_kind::Move || !argument.place.is_whole_local() ||
+                        !moved[argument.place.local.v] )
+                    {
+                        continue;
+                    }
+
+                    Local held = func.locals[argument.place.local];
+                    held.name  = Symbol_id {};
+                    const Local_id fresh { narrow_cast<u32>( func.locals.size() ) };
+                    func.locals.push_back( held );
+                    statements.push_back( Statement {
+                        .kind  = Statement_kind::Assign,
+                        .span  = statement.span,
+                        .place = Place { .local = fresh },
+                        .value = func.add_rvalue( use( argument ) ),
+                    } );
+                    func.rvalue( statement ).arguments[a] = move( Place { .local = fresh }, argument.type );
+                }
+            }
+
+            statements.push_back( std::move( statement ) );
+        }
+
+        block.statement_count = narrow_cast<u32>( statements.size() ) - block.first_statement;
+    }
+
+    func.statements = std::move( statements );
 }
 
 // One new local per split local and field, tag or index named, keyed by both (a tag's field is node 0); each place loses its
@@ -640,6 +695,24 @@ void move_into_return_slot( Function& func )
 
 void split_aggregates( Function& func, const Ast& ast, Types& types, const Literal_pool& literals )
 {
+    // A struct local a call moves whole, otherwise split and with a field read, is handed over in a fresh
+    // local; one only built through its fields gains nothing.
+    {
+        const std::vector<u64> indices = constant_indices( func, literals );
+        const Local_set        kept    = splittable( func, types.table(), indices, func.parameter_count + 1 );
+        Local_set              moved   = splittable( func, types.table(), indices, func.parameter_count + 1, true );
+        bool                   any     = false;
+        for( const Local_id l : func.locals.ids() )
+        {
+            moved[l.v] = moved[l.v] && !kept[l.v] && types.table().is_struct( func.locals[l].type ) && reads_a_field( func, l );
+            any        = any || moved[l.v];
+        }
+        if( any )
+        {
+            move_before_calls( func, moved );
+        }
+    }
+
     const Local_set whole = splittable( func, types.table(), constant_indices( func, literals ), 0 );
     copy_parameters( func, whole );
     if( whole[0] && reads_a_field( func, k_return_slot ) )
@@ -912,6 +985,22 @@ TEST_CASE( "split_aggregates_keeps_a_local_passed_whole", "[opt][split]" )
     REQUIRE( p.clean() );
     REQUIRE( verify( p.func ).empty() );
     REQUIRE( p.named() );
+}
+
+// `q` is read through a field in a loop, then moved whole into a call too big to inline: a fresh local
+// takes the move, and `q` splits.
+TEST_CASE( "split_aggregates_splits_a_local_moved_into_a_call", "[opt][split]" )
+{
+    const Split p(
+        "class Cell { public i32 value; public i32 spare; public Cell( i32 v ) { value = v; spare = 0; } ~Cell() { } };\n"
+        "i32 g( move Cell c ) { i32 t = c.value * 3; t = t + c.spare; t = t * t; return t - 1; }\n"
+        "i32 f( i32 a ) { Cell q = Cell( a ); for( i32 i : 0..a ) { q.spare = q.spare + q.value; } return g( move q ); }\n",
+        "q",
+        Inline_weights { .threshold = 3 }
+    );
+    REQUIRE( p.clean() );
+    REQUIRE( verify( p.func ).empty() );
+    REQUIRE_FALSE( p.named() );
 }
 
 // `p` is copied once into a fresh local in a new entry block, which splits.

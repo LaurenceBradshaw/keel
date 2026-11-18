@@ -189,7 +189,7 @@ int32_t kl_15self_tail_calls_4main__( void )
     int64_t kl_x_10;
     int64_t* kl_t11;
     struct kl_15self_tail_calls_Box kl_t12;
-    struct kl_15self_tail_calls_Box kl_b_13;
+    struct kl_15self_tail_calls_Box kl_t14;
     int64_t kl_t15;
 #line 30 "opt/self_tail_calls/main.kl"
     kl_t1 = kl_15self_tail_calls_3acc__3i64_3i64( 9999999, 10000000 );
@@ -214,10 +214,10 @@ int32_t kl_15self_tail_calls_4main__( void )
 #line 89 "opt/self_tail_calls/main.kl"
     return kl_t0;
     bb4:
-#line 92 "opt/self_tail_calls/main.kl"
-    kl_b_13.kl_value = 7;
 #line 53 "opt/self_tail_calls/main.kl"
-    kl_t5 = kl_15self_tail_calls_4last__MQ15self_tail_calls3Box_3i64( kl_b_13, 9999999 );
+    kl_t14.kl_value = 7;
+#line 53 "opt/self_tail_calls/main.kl"
+    kl_t5 = kl_15self_tail_calls_4last__MQ15self_tail_calls3Box_3i64( kl_t14, 9999999 );
 #line 92 "opt/self_tail_calls/main.kl"
     kl_t4 = kl_t5 != 7;
 #line 92 "opt/self_tail_calls/main.kl"
