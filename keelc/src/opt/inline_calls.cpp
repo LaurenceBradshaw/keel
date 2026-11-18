@@ -3,6 +3,7 @@
 
 #include "opt/inline_calls.h"
 #include "ir/call_graph.h"
+#include "ir/loops.h"
 #include "ir/simplify.h"
 
 namespace keel
@@ -75,19 +76,20 @@ u32 inline_cost( const Function& callee, const Inline_weights& weights )
 }
 
 // Measured against the caller's size before any splice, so one caller's limit cannot move mid-way.
-u32 threshold( const u32 statements_at_start, const Function& callee, const Inline_weights& weights )
+u32 threshold( const u32 statements_at_start, const Function& callee, const Inline_weights& weights, bool in_loop )
 {
     if( statements_at_start >= weights.big_caller )
     {
         return weights.big_caller_threshold;
     }
 
+    const u32 loop = in_loop ? weights.in_loop : 0;
     if( narrow_cast<u32>( callee.blocks.size() ) <= weights.few_blocks )
     {
-        return weights.threshold + weights.threshold / 4;
+        return weights.threshold + weights.threshold / 4 + loop;
     }
 
-    return weights.threshold;
+    return weights.threshold + loop;
 }
 
 // An `out` parameter is reached through `&init`, whose pointer `addressed_locals` trusts to die with its call.
@@ -472,16 +474,19 @@ const Rvalue* known_function( const Function& caller, const Operand& callee )
 }
 
 // Splices whatever `pick` chooses, then rescans the continuation for more. A spliced body was
-// inlined into already, so only its indirect calls are offered again: one may now be known.
+// inlined into already, so only its indirect calls are offered again: one may now be known. `pick`
+// is told which of the caller's first blocks the call's block came from.
 template <typename Pick>
 void inline_each( Function& caller, const Literal_pool& literals, Pick pick )
 {
     std::vector<Block_id> worklist( caller.blocks.size() );
     std::vector<bool>     spliced( caller.blocks.size(), false );
+    std::vector<Block_id> origin( caller.blocks.size() );
 
     for( const Block_id i : caller.blocks.ids() )
     {
         worklist[i.v] = i;
+        origin[i.v]   = i;
     }
 
     while( !worklist.empty() )
@@ -500,7 +505,7 @@ void inline_each( Function& caller, const Literal_pool& literals, Pick pick )
                 continue;
             }
 
-            const Site site = pick( block, s );
+            const Site site = pick( block, s, origin[at.v] );
             if( site.callee )
             {
                 const bool inner      = spliced[at.v];
@@ -508,6 +513,7 @@ void inline_each( Function& caller, const Literal_pool& literals, Pick pick )
                 splice( caller, at, s, *site.callee, site.receiver );
                 spliced.resize( caller.blocks.size(), true );
                 spliced.back() = inner;
+                origin.resize( caller.blocks.size(), origin[at.v] );
                 for( u32 b = block_base; b < caller.blocks.size(); ++b )
                 {
                     worklist.push_back( Block_id { b } );
@@ -533,10 +539,21 @@ void inline_calls(
 )
 {
     const u32 statement_count = narrow_cast<u32>( caller.statements.size() );
+
+    // A call run many times pays its overhead each time, so in a loop a dearer callee goes.
+    std::vector<bool> looped( caller.blocks.size(), false );
+    for( const Loop& loop : find_loops( caller ).loops )
+    {
+        for( const Block_id b : loop.blocks )
+        {
+            looped[b.v] = true;
+        }
+    }
+
     inline_each(
         caller,
         literals,
-        [&]( const Block& block, u32 s ) -> Site
+        [&]( const Block& block, u32 s, Block_id from ) -> Site
         {
             const Statement& statement = caller.statements_of( block )[s];
             const Rvalue&    value     = std::as_const( caller ).rvalue( statement );
@@ -567,8 +584,9 @@ void inline_calls(
                     const Function&      callee   = *saved[j];
                     const Function&      finished = functions[j];
                     std::optional<Place> receiver;
-                    bool                 fits = !( keep_trig && callee.trig != Trig::None ) && inlinable( callee ) &&
-                                inline_cost( finished, weights ) <= threshold( statement_count, finished, weights );
+                    bool                 fits =
+                        !( keep_trig && callee.trig != Trig::None ) && inlinable( callee ) &&
+                        inline_cost( finished, weights ) <= threshold( statement_count, finished, weights, looped[from.v] );
                     if( fits && callee.constructed.is_valid() )
                     {
                         assert( callee.constructed == Local_id { 1 } );
@@ -607,7 +625,7 @@ void inline_drops(
     inline_each(
         caller,
         literals,
-        [&]( const Block& block, u32 s ) -> Site
+        [&]( const Block& block, u32 s, Block_id ) -> Site
         {
             const Statement& statement = caller.statements_of( block )[s];
             if( statement.kind != Statement_kind::Drop || statement.drop_flag.is_valid() ||
@@ -626,7 +644,7 @@ void inline_drops(
                 if( calls( caller, statement, functions[j] ) )
                 {
                     if( replaceable_receiver( functions[j] ) &&
-                        inline_cost( functions[j], weights ) <= threshold( statement_count, functions[j], weights ) )
+                        inline_cost( functions[j], weights ) <= threshold( statement_count, functions[j], weights, false ) )
                     {
                         return Site { .callee = &functions[j], .receiver = statement.place };
                     }
@@ -658,7 +676,9 @@ constexpr std::string_view k_types = "class Box { public i64 value; public Box( 
                                      "i32 twice( i32 x ) { return x * 2; }\n"
                                      "void set( out i32 n ) { n = 9; }\n"
                                      "i32 mixed( i32 a, i32 b ) { i32 c = a * b + a; i32 d = c - b * 3; i32 e = d * d + c;"
-                                     " i32 f = e / 7 + d; i32 g = f * a - e; i32 h = g * b + f * c; return h + c * d - f; }\n"
+                                     " i32 f = e / 7 + d; i32 g = f * a - e; i32 h = g * b + f * c; i32 i = h * h + g;"
+                                     " i32 j = i / 5 - h; i32 k = j * c + i; i32 l = k - j * d; i32 m = l * e + k;"
+                                     " return m + h * i - l; }\n"
                                      "i32 main() { return 0; }\n";
 
 // Optimised and elaborated, as a release build emits it. The function under test is always the first.
@@ -745,6 +765,23 @@ TEST_CASE( "inline_calls_keeps_a_call_over_the_threshold", "[opt][inline]" )
     REQUIRE( raised.calls() == 0 );
 }
 
+// A call inside a loop may cost `in_loop` more; the same call outside one stays.
+TEST_CASE( "inline_calls_takes_a_dearer_callee_in_a_loop", "[opt][inline]" )
+{
+    const Inline_weights weights { .in_loop = 100 };
+
+    const Inlined straight( "i32 f( i32 a ) { return mixed( a, 3 ); }\n", weights );
+    REQUIRE( straight.clean() );
+    REQUIRE( straight.calls() == 1 );
+
+    const Inlined looped(
+        "i32 f( i32 a ) { i32 s = 0; for( i32 i = 0; i < a; i += 1 ) { s = s + mixed( i, 3 ); } return s; }\n", weights
+    );
+    REQUIRE( looped.clean() );
+    REQUIRE( verify( looped.first() ).empty() );
+    REQUIRE( looped.calls() == 0 );
+}
+
 // Both are reached through `&init`, whose pointer the passes trust to die with its call.
 TEST_CASE( "inline_calls_keeps_a_call_that_initialises_through_out", "[opt][inline]" )
 {
@@ -809,7 +846,8 @@ TEST_CASE( "inline_calls_keeps_a_constructor_that_passes_this_on", "[opt][inline
 {
     const Inlined p( "i32 f() { Reg r = Reg( 4 ); return r.value; }\n"
                      "class Reg { public i32 value; public Reg( i32 v ) { value = v; fill(); }"
-                     " void fill() { value = mixed( 1, 2 ) + mixed( 3, 4 ) + mixed( 5, 6 ); } };\n" );
+                     " void fill() { value = mixed( 1, 2 ) + mixed( 3, 4 ) + mixed( 5, 6 ) + mixed( 7, 8 ) + mixed( 9, 1 )"
+                     " + mixed( 2, 3 ); } };\n" );
     REQUIRE( p.clean() );
     REQUIRE( verify( p.first() ).empty() );
     REQUIRE( p.calls() == 1 );

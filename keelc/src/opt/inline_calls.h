@@ -10,13 +10,15 @@
 namespace keel
 {
 // The tuning knobs: rustc's MIR inliner's weights scaled by 5, with Go's cheap panic and big-caller cap.
+// No second inliner runs after this one, so the threshold is twice rustc's, and more in a loop.
 struct Inline_weights
 {
     u32 statement            = 1; // an assignment
     u32 call                 = 5; // a call, drop, allocation or release; a lone one is free
     u32 branch               = 1;
     u32 panic                = 1;    // cheap, so a check does not keep a body out
-    u32 threshold            = 10;   // the most a callee may cost
+    u32 threshold            = 20;   // the most a callee may cost
+    u32 in_loop              = 15;   // more it may cost when the call is inside a loop
     u32 few_blocks           = 3;    // a callee with this many blocks or fewer may cost a quarter more
     u32 big_caller           = 1000; // statements, before inlining, past which a caller takes only
     u32 big_caller_threshold = 2;    // callees costing this much

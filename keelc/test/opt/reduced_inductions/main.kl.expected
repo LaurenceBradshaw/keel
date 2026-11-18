@@ -59,8 +59,6 @@ _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
 int64_t kl_18reduced_inductions_4rows__A256_3i64( struct kl__A256_3i64* );
-int64_t kl_18reduced_inductions_6walked__Q2kl4listI3i64E( struct kl_2kl4list_list__I3i64E* );
-uint64_t kl_18reduced_inductions_7bounded__3u64( uint64_t );
 int32_t kl_18reduced_inductions_4main__( void );
 void kl_2kl4list_10reallocate__I3i64E__SQ2kl4listI3i64E_3u64( struct kl_2kl4list_list__I3i64E*, uint64_t );
 
@@ -154,97 +152,6 @@ int64_t kl_18reduced_inductions_4rows__A256_3i64( struct kl__A256_3i64* kl_a_1 )
     return kl_t0;
 }
 
-#line 33 "opt/reduced_inductions/main.kl"
-int64_t kl_18reduced_inductions_6walked__Q2kl4listI3i64E( struct kl_2kl4list_list__I3i64E* kl_xs_1 )
-{
-    int64_t kl_t0;
-    uint64_t kl_i_2;
-    uint64_t kl_t3;
-    bool kl_t4;
-    int64_t* kl_t5;
-    int64_t* kl_t6;
-    int64_t* kl_t7;
-#line 35 "opt/reduced_inductions/main.kl"
-    kl_t0 = 0;
-    kl_i_2 = 0;
-#line 125 "<kl>/list.kl"
-    kl_t3 = ( *kl_xs_1 ).kl_count_;
-#line 36 "opt/reduced_inductions/main.kl"
-    kl_t4 = 0 < kl_t3;
-#line 36 "opt/reduced_inductions/main.kl"
-    if ( kl_t4 ) goto bb3; else goto bb1;
-    bb1:
-#line 40 "opt/reduced_inductions/main.kl"
-    return kl_t0;
-    bb2:
-#line 233 "<kl>/list.kl"
-    kl_t6 = kl_t7 + kl_i_2;
-#line 233 "<kl>/list.kl"
-    kl_t5 = &( *kl_t6 );
-#line 38 "opt/reduced_inductions/main.kl"
-    kl_t0 = kl_t0 + ( *kl_t5 );
-#line 36 "opt/reduced_inductions/main.kl"
-    kl_i_2 = kl_i_2 + 1;
-#line 36 "opt/reduced_inductions/main.kl"
-    kl_t4 = kl_i_2 < kl_t3;
-#line 36 "opt/reduced_inductions/main.kl"
-    if ( kl_t4 ) goto bb2; else goto bb1;
-    bb3:
-#line 233 "<kl>/list.kl"
-    kl_t7 = ( *kl_xs_1 ).kl_data_;
-#line 36 "opt/reduced_inductions/main.kl"
-    goto bb2;
-#line 41 "opt/reduced_inductions/main.kl"
-}
-
-#line 45 "opt/reduced_inductions/main.kl"
-uint64_t kl_18reduced_inductions_7bounded__3u64( uint64_t kl_stop_1 )
-{
-    uint64_t kl_t0;
-    uint8_t kl_i_2;
-    bool kl_t3;
-    bool kl_t4;
-    uint8_t kl_twice_5;
-    uint64_t kl_t6;
-#line 47 "opt/reduced_inductions/main.kl"
-    kl_t0 = 0;
-    kl_i_2 = 0;
-#line 48 "opt/reduced_inductions/main.kl"
-    goto bb1;
-    bb1:
-    kl_t4 = kl_t0 >= kl_stop_1;
-#line 50 "opt/reduced_inductions/main.kl"
-    if ( kl_t4 ) goto bb2; else goto bb3;
-    bb2:
-#line 57 "opt/reduced_inductions/main.kl"
-    return kl_t0;
-    bb3:
-#line 54 "opt/reduced_inductions/main.kl"
-    kl_twice_5 = kl_i_2 * 2;
-    kl_t6 = ( uint64_t ) kl_twice_5;
-#line 55 "opt/reduced_inductions/main.kl"
-    kl_t0 = kl_t0 + kl_t6;
-#line 48 "opt/reduced_inductions/main.kl"
-    kl_i_2 = kl_i_2 + 1;
-#line 50 "opt/reduced_inductions/main.kl"
-    kl_t4 = kl_t0 >= kl_stop_1;
-#line 50 "opt/reduced_inductions/main.kl"
-    if ( kl_t4 ) goto bb2; else goto bb4;
-    bb4:
-#line 54 "opt/reduced_inductions/main.kl"
-    kl_twice_5 = kl_i_2 * 2;
-    kl_t6 = ( uint64_t ) kl_twice_5;
-#line 55 "opt/reduced_inductions/main.kl"
-    kl_t0 = kl_t0 + kl_t6;
-#line 48 "opt/reduced_inductions/main.kl"
-    kl_i_2 = kl_i_2 + 1;
-#line 48 "opt/reduced_inductions/main.kl"
-    kl_t3 = kl_i_2 < 200;
-#line 48 "opt/reduced_inductions/main.kl"
-    if ( kl_t3 ) goto bb1; else goto bb2;
-#line 58 "opt/reduced_inductions/main.kl"
-}
-
 #line 60 "opt/reduced_inductions/main.kl"
 int32_t kl_18reduced_inductions_4main__( void )
 {
@@ -252,56 +159,67 @@ int32_t kl_18reduced_inductions_4main__( void )
     struct kl_2kl4list_list__I3i64E kl_xs_1;
     struct kl_2kl4list_list__I3i64E* kl_this_2;
     struct kl_2kl4list_list__I3i64E* kl_this_3;
-    struct kl_2kl4list_list__I3i64E* kl_t4;
-    int64_t kl_t5;
-    bool kl_t6;
+    int64_t kl_t4;
+    bool kl_t5;
+    int64_t* kl_t6;
     int64_t* kl_t7;
-    int64_t* kl_t8;
-    int64_t kl_k_9;
-    int64_t kl_t10;
-    bool kl_t11;
-    struct kl__A256_3i64 kl_a_12;
-    uint64_t kl_t13;
-    bool kl_t14;
-    uint64_t kl_t15;
-    struct kl__A256_3i64* kl_t16;
-    int64_t kl_t17;
-    bool kl_t18;
-    int64_t* kl_t19;
-    uint64_t kl_t20;
-    bool kl_t21;
+    int64_t kl_k_8;
+    int64_t kl_t9;
+    bool kl_t10;
+    struct kl__A256_3i64 kl_a_11;
+    uint64_t kl_t12;
+    bool kl_t13;
+    uint64_t kl_t14;
+    struct kl__A256_3i64* kl_t15;
+    int64_t kl_t16;
+    bool kl_t17;
+    int64_t* kl_t18;
+    uint64_t kl_t19;
+    bool kl_t20;
+    uint64_t kl_stop_21;
     uint64_t kl_t22;
-    uint64_t kl_t23;
-    bool kl_t24;
+    bool kl_t23;
+    uint8_t kl_i_24;
     bool kl_t25;
-    struct kl_7prelude_str kl_t26;
-    int64_t* kl_t27;
-    bool kl_t28;
-    struct kl_7prelude_str kl_t29;
-    int64_t* kl_t30;
-    bool kl_t31;
-    struct kl_7prelude_str kl_t32;
-    int64_t* kl_t33;
-    int64_t kl_n_34;
-    int64_t kl_i_35;
-    bool kl_t36;
-    int64_t kl_value_37;
-    int64_t* kl_t38;
-    bool kl_t39;
-    uint64_t kl_t40;
-    bool kl_t41;
-    int64_t kl_value_43;
-    int64_t* kl_t44;
+    bool kl_t26;
+    uint8_t kl_twice_27;
+    uint64_t kl_t28;
+    bool kl_t29;
+    struct kl_7prelude_str kl_t30;
+    int64_t* kl_t31;
+    bool kl_t32;
+    struct kl_7prelude_str kl_t33;
+    int64_t* kl_t34;
+    bool kl_t35;
+    struct kl_7prelude_str kl_t36;
+    int64_t* kl_t37;
+    int64_t kl_n_38;
+    int64_t kl_i_39;
+    bool kl_t40;
+    int64_t kl_value_41;
+    int64_t* kl_t42;
+    bool kl_t43;
+    uint64_t kl_t44;
     bool kl_t45;
-    uint64_t kl_t46;
-    bool kl_t47;
+    int64_t kl_value_47;
+    int64_t* kl_t48;
     bool kl_t49;
+    uint64_t kl_t50;
     bool kl_t51;
-    bool kl_t53;
+    uint64_t kl_i_53;
+    uint64_t kl_t54;
     bool kl_t55;
+    int64_t* kl_t56;
     bool kl_t57;
-    int64_t kl_t59;
-    ( void ) kl_t15;
+    struct kl_7prelude_str kl_t58;
+    int64_t* kl_t59;
+    bool kl_t60;
+    bool kl_t62;
+    bool kl_t64;
+    bool kl_t66;
+    bool kl_t68;
+    int64_t kl_t70;
+    ( void ) kl_t14;
 #line 19 "<kl>/list.kl"
     kl_xs_1.kl_data_ = NULL;
     kl_xs_1.kl_count_ = 0;
@@ -309,289 +227,356 @@ int32_t kl_18reduced_inductions_4main__( void )
 #line 63 "opt/reduced_inductions/main.kl"
     kl_this_2 = &kl_xs_1;
 #line 63 "opt/reduced_inductions/main.kl"
-    kl_value_37 = 4;
+    kl_value_41 = 4;
 #line 546 "<kl>/list.kl"
-    kl_t39 = ( *kl_this_2 ).kl_count_ == ( *kl_this_2 ).kl_cap_;
+    kl_t43 = ( *kl_this_2 ).kl_count_ == ( *kl_this_2 ).kl_cap_;
 #line 546 "<kl>/list.kl"
-    if ( kl_t39 ) goto bb21; else goto bb25;
+    if ( kl_t43 ) goto bb24; else goto bb28;
     bb1:
 #line 67 "opt/reduced_inductions/main.kl"
     kl_t0 = 1;
 #line 110 "<kl>/list.kl"
-    kl_t57 = kl_xs_1.kl_data_ != NULL;
+    kl_t68 = kl_xs_1.kl_data_ != NULL;
 #line 110 "<kl>/list.kl"
-    if ( kl_t57 ) goto bb39; else goto bb40;
+    if ( kl_t68 ) goto bb46; else goto bb47;
     bb2:
 #line 226 "<kl>/list.kl"
-    kl_t28 = 1 >= kl_xs_1.kl_count_;
+    kl_t32 = 1 >= kl_xs_1.kl_count_;
 #line 226 "<kl>/list.kl"
-    if ( kl_t28 ) goto bb15; else goto bb16;
+    if ( kl_t32 ) goto bb18; else goto bb19;
     bb3:
 #line 73 "opt/reduced_inductions/main.kl"
     kl_t0 = 2;
 #line 110 "<kl>/list.kl"
-    kl_t55 = kl_xs_1.kl_data_ != NULL;
+    kl_t66 = kl_xs_1.kl_data_ != NULL;
 #line 110 "<kl>/list.kl"
-    if ( kl_t55 ) goto bb37; else goto bb38;
+    if ( kl_t66 ) goto bb44; else goto bb45;
     bb4:
 #line 76 "opt/reduced_inductions/main.kl"
-    kl_t13 = 0;
+    kl_t12 = 0;
 #line 76 "opt/reduced_inductions/main.kl"
     goto bb5;
     bb5:
 #line 76 "opt/reduced_inductions/main.kl"
-    kl_a_12.e[kl_t13] = 1;
+    kl_a_11.e[kl_t12] = 1;
 #line 76 "opt/reduced_inductions/main.kl"
-    kl_t13 = kl_t13 + 1;
+    kl_t12 = kl_t12 + 1;
 #line 76 "opt/reduced_inductions/main.kl"
-    kl_a_12.e[kl_t13] = 1;
+    kl_a_11.e[kl_t12] = 1;
 #line 76 "opt/reduced_inductions/main.kl"
-    kl_t13 = kl_t13 + 1;
+    kl_t12 = kl_t12 + 1;
 #line 76 "opt/reduced_inductions/main.kl"
-    kl_a_12.e[kl_t13] = 1;
+    kl_a_11.e[kl_t12] = 1;
 #line 76 "opt/reduced_inductions/main.kl"
-    kl_t13 = kl_t13 + 1;
+    kl_t12 = kl_t12 + 1;
 #line 76 "opt/reduced_inductions/main.kl"
-    kl_a_12.e[kl_t13] = 1;
+    kl_a_11.e[kl_t12] = 1;
 #line 76 "opt/reduced_inductions/main.kl"
-    kl_t13 = kl_t13 + 1;
+    kl_t12 = kl_t12 + 1;
 #line 76 "opt/reduced_inductions/main.kl"
-    kl_t14 = kl_t13 < 256;
+    kl_t13 = kl_t12 < 256;
 #line 76 "opt/reduced_inductions/main.kl"
-    if ( kl_t14 ) goto bb5; else goto bb6;
+    if ( kl_t13 ) goto bb5; else goto bb6;
     bb6:
 #line 77 "opt/reduced_inductions/main.kl"
-    kl_t15 = 17;
+    kl_t14 = 17;
 #line 77 "opt/reduced_inductions/main.kl"
-    kl_a_12.e[kl_t15] = 2;
-    kl_t16 = &kl_a_12;
+    kl_a_11.e[kl_t14] = 2;
+    kl_t15 = &kl_a_11;
 #line 78 "opt/reduced_inductions/main.kl"
-    kl_t17 = kl_18reduced_inductions_4rows__A256_3i64( kl_t16 );
+    kl_t16 = kl_18reduced_inductions_4rows__A256_3i64( kl_t15 );
 #line 78 "opt/reduced_inductions/main.kl"
-    kl_t18 = kl_t17 != 257;
+    kl_t17 = kl_t16 != 257;
 #line 78 "opt/reduced_inductions/main.kl"
-    if ( kl_t18 ) goto bb7; else goto bb8;
+    if ( kl_t17 ) goto bb7; else goto bb8;
     bb7:
     kl_t0 = 3;
 #line 110 "<kl>/list.kl"
-    kl_t53 = kl_xs_1.kl_data_ != NULL;
+    kl_t64 = kl_xs_1.kl_data_ != NULL;
 #line 110 "<kl>/list.kl"
-    if ( kl_t53 ) goto bb35; else goto bb36;
+    if ( kl_t64 ) goto bb42; else goto bb43;
     bb8:
 #line 226 "<kl>/list.kl"
-    kl_t25 = 1 >= kl_xs_1.kl_count_;
+    kl_t29 = 1 >= kl_xs_1.kl_count_;
 #line 226 "<kl>/list.kl"
-    if ( kl_t25 ) goto bb13; else goto bb14;
+    if ( kl_t29 ) goto bb16; else goto bb17;
     bb9:
 #line 83 "opt/reduced_inductions/main.kl"
     kl_rt_panic( "opt/reduced_inductions/main.kl", 83, "cast out of range: cast<u64>( xs[ 1 ] )" );
     bb10:
 #line 83 "opt/reduced_inductions/main.kl"
-    kl_t22 = kl_t20 * 1980;
-#line 83 "opt/reduced_inductions/main.kl"
-    kl_t23 = kl_18reduced_inductions_7bounded__3u64( kl_t22 );
-#line 83 "opt/reduced_inductions/main.kl"
-    kl_t24 = kl_t23 != 9900;
-#line 83 "opt/reduced_inductions/main.kl"
-    if ( kl_t24 ) goto bb11; else goto bb12;
+    kl_stop_21 = kl_t19 * 1980;
+#line 47 "opt/reduced_inductions/main.kl"
+    kl_t22 = 0;
+    kl_i_24 = 0;
+#line 48 "opt/reduced_inductions/main.kl"
+    goto bb13;
     bb11:
+#line 85 "opt/reduced_inductions/main.kl"
     kl_t0 = 4;
 #line 110 "<kl>/list.kl"
-    kl_t51 = kl_xs_1.kl_data_ != NULL;
+    kl_t62 = kl_xs_1.kl_data_ != NULL;
 #line 110 "<kl>/list.kl"
-    if ( kl_t51 ) goto bb33; else goto bb34;
+    if ( kl_t62 ) goto bb40; else goto bb41;
     bb12:
 #line 88 "opt/reduced_inductions/main.kl"
     kl_t0 = 0;
 #line 110 "<kl>/list.kl"
-    kl_t49 = kl_xs_1.kl_data_ != NULL;
+    kl_t60 = kl_xs_1.kl_data_ != NULL;
 #line 110 "<kl>/list.kl"
-    if ( kl_t49 ) goto bb31; else goto bb32;
+    if ( kl_t60 ) goto bb38; else goto bb39;
     bb13:
-#line 228 "<kl>/list.kl"
-    kl_t26.kl_data = ( uint8_t* ) "index out of range";
-#line 228 "<kl>/list.kl"
-    kl_t26.kl_size = 18;
-#line 228 "<kl>/list.kl"
-    kl_rt_panic_message( "<kl>/list.kl", 228, kl_t26.kl_data, kl_t26.kl_size );
+#line 50 "opt/reduced_inductions/main.kl"
+    kl_t26 = kl_t22 >= kl_stop_21;
+#line 50 "opt/reduced_inductions/main.kl"
+    if ( kl_t26 ) goto bb14; else goto bb15;
     bb14:
-#line 233 "<kl>/list.kl"
-    kl_t27 = kl_xs_1.kl_data_ + 1;
-#line 233 "<kl>/list.kl"
-    kl_t19 = &( *kl_t27 );
 #line 83 "opt/reduced_inductions/main.kl"
-    kl_t20 = ( uint64_t ) ( *kl_t19 );
+    kl_t23 = kl_t22 != 9900;
 #line 83 "opt/reduced_inductions/main.kl"
-    kl_t21 = ( *kl_t19 ) >= 0;
-#line 83 "opt/reduced_inductions/main.kl"
-    if ( kl_t21 ) goto bb10; else goto bb9;
+    if ( kl_t23 ) goto bb11; else goto bb12;
     bb15:
-#line 228 "<kl>/list.kl"
-    kl_t29.kl_data = ( uint8_t* ) "index out of range";
-#line 228 "<kl>/list.kl"
-    kl_t29.kl_size = 18;
-#line 228 "<kl>/list.kl"
-    kl_rt_panic_message( "<kl>/list.kl", 228, kl_t29.kl_data, kl_t29.kl_size );
+#line 54 "opt/reduced_inductions/main.kl"
+    kl_twice_27 = kl_i_24 * 2;
+    kl_t28 = ( uint64_t ) kl_twice_27;
+#line 55 "opt/reduced_inductions/main.kl"
+    kl_t22 = kl_t22 + kl_t28;
+#line 48 "opt/reduced_inductions/main.kl"
+    kl_i_24 = kl_i_24 + 1;
+#line 50 "opt/reduced_inductions/main.kl"
+    kl_t26 = kl_t22 >= kl_stop_21;
+#line 50 "opt/reduced_inductions/main.kl"
+    if ( kl_t26 ) goto bb14; else goto bb49;
     bb16:
-#line 233 "<kl>/list.kl"
-    kl_t30 = kl_xs_1.kl_data_ + 1;
-#line 233 "<kl>/list.kl"
-    kl_t7 = &( *kl_t30 );
-#line 226 "<kl>/list.kl"
-    kl_t31 = 0 >= kl_xs_1.kl_count_;
-#line 226 "<kl>/list.kl"
-    if ( kl_t31 ) goto bb17; else goto bb18;
+#line 228 "<kl>/list.kl"
+    kl_t30.kl_data = ( uint8_t* ) "index out of range";
+#line 228 "<kl>/list.kl"
+    kl_t30.kl_size = 18;
+#line 228 "<kl>/list.kl"
+    kl_rt_panic_message( "<kl>/list.kl", 228, kl_t30.kl_data, kl_t30.kl_size );
     bb17:
-    kl_t32.kl_data = ( uint8_t* ) "index out of range";
-#line 228 "<kl>/list.kl"
-    kl_t32.kl_size = 18;
-#line 228 "<kl>/list.kl"
-    kl_rt_panic_message( "<kl>/list.kl", 228, kl_t32.kl_data, kl_t32.kl_size );
+#line 233 "<kl>/list.kl"
+    kl_t31 = kl_xs_1.kl_data_ + 1;
+#line 233 "<kl>/list.kl"
+    kl_t18 = &( *kl_t31 );
+#line 83 "opt/reduced_inductions/main.kl"
+    kl_t19 = ( uint64_t ) ( *kl_t18 );
+#line 83 "opt/reduced_inductions/main.kl"
+    kl_t20 = ( *kl_t18 ) >= 0;
+#line 83 "opt/reduced_inductions/main.kl"
+    if ( kl_t20 ) goto bb10; else goto bb9;
     bb18:
-#line 233 "<kl>/list.kl"
-    kl_t33 = kl_xs_1.kl_data_ + 0;
-#line 233 "<kl>/list.kl"
-    kl_t8 = &( *kl_t33 );
-#line 71 "opt/reduced_inductions/main.kl"
-    kl_k_9 = ( *kl_t8 ) - 1;
-#line 71 "opt/reduced_inductions/main.kl"
-    kl_n_34 = ( *kl_t7 );
-#line 10 "opt/reduced_inductions/main.kl"
-    kl_t10 = 0;
-    kl_i_35 = 0;
-#line 11 "opt/reduced_inductions/main.kl"
-    kl_t36 = 0 < kl_n_34;
-#line 11 "opt/reduced_inductions/main.kl"
-    if ( kl_t36 ) goto bb41; else goto bb20;
+#line 228 "<kl>/list.kl"
+    kl_t33.kl_data = ( uint8_t* ) "index out of range";
+#line 228 "<kl>/list.kl"
+    kl_t33.kl_size = 18;
+#line 228 "<kl>/list.kl"
+    kl_rt_panic_message( "<kl>/list.kl", 228, kl_t33.kl_data, kl_t33.kl_size );
     bb19:
-    kl_t10 = kl_t10 + kl_t59;
-#line 11 "opt/reduced_inductions/main.kl"
-    kl_i_35 = kl_i_35 + 1;
-#line 11 "opt/reduced_inductions/main.kl"
-    kl_t59 = kl_t59 + kl_k_9;
-#line 11 "opt/reduced_inductions/main.kl"
-    kl_t36 = kl_i_35 < kl_n_34;
-#line 11 "opt/reduced_inductions/main.kl"
-    if ( kl_t36 ) goto bb19; else goto bb20;
+#line 233 "<kl>/list.kl"
+    kl_t34 = kl_xs_1.kl_data_ + 1;
+#line 233 "<kl>/list.kl"
+    kl_t6 = &( *kl_t34 );
+#line 226 "<kl>/list.kl"
+    kl_t35 = 0 >= kl_xs_1.kl_count_;
+#line 226 "<kl>/list.kl"
+    if ( kl_t35 ) goto bb20; else goto bb21;
     bb20:
-#line 71 "opt/reduced_inductions/main.kl"
-    kl_t11 = kl_t10 != 30;
-#line 71 "opt/reduced_inductions/main.kl"
-    if ( kl_t11 ) goto bb3; else goto bb4;
+    kl_t36.kl_data = ( uint8_t* ) "index out of range";
+#line 228 "<kl>/list.kl"
+    kl_t36.kl_size = 18;
+#line 228 "<kl>/list.kl"
+    kl_rt_panic_message( "<kl>/list.kl", 228, kl_t36.kl_data, kl_t36.kl_size );
     bb21:
-#line 548 "<kl>/list.kl"
-    kl_t41 = ( *kl_this_2 ).kl_cap_ > 0;
-#line 548 "<kl>/list.kl"
-    if ( kl_t41 ) goto bb22; else goto bb23;
+#line 233 "<kl>/list.kl"
+    kl_t37 = kl_xs_1.kl_data_ + 0;
+#line 233 "<kl>/list.kl"
+    kl_t7 = &( *kl_t37 );
+#line 71 "opt/reduced_inductions/main.kl"
+    kl_k_8 = ( *kl_t7 ) - 1;
+#line 71 "opt/reduced_inductions/main.kl"
+    kl_n_38 = ( *kl_t6 );
+#line 10 "opt/reduced_inductions/main.kl"
+    kl_t9 = 0;
+    kl_i_39 = 0;
+#line 11 "opt/reduced_inductions/main.kl"
+    kl_t40 = 0 < kl_n_38;
+#line 11 "opt/reduced_inductions/main.kl"
+    if ( kl_t40 ) goto bb48; else goto bb23;
     bb22:
-#line 548 "<kl>/list.kl"
-    kl_t40 = ( *kl_this_2 ).kl_cap_ * 2;
-#line 548 "<kl>/list.kl"
-    goto bb24;
+    kl_t9 = kl_t9 + kl_t70;
+#line 11 "opt/reduced_inductions/main.kl"
+    kl_i_39 = kl_i_39 + 1;
+#line 11 "opt/reduced_inductions/main.kl"
+    kl_t70 = kl_t70 + kl_k_8;
+#line 11 "opt/reduced_inductions/main.kl"
+    kl_t40 = kl_i_39 < kl_n_38;
+#line 11 "opt/reduced_inductions/main.kl"
+    if ( kl_t40 ) goto bb22; else goto bb23;
     bb23:
-#line 548 "<kl>/list.kl"
-    kl_t40 = 1;
-#line 548 "<kl>/list.kl"
-    goto bb24;
+#line 71 "opt/reduced_inductions/main.kl"
+    kl_t10 = kl_t9 != 30;
+#line 71 "opt/reduced_inductions/main.kl"
+    if ( kl_t10 ) goto bb3; else goto bb4;
     bb24:
 #line 548 "<kl>/list.kl"
-    kl_2kl4list_10reallocate__I3i64E__SQ2kl4listI3i64E_3u64( kl_this_2, kl_t40 );
-#line 546 "<kl>/list.kl"
-    goto bb25;
+    kl_t45 = ( *kl_this_2 ).kl_cap_ > 0;
+#line 548 "<kl>/list.kl"
+    if ( kl_t45 ) goto bb25; else goto bb26;
     bb25:
+#line 548 "<kl>/list.kl"
+    kl_t44 = ( *kl_this_2 ).kl_cap_ * 2;
+#line 548 "<kl>/list.kl"
+    goto bb27;
+    bb26:
+#line 548 "<kl>/list.kl"
+    kl_t44 = 1;
+#line 548 "<kl>/list.kl"
+    goto bb27;
+    bb27:
+#line 548 "<kl>/list.kl"
+    kl_2kl4list_10reallocate__I3i64E__SQ2kl4listI3i64E_3u64( kl_this_2, kl_t44 );
+#line 546 "<kl>/list.kl"
+    goto bb28;
+    bb28:
 #line 289 "<kl>/list.kl"
-    kl_t38 = ( *kl_this_2 ).kl_data_ + ( *kl_this_2 ).kl_count_;
+    kl_t42 = ( *kl_this_2 ).kl_data_ + ( *kl_this_2 ).kl_count_;
 #line 289 "<kl>/list.kl"
-    ( *kl_t38 ) = kl_value_37;
+    ( *kl_t42 ) = kl_value_41;
 #line 291 "<kl>/list.kl"
     ( *kl_this_2 ).kl_count_ = ( *kl_this_2 ).kl_count_ + 1;
 #line 64 "opt/reduced_inductions/main.kl"
     kl_this_3 = &kl_xs_1;
 #line 64 "opt/reduced_inductions/main.kl"
-    kl_value_43 = 5;
+    kl_value_47 = 5;
 #line 546 "<kl>/list.kl"
-    kl_t45 = ( *kl_this_3 ).kl_count_ == ( *kl_this_3 ).kl_cap_;
+    kl_t49 = ( *kl_this_3 ).kl_count_ == ( *kl_this_3 ).kl_cap_;
 #line 546 "<kl>/list.kl"
-    if ( kl_t45 ) goto bb26; else goto bb30;
-    bb26:
-    kl_t47 = ( *kl_this_3 ).kl_cap_ > 0;
-#line 548 "<kl>/list.kl"
-    if ( kl_t47 ) goto bb27; else goto bb28;
-    bb27:
-#line 548 "<kl>/list.kl"
-    kl_t46 = ( *kl_this_3 ).kl_cap_ * 2;
-#line 548 "<kl>/list.kl"
-    goto bb29;
-    bb28:
-#line 548 "<kl>/list.kl"
-    kl_t46 = 1;
-#line 548 "<kl>/list.kl"
-    goto bb29;
+    if ( kl_t49 ) goto bb29; else goto bb33;
     bb29:
+    kl_t51 = ( *kl_this_3 ).kl_cap_ > 0;
 #line 548 "<kl>/list.kl"
-    kl_2kl4list_10reallocate__I3i64E__SQ2kl4listI3i64E_3u64( kl_this_3, kl_t46 );
-#line 546 "<kl>/list.kl"
-    goto bb30;
+    if ( kl_t51 ) goto bb30; else goto bb31;
     bb30:
-#line 289 "<kl>/list.kl"
-    kl_t44 = ( *kl_this_3 ).kl_data_ + ( *kl_this_3 ).kl_count_;
-#line 289 "<kl>/list.kl"
-    ( *kl_t44 ) = kl_value_43;
-#line 291 "<kl>/list.kl"
-    ( *kl_this_3 ).kl_count_ = ( *kl_this_3 ).kl_count_ + 1;
-#line 65 "opt/reduced_inductions/main.kl"
-    kl_t4 = &kl_xs_1;
-#line 65 "opt/reduced_inductions/main.kl"
-    kl_t5 = kl_18reduced_inductions_6walked__Q2kl4listI3i64E( kl_t4 );
-#line 65 "opt/reduced_inductions/main.kl"
-    kl_t6 = kl_t5 != 9;
-#line 65 "opt/reduced_inductions/main.kl"
-    if ( kl_t6 ) goto bb1; else goto bb2;
+#line 548 "<kl>/list.kl"
+    kl_t50 = ( *kl_this_3 ).kl_cap_ * 2;
+#line 548 "<kl>/list.kl"
+    goto bb32;
     bb31:
-#line 115 "<kl>/list.kl"
-    kl_rt_free( kl_xs_1.kl_data_ );
-#line 110 "<kl>/list.kl"
+#line 548 "<kl>/list.kl"
+    kl_t50 = 1;
+#line 548 "<kl>/list.kl"
     goto bb32;
     bb32:
+#line 548 "<kl>/list.kl"
+    kl_2kl4list_10reallocate__I3i64E__SQ2kl4listI3i64E_3u64( kl_this_3, kl_t50 );
+#line 546 "<kl>/list.kl"
+    goto bb33;
+    bb33:
+#line 289 "<kl>/list.kl"
+    kl_t48 = ( *kl_this_3 ).kl_data_ + ( *kl_this_3 ).kl_count_;
+#line 289 "<kl>/list.kl"
+    ( *kl_t48 ) = kl_value_47;
+#line 291 "<kl>/list.kl"
+    ( *kl_this_3 ).kl_count_ = ( *kl_this_3 ).kl_count_ + 1;
+#line 35 "opt/reduced_inductions/main.kl"
+    kl_t4 = 0;
+    kl_i_53 = 0;
+#line 125 "<kl>/list.kl"
+    kl_t54 = kl_xs_1.kl_count_;
+#line 36 "opt/reduced_inductions/main.kl"
+    kl_t55 = 0 < kl_t54;
+#line 36 "opt/reduced_inductions/main.kl"
+    if ( kl_t55 ) goto bb34; else goto bb35;
+    bb34:
+#line 226 "<kl>/list.kl"
+    kl_t57 = kl_i_53 >= kl_xs_1.kl_count_;
+#line 226 "<kl>/list.kl"
+    if ( kl_t57 ) goto bb36; else goto bb37;
+    bb35:
+#line 65 "opt/reduced_inductions/main.kl"
+    kl_t5 = kl_t4 != 9;
+#line 65 "opt/reduced_inductions/main.kl"
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb36:
+#line 228 "<kl>/list.kl"
+    kl_t58.kl_data = ( uint8_t* ) "index out of range";
+#line 228 "<kl>/list.kl"
+    kl_t58.kl_size = 18;
+#line 228 "<kl>/list.kl"
+    kl_rt_panic_message( "<kl>/list.kl", 228, kl_t58.kl_data, kl_t58.kl_size );
+    bb37:
+#line 233 "<kl>/list.kl"
+    kl_t59 = kl_xs_1.kl_data_ + kl_i_53;
+#line 233 "<kl>/list.kl"
+    kl_t56 = &( *kl_t59 );
+#line 38 "opt/reduced_inductions/main.kl"
+    kl_t4 = kl_t4 + ( *kl_t56 );
+#line 36 "opt/reduced_inductions/main.kl"
+    kl_i_53 = kl_i_53 + 1;
+#line 125 "<kl>/list.kl"
+    kl_t54 = kl_xs_1.kl_count_;
+#line 36 "opt/reduced_inductions/main.kl"
+    kl_t55 = kl_i_53 < kl_t54;
+#line 36 "opt/reduced_inductions/main.kl"
+    if ( kl_t55 ) goto bb34; else goto bb35;
+    bb38:
+#line 115 "<kl>/list.kl"
+    kl_rt_free( kl_xs_1.kl_data_ );
+#line 110 "<kl>/list.kl"
+    goto bb39;
+    bb39:
 #line 88 "opt/reduced_inductions/main.kl"
     return kl_t0;
-    bb33:
+    bb40:
 #line 115 "<kl>/list.kl"
     kl_rt_free( kl_xs_1.kl_data_ );
 #line 110 "<kl>/list.kl"
-    goto bb34;
-    bb34:
+    goto bb41;
+    bb41:
 #line 85 "opt/reduced_inductions/main.kl"
     return kl_t0;
-    bb35:
+    bb42:
 #line 115 "<kl>/list.kl"
     kl_rt_free( kl_xs_1.kl_data_ );
 #line 110 "<kl>/list.kl"
-    goto bb36;
-    bb36:
+    goto bb43;
+    bb43:
 #line 80 "opt/reduced_inductions/main.kl"
     return kl_t0;
-    bb37:
+    bb44:
 #line 115 "<kl>/list.kl"
     kl_rt_free( kl_xs_1.kl_data_ );
 #line 110 "<kl>/list.kl"
-    goto bb38;
-    bb38:
+    goto bb45;
+    bb45:
 #line 73 "opt/reduced_inductions/main.kl"
     return kl_t0;
-    bb39:
+    bb46:
 #line 115 "<kl>/list.kl"
     kl_rt_free( kl_xs_1.kl_data_ );
 #line 110 "<kl>/list.kl"
-    goto bb40;
-    bb40:
+    goto bb47;
+    bb47:
 #line 67 "opt/reduced_inductions/main.kl"
     return kl_t0;
-    bb41:
+    bb48:
 #line 13 "opt/reduced_inductions/main.kl"
-    kl_t59 = 0;
+    kl_t70 = 0;
 #line 11 "opt/reduced_inductions/main.kl"
-    goto bb19;
+    goto bb22;
+    bb49:
+#line 54 "opt/reduced_inductions/main.kl"
+    kl_twice_27 = kl_i_24 * 2;
+    kl_t28 = ( uint64_t ) kl_twice_27;
+#line 55 "opt/reduced_inductions/main.kl"
+    kl_t22 = kl_t22 + kl_t28;
+#line 48 "opt/reduced_inductions/main.kl"
+    kl_i_24 = kl_i_24 + 1;
+#line 48 "opt/reduced_inductions/main.kl"
+    kl_t25 = kl_i_24 < 200;
+#line 48 "opt/reduced_inductions/main.kl"
+    if ( kl_t25 ) goto bb13; else goto bb14;
 #line 89 "opt/reduced_inductions/main.kl"
 }
 

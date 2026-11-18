@@ -60,106 +60,9 @@ void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-int64_t kl_18hoisted_invariants_3sum__Q2kl4listI3i64E_3i64( struct kl_2kl4list_list__I3i64E*, int64_t );
-int64_t kl_18hoisted_invariants_9unrotated__Q2kl4listI3i64E_4bool( struct kl_2kl4list_list__I3i64E*, bool );
 void kl_18hoisted_invariants_5Probe__dtor( struct kl_18hoisted_invariants_Probe* );
 int32_t kl_18hoisted_invariants_4main__( void );
 void kl_2kl4list_10reallocate__I3i64E__SQ2kl4listI3i64E_3u64( struct kl_2kl4list_list__I3i64E*, uint64_t );
-
-#line 12 "opt/hoisted_invariants/main.kl"
-int64_t kl_18hoisted_invariants_3sum__Q2kl4listI3i64E_3i64( struct kl_2kl4list_list__I3i64E* kl_xs_1, int64_t kl_k_2 )
-{
-    int64_t kl_t0;
-    uint64_t kl_i_3;
-    uint64_t kl_t4;
-    bool kl_t5;
-    int64_t* kl_t6;
-    int64_t kl_t7;
-    int64_t kl_t8;
-    int64_t* kl_t9;
-    int64_t* kl_t10;
-#line 14 "opt/hoisted_invariants/main.kl"
-    kl_t0 = 0;
-    kl_i_3 = 0;
-#line 125 "<kl>/list.kl"
-    kl_t4 = ( *kl_xs_1 ).kl_count_;
-#line 15 "opt/hoisted_invariants/main.kl"
-    kl_t5 = 0 < kl_t4;
-#line 15 "opt/hoisted_invariants/main.kl"
-    if ( kl_t5 ) goto bb3; else goto bb1;
-    bb1:
-#line 19 "opt/hoisted_invariants/main.kl"
-    return kl_t0;
-    bb2:
-#line 233 "<kl>/list.kl"
-    kl_t9 = kl_t10 + kl_i_3;
-#line 233 "<kl>/list.kl"
-    kl_t6 = &( *kl_t9 );
-#line 17 "opt/hoisted_invariants/main.kl"
-    kl_t8 = ( *kl_t6 ) * kl_t7;
-#line 17 "opt/hoisted_invariants/main.kl"
-    kl_t0 = kl_t0 + kl_t8;
-#line 15 "opt/hoisted_invariants/main.kl"
-    kl_i_3 = kl_i_3 + 1;
-#line 15 "opt/hoisted_invariants/main.kl"
-    kl_t5 = kl_i_3 < kl_t4;
-#line 15 "opt/hoisted_invariants/main.kl"
-    if ( kl_t5 ) goto bb2; else goto bb1;
-    bb3:
-#line 233 "<kl>/list.kl"
-    kl_t10 = ( *kl_xs_1 ).kl_data_;
-#line 17 "opt/hoisted_invariants/main.kl"
-    kl_t7 = kl_k_2 * 4;
-#line 15 "opt/hoisted_invariants/main.kl"
-    goto bb2;
-#line 20 "opt/hoisted_invariants/main.kl"
-}
-
-#line 35 "opt/hoisted_invariants/main.kl"
-int64_t kl_18hoisted_invariants_9unrotated__Q2kl4listI3i64E_4bool( struct kl_2kl4list_list__I3i64E* kl_xs_1, bool kl_go_2 )
-{
-    int64_t kl_t0;
-    uint64_t kl_i_3;
-    bool kl_t4;
-    uint64_t kl_t5;
-    int64_t* kl_t6;
-    int64_t* kl_t7;
-    int64_t* kl_t8;
-#line 37 "opt/hoisted_invariants/main.kl"
-    kl_t0 = 0;
-    kl_i_3 = 0;
-#line 125 "<kl>/list.kl"
-    kl_t5 = ( *kl_xs_1 ).kl_count_;
-#line 38 "opt/hoisted_invariants/main.kl"
-    kl_t4 = 0 < kl_t5;
-#line 38 "opt/hoisted_invariants/main.kl"
-    if ( kl_t4 ) goto bb1; else goto bb2;
-    bb1:
-#line 38 "opt/hoisted_invariants/main.kl"
-    if ( kl_go_2 ) goto bb4; else goto bb2;
-    bb2:
-#line 42 "opt/hoisted_invariants/main.kl"
-    return kl_t0;
-    bb3:
-#line 233 "<kl>/list.kl"
-    kl_t7 = kl_t8 + kl_i_3;
-#line 233 "<kl>/list.kl"
-    kl_t6 = &( *kl_t7 );
-#line 40 "opt/hoisted_invariants/main.kl"
-    kl_t0 = kl_t0 + ( *kl_t6 );
-#line 38 "opt/hoisted_invariants/main.kl"
-    kl_i_3 = kl_i_3 + 1;
-#line 38 "opt/hoisted_invariants/main.kl"
-    kl_t4 = kl_i_3 < kl_t5;
-#line 38 "opt/hoisted_invariants/main.kl"
-    if ( kl_t4 ) goto bb3; else goto bb2;
-    bb4:
-#line 233 "<kl>/list.kl"
-    kl_t8 = ( *kl_xs_1 ).kl_data_;
-#line 38 "opt/hoisted_invariants/main.kl"
-    goto bb3;
-#line 43 "opt/hoisted_invariants/main.kl"
-}
 
 #line 54 "opt/hoisted_invariants/main.kl"
 void kl_18hoisted_invariants_5Probe__dtor( struct kl_18hoisted_invariants_Probe* kl_this_1 )
@@ -179,49 +82,62 @@ int32_t kl_18hoisted_invariants_4main__( void )
     struct kl_2kl4list_list__I3i64E* kl_this_2;
     struct kl_2kl4list_list__I3i64E* kl_this_3;
     struct kl_2kl4list_list__I3i64E* kl_this_4;
-    struct kl_2kl4list_list__I3i64E* kl_t5;
-    int64_t kl_t6;
+    int64_t kl_t5;
+    bool kl_t6;
     bool kl_t7;
-    bool kl_t8;
-    int64_t* kl_t9;
-    int64_t kl_k_10;
-    int64_t kl_t11;
-    bool kl_t12;
-    struct kl_2kl4list_list__I3i64E* kl_t13;
-    int64_t kl_t14;
-    struct kl_2kl4list_list__I3i64E* kl_t15;
-    int64_t kl_t16;
-    bool kl_t17;
-    uint64_t kl_t18;
-    bool kl_t19;
-    struct kl_18hoisted_invariants_Probe kl_t20;
-    uint64_t kl_value_21;
-    bool kl_t22;
-    struct kl_7prelude_str kl_t23;
-    int64_t* kl_t24;
-    int64_t kl_t25;
-    int64_t kl_value_26;
-    int64_t* kl_t27;
-    bool kl_t28;
-    uint64_t kl_t29;
-    bool kl_t30;
-    int64_t kl_value_32;
-    int64_t* kl_t33;
-    bool kl_t34;
-    uint64_t kl_t35;
-    bool kl_t36;
-    int64_t kl_value_38;
-    int64_t* kl_t39;
-    bool kl_t40;
-    uint64_t kl_t41;
-    bool kl_t42;
-    bool kl_t44;
+    int64_t* kl_t8;
+    int64_t kl_k_9;
+    int64_t kl_t10;
+    bool kl_t11;
+    int64_t kl_t12;
+    bool kl_t13;
+    uint64_t kl_t14;
+    bool kl_t15;
+    struct kl_18hoisted_invariants_Probe kl_t16;
+    uint64_t kl_value_17;
+    bool kl_t18;
+    uint64_t kl_t19;
+    uint64_t kl_i_20;
+    bool kl_t21;
+    uint64_t kl_t22;
+    int64_t* kl_t23;
+    bool kl_t24;
+    struct kl_7prelude_str kl_t25;
+    int64_t* kl_t26;
+    bool kl_t27;
+    struct kl_7prelude_str kl_t28;
+    int64_t* kl_t29;
+    int64_t kl_t30;
+    int64_t kl_value_31;
+    int64_t* kl_t32;
+    bool kl_t33;
+    uint64_t kl_t34;
+    bool kl_t35;
+    int64_t kl_value_37;
+    int64_t* kl_t38;
+    bool kl_t39;
+    uint64_t kl_t40;
+    bool kl_t41;
+    int64_t kl_value_43;
+    int64_t* kl_t44;
     bool kl_t45;
+    uint64_t kl_t46;
     bool kl_t47;
-    bool kl_t49;
+    uint64_t kl_i_49;
+    uint64_t kl_t50;
     bool kl_t51;
-    bool kl_t53;
-    int64_t kl_t55;
+    int64_t* kl_t52;
+    int64_t kl_t53;
+    bool kl_t54;
+    struct kl_7prelude_str kl_t55;
+    int64_t* kl_t56;
+    bool kl_t57;
+    bool kl_t58;
+    bool kl_t60;
+    bool kl_t62;
+    bool kl_t64;
+    bool kl_t66;
+    int64_t kl_t68;
 #line 19 "<kl>/list.kl"
     kl_xs_1.kl_data_ = NULL;
     kl_xs_1.kl_count_ = 0;
@@ -229,280 +145,348 @@ int32_t kl_18hoisted_invariants_4main__( void )
 #line 82 "opt/hoisted_invariants/main.kl"
     kl_this_2 = &kl_xs_1;
 #line 82 "opt/hoisted_invariants/main.kl"
-    kl_value_26 = 1;
+    kl_value_31 = 1;
 #line 546 "<kl>/list.kl"
-    kl_t28 = ( *kl_this_2 ).kl_count_ == ( *kl_this_2 ).kl_cap_;
+    kl_t33 = ( *kl_this_2 ).kl_count_ == ( *kl_this_2 ).kl_cap_;
 #line 546 "<kl>/list.kl"
-    if ( kl_t28 ) goto bb18; else goto bb22;
+    if ( kl_t33 ) goto bb22; else goto bb26;
     bb1:
 #line 88 "opt/hoisted_invariants/main.kl"
     kl_t0 = 1;
 #line 110 "<kl>/list.kl"
-    kl_t53 = kl_xs_1.kl_data_ != NULL;
+    kl_t66 = kl_xs_1.kl_data_ != NULL;
 #line 110 "<kl>/list.kl"
-    if ( kl_t53 ) goto bb41; else goto bb42;
+    if ( kl_t66 ) goto bb49; else goto bb50;
     bb2:
 #line 226 "<kl>/list.kl"
-    kl_t22 = 2 >= kl_xs_1.kl_count_;
+    kl_t27 = 2 >= kl_xs_1.kl_count_;
 #line 226 "<kl>/list.kl"
-    if ( kl_t22 ) goto bb16; else goto bb17;
+    if ( kl_t27 ) goto bb20; else goto bb21;
     bb3:
 #line 91 "opt/hoisted_invariants/main.kl"
-    kl_t8 = kl_t55 != 4;
+    kl_t7 = kl_t68 != 4;
 #line 91 "opt/hoisted_invariants/main.kl"
-    if ( kl_t8 ) goto bb4; else goto bb5;
+    if ( kl_t7 ) goto bb4; else goto bb5;
     bb4:
     kl_t0 = 2;
 #line 110 "<kl>/list.kl"
-    kl_t51 = kl_xs_1.kl_data_ != NULL;
+    kl_t64 = kl_xs_1.kl_data_ != NULL;
 #line 110 "<kl>/list.kl"
-    if ( kl_t51 ) goto bb39; else goto bb40;
+    if ( kl_t64 ) goto bb47; else goto bb48;
     bb5:
-#line 96 "opt/hoisted_invariants/main.kl"
-    kl_t13 = &kl_xs_1;
-#line 96 "opt/hoisted_invariants/main.kl"
-    kl_t14 = kl_18hoisted_invariants_9unrotated__Q2kl4listI3i64E_4bool( kl_t13, true );
-#line 96 "opt/hoisted_invariants/main.kl"
-    kl_t12 = kl_t14 != 6;
-#line 96 "opt/hoisted_invariants/main.kl"
-    if ( kl_t12 ) goto bb7; else goto bb6;
+#line 37 "opt/hoisted_invariants/main.kl"
+    kl_t12 = 0;
+    kl_i_20 = 0;
+#line 125 "<kl>/list.kl"
+    kl_t22 = kl_xs_1.kl_count_;
+#line 38 "opt/hoisted_invariants/main.kl"
+    kl_t21 = 0 < kl_t22;
+#line 38 "opt/hoisted_invariants/main.kl"
+    if ( kl_t21 ) goto bb16; else goto bb17;
     bb6:
-#line 96 "opt/hoisted_invariants/main.kl"
-    kl_t15 = &kl_xs_1;
-#line 96 "opt/hoisted_invariants/main.kl"
-    kl_t16 = kl_18hoisted_invariants_9unrotated__Q2kl4listI3i64E_4bool( kl_t15, false );
-#line 96 "opt/hoisted_invariants/main.kl"
-    kl_t12 = kl_t16 != 0;
-#line 96 "opt/hoisted_invariants/main.kl"
-    if ( kl_t12 ) goto bb7; else goto bb11;
+#line 125 "<kl>/list.kl"
+    kl_t19 = kl_xs_1.kl_count_;
+#line 38 "opt/hoisted_invariants/main.kl"
+    kl_t18 = 0 < kl_t19;
+#line 38 "opt/hoisted_invariants/main.kl"
+    if ( kl_t18 ) goto bb15; else goto bb15;
     bb7:
+#line 98 "opt/hoisted_invariants/main.kl"
     kl_t0 = 3;
 #line 110 "<kl>/list.kl"
-    kl_t49 = kl_xs_1.kl_data_ != NULL;
+    kl_t62 = kl_xs_1.kl_data_ != NULL;
 #line 110 "<kl>/list.kl"
-    if ( kl_t49 ) goto bb37; else goto bb38;
+    if ( kl_t62 ) goto bb45; else goto bb46;
     bb8:
 #line 101 "opt/hoisted_invariants/main.kl"
-    kl_t17 = kl_18hoisted_invariants_drops__G != 2;
+    kl_t13 = kl_18hoisted_invariants_drops__G != 2;
 #line 101 "opt/hoisted_invariants/main.kl"
-    if ( kl_t17 ) goto bb9; else goto bb10;
+    if ( kl_t13 ) goto bb9; else goto bb10;
     bb9:
     kl_t0 = 4;
 #line 110 "<kl>/list.kl"
-    kl_t47 = kl_xs_1.kl_data_ != NULL;
+    kl_t60 = kl_xs_1.kl_data_ != NULL;
 #line 110 "<kl>/list.kl"
-    if ( kl_t47 ) goto bb35; else goto bb36;
+    if ( kl_t60 ) goto bb43; else goto bb44;
     bb10:
 #line 106 "opt/hoisted_invariants/main.kl"
     kl_t0 = 0;
 #line 110 "<kl>/list.kl"
-    kl_t45 = kl_xs_1.kl_data_ != NULL;
+    kl_t58 = kl_xs_1.kl_data_ != NULL;
 #line 110 "<kl>/list.kl"
-    if ( kl_t45 ) goto bb33; else goto bb34;
+    if ( kl_t58 ) goto bb41; else goto bb42;
     bb11:
-#line 71 "opt/hoisted_invariants/main.kl"
-    kl_t18 = 0;
-    goto bb13;
+#line 74 "opt/hoisted_invariants/main.kl"
+    kl_t14 = kl_t14 + 1;
+#line 72 "opt/hoisted_invariants/main.kl"
+    kl_t15 = kl_t14 < 2;
+#line 72 "opt/hoisted_invariants/main.kl"
+    if ( kl_t15 ) goto bb12; else goto bb13;
     bb12:
-    kl_t18 = kl_t18 + 1;
 #line 72 "opt/hoisted_invariants/main.kl"
-    kl_t19 = kl_t18 < 2;
+    kl_value_17 = 30 + kl_t14;
+#line 51 "opt/hoisted_invariants/main.kl"
+    kl_t16.kl_v = kl_value_17;
 #line 72 "opt/hoisted_invariants/main.kl"
-    if ( kl_t19 ) goto bb13; else goto bb14;
+    kl_t57 = true;
+#line 61 "opt/hoisted_invariants/main.kl"
+    kl_t15 = kl_t16.kl_v > 0;
+#line 61 "opt/hoisted_invariants/main.kl"
+    goto bb13;
     bb13:
 #line 72 "opt/hoisted_invariants/main.kl"
-    kl_value_21 = 30 + kl_t18;
-#line 51 "opt/hoisted_invariants/main.kl"
-    kl_t20.kl_v = kl_value_21;
+    if ( kl_t57 ) kl_18hoisted_invariants_5Probe__dtor( &kl_t16 );
 #line 72 "opt/hoisted_invariants/main.kl"
-    kl_t44 = true;
-#line 61 "opt/hoisted_invariants/main.kl"
-    kl_t19 = kl_t20.kl_v > 0;
-#line 61 "opt/hoisted_invariants/main.kl"
-    goto bb14;
+    kl_t57 = false;
+#line 72 "opt/hoisted_invariants/main.kl"
+    if ( kl_t15 ) goto bb11; else goto bb14;
     bb14:
-#line 72 "opt/hoisted_invariants/main.kl"
-    if ( kl_t44 ) kl_18hoisted_invariants_5Probe__dtor( &kl_t20 );
-#line 72 "opt/hoisted_invariants/main.kl"
-    kl_t44 = false;
-#line 72 "opt/hoisted_invariants/main.kl"
-    if ( kl_t19 ) goto bb12; else goto bb15;
+#line 101 "opt/hoisted_invariants/main.kl"
+    kl_t13 = kl_t14 != 2;
+#line 101 "opt/hoisted_invariants/main.kl"
+    if ( kl_t13 ) goto bb9; else goto bb8;
     bb15:
-#line 101 "opt/hoisted_invariants/main.kl"
-    kl_t17 = kl_t18 != 2;
-#line 101 "opt/hoisted_invariants/main.kl"
-    if ( kl_t17 ) goto bb9; else goto bb8;
+#line 71 "opt/hoisted_invariants/main.kl"
+    kl_t14 = 0;
+    goto bb12;
     bb16:
-#line 228 "<kl>/list.kl"
-    kl_t23.kl_data = ( uint8_t* ) "index out of range";
-#line 228 "<kl>/list.kl"
-    kl_t23.kl_size = 18;
-#line 228 "<kl>/list.kl"
-    kl_rt_panic_message( "<kl>/list.kl", 228, kl_t23.kl_data, kl_t23.kl_size );
+#line 226 "<kl>/list.kl"
+    kl_t24 = kl_i_20 >= kl_xs_1.kl_count_;
+#line 226 "<kl>/list.kl"
+    if ( kl_t24 ) goto bb18; else goto bb19;
     bb17:
-#line 233 "<kl>/list.kl"
-    kl_t24 = kl_xs_1.kl_data_ + 2;
-#line 233 "<kl>/list.kl"
-    kl_t9 = &( *kl_t24 );
-#line 91 "opt/hoisted_invariants/main.kl"
-    kl_k_10 = ( *kl_t9 ) * 3;
-#line 29 "opt/hoisted_invariants/main.kl"
-    kl_t25 = kl_k_10 / 3;
-#line 29 "opt/hoisted_invariants/main.kl"
-    kl_t11 = kl_t25 + kl_t25;
-#line 29 "opt/hoisted_invariants/main.kl"
-    kl_t11 = kl_t11 + kl_t25;
-#line 9 "opt/hoisted_invariants/main.kl"
-    kl_t55 = kl_18hoisted_invariants_calls__G + 4;
-#line 9 "opt/hoisted_invariants/main.kl"
-    kl_18hoisted_invariants_calls__G = kl_t55;
-#line 29 "opt/hoisted_invariants/main.kl"
-    kl_t11 = kl_t11 + kl_t25;
-#line 91 "opt/hoisted_invariants/main.kl"
-    kl_t8 = kl_t11 != 12;
-#line 91 "opt/hoisted_invariants/main.kl"
-    if ( kl_t8 ) goto bb4; else goto bb3;
+#line 96 "opt/hoisted_invariants/main.kl"
+    kl_t11 = kl_t12 != 6;
+#line 96 "opt/hoisted_invariants/main.kl"
+    if ( kl_t11 ) goto bb7; else goto bb6;
     bb18:
-#line 548 "<kl>/list.kl"
-    kl_t30 = ( *kl_this_2 ).kl_cap_ > 0;
-#line 548 "<kl>/list.kl"
-    if ( kl_t30 ) goto bb19; else goto bb20;
+#line 228 "<kl>/list.kl"
+    kl_t25.kl_data = ( uint8_t* ) "index out of range";
+#line 228 "<kl>/list.kl"
+    kl_t25.kl_size = 18;
+#line 228 "<kl>/list.kl"
+    kl_rt_panic_message( "<kl>/list.kl", 228, kl_t25.kl_data, kl_t25.kl_size );
     bb19:
-#line 548 "<kl>/list.kl"
-    kl_t29 = ( *kl_this_2 ).kl_cap_ * 2;
-#line 548 "<kl>/list.kl"
-    goto bb21;
+#line 233 "<kl>/list.kl"
+    kl_t26 = kl_xs_1.kl_data_ + kl_i_20;
+#line 233 "<kl>/list.kl"
+    kl_t23 = &( *kl_t26 );
+#line 40 "opt/hoisted_invariants/main.kl"
+    kl_t12 = kl_t12 + ( *kl_t23 );
+#line 38 "opt/hoisted_invariants/main.kl"
+    kl_i_20 = kl_i_20 + 1;
+#line 125 "<kl>/list.kl"
+    kl_t22 = kl_xs_1.kl_count_;
+#line 38 "opt/hoisted_invariants/main.kl"
+    kl_t21 = kl_i_20 < kl_t22;
+#line 38 "opt/hoisted_invariants/main.kl"
+    if ( kl_t21 ) goto bb16; else goto bb17;
     bb20:
-#line 548 "<kl>/list.kl"
-    kl_t29 = 1;
-#line 548 "<kl>/list.kl"
-    goto bb21;
+#line 228 "<kl>/list.kl"
+    kl_t28.kl_data = ( uint8_t* ) "index out of range";
+#line 228 "<kl>/list.kl"
+    kl_t28.kl_size = 18;
+#line 228 "<kl>/list.kl"
+    kl_rt_panic_message( "<kl>/list.kl", 228, kl_t28.kl_data, kl_t28.kl_size );
     bb21:
-#line 548 "<kl>/list.kl"
-    kl_2kl4list_10reallocate__I3i64E__SQ2kl4listI3i64E_3u64( kl_this_2, kl_t29 );
-#line 546 "<kl>/list.kl"
-    goto bb22;
+#line 233 "<kl>/list.kl"
+    kl_t29 = kl_xs_1.kl_data_ + 2;
+#line 233 "<kl>/list.kl"
+    kl_t8 = &( *kl_t29 );
+#line 91 "opt/hoisted_invariants/main.kl"
+    kl_k_9 = ( *kl_t8 ) * 3;
+#line 29 "opt/hoisted_invariants/main.kl"
+    kl_t30 = kl_k_9 / 3;
+#line 29 "opt/hoisted_invariants/main.kl"
+    kl_t10 = kl_t30 + kl_t30;
+#line 29 "opt/hoisted_invariants/main.kl"
+    kl_t10 = kl_t10 + kl_t30;
+#line 9 "opt/hoisted_invariants/main.kl"
+    kl_t68 = kl_18hoisted_invariants_calls__G + 4;
+#line 9 "opt/hoisted_invariants/main.kl"
+    kl_18hoisted_invariants_calls__G = kl_t68;
+#line 29 "opt/hoisted_invariants/main.kl"
+    kl_t10 = kl_t10 + kl_t30;
+#line 91 "opt/hoisted_invariants/main.kl"
+    kl_t7 = kl_t10 != 12;
+#line 91 "opt/hoisted_invariants/main.kl"
+    if ( kl_t7 ) goto bb4; else goto bb3;
     bb22:
+#line 548 "<kl>/list.kl"
+    kl_t35 = ( *kl_this_2 ).kl_cap_ > 0;
+#line 548 "<kl>/list.kl"
+    if ( kl_t35 ) goto bb23; else goto bb24;
+    bb23:
+#line 548 "<kl>/list.kl"
+    kl_t34 = ( *kl_this_2 ).kl_cap_ * 2;
+#line 548 "<kl>/list.kl"
+    goto bb25;
+    bb24:
+#line 548 "<kl>/list.kl"
+    kl_t34 = 1;
+#line 548 "<kl>/list.kl"
+    goto bb25;
+    bb25:
+#line 548 "<kl>/list.kl"
+    kl_2kl4list_10reallocate__I3i64E__SQ2kl4listI3i64E_3u64( kl_this_2, kl_t34 );
+#line 546 "<kl>/list.kl"
+    goto bb26;
+    bb26:
 #line 289 "<kl>/list.kl"
-    kl_t27 = ( *kl_this_2 ).kl_data_ + ( *kl_this_2 ).kl_count_;
+    kl_t32 = ( *kl_this_2 ).kl_data_ + ( *kl_this_2 ).kl_count_;
 #line 289 "<kl>/list.kl"
-    ( *kl_t27 ) = kl_value_26;
+    ( *kl_t32 ) = kl_value_31;
 #line 291 "<kl>/list.kl"
     ( *kl_this_2 ).kl_count_ = ( *kl_this_2 ).kl_count_ + 1;
 #line 83 "opt/hoisted_invariants/main.kl"
     kl_this_3 = &kl_xs_1;
 #line 83 "opt/hoisted_invariants/main.kl"
-    kl_value_32 = 2;
+    kl_value_37 = 2;
 #line 546 "<kl>/list.kl"
-    kl_t34 = ( *kl_this_3 ).kl_count_ == ( *kl_this_3 ).kl_cap_;
+    kl_t39 = ( *kl_this_3 ).kl_count_ == ( *kl_this_3 ).kl_cap_;
 #line 546 "<kl>/list.kl"
-    if ( kl_t34 ) goto bb23; else goto bb27;
-    bb23:
-    kl_t36 = ( *kl_this_3 ).kl_cap_ > 0;
-#line 548 "<kl>/list.kl"
-    if ( kl_t36 ) goto bb24; else goto bb25;
-    bb24:
-#line 548 "<kl>/list.kl"
-    kl_t35 = ( *kl_this_3 ).kl_cap_ * 2;
-#line 548 "<kl>/list.kl"
-    goto bb26;
-    bb25:
-#line 548 "<kl>/list.kl"
-    kl_t35 = 1;
-#line 548 "<kl>/list.kl"
-    goto bb26;
-    bb26:
-#line 548 "<kl>/list.kl"
-    kl_2kl4list_10reallocate__I3i64E__SQ2kl4listI3i64E_3u64( kl_this_3, kl_t35 );
-#line 546 "<kl>/list.kl"
-    goto bb27;
+    if ( kl_t39 ) goto bb27; else goto bb31;
     bb27:
+    kl_t41 = ( *kl_this_3 ).kl_cap_ > 0;
+#line 548 "<kl>/list.kl"
+    if ( kl_t41 ) goto bb28; else goto bb29;
+    bb28:
+#line 548 "<kl>/list.kl"
+    kl_t40 = ( *kl_this_3 ).kl_cap_ * 2;
+#line 548 "<kl>/list.kl"
+    goto bb30;
+    bb29:
+#line 548 "<kl>/list.kl"
+    kl_t40 = 1;
+#line 548 "<kl>/list.kl"
+    goto bb30;
+    bb30:
+#line 548 "<kl>/list.kl"
+    kl_2kl4list_10reallocate__I3i64E__SQ2kl4listI3i64E_3u64( kl_this_3, kl_t40 );
+#line 546 "<kl>/list.kl"
+    goto bb31;
+    bb31:
 #line 289 "<kl>/list.kl"
-    kl_t33 = ( *kl_this_3 ).kl_data_ + ( *kl_this_3 ).kl_count_;
+    kl_t38 = ( *kl_this_3 ).kl_data_ + ( *kl_this_3 ).kl_count_;
 #line 289 "<kl>/list.kl"
-    ( *kl_t33 ) = kl_value_32;
+    ( *kl_t38 ) = kl_value_37;
 #line 291 "<kl>/list.kl"
     ( *kl_this_3 ).kl_count_ = ( *kl_this_3 ).kl_count_ + 1;
 #line 84 "opt/hoisted_invariants/main.kl"
     kl_this_4 = &kl_xs_1;
 #line 84 "opt/hoisted_invariants/main.kl"
-    kl_value_38 = 3;
+    kl_value_43 = 3;
 #line 546 "<kl>/list.kl"
-    kl_t40 = ( *kl_this_4 ).kl_count_ == ( *kl_this_4 ).kl_cap_;
+    kl_t45 = ( *kl_this_4 ).kl_count_ == ( *kl_this_4 ).kl_cap_;
 #line 546 "<kl>/list.kl"
-    if ( kl_t40 ) goto bb28; else goto bb32;
-    bb28:
-    kl_t42 = ( *kl_this_4 ).kl_cap_ > 0;
-#line 548 "<kl>/list.kl"
-    if ( kl_t42 ) goto bb29; else goto bb30;
-    bb29:
-#line 548 "<kl>/list.kl"
-    kl_t41 = ( *kl_this_4 ).kl_cap_ * 2;
-#line 548 "<kl>/list.kl"
-    goto bb31;
-    bb30:
-#line 548 "<kl>/list.kl"
-    kl_t41 = 1;
-#line 548 "<kl>/list.kl"
-    goto bb31;
-    bb31:
-#line 548 "<kl>/list.kl"
-    kl_2kl4list_10reallocate__I3i64E__SQ2kl4listI3i64E_3u64( kl_this_4, kl_t41 );
-#line 546 "<kl>/list.kl"
-    goto bb32;
+    if ( kl_t45 ) goto bb32; else goto bb36;
     bb32:
-#line 289 "<kl>/list.kl"
-    kl_t39 = ( *kl_this_4 ).kl_data_ + ( *kl_this_4 ).kl_count_;
-#line 289 "<kl>/list.kl"
-    ( *kl_t39 ) = kl_value_38;
-#line 291 "<kl>/list.kl"
-    ( *kl_this_4 ).kl_count_ = ( *kl_this_4 ).kl_count_ + 1;
-#line 86 "opt/hoisted_invariants/main.kl"
-    kl_t5 = &kl_xs_1;
-#line 86 "opt/hoisted_invariants/main.kl"
-    kl_t6 = kl_18hoisted_invariants_3sum__Q2kl4listI3i64E_3i64( kl_t5, 3 );
-#line 86 "opt/hoisted_invariants/main.kl"
-    kl_t7 = kl_t6 != 72;
-#line 86 "opt/hoisted_invariants/main.kl"
-    if ( kl_t7 ) goto bb1; else goto bb2;
+    kl_t47 = ( *kl_this_4 ).kl_cap_ > 0;
+#line 548 "<kl>/list.kl"
+    if ( kl_t47 ) goto bb33; else goto bb34;
     bb33:
-#line 115 "<kl>/list.kl"
-    kl_rt_free( kl_xs_1.kl_data_ );
-#line 110 "<kl>/list.kl"
-    goto bb34;
+#line 548 "<kl>/list.kl"
+    kl_t46 = ( *kl_this_4 ).kl_cap_ * 2;
+#line 548 "<kl>/list.kl"
+    goto bb35;
     bb34:
-#line 106 "opt/hoisted_invariants/main.kl"
-    return kl_t0;
+#line 548 "<kl>/list.kl"
+    kl_t46 = 1;
+#line 548 "<kl>/list.kl"
+    goto bb35;
     bb35:
-#line 115 "<kl>/list.kl"
-    kl_rt_free( kl_xs_1.kl_data_ );
-#line 110 "<kl>/list.kl"
+#line 548 "<kl>/list.kl"
+    kl_2kl4list_10reallocate__I3i64E__SQ2kl4listI3i64E_3u64( kl_this_4, kl_t46 );
+#line 546 "<kl>/list.kl"
     goto bb36;
     bb36:
-#line 103 "opt/hoisted_invariants/main.kl"
-    return kl_t0;
+#line 289 "<kl>/list.kl"
+    kl_t44 = ( *kl_this_4 ).kl_data_ + ( *kl_this_4 ).kl_count_;
+#line 289 "<kl>/list.kl"
+    ( *kl_t44 ) = kl_value_43;
+#line 291 "<kl>/list.kl"
+    ( *kl_this_4 ).kl_count_ = ( *kl_this_4 ).kl_count_ + 1;
+#line 14 "opt/hoisted_invariants/main.kl"
+    kl_t5 = 0;
+    kl_i_49 = 0;
+#line 125 "<kl>/list.kl"
+    kl_t50 = kl_xs_1.kl_count_;
+#line 15 "opt/hoisted_invariants/main.kl"
+    kl_t51 = 0 < kl_t50;
+#line 15 "opt/hoisted_invariants/main.kl"
+    if ( kl_t51 ) goto bb37; else goto bb38;
     bb37:
-#line 115 "<kl>/list.kl"
-    kl_rt_free( kl_xs_1.kl_data_ );
-#line 110 "<kl>/list.kl"
-    goto bb38;
+#line 226 "<kl>/list.kl"
+    kl_t54 = kl_i_49 >= kl_xs_1.kl_count_;
+#line 226 "<kl>/list.kl"
+    if ( kl_t54 ) goto bb39; else goto bb40;
     bb38:
-#line 98 "opt/hoisted_invariants/main.kl"
-    return kl_t0;
+#line 86 "opt/hoisted_invariants/main.kl"
+    kl_t6 = kl_t5 != 72;
+#line 86 "opt/hoisted_invariants/main.kl"
+    if ( kl_t6 ) goto bb1; else goto bb2;
     bb39:
-#line 115 "<kl>/list.kl"
-    kl_rt_free( kl_xs_1.kl_data_ );
-#line 110 "<kl>/list.kl"
-    goto bb40;
+#line 228 "<kl>/list.kl"
+    kl_t55.kl_data = ( uint8_t* ) "index out of range";
+#line 228 "<kl>/list.kl"
+    kl_t55.kl_size = 18;
+#line 228 "<kl>/list.kl"
+    kl_rt_panic_message( "<kl>/list.kl", 228, kl_t55.kl_data, kl_t55.kl_size );
     bb40:
-#line 93 "opt/hoisted_invariants/main.kl"
-    return kl_t0;
+#line 233 "<kl>/list.kl"
+    kl_t56 = kl_xs_1.kl_data_ + kl_i_49;
+#line 233 "<kl>/list.kl"
+    kl_t52 = &( *kl_t56 );
+#line 17 "opt/hoisted_invariants/main.kl"
+    kl_t53 = ( *kl_t52 ) * 12;
+#line 17 "opt/hoisted_invariants/main.kl"
+    kl_t5 = kl_t5 + kl_t53;
+#line 15 "opt/hoisted_invariants/main.kl"
+    kl_i_49 = kl_i_49 + 1;
+#line 125 "<kl>/list.kl"
+    kl_t50 = kl_xs_1.kl_count_;
+#line 15 "opt/hoisted_invariants/main.kl"
+    kl_t51 = kl_i_49 < kl_t50;
+#line 15 "opt/hoisted_invariants/main.kl"
+    if ( kl_t51 ) goto bb37; else goto bb38;
     bb41:
 #line 115 "<kl>/list.kl"
     kl_rt_free( kl_xs_1.kl_data_ );
 #line 110 "<kl>/list.kl"
     goto bb42;
     bb42:
+#line 106 "opt/hoisted_invariants/main.kl"
+    return kl_t0;
+    bb43:
+#line 115 "<kl>/list.kl"
+    kl_rt_free( kl_xs_1.kl_data_ );
+#line 110 "<kl>/list.kl"
+    goto bb44;
+    bb44:
+#line 103 "opt/hoisted_invariants/main.kl"
+    return kl_t0;
+    bb45:
+#line 115 "<kl>/list.kl"
+    kl_rt_free( kl_xs_1.kl_data_ );
+#line 110 "<kl>/list.kl"
+    goto bb46;
+    bb46:
+#line 98 "opt/hoisted_invariants/main.kl"
+    return kl_t0;
+    bb47:
+#line 115 "<kl>/list.kl"
+    kl_rt_free( kl_xs_1.kl_data_ );
+#line 110 "<kl>/list.kl"
+    goto bb48;
+    bb48:
+#line 93 "opt/hoisted_invariants/main.kl"
+    return kl_t0;
+    bb49:
+#line 115 "<kl>/list.kl"
+    kl_rt_free( kl_xs_1.kl_data_ );
+#line 110 "<kl>/list.kl"
+    goto bb50;
+    bb50:
 #line 88 "opt/hoisted_invariants/main.kl"
     return kl_t0;
 #line 107 "opt/hoisted_invariants/main.kl"

@@ -109,14 +109,116 @@ int32_t kl_3opt_6spread__Q3opt5Point( struct kl_3opt_Point kl_p_1 )
     int32_t kl_t3;
     int32_t kl_t4;
     int32_t kl_t5;
-#line 47 "opt/scalars_copied.kl"
-    kl_t2 = kl_3opt_5mixed__3i32_3i32( kl_p_1.kl_x, 1 );
-#line 47 "opt/scalars_copied.kl"
-    kl_t3 = kl_3opt_5mixed__3i32_3i32( kl_p_1.kl_y, 2 );
+    int32_t kl_c_6;
+    int32_t kl_d_7;
+    int32_t kl_e_8;
+    int32_t kl_t9;
+    int32_t kl_f_10;
+    int32_t kl_t11;
+    int32_t kl_g_12;
+    int32_t kl_t13;
+    int32_t kl_h_14;
+    int32_t kl_t15;
+    int32_t kl_t16;
+    int32_t kl_t17;
+    int32_t kl_c_18;
+    int32_t kl_t19;
+    int32_t kl_d_20;
+    int32_t kl_e_21;
+    int32_t kl_t22;
+    int32_t kl_f_23;
+    int32_t kl_t24;
+    int32_t kl_g_25;
+    int32_t kl_t26;
+    int32_t kl_h_27;
+    int32_t kl_t28;
+    int32_t kl_t29;
+    int32_t kl_t30;
+    int32_t kl_t31;
+    int32_t kl_c_32;
+    int32_t kl_t33;
+    int32_t kl_d_34;
+    int32_t kl_e_35;
+    int32_t kl_t36;
+    int32_t kl_f_37;
+    int32_t kl_t38;
+    int32_t kl_g_39;
+    int32_t kl_t40;
+    int32_t kl_h_41;
+    int32_t kl_t42;
+    int32_t kl_t43;
+    int32_t kl_t44;
+    int32_t kl_t45;
+#line 30 "opt/scalars_copied.kl"
+    kl_c_6 = kl_p_1.kl_x + kl_p_1.kl_x;
+    kl_d_7 = kl_c_6 - 3;
+    kl_t9 = kl_d_7 * kl_d_7;
+#line 32 "opt/scalars_copied.kl"
+    kl_e_8 = kl_t9 + kl_c_6;
+    kl_t11 = kl_e_8 / 7;
+#line 33 "opt/scalars_copied.kl"
+    kl_f_10 = kl_t11 + kl_d_7;
+    kl_t13 = kl_f_10 * kl_p_1.kl_x;
+#line 34 "opt/scalars_copied.kl"
+    kl_g_12 = kl_t13 - kl_e_8;
+    kl_t15 = kl_f_10 * kl_c_6;
+#line 35 "opt/scalars_copied.kl"
+    kl_h_14 = kl_g_12 + kl_t15;
+    kl_t16 = kl_c_6 * kl_d_7;
+#line 36 "opt/scalars_copied.kl"
+    kl_t17 = kl_h_14 + kl_t16;
+#line 36 "opt/scalars_copied.kl"
+    kl_t2 = kl_t17 - kl_f_10;
+#line 30 "opt/scalars_copied.kl"
+    kl_t19 = kl_p_1.kl_y * 2;
+#line 30 "opt/scalars_copied.kl"
+    kl_c_18 = kl_t19 + kl_p_1.kl_y;
+    kl_d_20 = kl_c_18 - 6;
+    kl_t22 = kl_d_20 * kl_d_20;
+#line 32 "opt/scalars_copied.kl"
+    kl_e_21 = kl_t22 + kl_c_18;
+    kl_t24 = kl_e_21 / 7;
+#line 33 "opt/scalars_copied.kl"
+    kl_f_23 = kl_t24 + kl_d_20;
+    kl_t26 = kl_f_23 * kl_p_1.kl_y;
+#line 34 "opt/scalars_copied.kl"
+    kl_g_25 = kl_t26 - kl_e_21;
+    kl_t28 = kl_g_25 * 2;
+#line 35 "opt/scalars_copied.kl"
+    kl_t29 = kl_f_23 * kl_c_18;
+#line 35 "opt/scalars_copied.kl"
+    kl_h_27 = kl_t28 + kl_t29;
+    kl_t30 = kl_c_18 * kl_d_20;
+#line 36 "opt/scalars_copied.kl"
+    kl_t31 = kl_h_27 + kl_t30;
+#line 36 "opt/scalars_copied.kl"
+    kl_t3 = kl_t31 - kl_f_23;
 #line 47 "opt/scalars_copied.kl"
     kl_t4 = kl_t2 + kl_t3;
-#line 47 "opt/scalars_copied.kl"
-    kl_t5 = kl_3opt_5mixed__3i32_3i32( kl_p_1.kl_x, 3 );
+#line 30 "opt/scalars_copied.kl"
+    kl_t33 = kl_p_1.kl_x * 3;
+#line 30 "opt/scalars_copied.kl"
+    kl_c_32 = kl_t33 + kl_p_1.kl_x;
+    kl_d_34 = kl_c_32 - 9;
+    kl_t36 = kl_d_34 * kl_d_34;
+#line 32 "opt/scalars_copied.kl"
+    kl_e_35 = kl_t36 + kl_c_32;
+    kl_t38 = kl_e_35 / 7;
+#line 33 "opt/scalars_copied.kl"
+    kl_f_37 = kl_t38 + kl_d_34;
+    kl_t40 = kl_f_37 * kl_p_1.kl_x;
+#line 34 "opt/scalars_copied.kl"
+    kl_g_39 = kl_t40 - kl_e_35;
+    kl_t42 = kl_g_39 * 3;
+#line 35 "opt/scalars_copied.kl"
+    kl_t43 = kl_f_37 * kl_c_32;
+#line 35 "opt/scalars_copied.kl"
+    kl_h_41 = kl_t42 + kl_t43;
+    kl_t44 = kl_c_32 * kl_d_34;
+#line 36 "opt/scalars_copied.kl"
+    kl_t45 = kl_h_41 + kl_t44;
+#line 36 "opt/scalars_copied.kl"
+    kl_t5 = kl_t45 - kl_f_37;
 #line 47 "opt/scalars_copied.kl"
     kl_t0 = kl_t4 + kl_t5;
 #line 47 "opt/scalars_copied.kl"
@@ -217,27 +319,90 @@ int32_t kl_3opt_6passed__3i32( int32_t kl_a_1 )
     int32_t kl_t5;
     int32_t kl_t6;
     int32_t kl_t7;
-    int32_t kl_t8;
-    bool kl_t9;
+    bool kl_t8;
+    int32_t kl_c_9;
+    int32_t kl_d_10;
+    int32_t kl_e_11;
+    int32_t kl_t12;
+    int32_t kl_f_13;
+    int32_t kl_t14;
+    int32_t kl_g_15;
+    int32_t kl_t16;
+    int32_t kl_h_17;
+    int32_t kl_t18;
+    int32_t kl_t19;
+    int32_t kl_t20;
+    int32_t kl_c_21;
+    int32_t kl_t22;
+    int32_t kl_d_23;
+    int32_t kl_e_24;
+    int32_t kl_t25;
+    int32_t kl_f_26;
+    int32_t kl_t27;
+    int32_t kl_g_28;
+    int32_t kl_t29;
+    int32_t kl_h_30;
+    int32_t kl_t31;
+    int32_t kl_t32;
+    int32_t kl_t33;
+    int32_t kl_t34;
 #line 113 "opt/scalars_copied.kl"
     kl_p_2.kl_x = kl_a_1;
 #line 113 "opt/scalars_copied.kl"
     kl_p_2.kl_y = 1;
     kl_t3 = kl_3opt_6spread__Q3opt5Point( kl_p_2 );
+#line 30 "opt/scalars_copied.kl"
+    kl_c_9 = kl_a_1 + kl_a_1;
+    kl_d_10 = kl_c_9 - 3;
+    kl_t12 = kl_d_10 * kl_d_10;
+#line 32 "opt/scalars_copied.kl"
+    kl_e_11 = kl_t12 + kl_c_9;
+    kl_t14 = kl_e_11 / 7;
+#line 33 "opt/scalars_copied.kl"
+    kl_f_13 = kl_t14 + kl_d_10;
+    kl_t16 = kl_f_13 * kl_a_1;
+#line 34 "opt/scalars_copied.kl"
+    kl_g_15 = kl_t16 - kl_e_11;
+    kl_t18 = kl_f_13 * kl_c_9;
+#line 35 "opt/scalars_copied.kl"
+    kl_h_17 = kl_g_15 + kl_t18;
+    kl_t19 = kl_c_9 * kl_d_10;
+#line 36 "opt/scalars_copied.kl"
+    kl_t20 = kl_h_17 + kl_t19;
+#line 36 "opt/scalars_copied.kl"
+    kl_t4 = kl_t20 - kl_f_13;
 #line 114 "opt/scalars_copied.kl"
-    kl_t4 = kl_3opt_5mixed__3i32_3i32( kl_a_1, 1 );
+    kl_t5 = kl_t4 + -41;
+#line 30 "opt/scalars_copied.kl"
+    kl_t22 = kl_a_1 * 3;
+#line 30 "opt/scalars_copied.kl"
+    kl_c_21 = kl_t22 + kl_a_1;
+    kl_d_23 = kl_c_21 - 9;
+    kl_t25 = kl_d_23 * kl_d_23;
+#line 32 "opt/scalars_copied.kl"
+    kl_e_24 = kl_t25 + kl_c_21;
+    kl_t27 = kl_e_24 / 7;
+#line 33 "opt/scalars_copied.kl"
+    kl_f_26 = kl_t27 + kl_d_23;
+    kl_t29 = kl_f_26 * kl_a_1;
+#line 34 "opt/scalars_copied.kl"
+    kl_g_28 = kl_t29 - kl_e_24;
+    kl_t31 = kl_g_28 * 3;
+#line 35 "opt/scalars_copied.kl"
+    kl_t32 = kl_f_26 * kl_c_21;
+#line 35 "opt/scalars_copied.kl"
+    kl_h_30 = kl_t31 + kl_t32;
+    kl_t33 = kl_c_21 * kl_d_23;
+#line 36 "opt/scalars_copied.kl"
+    kl_t34 = kl_h_30 + kl_t33;
+#line 36 "opt/scalars_copied.kl"
+    kl_t6 = kl_t34 - kl_f_26;
 #line 114 "opt/scalars_copied.kl"
-    kl_t5 = kl_3opt_5mixed__3i32_3i32( 1, 2 );
+    kl_t7 = kl_t5 + kl_t6;
 #line 114 "opt/scalars_copied.kl"
-    kl_t6 = kl_t4 + kl_t5;
+    kl_t8 = kl_t3 == kl_t7;
 #line 114 "opt/scalars_copied.kl"
-    kl_t7 = kl_3opt_5mixed__3i32_3i32( kl_a_1, 3 );
-#line 114 "opt/scalars_copied.kl"
-    kl_t8 = kl_t6 + kl_t7;
-#line 114 "opt/scalars_copied.kl"
-    kl_t9 = kl_t3 == kl_t8;
-#line 114 "opt/scalars_copied.kl"
-    if ( kl_t9 ) goto bb1; else goto bb2;
+    if ( kl_t8 ) goto bb1; else goto bb2;
     bb1:
 #line 114 "opt/scalars_copied.kl"
     kl_t0 = 0;

@@ -291,8 +291,18 @@ int32_t kl_3opt_5mixed__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
     int32_t kl_h_13;
     int32_t kl_t14;
     int32_t kl_t15;
-    int32_t kl_t16;
+    int32_t kl_i_16;
     int32_t kl_t17;
+    int32_t kl_j_18;
+    int32_t kl_t19;
+    int32_t kl_k_20;
+    int32_t kl_t21;
+    int32_t kl_l_22;
+    int32_t kl_t23;
+    int32_t kl_m_24;
+    int32_t kl_t25;
+    int32_t kl_t26;
+    int32_t kl_t27;
 #line 117 "opt/inlining.kl"
     kl_t4 = kl_a_1 * kl_b_2;
 #line 117 "opt/inlining.kl"
@@ -314,34 +324,49 @@ int32_t kl_3opt_5mixed__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
     kl_t15 = kl_f_9 * kl_c_3;
 #line 122 "opt/inlining.kl"
     kl_h_13 = kl_t14 + kl_t15;
-    kl_t16 = kl_c_3 * kl_d_5;
+    kl_t17 = kl_h_13 * kl_h_13;
 #line 123 "opt/inlining.kl"
-    kl_t17 = kl_h_13 + kl_t16;
-#line 123 "opt/inlining.kl"
-    kl_t0 = kl_t17 - kl_f_9;
-#line 123 "opt/inlining.kl"
+    kl_i_16 = kl_t17 + kl_g_11;
+    kl_t19 = kl_i_16 / 5;
+#line 124 "opt/inlining.kl"
+    kl_j_18 = kl_t19 - kl_h_13;
+    kl_t21 = kl_j_18 * kl_c_3;
+#line 125 "opt/inlining.kl"
+    kl_k_20 = kl_t21 + kl_i_16;
+    kl_t23 = kl_j_18 * kl_d_5;
+#line 126 "opt/inlining.kl"
+    kl_l_22 = kl_k_20 - kl_t23;
+    kl_t25 = kl_l_22 * kl_e_7;
+#line 127 "opt/inlining.kl"
+    kl_m_24 = kl_t25 + kl_k_20;
+    kl_t26 = kl_h_13 * kl_i_16;
+#line 128 "opt/inlining.kl"
+    kl_t27 = kl_m_24 + kl_t26;
+#line 128 "opt/inlining.kl"
+    kl_t0 = kl_t27 - kl_l_22;
+#line 128 "opt/inlining.kl"
     return kl_t0;
 }
 
-#line 126 "opt/inlining.kl"
+#line 131 "opt/inlining.kl"
 void kl_3opt_3set__O3i32( int32_t* kl_n_1 )
 {
     ( *kl_n_1 ) = 9;
     return;
-#line 129 "opt/inlining.kl"
+#line 134 "opt/inlining.kl"
 }
 
-#line 131 "opt/inlining.kl"
+#line 136 "opt/inlining.kl"
 int32_t kl_3opt_7through__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
 #line 32 "opt/inlining.kl"
     kl_t0 = kl_a_1 * 2;
-#line 134 "opt/inlining.kl"
+#line 139 "opt/inlining.kl"
     return kl_t0;
 }
 
-#line 137 "opt/inlining.kl"
+#line 142 "opt/inlining.kl"
 int32_t kl_3opt_4main__( void )
 {
     int32_t kl_t0;
@@ -370,82 +395,82 @@ int32_t kl_3opt_4main__( void )
 #line 57 "opt/inlining.kl"
     goto bb15;
     bb1:
-#line 144 "opt/inlining.kl"
+#line 149 "opt/inlining.kl"
     kl_t1 = kl_t17 != 0;
-#line 144 "opt/inlining.kl"
+#line 149 "opt/inlining.kl"
     if ( kl_t1 ) goto bb2; else goto bb3;
     bb2:
     kl_t0 = 2;
-#line 146 "opt/inlining.kl"
+#line 151 "opt/inlining.kl"
     return kl_t0;
     bb3:
 #line 87 "opt/inlining.kl"
     kl_t14 = kl_3opt_9factorial__3i64( 4 );
 #line 87 "opt/inlining.kl"
     kl_t3 = 5 * kl_t14;
-#line 159 "opt/inlining.kl"
+#line 164 "opt/inlining.kl"
     kl_t4 = kl_t3 != 120;
-#line 159 "opt/inlining.kl"
+#line 164 "opt/inlining.kl"
     if ( kl_t4 ) goto bb4; else goto bb5;
     bb4:
     kl_t0 = 5;
-#line 161 "opt/inlining.kl"
+#line 166 "opt/inlining.kl"
     return kl_t0;
     bb5:
 #line 102 "opt/inlining.kl"
     kl_t6 = kl_3opt_6is_odd__3u32( 9 );
-#line 164 "opt/inlining.kl"
+#line 169 "opt/inlining.kl"
     kl_t5 = !kl_t6;
-#line 164 "opt/inlining.kl"
+#line 169 "opt/inlining.kl"
     if ( kl_t5 ) goto bb7; else goto bb6;
     bb6:
 #line 111 "opt/inlining.kl"
     kl_t5 = kl_3opt_7is_even__3u32( 9 );
-#line 164 "opt/inlining.kl"
+#line 169 "opt/inlining.kl"
     if ( kl_t5 ) goto bb7; else goto bb8;
     bb7:
     kl_t0 = 6;
-#line 166 "opt/inlining.kl"
+#line 171 "opt/inlining.kl"
     return kl_t0;
     bb8:
-#line 169 "opt/inlining.kl"
+#line 174 "opt/inlining.kl"
     kl_t7 = kl_3opt_5mixed__3i32_3i32( 2, 3 );
-#line 169 "opt/inlining.kl"
-    kl_t8 = kl_t7 != -35;
-#line 169 "opt/inlining.kl"
+#line 174 "opt/inlining.kl"
+    kl_t8 = kl_t7 != 720;
+#line 174 "opt/inlining.kl"
     if ( kl_t8 ) goto bb9; else goto bb10;
     bb9:
     kl_t0 = 7;
-#line 171 "opt/inlining.kl"
+#line 176 "opt/inlining.kl"
     return kl_t0;
     bb10:
-#line 174 "opt/inlining.kl"
+#line 179 "opt/inlining.kl"
     kl_n_9 = 0;
     kl_t10 = &kl_n_9;
-#line 175 "opt/inlining.kl"
+#line 180 "opt/inlining.kl"
     kl_3opt_3set__O3i32( kl_t10 );
     kl_t12 = kl_n_9 != 9;
-#line 176 "opt/inlining.kl"
+#line 181 "opt/inlining.kl"
     if ( kl_t12 ) goto bb11; else goto bb12;
     bb11:
     kl_t0 = 8;
-#line 178 "opt/inlining.kl"
+#line 183 "opt/inlining.kl"
     return kl_t0;
     bb12:
 #line 18 "opt/inlining.kl"
     kl_t18 = kl_3opt_live__G;
-#line 187 "opt/inlining.kl"
+#line 192 "opt/inlining.kl"
     kl_t13 = kl_t18 != 0;
-#line 187 "opt/inlining.kl"
+#line 192 "opt/inlining.kl"
     if ( kl_t13 ) goto bb13; else goto bb14;
     bb13:
     kl_t0 = 10;
-#line 189 "opt/inlining.kl"
+#line 194 "opt/inlining.kl"
     return kl_t0;
     bb14:
-#line 192 "opt/inlining.kl"
+#line 197 "opt/inlining.kl"
     kl_t0 = 0;
-#line 192 "opt/inlining.kl"
+#line 197 "opt/inlining.kl"
     return kl_t0;
     bb15:
 #line 59 "opt/inlining.kl"
@@ -457,20 +482,20 @@ int32_t kl_3opt_4main__( void )
 #line 57 "opt/inlining.kl"
     if ( kl_t16 ) goto bb15; else goto bb16;
     bb16:
-#line 144 "opt/inlining.kl"
+#line 149 "opt/inlining.kl"
     kl_t1 = kl_t2 != 6;
-#line 144 "opt/inlining.kl"
+#line 149 "opt/inlining.kl"
     if ( kl_t1 ) goto bb2; else goto bb1;
-#line 193 "opt/inlining.kl"
+#line 198 "opt/inlining.kl"
 }
 
 int main( void )
 {
     int32_t kl_t0;
-#line 137 "opt/inlining.kl"
+#line 142 "opt/inlining.kl"
     kl_t0 = kl_3opt_4main__(  );
-#line 137 "opt/inlining.kl"
+#line 142 "opt/inlining.kl"
     return kl_t0;
-#line 137 "opt/inlining.kl"
+#line 142 "opt/inlining.kl"
 }
 

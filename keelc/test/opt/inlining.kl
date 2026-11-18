@@ -120,7 +120,12 @@ i32 mixed( i32 a, i32 b )
     i32 f = e / 7 + d;
     i32 g = f * a - e;
     i32 h = g * b + f * c;
-    return h + c * d - f;
+    i32 i = h * h + g;
+    i32 j = i / 5 - h;
+    i32 k = j * c + i;
+    i32 l = k - j * d;
+    i32 m = l * e + k;
+    return m + h * i - l;
 }
 
 void set( out i32 n )
@@ -166,7 +171,7 @@ i32 main()
         return 6;
     }
 
-    if( mixed( 2, 3 ) != -35 )
+    if( mixed( 2, 3 ) != 720 )
     {
         return 7;
     }

@@ -293,45 +293,55 @@ int32_t kl_3opt_4main__( void )
     bool kl_t3;
     struct kl_3opt_Point kl_p_4;
     bool kl_t5;
-    struct kl_3opt_Point kl_t6;
+    struct kl_3opt_Point kl_p_6;
     bool kl_t7;
     int32_t kl_r_8;
     int32_t* kl_t9;
     int32_t kl_t11;
     bool kl_t12;
-    int32_t kl_a_13;
-    int32_t kl_r_14;
-    int32_t* kl_t15;
+    int32_t kl_r_13;
+    int32_t* kl_t14;
+    int32_t kl_t16;
     int32_t kl_t17;
-    int32_t kl_t18;
-    bool kl_t19;
+    bool kl_t18;
+    int32_t kl_a_19;
     int32_t kl_r_20;
     int32_t* kl_t21;
     int32_t kl_t23;
     int32_t kl_t24;
     bool kl_t25;
-    struct kl_3opt_Point kl_l_26;
-#line 103 "opt/propagation_chains.kl"
-    kl_t0 = kl_3opt_6looped__3i64( 4 );
-    kl_t1 = kl_t0 == 0;
-#line 104 "opt/propagation_chains.kl"
-    if ( kl_t1 ) goto bb1; else goto bb2;
+    int32_t kl_r_26;
+    int32_t* kl_t27;
+    int32_t kl_t29;
+    int32_t kl_t30;
+    bool kl_t31;
+    int64_t kl_t_32;
+    int64_t kl_i_33;
+    bool kl_t34;
+    bool kl_t35;
+    struct kl_3opt_Point kl_l_36;
+#line 48 "opt/propagation_chains.kl"
+    kl_t_32 = 0;
+    kl_i_33 = 0;
+#line 49 "opt/propagation_chains.kl"
+    goto bb21;
     bb1:
+#line 106 "opt/propagation_chains.kl"
     kl_p_2.kl_x = 1;
 #line 106 "opt/propagation_chains.kl"
     kl_p_2.kl_y = 2;
 #line 60 "opt/propagation_chains.kl"
-    kl_r_20 = 0;
-    kl_t21 = &kl_r_20;
+    kl_r_26 = 0;
+    kl_t27 = &kl_r_26;
 #line 61 "opt/propagation_chains.kl"
-    kl_3opt_5touch__Q3opt5Point_O3i32( kl_p_2, kl_t21 );
-    kl_t23 = kl_p_2.kl_x * kl_p_2.kl_x;
+    kl_3opt_5touch__Q3opt5Point_O3i32( kl_p_2, kl_t27 );
+    kl_t29 = kl_p_2.kl_x * kl_p_2.kl_x;
 #line 62 "opt/propagation_chains.kl"
-    kl_t24 = kl_t23 + kl_r_20;
+    kl_t30 = kl_t29 + kl_r_26;
 #line 62 "opt/propagation_chains.kl"
-    kl_t25 = kl_t24 == 3;
+    kl_t31 = kl_t30 == 3;
 #line 62 "opt/propagation_chains.kl"
-    if ( kl_t25 ) goto bb15; else goto bb16;
+    if ( kl_t31 ) goto bb18; else goto bb19;
     bb2:
 #line 108 "opt/propagation_chains.kl"
     kl_t3 = kl_t0 == 0;
@@ -342,47 +352,55 @@ int32_t kl_3opt_4main__( void )
 #line 110 "opt/propagation_chains.kl"
     kl_p_4.kl_y = 2;
 #line 68 "opt/propagation_chains.kl"
-    kl_a_13 = kl_p_4.kl_x;
+    kl_a_19 = kl_p_4.kl_x;
     kl_p_4.kl_x = 5;
-    kl_r_14 = 0;
-    kl_t15 = &kl_r_14;
+    kl_r_20 = 0;
+    kl_t21 = &kl_r_20;
 #line 71 "opt/propagation_chains.kl"
-    kl_3opt_5touch__Q3opt5Point_O3i32( kl_p_4, kl_t15 );
-    kl_t17 = kl_a_13 * kl_a_13;
+    kl_3opt_5touch__Q3opt5Point_O3i32( kl_p_4, kl_t21 );
+    kl_t23 = kl_a_19 * kl_a_19;
 #line 72 "opt/propagation_chains.kl"
-    kl_t18 = kl_t17 + kl_r_14;
+    kl_t24 = kl_t23 + kl_r_20;
 #line 72 "opt/propagation_chains.kl"
-    kl_t19 = kl_t18 == 3;
+    kl_t25 = kl_t24 == 3;
 #line 72 "opt/propagation_chains.kl"
-    if ( kl_t19 ) goto bb12; else goto bb13;
+    if ( kl_t25 ) goto bb15; else goto bb16;
     bb4:
 #line 112 "opt/propagation_chains.kl"
     kl_t5 = kl_t0 == 0;
 #line 112 "opt/propagation_chains.kl"
     if ( kl_t5 ) goto bb5; else goto bb6;
     bb5:
-    kl_t6.kl_x = 1;
+    kl_p_6.kl_x = 1;
 #line 114 "opt/propagation_chains.kl"
-    kl_t6.kl_y = 2;
-#line 114 "opt/propagation_chains.kl"
-    kl_t0 = kl_3opt_6joined__Q3opt5Point_4bool( kl_t6, true );
-#line 112 "opt/propagation_chains.kl"
-    goto bb6;
+    kl_p_6.kl_y = 2;
+#line 87 "opt/propagation_chains.kl"
+    kl_r_13 = 0;
+    kl_t14 = &kl_r_13;
+#line 88 "opt/propagation_chains.kl"
+    kl_3opt_5touch__Q3opt5Point_O3i32( kl_p_6, kl_t14 );
+    kl_t16 = kl_p_6.kl_x * kl_p_6.kl_x;
+#line 89 "opt/propagation_chains.kl"
+    kl_t17 = kl_t16 + kl_r_13;
+#line 89 "opt/propagation_chains.kl"
+    kl_t18 = kl_t17 == 3;
+#line 89 "opt/propagation_chains.kl"
+    if ( kl_t18 ) goto bb12; else goto bb13;
     bb6:
 #line 116 "opt/propagation_chains.kl"
     kl_t7 = kl_t0 == 0;
 #line 116 "opt/propagation_chains.kl"
     if ( kl_t7 ) goto bb7; else goto bb8;
     bb7:
-    kl_l_26.kl_x = 3;
+    kl_l_36.kl_x = 3;
 #line 118 "opt/propagation_chains.kl"
-    kl_l_26.kl_y = 4;
+    kl_l_36.kl_y = 4;
 #line 96 "opt/propagation_chains.kl"
     kl_r_8 = 0;
     kl_t9 = &kl_r_8;
 #line 97 "opt/propagation_chains.kl"
-    kl_3opt_5touch__Q3opt5Point_O3i32( kl_l_26, kl_t9 );
-    kl_t11 = kl_l_26.kl_x + kl_r_8;
+    kl_3opt_5touch__Q3opt5Point_O3i32( kl_l_36, kl_t9 );
+    kl_t11 = kl_l_36.kl_x + kl_r_8;
 #line 98 "opt/propagation_chains.kl"
     kl_t12 = kl_t11 == 7;
 #line 98 "opt/propagation_chains.kl"
@@ -404,31 +422,73 @@ int32_t kl_3opt_4main__( void )
 #line 98 "opt/propagation_chains.kl"
     goto bb8;
     bb12:
+#line 89 "opt/propagation_chains.kl"
+    kl_t0 = 0;
+#line 89 "opt/propagation_chains.kl"
+    goto bb14;
+    bb13:
+#line 89 "opt/propagation_chains.kl"
+    kl_t0 = 4;
+#line 89 "opt/propagation_chains.kl"
+    goto bb14;
+    bb14:
+#line 89 "opt/propagation_chains.kl"
+    goto bb6;
+    bb15:
 #line 72 "opt/propagation_chains.kl"
     kl_t0 = 0;
 #line 72 "opt/propagation_chains.kl"
-    goto bb14;
-    bb13:
+    goto bb17;
+    bb16:
 #line 72 "opt/propagation_chains.kl"
     kl_t0 = 3;
 #line 72 "opt/propagation_chains.kl"
-    goto bb14;
-    bb14:
+    goto bb17;
+    bb17:
 #line 72 "opt/propagation_chains.kl"
     goto bb4;
-    bb15:
+    bb18:
 #line 62 "opt/propagation_chains.kl"
     kl_t0 = 0;
 #line 62 "opt/propagation_chains.kl"
-    goto bb17;
-    bb16:
+    goto bb20;
+    bb19:
 #line 62 "opt/propagation_chains.kl"
     kl_t0 = 2;
 #line 62 "opt/propagation_chains.kl"
-    goto bb17;
-    bb17:
+    goto bb20;
+    bb20:
 #line 62 "opt/propagation_chains.kl"
     goto bb2;
+    bb21:
+#line 51 "opt/propagation_chains.kl"
+    kl_t_32 = kl_t_32 + kl_i_33;
+#line 49 "opt/propagation_chains.kl"
+    kl_i_33 = kl_i_33 + 1;
+#line 49 "opt/propagation_chains.kl"
+    kl_t34 = kl_i_33 < 4;
+#line 49 "opt/propagation_chains.kl"
+    if ( kl_t34 ) goto bb21; else goto bb22;
+    bb22:
+#line 53 "opt/propagation_chains.kl"
+    kl_t35 = kl_t_32 == 6;
+#line 53 "opt/propagation_chains.kl"
+    if ( kl_t35 ) goto bb23; else goto bb24;
+    bb23:
+#line 53 "opt/propagation_chains.kl"
+    kl_t0 = 0;
+#line 53 "opt/propagation_chains.kl"
+    goto bb25;
+    bb24:
+#line 53 "opt/propagation_chains.kl"
+    kl_t0 = 1;
+#line 53 "opt/propagation_chains.kl"
+    goto bb25;
+    bb25:
+#line 104 "opt/propagation_chains.kl"
+    kl_t1 = kl_t0 == 0;
+#line 104 "opt/propagation_chains.kl"
+    if ( kl_t1 ) goto bb1; else goto bb2;
 #line 122 "opt/propagation_chains.kl"
 }
 

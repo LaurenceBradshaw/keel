@@ -181,31 +181,38 @@ int32_t kl_13rotated_loops_4main__( void )
     bool kl_t11;
     int64_t kl_i_12;
     bool kl_t13;
+    int64_t kl_t14;
+    bool kl_t15;
+    bool kl_t16;
+    int64_t kl_i_17;
+    bool kl_t18;
+    int64_t kl_t19;
+    bool kl_t20;
+    bool kl_t21;
+    int64_t kl_i_22;
+    bool kl_t23;
 #line 8 "opt/rotated_loops/main.kl"
     kl_t2 = 0;
-    kl_i_12 = 0;
+    kl_i_22 = 0;
 #line 9 "opt/rotated_loops/main.kl"
-    goto bb12;
+    goto bb22;
     bb1:
-#line 71 "opt/rotated_loops/main.kl"
-    kl_t4 = kl_13rotated_loops_4odds__3i64_3i64( 10, 100 );
-#line 71 "opt/rotated_loops/main.kl"
-    kl_t3 = kl_t4 != 5;
-#line 71 "opt/rotated_loops/main.kl"
-    if ( kl_t3 ) goto bb4; else goto bb3;
+#line 19 "opt/rotated_loops/main.kl"
+    kl_t4 = 0;
+    kl_i_17 = 0;
+    goto bb18;
     bb2:
 #line 68 "opt/rotated_loops/main.kl"
     kl_t0 = 1;
 #line 68 "opt/rotated_loops/main.kl"
     return kl_t0;
     bb3:
-#line 71 "opt/rotated_loops/main.kl"
-    kl_t5 = kl_13rotated_loops_4odds__3i64_3i64( 10, 2 );
-#line 71 "opt/rotated_loops/main.kl"
-    kl_t3 = kl_t5 != 2;
-#line 71 "opt/rotated_loops/main.kl"
-    if ( kl_t3 ) goto bb4; else goto bb5;
+#line 19 "opt/rotated_loops/main.kl"
+    kl_t5 = 0;
+    kl_i_12 = 0;
+    goto bb13;
     bb4:
+#line 73 "opt/rotated_loops/main.kl"
     kl_t0 = 2;
 #line 73 "opt/rotated_loops/main.kl"
     return kl_t0;
@@ -249,27 +256,81 @@ int32_t kl_13rotated_loops_4main__( void )
 #line 81 "opt/rotated_loops/main.kl"
     if ( kl_t9 ) goto bb8; else goto bb9;
     bb12:
-#line 11 "opt/rotated_loops/main.kl"
-    kl_t2 = kl_t2 + kl_i_12;
-#line 9 "opt/rotated_loops/main.kl"
-    kl_i_12 = kl_i_12 + 1;
-#line 11 "opt/rotated_loops/main.kl"
-    kl_t2 = kl_t2 + kl_i_12;
-#line 9 "opt/rotated_loops/main.kl"
-    kl_i_12 = kl_i_12 + 1;
-#line 11 "opt/rotated_loops/main.kl"
-    kl_t2 = kl_t2 + kl_i_12;
-#line 9 "opt/rotated_loops/main.kl"
-    kl_i_12 = kl_i_12 + 1;
-#line 11 "opt/rotated_loops/main.kl"
-    kl_t2 = kl_t2 + kl_i_12;
-#line 9 "opt/rotated_loops/main.kl"
-    kl_i_12 = kl_i_12 + 1;
-#line 9 "opt/rotated_loops/main.kl"
-    kl_t13 = kl_i_12 < 100;
-#line 9 "opt/rotated_loops/main.kl"
-    if ( kl_t13 ) goto bb12; else goto bb13;
+#line 21 "opt/rotated_loops/main.kl"
+    kl_t13 = kl_i_12 < 10;
+#line 21 "opt/rotated_loops/main.kl"
+    if ( kl_t13 ) goto bb13; else goto bb14;
     bb13:
+    kl_i_12 = kl_i_12 + 1;
+    kl_t14 = kl_i_12 % 2;
+#line 24 "opt/rotated_loops/main.kl"
+    kl_t15 = kl_t14 == 0;
+#line 24 "opt/rotated_loops/main.kl"
+    if ( kl_t15 ) goto bb12; else goto bb15;
+    bb14:
+#line 71 "opt/rotated_loops/main.kl"
+    kl_t3 = kl_t5 != 2;
+#line 71 "opt/rotated_loops/main.kl"
+    if ( kl_t3 ) goto bb4; else goto bb5;
+    bb15:
+#line 28 "opt/rotated_loops/main.kl"
+    kl_t16 = kl_t5 == 2;
+#line 28 "opt/rotated_loops/main.kl"
+    if ( kl_t16 ) goto bb14; else goto bb16;
+    bb16:
+#line 32 "opt/rotated_loops/main.kl"
+    kl_t5 = kl_t5 + 1;
+#line 21 "opt/rotated_loops/main.kl"
+    goto bb12;
+    bb17:
+#line 21 "opt/rotated_loops/main.kl"
+    kl_t18 = kl_i_17 < 10;
+#line 21 "opt/rotated_loops/main.kl"
+    if ( kl_t18 ) goto bb18; else goto bb19;
+    bb18:
+    kl_i_17 = kl_i_17 + 1;
+    kl_t19 = kl_i_17 % 2;
+#line 24 "opt/rotated_loops/main.kl"
+    kl_t20 = kl_t19 == 0;
+#line 24 "opt/rotated_loops/main.kl"
+    if ( kl_t20 ) goto bb17; else goto bb20;
+    bb19:
+#line 71 "opt/rotated_loops/main.kl"
+    kl_t3 = kl_t4 != 5;
+#line 71 "opt/rotated_loops/main.kl"
+    if ( kl_t3 ) goto bb4; else goto bb3;
+    bb20:
+#line 28 "opt/rotated_loops/main.kl"
+    kl_t21 = kl_t4 == 100;
+#line 28 "opt/rotated_loops/main.kl"
+    if ( kl_t21 ) goto bb19; else goto bb21;
+    bb21:
+#line 32 "opt/rotated_loops/main.kl"
+    kl_t4 = kl_t4 + 1;
+#line 21 "opt/rotated_loops/main.kl"
+    goto bb17;
+    bb22:
+#line 11 "opt/rotated_loops/main.kl"
+    kl_t2 = kl_t2 + kl_i_22;
+#line 9 "opt/rotated_loops/main.kl"
+    kl_i_22 = kl_i_22 + 1;
+#line 11 "opt/rotated_loops/main.kl"
+    kl_t2 = kl_t2 + kl_i_22;
+#line 9 "opt/rotated_loops/main.kl"
+    kl_i_22 = kl_i_22 + 1;
+#line 11 "opt/rotated_loops/main.kl"
+    kl_t2 = kl_t2 + kl_i_22;
+#line 9 "opt/rotated_loops/main.kl"
+    kl_i_22 = kl_i_22 + 1;
+#line 11 "opt/rotated_loops/main.kl"
+    kl_t2 = kl_t2 + kl_i_22;
+#line 9 "opt/rotated_loops/main.kl"
+    kl_i_22 = kl_i_22 + 1;
+#line 9 "opt/rotated_loops/main.kl"
+    kl_t23 = kl_i_22 < 100;
+#line 9 "opt/rotated_loops/main.kl"
+    if ( kl_t23 ) goto bb22; else goto bb23;
+    bb23:
 #line 66 "opt/rotated_loops/main.kl"
     kl_t1 = kl_t2 != 4950;
 #line 66 "opt/rotated_loops/main.kl"

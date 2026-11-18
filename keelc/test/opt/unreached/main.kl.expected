@@ -99,27 +99,48 @@ int32_t kl_9unreached_4main__( void )
 {
     int32_t kl_t0;
     struct kl_9unreached_Circle kl_c_1;
-    struct kl_9unreached_Circle* kl_t2;
-    struct kl_9unreached_Shape__ref kl_t3;
+    struct kl_9unreached_Shape__ref kl_s_2;
+    int32_t kl_t3;
     int32_t kl_t4;
     int32_t kl_t5;
-    int32_t kl_t6;
-    bool kl_t7;
+    bool kl_t6;
+    struct kl_9unreached_Circle* kl_this_7;
+    int32_t kl_t8;
+    int32_t kl_t9;
+    int32_t kl_t10;
+    int32_t kl_t11;
+    int32_t kl_t12;
+    kl__fn__FMP4voidE3i32 kl_t13;
+    void* kl_t14;
 #line 58 "opt/unreached/main.kl"
     kl_c_1.kl_r = 1;
-    kl_t2 = &kl_c_1;
+    kl_this_7 = &kl_c_1;
 #line 59 "opt/unreached/main.kl"
-    kl_t3 = ( struct kl_9unreached_Shape__ref ) { ( void* ) kl_t2, &kl_9unreached_Circle__as_kl_9unreached_Shape };
+    kl_s_2 = ( struct kl_9unreached_Shape__ref ) { ( void* ) kl_this_7, &kl_9unreached_Circle__as_kl_9unreached_Shape };
+#line 26 "opt/unreached/main.kl"
+    kl_t10 = 3 * ( *kl_this_7 ).kl_r;
+#line 26 "opt/unreached/main.kl"
+    kl_t8 = kl_t10 * ( *kl_this_7 ).kl_r;
+#line 53 "opt/unreached/main.kl"
+    kl_t13 = ( kl_s_2 ).vtable->kl__4area__;
+#line 53 "opt/unreached/main.kl"
+    kl_t14 = ( kl_s_2 ).self;
+#line 53 "opt/unreached/main.kl"
+    kl_t11 = kl_t13( kl_t14 );
+#line 53 "opt/unreached/main.kl"
+    kl_t12 = kl_9unreached_5total__5Shape_3i32( kl_s_2, 0 );
+#line 53 "opt/unreached/main.kl"
+    kl_t9 = kl_t11 + kl_t12;
+#line 53 "opt/unreached/main.kl"
+    kl_t3 = kl_t8 + kl_t9;
 #line 59 "opt/unreached/main.kl"
-    kl_t4 = kl_9unreached_5total__5Shape_3i32( kl_t3, 2 );
+    kl_t4 = kl_9unreached_named__G(  );
 #line 59 "opt/unreached/main.kl"
-    kl_t5 = kl_9unreached_named__G(  );
+    kl_t5 = kl_t3 + kl_t4;
 #line 59 "opt/unreached/main.kl"
-    kl_t6 = kl_t4 + kl_t5;
+    kl_t6 = kl_t5 == 13;
 #line 59 "opt/unreached/main.kl"
-    kl_t7 = kl_t6 == 13;
-#line 59 "opt/unreached/main.kl"
-    if ( kl_t7 ) goto bb1; else goto bb2;
+    if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
 #line 59 "opt/unreached/main.kl"
     kl_t0 = 0;

@@ -107,21 +107,8 @@ int32_t kl_15globals_checked_5twice__3i32( int32_t kl_x_1 )
 int32_t kl_15globals_checked_4main__( void )
 {
     int32_t kl_t0;
-    int32_t kl_t1;
-    bool kl_t2;
 #line 11 "opt/globals_checked/main.kl"
     kl_15globals_checked_live__G = 3;
-#line 41 "opt/globals_checked/main.kl"
-    kl_t1 = kl_15globals_checked_5twice__3i32( 2 );
-#line 41 "opt/globals_checked/main.kl"
-    kl_t2 = kl_t1 != 9;
-#line 41 "opt/globals_checked/main.kl"
-    if ( kl_t2 ) goto bb1; else goto bb2;
-    bb1:
-    kl_t0 = 3;
-#line 43 "opt/globals_checked/main.kl"
-    return kl_t0;
-    bb2:
 #line 46 "opt/globals_checked/main.kl"
     kl_t0 = 0;
 #line 46 "opt/globals_checked/main.kl"

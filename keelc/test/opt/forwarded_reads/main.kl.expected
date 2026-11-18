@@ -27,7 +27,15 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+struct kl_7prelude_str;
 struct kl_2kl4list_list__I3i64E;
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
+};
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_2kl4list_list__I3i64E
 {
@@ -40,59 +48,10 @@ _Static_assert( sizeof( struct kl_2kl4list_list__I3i64E ) == 24 && _Alignof( str
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+_Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-int64_t kl_15forwarded_reads_3sum__Q2kl4listI3i64E_3i64( struct kl_2kl4list_list__I3i64E*, int64_t );
 int32_t kl_15forwarded_reads_4main__( void );
 void kl_2kl4list_10reallocate__I3i64E__SQ2kl4listI3i64E_3u64( struct kl_2kl4list_list__I3i64E*, uint64_t );
-
-#line 8 "opt/forwarded_reads/main.kl"
-int64_t kl_15forwarded_reads_3sum__Q2kl4listI3i64E_3i64( struct kl_2kl4list_list__I3i64E* kl_xs_1, int64_t kl_k_2 )
-{
-    int64_t kl_t0;
-    uint64_t kl_i_3;
-    uint64_t kl_t4;
-    bool kl_t5;
-    int64_t* kl_t6;
-    int64_t kl_t7;
-    int64_t kl_t8;
-    int64_t* kl_t9;
-    int64_t* kl_t10;
-#line 10 "opt/forwarded_reads/main.kl"
-    kl_t0 = 0;
-    kl_i_3 = 0;
-#line 125 "<kl>/list.kl"
-    kl_t4 = ( *kl_xs_1 ).kl_count_;
-#line 11 "opt/forwarded_reads/main.kl"
-    kl_t5 = 0 < kl_t4;
-#line 11 "opt/forwarded_reads/main.kl"
-    if ( kl_t5 ) goto bb3; else goto bb1;
-    bb1:
-#line 15 "opt/forwarded_reads/main.kl"
-    return kl_t0;
-    bb2:
-#line 233 "<kl>/list.kl"
-    kl_t9 = kl_t10 + kl_i_3;
-#line 233 "<kl>/list.kl"
-    kl_t6 = &( *kl_t9 );
-#line 13 "opt/forwarded_reads/main.kl"
-    kl_t7 = ( *kl_t6 ) * kl_k_2;
-#line 13 "opt/forwarded_reads/main.kl"
-    kl_t8 = kl_t7 * 4;
-#line 13 "opt/forwarded_reads/main.kl"
-    kl_t0 = kl_t0 + kl_t8;
-#line 11 "opt/forwarded_reads/main.kl"
-    kl_i_3 = kl_i_3 + 1;
-#line 11 "opt/forwarded_reads/main.kl"
-    kl_t5 = kl_i_3 < kl_t4;
-#line 11 "opt/forwarded_reads/main.kl"
-    if ( kl_t5 ) goto bb2; else goto bb1;
-    bb3:
-#line 233 "<kl>/list.kl"
-    kl_t10 = ( *kl_xs_1 ).kl_data_;
-#line 11 "opt/forwarded_reads/main.kl"
-    goto bb2;
-#line 16 "opt/forwarded_reads/main.kl"
-}
 
 #line 18 "opt/forwarded_reads/main.kl"
 int32_t kl_15forwarded_reads_4main__( void )
@@ -102,30 +61,32 @@ int32_t kl_15forwarded_reads_4main__( void )
     struct kl_2kl4list_list__I3i64E* kl_this_2;
     struct kl_2kl4list_list__I3i64E* kl_this_3;
     struct kl_2kl4list_list__I3i64E* kl_this_4;
-    struct kl_2kl4list_list__I3i64E* kl_t5;
-    int64_t kl_t6;
-    bool kl_t7;
-    struct kl_2kl4list_list__I3i64E kl_none_8;
-    struct kl_2kl4list_list__I3i64E* kl_t9;
-    int64_t kl_t10;
+    int64_t kl_t5;
+    bool kl_t6;
+    int64_t kl_value_7;
+    int64_t* kl_t8;
+    bool kl_t9;
+    uint64_t kl_t10;
     bool kl_t11;
-    int64_t kl_value_12;
-    int64_t* kl_t13;
-    bool kl_t14;
-    uint64_t kl_t15;
-    bool kl_t16;
-    int64_t kl_value_18;
-    int64_t* kl_t19;
-    bool kl_t20;
-    uint64_t kl_t21;
-    bool kl_t22;
-    int64_t kl_value_24;
-    int64_t* kl_t25;
-    bool kl_t26;
-    uint64_t kl_t27;
-    bool kl_t28;
-    bool kl_t30;
-    bool kl_t32;
+    int64_t kl_value_13;
+    int64_t* kl_t14;
+    bool kl_t15;
+    uint64_t kl_t16;
+    bool kl_t17;
+    int64_t kl_value_19;
+    int64_t* kl_t20;
+    bool kl_t21;
+    uint64_t kl_t22;
+    bool kl_t23;
+    uint64_t kl_i_25;
+    uint64_t kl_t26;
+    bool kl_t27;
+    int64_t* kl_t28;
+    int64_t kl_t29;
+    int64_t kl_t30;
+    bool kl_t31;
+    struct kl_7prelude_str kl_t32;
+    int64_t* kl_t33;
     bool kl_t34;
     bool kl_t36;
     bool kl_t38;
@@ -136,189 +97,189 @@ int32_t kl_15forwarded_reads_4main__( void )
 #line 21 "opt/forwarded_reads/main.kl"
     kl_this_2 = &kl_xs_1;
 #line 21 "opt/forwarded_reads/main.kl"
-    kl_value_12 = 1;
+    kl_value_7 = 1;
 #line 546 "<kl>/list.kl"
-    kl_t14 = ( *kl_this_2 ).kl_count_ == ( *kl_this_2 ).kl_cap_;
+    kl_t9 = ( *kl_this_2 ).kl_count_ == ( *kl_this_2 ).kl_cap_;
 #line 546 "<kl>/list.kl"
-    if ( kl_t14 ) goto bb5; else goto bb9;
+    if ( kl_t9 ) goto bb3; else goto bb7;
     bb1:
 #line 27 "opt/forwarded_reads/main.kl"
     kl_t0 = 1;
 #line 110 "<kl>/list.kl"
     kl_t38 = kl_xs_1.kl_data_ != NULL;
 #line 110 "<kl>/list.kl"
-    if ( kl_t38 ) goto bb28; else goto bb29;
+    if ( kl_t38 ) goto bb26; else goto bb27;
     bb2:
-#line 19 "<kl>/list.kl"
-    kl_none_8.kl_data_ = NULL;
-    kl_none_8.kl_count_ = 0;
-    kl_none_8.kl_cap_ = 0;
-#line 31 "opt/forwarded_reads/main.kl"
-    kl_t9 = &kl_none_8;
-#line 31 "opt/forwarded_reads/main.kl"
-    kl_t10 = kl_15forwarded_reads_3sum__Q2kl4listI3i64E_3i64( kl_t9, 3 );
-#line 31 "opt/forwarded_reads/main.kl"
-    kl_t11 = kl_t10 != 0;
-#line 31 "opt/forwarded_reads/main.kl"
-    if ( kl_t11 ) goto bb3; else goto bb4;
-    bb3:
-    kl_t0 = 2;
-#line 110 "<kl>/list.kl"
-    kl_t34 = kl_none_8.kl_data_ != NULL;
-#line 110 "<kl>/list.kl"
-    if ( kl_t34 ) goto bb24; else goto bb25;
-    bb4:
 #line 36 "opt/forwarded_reads/main.kl"
     kl_t0 = 0;
 #line 110 "<kl>/list.kl"
-    kl_t30 = kl_none_8.kl_data_ != NULL;
+    kl_t34 = NULL != NULL;
 #line 110 "<kl>/list.kl"
-    if ( kl_t30 ) goto bb20; else goto bb21;
+    if ( kl_t34 ) goto bb22; else goto bb23;
+    bb3:
+#line 548 "<kl>/list.kl"
+    kl_t11 = ( *kl_this_2 ).kl_cap_ > 0;
+#line 548 "<kl>/list.kl"
+    if ( kl_t11 ) goto bb4; else goto bb5;
+    bb4:
+#line 548 "<kl>/list.kl"
+    kl_t10 = ( *kl_this_2 ).kl_cap_ * 2;
+#line 548 "<kl>/list.kl"
+    goto bb6;
     bb5:
 #line 548 "<kl>/list.kl"
-    kl_t16 = ( *kl_this_2 ).kl_cap_ > 0;
+    kl_t10 = 1;
 #line 548 "<kl>/list.kl"
-    if ( kl_t16 ) goto bb6; else goto bb7;
+    goto bb6;
     bb6:
 #line 548 "<kl>/list.kl"
-    kl_t15 = ( *kl_this_2 ).kl_cap_ * 2;
-#line 548 "<kl>/list.kl"
-    goto bb8;
-    bb7:
-#line 548 "<kl>/list.kl"
-    kl_t15 = 1;
-#line 548 "<kl>/list.kl"
-    goto bb8;
-    bb8:
-#line 548 "<kl>/list.kl"
-    kl_2kl4list_10reallocate__I3i64E__SQ2kl4listI3i64E_3u64( kl_this_2, kl_t15 );
+    kl_2kl4list_10reallocate__I3i64E__SQ2kl4listI3i64E_3u64( kl_this_2, kl_t10 );
 #line 546 "<kl>/list.kl"
-    goto bb9;
-    bb9:
+    goto bb7;
+    bb7:
 #line 289 "<kl>/list.kl"
-    kl_t13 = ( *kl_this_2 ).kl_data_ + ( *kl_this_2 ).kl_count_;
+    kl_t8 = ( *kl_this_2 ).kl_data_ + ( *kl_this_2 ).kl_count_;
 #line 289 "<kl>/list.kl"
-    ( *kl_t13 ) = kl_value_12;
+    ( *kl_t8 ) = kl_value_7;
 #line 291 "<kl>/list.kl"
     ( *kl_this_2 ).kl_count_ = ( *kl_this_2 ).kl_count_ + 1;
 #line 22 "opt/forwarded_reads/main.kl"
     kl_this_3 = &kl_xs_1;
 #line 22 "opt/forwarded_reads/main.kl"
-    kl_value_18 = 2;
+    kl_value_13 = 2;
 #line 546 "<kl>/list.kl"
-    kl_t20 = ( *kl_this_3 ).kl_count_ == ( *kl_this_3 ).kl_cap_;
+    kl_t15 = ( *kl_this_3 ).kl_count_ == ( *kl_this_3 ).kl_cap_;
 #line 546 "<kl>/list.kl"
-    if ( kl_t20 ) goto bb10; else goto bb14;
-    bb10:
-    kl_t22 = ( *kl_this_3 ).kl_cap_ > 0;
+    if ( kl_t15 ) goto bb8; else goto bb12;
+    bb8:
+    kl_t17 = ( *kl_this_3 ).kl_cap_ > 0;
 #line 548 "<kl>/list.kl"
-    if ( kl_t22 ) goto bb11; else goto bb12;
+    if ( kl_t17 ) goto bb9; else goto bb10;
+    bb9:
+#line 548 "<kl>/list.kl"
+    kl_t16 = ( *kl_this_3 ).kl_cap_ * 2;
+#line 548 "<kl>/list.kl"
+    goto bb11;
+    bb10:
+#line 548 "<kl>/list.kl"
+    kl_t16 = 1;
+#line 548 "<kl>/list.kl"
+    goto bb11;
     bb11:
 #line 548 "<kl>/list.kl"
-    kl_t21 = ( *kl_this_3 ).kl_cap_ * 2;
-#line 548 "<kl>/list.kl"
-    goto bb13;
-    bb12:
-#line 548 "<kl>/list.kl"
-    kl_t21 = 1;
-#line 548 "<kl>/list.kl"
-    goto bb13;
-    bb13:
-#line 548 "<kl>/list.kl"
-    kl_2kl4list_10reallocate__I3i64E__SQ2kl4listI3i64E_3u64( kl_this_3, kl_t21 );
+    kl_2kl4list_10reallocate__I3i64E__SQ2kl4listI3i64E_3u64( kl_this_3, kl_t16 );
 #line 546 "<kl>/list.kl"
-    goto bb14;
-    bb14:
+    goto bb12;
+    bb12:
 #line 289 "<kl>/list.kl"
-    kl_t19 = ( *kl_this_3 ).kl_data_ + ( *kl_this_3 ).kl_count_;
+    kl_t14 = ( *kl_this_3 ).kl_data_ + ( *kl_this_3 ).kl_count_;
 #line 289 "<kl>/list.kl"
-    ( *kl_t19 ) = kl_value_18;
+    ( *kl_t14 ) = kl_value_13;
 #line 291 "<kl>/list.kl"
     ( *kl_this_3 ).kl_count_ = ( *kl_this_3 ).kl_count_ + 1;
 #line 23 "opt/forwarded_reads/main.kl"
     kl_this_4 = &kl_xs_1;
 #line 23 "opt/forwarded_reads/main.kl"
-    kl_value_24 = 3;
+    kl_value_19 = 3;
 #line 546 "<kl>/list.kl"
-    kl_t26 = ( *kl_this_4 ).kl_count_ == ( *kl_this_4 ).kl_cap_;
+    kl_t21 = ( *kl_this_4 ).kl_count_ == ( *kl_this_4 ).kl_cap_;
 #line 546 "<kl>/list.kl"
-    if ( kl_t26 ) goto bb15; else goto bb19;
-    bb15:
-    kl_t28 = ( *kl_this_4 ).kl_cap_ > 0;
+    if ( kl_t21 ) goto bb13; else goto bb17;
+    bb13:
+    kl_t23 = ( *kl_this_4 ).kl_cap_ > 0;
 #line 548 "<kl>/list.kl"
-    if ( kl_t28 ) goto bb16; else goto bb17;
+    if ( kl_t23 ) goto bb14; else goto bb15;
+    bb14:
+#line 548 "<kl>/list.kl"
+    kl_t22 = ( *kl_this_4 ).kl_cap_ * 2;
+#line 548 "<kl>/list.kl"
+    goto bb16;
+    bb15:
+#line 548 "<kl>/list.kl"
+    kl_t22 = 1;
+#line 548 "<kl>/list.kl"
+    goto bb16;
     bb16:
 #line 548 "<kl>/list.kl"
-    kl_t27 = ( *kl_this_4 ).kl_cap_ * 2;
-#line 548 "<kl>/list.kl"
-    goto bb18;
-    bb17:
-#line 548 "<kl>/list.kl"
-    kl_t27 = 1;
-#line 548 "<kl>/list.kl"
-    goto bb18;
-    bb18:
-#line 548 "<kl>/list.kl"
-    kl_2kl4list_10reallocate__I3i64E__SQ2kl4listI3i64E_3u64( kl_this_4, kl_t27 );
+    kl_2kl4list_10reallocate__I3i64E__SQ2kl4listI3i64E_3u64( kl_this_4, kl_t22 );
 #line 546 "<kl>/list.kl"
-    goto bb19;
-    bb19:
+    goto bb17;
+    bb17:
 #line 289 "<kl>/list.kl"
-    kl_t25 = ( *kl_this_4 ).kl_data_ + ( *kl_this_4 ).kl_count_;
+    kl_t20 = ( *kl_this_4 ).kl_data_ + ( *kl_this_4 ).kl_count_;
 #line 289 "<kl>/list.kl"
-    ( *kl_t25 ) = kl_value_24;
+    ( *kl_t20 ) = kl_value_19;
 #line 291 "<kl>/list.kl"
     ( *kl_this_4 ).kl_count_ = ( *kl_this_4 ).kl_count_ + 1;
+#line 10 "opt/forwarded_reads/main.kl"
+    kl_t5 = 0;
+    kl_i_25 = 0;
+#line 125 "<kl>/list.kl"
+    kl_t26 = kl_xs_1.kl_count_;
+#line 11 "opt/forwarded_reads/main.kl"
+    kl_t27 = 0 < kl_t26;
+#line 11 "opt/forwarded_reads/main.kl"
+    if ( kl_t27 ) goto bb18; else goto bb19;
+    bb18:
+#line 226 "<kl>/list.kl"
+    kl_t31 = kl_i_25 >= kl_xs_1.kl_count_;
+#line 226 "<kl>/list.kl"
+    if ( kl_t31 ) goto bb20; else goto bb21;
+    bb19:
 #line 25 "opt/forwarded_reads/main.kl"
-    kl_t5 = &kl_xs_1;
+    kl_t6 = kl_t5 != 72;
 #line 25 "opt/forwarded_reads/main.kl"
-    kl_t6 = kl_15forwarded_reads_3sum__Q2kl4listI3i64E_3i64( kl_t5, 3 );
-#line 25 "opt/forwarded_reads/main.kl"
-    kl_t7 = kl_t6 != 72;
-#line 25 "opt/forwarded_reads/main.kl"
-    if ( kl_t7 ) goto bb1; else goto bb2;
+    if ( kl_t6 ) goto bb1; else goto bb2;
     bb20:
-#line 115 "<kl>/list.kl"
-    kl_rt_free( kl_none_8.kl_data_ );
-#line 110 "<kl>/list.kl"
-    goto bb21;
+#line 228 "<kl>/list.kl"
+    kl_t32.kl_data = ( uint8_t* ) "index out of range";
+#line 228 "<kl>/list.kl"
+    kl_t32.kl_size = 18;
+#line 228 "<kl>/list.kl"
+    kl_rt_panic_message( "<kl>/list.kl", 228, kl_t32.kl_data, kl_t32.kl_size );
     bb21:
-#line 110 "<kl>/list.kl"
-    kl_t32 = kl_xs_1.kl_data_ != NULL;
-#line 110 "<kl>/list.kl"
-    if ( kl_t32 ) goto bb22; else goto bb23;
+#line 233 "<kl>/list.kl"
+    kl_t33 = kl_xs_1.kl_data_ + kl_i_25;
+#line 233 "<kl>/list.kl"
+    kl_t28 = &( *kl_t33 );
+#line 13 "opt/forwarded_reads/main.kl"
+    kl_t29 = ( *kl_t28 ) * 3;
+#line 13 "opt/forwarded_reads/main.kl"
+    kl_t30 = kl_t29 * 4;
+#line 13 "opt/forwarded_reads/main.kl"
+    kl_t5 = kl_t5 + kl_t30;
+#line 11 "opt/forwarded_reads/main.kl"
+    kl_i_25 = kl_i_25 + 1;
+#line 125 "<kl>/list.kl"
+    kl_t26 = kl_xs_1.kl_count_;
+#line 11 "opt/forwarded_reads/main.kl"
+    kl_t27 = kl_i_25 < kl_t26;
+#line 11 "opt/forwarded_reads/main.kl"
+    if ( kl_t27 ) goto bb18; else goto bb19;
     bb22:
 #line 115 "<kl>/list.kl"
-    kl_rt_free( kl_xs_1.kl_data_ );
+    kl_rt_free( NULL );
 #line 110 "<kl>/list.kl"
     goto bb23;
     bb23:
-#line 36 "opt/forwarded_reads/main.kl"
-    return kl_t0;
-    bb24:
-#line 115 "<kl>/list.kl"
-    kl_rt_free( kl_none_8.kl_data_ );
-#line 110 "<kl>/list.kl"
-    goto bb25;
-    bb25:
 #line 110 "<kl>/list.kl"
     kl_t36 = kl_xs_1.kl_data_ != NULL;
 #line 110 "<kl>/list.kl"
-    if ( kl_t36 ) goto bb26; else goto bb27;
+    if ( kl_t36 ) goto bb24; else goto bb25;
+    bb24:
+#line 115 "<kl>/list.kl"
+    kl_rt_free( kl_xs_1.kl_data_ );
+#line 110 "<kl>/list.kl"
+    goto bb25;
+    bb25:
+#line 36 "opt/forwarded_reads/main.kl"
+    return kl_t0;
     bb26:
 #line 115 "<kl>/list.kl"
     kl_rt_free( kl_xs_1.kl_data_ );
 #line 110 "<kl>/list.kl"
     goto bb27;
     bb27:
-#line 33 "opt/forwarded_reads/main.kl"
-    return kl_t0;
-    bb28:
-#line 115 "<kl>/list.kl"
-    kl_rt_free( kl_xs_1.kl_data_ );
-#line 110 "<kl>/list.kl"
-    goto bb29;
-    bb29:
 #line 27 "opt/forwarded_reads/main.kl"
     return kl_t0;
 #line 37 "opt/forwarded_reads/main.kl"

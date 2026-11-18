@@ -158,10 +158,66 @@ void kl_3opt_0build( void )
 
 void kl_3opt_0drop( void )
 {
-#line 33 "opt/owning_globals.kl"
-    kl_3opt_5Store__dtor( &kl_3opt_second__G );
-#line 33 "opt/owning_globals.kl"
-    kl_3opt_5Store__dtor( &kl_3opt_first__G );
+    uint64_t kl_t1;
+    uint64_t kl_n_3;
+    bool kl_t4;
+    uint64_t kl_t5;
+    uint64_t kl_t6;
+    uint64_t kl_t7;
+    uint64_t kl_n_9;
+    bool kl_t10;
+    uint64_t kl_t11;
+    uint64_t kl_t12;
+#line 24 "opt/owning_globals.kl"
+    kl_n_3 = kl_3opt_second__G.kl_size;
+#line 5 "opt/owning_globals.kl"
+    kl_t4 = kl_n_3 == 0;
+#line 5 "opt/owning_globals.kl"
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+#line 5 "opt/owning_globals.kl"
+    kl_t1 = 0;
+#line 5 "opt/owning_globals.kl"
+    goto bb3;
+    bb2:
+#line 5 "opt/owning_globals.kl"
+    kl_t5 = kl_n_3 - 1;
+#line 5 "opt/owning_globals.kl"
+    kl_t6 = kl_3opt_5depth__3u64( kl_t5 );
+#line 5 "opt/owning_globals.kl"
+    kl_t1 = kl_t6 + 1;
+#line 5 "opt/owning_globals.kl"
+    goto bb3;
+    bb3:
+#line 24 "opt/owning_globals.kl"
+    kl_3opt_second__G.kl_size = kl_t1;
+#line 27 "opt/owning_globals.kl"
+    kl_rt_free( kl_3opt_second__G.kl_bytes );
+#line 24 "opt/owning_globals.kl"
+    kl_n_9 = kl_3opt_first__G.kl_size;
+#line 5 "opt/owning_globals.kl"
+    kl_t10 = kl_n_9 == 0;
+#line 5 "opt/owning_globals.kl"
+    if ( kl_t10 ) goto bb4; else goto bb5;
+    bb4:
+#line 5 "opt/owning_globals.kl"
+    kl_t7 = 0;
+#line 5 "opt/owning_globals.kl"
+    goto bb6;
+    bb5:
+#line 5 "opt/owning_globals.kl"
+    kl_t11 = kl_n_9 - 1;
+#line 5 "opt/owning_globals.kl"
+    kl_t12 = kl_3opt_5depth__3u64( kl_t11 );
+#line 5 "opt/owning_globals.kl"
+    kl_t7 = kl_t12 + 1;
+#line 5 "opt/owning_globals.kl"
+    goto bb6;
+    bb6:
+#line 24 "opt/owning_globals.kl"
+    kl_3opt_first__G.kl_size = kl_t7;
+#line 27 "opt/owning_globals.kl"
+    kl_rt_free( kl_3opt_first__G.kl_bytes );
 #line 33 "opt/owning_globals.kl"
     return;
 #line 33 "opt/owning_globals.kl"
