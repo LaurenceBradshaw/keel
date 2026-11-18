@@ -21,6 +21,7 @@
 #include "opt/collapse_borrows.h"
 #include "opt/devirtualise_calls.h"
 #include "opt/eliminate_common.h"
+#include "opt/flatten_branches.h"
 #include "opt/fold_constants.h"
 #include "opt/forward_borrows.h"
 #include "opt/forward_globals.h"
@@ -530,6 +531,12 @@ Front_end run_front_end(
                     if( build.level >= 2 && reduce_inductions( current(), front.types.table(), literals ) )
                     {
                         verified( current(), "reduce_inductions" );
+                        moved = true;
+                    }
+                    // After the rounds, so threading has specialised each path a constant takes first.
+                    if( build.level >= 2 && flatten_branches( current(), front.types.table() ) )
+                    {
+                        verified( current(), "flatten_branches" );
                         moved = true;
                     }
                     // Last, so the round after folds each copy's index.

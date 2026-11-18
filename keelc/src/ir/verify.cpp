@@ -79,6 +79,17 @@ void check_rvalue( const Function& func, const Rvalue& value, const At& where, s
         operand_at( value.a, "operand" );
         return;
 
+    case Rvalue_kind::Select:
+        if( value.arguments.size() != 1 )
+        {
+            errors.push_back( fmt::format( "{}: a select has {} conditions", where, value.arguments.size() ) );
+            return;
+        }
+        operand_at( value.arguments[0], "condition" );
+        operand_at( value.a, "true operand" );
+        operand_at( value.b, "false operand" );
+        return;
+
     case Rvalue_kind::Run_of:
         operand_at( value.a, "data" );
         operand_at( value.b, "count" );

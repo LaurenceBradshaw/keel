@@ -109,6 +109,15 @@ public:
             operand( value.a, at );
             return;
 
+        case Rvalue_kind::Select:
+            operand( value.arguments[0], at( "condition" ) );
+            operand( value.a, at( "left" ) );
+            operand( value.b, at( "right" ) );
+            expect( value.arguments[0].type, table_.builtin( Type_kind::Bool ), at, "a select's condition" );
+            expect( value.a.type, value.type, at, "a select's true operand" );
+            expect( value.b.type, value.type, at, "a select's false operand" );
+            return;
+
         case Rvalue_kind::Run_of:
         case Rvalue_kind::Field_read:
             operand( value.a, at( "left" ) );

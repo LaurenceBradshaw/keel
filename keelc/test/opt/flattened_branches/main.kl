@@ -1,0 +1,111 @@
+// -O2: in an innermost loop, a branch whose arms are a few scalar assignments that cannot fault
+// becomes a select of the two. Each check returns its own code.
+
+import kl::string;
+
+// A triangle: the count is a select of `count + 1` and `count`.
+i64 count( const ref kl::string text, u8 byte )
+{
+    i64 n = 0;
+    for( u64 i = 0; i < text.size(); i += 1 )
+    {
+        if( text[i] == byte )
+        {
+            n += 1;
+        }
+    }
+    return n;
+}
+
+// A diamond assigning two locals, one in each arm and one in both.
+i64 split( i64 n )
+{
+    i64 odd  = 0;
+    i64 even = 0;
+    for( i64 i = 0; i < n; i += 1 )
+    {
+        i64 v = i * 3;
+        if( i % 2 == 0 )
+        {
+            even += v;
+            v = 1;
+        }
+        else
+        {
+            odd += v;
+            v = 2;
+        }
+        odd += v;
+    }
+    return odd * 1000 + even;
+}
+
+// A float clamp.
+f64 clamped( f64 limit, i64 n )
+{
+    f64 t = 0.0;
+    for( i64 i = 0; i < n; i += 1 )
+    {
+        f64 x = cast<f64>( i ) * 0.5;
+        if( x > limit )
+        {
+            x = limit;
+        }
+        t += x;
+    }
+    return t;
+}
+
+// The division may fault, so its branch stays.
+i64 divided( i64 n )
+{
+    i64 t = 0;
+    for( i64 i = -3; i < n; i += 1 )
+    {
+        if( i != 0 )
+        {
+            t += 60 / i;
+        }
+    }
+    return t;
+}
+
+// Outside a loop the branch stays.
+i64 pick( i64 x )
+{
+    i64 t = 5;
+    if( x > 0 )
+    {
+        t = x;
+    }
+    return t;
+}
+
+i32 main()
+{
+    kl::string text = kl::string( "a banana bandana" );
+    if( count( text, cast<u8>( 97 ) ) != 7 )
+    {
+        return 1;
+    }
+    // even: 3 * ( 0 + 2 + 4 + 6 + 8 ) = 60; odd: 3 * ( 1 + 3 + 5 + 7 + 9 ) + 5 * 1 + 5 * 2 = 90.
+    if( split( 10 ) != 90060 )
+    {
+        return 2;
+    }
+    // 0 + 0.5 + 1 + 1.5 + 2 + 2 + 2 + 2 = 11.
+    if( clamped( 2.0, 8 ) != 11.0 )
+    {
+        return 3;
+    }
+    // -20 - 30 - 60 + 60 + 30 + 20 + 15 = 15.
+    if( divided( 5 ) != 15 )
+    {
+        return 4;
+    }
+    if( pick( -1 ) != 5 || pick( 4 ) != 4 )
+    {
+        return 5;
+    }
+    return 0;
+}

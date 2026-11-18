@@ -1848,6 +1848,8 @@ llvm::Value* Llvm_emitter::rvalue( const Rvalue& value )
     }
     case Rvalue_kind::Bits:
         return builder_.CreateBitCast( operand( value.a ), value_type( value.type ) );
+    case Rvalue_kind::Select:
+        return builder_.CreateSelect( operand( value.arguments[0] ), operand( value.a ), operand( value.b ) );
     case Rvalue_kind::Sqrt:
     {
         llvm::Value* a = operand( value.a );

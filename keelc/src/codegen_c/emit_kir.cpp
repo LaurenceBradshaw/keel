@@ -1831,6 +1831,9 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
             operand( rvalue.a )
         );
 
+    case Rvalue_kind::Select:
+        return fmt::format( "{} ? {} : {}", operand( rvalue.arguments[0] ), operand( rvalue.a ), operand( rvalue.b ) );
+
     case Rvalue_kind::Address_of:
         // Nothing is there to point at, and nothing reads a `void` through it.
         if( is_void( type_of( rvalue.a.place ) ) )

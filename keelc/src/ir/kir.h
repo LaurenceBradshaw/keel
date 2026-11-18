@@ -175,6 +175,7 @@ enum class Rvalue_kind : u8
     Vtable_slot,    // §6.7: `a` is an interface pointer, callee the requirement, and the type the slot's function
     Interface_self, // §6.7: `a` is an interface pointer, and the type the `void*` of its object
     Sqrt,           // the correctly rounded square root of the float `a`
+    Select,         // `a` if the bool `arguments[0]` holds, else `b`; scalars only
 };
 
 // D80: a Call of a module's build or drop function, which no declaration has; `callee` is its first global.
@@ -782,6 +783,13 @@ inline Rvalue bits_of( Operand a, Type_id type )
 inline Rvalue sqrt_of( Operand a )
 {
     return Rvalue { .kind = Rvalue_kind::Sqrt, .type = a.type, .a = a };
+}
+
+inline Rvalue select( Operand condition, Operand if_true, Operand if_false )
+{
+    return Rvalue {
+        .kind = Rvalue_kind::Select, .type = if_true.type, .a = if_true, .b = if_false, .arguments = { condition }
+    };
 }
 
 inline Rvalue run_of( Operand data, Operand count, Type_id type )

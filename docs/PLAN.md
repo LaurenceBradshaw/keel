@@ -410,6 +410,7 @@ function's `-O1` code depends on nothing outside it.
 | `reduce_inductions` | `-O2` | Its gain is removing the index, which `-O1` pins; it would only add a second live variable. |
 | `unroll_loops` | `-O2`, `-O3` | `-O2` only where the copies, less each one's step and test, are no bigger than the loop; `-O3` trades size for speed within 200 statements, and unrolls a longer innermost loop by 4 or 2. |
 | `eliminate_common` | `-O2` | Pays on all code and adds none: each repeat becomes a copy. In each round, before `propagate_values`: a pure computation every path to it already made, into a local still holding it, copies that local. Exact repeats only, so no float is reassociated; a read through a pointer, of a global or of an addressed local is forgotten at a call, a drop or a store through a pointer, as Keel has no TBAA. A call of a pure function (below) is such a computation, keyed by its callee and its arguments, each a copy or a constant. `i = i + 1` is left as the loop passes' step. `thread_jumps` then decides a branch on a local written once below an edge that branched on it, or written more than once where a path with one way in, which nothing on it writes, leads up from the edge, so a repeated division's zero and `-1` tests and their join go. |
+| `flatten_branches` | `-O2` | In an innermost loop, a triangle or diamond whose arms are each at most 3 assignments of a whole `bool`, integer or float local, from scalars read with no `*` or index and with no integer division, becomes one block: each arm computes into temporaries and each local an arm assigns takes a `Select` of the two, so the vectoriser takes the loop (scan 10% faster, m11 12% fewer instructions, no program's code grows). Only in an innermost loop, since elsewhere a predicted branch is cheaper than waiting for the condition: everywhere, kepler's Newton chain ran 45% slower, as it does through LLVM's own pipeline. A scope both arms end ends after the selects. In the loop phase, after the rounds have threaded each path a constant takes. Whether a `select` becomes `cmov` or a branch is codegen's. |
 | `solve_linear_maps` | `-O3` | Landing. On an `@real_arithmetic` function, after the rounds and before the loop passes, a body that computes a linear map becomes the cheapest circuit the solve finds, or the cache holds (D86). A cold solve took up to 1.85 s (an 8-point DCT); a cached one costs about what `-O2` does. `-O2` never reads the cache, so a build at one level makes the same program whatever the cache holds. |
 
 **Order and added functions** (`ir/group_order`): each group of `callees_first` is optimised once,
@@ -429,11 +430,11 @@ removing an unread call of anything else could end a program that would have run
 panicked.
 
 **Loop passes** run once per function after the rounds, from `-O1`, each at its level in the
-table: rotation, read forwarding, a round, then LICM, versioning, induction variables, unrolling and another
-round, as LICM needs the checks the first round folds gone, and unrolling last lets that round fold
+table: rotation, read forwarding, a round, then LICM, versioning, induction variables, branch flattening,
+unrolling and another round, as LICM needs the checks the first round folds gone, and unrolling last lets that round fold
 each copy's index. The first round runs only when rotation or forwarding changed something, and from
 `-O2` always, as a repeat `eliminate_common` finds is threaded only by a third round. The last runs
-only when induction variables or unrolling changed something; otherwise only the empty blocks
+only when induction variables, flattening or unrolling changed something; otherwise only the empty blocks
 normalising added and a hoist went through are merged, as the round found nothing more. A loop has one preheader, one latch and exits only it enters. LICM
 hoists a read through a reference only when no store in the loop can reach it, a call, a drop or a
 `release` counting as a store to every place that is not a local. A store through a pointer reaches

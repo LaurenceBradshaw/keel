@@ -176,6 +176,9 @@ struct Printer
         case Rvalue_kind::Sqrt:
             return fmt::format( "sqrt {}", operand( value.a ) );
 
+        case Rvalue_kind::Select:
+            return fmt::format( "select {}, {}, {}", operand( value.arguments[0] ), operand( value.a ), operand( value.b ) );
+
         case Rvalue_kind::Make_interface:
             return fmt::format( "interface {} as {}", operand( value.a ), type_name( value.type ) );
 
