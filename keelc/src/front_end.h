@@ -45,7 +45,7 @@ struct Build
     // How the loop phase runs, from -O1; none skips it.
     std::optional<Loop_weights> loops = Loop_weights {};
 
-    // Scalar replacement; a test of an earlier pass turns it off to see that pass's fields.
+    // Scalar replacement and element forwarding; a test of an earlier pass turns it off to see that pass's fields.
     bool splitting = true;
 
     // `ref` forwarding; a test of an addressed local turns it off to keep the address.

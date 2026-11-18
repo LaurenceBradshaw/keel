@@ -24,6 +24,7 @@
 #include "opt/flatten_branches.h"
 #include "opt/fold_constants.h"
 #include "opt/forward_borrows.h"
+#include "opt/forward_elements.h"
 #include "opt/forward_globals.h"
 #include "opt/forward_reads.h"
 #include "opt/hoist_invariants.h"
@@ -298,6 +299,20 @@ Front_end run_front_end(
         verified( function, "simplify" );
         merge_blocks( function );
         verified( function, "merge_blocks" );
+        // Once merging joined an unrolled body into one block; what it forwards folds, a branch on it goes,
+        // and the indices only its reads used die.
+        if( build.level >= 2 && build.splitting && forward_elements( function, front.types.table(), literals ) )
+        {
+            verified( function, "forward_elements" );
+            propagate_values( function, front.types.table(), literals );
+            verified( function, "propagate_values" );
+            remove_dead_stores( function, pin_named, purity, front.types.table(), literals );
+            verified( function, "remove_dead_stores" );
+            simplify( function, literals );
+            verified( function, "simplify" );
+            merge_blocks( function );
+            verified( function, "merge_blocks" );
+        }
         // So no marker of a local a pass removed is left for the next round.
         remove_unused_locals( function, pin_named );
         verified( function, "remove_unused_locals" );

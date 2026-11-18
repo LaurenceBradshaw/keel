@@ -40,8 +40,8 @@ Elements elements_of( const Function& func, const Type_table& types, const Liter
             continue;
         }
         const Rvalue& value = func.rvalue( statement );
-        if( value.kind == Rvalue_kind::Address_of && value.address_purpose != Address_purpose::Read && value.a.has_place() &&
-            !value.a.place.is_global() )
+        if( value.kind == Rvalue_kind::Address_of && value.address_purpose != Address_purpose::Read &&
+            value.a.place.local.is_valid() )
         {
             written[value.a.place.local.v] = true;
         }
@@ -364,6 +364,19 @@ TEST_CASE( "remove_dead_stores_removes_a_store_its_elements_already_hold", "[opt
     }
     REQUIRE( same.element_writes() + 1 == other.element_writes() );
     REQUIRE( sign.element_writes() == other.element_writes() );
+}
+
+// `set` writes `a[0]` through the borrow its call takes, so `a[0] = 0` is not what the element holds.
+TEST_CASE( "remove_dead_stores_keeps_a_store_after_a_borrow_wrote_the_array", "[opt][dead]" )
+{
+    const Stored p(
+        "i32 f() { i32[2] a = [ 0, 0 ]; set( ref a ); a[0] = 0; return a[0] + a[1]; }\n"
+        "void set( ref i32[] r ) { r[0] = 5; }\n",
+        std::nullopt
+    );
+    REQUIRE( p.clean() );
+    REQUIRE( verify( p.first() ).empty() );
+    REQUIRE( p.element_writes() == 3 );
 }
 
 // The fill unrolls to constant stores only in the loop phase, so the second loop empties after it.
