@@ -1968,6 +1968,14 @@ major), no longer blocked now that D81 has settled lambdas.
   first. A constructor inlines when its `&init` is in the call's block. Neither keel_build nor the
   benchmarks has such a callee (measured 2026-11-13): their kept constructors are over the cost
   threshold.
+- **`folded_cost` sees only what folds inside the callee.** It binds the constant arguments, runs
+  `propagate_constants`, `remove_dead_stores` and `simplify` on a copy and prices the rest, so that
+  folding is measured, not guessed, and a flat discount per constant argument would count it twice.
+  It misses folding in the caller after splicing (a constant result deciding a branch there) and what
+  only later passes remove (unrolling a loop whose count became constant, `flatten_branches`,
+  `forward_elements`, further rounds). When a call misses the limit by a few points, run more of the
+  pipeline on the copy and subtract what goes. None did on 2026-11-18: at `-O2` the vec/mat kernels
+  inline, and the only call left with a constant argument, det's `lu`, is about 126 against 20.
 - **The dataflow analyses cost statements × locals.** `live_locals` keeps a set per statement,
   and `coalesce_moves` and `remove_dead_stores` read only a few of those sets. Each `coalesce_round`
   also renames over the whole function once per merge. Every set is a `std::vector<bool>`, which is

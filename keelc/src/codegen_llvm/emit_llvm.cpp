@@ -101,6 +101,7 @@ private:
     std::vector<llvm::Type*>  eightbytes( Type_id type ) const;
     bool                      by_reference( Type_id type ) const;
     std::vector<llvm::Value*> split( Type_id type, llvm::Value* from, const std::vector<llvm::Type*>& parts );
+    bool                      scalars( Type_id type, u64 at, std::vector<std::pair<u64, Type_id>>& out ) const;
     void                      join( Type_id type, std::span<llvm::Value* const> parts, llvm::Value* to );
     std::pair<llvm::FunctionType*, llvm::AttributeList>
                     signature( Type_id result, std::span<const Type_id> parameters, bool diverges );
@@ -1712,14 +1713,87 @@ std::vector<llvm::Value*> Llvm_emitter::split( Type_id type, llvm::Value* from, 
         copy( type, padded, from );
         from = padded;
     }
-    std::vector<llvm::Value*> values;
+    std::vector<std::pair<u64, Type_id>> fields;
+    const bool                           scalar = scalars( type, 0, fields );
+    std::vector<llvm::Value*>            values;
     for( u64 i = 0; i < parts.size(); ++i )
     {
-        values.push_back( builder_.CreateAlignedLoad(
-            parts[i], offset( from, 8 * i ), llvm::Align( std::min<u64>( 8, layout_.align( type ) ) )
-        ) );
+        const u64                            bits = parts[i]->getPrimitiveSizeInBits();
+        std::vector<std::pair<u64, Type_id>> in;
+        for( const auto& field : fields )
+        {
+            if( field.first / 8 == i )
+            {
+                in.push_back( field );
+            }
+        }
+        if( !scalar || in.size() < 2 )
+        {
+            values.push_back( builder_.CreateAlignedLoad(
+                parts[i], offset( from, 8 * i ), llvm::Align( std::min<u64>( 8, layout_.align( type ) ) )
+            ) );
+            continue;
+        }
+        // Field by field: one wide load over narrower stores defeats store forwarding. The freeze
+        // stops the backend combining the loads back into one.
+        llvm::Type*  word  = builder_.getIntNTy( narrow_cast<u32>( bits ) );
+        llvm::Value* whole = llvm::ConstantInt::get( word, 0 );
+        for( const auto& [at, field] : in )
+        {
+            llvm::Type*  held_as = memory_type( field );
+            llvm::Value* value =
+                builder_.CreateFreeze( builder_.CreateAlignedLoad( held_as, offset( from, at ), align( field ) ) );
+            if( held_as->isPointerTy() )
+            {
+                value = builder_.CreatePtrToInt( value, builder_.getInt64Ty() );
+            }
+            else if( held_as->isFloatingPointTy() )
+            {
+                value = builder_.CreateBitCast(
+                    value, builder_.getIntNTy( narrow_cast<u32>( u64 { held_as->getPrimitiveSizeInBits() } ) )
+                );
+            }
+            value = builder_.CreateShl( builder_.CreateZExtOrTrunc( value, word ), 8 * ( at - 8 * i ) );
+            whole = builder_.CreateOr( whole, value );
+        }
+        values.push_back( parts[i]->isIntegerTy() ? whole : builder_.CreateBitCast( whole, parts[i] ) );
     }
     return values;
+}
+
+// Each scalar of `type` with its offset; false if any part is not one, as a payload enum or a union.
+bool Llvm_emitter::scalars( Type_id type, u64 at, std::vector<std::pair<u64, Type_id>>& out ) const
+{
+    const Type& described = table().get( type );
+    if( held( type ) == Held::Scalar )
+    {
+        out.emplace_back( at, type );
+        return true;
+    }
+    switch( described.kind )
+    {
+    case Type_kind::Struct:
+    case Type_kind::Closure:
+        for( const Held_field& field : program_.fields( type ) )
+        {
+            if( !scalars( field.type, at + layout_.offset( type, field.declaration ), out ) )
+            {
+                return false;
+            }
+        }
+        return true;
+    case Type_kind::Array:
+        for( u64 i = 0; i < described.count; ++i )
+        {
+            if( !scalars( described.element, at + i * layout_.size( described.element ), out ) )
+            {
+                return false;
+            }
+        }
+        return true;
+    default:
+        return false;
+    }
 }
 
 void Llvm_emitter::join( Type_id type, std::span<llvm::Value* const> parts, llvm::Value* to )
@@ -2792,6 +2866,27 @@ TEST_CASE( "emit_llvm_passes_a_twelve_byte_struct_without_a_padded_copy", "[code
     REQUIRE( emitted.error.empty() );
     REQUIRE( emitted.ir.find( "define { i64, i32 } @" ) != std::string::npos );
     REQUIRE( emitted.ir.find( "alloca [16 x i8]" ) == std::string::npos );
+}
+
+// `k` and `h` share an eightbyte: read one by one, not as one `i64` over their two stores.
+TEST_CASE( "emit_llvm_returns_two_fields_of_one_eightbyte_read_field_by_field", "[codegen][llvm]" )
+{
+    Compiled p(
+        "struct Parts { f64 f; i32 k; u32 h; };\n"
+        "Parts made( f64 v ) { return Parts { v, 1, 2 }; }\n"
+        "i32 main() { Parts t = made( 1.0 ); return t.k - 1; }\n",
+        Stage::Elaborated
+    );
+    REQUIRE( p.clean() );
+
+    const Description program = describe( p.ast, p.types, p.interner );
+    const Llvm_output emitted =
+        emit_llvm( p.functions, program, p.types, p.literals, p.sm, p.interner, p.modules, { .print = true } );
+    INFO( emitted.ir );
+    REQUIRE( emitted.error.empty() );
+    REQUIRE( emitted.ir.find( "define { double, i64 } @" ) != std::string::npos );
+    REQUIRE( emitted.ir.find( "load i64" ) == std::string::npos );
+    REQUIRE( emitted.ir.find( "freeze i32" ) != std::string::npos );
 }
 
 TEST_CASE( "emit_llvm_promotes_a_scalar_local_unless_debug_at_O1_names_it", "[codegen][llvm]" )
