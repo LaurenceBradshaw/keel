@@ -427,7 +427,9 @@ once its bodies are final, every member taken as pure until its body refutes it,
 function can be pure. A pure function also surely returns when it has no cycle in its blocks, no
 panic, is alone in its group without calling itself, and calls only functions that surely return:
 removing an unread call of anything else could end a program that would have run forever or
-panicked.
+panicked. In `hoist_invariants` a pure call writes nothing but its result, so it is no store that
+may reach a read. One that surely returns is not seen before a panic and moves out of a loop as an
+addition does; any other moves as a division does, only from where it runs on every turn.
 
 **Loop passes** run once per function after the rounds, from `-O1`, each at its level in the
 table: rotation, read forwarding, a round, then LICM, versioning, induction variables, branch flattening,

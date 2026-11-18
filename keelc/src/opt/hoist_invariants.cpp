@@ -48,8 +48,8 @@ struct Origin
 };
 
 // What a program may see before a panic: a call, drop or release. A store to memory is not, as nothing
-// reads memory after one.
-bool observed( const Function& func, const Statement& statement )
+// reads memory after one; nor is a pure call that surely returns.
+bool observed( const Function& func, const Purity* purity, const Statement& statement )
 {
     if( statement.kind == Statement_kind::Drop )
     {
@@ -59,7 +59,12 @@ bool observed( const Function& func, const Statement& statement )
     {
         return false;
     }
-    const Rvalue_kind kind = func.rvalue( statement ).kind;
+    const Rvalue&     value = func.rvalue( statement );
+    const Rvalue_kind kind  = value.kind;
+    if( kind == Rvalue_kind::Call && purity != nullptr && purity->removable( value ) )
+    {
+        return false;
+    }
     return kind == Rvalue_kind::Call || kind == Rvalue_kind::Indirect_call || kind == Rvalue_kind::Release;
 }
 
@@ -71,6 +76,7 @@ struct Scope
     const Loops&                            found;
     const Loop&                             loop;
     const Local_set&                        addressed;
+    const Purity*                           purity;  // none: every call may write anything
     std::vector<bool>                       own;     // by block: in the loop and in none inside it
     std::vector<u32>                        writes;  // by local: statements in the loop that write it or take its address
     std::vector<Block_id>                   exiting; // blocks in the loop with an edge out
@@ -82,13 +88,20 @@ struct Scope
     bool anywhere   = false;                         // a store through a pointer that may reach memory from before it
 
     Scope(
-        const Function& f, const Type_table& t, const Loops& l, u32 index, const std::vector<u32>& innermost, const Local_set& a
+        const Function&         f,
+        const Type_table&       t,
+        const Loops&            l,
+        u32                     index,
+        const std::vector<u32>& innermost,
+        const Local_set&        a,
+        const Purity*           p
     )
         : func( f ),
           table( t ),
           found( l ),
           loop( l.loops[index] ),
           addressed( a ),
+          purity( p ),
           own( f.blocks.size(), false ),
           writes( f.locals.size(), 0 ),
           sets( f.locals.size(), 0 ),
@@ -118,13 +131,18 @@ struct Scope
             for( const Statement& statement : func.statements_of( b ) )
             {
                 count( statement, writes );
-                if( !clobbers( func, addressed, statement ) )
+                // A pure call writes only its result.
+                const bool pure        = statement.kind == Statement_kind::Assign && pure_call( func.rvalue( statement ) );
+                const bool into_memory = statement.place.is_global() || has_deref_projection( func, statement.place ) ||
+                                         is_addressed( addressed, statement.place.local );
+                if( !clobbers( func, addressed, statement ) || ( pure && !into_memory ) )
                 {
                     continue;
                 }
                 const Rvalue_kind kind =
                     statement.kind == Statement_kind::Assign ? func.rvalue( statement ).kind : Rvalue_kind::Call;
-                if( kind == Rvalue_kind::Call || kind == Rvalue_kind::Indirect_call || kind == Rvalue_kind::Release ||
+                if( ( !pure &&
+                      ( kind == Rvalue_kind::Call || kind == Rvalue_kind::Indirect_call || kind == Rvalue_kind::Release ) ) ||
                     !has_deref_projection( func, statement.place ) )
                 {
                     everything = true;
@@ -148,6 +166,11 @@ struct Scope
                 }
             }
         }
+    }
+
+    bool pure_call( const Rvalue& value ) const
+    {
+        return value.kind == Rvalue_kind::Call && purity != nullptr && purity->pure( value );
     }
 
     // A write of `statement`'s local, or of a local whose address it takes, into `counts`. A store
@@ -347,6 +370,12 @@ struct Scope
         case Rvalue_kind::Run_data:
         case Rvalue_kind::Run_size:
             break;
+        case Rvalue_kind::Call:
+            if( !pure_call( value ) )
+            {
+                return false;
+            }
+            break;
         default:
             return false;
         }
@@ -371,7 +400,7 @@ struct Scope
         const Run<const Statement> statements = func.statements_of( block );
         for( u32 s = 0; s < index; ++s )
         {
-            if( observed( func, statements[s] ) )
+            if( observed( func, purity, statements[s] ) )
             {
                 return false;
             }
@@ -395,7 +424,7 @@ struct Scope
                 }
                 for( const Statement& statement : func.statements_of( b ) )
                 {
-                    if( observed( func, statement ) )
+                    if( observed( func, purity, statement ) )
                     {
                         return false;
                     }
@@ -420,11 +449,17 @@ struct Scope
     }
 };
 
-bool traps( const Function& func, const Rvalue& value )
+bool traps( const Scope& scope, const Rvalue& value )
 {
+    const Function& func = scope.func;
     if( value.kind == Rvalue_kind::Address_of )
     {
         return false;
+    }
+    // A pure call that may panic or not return waits as a division does.
+    if( value.kind == Rvalue_kind::Call && !scope.purity->removable( value ) )
+    {
+        return true;
     }
     if( value.kind == Rvalue_kind::Cast ||
         ( value.kind == Rvalue_kind::Binary && ( value.op == Token_kind::Slash || value.op == Token_kind::Percent ) ) )
@@ -511,7 +546,7 @@ bool hoist_one( Function& func, const Scope& scope, bool pin_named )
                     !( pin_named && func.locals[local].name.is_valid() ) )
                 {
                     const bool every_entry = scope.runs_unobserved( b, s );
-                    if( ( every_entry || !traps( func, value ) ) && read_only_after( scope, b, s, local, every_entry ) )
+                    if( ( every_entry || !traps( scope, value ) ) && read_only_after( scope, b, s, local, every_entry ) )
                     {
                         const u32 index             = block.first_statement + s;
                         func.statements[index].span = moved_at( statement->span );
@@ -985,7 +1020,7 @@ std::optional<std::vector<Blocked_read>>
 blocked_reads( const Function& func, const Type_table& table, const Loops& found, u32 index )
 {
     const Local_set addressed = addressed_locals_of( func );
-    const Scope     scope( func, table, found, index, innermost_of( func, found ), addressed );
+    const Scope     scope( func, table, found, index, innermost_of( func, found ), addressed, nullptr );
     if( scope.everything || scope.stores.empty() ||
         std::ranges::any_of( scope.loop.blocks, [&]( Block_id b ) { return !scope.own[b.v]; } ) )
     {
@@ -1035,7 +1070,9 @@ blocked_reads( const Function& func, const Type_table& table, const Loops& found
     return reads;
 }
 
-bool hoist_invariants( Function& func, const Type_table& table, Literal_pool& literals, bool pin_named, u32 copying )
+bool hoist_invariants(
+    Function& func, const Type_table& table, Literal_pool& literals, const Purity& purity, bool pin_named, u32 copying
+)
 {
     bool changed = false;
     for( bool again = true; again; )
@@ -1052,13 +1089,14 @@ bool hoist_invariants( Function& func, const Type_table& table, Literal_pool& li
             {
                 continue;
             }
-            while( hoist_one( func, Scope( func, table, found, l, innermost, addressed ), pin_named ) )
+            while( hoist_one( func, Scope( func, table, found, l, innermost, addressed, &purity ), pin_named ) )
             {
                 changed = true;
             }
             // After the reads, so its bound is a local.
-            again = hoist_range_check( func, Scope( func, table, found, l, innermost, addressed ), literals, pin_named ) ||
-                    version_range_checks( func, Scope( func, table, found, l, innermost, addressed ), literals, copying );
+            again =
+                hoist_range_check( func, Scope( func, table, found, l, innermost, addressed, &purity ), literals, pin_named ) ||
+                version_range_checks( func, Scope( func, table, found, l, innermost, addressed, &purity ), literals, copying );
             changed |= again;
         }
     }
@@ -1171,6 +1209,11 @@ struct Hoisted : Compiled
         return count;
     }
 
+    std::size_t calls() const
+    {
+        return in_loops( []( const Function&, const Rvalue& value ) { return value.kind == Rvalue_kind::Call; } );
+    }
+
     std::size_t by( Token_kind op ) const
     {
         return in_loops(
@@ -1179,6 +1222,17 @@ struct Hoisted : Compiled
         );
     }
 };
+
+// A pure function too large to inline: `x` stirred, then `last` added.
+std::string stirred( std::string_view last )
+{
+    std::string source = "i64 mix( i64 a, i64 b ) { i64 x = a; ";
+    for( int i = 0; i < 16; ++i )
+    {
+        source += "x = x * 31 + b; x = x ^ ( x >> 7 ); ";
+    }
+    return source + "return x + " + std::string( last ) + "; }\n";
+}
 
 } // namespace
 
@@ -1322,6 +1376,55 @@ TEST_CASE( "hoist_invariants_keeps_a_range_check_a_call_comes_before", "[opt][ho
                      "{ tick(); if( i >= len ) { panic( \"short\" ); } unsafe { d[ i ] = 1; } } }\n" );
     INFO( f.kir() );
     REQUIRE( f.exits() == 2 );
+}
+
+// `mix` is pure and surely returns, so it moves as a product would; `tick` calls an extern.
+TEST_CASE( "hoist_invariants_hoists_a_pure_call", "[opt][hoist_invariants]" )
+{
+    const Hoisted f(
+        "i64 f( i64 n, i64 a, i64 b ) { i64 t = 0; for( i64 i = 0; i < n; i += 1 ) "
+        "{ t += i * mix( a, b ); } return t; }\n" +
+        stirred( "0" )
+    );
+    INFO( f.kir() );
+    REQUIRE( f.calls() == 0 );
+
+    const Hoisted g( "i64 f( i64 n ) { i64 t = 0; for( i64 i = 0; i < n; i += 1 ) { tick(); t += i; } return t; }\n" );
+    INFO( g.kir() );
+    REQUIRE( g.calls() == 1 );
+}
+
+// A pure call is no store, so a read through a reference after it still moves.
+TEST_CASE( "hoist_invariants_hoists_a_read_past_a_pure_call", "[opt][hoist_invariants]" )
+{
+    const Hoisted f(
+        "i64 f( const ref Pair p, i64 n, i64 a ) { i64 t = 0; for( i64 i = 0; i < n; i += 1 ) "
+        "{ t += mix( a, i ) + p.a; } return t; }\n" +
+        stirred( "0" )
+    );
+    INFO( f.kir() );
+    REQUIRE( f.calls() == 1 );
+    REQUIRE( f.reads_through() == 0 );
+}
+
+// `mix` divides, so it may panic: it moves only from where it runs on every turn, as a division does.
+TEST_CASE( "hoist_invariants_keeps_a_pure_call_that_may_panic_under_a_branch", "[opt][hoist_invariants]" )
+{
+    const Hoisted f(
+        "i64 f( i64 n, i64 a, i64 b ) { i64 t = 0; for( i64 i = 0; i < n; i += 1 ) "
+        "{ t += i * mix( a, b ); } return t; }\n" +
+        stirred( "a / b" )
+    );
+    INFO( f.kir() );
+    REQUIRE( f.calls() == 0 );
+
+    const Hoisted g(
+        "i64 f( i64 n, i64 a, i64 b ) { i64 t = 0; for( i64 i = 0; i < n; i += 1 ) "
+        "{ if( i > 2 ) { t += mix( a, b ); } } return t; }\n" +
+        stirred( "a / b" )
+    );
+    INFO( g.kir() );
+    REQUIRE( g.calls() == 1 );
 }
 
 } // namespace keel

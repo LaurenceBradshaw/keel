@@ -514,7 +514,7 @@ Front_end run_front_end(
                     }
                     // After the round folds the checks that would exit before an invariant.
                     const u32 copying = build.level >= 2 ? build.loops->versioning : 0;
-                    if( hoist_invariants( current(), front.types.table(), literals, pin_named, copying ) )
+                    if( hoist_invariants( current(), front.types.table(), literals, purity, pin_named, copying ) )
                     {
                         verified( current(), "hoist_invariants" );
                     }
@@ -524,7 +524,7 @@ Front_end run_front_end(
                     {
                         verified( current(), "version_loops" );
                         // The copy reads its bounds once, so its checks can leave it.
-                        hoist_invariants( current(), front.types.table(), literals, pin_named, copying );
+                        hoist_invariants( current(), front.types.table(), literals, purity, pin_named, copying );
                         verified( current(), "hoist_invariants" );
                     }
                     // After hoisting, so `i * n` has an invariant `n`.

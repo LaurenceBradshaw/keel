@@ -1,0 +1,549 @@
+// opt/hoisted_pure_calls/main.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int64_t labs( int64_t );
+
+int64_t kl_18hoisted_pure_calls_3mix__3i64_3i64( int64_t, int64_t );
+int64_t kl_18hoisted_pure_calls_6divide__3i64_3i64( int64_t, int64_t );
+int64_t kl_18hoisted_pure_calls_6scaled__3i64_3i64_3i64( int64_t, int64_t, int64_t );
+int64_t kl_18hoisted_pure_calls_7guarded__3i64_3i64_3i64( int64_t, int64_t, int64_t );
+int64_t kl_18hoisted_pure_calls_9absolutes__3i64_3i64( int64_t, int64_t );
+int32_t kl_18hoisted_pure_calls_4main__( void );
+
+#line 8 "opt/hoisted_pure_calls/main.kl"
+int64_t kl_18hoisted_pure_calls_3mix__3i64_3i64( int64_t kl_a_1, int64_t kl_b_2 )
+{
+    int64_t kl_t0;
+    int64_t kl_t3;
+    int64_t kl_t4;
+    int64_t kl_t5;
+    int64_t kl_t6;
+    int64_t kl_t7;
+    int64_t kl_t8;
+    int64_t kl_t9;
+    int64_t kl_t10;
+    int64_t kl_t11;
+    int64_t kl_t12;
+    int64_t kl_t13;
+    int64_t kl_t14;
+    int64_t kl_t15;
+    int64_t kl_t16;
+    int64_t kl_t17;
+    int64_t kl_t18;
+    int64_t kl_t19;
+    int64_t kl_t20;
+    int64_t kl_t21;
+    int64_t kl_t22;
+    int64_t kl_t23;
+    int64_t kl_t24;
+    int64_t kl_t25;
+    int64_t kl_t26;
+    int64_t kl_t27;
+    int64_t kl_t28;
+    int64_t kl_t29;
+    int64_t kl_t30;
+    int64_t kl_t31;
+    int64_t kl_t32;
+    int64_t kl_t33;
+    int64_t kl_t34;
+#line 11 "opt/hoisted_pure_calls/main.kl"
+    kl_t3 = kl_a_1 * 31;
+#line 11 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_t3 + kl_b_2;
+    kl_t4 = kl_a_1 >> 7;
+#line 12 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_a_1 ^ kl_t4;
+    kl_t5 = kl_a_1 * 31;
+#line 13 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_t5 + kl_b_2;
+    kl_t6 = kl_a_1 >> 7;
+#line 14 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_a_1 ^ kl_t6;
+    kl_t7 = kl_a_1 * 31;
+#line 15 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_t7 + kl_b_2;
+    kl_t8 = kl_a_1 >> 7;
+#line 16 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_a_1 ^ kl_t8;
+    kl_t9 = kl_a_1 * 31;
+#line 17 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_t9 + kl_b_2;
+    kl_t10 = kl_a_1 >> 7;
+#line 18 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_a_1 ^ kl_t10;
+    kl_t11 = kl_a_1 * 31;
+#line 19 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_t11 + kl_b_2;
+    kl_t12 = kl_a_1 >> 7;
+#line 20 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_a_1 ^ kl_t12;
+    kl_t13 = kl_a_1 * 31;
+#line 21 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_t13 + kl_b_2;
+    kl_t14 = kl_a_1 >> 7;
+#line 22 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_a_1 ^ kl_t14;
+    kl_t15 = kl_a_1 * 31;
+#line 23 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_t15 + kl_b_2;
+    kl_t16 = kl_a_1 >> 7;
+#line 24 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_a_1 ^ kl_t16;
+    kl_t17 = kl_a_1 * 31;
+#line 25 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_t17 + kl_b_2;
+    kl_t18 = kl_a_1 >> 7;
+#line 26 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_a_1 ^ kl_t18;
+    kl_t19 = kl_a_1 * 31;
+#line 27 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_t19 + kl_b_2;
+    kl_t20 = kl_a_1 >> 7;
+#line 28 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_a_1 ^ kl_t20;
+    kl_t21 = kl_a_1 * 31;
+#line 29 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_t21 + kl_b_2;
+    kl_t22 = kl_a_1 >> 7;
+#line 30 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_a_1 ^ kl_t22;
+    kl_t23 = kl_a_1 * 31;
+#line 31 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_t23 + kl_b_2;
+    kl_t24 = kl_a_1 >> 7;
+#line 32 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_a_1 ^ kl_t24;
+    kl_t25 = kl_a_1 * 31;
+#line 33 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_t25 + kl_b_2;
+    kl_t26 = kl_a_1 >> 7;
+#line 34 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_a_1 ^ kl_t26;
+    kl_t27 = kl_a_1 * 31;
+#line 35 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_t27 + kl_b_2;
+    kl_t28 = kl_a_1 >> 7;
+#line 36 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_a_1 ^ kl_t28;
+    kl_t29 = kl_a_1 * 31;
+#line 37 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_t29 + kl_b_2;
+    kl_t30 = kl_a_1 >> 7;
+#line 38 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_a_1 ^ kl_t30;
+    kl_t31 = kl_a_1 * 31;
+#line 39 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_t31 + kl_b_2;
+    kl_t32 = kl_a_1 >> 7;
+#line 40 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_a_1 ^ kl_t32;
+    kl_t33 = kl_a_1 * 31;
+#line 41 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_t33 + kl_b_2;
+    kl_t34 = kl_a_1 >> 7;
+#line 42 "opt/hoisted_pure_calls/main.kl"
+    kl_a_1 = kl_a_1 ^ kl_t34;
+    kl_t0 = kl_a_1;
+#line 43 "opt/hoisted_pure_calls/main.kl"
+    return kl_t0;
+}
+
+#line 47 "opt/hoisted_pure_calls/main.kl"
+int64_t kl_18hoisted_pure_calls_6divide__3i64_3i64( int64_t kl_a_1, int64_t kl_b_2 )
+{
+    int64_t kl_t0;
+    int64_t kl_x_3;
+    int64_t kl_t4;
+    int64_t kl_t5;
+    int64_t kl_t6;
+    int64_t kl_t7;
+    int64_t kl_t8;
+    int64_t kl_t9;
+    int64_t kl_t10;
+    int64_t kl_t11;
+    int64_t kl_t12;
+    int64_t kl_t13;
+    int64_t kl_t14;
+    int64_t kl_t15;
+    int64_t kl_t16;
+    int64_t kl_t17;
+    int64_t kl_t18;
+    int64_t kl_t19;
+    int64_t kl_t20;
+    int64_t kl_t21;
+    int64_t kl_t22;
+    int64_t kl_t23;
+    int64_t kl_t24;
+    int64_t kl_t25;
+    int64_t kl_t26;
+    int64_t kl_t27;
+    int64_t kl_t28;
+    int64_t kl_t29;
+    int64_t kl_t30;
+    int64_t kl_t31;
+    int64_t kl_t32;
+    int64_t kl_t33;
+    int64_t kl_t34;
+    int64_t kl_t35;
+    bool kl_t36;
+    bool kl_t37;
+    int64_t kl_t38;
+#line 50 "opt/hoisted_pure_calls/main.kl"
+    kl_t4 = kl_a_1 * 31;
+#line 50 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_t4 + kl_b_2;
+    kl_t5 = kl_x_3 >> 7;
+#line 51 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_x_3 ^ kl_t5;
+    kl_t6 = kl_x_3 * 31;
+#line 52 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_t6 + kl_b_2;
+    kl_t7 = kl_x_3 >> 7;
+#line 53 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_x_3 ^ kl_t7;
+    kl_t8 = kl_x_3 * 31;
+#line 54 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_t8 + kl_b_2;
+    kl_t9 = kl_x_3 >> 7;
+#line 55 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_x_3 ^ kl_t9;
+    kl_t10 = kl_x_3 * 31;
+#line 56 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_t10 + kl_b_2;
+    kl_t11 = kl_x_3 >> 7;
+#line 57 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_x_3 ^ kl_t11;
+    kl_t12 = kl_x_3 * 31;
+#line 58 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_t12 + kl_b_2;
+    kl_t13 = kl_x_3 >> 7;
+#line 59 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_x_3 ^ kl_t13;
+    kl_t14 = kl_x_3 * 31;
+#line 60 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_t14 + kl_b_2;
+    kl_t15 = kl_x_3 >> 7;
+#line 61 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_x_3 ^ kl_t15;
+    kl_t16 = kl_x_3 * 31;
+#line 62 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_t16 + kl_b_2;
+    kl_t17 = kl_x_3 >> 7;
+#line 63 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_x_3 ^ kl_t17;
+    kl_t18 = kl_x_3 * 31;
+#line 64 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_t18 + kl_b_2;
+    kl_t19 = kl_x_3 >> 7;
+#line 65 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_x_3 ^ kl_t19;
+    kl_t20 = kl_x_3 * 31;
+#line 66 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_t20 + kl_b_2;
+    kl_t21 = kl_x_3 >> 7;
+#line 67 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_x_3 ^ kl_t21;
+    kl_t22 = kl_x_3 * 31;
+#line 68 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_t22 + kl_b_2;
+    kl_t23 = kl_x_3 >> 7;
+#line 69 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_x_3 ^ kl_t23;
+    kl_t24 = kl_x_3 * 31;
+#line 70 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_t24 + kl_b_2;
+    kl_t25 = kl_x_3 >> 7;
+#line 71 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_x_3 ^ kl_t25;
+    kl_t26 = kl_x_3 * 31;
+#line 72 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_t26 + kl_b_2;
+    kl_t27 = kl_x_3 >> 7;
+#line 73 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_x_3 ^ kl_t27;
+    kl_t28 = kl_x_3 * 31;
+#line 74 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_t28 + kl_b_2;
+    kl_t29 = kl_x_3 >> 7;
+#line 75 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_x_3 ^ kl_t29;
+    kl_t30 = kl_x_3 * 31;
+#line 76 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_t30 + kl_b_2;
+    kl_t31 = kl_x_3 >> 7;
+#line 77 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_x_3 ^ kl_t31;
+    kl_t32 = kl_x_3 * 31;
+#line 78 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_t32 + kl_b_2;
+    kl_t33 = kl_x_3 >> 7;
+#line 79 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_x_3 ^ kl_t33;
+    kl_t34 = kl_x_3 * 31;
+#line 80 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_t34 + kl_b_2;
+    kl_t35 = kl_x_3 >> 7;
+#line 81 "opt/hoisted_pure_calls/main.kl"
+    kl_x_3 = kl_x_3 ^ kl_t35;
+    kl_t36 = kl_b_2 != 0;
+#line 82 "opt/hoisted_pure_calls/main.kl"
+    if ( kl_t36 ) goto bb2; else goto bb1;
+    bb1:
+#line 82 "opt/hoisted_pure_calls/main.kl"
+    kl_rt_panic( "opt/hoisted_pure_calls/main.kl", 82, "division by zero: a / b" );
+    bb2:
+#line 82 "opt/hoisted_pure_calls/main.kl"
+    kl_t37 = kl_b_2 == -1;
+#line 82 "opt/hoisted_pure_calls/main.kl"
+    if ( kl_t37 ) goto bb3; else goto bb4;
+    bb3:
+#line 82 "opt/hoisted_pure_calls/main.kl"
+    kl_t38 = -kl_a_1;
+#line 82 "opt/hoisted_pure_calls/main.kl"
+    goto bb5;
+    bb4:
+#line 82 "opt/hoisted_pure_calls/main.kl"
+    kl_t38 = kl_a_1 / kl_b_2;
+#line 82 "opt/hoisted_pure_calls/main.kl"
+    goto bb5;
+    bb5:
+#line 82 "opt/hoisted_pure_calls/main.kl"
+    kl_t0 = kl_x_3 + kl_t38;
+#line 82 "opt/hoisted_pure_calls/main.kl"
+    return kl_t0;
+}
+
+#line 86 "opt/hoisted_pure_calls/main.kl"
+int64_t kl_18hoisted_pure_calls_6scaled__3i64_3i64_3i64( int64_t kl_n_1, int64_t kl_a_2, int64_t kl_b_3 )
+{
+    int64_t kl_t0;
+    int64_t kl_i_4;
+    bool kl_t5;
+    int64_t kl_t6;
+    int64_t kl_t7;
+#line 88 "opt/hoisted_pure_calls/main.kl"
+    kl_t0 = 0;
+    kl_i_4 = 0;
+#line 89 "opt/hoisted_pure_calls/main.kl"
+    kl_t5 = 0 < kl_n_1;
+#line 89 "opt/hoisted_pure_calls/main.kl"
+    if ( kl_t5 ) goto bb3; else goto bb2;
+    bb1:
+    kl_t0 = kl_t0 + kl_t7;
+#line 89 "opt/hoisted_pure_calls/main.kl"
+    kl_i_4 = kl_i_4 + 1;
+#line 89 "opt/hoisted_pure_calls/main.kl"
+    kl_t7 = kl_t7 + kl_t6;
+#line 89 "opt/hoisted_pure_calls/main.kl"
+    kl_t5 = kl_i_4 < kl_n_1;
+#line 89 "opt/hoisted_pure_calls/main.kl"
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb2:
+#line 93 "opt/hoisted_pure_calls/main.kl"
+    return kl_t0;
+    bb3:
+#line 91 "opt/hoisted_pure_calls/main.kl"
+    kl_t6 = kl_18hoisted_pure_calls_3mix__3i64_3i64( kl_a_2, kl_b_3 );
+#line 91 "opt/hoisted_pure_calls/main.kl"
+    kl_t7 = 0;
+#line 89 "opt/hoisted_pure_calls/main.kl"
+    goto bb1;
+#line 94 "opt/hoisted_pure_calls/main.kl"
+}
+
+#line 97 "opt/hoisted_pure_calls/main.kl"
+int64_t kl_18hoisted_pure_calls_7guarded__3i64_3i64_3i64( int64_t kl_n_1, int64_t kl_k_2, int64_t kl_a_3 )
+{
+    int64_t kl_t0;
+    int64_t kl_i_4;
+    bool kl_t5;
+    bool kl_t6;
+    int64_t kl_t7;
+#line 99 "opt/hoisted_pure_calls/main.kl"
+    kl_t0 = 0;
+    kl_i_4 = 0;
+#line 100 "opt/hoisted_pure_calls/main.kl"
+    kl_t5 = 0 < kl_n_1;
+#line 100 "opt/hoisted_pure_calls/main.kl"
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t6 = kl_i_4 == kl_k_2;
+#line 102 "opt/hoisted_pure_calls/main.kl"
+    if ( kl_t6 ) goto bb3; else goto bb4;
+    bb2:
+#line 108 "opt/hoisted_pure_calls/main.kl"
+    return kl_t0;
+    bb3:
+#line 104 "opt/hoisted_pure_calls/main.kl"
+    kl_t7 = kl_18hoisted_pure_calls_6divide__3i64_3i64( kl_a_3, 0 );
+#line 104 "opt/hoisted_pure_calls/main.kl"
+    kl_t0 = kl_t0 + kl_t7;
+#line 102 "opt/hoisted_pure_calls/main.kl"
+    goto bb4;
+    bb4:
+#line 106 "opt/hoisted_pure_calls/main.kl"
+    kl_t0 = kl_t0 + kl_i_4;
+#line 100 "opt/hoisted_pure_calls/main.kl"
+    kl_i_4 = kl_i_4 + 1;
+#line 100 "opt/hoisted_pure_calls/main.kl"
+    kl_t5 = kl_i_4 < kl_n_1;
+#line 100 "opt/hoisted_pure_calls/main.kl"
+    if ( kl_t5 ) goto bb1; else goto bb2;
+#line 109 "opt/hoisted_pure_calls/main.kl"
+}
+
+#line 112 "opt/hoisted_pure_calls/main.kl"
+int64_t kl_18hoisted_pure_calls_9absolutes__3i64_3i64( int64_t kl_n_1, int64_t kl_a_2 )
+{
+    int64_t kl_t0;
+    int64_t kl_i_3;
+    bool kl_t4;
+    int64_t kl_t5;
+#line 114 "opt/hoisted_pure_calls/main.kl"
+    kl_t0 = 0;
+    kl_i_3 = 0;
+#line 115 "opt/hoisted_pure_calls/main.kl"
+    kl_t4 = 0 < kl_n_1;
+#line 115 "opt/hoisted_pure_calls/main.kl"
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+#line 119 "opt/hoisted_pure_calls/main.kl"
+    kl_t5 = labs( kl_a_2 );
+#line 119 "opt/hoisted_pure_calls/main.kl"
+    kl_t0 = kl_t0 + kl_t5;
+#line 115 "opt/hoisted_pure_calls/main.kl"
+    kl_i_3 = kl_i_3 + 1;
+#line 115 "opt/hoisted_pure_calls/main.kl"
+    kl_t4 = kl_i_3 < kl_n_1;
+#line 115 "opt/hoisted_pure_calls/main.kl"
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb2:
+#line 122 "opt/hoisted_pure_calls/main.kl"
+    return kl_t0;
+}
+
+#line 125 "opt/hoisted_pure_calls/main.kl"
+int32_t kl_18hoisted_pure_calls_4main__( void )
+{
+    int32_t kl_t0;
+    int64_t kl_t1;
+    int64_t kl_t2;
+    bool kl_t3;
+    int64_t kl_t4;
+    bool kl_t5;
+    int64_t kl_t6;
+    bool kl_t7;
+    int64_t kl_i_8;
+    bool kl_t9;
+    int64_t kl_t10;
+    int64_t kl_i_11;
+    bool kl_t12;
+    int64_t kl_i_13;
+    bool kl_t14;
+    int64_t kl_t15;
+    int64_t kl_t16;
+#line 88 "opt/hoisted_pure_calls/main.kl"
+    kl_t1 = 0;
+    kl_i_13 = 0;
+#line 91 "opt/hoisted_pure_calls/main.kl"
+    kl_t15 = kl_18hoisted_pure_calls_3mix__3i64_3i64( 3, 7 );
+#line 91 "opt/hoisted_pure_calls/main.kl"
+    kl_t16 = 0;
+#line 89 "opt/hoisted_pure_calls/main.kl"
+    goto bb11;
+    bb1:
+#line 129 "opt/hoisted_pure_calls/main.kl"
+    kl_t0 = 1;
+#line 129 "opt/hoisted_pure_calls/main.kl"
+    return kl_t0;
+    bb2:
+#line 99 "opt/hoisted_pure_calls/main.kl"
+    kl_t4 = 0;
+    kl_i_11 = 0;
+#line 100 "opt/hoisted_pure_calls/main.kl"
+    goto bb10;
+    bb3:
+#line 133 "opt/hoisted_pure_calls/main.kl"
+    kl_t0 = 2;
+#line 133 "opt/hoisted_pure_calls/main.kl"
+    return kl_t0;
+    bb4:
+#line 114 "opt/hoisted_pure_calls/main.kl"
+    kl_t6 = 0;
+    kl_i_8 = 0;
+#line 115 "opt/hoisted_pure_calls/main.kl"
+    goto bb7;
+    bb5:
+#line 137 "opt/hoisted_pure_calls/main.kl"
+    kl_t0 = 3;
+#line 137 "opt/hoisted_pure_calls/main.kl"
+    return kl_t0;
+    bb6:
+    kl_t0 = 0;
+#line 139 "opt/hoisted_pure_calls/main.kl"
+    return kl_t0;
+    bb7:
+#line 119 "opt/hoisted_pure_calls/main.kl"
+    kl_t10 = labs( -3 );
+#line 119 "opt/hoisted_pure_calls/main.kl"
+    kl_t6 = kl_t6 + kl_t10;
+#line 115 "opt/hoisted_pure_calls/main.kl"
+    kl_i_8 = kl_i_8 + 1;
+#line 115 "opt/hoisted_pure_calls/main.kl"
+    kl_t9 = kl_i_8 < 4;
+#line 115 "opt/hoisted_pure_calls/main.kl"
+    if ( kl_t9 ) goto bb7; else goto bb8;
+    bb8:
+#line 135 "opt/hoisted_pure_calls/main.kl"
+    kl_t7 = kl_t6 != 12;
+#line 135 "opt/hoisted_pure_calls/main.kl"
+    if ( kl_t7 ) goto bb5; else goto bb6;
+    bb9:
+#line 131 "opt/hoisted_pure_calls/main.kl"
+    kl_t5 = kl_t4 != 10;
+#line 131 "opt/hoisted_pure_calls/main.kl"
+    if ( kl_t5 ) goto bb3; else goto bb4;
+    bb10:
+#line 106 "opt/hoisted_pure_calls/main.kl"
+    kl_t4 = kl_t4 + kl_i_11;
+#line 100 "opt/hoisted_pure_calls/main.kl"
+    kl_i_11 = kl_i_11 + 1;
+#line 100 "opt/hoisted_pure_calls/main.kl"
+    kl_t12 = kl_i_11 < 5;
+#line 100 "opt/hoisted_pure_calls/main.kl"
+    if ( kl_t12 ) goto bb10; else goto bb9;
+    bb11:
+#line 91 "opt/hoisted_pure_calls/main.kl"
+    kl_t1 = kl_t1 + kl_t16;
+#line 89 "opt/hoisted_pure_calls/main.kl"
+    kl_i_13 = kl_i_13 + 1;
+#line 89 "opt/hoisted_pure_calls/main.kl"
+    kl_t16 = kl_t16 + kl_t15;
+#line 89 "opt/hoisted_pure_calls/main.kl"
+    kl_t14 = kl_i_13 < 5;
+#line 89 "opt/hoisted_pure_calls/main.kl"
+    if ( kl_t14 ) goto bb11; else goto bb12;
+    bb12:
+#line 127 "opt/hoisted_pure_calls/main.kl"
+    kl_t2 = 10 * kl_t15;
+#line 127 "opt/hoisted_pure_calls/main.kl"
+    kl_t3 = kl_t1 != kl_t2;
+#line 127 "opt/hoisted_pure_calls/main.kl"
+    if ( kl_t3 ) goto bb1; else goto bb2;
+#line 140 "opt/hoisted_pure_calls/main.kl"
+}
+
+int main( void )
+{
+    int32_t kl_t0;
+#line 125 "opt/hoisted_pure_calls/main.kl"
+    kl_t0 = kl_18hoisted_pure_calls_4main__(  );
+#line 125 "opt/hoisted_pure_calls/main.kl"
+    return kl_t0;
+#line 125 "opt/hoisted_pure_calls/main.kl"
+}
+

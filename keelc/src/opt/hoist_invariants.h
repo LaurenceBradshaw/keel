@@ -7,6 +7,7 @@
 #include "common/literal_pool.h"
 #include "ir/kir.h"
 #include "ir/loops.h"
+#include "ir/purity.h"
 
 namespace keel
 {
@@ -16,9 +17,11 @@ namespace keel
 // test does not cover, as one range check, or, for a loop of at most `copying` statements, as a test
 // that none can fail choosing between the loop without them and a copy with them. A store of one
 // scalar kind does not reach a read of another (D89). Under `pin_named` a named local's statement
-// stays, and what moves takes the loop test's span. Whether it changed the function, normalising the
-// loops included.
-bool hoist_invariants( Function& func, const Type_table& table, Literal_pool& literals, bool pin_named, u32 copying );
+// stays, and what moves takes the loop test's span. A pure call is no store, and moves as a division
+// does unless it surely returns. Whether it changed the function, normalising the loops included.
+bool hoist_invariants(
+    Function& func, const Type_table& table, Literal_pool& literals, const Purity& purity, bool pin_named, u32 copying
+);
 
 // A read through a pointer whose place names no local the loop writes.
 struct Blocked_read

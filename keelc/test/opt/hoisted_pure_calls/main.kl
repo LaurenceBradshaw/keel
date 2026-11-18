@@ -1,0 +1,140 @@
+// -O2: a call of a pure function whose arguments a loop never changes moves before the loop, as any
+// invariant computation does; one that may panic moves only from where it runs on every turn, and an
+// extern's stays. Each check returns its own code.
+
+extern i64 labs( i64 n );
+
+// Pure and too large to inline; surely returns.
+i64 mix( i64 a, i64 b )
+{
+    i64 x = a;
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    return x;
+}
+
+// Pure, but divides, so it may panic.
+i64 divide( i64 a, i64 b )
+{
+    i64 x = a;
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    x = x * 31 + b;
+    x = x ^ ( x >> 7 );
+    return x + a / b;
+}
+
+// `mix` moves before the loop.
+i64 scaled( i64 n, i64 a, i64 b )
+{
+    i64 t = 0;
+    for( i64 i = 0; i < n; i += 1 )
+    {
+        t += i * mix( a, b );
+    }
+    return t;
+}
+
+// `divide` runs only when `i == k`, never here: moved before the loop, it would divide by zero.
+i64 guarded( i64 n, i64 k, i64 a )
+{
+    i64 t = 0;
+    for( i64 i = 0; i < n; i += 1 )
+    {
+        if( i == k )
+        {
+            t += divide( a, 0 );
+        }
+        t += i;
+    }
+    return t;
+}
+
+// An extern may do anything, so its call stays in the loop.
+i64 absolutes( i64 n, i64 a )
+{
+    i64 t = 0;
+    for( i64 i = 0; i < n; i += 1 )
+    {
+        unsafe
+        {
+            t += labs( a );
+        }
+    }
+    return t;
+}
+
+i32 main()
+{
+    if( scaled( 5, 3, 7 ) != 10 * mix( 3, 7 ) )
+    {
+        return 1;
+    }
+    if( guarded( 5, -1, 9 ) != 10 )
+    {
+        return 2;
+    }
+    if( absolutes( 4, -3 ) != 12 )
+    {
+        return 3;
+    }
+    return 0;
+}
