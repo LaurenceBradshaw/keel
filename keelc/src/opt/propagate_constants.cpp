@@ -361,6 +361,51 @@ std::vector<Local_id> same_sizes( const Function& func, const Local_set& tracked
     return same;
 }
 
+// `size( x )` reads as `n` where `x = run( p, const n )` is x's only write.
+void fold_run_sizes( Function& func )
+{
+    std::vector<u32>           writes( func.locals.size(), 0 );
+    std::vector<const Rvalue*> made( func.locals.size(), nullptr );
+    for( const Block_id b : func.blocks.ids() )
+    {
+        for( const Statement& s : func.statements_of( func.blocks[b] ) )
+        {
+            if( ( s.kind == Statement_kind::Assign || s.kind == Statement_kind::Drop ) && !s.place.is_global() &&
+                s.place.local.is_valid() )
+            {
+                ++writes[s.place.local.v];
+                const Rvalue* value   = s.kind == Statement_kind::Assign ? &func.rvalue( s ) : nullptr;
+                made[s.place.local.v] = value && s.place.is_whole_local() && value->kind == Rvalue_kind::Run_of &&
+                                                value->b.kind == Operand_kind::Constant
+                                            ? value
+                                            : nullptr;
+            }
+        }
+    }
+    const Local_set addressed = addressed_locals( func );
+    for( const Block_id b : func.blocks.ids() )
+    {
+        for( Statement& s : func.statements_of( func.blocks[b] ) )
+        {
+            if( s.kind != Statement_kind::Assign )
+            {
+                continue;
+            }
+            Rvalue& value = func.rvalue( s );
+            if( value.kind != Rvalue_kind::Run_size || value.a.kind != Operand_kind::Copy || !value.a.place.is_whole_local() ||
+                value.a.place.is_global() )
+            {
+                continue;
+            }
+            const u32 x = value.a.place.local.v;
+            if( writes[x] == 1 && made[x] && !addressed[x] )
+            {
+                value = use( made[x]->b );
+            }
+        }
+    }
+}
+
 struct Analysis
 {
     const Function&       func;
@@ -1262,6 +1307,7 @@ private:
 
 void propagate_constants( Function& func, const Type_table& types, Literal_pool& literals, bool relating )
 {
+    fold_run_sizes( func );
     Local_set             tracked = tracked_locals( func, types );
     std::vector<Local_id> same    = relating ? same_sizes( func, tracked ) : std::vector<Local_id> {};
     if( !relating )
@@ -1620,6 +1666,17 @@ TEST_CASE( "propagate_constants_drops_the_checks_a_runs_size_covers", "[opt][con
 
     REQUIRE( checks( "if( b.size != a.size ) { panic( \"the shapes differ\" ); }" ) == 0 );
     REQUIRE( checks( "" ) == 1 );
+}
+
+// The slice's run is made with a count of 2, so its `size` is that constant and the test folds.
+TEST_CASE( "propagate_constants_reads_the_size_of_a_run_of_a_constant_count", "[opt][constants]" )
+{
+    const Propagated p( "u64 f( const ref u64[4] a ) { const ref u64[] r = a[1..3]; return r.size == 2 ? 7 : 9; }\n" );
+    REQUIRE( p.assigns( 7 ) );
+    for( const Statement& s : p.first().statements )
+    {
+        REQUIRE( ( s.kind != Statement_kind::Assign || p.first().rvalue( s ).kind != Rvalue_kind::Run_size ) );
+    }
 }
 
 // Past `x == 3`, `x` is the constant.

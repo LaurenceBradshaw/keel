@@ -449,22 +449,19 @@ int32_t kl_16overflow_release_4main__( void )
     int32_t kl_t0;
     struct kl__run__L2u8__ref kl_r_2;
     uint8_t* kl_t3;
-    uint64_t kl_t4;
+    uint8_t* kl_t5;
     uint8_t* kl_t6;
-    uint8_t* kl_t7;
 #line 31 "../test_lib/console.kl"
-    kl_t7 = ( uint8_t* ) "\012";
+    kl_t6 = ( uint8_t* ) "\012";
 #line 35 "../test_lib/console.kl"
     kl_rt_write_i64( 1, -2147483648 );
-    kl_t6 = kl_t7 + 0;
+    kl_t5 = kl_t6 + 0;
 #line 36 "<prelude>"
-    kl_r_2 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t6, 1 };
+    kl_r_2 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t5, 1 };
 #line 17 "../test_lib/console.kl"
     kl_t3 = ( kl_r_2 ).data;
 #line 17 "../test_lib/console.kl"
-    kl_t4 = ( kl_r_2 ).size;
-#line 17 "../test_lib/console.kl"
-    kl_rt_write( 1, kl_t3, kl_t4 );
+    kl_rt_write( 1, kl_t3, 1 );
 #line 13 "codegen/overflow_release/main.kl"
     kl_t0 = 0;
 #line 13 "codegen/overflow_release/main.kl"

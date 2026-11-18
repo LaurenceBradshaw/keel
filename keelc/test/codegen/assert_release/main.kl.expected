@@ -448,39 +448,33 @@ void kl_14assert_release_5Noisy__RQ14assert_release5Noisy__ctor( struct kl_14ass
 {
     struct kl__run__L2u8__ref kl_r_2;
     uint8_t* kl_t3;
-    uint64_t kl_t4;
-    struct kl__run__L2u8__ref kl_r_6;
-    uint8_t* kl_t7;
-    uint64_t kl_t8;
+    struct kl__run__L2u8__ref kl_r_5;
+    uint8_t* kl_t6;
+    uint8_t* kl_t8;
+    uint8_t* kl_t9;
     uint8_t* kl_t10;
     uint8_t* kl_t11;
-    uint8_t* kl_t12;
-    uint8_t* kl_t13;
 #line 10 "codegen/assert_release/main.kl"
     ( *kl_this_1 ).kl_ok_ = false;
-    kl_t12 = ( uint8_t* ) "built";
+    kl_t10 = ( uint8_t* ) "built";
 #line 24 "../test_lib/console.kl"
-    kl_t13 = ( uint8_t* ) "\012";
+    kl_t11 = ( uint8_t* ) "\012";
 #line 36 "<prelude>"
-    kl_t11 = kl_t12 + 0;
+    kl_t9 = kl_t10 + 0;
 #line 36 "<prelude>"
-    kl_r_2 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t11, 5 };
+    kl_r_2 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t9, 5 };
 #line 17 "../test_lib/console.kl"
     kl_t3 = ( kl_r_2 ).data;
 #line 17 "../test_lib/console.kl"
-    kl_t4 = ( kl_r_2 ).size;
-#line 17 "../test_lib/console.kl"
-    kl_rt_write( 1, kl_t3, kl_t4 );
+    kl_rt_write( 1, kl_t3, 5 );
 #line 36 "<prelude>"
-    kl_t10 = kl_t13 + 0;
+    kl_t8 = kl_t11 + 0;
 #line 36 "<prelude>"
-    kl_r_6 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t10, 1 };
+    kl_r_5 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t8, 1 };
 #line 17 "../test_lib/console.kl"
-    kl_t7 = ( kl_r_6 ).data;
+    kl_t6 = ( kl_r_5 ).data;
 #line 17 "../test_lib/console.kl"
-    kl_t8 = ( kl_r_6 ).size;
-#line 17 "../test_lib/console.kl"
-    kl_rt_write( 1, kl_t7, kl_t8 );
+    kl_rt_write( 1, kl_t6, 1 );
 #line 12 "codegen/assert_release/main.kl"
     return;
 #line 12 "codegen/assert_release/main.kl"
@@ -491,39 +485,33 @@ void kl_14assert_release_5Noisy__dtor( struct kl_14assert_release_Noisy* kl_this
 {
     struct kl__run__L2u8__ref kl_r_2;
     uint8_t* kl_t3;
-    uint64_t kl_t4;
-    struct kl__run__L2u8__ref kl_r_6;
-    uint8_t* kl_t7;
-    uint64_t kl_t8;
+    struct kl__run__L2u8__ref kl_r_5;
+    uint8_t* kl_t6;
+    uint8_t* kl_t8;
+    uint8_t* kl_t9;
     uint8_t* kl_t10;
     uint8_t* kl_t11;
-    uint8_t* kl_t12;
-    uint8_t* kl_t13;
     ( void ) kl_this_1;
 #line 16 "codegen/assert_release/main.kl"
-    kl_t12 = ( uint8_t* ) "dropped";
+    kl_t10 = ( uint8_t* ) "dropped";
 #line 24 "../test_lib/console.kl"
-    kl_t13 = ( uint8_t* ) "\012";
+    kl_t11 = ( uint8_t* ) "\012";
 #line 36 "<prelude>"
-    kl_t11 = kl_t12 + 0;
+    kl_t9 = kl_t10 + 0;
 #line 36 "<prelude>"
-    kl_r_2 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t11, 7 };
+    kl_r_2 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t9, 7 };
 #line 17 "../test_lib/console.kl"
     kl_t3 = ( kl_r_2 ).data;
 #line 17 "../test_lib/console.kl"
-    kl_t4 = ( kl_r_2 ).size;
-#line 17 "../test_lib/console.kl"
-    kl_rt_write( 1, kl_t3, kl_t4 );
+    kl_rt_write( 1, kl_t3, 7 );
 #line 36 "<prelude>"
-    kl_t10 = kl_t13 + 0;
+    kl_t8 = kl_t11 + 0;
 #line 36 "<prelude>"
-    kl_r_6 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t10, 1 };
+    kl_r_5 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t8, 1 };
 #line 17 "../test_lib/console.kl"
-    kl_t7 = ( kl_r_6 ).data;
+    kl_t6 = ( kl_r_5 ).data;
 #line 17 "../test_lib/console.kl"
-    kl_t8 = ( kl_r_6 ).size;
-#line 17 "../test_lib/console.kl"
-    kl_rt_write( 1, kl_t7, kl_t8 );
+    kl_rt_write( 1, kl_t6, 1 );
 #line 17 "codegen/assert_release/main.kl"
     return;
 #line 17 "codegen/assert_release/main.kl"
@@ -545,38 +533,32 @@ bool kl_14assert_release_5shout__( void )
     bool kl_t0;
     struct kl__run__L2u8__ref kl_r_1;
     uint8_t* kl_t2;
-    uint64_t kl_t3;
-    struct kl__run__L2u8__ref kl_r_5;
-    uint8_t* kl_t6;
-    uint64_t kl_t7;
+    struct kl__run__L2u8__ref kl_r_4;
+    uint8_t* kl_t5;
+    uint8_t* kl_t7;
+    uint8_t* kl_t8;
     uint8_t* kl_t9;
     uint8_t* kl_t10;
-    uint8_t* kl_t11;
-    uint8_t* kl_t12;
 #line 29 "codegen/assert_release/main.kl"
-    kl_t11 = ( uint8_t* ) "ran";
+    kl_t9 = ( uint8_t* ) "ran";
 #line 24 "../test_lib/console.kl"
-    kl_t12 = ( uint8_t* ) "\012";
+    kl_t10 = ( uint8_t* ) "\012";
 #line 36 "<prelude>"
-    kl_t10 = kl_t11 + 0;
+    kl_t8 = kl_t9 + 0;
 #line 36 "<prelude>"
-    kl_r_1 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t10, 3 };
+    kl_r_1 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t8, 3 };
 #line 17 "../test_lib/console.kl"
     kl_t2 = ( kl_r_1 ).data;
 #line 17 "../test_lib/console.kl"
-    kl_t3 = ( kl_r_1 ).size;
-#line 17 "../test_lib/console.kl"
-    kl_rt_write( 1, kl_t2, kl_t3 );
+    kl_rt_write( 1, kl_t2, 3 );
 #line 36 "<prelude>"
-    kl_t9 = kl_t12 + 0;
+    kl_t7 = kl_t10 + 0;
 #line 36 "<prelude>"
-    kl_r_5 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t9, 1 };
+    kl_r_4 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t7, 1 };
 #line 17 "../test_lib/console.kl"
-    kl_t6 = ( kl_r_5 ).data;
+    kl_t5 = ( kl_r_4 ).data;
 #line 17 "../test_lib/console.kl"
-    kl_t7 = ( kl_r_5 ).size;
-#line 17 "../test_lib/console.kl"
-    kl_rt_write( 1, kl_t6, kl_t7 );
+    kl_rt_write( 1, kl_t5, 1 );
 #line 30 "codegen/assert_release/main.kl"
     kl_t0 = false;
 #line 30 "codegen/assert_release/main.kl"
@@ -589,38 +571,32 @@ int32_t kl_14assert_release_4main__( void )
     int32_t kl_t0;
     struct kl__run__L2u8__ref kl_r_1;
     uint8_t* kl_t2;
-    uint64_t kl_t3;
-    struct kl__run__L2u8__ref kl_r_5;
-    uint8_t* kl_t6;
-    uint64_t kl_t7;
+    struct kl__run__L2u8__ref kl_r_4;
+    uint8_t* kl_t5;
+    uint8_t* kl_t7;
+    uint8_t* kl_t8;
     uint8_t* kl_t9;
     uint8_t* kl_t10;
-    uint8_t* kl_t11;
-    uint8_t* kl_t12;
 #line 39 "codegen/assert_release/main.kl"
-    kl_t11 = ( uint8_t* ) "done";
+    kl_t9 = ( uint8_t* ) "done";
 #line 24 "../test_lib/console.kl"
-    kl_t12 = ( uint8_t* ) "\012";
+    kl_t10 = ( uint8_t* ) "\012";
 #line 36 "<prelude>"
-    kl_t10 = kl_t11 + 0;
+    kl_t8 = kl_t9 + 0;
 #line 36 "<prelude>"
-    kl_r_1 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t10, 4 };
+    kl_r_1 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t8, 4 };
 #line 17 "../test_lib/console.kl"
     kl_t2 = ( kl_r_1 ).data;
 #line 17 "../test_lib/console.kl"
-    kl_t3 = ( kl_r_1 ).size;
-#line 17 "../test_lib/console.kl"
-    kl_rt_write( 1, kl_t2, kl_t3 );
+    kl_rt_write( 1, kl_t2, 4 );
 #line 36 "<prelude>"
-    kl_t9 = kl_t12 + 0;
+    kl_t7 = kl_t10 + 0;
 #line 36 "<prelude>"
-    kl_r_5 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t9, 1 };
+    kl_r_4 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t7, 1 };
 #line 17 "../test_lib/console.kl"
-    kl_t6 = ( kl_r_5 ).data;
+    kl_t5 = ( kl_r_4 ).data;
 #line 17 "../test_lib/console.kl"
-    kl_t7 = ( kl_r_5 ).size;
-#line 17 "../test_lib/console.kl"
-    kl_rt_write( 1, kl_t6, kl_t7 );
+    kl_rt_write( 1, kl_t5, 1 );
 #line 40 "codegen/assert_release/main.kl"
     kl_t0 = 0;
 #line 40 "codegen/assert_release/main.kl"
