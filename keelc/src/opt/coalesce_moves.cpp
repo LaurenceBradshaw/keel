@@ -279,9 +279,9 @@ bool indexes( const Function& func, Local_id local )
 }
 
 // Holds a value something may still see. `written` keeps a dead store: it still lands in the storage.
-bool occupied( const Occupancy& state, const Local_set& alive, const Local_set& addressed, Local_id local, bool written )
+bool occupied( const Occupancy& state, const Local_set& alive, const Local_set& exposed, Local_id local, bool written )
 {
-    return state.initialised[local.v] && ( alive[local.v] || addressed[local.v] || written );
+    return state.initialised[local.v] && ( alive[local.v] || exposed[local.v] || written );
 }
 
 std::optional<Candidate> candidate_at( const Function& func, u32 index )
@@ -391,7 +391,7 @@ bool interferes(
     const std::vector<Occupancy>& entry,
     const std::vector<Occupancy>& after,
     const Liveness&               live,
-    const Local_set&              addressed
+    const Liveness&               exposed
 )
 {
     // A dead shell left in `kept`'s storage is fine; a value still wanted is not. Outside its storage,
@@ -401,10 +401,15 @@ bool interferes(
         [&]( const Statement& statement )
         { return statement.kind == Statement_kind::Storage_live && names( statement.place, kept ); }
     );
-    const auto clash = [&]( const Occupancy& s, const Local_set& alive, bool gone_written, bool kept_written, bool ends_kept )
+    const auto clash = [&]( const Occupancy& s,
+                            const Local_set& alive,
+                            const Local_set& reached,
+                            bool             gone_written,
+                            bool             kept_written,
+                            bool             ends_kept )
     {
-        return occupied( s, alive, addressed, gone, gone_written ) &&
-               ( occupied( s, alive, addressed, kept, kept_written ) || ( s.storage_dead[kept.v] && ( scoped || ends_kept ) ) );
+        return occupied( s, alive, reached, gone, gone_written ) &&
+               ( occupied( s, alive, reached, kept, kept_written ) || ( s.storage_dead[kept.v] && ( scoped || ends_kept ) ) );
     };
 
     for( const Block_id b : func.blocks.ids() )
@@ -412,7 +417,7 @@ bool interferes(
         const Block&     block = func.blocks[b];
         const Occupancy* state = &entry[b.v];
 
-        if( clash( *state, live.on_entry[b.v], false, false, false ) )
+        if( clash( *state, live.on_entry[b.v], exposed.on_entry[b.v], false, false, false ) )
         {
             return true;
         }
@@ -434,7 +439,14 @@ bool interferes(
             state = &after[at];
 
             const bool ends_kept = statement.kind == Statement_kind::Storage_dead && names( statement.place, kept );
-            if( clash( *state, live.after[at], writes( func, statement, gone ), writes( func, statement, kept ), ends_kept ) )
+            if( clash(
+                    *state,
+                    live.after[at],
+                    exposed.after[at],
+                    writes( func, statement, gone ),
+                    writes( func, statement, kept ),
+                    ends_kept
+                ) )
             {
                 return true;
             }
@@ -550,7 +562,7 @@ bool field_interferes(
     const std::vector<Occupancy>& entry,
     const std::vector<Occupancy>& after,
     const Liveness&               live,
-    const Local_set&              addressed
+    const Liveness&               exposed
 )
 {
     // Which statements run while `gone` holds a value.
@@ -559,13 +571,14 @@ bool field_interferes(
     for( const Block_id b : func.blocks.ids() )
     {
         const Block& block = func.blocks[b];
-        bool         was   = occupied( entry[b.v], live.on_entry[b.v], addressed, c.gone, false );
+        bool         was   = occupied( entry[b.v], live.on_entry[b.v], exposed.on_entry[b.v], c.gone, false );
 
         for( u32 i = 0; i < block.statement_count; ++i )
         {
             const u32        at        = func.statements_of( block ).position( i );
             const Statement& statement = func.statements[at];
-            const bool       now = occupied( after[at], live.after[at], addressed, c.gone, writes( func, statement, c.gone ) );
+            const bool       now =
+                occupied( after[at], live.after[at], exposed.after[at], c.gone, writes( func, statement, c.gone ) );
             // `was` catches the statement that reads `gone` for the last time.
             in_life[at] = was || now;
 
@@ -751,15 +764,15 @@ bool mark_deletions(
 
 // Merges every candidate that does not clash and shares no local with one already taken; a merge
 // changes facts only about its own locals, so one analysis judges them all. Answers whether any merged.
-bool coalesce_round( Function& func, const Ast& ast )
+bool coalesce_round( Function& func, const Ast& ast, const Type_table& types )
 {
     const Slot_map               slots( func );
     const std::vector<Occupancy> entry = occupancy_on_entry( func, slots );
     const std::vector<Occupancy> after = occupancy_after( func, slots, entry );
     std::vector<Candidate>       chosen;
     Local_set                    taken( func.locals.size(), false );
-    const Liveness               live      = live_locals( func );
-    const Local_set              addressed = addressed_locals( func );
+    const Liveness               live    = live_locals( func );
+    const Liveness               exposed = exposed_locals( func, types, live );
     for( u32 index = 0; index < func.statements.size(); ++index )
     {
         std::optional<Candidate> candidate = candidate_at( func, index );
@@ -774,8 +787,8 @@ bool coalesce_round( Function& func, const Ast& ast )
         }
 
         bool clash = candidate->into.num_projections == 0
-                         ? interferes( func, candidate->kept, candidate->gone, entry, after, live, addressed )
-                         : field_interferes( ast, func, *candidate, entry, after, live, addressed );
+                         ? interferes( func, candidate->kept, candidate->gone, entry, after, live, exposed )
+                         : field_interferes( ast, func, *candidate, entry, after, live, exposed );
 
         // `_6 = call f(); storage_live _10; _10 = move _6`: `_10`'s storage is not live for all of `_6`'s
         // value, so `_6` keeps it instead. Neither may be dropped: `_10` may pass its value on without a
@@ -785,7 +798,7 @@ bool coalesce_round( Function& func, const Ast& ast )
         {
             std::swap( candidate->kept, candidate->gone );
             candidate->into = Place { .local = candidate->kept };
-            clash           = interferes( func, candidate->kept, candidate->gone, entry, after, live, addressed );
+            clash           = interferes( func, candidate->kept, candidate->gone, entry, after, live, exposed );
 
             // The temporary becomes the named local it moved into.
             Local& kept = func.locals[candidate->kept];
@@ -863,9 +876,9 @@ bool coalesce_round( Function& func, const Ast& ast )
 
 } // namespace
 
-void coalesce_moves( Function& func, const Ast& ast )
+void coalesce_moves( Function& func, const Ast& ast, const Type_table& types )
 {
-    while( coalesce_round( func, ast ) )
+    while( coalesce_round( func, ast, types ) )
     {
         // A round leaves for the next any candidate sharing a local with a merge.
     }
@@ -989,7 +1002,7 @@ u32 rounds_of( std::string_view source )
     settle_debug( func, p.literals.add_integer( 0 ) );
     simplify( func, p.literals );
     u32 rounds = 0;
-    while( coalesce_round( func, p.ast ) )
+    while( coalesce_round( func, p.ast, p.types.table() ) )
     {
         ++rounds;
     }
@@ -1359,6 +1372,34 @@ TEST_CASE( "coalesce_moves_keeps_a_call_result_where_it_lies_in_a_loop", "[opt][
     REQUIRE( p.clean() );
     REQUIRE( p.well_formed() );
     REQUIRE( p.local_copies() == 0 );
+}
+
+// A run lent to a call is gone after it, so the array is a value again; a pointer the callee may keep is not.
+TEST_CASE( "coalesce_moves_merges_an_array_once_its_run_is_gone", "[opt][coalesce]" )
+{
+    SECTION( "a run of it was passed" )
+    {
+        const Optimised p(
+            "i32 f() { i32[4] a = [ 1, 2, 3, 4 ]; fill( ref a[0..4] ); i32[4] b = a; return b[1] + b[2]; }\n"
+            "void fill( ref i32[] r ) { r[1] = 7; }\n",
+            std::nullopt
+        );
+        REQUIRE( p.clean() );
+        REQUIRE( p.well_formed() );
+        REQUIRE( p.local_copies() == 0 );
+    }
+
+    SECTION( "a pointer to it was passed" )
+    {
+        const Optimised p(
+            "i32 f() { i32[4] a = [ 1, 2, 3, 4 ]; poke( ref a ); i32[4] b = a; return b[1] + b[2]; }\n"
+            "void poke( ref i32[4] r ) { r[1] = 7; }\n",
+            std::nullopt
+        );
+        REQUIRE( p.clean() );
+        REQUIRE( p.well_formed() );
+        REQUIRE( p.local_copies() == 1 );
+    }
 }
 
 TEST_CASE( "coalesce_moves_merges_independent_moves_in_one_round", "[opt][coalesce]" )

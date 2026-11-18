@@ -25,4 +25,9 @@ Liveness live_locals( const Function& func );
 // pointer past its constructor.
 Local_set addressed_locals( const Function& func );
 
+// The addressed locals a pointer may reach at each point: those a live pointer is derived from, and
+// everywhere those whose pointer escapes, stored to memory or passed to a call as anything but a run.
+// A statement that reads the pointer reaches them too, so `after` holds them for it.
+Liveness exposed_locals( const Function& func, const Type_table& types, const Liveness& live );
+
 } // namespace keel

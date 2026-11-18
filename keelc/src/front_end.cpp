@@ -378,7 +378,7 @@ Front_end run_front_end(
                 verified( function, "collapse_borrows" );
                 if( build.level >= 2 )
                 {
-                    coalesce_moves( function, ast );
+                    coalesce_moves( function, ast, front.types.table() );
                     verified( function, "coalesce_moves" );
                 }
             }
@@ -429,7 +429,7 @@ Front_end run_front_end(
                 {
                     if( build.level >= 2 )
                     {
-                        coalesce_moves( current(), ast );
+                        coalesce_moves( current(), ast, front.types.table() );
                         verified( current(), "coalesce_moves" );
                     }
                     // Merging two locals can make `a != a`.

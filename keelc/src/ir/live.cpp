@@ -218,6 +218,151 @@ Local_set addressed_locals( const Function& func )
     return addressed;
 }
 
+Liveness exposed_locals( const Function& func, const Type_table& types, const Liveness& live )
+{
+    const std::size_t      n         = func.locals.size();
+    const Local_set        addressed = addressed_locals( func );
+    std::vector<Local_set> roots( n ); // the locals each local's value may point into; empty for none
+    Local_set              escaped( n, false );
+
+    const auto add = [&]( Local_set& into, const Local_set& from )
+    {
+        if( !from.any() )
+        {
+            return false;
+        }
+        if( into.size() == 0 )
+        {
+            into.resize( n, false );
+        }
+        return into.join( from );
+    };
+    // What a read of `place` carries: a pointee's value points into nothing of this function's.
+    const auto carried = [&]( const Place& place, Local_set& into )
+    {
+        if( !place.is_global() && !has_deref_projection( func, place ) && roots[place.local.v].size() != 0 )
+        {
+            into.join( roots[place.local.v] );
+        }
+    };
+
+    bool changed = true;
+    while( changed )
+    {
+        changed = false;
+        for( const Statement& statement : func.statements )
+        {
+            Local_set carries( n, false );
+            if( statement.kind == Statement_kind::Drop )
+            {
+                carried( statement.place, carries );
+                changed |= add( escaped, carries );
+                continue;
+            }
+            if( statement.kind != Statement_kind::Assign )
+            {
+                continue;
+            }
+
+            const Rvalue& value = func.rvalue( statement );
+            if( value.kind == Rvalue_kind::Address_of )
+            {
+                const Place& place = value.a.place;
+                if( value.address_purpose == Address_purpose::Initialise || place.is_global() )
+                {
+                    continue;
+                }
+                if( has_deref_projection( func, place ) )
+                {
+                    const Local_id pointer = place.local;
+                    if( roots[pointer.v].size() != 0 )
+                    {
+                        carries.join( roots[pointer.v] );
+                    }
+                }
+                else
+                {
+                    carries[place.local.v] = true;
+                }
+            }
+            else
+            {
+                for_each_operand(
+                    value,
+                    [&]( const Operand& operand )
+                    {
+                        if( !operand.has_place() )
+                        {
+                            return;
+                        }
+                        Local_set one( n, false );
+                        carried( operand.place, one );
+                        // A callee cannot keep a run past its call; any other pointer it may.
+                        const bool call = value.kind == Rvalue_kind::Call || value.kind == Rvalue_kind::Indirect_call;
+                        if( call && !types.is_run( operand.type ) && !types.is_run_pointer( operand.type ) )
+                        {
+                            changed |= add( escaped, one );
+                        }
+                        carries.join( one );
+                    }
+                );
+            }
+
+            const Place& into = statement.place;
+            if( into.is_global() || has_deref_projection( func, into ) || addressed[into.local.v] )
+            {
+                changed |= add( escaped, carries );
+            }
+            else
+            {
+                changed |= add( roots[into.local.v], carries );
+            }
+        }
+    }
+
+    std::vector<Local_id> pointers;
+    for( u32 i = 0; i < n; ++i )
+    {
+        if( roots[i].size() != 0 )
+        {
+            pointers.push_back( Local_id { i } );
+        }
+    }
+    const auto reached = [&]( const Local_set& alive, Local_set& into )
+    {
+        for( const Local_id pointer : pointers )
+        {
+            if( alive[pointer.v] )
+            {
+                into.join( roots[pointer.v] );
+            }
+        }
+    };
+    Local_set always( n, false );
+    for( u32 i = 0; i < n; ++i )
+    {
+        always[i] = addressed[i] && escaped[i];
+    }
+
+    Liveness exposed;
+    exposed.on_entry.assign( func.blocks.size(), always );
+    exposed.after.assign( func.statements.size(), always );
+    for( const Block_id b : func.blocks.ids() )
+    {
+        reached( live.on_entry[b.v], exposed.on_entry[b.v] );
+        const Local_set* before = &live.on_entry[b.v];
+        for( u32 i = 0; i < func.blocks[b].statement_count; ++i )
+        {
+            const u32 at = func.statements_of( b ).position( i );
+            reached( *before, exposed.after[at] );
+            reached( live.after[at], exposed.after[at] );
+            before = &live.after[at];
+        }
+    }
+
+    return exposed;
+}
+
 } // namespace keel
 #ifdef ENABLE_UNIT_TESTS
 #include <algorithm>

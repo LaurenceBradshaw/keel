@@ -115,9 +115,8 @@ int32_t kl_3opt_6summed__( void )
 int32_t kl_3opt_7aliased__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
-#line 75 "opt/propagation.kl"
+#line 74 "opt/propagation.kl"
     kl_t0 = kl_a_1;
-#line 75 "opt/propagation.kl"
     return kl_t0;
 }
 

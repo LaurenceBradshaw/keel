@@ -4,10 +4,11 @@
 #pragma once
 #include "ast/ast.h"
 #include "ir/kir.h"
+#include "sema/type.h"
 
 namespace keel
 {
 // Merges the two sides of `a = move b`, a local into a local or a field, where their values are never
 // alive at once; release only.
-void coalesce_moves( Function& func, const Ast& ast );
+void coalesce_moves( Function& func, const Ast& ast, const Type_table& types );
 } // namespace keel

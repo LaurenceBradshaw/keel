@@ -2683,7 +2683,7 @@ int32_t kl_2kl6string_16operator_compare__SQ2kl6string_Q2kl6string( struct kl_2k
     bool kl_t26;
     struct kl_7prelude_str kl_t27;
     uint8_t* kl_t28;
-    uint8_t* kl_t29;
+    bool kl_t29;
     bool kl_t30;
     bool kl_t31;
     bool kl_t32;
@@ -2698,8 +2698,7 @@ int32_t kl_2kl6string_16operator_compare__SQ2kl6string_Q2kl6string( struct kl_2k
     bool kl_t41;
     bool kl_t42;
     bool kl_t43;
-    bool kl_t44;
-    uint8_t* kl_t45;
+    uint8_t* kl_t44;
 #line 143 "<kl>/string.kl"
     kl_t4 = ( *kl_this_1 ).kl_size_;
 #line 143 "<kl>/string.kl"
@@ -2765,8 +2764,6 @@ int32_t kl_2kl6string_16operator_compare__SQ2kl6string_Q2kl6string( struct kl_2k
 #line 515 "<kl>/string.kl"
     kl_t20 = kl_t18 + kl_i_7;
 #line 177 "<kl>/string.kl"
-    kl_t25 = kl_t28;
-#line 177 "<kl>/string.kl"
     kl_t21 = &( *kl_t25 );
 #line 515 "<kl>/string.kl"
     kl_t22 = ( *kl_t20 ) > ( *kl_t21 );
@@ -2787,9 +2784,9 @@ int32_t kl_2kl6string_16operator_compare__SQ2kl6string_Q2kl6string( struct kl_2k
 #line 170 "<kl>/string.kl"
     kl_t26 = kl_i_7 >= kl_t5;
 #line 177 "<kl>/string.kl"
-    kl_t28 = kl_t45 + kl_i_7;
+    kl_t25 = kl_t44 + kl_i_7;
 #line 177 "<kl>/string.kl"
-    kl_t14 = &( *kl_t28 );
+    kl_t14 = &( *kl_t25 );
 #line 511 "<kl>/string.kl"
     kl_t15 = ( *kl_t13 ) < ( *kl_t14 );
 #line 511 "<kl>/string.kl"
@@ -2806,51 +2803,51 @@ int32_t kl_2kl6string_16operator_compare__SQ2kl6string_Q2kl6string( struct kl_2k
     goto bb1;
     bb17:
 #line 159 "<kl>/string.kl"
-    kl_t29 = ( *kl_this_1 ).kl_data_ + 0;
+    kl_t28 = ( *kl_this_1 ).kl_data_ + 0;
 #line 159 "<kl>/string.kl"
-    kl_t16 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t29, kl_t4 };
+    kl_t16 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t28, kl_t4 };
 #line 515 "<kl>/string.kl"
     kl_t17 = ( kl_t16 ).size;
 #line 515 "<kl>/string.kl"
     kl_t18 = ( kl_t16 ).data;
 #line 159 "<kl>/string.kl"
-    kl_t9 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t29, kl_t4 };
+    kl_t9 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t28, kl_t4 };
 #line 511 "<kl>/string.kl"
     kl_t10 = ( kl_t9 ).size;
 #line 511 "<kl>/string.kl"
     kl_t11 = ( kl_t9 ).data;
 #line 509 "<kl>/string.kl"
-    kl_t30 = kl_i_7 <= kl_min_size_3;
+    kl_t29 = kl_i_7 <= kl_min_size_3;
 #line 509 "<kl>/string.kl"
-    kl_t31 = kl_min_size_3 <= 18446744073709551614ull;
+    kl_t30 = kl_min_size_3 <= 18446744073709551614ull;
 #line 509 "<kl>/string.kl"
-    kl_t32 = kl_t30 & kl_t31;
+    kl_t31 = kl_t29 & kl_t30;
 #line 509 "<kl>/string.kl"
-    kl_t33 = kl_i_7 < kl_t5;
+    kl_t32 = kl_i_7 < kl_t5;
 #line 509 "<kl>/string.kl"
-    kl_t34 = kl_t32 & kl_t33;
+    kl_t33 = kl_t31 & kl_t32;
 #line 509 "<kl>/string.kl"
-    kl_t35 = kl_min_size_3 <= kl_t5;
+    kl_t34 = kl_min_size_3 <= kl_t5;
 #line 509 "<kl>/string.kl"
-    kl_t36 = kl_t34 & kl_t35;
+    kl_t35 = kl_t33 & kl_t34;
 #line 509 "<kl>/string.kl"
-    kl_t37 = kl_i_7 < kl_t17;
+    kl_t36 = kl_i_7 < kl_t17;
 #line 509 "<kl>/string.kl"
-    kl_t38 = kl_t36 & kl_t37;
+    kl_t37 = kl_t35 & kl_t36;
 #line 509 "<kl>/string.kl"
-    kl_t39 = kl_min_size_3 <= kl_t17;
+    kl_t38 = kl_min_size_3 <= kl_t17;
 #line 509 "<kl>/string.kl"
-    kl_t40 = kl_t38 & kl_t39;
+    kl_t39 = kl_t37 & kl_t38;
 #line 509 "<kl>/string.kl"
-    kl_t41 = kl_i_7 < kl_t10;
+    kl_t40 = kl_i_7 < kl_t10;
 #line 509 "<kl>/string.kl"
-    kl_t42 = kl_t40 & kl_t41;
+    kl_t41 = kl_t39 & kl_t40;
 #line 509 "<kl>/string.kl"
-    kl_t43 = kl_min_size_3 <= kl_t10;
+    kl_t42 = kl_min_size_3 <= kl_t10;
 #line 509 "<kl>/string.kl"
-    kl_t44 = kl_t42 & kl_t43;
+    kl_t43 = kl_t41 & kl_t42;
 #line 509 "<kl>/string.kl"
-    if ( kl_t44 ) goto bb24; else goto bb23;
+    if ( kl_t43 ) goto bb24; else goto bb23;
     bb18:
     kl_t13 = kl_t11 + kl_i_7;
 #line 170 "<kl>/string.kl"
@@ -2860,8 +2857,6 @@ int32_t kl_2kl6string_16operator_compare__SQ2kl6string_Q2kl6string( struct kl_2k
     bb19:
 #line 515 "<kl>/string.kl"
     kl_t20 = kl_t18 + kl_i_7;
-#line 177 "<kl>/string.kl"
-    kl_t25 = kl_t28;
 #line 177 "<kl>/string.kl"
     kl_t21 = &( *kl_t25 );
 #line 515 "<kl>/string.kl"
@@ -2882,9 +2877,9 @@ int32_t kl_2kl6string_16operator_compare__SQ2kl6string_Q2kl6string( struct kl_2k
     if ( kl_t19 ) goto bb19; else goto bb5;
     bb22:
 #line 177 "<kl>/string.kl"
-    kl_t28 = ( *kl_other_2 ).kl_data_ + kl_i_7;
+    kl_t25 = ( *kl_other_2 ).kl_data_ + kl_i_7;
 #line 177 "<kl>/string.kl"
-    kl_t14 = &( *kl_t28 );
+    kl_t14 = &( *kl_t25 );
 #line 511 "<kl>/string.kl"
     kl_t15 = ( *kl_t13 ) < ( *kl_t14 );
 #line 511 "<kl>/string.kl"
@@ -2896,7 +2891,7 @@ int32_t kl_2kl6string_16operator_compare__SQ2kl6string_Q2kl6string( struct kl_2k
     if ( kl_t12 ) goto bb18; else goto bb3;
     bb24:
 #line 177 "<kl>/string.kl"
-    kl_t45 = ( *kl_other_2 ).kl_data_;
+    kl_t44 = ( *kl_other_2 ).kl_data_;
 #line 511 "<kl>/string.kl"
     goto bb14;
 #line 531 "<kl>/string.kl"
