@@ -81,14 +81,14 @@ private void selecting_rows_and_columns( ref kl::test::context c )
 {
     kl::dataframe df = fruit();
     c.check_eq( df.head( 2 ).to_string(), "   n    x     s      b\n0  3  2.5  pear   True\n1  1  NaN   fig  False" );
-    c.check_eq( df.tail( 2 )["s"].strings()[0], "fig" );
+    c.check_eq( df.tail( 2 )["s"].strings().at( 0 ), "fig" );
     c.check_eq( df.tail( 9 ).rows(), 5 );
     c.check_eq( df.iloc( 1..3 )["n"].i64s()[1], 2 );
     c.check_eq( df.iloc( 4..9 ).rows(), 1 );
 
     kl::dataframe big = df.filtered( df["n"].greater( 1.0 ) );
     c.check_eq( big.rows(), 3 );
-    c.check_eq( big["s"].strings()[2], "kiwi" );
+    c.check_eq( big["s"].strings().at( 2 ), "kiwi" );
     c.check_eq( df.filtered( df["s"].equal_each( "fig" ) & df["b"].bools() )["x"].f64s()[0], 4.0 );
 
     kl::dataframe two = df.select( "s", "n" );
@@ -107,7 +107,7 @@ private void sorting_keeps_ties_and_puts_missing_last( ref kl::test::context c )
 
     // The two figs keep their order, either way.
     kl::dataframe by_name = df.sort_values( "s" );
-    c.check_eq( by_name["s"].strings()[0], "apple" );
+    c.check_eq( by_name["s"].strings().at( 0 ), "apple" );
     c.check( by_name["x"].is_missing( 1 ) && by_name["x"].f64s()[2] == 4.0 );
     kl::dataframe by_n = df.sort_values( "n", false );
     c.check( by_n["x"].is_missing( 3 ) && by_n["x"].f64s()[4] == 4.0 );
@@ -225,7 +225,7 @@ private void missing_values_found_filled_and_dropped( ref kl::test::context c )
 
     kl::series gappy = kl::series( [ "a", "b" ] );
     gappy.set_missing( 0 );
-    c.check_eq( gappy.fillna( "z" ).strings()[0], "z" );
+    c.check_eq( gappy.fillna( "z" ).strings().at( 0 ), "z" );
     c.check( !gappy.fillna( "z" ).is_missing( 0 ) );
     kl::series flags = kl::series( [ true, false ] );
     flags.set_missing( 1 );
@@ -268,7 +268,7 @@ private void value_counts_and_unique_keep_first_appearance( ref kl::test::contex
     kl::series u = df["x"].unique();
     c.check_eq( u.size(), 5 );
     c.check( u.is_missing( 1 ) );
-    c.check_eq( df["s"].unique().strings()[2], "apple" );
+    c.check_eq( df["s"].unique().strings().at( 2 ), "apple" );
     c.check_eq( df["n"].unique().size(), 4 );
 }
 
@@ -279,7 +279,7 @@ private void map_and_apply_take_lambdas( ref kl::test::context c )
     c.check_eq( twice.f64s()[2], -2.0 );
     c.check( twice.is_missing( 1 ) );
     c.check_eq( df["n"].map( fn[]( f64 v ) { return v + 0.5; } ).f64s()[0], 3.5 );
-    c.check_eq( df["s"].map( fn[]( const ref kl::string t ) { return t + "!"; } ).strings()[1], "fig!" );
+    c.check_eq( df["s"].map( fn[]( const ref kl::string t ) { return t + "!"; } ).strings().at( 1 ), "fig!" );
     c.check_eq( df.select( "n", "x" ).apply( fn[]( s ) { return s.sum(); } ).to_string(), "      n    x\n0  12.0  6.0" );
     c.check_eq( df["b"].sum(), 3.0 );
 }
@@ -457,6 +457,25 @@ private void index_labels_rows( ref kl::test::context c )
     c.check_eq( df.loc( 3 ).rows(), 1 );
     c.expect_panic( "no row has that label", fn[ a ]() { _ = a.loc( "z" ); } );
     c.expect_panic( "the index is not sorted", fn[ a ]() { _ = a.loc( "a", "b" ); } );
+}
+
+// A range of labels found by binary search: by row number, over a float index, an integer range
+// over a float index, a time index, and one that falls between the labels.
+private void loc_ranges_find_their_rows( ref kl::test::context c )
+{
+    kl::dataframe df = parsed( "w,v\n0.5,1\n1.5,2\n1.5,3\n4.0,4\n", ',' );
+    c.check_eq( df.loc( 1, 2 )["v"].i64s()[0], 2 );
+    c.check_eq( df.loc( 1, 2 ).rows(), 2 );
+    kl::dataframe w = df.set_index( "w" );
+    c.check_eq( w.loc( 1.0, 1.5 ).rows(), 2 );
+    c.check_eq( w.loc( 1, 4 )["v"].i64s()[2], 4 );
+    c.check_eq( w.loc( 2.0, 3.0 ).rows(), 0 );
+    kl::dataframe t = df.copy();
+    t.insert( "t", times_of( "t\n2026-01-01\n2026-01-02\n2026-01-03\n2026-01-04\n", "t" ) );
+    kl::dataframe by_time = t.set_index( "t" ).loc( kl::date( 2026, 1, 2 ).at(), kl::date( 2026, 1, 3 ).at() );
+    c.check_eq( by_time["v"].i64s()[0], 2 );
+    c.check_eq( by_time.rows(), 2 );
+    c.expect_panic( "the index is not sorted", fn[ df ]() { _ = df.set_index( "v" ).sort_values( "w", false ).loc( 1, 2 ); } );
 }
 
 private void pivot_table_spreads_a_key( ref kl::test::context c )

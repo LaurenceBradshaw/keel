@@ -1,0 +1,390 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//
+// `kl::sort`'s quicksort, ported from pdqsort (https://github.com/orlp/pdqsort, b1ef26a):
+// pdqsort.h's insertion sorts, sort3, partition_right, partition_left and pdqsort_loop. This is an
+// altered version: it swaps in place of moves, keeps the pivot in its slot rather than in a local,
+// leaves out the branchless block partition, and its heap sort fallback is kl's own. The notice
+// from pdqsort.h follows.
+//
+//    pdqsort.h - Pattern-defeating quicksort.
+//
+//    Copyright (c) 2021 Orson Peters
+//
+//    This software is provided 'as-is', without any express or implied warranty. In no event will the
+//    authors be held liable for any damages arising from the use of this software.
+//
+//    Permission is granted to anyone to use this software for any purpose, including commercial
+//    applications, and to alter it and redistribute it freely, subject to the following restrictions:
+//
+//    1. The origin of this software must not be misrepresented; you must not claim that you wrote the
+//       original software. If you use this software in a product, an acknowledgment in the product
+//       documentation would be appreciated but is not required.
+//
+//    2. Altered source versions must be plainly marked as such, and must not be misrepresented as
+//       being the original software.
+//
+//    3. This notice may not be removed or altered from any source distribution.
+
+// Below this size a range is insertion sorted.
+private u64 insertion_threshold()
+{
+    return 24;
+}
+
+// Above this size the pivot is Tukey's ninther.
+private u64 ninther_threshold()
+{
+    return 128;
+}
+
+/// Orders `items` so no element is `less` than the one before it: O(n log n), in place, not stable.
+void pdqsort<C, T, F>( ref C items, F less ) where C : fixed_memory<T>, where F : fn( const ref T, const ref T ) -> bool
+{
+    u64 n = items.size();
+    if( n < 2 )
+    {
+        return;
+    }
+    u64 log = 0;
+    for( u64 m = n; m > 1; m /= 2 )
+    {
+        log++;
+    }
+    pdq_loop( ref items, 0, n, less, log, true );
+}
+
+// Sorts `[begin, end)`; `bad_allowed` unbalanced partitions are allowed before a heap sort, and
+// `leftmost` says whether an element no greater than all of the range sits before it.
+private void pdq_loop<C, T, F>( ref C items, u64 begin, u64 end, F less, u64 bad_allowed, bool leftmost ) where C : fixed_memory<T>, where F : fn( const ref T, const ref T ) -> bool
+{
+    while( true )
+    {
+        u64 size = end - begin;
+        if( size < insertion_threshold() )
+        {
+            insertion_sort( ref items, begin, end, less );
+            return;
+        }
+
+        u64 s2 = size / 2;
+        if( size > ninther_threshold() )
+        {
+            sort3( ref items, begin, begin + s2, end - 1, less );
+            sort3( ref items, begin + 1, begin + s2 - 1, end - 2, less );
+            sort3( ref items, begin + 2, begin + s2 + 1, end - 3, less );
+            sort3( ref items, begin + s2 - 1, begin + s2, begin + s2 + 1, less );
+            items.swap( begin, begin + s2 );
+        }
+        else
+        {
+            sort3( ref items, begin + s2, begin, end - 1, less );
+        }
+
+        // A pivot equal to the element before the range: put its equals left, which are then done.
+        if( !leftmost && !less( items[begin - 1], items[begin] ) )
+        {
+            begin = partition_left( ref items, begin, end, less ) + 1;
+            continue;
+        }
+
+        bool already_partitioned = false;
+        u64 pivot = partition_right( ref items, begin, end, less, ref already_partitioned );
+        u64 l_size = pivot - begin;
+        u64 r_size = end - ( pivot + 1 );
+        if( l_size < size / 8 || r_size < size / 8 )
+        {
+            bad_allowed -= 1;
+            if( bad_allowed == 0 )
+            {
+                heap_sort( ref items, begin, end, less );
+                return;
+            }
+            // Shuffle a few elements to break the pattern.
+            if( l_size >= insertion_threshold() )
+            {
+                items.swap( begin, begin + l_size / 4 );
+                items.swap( pivot - 1, pivot - l_size / 4 );
+                if( l_size > ninther_threshold() )
+                {
+                    items.swap( begin + 1, begin + ( l_size / 4 + 1 ) );
+                    items.swap( begin + 2, begin + ( l_size / 4 + 2 ) );
+                    items.swap( pivot - 2, pivot - ( l_size / 4 + 1 ) );
+                    items.swap( pivot - 3, pivot - ( l_size / 4 + 2 ) );
+                }
+            }
+            if( r_size >= insertion_threshold() )
+            {
+                items.swap( pivot + 1, pivot + ( 1 + r_size / 4 ) );
+                items.swap( end - 1, end - r_size / 4 );
+                if( r_size > ninther_threshold() )
+                {
+                    items.swap( pivot + 2, pivot + ( 2 + r_size / 4 ) );
+                    items.swap( pivot + 3, pivot + ( 3 + r_size / 4 ) );
+                    items.swap( end - 2, end - ( 1 + r_size / 4 ) );
+                    items.swap( end - 3, end - ( 2 + r_size / 4 ) );
+                }
+            }
+        }
+        else if( already_partitioned && partial_insertion_sort( ref items, begin, pivot, less ) && partial_insertion_sort( ref items, pivot + 1, end, less ) )
+        {
+            return;
+        }
+
+        pdq_loop( ref items, begin, pivot, less, bad_allowed, leftmost );
+        begin = pivot + 1;
+        leftmost = false;
+    }
+}
+
+// Orders `[a, b)` by insertion.
+private void insertion_sort<C, T, F>( ref C items, u64 a, u64 b, F less ) where C : fixed_memory<T>, where F : fn( const ref T, const ref T ) -> bool
+{
+    for( u64 i = a + 1; i < b; i++ )
+    {
+        for( u64 j = i; j > a && less( items[j], items[j - 1] ); j-- )
+        {
+            items.swap( j, j - 1 );
+        }
+    }
+}
+
+// Insertion sorts `[a, b)` unless that moves more than 8 elements, when it stops; answers whether
+// it finished.
+private bool partial_insertion_sort<C, T, F>( ref C items, u64 a, u64 b, F less ) where C : fixed_memory<T>, where F : fn( const ref T, const ref T ) -> bool
+{
+    u64 moved = 0;
+    for( u64 i = a + 1; i < b; i++ )
+    {
+        u64 j = i;
+        while( j > a && less( items[j], items[j - 1] ) )
+        {
+            items.swap( j, j - 1 );
+            j--;
+        }
+        moved += i - j;
+        if( moved > 8 )
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Orders the elements at `a`, `b` and `c`.
+private void sort3<C, T, F>( ref C items, u64 a, u64 b, u64 c, F less ) where C : fixed_memory<T>, where F : fn( const ref T, const ref T ) -> bool
+{
+    if( less( items[b], items[a] ) )
+    {
+        items.swap( a, b );
+    }
+    if( less( items[c], items[b] ) )
+    {
+        items.swap( b, c );
+    }
+    if( less( items[b], items[a] ) )
+    {
+        items.swap( a, b );
+    }
+}
+
+// Partitions `[begin, end)` around the pivot at `begin`, its equals to the right; answers where the
+// pivot lands, and sets `already` when the range was partitioned before. The pivot is a median of
+// at least 3, so the first scan stops inside the range.
+private u64 partition_right<C, T, F>( ref C items, u64 begin, u64 end, F less, ref bool already ) where C : fixed_memory<T>, where F : fn( const ref T, const ref T ) -> bool
+{
+    u64 first = begin + 1;
+    while( less( items[first], items[begin] ) )
+    {
+        first++;
+    }
+    u64 last = end;
+    if( first - 1 == begin )
+    {
+        while( first < last )
+        {
+            last--;
+            if( less( items[last], items[begin] ) )
+            {
+                break;
+            }
+        }
+    }
+    else
+    {
+        last--;
+        while( !less( items[last], items[begin] ) )
+        {
+            last--;
+        }
+    }
+
+    already = first >= last;
+    while( first < last )
+    {
+        items.swap( first, last );
+        first++;
+        while( less( items[first], items[begin] ) )
+        {
+            first++;
+        }
+        last--;
+        while( !less( items[last], items[begin] ) )
+        {
+            last--;
+        }
+    }
+
+    u64 pivot = first - 1;
+    items.swap( begin, pivot );
+    return pivot;
+}
+
+// Partitions `[begin, end)` around the pivot at `begin`, its equals to the left; answers where the
+// pivot lands.
+private u64 partition_left<C, T, F>( ref C items, u64 begin, u64 end, F less ) where C : fixed_memory<T>, where F : fn( const ref T, const ref T ) -> bool
+{
+    u64 first = begin;
+    u64 last = end - 1;
+    while( less( items[begin], items[last] ) )
+    {
+        last--;
+    }
+    if( last + 1 == end )
+    {
+        while( first < last )
+        {
+            first++;
+            if( less( items[begin], items[first] ) )
+            {
+                break;
+            }
+        }
+    }
+    else
+    {
+        first++;
+        while( !less( items[begin], items[first] ) )
+        {
+            first++;
+        }
+    }
+
+    while( first < last )
+    {
+        items.swap( first, last );
+        last--;
+        while( less( items[begin], items[last] ) )
+        {
+            last--;
+        }
+        first++;
+        while( !less( items[begin], items[first] ) )
+        {
+            first++;
+        }
+    }
+
+    items.swap( begin, last );
+    return last;
+}
+
+// Heap sorts `[a, b)`.
+private void heap_sort<C, T, F>( ref C items, u64 a, u64 b, F less ) where C : fixed_memory<T>, where F : fn( const ref T, const ref T ) -> bool
+{
+    u64 n = b - a;
+    for( u64 i = n / 2; i > 0; i-- )
+    {
+        sift_down( ref items, a, i - 1, n, less );
+    }
+    for( u64 end = n; end > 1; end-- )
+    {
+        items.swap( a, a + end - 1 );
+        sift_down( ref items, a, 0, end - 1, less );
+    }
+}
+
+// Sinks `root` until it is no less than its children, within the `end` elements from `a`.
+private void sift_down<C, T, F>( ref C items, u64 a, u64 root, u64 end, F less ) where C : fixed_memory<T>, where F : fn( const ref T, const ref T ) -> bool
+{
+    while( true )
+    {
+        u64 child = root * 2 + 1;
+        if( child >= end )
+        {
+            return;
+        }
+        if( child + 1 < end && less( items[a + child], items[a + child + 1] ) )
+        {
+            child += 1;
+        }
+        if( !less( items[a + root], items[a + child] ) )
+        {
+            return;
+        }
+        items.swap( a + root, a + child );
+        root = child;
+    }
+}
+
+// Not from pdqsort: a quickselect over its partition, kl's own.
+
+/// Puts at `k` the element a sort would, with none after it `less` than it and none before it
+/// that it is `less` than: O(n) on average, O(n log n) at worst.
+void select_nth<C, T, F>( ref C items, u64 k, F less ) where C : fixed_memory<T>, where F : fn( const ref T, const ref T ) -> bool
+{
+    u64 begin = 0;
+    u64 end = items.size();
+    if( k >= end )
+    {
+        return;
+    }
+    u64 bad_allowed = 0;
+    for( u64 m = end; m > 1; m /= 2 )
+    {
+        bad_allowed++;
+    }
+    while( end - begin >= insertion_threshold() )
+    {
+        u64 size = end - begin;
+        u64 s2 = size / 2;
+        if( size > ninther_threshold() )
+        {
+            sort3( ref items, begin, begin + s2, end - 1, less );
+            sort3( ref items, begin + 1, begin + s2 - 1, end - 2, less );
+            sort3( ref items, begin + 2, begin + s2 + 1, end - 3, less );
+            sort3( ref items, begin + s2 - 1, begin + s2, begin + s2 + 1, less );
+            items.swap( begin, begin + s2 );
+        }
+        else
+        {
+            sort3( ref items, begin + s2, begin, end - 1, less );
+        }
+        bool already_partitioned = false;
+        u64 pivot = partition_right( ref items, begin, end, less, ref already_partitioned );
+        if( pivot == k )
+        {
+            return;
+        }
+        u64 l_size = pivot - begin;
+        u64 r_size = end - ( pivot + 1 );
+        if( l_size < size / 8 || r_size < size / 8 )
+        {
+            bad_allowed -= 1;
+            if( bad_allowed == 0 )
+            {
+                heap_sort( ref items, begin, end, less );
+                return;
+            }
+        }
+        if( k < pivot )
+        {
+            end = pivot;
+        }
+        else
+        {
+            begin = pivot + 1;
+        }
+    }
+    insertion_sort( ref items, begin, end, less );
+}

@@ -22,6 +22,10 @@ are written through the package too, <code>kl::list&lt;i32&gt;</code>.</p>
 <dl class="summaries">
 <dt><a href="algorithm.html#sort"><code>sort</code></a> <span class="kind">function</span></dt>
 <dd>Orders <code>items</code> so no element is <code>less</code> than the one before it.</dd>
+<dt><a href="algorithm.html#nth_element"><code>nth_element</code></a> <span class="kind">function</span></dt>
+<dd>Puts at <code>k</code> the element <code>sort( ref items, less )</code> would, with none after it <code>less</code> than it
+and none before it that it is <code>less</code> than, as C++'s <code>nth_element</code>: O(n) on average and in place.
+Does nothing when <code>k</code> is not less than <code>items.size()</code>.</dd>
 <dt><a href="algorithm.html#stable_sort"><code>stable_sort</code></a> <span class="kind">function</span></dt>
 <dd>Orders <code>items</code> so no element is <code>less</code> than the one before it, keeping equal elements in order.</dd>
 <dt><a href="algorithm.html#index_if"><code>index_if</code></a> <span class="kind">function</span></dt>
@@ -98,6 +102,10 @@ end of input. A read error is also <code>false</code>; the careful path is <code
 <dd>pandas' name for <code>d</code>: <code>float64</code>, <code>int64</code>, <code>bool</code>, <code>str</code>, <code>datetime64[ns]</code> or <code>timedelta64[ns]</code>.</dd>
 <dt><a href="dataframe.html#how"><code>how</code></a> <span class="kind">enum</span></dt>
 <dd>Which rows <code>dataframe::merge</code> keeps.</dd>
+<dt><a href="dataframe.html#text_column"><code>text_column</code></a> <span class="kind">class</span></dt>
+<dd>The values of a <code>strings</code> series, held as one run of bytes and where each value ends, so no
+value has an allocation of its own: <code>t[i]</code> lends value <code>i</code>'s bytes and <code>t.at( i )</code> copies them
+into a <code>string</code>.</dd>
 <dt><a href="dataframe.html#series"><code>series</code></a> <span class="kind">class</span></dt>
 <dd>One column of a <code>dataframe</code>: values of one <code>dtype</code>, any of which may be missing.</dd>
 <dt><a href="dataframe.html#dataframe"><code>dataframe</code></a> <span class="kind">class</span></dt>

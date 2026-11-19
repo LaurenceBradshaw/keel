@@ -15,6 +15,7 @@
 <li><a href="#dtype"><code>dtype</code></a> <span class="kind">enum</span></li>
 <li><a href="#dtype_name"><code>dtype_name</code></a> <span class="kind">function</span></li>
 <li><a href="#how"><code>how</code></a> <span class="kind">enum</span></li>
+<li><a href="#text_column"><code>text_column</code></a> <span class="kind">class</span></li>
 <li><a href="#series"><code>series</code></a> <span class="kind">class</span></li>
 <li><a href="#dataframe"><code>dataframe</code></a> <span class="kind">class</span></li>
 <li><a href="#grouped"><code>grouped</code></a> <span class="kind">class</span></li>
@@ -116,6 +117,67 @@
 </div>
 </section>
 <section class="entry">
+<h2><span class="kind">class</span> <span class="type">text_column</span></h2>
+<div class="group" id="text_column">
+<pre class="signature"><a class="anchor" href="#text_column" aria-label="Link to text_column">#</a><code><span class="kw">class</span> <span class="type">text_column</span></code></pre>
+<div class="doc">
+<p>The values of a <code>strings</code> series, held as one run of bytes and where each value ends, so no
+value has an allocation of its own: <code>t[i]</code> lends value <code>i</code>'s bytes and <code>t.at( i )</code> copies them
+into a <code>string</code>.</p>
+</div>
+</div>
+<h3>Constructors</h3>
+<div class="group" id="text_column.text_column">
+<pre class="signature"><a class="anchor" href="#text_column.text_column" aria-label="Link to text_column">#</a><code><span class="kw">public</span> <span class="type">text_column</span>()</code></pre>
+<div class="doc">
+<p>No values.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="text_column.with_capacity">
+<pre class="signature"><a class="anchor" href="#text_column.with_capacity" aria-label="Link to with_capacity">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#text_column">text_column</a> <span class="fn">with_capacity</span>( <a class="prim" href="prelude.html#u64">u64</a> values, <a class="prim" href="prelude.html#u64">u64</a> bytes )</code></pre>
+<div class="doc">
+<p>No values, with room for <code>values</code> of them, <code>bytes</code> bytes in all.</p>
+</div>
+</div>
+<div class="group" id="text_column.copy">
+<pre class="signature"><a class="anchor" href="#text_column.copy" aria-label="Link to copy">#</a><code><span class="kw">public</span> <a class="type" href="#text_column">text_column</a> <span class="fn">copy</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A second column with the same values.</p>
+</div>
+</div>
+<div class="group" id="text_column.size">
+<pre class="signature"><a class="anchor" href="#text_column.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">size</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>How many values there are.</p>
+</div>
+</div>
+<div class="group" id="text_column.operator[]">
+<pre class="signature"><a class="anchor" href="#text_column.operator[]" aria-label="Link to operator[]">#</a><code><span class="kw">public</span> <span class="kw">const</span> <span class="kw">ref</span> <a class="prim" href="prelude.html#u8">u8</a>[] <span class="fn">operator[]</span>( <a class="prim" href="prelude.html#u64">u64</a> i ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The bytes of value <code>i</code>.</p>
+</div>
+</div>
+<div class="group" id="text_column.at">
+<pre class="signature"><a class="anchor" href="#text_column.at" aria-label="Link to at">#</a><code><span class="kw">public</span> <a class="type" href="string.html#string">string</a> <span class="fn">at</span>( <a class="prim" href="prelude.html#u64">u64</a> i ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Value <code>i</code> as a <code>string</code> of its own.</p>
+</div>
+</div>
+<div class="group" id="text_column.push">
+<pre class="signature"><a class="anchor" href="#text_column.push" aria-label="Link to push">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">push</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="prim" href="prelude.html#u8">u8</a>[] bytes )</code></pre>
+<div class="doc">
+<p>Adds <code>bytes</code> as the last value.</p>
+</div>
+</div>
+<div class="group" id="text_column.taken">
+<pre class="signature"><a class="anchor" href="#text_column.taken" aria-label="Link to taken">#</a><code><span class="kw">public</span> <a class="type" href="#text_column">text_column</a> <span class="fn">taken</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="prim" href="prelude.html#u64">u64</a>[] rows ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The values at <code>rows</code>, in that order.</p>
+</div>
+</div>
+</section>
+<section class="entry">
 <h2><span class="kind">class</span> <span class="type">series</span></h2>
 <div class="group" id="series">
 <pre class="signature"><a class="anchor" href="#series" aria-label="Link to series">#</a><code><span class="kw">class</span> <span class="type">series</span></code></pre>
@@ -147,6 +209,10 @@ time plus or less a duration is a time; <code>year()</code> and its siblings rea
 <p>The bits of <code>values</code>, of rank 1, as <code>bools</code>.</p>
 </div>
 <pre class="signature"><a class="anchor" href="#series.series" aria-label="Link to series">#</a><code><span class="kw">public</span> <span class="type">series</span>( <span class="kw">move</span> <a class="type" href="list.html#list">list</a>&lt;<a class="type" href="string.html#string">string</a>&gt; values )</code></pre>
+<div class="doc">
+<p><code>values</code> as <code>strings</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.series" aria-label="Link to series">#</a><code><span class="kw">public</span> <span class="type">series</span>( <span class="kw">move</span> <a class="type" href="#text_column">text_column</a> values )</code></pre>
 <div class="doc">
 <p><code>values</code> as <code>strings</code>.</p>
 </div>
@@ -232,7 +298,7 @@ time plus or less a duration is a time; <code>year()</code> and its siblings rea
 </div>
 </div>
 <div class="group" id="series.strings">
-<pre class="signature"><a class="anchor" href="#series.strings" aria-label="Link to strings">#</a><code><span class="kw">public</span> <span class="kw">ref</span> <a class="type" href="list.html#list">list</a>&lt;<a class="type" href="string.html#string">string</a>&gt; <span class="fn">strings</span>() <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.strings" aria-label="Link to strings">#</a><code><span class="kw">public</span> <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#text_column">text_column</a> <span class="fn">strings</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>The values of a <code>strings</code> series, missing ones unspecified; panics on another dtype.</p>
 </div>

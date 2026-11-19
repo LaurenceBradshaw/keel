@@ -263,3 +263,77 @@ private void array_builds_each_element_from_its_index( ref kl::test::context c )
     c.check_eq( offset[0], 5 );
     c.check_eq( offset[2], 7 );
 }
+
+// Inputs that break a naive quicksort: in order, reversed, all equal, few values, organ pipe and
+// scrambled, each long enough for the ninther, the equal-pivot partition and the pattern breaks.
+private void sort_orders_quicksort_patterns( ref kl::test::context c )
+{
+    u64 n = 5000;
+    for( u64 shape : 0..6 )
+    {
+        kl::list<u64> values = kl::list<u64>();
+        for( u64 i : 0..n )
+        {
+            u64[6] made = [ i, n - i, 7, i % 3, i < n / 2 ? i : n - i, ( i * 7919 ) % n ];
+            values.push( made[shape] );
+        }
+        u64 total = 0;
+        for( u64 v : values )
+        {
+            total += v;
+        }
+        kl::sort( ref values );
+        u64 after = values[0];
+        for( u64 i : 1..n )
+        {
+            c.check( values[i - 1] <= values[i] );
+            after += values[i];
+        }
+        c.check_eq( after, total );
+    }
+}
+
+// The merge moves class elements through its scratch array: each is kept once, in stable order.
+private void stable_sort_merges_owned_elements( ref kl::test::context c )
+{
+    {
+        kl::list<owned> values = kl::list<owned>();
+        for( u64 i : 0..500 )
+        {
+            values.push( owned( ( i * 37 ) % 500 ) );
+        }
+        kl::stable_sort( ref values, fn[]( a, b ) { return a.value() % 7 < b.value() % 7; } );
+        c.check_eq( live, 500 );
+        for( u64 i : 1..500 )
+        {
+            u64 before = values[i - 1].value();
+            u64 now = values[i].value();
+            c.check( before % 7 < now % 7 || ( before % 7 == now % 7 && ( before * 473 ) % 500 < ( now * 473 ) % 500 ) );
+        }
+    }
+    c.check_eq( live, 0 );
+}
+
+// Every rank of a scrambled list, and of one with many repeats, lands where a sort puts it.
+private void nth_element_puts_each_rank_in_place( ref kl::test::context c )
+{
+    for( u64 repeats : 0..2 )
+    {
+        u64 n = 1000;
+        for( u64 k = 0; k < n; k += 37 )
+        {
+            kl::list<u64> values = kl::list<u64>();
+            for( u64 i : 0..n )
+            {
+                values.push( repeats == 0 ? ( i * 7919 ) % n : i % 5 );
+            }
+            kl::nth_element( ref values, k, fn[]( a, b ) { return a < b; } );
+            u64 expected = repeats == 0 ? k : k / 200;
+            c.check_eq( values[k], expected );
+            for( u64 i : 0..n )
+            {
+                c.check( i < k ? values[i] <= expected : values[i] >= expected );
+            }
+        }
+    }
+}

@@ -1,52 +1,24 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+import kl::_core::pdqsort as kernel;
 import optional;
-
-// Sinks `root` until it is no less than its children, within the first `end` elements.
-private void sift_down<C, T, F>( ref C items, u64 root, u64 end, F less ) where C : fixed_memory<T>, where F : fn( const ref T, const ref T ) -> bool
-{
-    while( true )
-    {
-        u64 child = root * 2 + 1;
-        
-        if( child >= end )
-        {
-            return;
-        }
-        
-        if( child + 1 < end && less( items[child], items[child + 1] ) )
-        {
-            child += 1;
-        }
-        
-        if( !less( items[root], items[child] ) )
-        {
-            return;
-        }
-
-        items.swap( root, child );
-        root = child;
-    }
-}
 
 /// Orders `items` so no element is `less` than the one before it.
 ///
-/// A heap sort: O(n log n) and in place, but equal elements may change order.
+/// Pattern-defeating quicksort: O(n log n) and in place, near O(n) on input already in order or
+/// all equal, but equal elements may change order.
 void sort<C, T, F>( ref C items, F less ) where C : fixed_memory<T>, where F : fn( const ref T, const ref T ) -> bool
 {
-    u64 n = items.size();
+    kernel::pdqsort( ref items, less );
+}
 
-    for( u64 i = n / 2; i > 0; i-- )
-    {
-        sift_down( ref items, i - 1, n, less );
-    }
-
-    for( u64 end = n; end > 1; end-- )
-    {
-        items.swap( 0, end - 1 );
-        sift_down( ref items, 0, end - 1, less );
-    }
+/// Puts at `k` the element `sort( ref items, less )` would, with none after it `less` than it
+/// and none before it that it is `less` than, as C++'s `nth_element`: O(n) on average and in place.
+/// Does nothing when `k` is not less than `items.size()`.
+void nth_element<C, T, F>( ref C items, u64 k, F less ) where C : fixed_memory<T>, where F : fn( const ref T, const ref T ) -> bool
+{
+    kernel::select_nth( ref items, k, less );
 }
 
 /// Orders `items` from least to greatest, as `sort( ref items, less )` with `<`.
@@ -57,8 +29,8 @@ void sort<C, T>( ref C items ) where C : fixed_memory<T>, where T : comparable
 
 /// Orders `items` so no element is `less` than the one before it, keeping equal elements in order.
 ///
-/// In place, with O(n log n) comparisons and O(n log^2 n) swaps: insertion sorts blocks of 20,
-/// then merges them by Kim and Kutzner's symmetric merge.
+/// O(n log n): insertion sorts blocks of 20, then merges them, holding the left side of each merge
+/// aside in a scratch array of up to n elements. Input already in order is merged in O(n).
 void stable_sort<C, T, F>( ref C items, F less ) where C : fixed_memory<T>, where F : fn( const ref T, const ref T ) -> bool
 {
     u64 n = items.size();
@@ -68,14 +40,23 @@ void stable_sort<C, T, F>( ref C items, F less ) where C : fixed_memory<T>, wher
     {
         insertion_sort( ref items, a, a + block < n ? a + block : n, less );
     }
-
-    while( block < n )
+    if( block >= n )
     {
-        for( u64 a = 0; a + block < n; a += block * 2 )
+        return;
+    }
+
+    unsafe
+    {
+        T[*] aside = alloc<T>( n );
+        while( block < n )
         {
-            merge( ref items, a, a + block, a + block * 2 < n ? a + block * 2 : n, less );
+            for( u64 a = 0; a + block < n; a += block * 2 )
+            {
+                merge( ref items, aside, a, a + block, a + block * 2 < n ? a + block * 2 : n, less );
+            }
+            block *= 2;
         }
-        block *= 2;
+        free( aside );
     }
 }
 
@@ -98,59 +79,54 @@ private void insertion_sort<C, T, F>( ref C items, u64 a, u64 b, F less ) where 
     }
 }
 
-// Merges the ordered `[a, m)` and `[m, b)` in place, the left first among equals.
-private void merge<C, T, F>( ref C items, u64 a, u64 m, u64 b, F less ) where C : fixed_memory<T>, where F : fn( const ref T, const ref T ) -> bool
+// Merges the ordered `[a, m)` and `[m, b)`, the left first among equals, moving `[a, m)` into
+// `aside` and each element back into the first empty slot.
+private void merge<C, T, F>( ref C items, T[*] aside, u64 a, u64 m, u64 b, F less ) where C : fixed_memory<T>, where F : fn( const ref T, const ref T ) -> bool
 {
-    if( a == m || m == b || !less( items[m], items[m - 1] ) )
+    if( !less( items[m], items[m - 1] ) )
     {
         return;
     }
 
-    // Split both sides where the halves of `[a, b)` meet, swap the middle pieces, merge each half.
-    u64 mid = a + ( b - a ) / 2;
-    u64 n = mid + m;
-    u64 start = a;
-    u64 end = m;
-    if( m > mid )
+    unsafe
     {
-        start = n - b;
-        end = mid;
-    }
-    while( start < end )
-    {
-        u64 c = start + ( end - start ) / 2;
-        if( !less( items[n - 1 - c], items[c] ) )
+        u64 left = m - a;
+        for( u64 i : 0..left )
         {
-            start = c + 1;
+            aside[i] = move slot( ref items, a + i )[0];
         }
-        else
+        u64 i = 0;
+        u64 j = m;
+        u64 k = a;
+        while( i < left && j < b )
         {
-            end = c;
+            if( less( items[j], aside[i] ) )
+            {
+                slot( ref items, k )[0] = move slot( ref items, j )[0];
+                j++;
+            }
+            else
+            {
+                slot( ref items, k )[0] = move aside[i];
+                i++;
+            }
+            k++;
+        }
+        while( i < left )
+        {
+            slot( ref items, k )[0] = move aside[i];
+            i++;
+            k++;
         }
     }
-    end = n - start;
-
-    rotate( ref items, start, m, end );
-    merge( ref items, a, start, mid, less );
-    merge( ref items, mid, end, b, less );
 }
 
-// Moves `[m, b)` before `[a, m)`.
-private void rotate<C, T>( ref C items, u64 a, u64 m, u64 b ) where C : fixed_memory<T>
+// Element `i` as a raw slot, which a move leaves empty and a write fills without dropping.
+private T[*] slot<C, T>( ref C items, u64 i ) where C : fixed_memory<T>
 {
-    reverse( ref items, a, m );
-    reverse( ref items, m, b );
-    reverse( ref items, a, b );
-}
-
-// Reverses `[a, b)`.
-private void reverse<C, T>( ref C items, u64 a, u64 b ) where C : fixed_memory<T>
-{
-    while( a + 1 < b )
+    unsafe
     {
-        b -= 1;
-        items.swap( a, b );
-        a += 1;
+        return cast<T[*]>( &items[i] );
     }
 }
 

@@ -13,6 +13,7 @@
 <h1><span class="kind">module</span> <a class="package" href="index.html">kl</a>::algorithm</h1>
 <ul class="contents">
 <li><a href="#sort"><code>sort</code></a> <span class="kind">function</span></li>
+<li><a href="#nth_element"><code>nth_element</code></a> <span class="kind">function</span></li>
 <li><a href="#stable_sort"><code>stable_sort</code></a> <span class="kind">function</span></li>
 <li><a href="#index_if"><code>index_if</code></a> <span class="kind">function</span></li>
 <li><a href="#index_of"><code>index_of</code></a> <span class="kind">function</span></li>
@@ -31,11 +32,23 @@
 <pre class="signature"><a class="anchor" href="#sort" aria-label="Link to sort">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">sort</span>&lt;C, T, F&gt;( <span class="kw">ref</span> C items, F less ) <span class="kw">where</span> C : <a class="type" href="prelude.html#fixed_memory">fixed_memory</a>&lt;T&gt;, <span class="kw">where</span> F : <span class="kw">fn</span>( <span class="kw">const</span> <span class="kw">ref</span> T, <span class="kw">const</span> <span class="kw">ref</span> T ) -&gt; <a class="prim" href="prelude.html#bool">bool</a></code></pre>
 <div class="doc">
 <p>Orders <code>items</code> so no element is <code>less</code> than the one before it.</p>
-<p>A heap sort: O(n log n) and in place, but equal elements may change order.</p>
+<p>Pattern-defeating quicksort: O(n log n) and in place, near O(n) on input already in order or
+all equal, but equal elements may change order.</p>
 </div>
 <pre class="signature"><a class="anchor" href="#sort" aria-label="Link to sort">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">sort</span>&lt;C, T&gt;( <span class="kw">ref</span> C items ) <span class="kw">where</span> C : <a class="type" href="prelude.html#fixed_memory">fixed_memory</a>&lt;T&gt;, <span class="kw">where</span> T : <a class="type" href="prelude.html#comparable">comparable</a></code></pre>
 <div class="doc">
 <p>Orders <code>items</code> from least to greatest, as <code>sort( ref items, less )</code> with <code>&lt;</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">nth_element</span></h2>
+<div class="group" id="nth_element">
+<pre class="signature"><a class="anchor" href="#nth_element" aria-label="Link to nth_element">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">nth_element</span>&lt;C, T, F&gt;( <span class="kw">ref</span> C items, <a class="prim" href="prelude.html#u64">u64</a> k, F less ) <span class="kw">where</span> C : <a class="type" href="prelude.html#fixed_memory">fixed_memory</a>&lt;T&gt;, <span class="kw">where</span> F : <span class="kw">fn</span>( <span class="kw">const</span> <span class="kw">ref</span> T, <span class="kw">const</span> <span class="kw">ref</span> T ) -&gt; <a class="prim" href="prelude.html#bool">bool</a></code></pre>
+<div class="doc">
+<p>Puts at <code>k</code> the element <code>sort( ref items, less )</code> would, with none after it <code>less</code> than it
+and none before it that it is <code>less</code> than, as C++'s <code>nth_element</code>: O(n) on average and in place.
+Does nothing when <code>k</code> is not less than <code>items.size()</code>.</p>
 </div>
 </div>
 </section>
@@ -45,8 +58,8 @@
 <pre class="signature"><a class="anchor" href="#stable_sort" aria-label="Link to stable_sort">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">stable_sort</span>&lt;C, T, F&gt;( <span class="kw">ref</span> C items, F less ) <span class="kw">where</span> C : <a class="type" href="prelude.html#fixed_memory">fixed_memory</a>&lt;T&gt;, <span class="kw">where</span> F : <span class="kw">fn</span>( <span class="kw">const</span> <span class="kw">ref</span> T, <span class="kw">const</span> <span class="kw">ref</span> T ) -&gt; <a class="prim" href="prelude.html#bool">bool</a></code></pre>
 <div class="doc">
 <p>Orders <code>items</code> so no element is <code>less</code> than the one before it, keeping equal elements in order.</p>
-<p>In place, with O(n log n) comparisons and O(n log^2 n) swaps: insertion sorts blocks of 20,
-then merges them by Kim and Kutzner's symmetric merge.</p>
+<p>O(n log n): insertion sorts blocks of 20, then merges them, holding the left side of each merge
+aside in a scratch array of up to n elements. Input already in order is merged in O(n).</p>
 </div>
 <pre class="signature"><a class="anchor" href="#stable_sort" aria-label="Link to stable_sort">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">stable_sort</span>&lt;C, T&gt;( <span class="kw">ref</span> C items ) <span class="kw">where</span> C : <a class="type" href="prelude.html#fixed_memory">fixed_memory</a>&lt;T&gt;, <span class="kw">where</span> T : <a class="type" href="prelude.html#comparable">comparable</a></code></pre>
 <div class="doc">
