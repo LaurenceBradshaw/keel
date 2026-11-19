@@ -1274,20 +1274,23 @@ private f64 nan()
 /// Build one empty and `insert` columns, or read one with `read_csv`. `df["a"]` is a column;
 /// `head`, `tail`, `iloc`, `filtered`, `select` and `sort_values` answer new frames holding copies,
 /// as pandas' copy-on-write behaves, while `insert`, `set`, `drop` and `rename` change the frame
-/// itself. `groupby` answers a `grouped`.
+/// itself. `groupby` answers a `grouped`. `set_index` labels the rows by a column, which `loc`
+/// looks up and every selection keeps; arithmetic never aligns by it.
 /// `to_string` writes pandas' table.
 class dataframe
 {
     list<string> names_;
     list<series> columns_;
-    list<string> labels_; // row labels to print, none when rows are numbered
+    list<series> index_; // the index, or none when rows are numbered
+    string index_name_;
 
     /// No columns and no rows.
     public dataframe()
     {
-        names_   = list<string>();
-        columns_ = list<series>();
-        labels_  = list<string>();
+        names_      = list<string>();
+        columns_    = list<series>();
+        index_      = list<series>();
+        index_name_ = string();
     }
 
     /// A second frame with the same columns.
@@ -1299,10 +1302,7 @@ class dataframe
             r.names_.push( string( names_[c] ) );
             r.columns_.push( columns_[c].copy() );
         }
-        for( u64 i : 0..labels_.size() )
-        {
-            r.labels_.push( string( labels_[i] ) );
-        }
+        r.keep_index( this );
         return r;
     }
 
@@ -1311,7 +1311,11 @@ class dataframe
     /// How many rows there are.
     public u64 rows() const
     {
-        return columns_.is_empty() ? 0 : columns_[0].size();
+        if( columns_.is_empty() )
+        {
+            return index_.is_empty() ? 0 : index_[0].size();
+        }
+        return columns_[0].size();
     }
 
     /// The rows, then the columns.
@@ -1417,7 +1421,7 @@ class dataframe
         {
             r.insert( n, columns_[position( n )].copy() );
         }
-        r.labels_ = copied( labels_ );
+        r.keep_index( this );
         return r;
     }
 
@@ -1472,12 +1476,10 @@ class dataframe
             r.names_.push( string( names_[c] ) );
             r.columns_.push( columns_[c].taken( rows ) );
         }
-        if( !labels_.is_empty() )
+        if( !index_.is_empty() )
         {
-            for( u64 k : rows )
-            {
-                r.labels_.push( string( labels_[k] ) );
-            }
+            r.index_.push( index_[0].taken( rows ) );
+            r.index_name_ = string( index_name_ );
         }
         return r;
     }
@@ -1528,6 +1530,94 @@ class dataframe
         return taken( picked.as_run() );
     }
 
+    /// --- Index ---
+
+    /// The frame with column `name` moved aside as its index, which labels the rows in place of
+    /// their numbers and replaces any index before it; panics when there is no such column.
+    public dataframe set_index( const ref textual name ) const
+    {
+        u64 at = position( name );
+        dataframe r = dataframe();
+        for( u64 c : 0..columns_.size() )
+        {
+            if( c != at )
+            {
+                r.names_.push( string( names_[c] ) );
+                r.columns_.push( columns_[c].copy() );
+            }
+        }
+        r.index_.push( columns_[at].copy() );
+        r.index_name_ = string( name );
+        return r;
+    }
+
+    /// The frame with its index put back as the first column, named `index` when the index has no
+    /// name, or the row numbers so when there is none; the rows are then numbered.
+    public dataframe reset_index() const
+    {
+        dataframe r = dataframe();
+        r.insert( index_name_.is_empty() ? string( "index" ) : string( index_name_ ), labels() );
+        for( u64 c : 0..columns_.size() )
+        {
+            r.insert( names_[c], columns_[c].copy() );
+        }
+        return r;
+    }
+
+    /// The rows labelled `label`, in order, as pandas' `df.loc[[label]]`; without an index the
+    /// labels are the row numbers. Panics when no row has it.
+    public dataframe loc( f64 label ) const
+    {
+        return labelled( labels().equal_each( label ) );
+    }
+
+    /// The rows labelled `label`, in order; panics when no row has it.
+    public dataframe loc( i64 label ) const
+    {
+        return labelled( labels().equal_each( series( ndarray<i64>::filled( label, rows() ) ) ) );
+    }
+
+    /// The rows labelled with the text `label`, in order; panics when no row has it.
+    public dataframe loc( const ref textual label ) const
+    {
+        return labelled( labels().equal_each( label ) );
+    }
+
+    /// The rows labelled with the time `label`, in order; panics when no row has it.
+    public dataframe loc( const ref timestamp label ) const
+    {
+        return labelled( labels().equal_each( label ) );
+    }
+
+    /// The rows labelled `from` to `to`, both included, as pandas' `df.loc[from:to]`; panics when
+    /// the index is not in ascending order or has a gap.
+    public dataframe loc( f64 from, f64 to ) const
+    {
+        series s = sorted_labels();
+        return filtered( s.greater_equal( from ) & s.less_equal( to ) );
+    }
+
+    /// The rows labelled `from` to `to`, both included; panics as `loc( f64, f64 )`.
+    public dataframe loc( i64 from, i64 to ) const
+    {
+        series s = sorted_labels();
+        return filtered( s.greater_equal( series( ndarray<i64>::filled( from, rows() ) ) ) & s.less_equal( series( ndarray<i64>::filled( to, rows() ) ) ) );
+    }
+
+    /// The rows labelled with the texts `from` to `to`, both included; panics as `loc( f64, f64 )`.
+    public dataframe loc( const ref textual from, const ref textual to ) const
+    {
+        series s = sorted_labels();
+        return filtered( s.greater_equal( repeated( from, rows() ) ) & s.less_equal( repeated( to, rows() ) ) );
+    }
+
+    /// The rows labelled with the times `from` to `to`, both included; panics as `loc( f64, f64 )`.
+    public dataframe loc( const ref timestamp from, const ref timestamp to ) const
+    {
+        series s = sorted_labels();
+        return filtered( s.greater_equal( from ) & s.less_equal( to ) );
+    }
+
     /// --- Missing values ---
 
     /// A `bools` column for each column, set where a value is missing.
@@ -1538,7 +1628,7 @@ class dataframe
         {
             r.insert( names_[c], series( columns_[c].isna() ) );
         }
-        r.labels_ = copied( labels_ );
+        r.keep_index( this );
         return r;
     }
 
@@ -1818,10 +1908,7 @@ class dataframe
     {
         dataframe r = dataframe();
         str[8] stats = [ "count", "mean", "std", "min", "25%", "50%", "75%", "max" ];
-        for( str s : stats )
-        {
-            r.labels_.push( string( s ) );
-        }
+        r.index_.push( series( stats[0..8] ) );
         for( u64 c : 0..columns_.size() )
         {
             const ref series s = columns_[c];
@@ -1871,11 +1958,22 @@ class dataframe
     // leading space its cells do, but over text.
         list<list<string>> cells = list<list<string>>();
         list<string> index = list<string>();
-        index.push( string() );
-        for( u64 i : shown )
+        if( index_.is_empty() )
         {
-            index.push( labels_.is_empty() ? string::from( i ) : string( labels_[i] ) );
+            for( u64 i : shown )
+            {
+                index.push( string::from( i ) );
+            }
         }
+        else
+        {
+            list<string> texts = cell_texts( index_[0], shown.as_run() );
+            for( u64 k : 0..texts.size() )
+            {
+                index.push( texts[k].trim_start() );
+            }
+        }
+        index.insert( 0, string() );
         cells.push( move index );
         for( u64 c : 0..columns_.size() )
         {
@@ -1895,6 +1993,7 @@ class dataframe
             }
             widths.push( w );
         }
+        widths[0] = index_name_.size() > widths[0] ? index_name_.size() : widths[0];
 
         string r = string();
         for( u64 k : 0..shown.size() + 1 )
@@ -1919,6 +2018,16 @@ class dataframe
             {
                 r += "\n";
             }
+            if( k == 0 && !index_name_.is_empty() )
+            {
+                pad( ref r, index_name_, widths[0], false );
+                for( u64 c : 1..cells.size() )
+                {
+                    r += " ";
+                    pad( ref r, "", widths[c], true );
+                }
+                r += "\n";
+            }
         }
         if( cut )
         {
@@ -1934,7 +2043,7 @@ class dataframe
     /// The frame as CSV: a header, then a line for each row, ended by `\n`; a missing value is
     /// empty (`""` when it is the row's only field), a float written as `string::from` writes it, a
     /// time or duration as the table writes its column, and a field holding `sep`, a quote or a
-    /// line break quoted. The row numbers are not written, as pandas' `index=False`.
+    /// line break quoted. The row numbers or index are not written, as pandas' `index=False`.
     public string to_csv( u8 sep = ',' ) const
     {
         string r = string();
@@ -2023,17 +2132,62 @@ class dataframe
         }
         return names_.size();
     }
+
+    // `other`'s index, copied.
+    private void keep_index( const ref dataframe other )
+    {
+        if( !other.index_.is_empty() )
+        {
+            index_.push( other.index_[0].copy() );
+            index_name_ = string( other.index_name_ );
+        }
+    }
+
+    // A copy of the index, or the row numbers as `i64s`.
+    private series labels() const
+    {
+        if( index_.is_empty() )
+        {
+            return series( ndarray<i64>::arange( 0, cast<i64>( rows() ) ) );
+        }
+        return index_[0].copy();
+    }
+
+    // `labels()`; panics unless they ascend with no gap.
+    private series sorted_labels() const
+    {
+        series s = labels();
+        list<u64> order = present_order( s, true );
+        for( u64 i : 0..s.size() )
+        {
+            if( order.size() != s.size() || order[i] != i )
+            {
+                panic( "the index is not sorted" );
+            }
+        }
+        return s;
+    }
+
+    // The rows `m` sets; panics when it sets none.
+    private dataframe labelled( const ref mask m ) const
+    {
+        if( m.count() == 0 )
+        {
+            panic( "no row has that label" );
+        }
+        return filtered( m );
+    }
 };
 
-// A copy of each string in `a`.
-private list<string> copied( const ref list<string> a )
+// `x`, `n` times, as `strings`.
+private series repeated( const ref textual x, u64 n )
 {
-    list<string> r = list<string>::with_capacity( a.size() );
-    for( u64 i : 0..a.size() )
+    list<string> r = list<string>::with_capacity( n );
+    for( u64 i : 0..n )
     {
-        r.push( string( a[i] ) );
+        r.push( string( x ) );
     }
-    return r;
+    return series( move r );
 }
 
 // The rows of `s` with a value present, ordered by value, ties in row order.

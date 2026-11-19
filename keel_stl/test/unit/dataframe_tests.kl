@@ -1,7 +1,7 @@
 // `kl::dataframe`: building and shape, pandas' table, selecting rows and columns, sorting,
 // series arithmetic, comparisons and reductions with missing values, describe, CSV both ways,
-// time and duration columns, concat and merge. The expected texts are pandas 3.1's, but for an
-// integer or bool column with a gap, which stays one.
+// time and duration columns, concat and merge, the index. The expected texts are pandas 3.1's,
+// but for an integer or bool column with a gap, which stays one.
 import kl::dataframe;
 import kl::list;
 import kl::mask;
@@ -439,4 +439,21 @@ private void merge_pairs_rows( ref kl::test::context c )
     c.check_eq( d.merge( parsed( "k,w\n", ',' ), kl::how::left, "k" )["w"].count(), 0 );
     c.expect_panic( "the key columns' dtypes differ", fn[]() { _ = parsed( "k\n1\n", ',' ).merge( parsed( "k\nx\n", ',' ), kl::how::inner ); } );
     c.expect_panic( "the frames share no column to merge on", fn[]() { _ = parsed( "a\n1\n", ',' ).merge( parsed( "b\n1\n", ',' ), kl::how::inner ); } );
+}
+
+private void index_labels_rows( ref kl::test::context c )
+{
+    kl::dataframe df = parsed( "k,v,w\nb,1,1.5\na,2,2.25\nc,3,\na,4,4.0\n", ',' );
+    kl::dataframe a = df.set_index( "k" );
+    c.check_eq( a.to_string(), "   v     w\nk         \nb  1  1.50\na  2  2.25\nc  3   NaN\na  4  4.00" );
+    c.check_eq( a.loc( "a" ).to_string(), "   v     w\nk         \na  2  2.25\na  4  4.00" );
+    c.check_eq( a.filtered( a["v"].greater( 1.0 ) ).head( 1 ).to_string(), "   v     w\nk         \na  2  2.25" );
+    c.check_eq( a.reset_index().to_string(), df.to_string() );
+    c.check_eq( df.reset_index().columns()[0], "index" );
+    c.check_eq( df.set_index( "v" ).loc( 2, 3 ).to_string(), "   k     w\nv         \n2  a  2.25\n3  c   NaN" );
+    c.check_eq( df.set_index( "w" ).to_string(), "      k  v\nw         \n1.50  b  1\n2.25  a  2\nNaN   c  3\n4.00  a  4" );
+    c.check_eq( df.sort_values( "k" ).set_index( "k" ).loc( "aa", "bz" ).to_string(), "   v    w\nk        \nb  1  1.5" );
+    c.check_eq( df.loc( 3 ).rows(), 1 );
+    c.expect_panic( "no row has that label", fn[ a ]() { _ = a.loc( "z" ); } );
+    c.expect_panic( "the index is not sorted", fn[ a ]() { _ = a.loc( "a", "b" ); } );
 }

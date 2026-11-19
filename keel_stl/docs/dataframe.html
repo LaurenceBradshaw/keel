@@ -624,7 +624,8 @@ two nearest as pandas' default; NaN when there are none.</p>
 <p>Build one empty and <code>insert</code> columns, or read one with <code>read_csv</code>. <code>df[&quot;a&quot;]</code> is a column;
 <code>head</code>, <code>tail</code>, <code>iloc</code>, <code>filtered</code>, <code>select</code> and <code>sort_values</code> answer new frames holding copies,
 as pandas' copy-on-write behaves, while <code>insert</code>, <code>set</code>, <code>drop</code> and <code>rename</code> change the frame
-itself. <code>groupby</code> answers a <code>grouped</code>.
+itself. <code>groupby</code> answers a <code>grouped</code>. <code>set_index</code> labels the rows by a column, which <code>loc</code>
+looks up and every selection keeps; arithmetic never aligns by it.
 <code>to_string</code> writes pandas' table.</p>
 </div>
 </div>
@@ -755,6 +756,57 @@ pandas' <code>df[name] = s</code>; panics when <code>s</code>'s size is not the 
 <p>The rows where none of <code>names</code> is missing, or none of the columns when no name is given.</p>
 </div>
 </div>
+<h3>Index</h3>
+<div class="group" id="dataframe.set_index">
+<pre class="signature"><a class="anchor" href="#dataframe.set_index" aria-label="Link to set_index">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">set_index</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> name ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The frame with column <code>name</code> moved aside as its index, which labels the rows in place of
+their numbers and replaces any index before it; panics when there is no such column.</p>
+</div>
+</div>
+<div class="group" id="dataframe.reset_index">
+<pre class="signature"><a class="anchor" href="#dataframe.reset_index" aria-label="Link to reset_index">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">reset_index</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The frame with its index put back as the first column, named <code>index</code> when the index has no
+name, or the row numbers so when there is none; the rows are then numbered.</p>
+</div>
+</div>
+<div class="group" id="dataframe.loc">
+<pre class="signature"><a class="anchor" href="#dataframe.loc" aria-label="Link to loc">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">loc</span>( <a class="prim" href="prelude.html#f64">f64</a> label ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The rows labelled <code>label</code>, in order, as pandas' <code>df.loc[[label]]</code>; without an index the
+labels are the row numbers. Panics when no row has it.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#dataframe.loc" aria-label="Link to loc">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">loc</span>( <a class="prim" href="prelude.html#i64">i64</a> label ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The rows labelled <code>label</code>, in order; panics when no row has it.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#dataframe.loc" aria-label="Link to loc">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">loc</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> label ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The rows labelled with the text <code>label</code>, in order; panics when no row has it.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#dataframe.loc" aria-label="Link to loc">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">loc</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="time.html#timestamp">timestamp</a> label ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The rows labelled with the time <code>label</code>, in order; panics when no row has it.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#dataframe.loc" aria-label="Link to loc">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">loc</span>( <a class="prim" href="prelude.html#f64">f64</a> <a class="type" href="prelude.html#from">from</a>, <a class="prim" href="prelude.html#f64">f64</a> to ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The rows labelled <code>from</code> to <code>to</code>, both included, as pandas' <code>df.loc[from:to]</code>; panics when
+the index is not in ascending order or has a gap.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#dataframe.loc" aria-label="Link to loc">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">loc</span>( <a class="prim" href="prelude.html#i64">i64</a> <a class="type" href="prelude.html#from">from</a>, <a class="prim" href="prelude.html#i64">i64</a> to ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The rows labelled <code>from</code> to <code>to</code>, both included; panics as <code>loc( f64, f64 )</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#dataframe.loc" aria-label="Link to loc">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">loc</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> <a class="type" href="prelude.html#from">from</a>, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> to ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The rows labelled with the texts <code>from</code> to <code>to</code>, both included; panics as <code>loc( f64, f64 )</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#dataframe.loc" aria-label="Link to loc">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">loc</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="time.html#timestamp">timestamp</a> <a class="type" href="prelude.html#from">from</a>, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="time.html#timestamp">timestamp</a> to ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The rows labelled with the times <code>from</code> to <code>to</code>, both included; panics as <code>loc( f64, f64 )</code>.</p>
+</div>
+</div>
 <h3>Missing values</h3>
 <div class="group" id="dataframe.isna">
 <pre class="signature"><a class="anchor" href="#dataframe.isna" aria-label="Link to isna">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">isna</span>() <span class="kw">const</span></code></pre>
@@ -835,7 +887,7 @@ than 60 rows the first and last five, then <code>[n rows x m columns]</code>.</p
 <p>The frame as CSV: a header, then a line for each row, ended by <code>\n</code>; a missing value is
 empty (<code>&quot;&quot;</code> when it is the row's only field), a float written as <code>string::from</code> writes it, a
 time or duration as the table writes its column, and a field holding <code>sep</code>, a quote or a
-line break quoted. The row numbers are not written, as pandas' <code>index=False</code>.</p>
+line break quoted. The row numbers or index are not written, as pandas' <code>index=False</code>.</p>
 </div>
 </div>
 </section>
