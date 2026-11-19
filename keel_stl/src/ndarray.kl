@@ -52,6 +52,13 @@ class ndarray<T> implements iterable<T> where T : numeric
         }
     }
 
+    /// `elements` as rank 1, taken over without a copy.
+    public static ndarray<T> from_list( move list<T> elements )
+    {
+        u64 n = elements.size();
+        return ndarray<T>( move elements, [ n ] );
+    }
+
     /// Every element 0, in `shape`: `ndarray<f64>::zeros( 3, 4 )`. No shape is rank 0, one element.
     public static ndarray<T> zeros( u64... shape )
     {

@@ -90,6 +90,28 @@ end of input. A read error is also <code>false</code>; the careful path is <code
 </dl>
 </section>
 <section class="module">
+<h3><a href="dataframe.html">dataframe</a></h3>
+<dl class="summaries">
+<dt><a href="dataframe.html#dtype"><code>dtype</code></a> <span class="kind">enum</span></dt>
+<dd>What a <code>series</code> holds.</dd>
+<dt><a href="dataframe.html#dtype_name"><code>dtype_name</code></a> <span class="kind">function</span></dt>
+<dd>pandas' name for <code>d</code>: <code>float64</code>, <code>int64</code>, <code>bool</code> or <code>str</code>.</dd>
+<dt><a href="dataframe.html#series"><code>series</code></a> <span class="kind">class</span></dt>
+<dd>One column of a <code>dataframe</code>: values of one <code>dtype</code>, any of which may be missing.</dd>
+<dt><a href="dataframe.html#dataframe"><code>dataframe</code></a> <span class="kind">class</span></dt>
+<dd>Named <code>series</code> of one length, in order, with rows numbered from 0, as pandas' <code>DataFrame</code>.</dd>
+</dl>
+<h4 class="divider">CSV</h4>
+<dl class="summaries">
+<dt><a href="dataframe.html#csv_error"><code>csv_error</code></a> <span class="kind">enum</span></dt>
+<dd>Why <code>parse_csv</code> or <code>read_csv</code> failed.</dd>
+<dt><a href="dataframe.html#parse_csv"><code>parse_csv</code></a> <span class="kind">function</span></dt>
+<dd>The frame CSV <code>text</code> holds, read as RFC 4180 with pandas' defaults.</dd>
+<dt><a href="dataframe.html#read_csv"><code>read_csv</code></a> <span class="kind">function</span></dt>
+<dd>The frame the CSV file at <code>path</code> holds, as <code>parse_csv</code> reads it.</dd>
+</dl>
+</section>
+<section class="module">
 <h3><a href="fixed_list.html">fixed_list</a></h3>
 <dl class="summaries">
 <dt><a href="fixed_list.html#fixed_list"><code>fixed_list</code></a> <span class="kind">class</span></dt>

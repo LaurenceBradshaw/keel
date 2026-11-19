@@ -1,0 +1,209 @@
+// `kl::dataframe`: building and shape, pandas' table, selecting rows and columns, sorting,
+// series arithmetic, comparisons and reductions with missing values, describe, and CSV both ways.
+// The expected texts are pandas 3.1's.
+import kl::dataframe;
+import kl::list;
+import kl::mask;
+import kl::math;
+import kl::ndarray;
+import kl::string;
+import kl::test::context;
+
+private kl::dataframe fruit()
+{
+    f64 zero = 0.0;
+    kl::dataframe df = kl::dataframe();
+    df.insert( "n", kl::series( [ 3, 1, 2, 1, 5 ] ) );
+    df.insert( "x", kl::series( [ 2.5, zero / zero, -1.0, 4.0, 0.5 ] ) );
+    df.insert( "s", kl::series( [ "pear", "fig", "apple", "fig", "kiwi" ] ) );
+    df.insert( "b", kl::series( [ true, false, true, true, false ] ) );
+    return df;
+}
+
+private kl::dataframe parsed( str text, u8 sep )
+{
+    switch( kl::parse_csv( text, sep ) )
+    {
+        case result::ok( df ):
+            return df.copy();
+        case result::err( _ ):
+            panic( "the CSV did not parse" );
+    }
+}
+
+private void building_and_shape( ref kl::test::context c )
+{
+    kl::dataframe df = fruit();
+    c.check_eq( df.shape()[0], 5 );
+    c.check_eq( df.shape()[1], 4 );
+    c.check_eq( df.columns()[2], "s" );
+    c.check_eq( kl::dtype_name( df.dtypes()[0] ), "int64" );
+    c.check_eq( kl::dtype_name( df.dtypes()[1] ), "float64" );
+    c.check_eq( kl::dtype_name( df.dtypes()[2] ), "str" );
+    c.check_eq( kl::dtype_name( df.dtypes()[3] ), "bool" );
+    c.check_eq( df["n"].i64s()[4], 5 );
+    c.check( df.has( "b" ) && !df.has( "z" ) );
+
+    df.rename( "x", "y" );
+    df.drop( "s", "b" );
+    c.check_eq( df.shape()[1], 2 );
+    c.check_eq( df.columns()[1], "y" );
+
+    c.expect_panic( "a column already has that name", fn[]() { kl::dataframe d = fruit(); d.insert( "n", kl::series( [ 1 ] ) ); } );
+    c.expect_panic( "the column's size is not the frame's rows", fn[]() { kl::dataframe d = fruit(); d.insert( "m", kl::series( [ 1 ] ) ); } );
+    c.expect_panic( "no column has that name", fn[]() { _ = fruit()["z"].size(); } );
+    c.expect_panic( "the series holds another dtype", fn[]() { _ = fruit()["n"].f64s().size(); } );
+}
+
+private void printing_as_pandas( ref kl::test::context c )
+{
+    c.check_eq( fruit().to_string(), "   n    x      s      b\n0  3  2.5   pear   True\n1  1  NaN    fig  False\n2  2 -1.0  apple   True\n3  1  4.0    fig   True\n4  5  0.5   kiwi  False" );
+
+    kl::dataframe f = kl::dataframe();
+    f.insert( "a", kl::series( [ 1e7, 2.0 ] ) );
+    f.insert( "b", kl::series( [ 1e12, 3.0 ] ) );
+    f.insert( "c", kl::series( [ 3.14159265, 1.0 ] ) );
+    f.insert( "d", kl::series( [ 1e-7, 1.0 ] ) );
+    c.check_eq( f.to_string(), "            a             b         c             d\n0  10000000.0  1.000000e+12  3.141593  1.000000e-07\n1         2.0  3.000000e+00  1.000000  1.000000e+00" );
+
+    kl::dataframe long = kl::dataframe();
+    long.insert( "abcd", kl::series( kl::ndarray<i64>::arange( 0, 70 ) ) );
+    c.check_eq( long.to_string(), "    abcd\n0      0\n1      1\n2      2\n3      3\n4      4\n..   ...\n65    65\n66    66\n67    67\n68    68\n69    69\n\n[70 rows x 1 columns]" );
+
+    c.check_eq( kl::dataframe().to_string(), "Empty DataFrame\nColumns: []\nIndex: []" );
+}
+
+private void selecting_rows_and_columns( ref kl::test::context c )
+{
+    kl::dataframe df = fruit();
+    c.check_eq( df.head( 2 ).to_string(), "   n    x     s      b\n0  3  2.5  pear   True\n1  1  NaN   fig  False" );
+    c.check_eq( df.tail( 2 )["s"].strings()[0], "fig" );
+    c.check_eq( df.tail( 9 ).rows(), 5 );
+    c.check_eq( df.iloc( 1..3 )["n"].i64s()[1], 2 );
+    c.check_eq( df.iloc( 4..9 ).rows(), 1 );
+
+    kl::dataframe big = df.filtered( df["n"].greater( 1.0 ) );
+    c.check_eq( big.rows(), 3 );
+    c.check_eq( big["s"].strings()[2], "kiwi" );
+    c.check_eq( df.filtered( df["s"].equal_each( "fig" ) & df["b"].bools() )["x"].f64s()[0], 4.0 );
+
+    kl::dataframe two = df.select( "s", "n" );
+    c.check_eq( two.columns()[0], "s" );
+    c.check_eq( two.shape()[1], 2 );
+}
+
+private void sorting_keeps_ties_and_puts_missing_last( ref kl::test::context c )
+{
+    kl::dataframe df = fruit();
+    kl::dataframe up = df.sort_values( "x" );
+    c.check_eq( up["n"].i64s()[0], 2 );
+    c.check( up["x"].is_missing( 4 ) );
+    c.check( df.sort_values( "x", false )["x"].is_missing( 4 ) );
+    c.check_eq( df.sort_values( "x", false )["x"].f64s()[0], 4.0 );
+
+    // The two figs keep their order, either way.
+    kl::dataframe by_name = df.sort_values( "s" );
+    c.check_eq( by_name["s"].strings()[0], "apple" );
+    c.check( by_name["x"].is_missing( 1 ) && by_name["x"].f64s()[2] == 4.0 );
+    kl::dataframe by_n = df.sort_values( "n", false );
+    c.check( by_n["x"].is_missing( 3 ) && by_n["x"].f64s()[4] == 4.0 );
+    c.check( !df.sort_values( "b" )["b"].bools().test( 0 ) );
+}
+
+private void arithmetic_keeps_ints_and_missing( ref kl::test::context c )
+{
+    kl::dataframe df = fruit();
+    kl::series sum = df["n"] + df["x"];
+    c.check( sum.kind() == kl::dtype::f64s );
+    c.check_eq( sum.f64s()[0], 5.5 );
+    c.check( sum.is_missing( 1 ) );
+    c.check( ( df["n"] * 2 ).kind() == kl::dtype::i64s );
+    c.check_eq( ( df["n"] * 2 ).i64s()[4], 10 );
+    c.check_eq( ( df["n"] / 2 ).f64s()[0], 1.5 );
+    c.check_eq( ( df["x"] - 1.5 ).f64s()[2], -2.5 );
+
+    kl::series gappy = kl::series( [ 1, 2, 3 ] );
+    gappy.set_missing( 1 );
+    kl::series twice = gappy + gappy;
+    c.check( twice.kind() == kl::dtype::i64s && twice.is_missing( 1 ) && !twice.is_missing( 2 ) );
+    c.check( ( gappy + 0.5 ).is_missing( 1 ) );
+    c.check( !gappy.greater( 0.0 ).test( 1 ) && gappy.differs( 0.0 ).test( 1 ) );
+    c.check_eq( gappy.greater_equal( kl::series( [ 1, 1, 4 ] ) ).count(), 1 );
+
+    c.expect_panic( "the series differ in size", fn[]() { _ = kl::series( [ 1 ] ) + kl::series( [ 1, 2 ] ); } );
+    c.expect_panic( "the series does not hold numbers", fn[]() { _ = kl::series( [ "a" ] ) * 2; } );
+}
+
+private void reductions_skip_missing( ref kl::test::context c )
+{
+    kl::dataframe df = fruit();
+    c.check_eq( df["x"].sum(), 6.0 );
+    c.check_eq( df["x"].mean(), 1.5 );
+    c.check_eq( df["x"].std(), 2.1984843263788196 );
+    c.check_eq( df["n"].std(), 1.6733200530681511 );
+    c.check_eq( df["x"].min(), -1.0 );
+    c.check_eq( df["n"].max(), 5.0 );
+    c.check_eq( df["x"].quantile( 0.3 ), 0.34999999999999987 );
+    c.check_eq( df["n"].quantile( 0.75 ), 3.0 );
+    c.check_eq( df["x"].count(), 4 );
+
+    kl::series none = kl::series( [ 1, 2 ] );
+    none.set_missing( 0 );
+    none.set_missing( 1 );
+    c.check_eq( none.sum(), 0.0 );
+    c.check( kl::is_nan( none.mean() ) && kl::is_nan( none.max() ) && kl::is_nan( kl::series( [ 2.0 ] ).std() ) );
+
+    c.check_eq( df.describe().to_string(), "             n         x\ncount  5.00000  4.000000\nmean   2.40000  1.500000\nstd    1.67332  2.198484\nmin    1.00000 -1.000000\n25%    1.00000  0.125000\n50%    2.00000  1.500000\n75%    3.00000  2.875000\nmax    5.00000  4.000000" );
+}
+
+private void csv_both_ways( ref kl::test::context c )
+{
+    c.check_eq( fruit().to_csv(), "n,x,s,b\n3,2.5,pear,True\n1,,fig,False\n2,-1.0,apple,True\n1,4.0,fig,True\n5,0.5,kiwi,False\n" );
+
+    kl::dataframe df = parsed( "id,v,t,flag,e\r\n1,1.5,\"a\nb\",TRUE,\r\n\r\n2,-2e3,\"x\"\"y\",false,\r\n3,inf,plain,True,\r\n4,,\"\",FALSE,NA\r\n5,0.1\r\n", ',' );
+    c.check_eq( kl::dtype_name( df.dtypes()[0] ), "int64" );
+    c.check_eq( kl::dtype_name( df.dtypes()[1] ), "float64" );
+    c.check_eq( kl::dtype_name( df.dtypes()[2] ), "str" );
+    c.check_eq( kl::dtype_name( df.dtypes()[3] ), "bool" );
+    c.check_eq( kl::dtype_name( df.dtypes()[4] ), "float64" );
+    c.check_eq( df.to_csv(), "id,v,t,flag,e\n1,1.5,\"a\nb\",True,\n2,-2000.0,\"x\"\"y\",False,\n3,inf,plain,True,\n4,,,False,\n5,0.1,,,\n" );
+
+    // An integer column with a gap stays integer.
+    kl::dataframe ints = parsed( "a;b\n1;\n;2\n", ';' );
+    c.check( ints["a"].kind() == kl::dtype::i64s && ints["a"].is_missing( 1 ) && ints["b"].i64s()[1] == 2 );
+    c.check_eq( ints.to_string(), "      a     b\n0     1  <NA>\n1  <NA>     2" );
+
+    switch( kl::parse_csv( "a,b\n1,2\n1,2,3\n" ) )
+    {
+        case result::ok( _ ):
+            c.check( false );
+            break;
+        case result::err( e ):
+            switch( e )
+            {
+                case kl::csv_error::too_many_fields( line ):
+                    c.check_eq( line, 3 );
+                    break;
+                default:
+                    c.check( false );
+                    break;
+            }
+            break;
+    }
+    switch( kl::parse_csv( "a\n\"open\n" ) )
+    {
+        case result::ok( _ ):
+            c.check( false );
+            break;
+        case result::err( e ):
+            switch( e )
+            {
+                case kl::csv_error::unclosed_quote:
+                    break;
+                default:
+                    c.check( false );
+                    break;
+            }
+            break;
+    }
+}

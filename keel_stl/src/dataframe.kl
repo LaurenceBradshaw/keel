@@ -1,0 +1,1597 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+import algorithm;
+import list;
+import mask;
+import math;
+import ndarray;
+import os;
+import string;
+
+/// What a `series` holds.
+enum dtype
+{
+    /// `f64` values, pandas' `float64`.
+    f64s,
+    /// `i64` values, pandas' `int64`.
+    i64s,
+    /// `bool` values.
+    bools,
+    /// `string` values, pandas' `str`.
+    strings
+};
+
+/// pandas' name for `d`: `float64`, `int64`, `bool` or `str`.
+str dtype_name( dtype d )
+{
+    switch( d )
+    {
+        case dtype::f64s:
+            return "float64";
+        case dtype::i64s:
+            return "int64";
+        case dtype::bools:
+            return "bool";
+        case dtype::strings:
+            return "str";
+    }
+}
+
+/// One column of a `dataframe`: values of one `dtype`, any of which may be missing.
+///
+/// A missing `f64` is a NaN, as in pandas; the other dtypes keep a mask of missing values, so an
+/// `i64` column with a gap stays `i64`. `+ - * /` work element by element against a series of
+/// the same size or a number: two `i64` sides stay `i64`, `/` always gives `f64`, and a value
+/// missing on either side is missing in the result. The comparisons answer a `mask` that is clear
+/// where a value is missing, for `dataframe::filtered`. The reductions skip missing values and
+/// answer `f64`. `s.f64s()` and its siblings hand a loop the values, panicking on another dtype.
+class series
+{
+    dtype        kind_;
+    ndarray<f64> f_;
+    ndarray<i64> i_;
+    mask         b_;
+    list<string> s_;
+    mask         missing_; // no bits when nothing is missing; never set for `f64s`
+
+    /// `values` as `f64s`.
+    public series( move ndarray<f64> values )
+    {
+        kind_    = dtype::f64s;
+        f_       = move values;
+        i_       = ndarray<i64>::from_list( list<i64>() );
+        b_       = mask( 0 );
+        s_       = list<string>();
+        missing_ = mask( 0 );
+    }
+
+    /// `values` as `i64s`.
+    public series( move ndarray<i64> values )
+    {
+        kind_    = dtype::i64s;
+        f_       = ndarray<f64>::from_list( list<f64>() );
+        i_       = move values;
+        b_       = mask( 0 );
+        s_       = list<string>();
+        missing_ = mask( 0 );
+    }
+
+    /// The bits of `values`, of rank 1, as `bools`.
+    public series( move mask values )
+    {
+        kind_    = dtype::bools;
+        f_       = ndarray<f64>::from_list( list<f64>() );
+        i_       = ndarray<i64>::from_list( list<i64>() );
+        b_       = move values;
+        s_       = list<string>();
+        missing_ = mask( 0 );
+    }
+
+    /// `values` as `strings`.
+    public series( move list<string> values )
+    {
+        kind_    = dtype::strings;
+        f_       = ndarray<f64>::from_list( list<f64>() );
+        i_       = ndarray<i64>::from_list( list<i64>() );
+        b_       = mask( 0 );
+        s_       = move values;
+        missing_ = mask( 0 );
+    }
+
+    /// A copy of `values` as `f64s`: `series( [ 1.5, 2.0 ] )`.
+    public series( const ref f64[] values )
+    {
+        kind_    = dtype::f64s;
+        f_       = ndarray<f64>( values );
+        i_       = ndarray<i64>::from_list( list<i64>() );
+        b_       = mask( 0 );
+        s_       = list<string>();
+        missing_ = mask( 0 );
+    }
+
+    /// A copy of `values` as `i64s`: `series( [ 1, 2 ] )`.
+    public series( const ref i64[] values )
+    {
+        kind_    = dtype::i64s;
+        f_       = ndarray<f64>::from_list( list<f64>() );
+        i_       = ndarray<i64>( values );
+        b_       = mask( 0 );
+        s_       = list<string>();
+        missing_ = mask( 0 );
+    }
+
+    /// A copy of `values` as `bools`.
+    public series( const ref bool[] values )
+    {
+        kind_ = dtype::bools;
+        f_    = ndarray<f64>::from_list( list<f64>() );
+        i_    = ndarray<i64>::from_list( list<i64>() );
+        b_    = mask( values.size );
+        for( u64 i : 0..values.size )
+        {
+            b_.assign( i, values[i] );
+        }
+        s_       = list<string>();
+        missing_ = mask( 0 );
+    }
+
+    /// A copy of `values` as `strings`: `series( [ "a", "b" ] )`.
+    public series( const ref str[] values )
+    {
+        kind_ = dtype::strings;
+        f_    = ndarray<f64>::from_list( list<f64>() );
+        i_    = ndarray<i64>::from_list( list<i64>() );
+        b_    = mask( 0 );
+        s_    = list<string>::with_capacity( values.size );
+        for( u64 i : 0..values.size )
+        {
+            s_.push( string( values[i] ) );
+        }
+        missing_ = mask( 0 );
+    }
+
+    /// A second series with the same values.
+    public series copy() const
+    {
+        series r = series( list<string>() );
+        r.kind_    = kind_;
+        r.f_       = f_.copy();
+        r.i_       = i_.copy();
+        r.b_       = b_.copy();
+        r.s_       = list<string>::with_capacity( s_.size() );
+        for( u64 i : 0..s_.size() )
+        {
+            r.s_.push( string( s_[i] ) );
+        }
+        r.missing_ = missing_.copy();
+        return r;
+    }
+
+    /// --- Reading ---
+
+    /// What the series holds.
+    public dtype kind() const
+    {
+        return kind_;
+    }
+
+    /// How many values there are, missing ones included.
+    public u64 size() const
+    {
+        switch( kind_ )
+        {
+            case dtype::f64s:
+                return f_.size();
+            case dtype::i64s:
+                return i_.size();
+            case dtype::bools:
+                return b_.size();
+            case dtype::strings:
+                return s_.size();
+        }
+    }
+
+    /// Whether value `i` is missing.
+    public bool is_missing( u64 i ) const
+    {
+        if( kind_ == dtype::f64s )
+        {
+            return kl::is_nan( f_[i] );
+        }
+        return missing_.size() > 0 && missing_.test( i );
+    }
+
+    /// Marks value `i` missing; an `f64` becomes NaN.
+    public void set_missing( u64 i )
+    {
+        if( i >= size() )
+        {
+            panic( "index out of bounds" );
+        }
+        if( kind_ == dtype::f64s )
+        {
+            f_[i] = nan();
+            return;
+        }
+        if( missing_.size() == 0 )
+        {
+            missing_ = mask( size() );
+        }
+        missing_.assign( i, true );
+    }
+
+    /// How many values are not missing.
+    public u64 count() const
+    {
+        if( kind_ == dtype::f64s )
+        {
+            return size() - kl::is_nan( f_ ).count();
+        }
+        return size() - missing_.count();
+    }
+
+    /// The values of an `f64s` series; panics on another dtype.
+    public ref ndarray<f64> f64s() const
+    {
+        holds( dtype::f64s );
+        return f_;
+    }
+
+    /// The values of an `i64s` series, missing ones unspecified; panics on another dtype.
+    public ref ndarray<i64> i64s() const
+    {
+        holds( dtype::i64s );
+        return i_;
+    }
+
+    /// The values of a `bools` series, missing ones unspecified; panics on another dtype.
+    public ref mask bools() const
+    {
+        holds( dtype::bools );
+        return b_;
+    }
+
+    /// The values of a `strings` series, missing ones unspecified; panics on another dtype.
+    public ref list<string> strings() const
+    {
+        holds( dtype::strings );
+        return s_;
+    }
+
+    /// The values at `rows`, in that order: pandas' `take`.
+    public series taken( const ref u64[] rows ) const
+    {
+        series r = series( list<string>() );
+        r.kind_ = kind_;
+        switch( kind_ )
+        {
+            case dtype::f64s:
+                list<f64> f = list<f64>::with_capacity( rows.size );
+                for( u64 k : rows )
+                {
+                    f.push( f_[k] );
+                }
+                r.f_ = ndarray<f64>::from_list( move f );
+                break;
+            case dtype::i64s:
+                list<i64> v = list<i64>::with_capacity( rows.size );
+                for( u64 k : rows )
+                {
+                    v.push( i_[k] );
+                }
+                r.i_ = ndarray<i64>::from_list( move v );
+                break;
+            case dtype::bools:
+                r.b_ = mask( rows.size );
+                for( u64 j : 0..rows.size )
+                {
+                    r.b_.assign( j, b_.test( rows[j] ) );
+                }
+                break;
+            case dtype::strings:
+                r.s_ = list<string>::with_capacity( rows.size );
+                for( u64 k : rows )
+                {
+                    r.s_.push( string( s_[k] ) );
+                }
+                break;
+        }
+        if( missing_.size() > 0 )
+        {
+            r.missing_ = mask( rows.size );
+            for( u64 j : 0..rows.size )
+            {
+                r.missing_.assign( j, missing_.test( rows[j] ) );
+            }
+        }
+        return r;
+    }
+
+    /// --- Arithmetic ---
+
+    /// Element by element against `o`, of the same size.
+    public series operator+( const ref series o ) const
+    {
+        return combine( o, '+' );
+    }
+
+    /// Element by element against `o`, of the same size.
+    public series operator-( const ref series o ) const
+    {
+        return combine( o, '-' );
+    }
+
+    /// Element by element against `o`, of the same size.
+    public series operator*( const ref series o ) const
+    {
+        return combine( o, '*' );
+    }
+
+    /// Element by element against `o`, of the same size, as `f64`.
+    public series operator/( const ref series o ) const
+    {
+        return combine( o, '/' );
+    }
+
+    /// `x` added to each value, as `f64`.
+    public series operator+( f64 x ) const
+    {
+        return combine( series( ndarray<f64>::filled( x, size() ) ), '+' );
+    }
+
+    /// `x` taken from each value, as `f64`.
+    public series operator-( f64 x ) const
+    {
+        return combine( series( ndarray<f64>::filled( x, size() ) ), '-' );
+    }
+
+    /// Each value times `x`, as `f64`.
+    public series operator*( f64 x ) const
+    {
+        return combine( series( ndarray<f64>::filled( x, size() ) ), '*' );
+    }
+
+    /// Each value over `x`, as `f64`.
+    public series operator/( f64 x ) const
+    {
+        return combine( series( ndarray<f64>::filled( x, size() ) ), '/' );
+    }
+
+    /// `x` added to each value; an `i64s` series stays `i64s`.
+    public series operator+( i64 x ) const
+    {
+        return combine( series( ndarray<i64>::filled( x, size() ) ), '+' );
+    }
+
+    /// `x` taken from each value; an `i64s` series stays `i64s`.
+    public series operator-( i64 x ) const
+    {
+        return combine( series( ndarray<i64>::filled( x, size() ) ), '-' );
+    }
+
+    /// Each value times `x`; an `i64s` series stays `i64s`.
+    public series operator*( i64 x ) const
+    {
+        return combine( series( ndarray<i64>::filled( x, size() ) ), '*' );
+    }
+
+    /// Each value over `x`, as `f64`.
+    public series operator/( i64 x ) const
+    {
+        return combine( series( ndarray<i64>::filled( x, size() ) ), '/' );
+    }
+
+    /// --- Comparing ---
+
+    /// Where each value is less than `o`'s.
+    public mask less( const ref series o ) const
+    {
+        return compare( o, relation::less );
+    }
+
+    /// Where each value is greater than `o`'s.
+    public mask greater( const ref series o ) const
+    {
+        return compare( o, relation::greater );
+    }
+
+    /// Where each value is at most `o`'s.
+    public mask less_equal( const ref series o ) const
+    {
+        return compare( o, relation::less_equal );
+    }
+
+    /// Where each value is at least `o`'s.
+    public mask greater_equal( const ref series o ) const
+    {
+        return compare( o, relation::greater_equal );
+    }
+
+    /// Where each value equals `o`'s.
+    public mask equal_each( const ref series o ) const
+    {
+        return compare( o, relation::equal );
+    }
+
+    /// Where each value differs from `o`'s, a missing one included.
+    public mask differs( const ref series o ) const
+    {
+        return ~compare( o, relation::equal );
+    }
+
+    /// Where each value is less than `x`.
+    public mask less( f64 x ) const
+    {
+        return compare( series( ndarray<f64>::filled( x, size() ) ), relation::less );
+    }
+
+    /// Where each value is greater than `x`.
+    public mask greater( f64 x ) const
+    {
+        return compare( series( ndarray<f64>::filled( x, size() ) ), relation::greater );
+    }
+
+    /// Where each value is at most `x`.
+    public mask less_equal( f64 x ) const
+    {
+        return compare( series( ndarray<f64>::filled( x, size() ) ), relation::less_equal );
+    }
+
+    /// Where each value is at least `x`.
+    public mask greater_equal( f64 x ) const
+    {
+        return compare( series( ndarray<f64>::filled( x, size() ) ), relation::greater_equal );
+    }
+
+    /// Where each value equals `x`.
+    public mask equal_each( f64 x ) const
+    {
+        return compare( series( ndarray<f64>::filled( x, size() ) ), relation::equal );
+    }
+
+    /// Where each value differs from `x`, a missing one included.
+    public mask differs( f64 x ) const
+    {
+        return ~equal_each( x );
+    }
+
+    /// Where each value equals the text `x`.
+    public mask equal_each( const ref textual x ) const
+    {
+        holds( dtype::strings );
+        mask r = mask( size() );
+        string t = string( x );
+        for( u64 i : 0..s_.size() )
+        {
+            r.assign( i, s_[i] == t );
+        }
+        return without_missing( move r );
+    }
+
+    /// Where each value differs from the text `x`, a missing one included.
+    public mask differs( const ref textual x ) const
+    {
+        return ~equal_each( x );
+    }
+
+    /// --- Reducing ---
+
+    /// The sum of the values present, 0 when there are none.
+    public f64 sum() const
+    {
+        return present().sum();
+    }
+
+    /// The mean of the values present, NaN when there are none.
+    public f64 mean() const
+    {
+        ndarray<f64> v = present();
+        return v.size() == 0 ? nan() : v.sum() / cast<f64>( v.size() );
+    }
+
+    /// The sample variance of the values present, over n - 1 as pandas' default; NaN for fewer
+    /// than two.
+    public f64 var() const
+    {
+        ndarray<f64> v = present();
+        u64 n = v.size();
+        if( n < 2 )
+        {
+            return nan();
+        }
+        ndarray<f64> d = v - v.sum() / cast<f64>( n );
+        return ( d * d ).sum() / cast<f64>( n - 1 );
+    }
+
+    /// The sample standard deviation of the values present, the square root of `var`.
+    public f64 std() const
+    {
+        return kl::sqrt( var() );
+    }
+
+    /// The least value present, NaN when there are none.
+    public f64 min() const
+    {
+        ndarray<f64> v = present();
+        return v.size() == 0 ? nan() : v.min();
+    }
+
+    /// The greatest value present, NaN when there are none.
+    public f64 max() const
+    {
+        ndarray<f64> v = present();
+        return v.size() == 0 ? nan() : v.max();
+    }
+
+    /// The `q` quantile of the values present, `q` in [0, 1], interpolated linearly between the
+    /// two nearest as pandas' default; NaN when there are none.
+    public f64 quantile( f64 q ) const
+    {
+        if( !( q >= 0.0 && q <= 1.0 ) )
+        {
+            panic( "the quantile is outside [0, 1]" );
+        }
+        ndarray<f64> v = present().sorted();
+        u64 n = v.size();
+        if( n == 0 )
+        {
+            return nan();
+        }
+        f64 at = q * cast<f64>( n - 1 );
+        u64 lo = kl::floored<u64>( at );
+        u64 hi = lo + 1 < n ? lo + 1 : lo;
+        f64 t = at - cast<f64>( lo );
+        f64 diff = v[hi] - v[lo];
+        // numpy's lerp: from the nearer end, so q = 1 lands on the last value exactly.
+        return t >= 0.5 ? v[hi] - diff * ( 1.0 - t ) : v[lo] + diff * t;
+    }
+
+    // Panics unless the series holds `k`.
+    private void holds( dtype k ) const
+    {
+        if( kind_ != k )
+        {
+            panic( "the series holds another dtype" );
+        }
+    }
+
+    // The values present, as `f64`.
+    private ndarray<f64> present() const
+    {
+        switch( kind_ )
+        {
+            case dtype::f64s:
+                return f_.selected( ~kl::is_nan( f_ ) );
+            case dtype::i64s:
+                if( missing_.size() == 0 )
+                {
+                    return i_.to<f64>();
+                }
+                return i_.selected( ~missing_ ).to<f64>();
+            case dtype::bools:
+            case dtype::strings:
+                panic( "the series does not hold numbers" );
+        }
+    }
+
+    // Every value as `f64`, missing ones unspecified.
+    private ndarray<f64> numbers() const
+    {
+        switch( kind_ )
+        {
+            case dtype::f64s:
+                return f_.copy();
+            case dtype::i64s:
+                return i_.to<f64>();
+            case dtype::bools:
+            case dtype::strings:
+                panic( "the series does not hold numbers" );
+        }
+    }
+
+    // `op`, one of `+ - * /`, element by element against `o`.
+    private series combine( const ref series o, u8 op ) const
+    {
+        if( size() != o.size() )
+        {
+            panic( "the series differ in size" );
+        }
+
+        if( kind_ == dtype::i64s && o.kind_ == dtype::i64s && op != '/' )
+        {
+            series r = series( op == '+' ? i_ + o.i_ : op == '-' ? i_ - o.i_ : i_ * o.i_ );
+            if( missing_.size() > 0 || o.missing_.size() > 0 )
+            {
+                r.missing_ = missing_.size() == 0 ? o.missing_.copy() : o.missing_.size() == 0 ? missing_.copy() : missing_ | o.missing_;
+            }
+            return r;
+        }
+
+        series r = kind_ == dtype::f64s && o.kind_ == dtype::f64s ? series( arithmetic( f_, o.f_, op ) )
+                 : kind_ == dtype::f64s ? series( arithmetic( f_, o.numbers(), op ) )
+                 : o.kind_ == dtype::f64s ? series( arithmetic( numbers(), o.f_, op ) )
+                 : series( arithmetic( numbers(), o.numbers(), op ) );
+        for( u64 i : 0..r.size() )
+        {
+            if( ( missing_.size() > 0 && missing_.test( i ) ) || ( o.missing_.size() > 0 && o.missing_.test( i ) ) )
+            {
+                r.f_[i] = nan();
+            }
+        }
+        return r;
+    }
+
+    // Where `relation` holds between each value and `o`'s, clear where either is missing.
+    private mask compare( const ref series o, relation rel ) const
+    {
+        if( size() != o.size() )
+        {
+            panic( "the series differ in size" );
+        }
+
+        mask r = mask( 0 );
+        if( kind_ == dtype::i64s && o.kind_ == dtype::i64s )
+        {
+            r = relate( i_, o.i_, rel );
+        }
+        else if( kind_ == dtype::strings && o.kind_ == dtype::strings )
+        {
+            r = mask( size() );
+            for( u64 i : 0..s_.size() )
+            {
+                r.assign( i, holds_between( s_[i] <=> o.s_[i], rel ) );
+            }
+        }
+        else if( kind_ == dtype::f64s && o.kind_ == dtype::f64s )
+        {
+            r = relate( f_, o.f_, rel );
+        }
+        else
+        {
+            r = relate( numbers(), o.numbers(), rel );
+        }
+
+        r = without_missing( move r );
+        return o.without_missing( move r );
+    }
+
+    // `m` cleared where a value is missing.
+    private mask without_missing( move mask m ) const
+    {
+        if( missing_.size() == 0 )
+        {
+            return m;
+        }
+        return m & ~missing_;
+    }
+};
+
+// What `series::compare` tests.
+private enum relation
+{
+    less,
+    less_equal,
+    greater,
+    greater_equal,
+    equal
+};
+
+// Whether `rel` holds for an ordering of two values.
+private bool holds_between( ordering o, relation rel )
+{
+    switch( rel )
+    {
+        case relation::less:
+            return o == ordering::less;
+        case relation::less_equal:
+            return o != ordering::greater;
+        case relation::greater:
+            return o == ordering::greater;
+        case relation::greater_equal:
+            return o != ordering::less;
+        case relation::equal:
+            return o == ordering::equal;
+    }
+}
+
+// Where `rel` holds between each element of `a` and `b`'s.
+private mask relate<T>( const ref ndarray<T> a, const ref ndarray<T> b, relation rel ) where T : numeric
+{
+    switch( rel )
+    {
+        case relation::less:
+            return a.less( b );
+        case relation::less_equal:
+            return a.less_equal( b );
+        case relation::greater:
+            return a.greater( b );
+        case relation::greater_equal:
+            return a.greater_equal( b );
+        case relation::equal:
+            return a.equal_each( b );
+    }
+}
+
+// `op`, one of `+ - * /`, element by element.
+private ndarray<f64> arithmetic( const ref ndarray<f64> a, const ref ndarray<f64> b, u8 op )
+{
+    switch( op )
+    {
+        case '+':
+            return a + b;
+        case '-':
+            return a - b;
+        case '*':
+            return a * b;
+        default:
+            return a / b;
+    }
+}
+
+// A quiet NaN.
+private f64 nan()
+{
+    f64 zero = 0.0;
+    return zero / zero;
+}
+
+/// Named `series` of one length, in order, with rows numbered from 0, as pandas' `DataFrame`.
+///
+/// Build one empty and `insert` columns, or read one with `read_csv`. `df["a"]` is a column;
+/// `head`, `tail`, `iloc`, `filtered`, `select` and `sort_values` answer new frames holding copies,
+/// as pandas' copy-on-write behaves, while `insert`, `drop` and `rename` change the frame itself.
+/// `to_string` writes pandas' table.
+class dataframe
+{
+    list<string> names_;
+    list<series> columns_;
+    list<string> labels_; // row labels to print, none when rows are numbered
+
+    /// No columns and no rows.
+    public dataframe()
+    {
+        names_   = list<string>();
+        columns_ = list<series>();
+        labels_  = list<string>();
+    }
+
+    /// A second frame with the same columns.
+    public dataframe copy() const
+    {
+        dataframe r = dataframe();
+        for( u64 c : 0..columns_.size() )
+        {
+            r.names_.push( string( names_[c] ) );
+            r.columns_.push( columns_[c].copy() );
+        }
+        for( u64 i : 0..labels_.size() )
+        {
+            r.labels_.push( string( labels_[i] ) );
+        }
+        return r;
+    }
+
+    /// --- Shape ---
+
+    /// How many rows there are.
+    public u64 rows() const
+    {
+        return columns_.is_empty() ? 0 : columns_[0].size();
+    }
+
+    /// The rows, then the columns.
+    public u64[2] shape() const
+    {
+        u64[2] r = [ rows(), columns_.size() ];
+        return r;
+    }
+
+    /// The columns' names, in order.
+    public const ref list<string> columns() const
+    {
+        return names_;
+    }
+
+    /// The columns' dtypes, in order.
+    public list<dtype> dtypes() const
+    {
+        list<dtype> r = list<dtype>::with_capacity( columns_.size() );
+        for( u64 c : 0..columns_.size() )
+        {
+            r.push( columns_[c].kind() );
+        }
+        return r;
+    }
+
+    /// The column named `name`; panics when there is none.
+    public const ref series operator[]( const ref textual name ) const
+    {
+        return columns_[position( name )];
+    }
+
+    /// Whether a column is named `name`.
+    public bool has( const ref textual name ) const
+    {
+        return find( name ) < names_.size();
+    }
+
+    /// --- Changing ---
+
+    /// Adds `s` as the last column, named `name`. Panics when the name is taken, or when `s`'s
+    /// size is not the frame's rows; the first column sets them.
+    public void insert( const ref textual name, move series s )
+    {
+        if( has( name ) )
+        {
+            panic( "a column already has that name" );
+        }
+        if( !columns_.is_empty() && s.size() != rows() )
+        {
+            panic( "the column's size is not the frame's rows" );
+        }
+        names_.push( string( name ) );
+        columns_.push( move s );
+    }
+
+    /// Drops each column in `names`; panics on a name no column has.
+    public void drop( str... names )
+    {
+        for( str n : names )
+        {
+            u64 c = position( n );
+            names_.remove( c );
+            columns_.remove( c );
+        }
+    }
+
+    /// Renames column `from` to `to`; panics when there is no `from` or `to` is taken.
+    public void rename( const ref textual from, const ref textual to )
+    {
+        u64 c = position( from );
+        if( has( to ) )
+        {
+            panic( "a column already has that name" );
+        }
+        names_[c] = string( to );
+    }
+
+    /// --- Selecting ---
+
+    /// The columns in `names`, in that order.
+    public dataframe select( str... names ) const
+    {
+        dataframe r = dataframe();
+        for( str n : names )
+        {
+            r.insert( n, columns_[position( n )].copy() );
+        }
+        r.labels_ = copied( labels_ );
+        return r;
+    }
+
+    /// The rows in `at`, those past the end left out, as pandas' `iloc[a:b]`.
+    public dataframe iloc( range at ) const
+    {
+        u64 to = at.to < rows() ? at.to : rows();
+        list<u64> picked = list<u64>();
+        for( u64 i = at.from; i < to; i++ )
+        {
+            picked.push( i );
+        }
+        return taken( picked.as_run() );
+    }
+
+    /// The first `n` rows, or all of them.
+    public dataframe head( u64 n = 5 ) const
+    {
+        return iloc( 0..n );
+    }
+
+    /// The last `n` rows, or all of them.
+    public dataframe tail( u64 n = 5 ) const
+    {
+        return iloc( ( n < rows() ? rows() - n : 0 )..rows() );
+    }
+
+    /// The rows `m` sets, `m` holding one bit per row: `df.filtered( df["a"].greater( 3.0 ) )`.
+    public dataframe filtered( const ref mask m ) const
+    {
+        if( m.size() != rows() )
+        {
+            panic( "the mask's size is not the frame's rows" );
+        }
+        list<u64> picked = list<u64>::with_capacity( m.count() );
+        for( u64 i : 0..m.size() )
+        {
+            if( m.test( i ) )
+            {
+                picked.push( i );
+            }
+        }
+        return taken( picked.as_run() );
+    }
+
+    /// The rows at `rows`, in that order: pandas' `take`.
+    public dataframe taken( const ref u64[] rows ) const
+    {
+        dataframe r = dataframe();
+        for( u64 c : 0..columns_.size() )
+        {
+            r.names_.push( string( names_[c] ) );
+            r.columns_.push( columns_[c].taken( rows ) );
+        }
+        if( !labels_.is_empty() )
+        {
+            for( u64 k : rows )
+            {
+                r.labels_.push( string( labels_[k] ) );
+            }
+        }
+        return r;
+    }
+
+    /// The rows ordered by column `name`, a stable sort, missing values last either way.
+    public dataframe sort_values( const ref textual name, bool ascending = true ) const
+    {
+        const ref series s = columns_[position( name )];
+        list<u64> order = list<u64>::with_capacity( rows() );
+        list<u64> gaps = list<u64>();
+        for( u64 i : 0..rows() )
+        {
+            if( s.is_missing( i ) )
+            {
+                gaps.push( i );
+            }
+            else
+            {
+                order.push( i );
+            }
+        }
+
+        switch( s.kind() )
+        {
+            case dtype::f64s:
+                const ref ndarray<f64> f = s.f64s();
+                kl::stable_sort( ref order, fn[ f, ascending ]( a, b ) { return ascending ? f[a] < f[b] : f[b] < f[a]; } );
+                break;
+            case dtype::i64s:
+                const ref ndarray<i64> v = s.i64s();
+                kl::stable_sort( ref order, fn[ v, ascending ]( a, b ) { return ascending ? v[a] < v[b] : v[b] < v[a]; } );
+                break;
+            case dtype::bools:
+                const ref mask m = s.bools();
+                kl::stable_sort( ref order, fn[ m, ascending ]( a, b ) { return m.test( ascending ? b : a ) && !m.test( ascending ? a : b ); } );
+                break;
+            case dtype::strings:
+                const ref list<string> t = s.strings();
+                kl::stable_sort( ref order, fn[ t, ascending ]( a, b ) { return ascending ? t[a] < t[b] : t[b] < t[a]; } );
+                break;
+        }
+
+        for( u64 i : 0..gaps.size() )
+        {
+            order.push( gaps[i] );
+        }
+        return taken( order.as_run() );
+    }
+
+    /// --- Summarising ---
+
+    /// pandas' `describe`: the count, mean, standard deviation, least, quartiles and greatest of
+    /// each `f64s` and `i64s` column, as `f64s` columns of a frame whose rows are labelled.
+    public dataframe describe() const
+    {
+        dataframe r = dataframe();
+        str[8] stats = [ "count", "mean", "std", "min", "25%", "50%", "75%", "max" ];
+        for( str s : stats )
+        {
+            r.labels_.push( string( s ) );
+        }
+        for( u64 c : 0..columns_.size() )
+        {
+            const ref series s = columns_[c];
+            if( s.kind() == dtype::f64s || s.kind() == dtype::i64s )
+            {
+                f64[8] v = [ cast<f64>( s.count() ), s.mean(), s.std(), s.min(), s.quantile( 0.25 ), s.quantile( 0.5 ), s.quantile( 0.75 ), s.max() ];
+                r.names_.push( string( names_[c] ) );
+                r.columns_.push( series( v[0..8] ) );
+            }
+        }
+        return r;
+    }
+
+    /// --- Writing ---
+
+    /// pandas' table: a header, the row labels on the left, each column right-aligned, and of more
+    /// than 60 rows the first and last five, then `[n rows x m columns]`.
+    public string to_string() const
+    {
+        u64 n = rows();
+        if( columns_.is_empty() || n == 0 )
+        {
+            string r = string( "Empty DataFrame\nColumns: [" );
+            for( u64 c : 0..names_.size() )
+            {
+                if( c > 0 )
+                {
+                    r += ", ";
+                }
+                r += names_[c];
+            }
+            r += "]\nIndex: []";
+            return r;
+        }
+
+        bool cut = n > 60;
+        list<u64> shown = list<u64>();
+        for( u64 i : 0..n )
+        {
+            if( !cut || i < 5 || i >= n - 5 )
+            {
+                shown.push( i );
+            }
+        }
+
+        // Each column's cells, the label column first, with the header as cell 0; a header takes the
+    // leading space its cells do, but over text.
+        list<list<string>> cells = list<list<string>>();
+        list<string> index = list<string>();
+        index.push( string() );
+        for( u64 i : shown )
+        {
+            index.push( labels_.is_empty() ? string::from( i ) : string( labels_[i] ) );
+        }
+        cells.push( move index );
+        for( u64 c : 0..columns_.size() )
+        {
+            list<string> column = cell_texts( columns_[c], shown.as_run() );
+            column.insert( 0, string( columns_[c].kind() == dtype::strings ? "" : " " ) + names_[c] );
+            cells.push( move column );
+        }
+
+        list<u64> widths = list<u64>();
+        for( u64 c : 0..cells.size() )
+        {
+            u64 w = 0;
+            for( u64 k : 0..cells[c].size() )
+            {
+                w = cells[c][k].size() > w ? cells[c][k].size() : w;
+            }
+            widths.push( w );
+        }
+
+        string r = string();
+        for( u64 k : 0..shown.size() + 1 )
+        {
+            if( cut && k == 6 )
+            {
+                pad( ref r, widths[0] > 3 ? "..." : "..", widths[0], false );
+                for( u64 c : 1..cells.size() )
+                {
+                    r += " ";
+                    pad( ref r, widths[c] > 3 ? "..." : "..", widths[c], true );
+                }
+                r += "\n";
+            }
+            pad( ref r, cells[0][k], widths[0], false );
+            for( u64 c : 1..cells.size() )
+            {
+                r += " ";
+                pad( ref r, cells[c][k], widths[c], true );
+            }
+            if( k < shown.size() )
+            {
+                r += "\n";
+            }
+        }
+        if( cut )
+        {
+            r += "\n\n[";
+            r += string::from( n );
+            r += " rows x ";
+            r += string::from( columns_.size() );
+            r += " columns]";
+        }
+        return r;
+    }
+
+    /// The frame as CSV: a header, then a line for each row, ended by `\n`; a missing value is
+    /// empty, a float written as `string::from` writes it, and a field holding `sep`, a quote or a
+    /// line break quoted. The row numbers are not written, as pandas' `index=False`.
+    public string to_csv( u8 sep = ',' ) const
+    {
+        string r = string();
+        for( u64 c : 0..names_.size() )
+        {
+            if( c > 0 )
+            {
+                r.push( sep );
+            }
+            push_field( ref r, names_[c], sep );
+        }
+        r += "\n";
+        for( u64 i : 0..rows() )
+        {
+            for( u64 c : 0..columns_.size() )
+            {
+                if( c > 0 )
+                {
+                    r.push( sep );
+                }
+                const ref series s = columns_[c];
+                if( s.is_missing( i ) )
+                {
+                    continue;
+                }
+                switch( s.kind() )
+                {
+                    case dtype::f64s:
+                        r += string::from( s.f64s()[i] );
+                        break;
+                    case dtype::i64s:
+                        r += string::from( s.i64s()[i] );
+                        break;
+                    case dtype::bools:
+                        r += s.bools().test( i ) ? "True" : "False";
+                        break;
+                    case dtype::strings:
+                        push_field( ref r, s.strings()[i], sep );
+                        break;
+                }
+            }
+            r += "\n";
+        }
+        return r;
+    }
+
+    // The column named `name`'s place; panics when there is none.
+    private u64 position( const ref textual name ) const
+    {
+        u64 c = find( name );
+        if( c == names_.size() )
+        {
+            panic( "no column has that name" );
+        }
+        return c;
+    }
+
+    // The column named `name`'s place, or the count when there is none.
+    private u64 find( const ref textual name ) const
+    {
+        string n = string( name );
+        for( u64 c : 0..names_.size() )
+        {
+            if( names_[c] == n )
+            {
+                return c;
+            }
+        }
+        return names_.size();
+    }
+};
+
+// A copy of each string in `a`.
+private list<string> copied( const ref list<string> a )
+{
+    list<string> r = list<string>::with_capacity( a.size() );
+    for( u64 i : 0..a.size() )
+    {
+        r.push( string( a[i] ) );
+    }
+    return r;
+}
+
+// `text` padded with spaces to `width`, on the left when `right`.
+private void pad( ref string to, const ref textual text, u64 width, bool right )
+{
+    u64 n = text.as_text().size;
+    if( right )
+    {
+        for( u64 i = n; i < width; i++ )
+        {
+            to.push( ' ' );
+        }
+    }
+    to += text;
+    if( !right )
+    {
+        for( u64 i = n; i < width; i++ )
+        {
+            to.push( ' ' );
+        }
+    }
+}
+
+// The values of `s` at `rows` as pandas prints them, each after a space or its sign.
+private list<string> cell_texts( const ref series s, const ref u64[] rows )
+{
+    list<string> r = list<string>::with_capacity( rows.size );
+    if( s.kind() == dtype::f64s )
+    {
+        r = float_texts( s.f64s(), rows );
+    }
+    else
+    {
+        for( u64 k : rows )
+        {
+            if( s.is_missing( k ) )
+            {
+                r.push( string( s.kind() == dtype::strings ? "NaN" : "<NA>" ) );
+                continue;
+            }
+            switch( s.kind() )
+            {
+                case dtype::i64s:
+                    r.push( string::from( s.i64s()[k] ) );
+                    break;
+                case dtype::bools:
+                    r.push( string( s.bools().test( k ) ? "True" : "False" ) );
+                    break;
+                default:
+                    r.push( string( s.strings()[k] ) );
+                    break;
+            }
+        }
+    }
+
+    for( u64 i : 0..r.size() )
+    {
+        if( r[i].is_empty() || r[i][0] != '-' )
+        {
+            r[i] = string( " " ) + r[i];
+        }
+    }
+    return r;
+}
+
+// pandas' float column: six places, the trailing zeros all values share trimmed down to one, or
+// six places of scientific when a value is below 1e-6, or above 1e6 with a fixed text past 12.
+private list<string> float_texts( const ref ndarray<f64> v, const ref u64[] rows )
+{
+    u64 places = 1;
+    bool small = false;
+    bool large = false;
+    for( u64 k : rows )
+    {
+        f64 x = v[k];
+        if( kl::is_nan( x ) || kl::is_inf( x ) )
+        {
+            continue;
+        }
+        f64 a = kl::abs( x );
+        small = small || ( a > 0.0 && a < 1e-6 );
+        large = large || a > 1e6;
+        string t = string::fixed( x, 6 );
+        u64 zeros = 0;
+        while( zeros < 6 && t[t.size() - 1 - zeros] == '0' )
+        {
+            zeros++;
+        }
+        places = 6 - zeros > places ? 6 - zeros : places;
+    }
+
+    list<string> r = list<string>::with_capacity( rows.size );
+    u64 longest = 0;
+    for( u64 k : rows )
+    {
+        r.push( kl::is_nan( v[k] ) ? string( "NaN" ) : string::fixed( v[k], places ) );
+        longest = r.last().size() > longest ? r.last().size() : longest;
+    }
+    if( small || ( large && longest > 12 ) )
+    {
+        for( u64 j : 0..rows.size )
+        {
+            f64 x = v[rows[j]];
+            if( !kl::is_nan( x ) )
+            {
+                r[j] = string::scientific( x, 6 );
+            }
+        }
+    }
+    return r;
+}
+
+// `text` as a CSV field: quoted, its quotes doubled, when it holds `sep`, a quote or a line break.
+private void push_field( ref string to, const ref string text, u8 sep )
+{
+    bool quote = false;
+    for( u64 i : 0..text.size() )
+    {
+        u8 b = text[i];
+        quote = quote || b == sep || b == '"' || b == '\n' || b == '\r';
+    }
+    if( !quote )
+    {
+        to += text;
+        return;
+    }
+    to.push( '"' );
+    for( u64 i : 0..text.size() )
+    {
+        if( text[i] == '"' )
+        {
+            to.push( '"' );
+        }
+        to.push( text[i] );
+    }
+    to.push( '"' );
+}
+
+/// --- CSV ---
+
+/// Why `parse_csv` or `read_csv` failed.
+enum csv_error
+{
+    /// The file could not be read.
+    unreadable( file_error error ),
+    /// The row starting on `line` has more fields than the header.
+    too_many_fields( u64 line ),
+    /// A quoted field runs to the end of the text.
+    unclosed_quote
+};
+
+/// The frame CSV `text` holds, read as RFC 4180 with pandas' defaults.
+///
+/// The first line names the columns. Fields are split at `sep`; a quoted field may hold `sep`,
+/// line breaks and doubled quotes. Blank lines are skipped, and a row short of fields has the rest
+/// missing, as are pandas' missing tokens (an empty field, `NA`, `NaN`, `null`, `None` and the
+/// like). Each column takes the first dtype every value present reads as, `i64s`, `f64s`, then
+/// `bools` (`True`, `False`, and lower or upper case), else `strings`; a column with no values
+/// present is `f64s`.
+result<dataframe, csv_error> parse_csv( const ref textual text, u8 sep = ',' )
+{
+    const ref u8[] t = text.as_text();
+    list<string> header = list<string>();
+    list<list<string>> raw = list<list<string>>();
+    bool started = false;
+    u64 i = 0;
+    u64 line = 1;
+
+    while( i < t.size )
+    {
+        u64 first_line = line;
+        list<string> record = list<string>();
+        while( true )
+        {
+            string f = string();
+            if( i < t.size && t[i] == '"' )
+            {
+                i++;
+                while( true )
+                {
+                    if( i >= t.size )
+                    {
+                        return result::err( csv_error::unclosed_quote );
+                    }
+                    if( t[i] == '"' )
+                    {
+                        i++;
+                        if( i < t.size && t[i] == '"' )
+                        {
+                            f.push( '"' );
+                            i++;
+                            continue;
+                        }
+                        break;
+                    }
+                    if( t[i] == '\n' )
+                    {
+                        line++;
+                    }
+                    f.push( t[i] );
+                    i++;
+                }
+            }
+            u64 from = i;
+            while( i < t.size && t[i] != sep && t[i] != '\n' && t[i] != '\r' )
+            {
+                i++;
+            }
+            f.append( t[from..i] );
+            record.push( move f );
+
+            if( i < t.size && t[i] == sep )
+            {
+                i++;
+                continue;
+            }
+            if( i < t.size && t[i] == '\r' )
+            {
+                i++;
+            }
+            if( i < t.size && t[i] == '\n' )
+            {
+                i++;
+            }
+            line++;
+            break;
+        }
+
+        if( record.size() == 1 && record[0].is_empty() )
+        {
+            continue;
+        }
+        if( !started )
+        {
+            started = true;
+            header = move record;
+            for( u64 c : 0..header.size() )
+            {
+                raw.push( list<string>() );
+            }
+            continue;
+        }
+        if( record.size() > header.size() )
+        {
+            return result::err( csv_error::too_many_fields( first_line ) );
+        }
+        for( u64 c : 0..header.size() )
+        {
+            raw[c].push( c < record.size() ? string( record[c] ) : string() );
+        }
+    }
+
+    dataframe r = dataframe();
+    for( u64 c : 0..header.size() )
+    {
+        r.insert( header[c], column_of( raw[c] ) );
+    }
+    return result::ok( move r );
+}
+
+/// The frame the CSV file at `path` holds, as `parse_csv` reads it.
+result<dataframe, csv_error> read_csv( const ref textual path, u8 sep = ',' )
+{
+    switch( kl::read_file( path ) )
+    {
+        case result::ok( text ):
+            return parse_csv( text, sep );
+        case result::err( e ):
+            return result::err( csv_error::unreadable( e ) );
+    }
+}
+
+// Whether `f` is one of pandas' missing tokens.
+private bool is_na_token( const ref string f )
+{
+    str[19] tokens = [ "", "#N/A", "#N/A N/A", "#NA", "-1.#IND", "-1.#QNAN", "-NaN", "-nan", "1.#IND", "1.#QNAN", "<NA>", "N/A", "NA", "NULL", "NaN", "None", "n/a", "nan", "null" ];
+    for( str k : tokens )
+    {
+        if( f.size() == k.size && f.starts_with( k ) )
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Whether `f` reads as a bool, and which.
+private bool is_bool_token( const ref string f, ref bool value )
+{
+    str[3] yes = [ "True", "true", "TRUE" ];
+    str[3] no = [ "False", "false", "FALSE" ];
+    for( u64 k : 0..3 )
+    {
+        if( f.size() == yes[k].size && f.starts_with( yes[k] ) )
+        {
+            value = true;
+            return true;
+        }
+        if( f.size() == no[k].size && f.starts_with( no[k] ) )
+        {
+            value = false;
+            return true;
+        }
+    }
+    return false;
+}
+
+// Whether `f` reads as an `i64`, written to `value`.
+private bool reads_i64( const ref string f, ref i64 value )
+{
+    switch( f.parse_i64() )
+    {
+        case result::ok( x ):
+            value = x;
+            return true;
+        case result::err( _ ):
+            return false;
+    }
+}
+
+// Whether `f` reads as an `f64`, written to `value`.
+private bool reads_f64( const ref string f, ref f64 value )
+{
+    switch( f.parse_f64() )
+    {
+        case result::ok( x ):
+            value = x;
+            return true;
+        case result::err( _ ):
+            return false;
+    }
+}
+
+// A column of CSV fields as the first dtype every value present reads as.
+private series column_of( const ref list<string> fields )
+{
+    u64 n = fields.size();
+    mask gaps = mask( n );
+    bool ints = true;
+    bool floats = true;
+    bool bools = true;
+    u64 present = 0;
+    for( u64 i : 0..n )
+    {
+        const ref string f = fields[i];
+        if( is_na_token( f ) )
+        {
+            gaps.assign( i, true );
+            continue;
+        }
+        present++;
+        i64 x = 0;
+        f64 y = 0.0;
+        bool b = false;
+        ints = ints && reads_i64( f, ref x );
+        floats = floats && ( ints || reads_f64( f, ref y ) );
+        bools = bools && is_bool_token( f, ref b );
+    }
+
+    if( present == 0 )
+    {
+        return series( ndarray<f64>::filled( nan(), n ) );
+    }
+    if( ints )
+    {
+        list<i64> v = list<i64>::with_capacity( n );
+        for( u64 i : 0..n )
+        {
+            i64 x = 0;
+            _ = !gaps.test( i ) && reads_i64( fields[i], ref x );
+            v.push( x );
+        }
+        return with_gaps( series( ndarray<i64>::from_list( move v ) ), gaps );
+    }
+    if( floats )
+    {
+        list<f64> v = list<f64>::with_capacity( n );
+        for( u64 i : 0..n )
+        {
+            f64 y = nan();
+            _ = !gaps.test( i ) && reads_f64( fields[i], ref y );
+            v.push( y );
+        }
+        return series( ndarray<f64>::from_list( move v ) );
+    }
+    if( bools )
+    {
+        mask v = mask( n );
+        for( u64 i : 0..n )
+        {
+            bool b = false;
+            v.assign( i, !gaps.test( i ) && is_bool_token( fields[i], ref b ) && b );
+        }
+        return with_gaps( series( move v ), gaps );
+    }
+    list<string> v = list<string>::with_capacity( n );
+    for( u64 i : 0..n )
+    {
+        v.push( gaps.test( i ) ? string() : string( fields[i] ) );
+    }
+    return with_gaps( series( move v ), gaps );
+}
+
+// `s` with each value `gaps` sets missing.
+private series with_gaps( move series s, const ref mask gaps )
+{
+    for( u64 i : 0..gaps.size() )
+    {
+        if( gaps.test( i ) )
+        {
+            s.set_missing( i );
+        }
+    }
+    return s;
+}

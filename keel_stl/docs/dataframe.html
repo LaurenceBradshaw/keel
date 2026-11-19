@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kl::dataframe</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+</head>
+<body>
+<header><nav><a href="index.html"><img src="logo.svg" alt="">The Keel standard library</a></nav></header>
+<main>
+<h1><span class="kind">module</span> <a class="package" href="index.html">kl</a>::dataframe</h1>
+<ul class="contents">
+<li><a href="#dtype"><code>dtype</code></a> <span class="kind">enum</span></li>
+<li><a href="#dtype_name"><code>dtype_name</code></a> <span class="kind">function</span></li>
+<li><a href="#series"><code>series</code></a> <span class="kind">class</span></li>
+<li><a href="#dataframe"><code>dataframe</code></a> <span class="kind">class</span></li>
+<li class="divider">CSV</li>
+<li><a href="#csv_error"><code>csv_error</code></a> <span class="kind">enum</span></li>
+<li><a href="#parse_csv"><code>parse_csv</code></a> <span class="kind">function</span></li>
+<li><a href="#read_csv"><code>read_csv</code></a> <span class="kind">function</span></li>
+</ul>
+<section class="entry">
+<h2><span class="kind">enum</span> <span class="type">dtype</span></h2>
+<div class="group" id="dtype">
+<pre class="signature"><a class="anchor" href="#dtype" aria-label="Link to dtype">#</a><code><span class="kw">enum</span> <span class="type">dtype</span></code></pre>
+<div class="doc">
+<p>What a <code>series</code> holds.</p>
+</div>
+</div>
+<h3>Variants</h3>
+<div class="group" id="dtype.f64s">
+<pre class="signature"><a class="anchor" href="#dtype.f64s" aria-label="Link to f64s">#</a><code>f64s</code></pre>
+<div class="doc">
+<p><code>f64</code> values, pandas' <code>float64</code>.</p>
+</div>
+</div>
+<div class="group" id="dtype.i64s">
+<pre class="signature"><a class="anchor" href="#dtype.i64s" aria-label="Link to i64s">#</a><code>i64s</code></pre>
+<div class="doc">
+<p><code>i64</code> values, pandas' <code>int64</code>.</p>
+</div>
+</div>
+<div class="group" id="dtype.bools">
+<pre class="signature"><a class="anchor" href="#dtype.bools" aria-label="Link to bools">#</a><code>bools</code></pre>
+<div class="doc">
+<p><code>bool</code> values.</p>
+</div>
+</div>
+<div class="group" id="dtype.strings">
+<pre class="signature"><a class="anchor" href="#dtype.strings" aria-label="Link to strings">#</a><code>strings</code></pre>
+<div class="doc">
+<p><code>string</code> values, pandas' <code>str</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">dtype_name</span></h2>
+<div class="group" id="dtype_name">
+<pre class="signature"><a class="anchor" href="#dtype_name" aria-label="Link to dtype_name">#</a><code><a class="type" href="prelude.html#str">str</a> <span class="fn">dtype_name</span>( <a class="type" href="#dtype">dtype</a> d )</code></pre>
+<div class="doc">
+<p>pandas' name for <code>d</code>: <code>float64</code>, <code>int64</code>, <code>bool</code> or <code>str</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">class</span> <span class="type">series</span></h2>
+<div class="group" id="series">
+<pre class="signature"><a class="anchor" href="#series" aria-label="Link to series">#</a><code><span class="kw">class</span> <span class="type">series</span></code></pre>
+<div class="doc">
+<p>One column of a <code>dataframe</code>: values of one <code>dtype</code>, any of which may be missing.</p>
+<p>A missing <code>f64</code> is a NaN, as in pandas; the other dtypes keep a mask of missing values, so an
+<code>i64</code> column with a gap stays <code>i64</code>. <code>+ - * /</code> work element by element against a series of
+the same size or a number: two <code>i64</code> sides stay <code>i64</code>, <code>/</code> always gives <code>f64</code>, and a value
+missing on either side is missing in the result. The comparisons answer a <code>mask</code> that is clear
+where a value is missing, for <code>dataframe::filtered</code>. The reductions skip missing values and
+answer <code>f64</code>. <code>s.f64s()</code> and its siblings hand a loop the values, panicking on another dtype.</p>
+</div>
+</div>
+<h3>Constructors</h3>
+<div class="group" id="series.series">
+<pre class="signature"><a class="anchor" href="#series.series" aria-label="Link to series">#</a><code><span class="kw">public</span> <span class="type">series</span>( <span class="kw">move</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#f64">f64</a>&gt; values )</code></pre>
+<div class="doc">
+<p><code>values</code> as <code>f64s</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.series" aria-label="Link to series">#</a><code><span class="kw">public</span> <span class="type">series</span>( <span class="kw">move</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#i64">i64</a>&gt; values )</code></pre>
+<div class="doc">
+<p><code>values</code> as <code>i64s</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.series" aria-label="Link to series">#</a><code><span class="kw">public</span> <span class="type">series</span>( <span class="kw">move</span> <a class="type" href="mask.html#mask">mask</a> values )</code></pre>
+<div class="doc">
+<p>The bits of <code>values</code>, of rank 1, as <code>bools</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.series" aria-label="Link to series">#</a><code><span class="kw">public</span> <span class="type">series</span>( <span class="kw">move</span> <a class="type" href="list.html#list">list</a>&lt;<a class="type" href="string.html#string">string</a>&gt; values )</code></pre>
+<div class="doc">
+<p><code>values</code> as <code>strings</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.series" aria-label="Link to series">#</a><code><span class="kw">public</span> <span class="type">series</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="prim" href="prelude.html#f64">f64</a>[] values )</code></pre>
+<div class="doc">
+<p>A copy of <code>values</code> as <code>f64s</code>: <code>series( [ 1.5, 2.0 ] )</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.series" aria-label="Link to series">#</a><code><span class="kw">public</span> <span class="type">series</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="prim" href="prelude.html#i64">i64</a>[] values )</code></pre>
+<div class="doc">
+<p>A copy of <code>values</code> as <code>i64s</code>: <code>series( [ 1, 2 ] )</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.series" aria-label="Link to series">#</a><code><span class="kw">public</span> <span class="type">series</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="prim" href="prelude.html#bool">bool</a>[] values )</code></pre>
+<div class="doc">
+<p>A copy of <code>values</code> as <code>bools</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.series" aria-label="Link to series">#</a><code><span class="kw">public</span> <span class="type">series</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#str">str</a>[] values )</code></pre>
+<div class="doc">
+<p>A copy of <code>values</code> as <code>strings</code>: <code>series( [ &quot;a&quot;, &quot;b&quot; ] )</code>.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="series.copy">
+<pre class="signature"><a class="anchor" href="#series.copy" aria-label="Link to copy">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">copy</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A second series with the same values.</p>
+</div>
+</div>
+<h3>Reading</h3>
+<div class="group" id="series.kind">
+<pre class="signature"><a class="anchor" href="#series.kind" aria-label="Link to kind">#</a><code><span class="kw">public</span> <a class="type" href="#dtype">dtype</a> <span class="fn">kind</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>What the series holds.</p>
+</div>
+</div>
+<div class="group" id="series.size">
+<pre class="signature"><a class="anchor" href="#series.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">size</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>How many values there are, missing ones included.</p>
+</div>
+</div>
+<div class="group" id="series.is_missing">
+<pre class="signature"><a class="anchor" href="#series.is_missing" aria-label="Link to is_missing">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">is_missing</span>( <a class="prim" href="prelude.html#u64">u64</a> i ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether value <code>i</code> is missing.</p>
+</div>
+</div>
+<div class="group" id="series.set_missing">
+<pre class="signature"><a class="anchor" href="#series.set_missing" aria-label="Link to set_missing">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">set_missing</span>( <a class="prim" href="prelude.html#u64">u64</a> i )</code></pre>
+<div class="doc">
+<p>Marks value <code>i</code> missing; an <code>f64</code> becomes NaN.</p>
+</div>
+</div>
+<div class="group" id="series.count">
+<pre class="signature"><a class="anchor" href="#series.count" aria-label="Link to count">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">count</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>How many values are not missing.</p>
+</div>
+</div>
+<div class="group" id="series.f64s">
+<pre class="signature"><a class="anchor" href="#series.f64s" aria-label="Link to f64s">#</a><code><span class="kw">public</span> <span class="kw">ref</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#f64">f64</a>&gt; <span class="fn">f64s</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The values of an <code>f64s</code> series; panics on another dtype.</p>
+</div>
+</div>
+<div class="group" id="series.i64s">
+<pre class="signature"><a class="anchor" href="#series.i64s" aria-label="Link to i64s">#</a><code><span class="kw">public</span> <span class="kw">ref</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#i64">i64</a>&gt; <span class="fn">i64s</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The values of an <code>i64s</code> series, missing ones unspecified; panics on another dtype.</p>
+</div>
+</div>
+<div class="group" id="series.bools">
+<pre class="signature"><a class="anchor" href="#series.bools" aria-label="Link to bools">#</a><code><span class="kw">public</span> <span class="kw">ref</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">bools</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The values of a <code>bools</code> series, missing ones unspecified; panics on another dtype.</p>
+</div>
+</div>
+<div class="group" id="series.strings">
+<pre class="signature"><a class="anchor" href="#series.strings" aria-label="Link to strings">#</a><code><span class="kw">public</span> <span class="kw">ref</span> <a class="type" href="list.html#list">list</a>&lt;<a class="type" href="string.html#string">string</a>&gt; <span class="fn">strings</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The values of a <code>strings</code> series, missing ones unspecified; panics on another dtype.</p>
+</div>
+</div>
+<div class="group" id="series.taken">
+<pre class="signature"><a class="anchor" href="#series.taken" aria-label="Link to taken">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">taken</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="prim" href="prelude.html#u64">u64</a>[] rows ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The values at <code>rows</code>, in that order: pandas' <code>take</code>.</p>
+</div>
+</div>
+<h3>Arithmetic</h3>
+<div class="group" id="series.operator+">
+<pre class="signature"><a class="anchor" href="#series.operator+" aria-label="Link to operator+">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">operator+</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Element by element against <code>o</code>, of the same size.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.operator+" aria-label="Link to operator+">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">operator+</span>( <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p><code>x</code> added to each value, as <code>f64</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.operator+" aria-label="Link to operator+">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">operator+</span>( <a class="prim" href="prelude.html#i64">i64</a> x ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p><code>x</code> added to each value; an <code>i64s</code> series stays <code>i64s</code>.</p>
+</div>
+</div>
+<div class="group" id="series.operator-">
+<pre class="signature"><a class="anchor" href="#series.operator-" aria-label="Link to operator-">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">operator-</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Element by element against <code>o</code>, of the same size.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.operator-" aria-label="Link to operator-">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">operator-</span>( <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p><code>x</code> taken from each value, as <code>f64</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.operator-" aria-label="Link to operator-">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">operator-</span>( <a class="prim" href="prelude.html#i64">i64</a> x ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p><code>x</code> taken from each value; an <code>i64s</code> series stays <code>i64s</code>.</p>
+</div>
+</div>
+<div class="group" id="series.operator*">
+<pre class="signature"><a class="anchor" href="#series.operator*" aria-label="Link to operator*">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">operator*</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Element by element against <code>o</code>, of the same size.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.operator*" aria-label="Link to operator*">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">operator*</span>( <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each value times <code>x</code>, as <code>f64</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.operator*" aria-label="Link to operator*">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">operator*</span>( <a class="prim" href="prelude.html#i64">i64</a> x ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each value times <code>x</code>; an <code>i64s</code> series stays <code>i64s</code>.</p>
+</div>
+</div>
+<div class="group" id="series.operator/">
+<pre class="signature"><a class="anchor" href="#series.operator/" aria-label="Link to operator/">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">operator/</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Element by element against <code>o</code>, of the same size, as <code>f64</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.operator/" aria-label="Link to operator/">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">operator/</span>( <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each value over <code>x</code>, as <code>f64</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.operator/" aria-label="Link to operator/">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">operator/</span>( <a class="prim" href="prelude.html#i64">i64</a> x ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each value over <code>x</code>, as <code>f64</code>.</p>
+</div>
+</div>
+<h3>Comparing</h3>
+<div class="group" id="series.less">
+<pre class="signature"><a class="anchor" href="#series.less" aria-label="Link to less">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">less</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each value is less than <code>o</code>'s.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.less" aria-label="Link to less">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">less</span>( <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each value is less than <code>x</code>.</p>
+</div>
+</div>
+<div class="group" id="series.greater">
+<pre class="signature"><a class="anchor" href="#series.greater" aria-label="Link to greater">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">greater</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each value is greater than <code>o</code>'s.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.greater" aria-label="Link to greater">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">greater</span>( <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each value is greater than <code>x</code>.</p>
+</div>
+</div>
+<div class="group" id="series.less_equal">
+<pre class="signature"><a class="anchor" href="#series.less_equal" aria-label="Link to less_equal">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">less_equal</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each value is at most <code>o</code>'s.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.less_equal" aria-label="Link to less_equal">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">less_equal</span>( <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each value is at most <code>x</code>.</p>
+</div>
+</div>
+<div class="group" id="series.greater_equal">
+<pre class="signature"><a class="anchor" href="#series.greater_equal" aria-label="Link to greater_equal">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">greater_equal</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each value is at least <code>o</code>'s.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.greater_equal" aria-label="Link to greater_equal">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">greater_equal</span>( <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each value is at least <code>x</code>.</p>
+</div>
+</div>
+<div class="group" id="series.equal_each">
+<pre class="signature"><a class="anchor" href="#series.equal_each" aria-label="Link to equal_each">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">equal_each</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each value equals <code>o</code>'s.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.equal_each" aria-label="Link to equal_each">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">equal_each</span>( <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each value equals <code>x</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.equal_each" aria-label="Link to equal_each">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">equal_each</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> x ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each value equals the text <code>x</code>.</p>
+</div>
+</div>
+<div class="group" id="series.differs">
+<pre class="signature"><a class="anchor" href="#series.differs" aria-label="Link to differs">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">differs</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each value differs from <code>o</code>'s, a missing one included.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.differs" aria-label="Link to differs">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">differs</span>( <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each value differs from <code>x</code>, a missing one included.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.differs" aria-label="Link to differs">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">differs</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> x ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each value differs from the text <code>x</code>, a missing one included.</p>
+</div>
+</div>
+<h3>Reducing</h3>
+<div class="group" id="series.sum">
+<pre class="signature"><a class="anchor" href="#series.sum" aria-label="Link to sum">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#f64">f64</a> <span class="fn">sum</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The sum of the values present, 0 when there are none.</p>
+</div>
+</div>
+<div class="group" id="series.mean">
+<pre class="signature"><a class="anchor" href="#series.mean" aria-label="Link to mean">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#f64">f64</a> <span class="fn">mean</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The mean of the values present, NaN when there are none.</p>
+</div>
+</div>
+<div class="group" id="series.var">
+<pre class="signature"><a class="anchor" href="#series.var" aria-label="Link to var">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#f64">f64</a> <span class="fn">var</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The sample variance of the values present, over n - 1 as pandas' default; NaN for fewer
+than two.</p>
+</div>
+</div>
+<div class="group" id="series.std">
+<pre class="signature"><a class="anchor" href="#series.std" aria-label="Link to std">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#f64">f64</a> <span class="fn">std</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The sample standard deviation of the values present, the square root of <code>var</code>.</p>
+</div>
+</div>
+<div class="group" id="series.min">
+<pre class="signature"><a class="anchor" href="#series.min" aria-label="Link to min">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#f64">f64</a> <span class="fn">min</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The least value present, NaN when there are none.</p>
+</div>
+</div>
+<div class="group" id="series.max">
+<pre class="signature"><a class="anchor" href="#series.max" aria-label="Link to max">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#f64">f64</a> <span class="fn">max</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The greatest value present, NaN when there are none.</p>
+</div>
+</div>
+<div class="group" id="series.quantile">
+<pre class="signature"><a class="anchor" href="#series.quantile" aria-label="Link to quantile">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#f64">f64</a> <span class="fn">quantile</span>( <a class="prim" href="prelude.html#f64">f64</a> q ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The <code>q</code> quantile of the values present, <code>q</code> in [0, 1], interpolated linearly between the
+two nearest as pandas' default; NaN when there are none.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">class</span> <span class="type">dataframe</span></h2>
+<div class="group" id="dataframe">
+<pre class="signature"><a class="anchor" href="#dataframe" aria-label="Link to dataframe">#</a><code><span class="kw">class</span> <span class="type">dataframe</span></code></pre>
+<div class="doc">
+<p>Named <code>series</code> of one length, in order, with rows numbered from 0, as pandas' <code>DataFrame</code>.</p>
+<p>Build one empty and <code>insert</code> columns, or read one with <code>read_csv</code>. <code>df[&quot;a&quot;]</code> is a column;
+<code>head</code>, <code>tail</code>, <code>iloc</code>, <code>filtered</code>, <code>select</code> and <code>sort_values</code> answer new frames holding copies,
+as pandas' copy-on-write behaves, while <code>insert</code>, <code>drop</code> and <code>rename</code> change the frame itself.
+<code>to_string</code> writes pandas' table.</p>
+</div>
+</div>
+<h3>Constructors</h3>
+<div class="group" id="dataframe.dataframe">
+<pre class="signature"><a class="anchor" href="#dataframe.dataframe" aria-label="Link to dataframe">#</a><code><span class="kw">public</span> <span class="type">dataframe</span>()</code></pre>
+<div class="doc">
+<p>No columns and no rows.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="dataframe.copy">
+<pre class="signature"><a class="anchor" href="#dataframe.copy" aria-label="Link to copy">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">copy</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A second frame with the same columns.</p>
+</div>
+</div>
+<h3>Shape</h3>
+<div class="group" id="dataframe.rows">
+<pre class="signature"><a class="anchor" href="#dataframe.rows" aria-label="Link to rows">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">rows</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>How many rows there are.</p>
+</div>
+</div>
+<div class="group" id="dataframe.shape">
+<pre class="signature"><a class="anchor" href="#dataframe.shape" aria-label="Link to shape">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a>[2] <span class="fn">shape</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The rows, then the columns.</p>
+</div>
+</div>
+<div class="group" id="dataframe.columns">
+<pre class="signature"><a class="anchor" href="#dataframe.columns" aria-label="Link to columns">#</a><code><span class="kw">public</span> <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="list.html#list">list</a>&lt;<a class="type" href="string.html#string">string</a>&gt; <span class="fn">columns</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The columns' names, in order.</p>
+</div>
+</div>
+<div class="group" id="dataframe.dtypes">
+<pre class="signature"><a class="anchor" href="#dataframe.dtypes" aria-label="Link to dtypes">#</a><code><span class="kw">public</span> <a class="type" href="list.html#list">list</a>&lt;<a class="type" href="#dtype">dtype</a>&gt; <span class="fn">dtypes</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The columns' dtypes, in order.</p>
+</div>
+</div>
+<div class="group" id="dataframe.operator[]">
+<pre class="signature"><a class="anchor" href="#dataframe.operator[]" aria-label="Link to operator[]">#</a><code><span class="kw">public</span> <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> <span class="fn">operator[]</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> name ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The column named <code>name</code>; panics when there is none.</p>
+</div>
+</div>
+<div class="group" id="dataframe.has">
+<pre class="signature"><a class="anchor" href="#dataframe.has" aria-label="Link to has">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">has</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> name ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether a column is named <code>name</code>.</p>
+</div>
+</div>
+<h3>Changing</h3>
+<div class="group" id="dataframe.insert">
+<pre class="signature"><a class="anchor" href="#dataframe.insert" aria-label="Link to insert">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">insert</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> name, <span class="kw">move</span> <a class="type" href="#series">series</a> s )</code></pre>
+<div class="doc">
+<p>Adds <code>s</code> as the last column, named <code>name</code>. Panics when the name is taken, or when <code>s</code>'s
+size is not the frame's rows; the first column sets them.</p>
+</div>
+</div>
+<div class="group" id="dataframe.drop">
+<pre class="signature"><a class="anchor" href="#dataframe.drop" aria-label="Link to drop">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">drop</span>( <a class="type" href="prelude.html#str">str</a>... names )</code></pre>
+<div class="doc">
+<p>Drops each column in <code>names</code>; panics on a name no column has.</p>
+</div>
+</div>
+<div class="group" id="dataframe.rename">
+<pre class="signature"><a class="anchor" href="#dataframe.rename" aria-label="Link to rename">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">rename</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> <a class="type" href="prelude.html#from">from</a>, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> to )</code></pre>
+<div class="doc">
+<p>Renames column <code>from</code> to <code>to</code>; panics when there is no <code>from</code> or <code>to</code> is taken.</p>
+</div>
+</div>
+<h3>Selecting</h3>
+<div class="group" id="dataframe.select">
+<pre class="signature"><a class="anchor" href="#dataframe.select" aria-label="Link to select">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">select</span>( <a class="type" href="prelude.html#str">str</a>... names ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The columns in <code>names</code>, in that order.</p>
+</div>
+</div>
+<div class="group" id="dataframe.iloc">
+<pre class="signature"><a class="anchor" href="#dataframe.iloc" aria-label="Link to iloc">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">iloc</span>( <a class="type" href="prelude.html#range">range</a> at ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The rows in <code>at</code>, those past the end left out, as pandas' <code>iloc[a:b]</code>.</p>
+</div>
+</div>
+<div class="group" id="dataframe.head">
+<pre class="signature"><a class="anchor" href="#dataframe.head" aria-label="Link to head">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">head</span>( <a class="prim" href="prelude.html#u64">u64</a> n = 5 ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The first <code>n</code> rows, or all of them.</p>
+</div>
+</div>
+<div class="group" id="dataframe.tail">
+<pre class="signature"><a class="anchor" href="#dataframe.tail" aria-label="Link to tail">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">tail</span>( <a class="prim" href="prelude.html#u64">u64</a> n = 5 ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The last <code>n</code> rows, or all of them.</p>
+</div>
+</div>
+<div class="group" id="dataframe.filtered">
+<pre class="signature"><a class="anchor" href="#dataframe.filtered" aria-label="Link to filtered">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">filtered</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="mask.html#mask">mask</a> m ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The rows <code>m</code> sets, <code>m</code> holding one bit per row: <code>df.filtered( df[&quot;a&quot;].greater( 3.0 ) )</code>.</p>
+</div>
+</div>
+<div class="group" id="dataframe.taken">
+<pre class="signature"><a class="anchor" href="#dataframe.taken" aria-label="Link to taken">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">taken</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="prim" href="prelude.html#u64">u64</a>[] rows ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The rows at <code>rows</code>, in that order: pandas' <code>take</code>.</p>
+</div>
+</div>
+<div class="group" id="dataframe.sort_values">
+<pre class="signature"><a class="anchor" href="#dataframe.sort_values" aria-label="Link to sort_values">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">sort_values</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> name, <a class="prim" href="prelude.html#bool">bool</a> ascending = true ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The rows ordered by column <code>name</code>, a stable sort, missing values last either way.</p>
+</div>
+</div>
+<h3>Summarising</h3>
+<div class="group" id="dataframe.describe">
+<pre class="signature"><a class="anchor" href="#dataframe.describe" aria-label="Link to describe">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">describe</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>pandas' <code>describe</code>: the count, mean, standard deviation, least, quartiles and greatest of
+each <code>f64s</code> and <code>i64s</code> column, as <code>f64s</code> columns of a frame whose rows are labelled.</p>
+</div>
+</div>
+<h3>Writing</h3>
+<div class="group" id="dataframe.to_string">
+<pre class="signature"><a class="anchor" href="#dataframe.to_string" aria-label="Link to to_string">#</a><code><span class="kw">public</span> <a class="type" href="string.html#string">string</a> <span class="fn">to_string</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>pandas' table: a header, the row labels on the left, each column right-aligned, and of more
+than 60 rows the first and last five, then <code>[n rows x m columns]</code>.</p>
+</div>
+</div>
+<div class="group" id="dataframe.to_csv">
+<pre class="signature"><a class="anchor" href="#dataframe.to_csv" aria-label="Link to to_csv">#</a><code><span class="kw">public</span> <a class="type" href="string.html#string">string</a> <span class="fn">to_csv</span>( <a class="prim" href="prelude.html#u8">u8</a> sep = ',' ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The frame as CSV: a header, then a line for each row, ended by <code>\n</code>; a missing value is
+empty, a float written as <code>string::from</code> writes it, and a field holding <code>sep</code>, a quote or a
+line break quoted. The row numbers are not written, as pandas' <code>index=False</code>.</p>
+</div>
+</div>
+</section>
+<h2 class="divider">CSV</h2>
+<section class="entry">
+<h2><span class="kind">enum</span> <span class="type">csv_error</span></h2>
+<div class="group" id="csv_error">
+<pre class="signature"><a class="anchor" href="#csv_error" aria-label="Link to csv_error">#</a><code><span class="kw">enum</span> <span class="type">csv_error</span></code></pre>
+<div class="doc">
+<p>Why <code>parse_csv</code> or <code>read_csv</code> failed.</p>
+</div>
+</div>
+<h3>Variants</h3>
+<div class="group" id="csv_error.unreadable">
+<pre class="signature"><a class="anchor" href="#csv_error.unreadable" aria-label="Link to unreadable">#</a><code>unreadable( <a class="type" href="os.html#file_error">file_error</a> error )</code></pre>
+<div class="doc">
+<p>The file could not be read.</p>
+</div>
+</div>
+<div class="group" id="csv_error.too_many_fields">
+<pre class="signature"><a class="anchor" href="#csv_error.too_many_fields" aria-label="Link to too_many_fields">#</a><code>too_many_fields( <a class="prim" href="prelude.html#u64">u64</a> line )</code></pre>
+<div class="doc">
+<p>The row starting on <code>line</code> has more fields than the header.</p>
+</div>
+</div>
+<div class="group" id="csv_error.unclosed_quote">
+<pre class="signature"><a class="anchor" href="#csv_error.unclosed_quote" aria-label="Link to unclosed_quote">#</a><code>unclosed_quote</code></pre>
+<div class="doc">
+<p>A quoted field runs to the end of the text.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">parse_csv</span></h2>
+<div class="group" id="parse_csv">
+<pre class="signature"><a class="anchor" href="#parse_csv" aria-label="Link to parse_csv">#</a><code><a class="type" href="prelude.html#result">result</a>&lt;<a class="type" href="#dataframe">dataframe</a>, <a class="type" href="#csv_error">csv_error</a>&gt; <span class="fn">parse_csv</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> text, <a class="prim" href="prelude.html#u8">u8</a> sep = ',' )</code></pre>
+<div class="doc">
+<p>The frame CSV <code>text</code> holds, read as RFC 4180 with pandas' defaults.</p>
+<p>The first line names the columns. Fields are split at <code>sep</code>; a quoted field may hold <code>sep</code>,
+line breaks and doubled quotes. Blank lines are skipped, and a row short of fields has the rest
+missing, as are pandas' missing tokens (an empty field, <code>NA</code>, <code>NaN</code>, <code>null</code>, <code>None</code> and the
+like). Each column takes the first dtype every value present reads as, <code>i64s</code>, <code>f64s</code>, then
+<code>bools</code> (<code>True</code>, <code>False</code>, and lower or upper case), else <code>strings</code>; a column with no values
+present is <code>f64s</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">read_csv</span></h2>
+<div class="group" id="read_csv">
+<pre class="signature"><a class="anchor" href="#read_csv" aria-label="Link to read_csv">#</a><code><a class="type" href="prelude.html#result">result</a>&lt;<a class="type" href="#dataframe">dataframe</a>, <a class="type" href="#csv_error">csv_error</a>&gt; <span class="fn">read_csv</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> <a class="type" href="os.html#path">path</a>, <a class="prim" href="prelude.html#u8">u8</a> sep = ',' )</code></pre>
+<div class="doc">
+<p>The frame the CSV file at <code>path</code> holds, as <code>parse_csv</code> reads it.</p>
+</div>
+</div>
+</section>
+</main>
+<footer>Copyright 2026 Laurence Bradshaw. Licensed under Apache-2.0 WITH LLVM-exception.</footer>
+</body>
+</html>
