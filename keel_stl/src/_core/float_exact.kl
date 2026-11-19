@@ -1,0 +1,155 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// A float's exact decimal value, behind `string::fixed` and `string::scientific`.
+
+import float_bits;
+import float_parse;
+
+/// The decimal digits of a value, the first significant, and `point`, how many of them come before
+/// the decimal point; it may be negative or past `size`. Zero has no digits.
+struct expansion
+{
+    u8[768] digits;
+    u64 size;
+    i64 point;
+};
+
+/// The exact decimal value of a finite `x`, ignoring its sign.
+expansion exact( f64 x )
+{
+    const u64 bits = bits_of( x );
+    const u64 biased = ( bits >> 52 ) & 0x7ff;
+    u64 m = bits & 0xf_ffff_ffff_ffff;
+    i64 e = -1074;
+    if( biased != 0 )
+    {
+        m |= 0x10_0000_0000_0000;
+        e = cast<i64>( biased ) - 1075;
+    }
+
+    expansion result = expansion { [ 0, .. ], 0, 0 };
+    if( m == 0 )
+    {
+        return result;
+    }
+    while( m % 2 == 0 && e < 0 )
+    {
+        m /= 2;
+        e++;
+    }
+
+    // m * 2^e is n, or n / 10^-e when e < 0, with n = m * 5^-e.
+    big n = big { [ 0, .. ], 1 };
+    n.limbs[0] = m;
+    if( e >= 0 )
+    {
+        shl( ref n, cast<u64>( e ) );
+    }
+    else
+    {
+        pow5( ref n, cast<u64>( -e ) );
+    }
+
+    // Nine digits at a time, the last first.
+    u32[86] chunks = [ 0, .. ];
+    u64 count = 0;
+    while( n.size > 0 )
+    {
+        chunks[count] = divide_billion( ref n );
+        count++;
+    }
+
+    u64 top = chunks[count - 1];
+    u8[9] lead = [ 0, .. ];
+    u64 width = 0;
+    while( top > 0 )
+    {
+        lead[8 - width] = cast<u8>( '0' + top % 10 );
+        top /= 10;
+        width++;
+    }
+    for( u64 i : 9 - width..9 )
+    {
+        result.digits[result.size] = lead[i];
+        result.size++;
+    }
+    u64 c = count - 1;
+    while( c > 0 )
+    {
+        c--;
+        u64 chunk = chunks[c];
+        for( u64 i : 0..9 )
+        {
+            result.digits[result.size + 8 - i] = cast<u8>( '0' + chunk % 10 );
+            chunk /= 10;
+        }
+        result.size += 9;
+    }
+
+    result.point = cast<i64>( result.size ) + ( e < 0 ? e : 0 );
+    return result;
+}
+
+/// Keeps the first `keep` digits, rounding the rest away to nearest, ties to even; a carry past the
+/// first digit leaves the single digit 1 and moves `point` on.
+void round_to( ref expansion x, i64 keep )
+{
+    if( keep < 0 )
+    {
+        x.size = 0;
+        return;
+    }
+    const u64 k = cast<u64>( keep );
+    if( k >= x.size )
+    {
+        return;
+    }
+
+    const u8 next = x.digits[k];
+    bool rest = false;
+    for( u64 i : k + 1..x.size )
+    {
+        rest = rest || x.digits[i] != '0';
+    }
+    const bool odd = k > 0 && ( x.digits[k - 1] - '0' ) % 2 == 1;
+    x.size = k;
+    if( next < '5' || ( next == '5' && !rest && !odd ) )
+    {
+        return;
+    }
+
+    u64 i = k;
+    while( i > 0 && x.digits[i - 1] == '9' )
+    {
+        i--;
+    }
+    if( i == 0 )
+    {
+        x.digits[0] = '1';
+        x.size = 1;
+        x.point++;
+        return;
+    }
+    x.digits[i - 1]++;
+    x.size = i;
+}
+
+// Divides by 10^9 and returns the remainder.
+private u32 divide_billion( ref big n )
+{
+    u64 rest = 0;
+    u64 i = n.size;
+    while( i > 0 )
+    {
+        i--;
+        const u64 limb = n.limbs[i];
+        const u64 high = ( rest << 32 ) | ( limb >> 32 );
+        rest = high % 1000000000;
+        const u64 low = ( rest << 32 ) | ( limb & 0xffff_ffff );
+        rest = low % 1000000000;
+        n.limbs[i] = ( ( high / 1000000000 ) << 32 ) | ( low / 1000000000 );
+    }
+    normalize( ref n );
+    return cast<u32>( rest );
+}

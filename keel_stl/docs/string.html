@@ -48,7 +48,7 @@
 <section class="entry">
 <h2><span class="kind">class</span> <span class="type">string</span></h2>
 <div class="group" id="string">
-<pre class="signature"><a class="anchor" href="#string" aria-label="Link to string">#</a><code><span class="kw">class</span> <span class="type">string</span> <span class="kw">implements</span> <a class="type" href="prelude.html#textual">textual</a>, <a class="type" href="prelude.html#equatable">equatable</a>, <a class="type" href="prelude.html#comparable">comparable</a>, <a class="type" href="prelude.html#hashable">hashable</a>, <a class="type" href="prelude.html#from">from</a>&lt;<a class="type" href="prelude.html#str">str</a>&gt;, <a class="type" href="prelude.html#from">from</a>&lt;<a class="prim" href="prelude.html#u64">u64</a>&gt;, <a class="type" href="prelude.html#from">from</a>&lt;<a class="prim" href="prelude.html#i64">i64</a>&gt;, <a class="type" href="prelude.html#from">from</a>&lt;<a class="type" href="prelude.html#joined_text">joined_text</a>&gt;</code></pre>
+<pre class="signature"><a class="anchor" href="#string" aria-label="Link to string">#</a><code><span class="kw">class</span> <span class="type">string</span> <span class="kw">implements</span> <a class="type" href="prelude.html#textual">textual</a>, <a class="type" href="prelude.html#equatable">equatable</a>, <a class="type" href="prelude.html#comparable">comparable</a>, <a class="type" href="prelude.html#hashable">hashable</a>, <a class="type" href="prelude.html#from">from</a>&lt;<a class="type" href="prelude.html#str">str</a>&gt;, <a class="type" href="prelude.html#from">from</a>&lt;<a class="prim" href="prelude.html#u64">u64</a>&gt;, <a class="type" href="prelude.html#from">from</a>&lt;<a class="prim" href="prelude.html#i64">i64</a>&gt;, <a class="type" href="prelude.html#from">from</a>&lt;<a class="prim" href="prelude.html#f64">f64</a>&gt;, <a class="type" href="prelude.html#from">from</a>&lt;<a class="type" href="prelude.html#joined_text">joined_text</a>&gt;</code></pre>
 <div class="doc">
 <p>A growable sequence of bytes that owns its storage.</p>
 <p>The bytes are not checked to be UTF-8, and every index and size counts bytes.</p>
@@ -96,6 +96,22 @@
 <p><code>value</code> as Python's <code>repr</code> writes it: the fewest digits that read back as <code>value</code>, fixed
 from 1e-4 up to 1e16, with <code>.0</code> on a whole number, and otherwise as <code>1e+16</code> or <code>2.5e-05</code>;
 <code>nan</code>, <code>inf</code> and <code>-inf</code>.</p>
+</div>
+</div>
+<div class="group" id="string.fixed">
+<pre class="signature"><a class="anchor" href="#string.fixed" aria-label="Link to fixed">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#string">string</a> <span class="fn">fixed</span>( <a class="prim" href="prelude.html#f64">f64</a> value, <a class="prim" href="prelude.html#u64">u64</a> places )</code></pre>
+<div class="doc">
+<p><code>value</code> with <code>places</code> digits after the point, as C's <code>%.*f</code> writes it: rounded from its
+exact binary value, ties to even, so <code>fixed( 2.675, 2 )</code> is <code>2.67</code>; no point when <code>places</code>
+is 0. <code>nan</code>, <code>inf</code> and <code>-inf</code> as <code>from</code> writes them.</p>
+</div>
+</div>
+<div class="group" id="string.scientific">
+<pre class="signature"><a class="anchor" href="#string.scientific" aria-label="Link to scientific">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#string">string</a> <span class="fn">scientific</span>( <a class="prim" href="prelude.html#f64">f64</a> value, <a class="prim" href="prelude.html#u64">u64</a> places )</code></pre>
+<div class="doc">
+<p><code>value</code> as <code>d.ddde+XX</code> with <code>places</code> digits after the point, as C's <code>%.*e</code> writes it: rounded
+from its exact binary value, ties to even, and at least two exponent digits. <code>nan</code>, <code>inf</code>
+and <code>-inf</code> as <code>from</code> writes them.</p>
 </div>
 </div>
 <h3>Size</h3>

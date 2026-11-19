@@ -4,6 +4,7 @@
 import kl::_core::compare as kernel;
 import kl::_core::float_format as float_text;
 import kl::_core::float_parse as float_parse;
+import kl::_core::float_exact as float_exact;
 import kl::_core::float_bits as float_bits;
 import list;
 import optional;
@@ -23,7 +24,7 @@ enum parse_error
 ///
 /// The bytes are not checked to be UTF-8, and every index and size counts bytes.
 class string implements textual, equatable, comparable, hashable, from<str>, from<u64>, from<i64>,
-    from<joined_text>
+    from<f64>, from<joined_text>
 {
     /// --- Construction ---
 
@@ -133,23 +134,13 @@ class string implements textual, equatable, comparable, hashable, from<str>, fro
     public static string from( move f64 value )
     {
         string result = with_capacity( 25 );
-        if( value != value )
+        if( result.push_special( value ) )
         {
-            result += "nan";
             return result;
-        }
-        if( ( float_bits::bits_of( value ) >> 63 ) != 0 )
-        {
-            result.push( '-' );
         }
         if( value == 0.0 )
         {
             result += "0.0";
-            return result;
-        }
-        if( value > 1.7976931348623157e308 || value < -1.7976931348623157e308 )
-        {
-            result += "inf";
             return result;
         }
 
@@ -181,15 +172,7 @@ class string implements textual, equatable, comparable, hashable, from<str>, fro
                 result.push( '.' );
                 result.append( digits[1..n] );
             }
-            result.push( 'e' );
-            result.push( e < 0 ? '-' : '+' );
-            const u64 magnitude = cast<u64>( e < 0 ? -e : e );
-            if( magnitude >= 100 )
-            {
-                result.push( cast<u8>( '0' + magnitude / 100 ) );
-            }
-            result.push( cast<u8>( '0' + magnitude / 10 % 10 ) );
-            result.push( cast<u8>( '0' + magnitude % 10 ) );
+            result.push_exponent( e );
         }
         else if( e < 0 )
         {
@@ -220,6 +203,104 @@ class string implements textual, equatable, comparable, hashable, from<str>, fro
         }
 
         return result;
+    }
+
+    /// `value` with `places` digits after the point, as C's `%.*f` writes it: rounded from its
+    /// exact binary value, ties to even, so `fixed( 2.675, 2 )` is `2.67`; no point when `places`
+    /// is 0. `nan`, `inf` and `-inf` as `from` writes them.
+    public static string fixed( f64 value, u64 places )
+    {
+        string result = with_capacity( 24 + places );
+        if( result.push_special( value ) )
+        {
+            return result;
+        }
+
+        float_exact::expansion x = float_exact::exact( value );
+        float_exact::round_to( ref x, x.point + cast<i64>( places ) );
+        if( x.point <= 0 )
+        {
+            result.push( '0' );
+        }
+        for( i64 i = 0; i < x.point; i++ )
+        {
+            result.push( digit_at( x, i ) );
+        }
+        if( places > 0 )
+        {
+            result.push( '.' );
+            for( i64 i = x.point; i < x.point + cast<i64>( places ); i++ )
+            {
+                result.push( digit_at( x, i ) );
+            }
+        }
+        return result;
+    }
+
+    /// `value` as `d.ddde+XX` with `places` digits after the point, as C's `%.*e` writes it: rounded
+    /// from its exact binary value, ties to even, and at least two exponent digits. `nan`, `inf`
+    /// and `-inf` as `from` writes them.
+    public static string scientific( f64 value, u64 places )
+    {
+        string result = with_capacity( 24 + places );
+        if( result.push_special( value ) )
+        {
+            return result;
+        }
+
+        float_exact::expansion x = float_exact::exact( value );
+        float_exact::round_to( ref x, cast<i64>( places ) + 1 );
+        result.push( digit_at( x, 0 ) );
+        if( places > 0 )
+        {
+            result.push( '.' );
+            for( i64 i = 1; i <= cast<i64>( places ); i++ )
+            {
+                result.push( digit_at( x, i ) );
+            }
+        }
+        result.push_exponent( x.size == 0 ? 0 : x.point - 1 );
+        return result;
+    }
+
+    // Appends the sign of `value`, and `nan` or `inf` if it is one; returns whether it was.
+    private bool push_special( f64 value )
+    {
+        if( value != value )
+        {
+            append( "nan".as_text() );
+            return true;
+        }
+        if( ( float_bits::bits_of( value ) >> 63 ) != 0 )
+        {
+            push( '-' );
+        }
+        if( value > 1.7976931348623157e308 || value < -1.7976931348623157e308 )
+        {
+            append( "inf".as_text() );
+            return true;
+        }
+        return false;
+    }
+
+    // Appends `e+XX` or `e-XX`, with a third digit past 99.
+    private void push_exponent( i64 e )
+    {
+        push( 'e' );
+        push( e < 0 ? '-' : '+' );
+        const u64 magnitude = cast<u64>( e < 0 ? -e : e );
+        if( magnitude >= 100 )
+        {
+            push( cast<u8>( '0' + magnitude / 100 ) );
+        }
+        push( cast<u8>( '0' + magnitude / 10 % 10 ) );
+        push( cast<u8>( '0' + magnitude % 10 ) );
+    }
+
+    // Digit `i` of `x`, counting from its first; `0` outside its digits.
+    private static u8 digit_at( const ref float_exact::expansion x, i64 i )
+    {
+        return i >= 0 && i < cast<i64>( x.size ) ? x.digits[cast<u64>( i )] : '0';
     }
 
     /// --- Size ---

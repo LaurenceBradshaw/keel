@@ -481,8 +481,9 @@ private bool any_nonzero( const ref u8[] digits )
 
 // --- A big integer: bigint.h ---
 
-// Little-endian limbs, the top one non-zero; 62 hold the 3600 bits the largest needs.
-private struct big
+/// A big integer: little-endian limbs, the top one non-zero; 62 hold the 3600 bits the largest
+/// needs.
+struct big
 {
     u64[62] limbs;
     u64 size;
@@ -501,7 +502,8 @@ private void push( ref big x, u64 limb )
     x.size++;
 }
 
-private void normalize( ref big x )
+/// Drops zero top limbs.
+void normalize( ref big x )
 {
     while( x.size > 0 && x.limbs[x.size - 1] == 0 )
     {
@@ -515,7 +517,8 @@ private void add_native( ref big x, u64 power, u64 value )
     small_add_from( ref x, value, 0 );
 }
 
-private void small_mul( ref big x, u64 y )
+/// Multiplies by `y`.
+void small_mul( ref big x, u64 y )
 {
     u64 carry = 0;
     for( u64 i : 0..x.size )
@@ -635,8 +638,8 @@ private i32 compare( const ref big a, const ref big b )
     return 0;
 }
 
-// Multiplies by 2^n.
-private void shl( ref big x, u64 n )
+/// Multiplies by 2^n.
+void shl( ref big x, u64 n )
 {
     const u64 bits = n % 64;
     const u64 limbs = n / 64;
@@ -680,8 +683,8 @@ private u64 bit_length( const ref big x )
     return x.size == 0 ? 0 : 64 * x.size - leading_zeros( x.limbs[x.size - 1] );
 }
 
-// Multiplies by 5^n.
-private void pow5( ref big x, u64 n )
+/// Multiplies by 5^n.
+void pow5( ref big x, u64 n )
 {
     u64 rest = n;
     while( rest >= 135 )

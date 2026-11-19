@@ -4,7 +4,8 @@
 ../../../../keel_stl/src/_core/float_bits.kl
 ../../../../keel_stl/src/_core/float_format.kl float_bits.klo
 ../../../../keel_stl/src/_core/float_parse.kl float_bits.klo float_format.klo
+../../../../keel_stl/src/_core/float_exact.kl float_bits.klo float_format.klo float_parse.klo
 ../../../../keel_stl/src/list.kl iterable.klo optional.klo compare.klo
-../../../../keel_stl/src/string.kl list.klo iterable.klo optional.klo compare.klo float_format.klo float_parse.klo float_bits.klo
-../../../../keel_stl/src/os.kl list.klo iterable.klo optional.klo string.klo compare.klo float_format.klo float_parse.klo float_bits.klo
-../../../../keel_stl/src/console.kl list.klo iterable.klo optional.klo string.klo os.klo compare.klo float_format.klo float_parse.klo float_bits.klo
+../../../../keel_stl/src/string.kl list.klo iterable.klo optional.klo compare.klo float_format.klo float_parse.klo float_exact.klo float_bits.klo
+../../../../keel_stl/src/os.kl list.klo iterable.klo optional.klo string.klo compare.klo float_format.klo float_parse.klo float_exact.klo float_bits.klo
+../../../../keel_stl/src/console.kl list.klo iterable.klo optional.klo string.klo os.klo compare.klo float_format.klo float_parse.klo float_exact.klo float_bits.klo

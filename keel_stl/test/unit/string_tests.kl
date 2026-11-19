@@ -319,3 +319,34 @@ private void parse_u64_reads_the_whole_range( ref kl::test::context c )
     c.check( !u64_parses( "-1" ) );
     c.check( !u64_parses( "" ) );
 }
+
+private void fixed_rounds_the_exact_value( ref kl::test::context c )
+{
+    c.check_eq( kl::string::fixed( 3.14159265, 6 ), "3.141593" );
+    c.check_eq( kl::string::fixed( 2.675, 2 ), "2.67" );
+    c.check_eq( kl::string::fixed( 0.125, 2 ), "0.12" );
+    c.check_eq( kl::string::fixed( 0.375, 2 ), "0.38" );
+    c.check_eq( kl::string::fixed( 2.5, 0 ), "2" );
+    c.check_eq( kl::string::fixed( 9.9999999, 6 ), "10.000000" );
+    c.check_eq( kl::string::fixed( 0.0004, 3 ), "0.000" );
+    c.check_eq( kl::string::fixed( -0.001, 2 ), "-0.00" );
+    c.check_eq( kl::string::fixed( 1152921504606846976.0, 1 ), "1152921504606846976.0" );
+    c.check_eq( kl::string::fixed( 5e-324, 2 ), "0.00" );
+}
+
+private void scientific_rounds_the_exact_value( ref kl::test::context c )
+{
+    c.check_eq( kl::string::scientific( 31415.9, 6 ), "3.141590e+04" );
+    c.check_eq( kl::string::scientific( 0.0, 2 ), "0.00e+00" );
+    c.check_eq( kl::string::scientific( 9.5, 0 ), "1e+01" );
+    c.check_eq( kl::string::scientific( 1.7976931348623157e308, 3 ), "1.798e+308" );
+    c.check_eq( kl::string::scientific( 5e-324, 20 ), "4.94065645841246544177e-324" );
+}
+
+private void fixed_and_scientific_write_specials_as_from( ref kl::test::context c )
+{
+    c.check_eq( kl::string::fixed( kl::from_bits( 0x7ff8000000000000 ), 2 ), "nan" );
+    c.check_eq( kl::string::fixed( kl::from_bits( 0x7ff0000000000000 ), 2 ), "inf" );
+    c.check_eq( kl::string::scientific( kl::from_bits( 0xfff0000000000000 ), 2 ), "-inf" );
+    c.check_eq( kl::string::fixed( -0.0, 1 ), "-0.0" );
+}
