@@ -14,28 +14,18 @@ namespace keel
 
 namespace
 {
-// What each local is known to hold, by Local_id::v: a constant, a copy of a whole local, or nothing known.
+// What a local is known to hold, by Local_id::v: a constant or a copy of a whole local; absent, nothing known.
 // propagate_constants has already read every integer one; a float or an `enum` is left to this.
+// Sparse, as a block's facts are few beside a large function's locals.
 struct Values
 {
-    std::vector<std::optional<Operand>>       facts;
+    std::unordered_map<u32, Operand>          facts;
     std::unordered_map<u32, std::vector<u32>> naming; // a local, and the locals whose copy fact may name it
 
-    Values() = default;
-
-    Values( std::size_t size, std::nullopt_t )
-        : facts( size, std::nullopt )
+    const Operand* operator[]( u32 i ) const
     {
-    }
-
-    std::optional<Operand>& operator[]( std::size_t i )
-    {
-        return facts[i];
-    }
-
-    const std::optional<Operand>& operator[]( std::size_t i ) const
-    {
-        return facts[i];
+        const auto found = facts.find( i );
+        return found == facts.end() ? nullptr : &found->second;
     }
 };
 
@@ -65,7 +55,7 @@ bool same( const Operand& a, const Operand& b )
 // `local` changed: its own fact goes, and so does every fact naming it, a field of it or an index by it included.
 void kill( const Function& func, Values& values, Local_id local )
 {
-    values[local.v]  = std::nullopt;
+    values.facts.erase( local.v );
     const auto found = values.naming.find( local.v );
     if( found == values.naming.end() )
     {
@@ -73,9 +63,10 @@ void kill( const Function& func, Values& values, Local_id local )
     }
     for( const u32 i : found->second )
     {
-        if( values[i].has_value() && values[i]->kind == Operand_kind::Copy && mentions( func, values[i]->place, local ) )
+        const Operand* fact = values[i];
+        if( fact && fact->kind == Operand_kind::Copy && mentions( func, fact->place, local ) )
         {
-            values[i] = std::nullopt;
+            values.facts.erase( i );
         }
     }
     values.naming.erase( found );
@@ -133,12 +124,12 @@ void step(
 
     if( from.kind == Operand_kind::Constant && from.constant.is_valid() )
     {
-        values[into.v] = from;
+        values.facts[into.v] = from;
     }
     else if( from.kind == Operand_kind::Copy && copyable( func, from.place ) && from.place.local != into &&
              !addressed[from.place.local.v] )
     {
-        values[into.v] = from;
+        values.facts[into.v] = from;
         std::vector<Local_id> named;
         mentioned_by( func, from.place, named );
         for( const Local_id l : named )
@@ -151,7 +142,7 @@ void step(
 std::vector<std::optional<Values>> values_on_entry( const Function& func, const Type_table& types, const Local_set& addressed )
 {
     std::vector<std::optional<Values>> values( func.blocks.size(), std::nullopt );
-    values[0].emplace( func.locals.size(), std::nullopt );
+    values[0].emplace();
 
     // Facts only go away, and a block is reached once, so this ends.
     bool                  changed = true;
@@ -193,14 +184,18 @@ std::vector<std::optional<Values>> values_on_entry( const Function& func, const 
                 }
 
                 // A fact survives a join only if this path holds it too.
-                for( const Local_id l : func.locals.ids() )
-                {
-                    if( ( *entry )[l.v] && ( !state[l.v] || !same( *( *entry )[l.v], *state[l.v] ) ) )
+                const auto lost = std::erase_if(
+                    entry->facts,
+                    [&]( const auto& fact )
                     {
-                        ( *entry )[l.v] = std::nullopt;
-                        changed         = true;
-                        dirty[target.v] = true;
+                        const Operand* held = state[fact.first];
+                        return !held || !same( fact.second, *held );
                     }
+                );
+                if( lost > 0 )
+                {
+                    changed         = true;
+                    dirty[target.v] = true;
                 }
             }
         }
@@ -266,7 +261,6 @@ void rewrite( const Function& func, Operand& operand, const Values& values, bool
 }
 } // namespace
 
-// Facts are locals × blocks; a sparse map per block if it shows.
 void propagate_values( Function& func, const Type_table& types, Literal_pool& literals )
 {
     const Local_set                          addressed = addressed_locals( func );

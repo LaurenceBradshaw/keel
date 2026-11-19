@@ -1224,13 +1224,26 @@ std::vector<std::optional<State>> values_on_entry( const Analysis& analysis, con
 
     // Values only rise, a range that grows again at a join is widened to the next stop (every cycle has one),
     // relations only weaken, and a block is reached once, so this ends; a block with one way in keeps exact ranges.
-    const std::vector<Wide> stops   = stops_of( analysis, inductions ? &inductions->first : nullptr );
-    const std::vector<u32>  ways_in = predecessor_counts( func );
-    bool                    changed = true;
-    std::vector<Edge>       targets;
-    std::vector<bool>       dirty( func.blocks.size(), true );
-    State                   state;
-    State                   arriving;
+    const std::vector<Wide>            stops   = stops_of( analysis, inductions ? &inductions->first : nullptr );
+    const std::vector<u32>             ways_in = predecessor_counts( func );
+    bool                               changed = true;
+    std::vector<Edge>                  targets;
+    std::vector<bool>                  dirty( func.blocks.size(), true );
+    State                              state;
+    State                              arriving;
+    std::vector<std::pair<u32, Value>> was;
+    std::vector<bool>                  logged( func.locals.size(), false );
+
+    // An untracked local keeps its first value everywhere, so only tracked ones join.
+    std::vector<u32> tracked;
+    for( const Local_id l : func.locals.ids() )
+    {
+        if( analysis.tracked[l.v] )
+        {
+            tracked.push_back( l.v );
+        }
+    }
+
     while( changed )
     {
         changed = false;
@@ -1278,16 +1291,24 @@ std::vector<std::optional<State>> values_on_entry( const Analysis& analysis, con
                 }
             }
 
+            // Each edge reads the block's values in place, its narrowing undone before the next.
+            std::swap( arriving.values, state.values );
+            std::optional<std::pair<u32, Value>> undo;
             for( const Edge& edge : targets )
             {
-                arriving = state;
+                if( undo )
+                {
+                    arriving.values[undo->first] = undo->second;
+                    undo.reset();
+                }
+                arriving.relations = state.relations;
 
                 // The tested local, within what the edge allows; an edge it cannot take is left out.
                 if( edge.narrowed )
                 {
                     const Local_id              local   = edge.narrowed->local;
                     const Type_id               type    = func.locals[local].type;
-                    const std::optional<Bounds> current = bounds( state.values[local.v], type, analysis.types );
+                    const std::optional<Bounds> current = bounds( arriving.values[local.v], type, analysis.types );
                     if( current )
                     {
                         const Bounds within {
@@ -1297,6 +1318,7 @@ std::vector<std::optional<State>> values_on_entry( const Analysis& analysis, con
                         {
                             continue;
                         }
+                        undo                     = std::pair { local.v, arriving.values[local.v] };
                         arriving.values[local.v] = of_bounds( within, type, analysis.types );
                     }
                 }
@@ -1310,11 +1332,11 @@ std::vector<std::optional<State>> values_on_entry( const Analysis& analysis, con
 
                 if( !entry )
                 {
+                    entry = arriving;
                     if( inductions )
                     {
-                        tighten( analysis, inductions->loops, inductions->pairs, edge.target, arriving.values );
+                        tighten( analysis, inductions->loops, inductions->pairs, edge.target, entry->values );
                     }
-                    entry                = arriving;
                     changed              = true;
                     dirty[edge.target.v] = true;
                     continue;
@@ -1323,25 +1345,46 @@ std::vector<std::optional<State>> values_on_entry( const Analysis& analysis, con
                 // Before the values join, so a pair one path does not relate is ordered by that path's bounds.
                 Relations relations = joined( analysis, *entry, arriving );
 
-                Values next = entry->values;
-                for( const Local_id l : func.locals.ids() )
+                // Joined in place; `was` keeps each changed local's old value, so a tighten that undoes
+                // a join is no change.
+                was.clear();
+                for( const u32 l : tracked )
                 {
-                    const Value old    = entry->values[l.v];
-                    Value       joined = join( old, arriving.values[l.v], func.locals[l].type, analysis.types );
+                    const Type_id type   = func.locals[Local_id { l }].type;
+                    const Value   old    = entry->values[l];
+                    Value         joined = join( old, arriving.values[l], type, analysis.types );
                     if( joined != old && ways_in[edge.target.v] > 1 && old.state == Value::State::Range &&
                         joined.state == Value::State::Range )
                     {
-                        joined = widened( old, joined, stops, func.locals[l].type, analysis.types );
+                        joined = widened( old, joined, stops, type, analysis.types );
                     }
-                    next[l.v] = joined;
+                    if( joined != old )
+                    {
+                        was.emplace_back( l, old );
+                        logged[l]        = true;
+                        entry->values[l] = joined;
+                    }
                 }
                 if( inductions )
                 {
-                    tighten( analysis, inductions->loops, inductions->pairs, edge.target, next );
+                    for( const Lockstep& p : inductions->pairs )
+                    {
+                        if( !logged[p.v.v] )
+                        {
+                            was.emplace_back( p.v.v, entry->values[p.v.v] );
+                            logged[p.v.v] = true;
+                        }
+                    }
+                    tighten( analysis, inductions->loops, inductions->pairs, edge.target, entry->values );
                 }
-                if( next != entry->values )
+                bool moved = false;
+                for( const auto& [l, old] : was )
                 {
-                    entry->values        = std::move( next );
+                    moved     = moved || entry->values[l] != old;
+                    logged[l] = false;
+                }
+                if( moved )
+                {
                     changed              = true;
                     dirty[edge.target.v] = true;
                 }

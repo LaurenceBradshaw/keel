@@ -23,7 +23,7 @@ struct Inline_weights
     u32 threshold            = 20;   // the most a callee may cost
     u32 in_loop              = 15;   // more it may cost when the call is inside a loop
     u32 few_blocks           = 3;    // a callee with this many blocks or fewer may cost a quarter more
-    u32 big_caller           = 1000; // statements, before inlining, past which a caller takes only
+    u32 big_caller           = 1500; // statements, before inlining, past which a caller takes only
     u32 big_caller_threshold = 2;    // callees costing this much
 };
 
