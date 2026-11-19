@@ -822,7 +822,8 @@ std::optional<u64> offset_of(
 }
 
 // A `u64` loop the range check cannot take exactly: its index `i` runs from `a` by `s` while the latch's
-// `i + d < n` (or `<=`) holds, and its bounds checks are `i + c < len`, any number of them. Wrapping
+// `i + d < n` (or `<=`) holds, and its bounds checks are `i + c < len`, any number of them, or, under
+// `i < n` stepping by 1, `o + k < len` with `k` stepped by a fixed stride. Wrapping
 // makes the turn a check would fail on unknowable before the loop, so the preheader proves none can
 // fail instead, from `a <= n <= max - s - max( d, c )`, `a + c < len` and the last turn's `i + c < len`;
 // the loop runs without them when it holds and as it was, in a copy never versioned again, when not.
@@ -869,11 +870,12 @@ bool version_range_checks( Function& func, const Scope& scope, Literal_pool& lit
     }
 
     // The index, stepped in the latch before its test reads `i + d`.
-    const Type_id      word = scope.table.integer( 64, false );
-    std::optional<u64> step;
-    std::optional<u64> d;
-    Local_id           i;
-    for( const Induction& induction : inductions_of( func, loop, scope.addressed ) )
+    const Type_id                word       = scope.table.integer( 64, false );
+    const std::vector<Induction> inductions = inductions_of( func, loop, scope.addressed );
+    std::optional<u64>           step;
+    std::optional<u64>           d;
+    Local_id                     i;
+    for( const Induction& induction : inductions )
     {
         if( induction.block != latch || induction.index >= *tested_at || func.locals[induction.local].type != word ||
             induction.step.kind != Operand_kind::Constant || literals.kind( induction.step.constant ) != Literal_kind::Integer )
@@ -891,17 +893,93 @@ bool version_range_checks( Function& func, const Scope& scope, Literal_pool& lit
         }
     }
     constexpr u64 k_small = u64( 1 ) << 32;
+    constexpr u64 k_wide  = u64( 1 ) << 62;
     if( !step || *step == 0 || *step >= k_small || *d >= k_small )
     {
         return false;
     }
 
+    // `o + k`, or `k`: `o` fixed, `k` stepped in the latch by a fixed `s`, so `k0 + s * t` on turn `t`;
+    // or `k` is `i * s`, `a * s + s * t`.
+    struct Strided
+    {
+        std::optional<Operand> o;
+        Local_id               k;
+        Operand                s;
+        bool                   scaled;
+    };
+    // `operand`'s `x op y`, written in `b` before statement `before`, and where.
+    const auto made = [&]( const Operand& operand, Block_id b, u32 before, Token_kind op ) -> std::optional<u32>
+    {
+        if( operand.kind != Operand_kind::Copy || !operand.place.is_whole_local() )
+        {
+            return std::nullopt;
+        }
+        const std::optional<u32> at = assigned( func, scope, operand.place.local, b );
+        if( !at || *at >= before || value_at( func, b, *at ).kind != Rvalue_kind::Binary || value_at( func, b, *at ).op != op )
+        {
+            return std::nullopt;
+        }
+        return at;
+    };
+    const auto term = [&]( const Operand& operand, Block_id b, u32 before ) -> std::optional<Strided>
+    {
+        for( const Induction& k : inductions )
+        {
+            if( k.block == latch && is_local( operand, k.local ) && func.locals[k.local].type == word &&
+                fixed( scope, k.step ) )
+            {
+                return Strided { .o = std::nullopt, .k = k.local, .s = k.step, .scaled = false };
+            }
+        }
+        if( const std::optional<u32> at = made( operand, b, before, Token_kind::Star ) )
+        {
+            const Rvalue& value = value_at( func, b, *at );
+            for( const bool flipped : { false, true } )
+            {
+                const Operand& s = flipped ? value.a : value.b;
+                if( is_local( flipped ? value.b : value.a, i ) && fixed( scope, s ) )
+                {
+                    return Strided { .o = std::nullopt, .k = i, .s = s, .scaled = true };
+                }
+            }
+        }
+        return std::nullopt;
+    };
+    const auto strided = [&]( const Operand& index, Block_id b, u32 before ) -> std::optional<Strided>
+    {
+        if( std::optional<Strided> alone = term( index, b, before ) )
+        {
+            return alone;
+        }
+        const std::optional<u32> at = made( index, b, before, Token_kind::Plus );
+        if( !at )
+        {
+            return std::nullopt;
+        }
+        const Rvalue& value = value_at( func, b, *at );
+        for( const bool flipped : { false, true } )
+        {
+            std::optional<Strided> by = term( flipped ? value.b : value.a, b, *at );
+            const Operand&         o  = flipped ? value.a : value.b;
+            if( by && fixed( scope, o ) )
+            {
+                by->o = o;
+                return by;
+            }
+        }
+        return std::nullopt;
+    };
+    // Turn `t` has `i = a + t` and the last is `n - 1 - a`, as the strided checks need.
+    const bool counted = *step == 1 && *d == 0 && tested.op == Token_kind::Less;
+
     struct Check
     {
-        Block_id block;
-        Block_id stays;
-        u64      c;
-        Operand  len;
+        Block_id               block;
+        Block_id               stays;
+        u64                    c;
+        Operand                len;
+        std::optional<Strided> strided;
     };
     std::vector<Check> checks;
     for( const Block_id b : scope.exiting )
@@ -927,14 +1005,23 @@ bool version_range_checks( Function& func, const Scope& scope, Literal_pool& lit
         }
         for( const bool flipped : { false, true } )
         {
-            const Operand&           index = flipped ? compared.b : compared.a;
-            const Operand&           len   = flipped ? compared.a : compared.b;
-            const Token_kind         fails = flipped ? Token_kind::Less_equal : Token_kind::Greater_equal;
-            const Token_kind         holds = flipped ? Token_kind::Greater : Token_kind::Less;
-            const std::optional<u64> c     = offset_of( func, scope, literals, index, i, b, *compared_at );
-            if( c && *c < k_small && fixed( scope, len ) && compared.op == ( fails_on_true ? fails : holds ) )
+            const Operand&   index = flipped ? compared.b : compared.a;
+            const Operand&   len   = flipped ? compared.a : compared.b;
+            const Token_kind fails = flipped ? Token_kind::Less_equal : Token_kind::Greater_equal;
+            const Token_kind holds = flipped ? Token_kind::Greater : Token_kind::Less;
+            if( !fixed( scope, len ) || compared.op != ( fails_on_true ? fails : holds ) )
             {
-                checks.push_back( Check { .block = b, .stays = stays, .c = *c, .len = len } );
+                continue;
+            }
+            const std::optional<u64> c = offset_of( func, scope, literals, index, i, b, *compared_at );
+            if( c && *c < k_small )
+            {
+                checks.push_back( Check { .block = b, .stays = stays, .c = *c, .len = len, .strided = std::nullopt } );
+                break;
+            }
+            if( const std::optional<Strided> by = counted ? strided( index, b, *compared_at ) : std::nullopt )
+            {
+                checks.push_back( Check { .block = b, .stays = stays, .c = 0, .len = len, .strided = by } );
                 break;
             }
         }
@@ -971,9 +1058,46 @@ bool version_range_checks( Function& func, const Scope& scope, Literal_pool& lit
         temporary( boolean, binary( Token_kind::Less_equal, a, *n, boolean ) ),
         temporary( boolean, binary( Token_kind::Less_equal, *n, number( ~u64( 0 ) - *step - widest ), boolean ) )
     );
-    const u64 inclusive = tested.op == Token_kind::Less_equal;
+    const u64              inclusive = tested.op == Token_kind::Less_equal;
+    std::optional<Operand> last_turn;
     for( const Check& check : checks )
     {
+        if( check.strided )
+        {
+            // `a < n`, and `o`, `k0` and `s * (n - 1 - a)` each under 2^62 (each product from both sides
+            // under 2^32), so `o + k0 + s * t` never wraps and its last is under `len`. Each bound alone,
+            // so constant sizes fold it.
+            const auto less = [&]( const Operand& x, const Operand& y )
+            { return temporary( boolean, binary( Token_kind::Less, x, y, boolean ) ); };
+            if( !last_turn )
+            {
+                holds     = both( holds, less( a, *n ) );
+                last_turn = temporary(
+                    word,
+                    binary( Token_kind::Minus, temporary( word, binary( Token_kind::Minus, *n, a, word ) ), number( 1 ), word )
+                );
+                holds = both( holds, less( *last_turn, number( k_small ) ) );
+            }
+            const Strided& by = *check.strided;
+            holds             = both( holds, less( by.s, number( k_small ) ) );
+            if( by.scaled )
+            {
+                holds = both( holds, less( a, number( k_small ) ) );
+            }
+            const Operand k0      = by.scaled ? temporary( word, binary( Token_kind::Star, a, by.s, word ) )
+                                              : copy( Place { .local = by.k }, word );
+            const Operand span_of = temporary( word, binary( Token_kind::Star, by.s, *last_turn, word ) );
+            holds                 = both( holds, less( k0, number( k_wide ) ) );
+            holds                 = both( holds, less( span_of, number( k_wide ) ) );
+            Operand last          = temporary( word, binary( Token_kind::Plus, k0, span_of, word ) );
+            if( by.o )
+            {
+                holds = both( holds, less( *by.o, number( k_wide ) ) );
+                last  = temporary( word, binary( Token_kind::Plus, *by.o, last, word ) );
+            }
+            holds = both( holds, less( last, check.len ) );
+            continue;
+        }
         const Operand first = check.c == 0 ? a : temporary( word, binary( Token_kind::Plus, a, number( check.c ), word ) );
         holds               = both( holds, temporary( boolean, binary( Token_kind::Less, first, check.len, boolean ) ) );
         const u64     more  = check.c + inclusive;
@@ -1367,6 +1491,17 @@ TEST_CASE( "hoist_invariants_versions_a_loop_with_several_range_checks", "[opt][
     REQUIRE( f.exits() == 1 + 3 );
     REQUIRE( Hoisted( source, 2 ).exits() == 3 );
     REQUIRE( Hoisted( source, 1, Loop_weights {} ).exits() == 3 );
+}
+
+// An offset index and one stepping by a run-time stride, as a broadcast reads them.
+TEST_CASE( "hoist_invariants_versions_a_loop_with_strided_range_checks", "[opt][hoist_invariants]" )
+{
+    constexpr std::string_view source = "void f( ref f64[] d, const ref f64[] a, u64 o, u64 s, u64 n ) "
+                                        "{ for( u64 j : 0..n ) { d[ o + j ] = a[ j * s ]; } }\n";
+    const Hoisted              f( source, 2, Loop_weights {} );
+    INFO( f.kir() );
+    REQUIRE( f.exits() == 1 + 3 );
+    REQUIRE( Hoisted( source, 2 ).exits() == 3 );
 }
 
 // `tick` runs before the check on each turn, and a panic before the loop would skip it.

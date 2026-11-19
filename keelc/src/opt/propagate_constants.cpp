@@ -1932,7 +1932,8 @@ TEST_CASE( "propagate_constants_widens_only_at_a_join", "[opt][constants]" )
     REQUIRE( p.branches() == 3 );
 }
 
-// `v` steps by 4 beside `i`, so it is `4 * i` in the inner loop and `v + j` stays under 16; by 5 it may not.
+// `v` steps by 4 beside `i`, so it is `4 * i` in the inner loop and `v + j` stays under 16; by 5 it may not,
+// and the inner loop is versioned on it.
 TEST_CASE( "propagate_constants_bounds_an_induction_by_its_counter", "[opt][constants]" )
 {
     const auto source = []( int step )
@@ -1944,7 +1945,7 @@ TEST_CASE( "propagate_constants_bounds_an_induction_by_its_counter", "[opt][cons
     const Propagated lockstep( source( 4 ) );
     CHECK( lockstep.branches() == 2 );
     const Propagated past( source( 5 ) );
-    CHECK( past.branches() == 3 );
+    CHECK( past.branches() == 5 );
 }
 
 } // namespace keel

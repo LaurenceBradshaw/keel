@@ -459,8 +459,12 @@ loop that steps by `s` to the latch's `i + d < n` (or `<=`), or has several chec
 copied instead, under the versioning budget: which check fails first, on which turn, cannot be
 known before the loop once arithmetic may wrap, so a range check cannot stand for them. The preheader
 proves that none can fail, from `a <= n <= max - s - max( d, c )`, each `a + c < len`, and each
-`n + c + [<=] <= len + d` for the last turn, each written so neither side wraps. When that holds the
-loop runs without its checks; otherwise a copy with them runs, which is never versioned again. LICM
+`n + c + [<=] <= len + d` for the last turn, each written so neither side wraps. Under `i < n`
+stepping by 1, a check may also read `o + k` (or `k`), `o` invariant and `k` either an induction the
+latch steps by an invariant `s` or `i * s`, as a strided view's index reads. The preheader proves it
+from `a < n`, `s` and `n - 1 - a` (and `a`, for `i * s`) each under 2^32, `o`, `k` on entry and
+`s * ( n - 1 - a )` each under 2^62, and the last turn's `o + k < len`. Each bound stands alone, so
+constant sizes fold the test away. When that holds the loop runs without its checks; otherwise a copy with them runs, which is never versioned again. LICM
 runs again after versioning, so the copy that reads the preheader's values loses its checks too.
 Where neither proof holds, `-O3` checks at run time instead. The loop has to be rotated and innermost, with at
 most 200 statements, and its index has to step by 1 to the latch's `i < n`. It may store only into
