@@ -105,6 +105,13 @@ end of input. A read error is also <code>false</code>; the careful path is <code
 <dt><a href="dataframe.html#grouped"><code>grouped</code></a> <span class="kind">class</span></dt>
 <dd>The groups <code>dataframe::groupby</code> makes: the rows sharing their values in the key columns, the
 groups in sorted key order, and rows missing a key left out.</dd>
+<dt><a href="dataframe.html#rolling"><code>rolling</code></a> <span class="kind">class</span></dt>
+<dd>The windows <code>series::rolling</code> makes: for each row, that row and those before it in its window.</dd>
+<dt><a href="dataframe.html#rolling_frame"><code>rolling_frame</code></a> <span class="kind">class</span></dt>
+<dd>The windows <code>dataframe::rolling</code> makes, applied to each number and bool column as
+<code>kl::rolling</code> applies them to a series, each method answering a frame. <code>strings</code>, <code>times</code> and
+<code>durations</code> columns are left out, where pandas refuses them, but the times a window is measured
+by stay as they are. The index is kept.</dd>
 </dl>
 <h4 class="divider">CSV</h4>
 <dl class="summaries">

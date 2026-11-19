@@ -18,6 +18,8 @@
 <li><a href="#series"><code>series</code></a> <span class="kind">class</span></li>
 <li><a href="#dataframe"><code>dataframe</code></a> <span class="kind">class</span></li>
 <li><a href="#grouped"><code>grouped</code></a> <span class="kind">class</span></li>
+<li><a href="#rolling"><code>rolling</code></a> <span class="kind">class</span></li>
+<li><a href="#rolling_frame"><code>rolling_frame</code></a> <span class="kind">class</span></li>
 <li class="divider">CSV</li>
 <li><a href="#csv_error"><code>csv_error</code></a> <span class="kind">enum</span></li>
 <li><a href="#parse_csv"><code>parse_csv</code></a> <span class="kind">function</span></li>
@@ -614,6 +616,18 @@ than two.</p>
 two nearest as pandas' default; NaN when there are none.</p>
 </div>
 </div>
+<h3>Windows</h3>
+<div class="group" id="series.rolling">
+<pre class="signature"><a class="anchor" href="#series.rolling" aria-label="Link to rolling">#</a><code><span class="kw">public</span> kl::<a class="type" href="#rolling">rolling</a> <span class="fn">rolling</span>( <a class="prim" href="prelude.html#u64">u64</a> window ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Windows of <code>window</code> rows ending at each row, as pandas' <code>s.rolling( window )</code>; a window
+needs every row present. Panics when <code>window</code> is 0 or the series holds no numbers or bools.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.rolling" aria-label="Link to rolling">#</a><code><span class="kw">public</span> kl::<a class="type" href="#rolling">rolling</a> <span class="fn">rolling</span>( <a class="prim" href="prelude.html#u64">u64</a> window, <a class="prim" href="prelude.html#u64">u64</a> min_periods ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>As <code>rolling( window )</code>, a window needing only <code>min_periods</code> values present.</p>
+</div>
+</div>
 </section>
 <section class="entry">
 <h2><span class="kind">class</span> <span class="type">dataframe</span></h2>
@@ -868,6 +882,25 @@ look. Panics when <code>values</code> is a <code>strings</code>, <code>times</co
 the mean: <code>df.pivot_table( &quot;v&quot;, &quot;k&quot;, &quot;j&quot;, fn[]( s ) { return s.sum(); } )</code>.</p>
 </div>
 </div>
+<h3>Windows</h3>
+<div class="group" id="dataframe.rolling">
+<pre class="signature"><a class="anchor" href="#dataframe.rolling" aria-label="Link to rolling">#</a><code><span class="kw">public</span> <a class="type" href="#rolling_frame">rolling_frame</a> <span class="fn">rolling</span>( <a class="prim" href="prelude.html#u64">u64</a> window ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Windows of <code>window</code> rows ending at each row over each number and bool column, as pandas'
+<code>df.rolling( window )</code>; a window needs every row present. Panics when <code>window</code> is 0.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#dataframe.rolling" aria-label="Link to rolling">#</a><code><span class="kw">public</span> <a class="type" href="#rolling_frame">rolling_frame</a> <span class="fn">rolling</span>( <a class="prim" href="prelude.html#u64">u64</a> window, <a class="prim" href="prelude.html#u64">u64</a> min_periods ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>As <code>rolling( window )</code>, a window needing only <code>min_periods</code> values present.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#dataframe.rolling" aria-label="Link to rolling">#</a><code><span class="kw">public</span> <a class="type" href="#rolling_frame">rolling_frame</a> <span class="fn">rolling</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="time.html#duration">duration</a> window, <a class="type" href="prelude.html#str">str</a> on = &quot;&quot;, <a class="prim" href="prelude.html#u64">u64</a> min_periods = 1 ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Windows of the rows whose times in the <code>times</code> column <code>on</code>, or in the index when <code>on</code> is
+empty, fall within <code>window</code> before each row's, that row's included, as pandas'
+<code>df.rolling( &quot;2D&quot;, on = &quot;t&quot; )</code>; a window needs <code>min_periods</code> values present. The times
+column is kept as it is. Panics unless the times ascend with no gap.</p>
+</div>
+</div>
 <h3>Combining</h3>
 <div class="group" id="dataframe.merge">
 <pre class="signature"><a class="anchor" href="#dataframe.merge" aria-label="Link to merge">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">merge</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#dataframe">dataframe</a> right, <a class="type" href="#how">how</a> kind, <a class="type" href="prelude.html#str">str</a>... on ) <span class="kw">const</span></code></pre>
@@ -988,6 +1021,143 @@ by <code>min</code> and <code>max</code> only, and a <code>durations</code> one 
 <div class="doc">
 <p><code>f</code> of each group's rows of each number and bool column, as <code>f64s</code>:
 <code>g.agg( fn[]( s ) { return s.max() - s.min(); } )</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">class</span> <span class="type">rolling</span></h2>
+<div class="group" id="rolling">
+<pre class="signature"><a class="anchor" href="#rolling" aria-label="Link to rolling">#</a><code><span class="kw">class</span> <span class="type">rolling</span></code></pre>
+<div class="doc">
+<p>The windows <code>series::rolling</code> makes: for each row, that row and those before it in its window.</p>
+<p>Each method answers <code>f64s</code> the length of the series, a gap where the window holds fewer than
+<code>min_periods</code> values present. Sums add and take away values with Kahan's compensation, and the
+variance by Welford's updates, so a window of equal values has a variance of exactly 0.</p>
+</div>
+</div>
+<h3>Constructors</h3>
+<div class="group" id="rolling.rolling">
+<pre class="signature"><a class="anchor" href="#rolling.rolling" aria-label="Link to rolling">#</a><code><span class="kw">public</span> <span class="type">rolling</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> s, <span class="kw">move</span> <a class="type" href="list.html#list">list</a>&lt;<a class="prim" href="prelude.html#u64">u64</a>&gt; starts, <a class="prim" href="prelude.html#u64">u64</a> min_periods )</code></pre>
+<div class="doc">
+<p><code>s</code>'s windows; see <code>series::rolling</code>.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="rolling.sum">
+<pre class="signature"><a class="anchor" href="#rolling.sum" aria-label="Link to sum">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">sum</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each window's sum, 0 for none present when <code>min_periods</code> is 0.</p>
+</div>
+</div>
+<div class="group" id="rolling.mean">
+<pre class="signature"><a class="anchor" href="#rolling.mean" aria-label="Link to mean">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">mean</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each window's mean.</p>
+</div>
+</div>
+<div class="group" id="rolling.var">
+<pre class="signature"><a class="anchor" href="#rolling.var" aria-label="Link to var">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">var</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each window's sample variance, over n - 1.</p>
+</div>
+</div>
+<div class="group" id="rolling.std">
+<pre class="signature"><a class="anchor" href="#rolling.std" aria-label="Link to std">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">std</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each window's sample standard deviation.</p>
+</div>
+</div>
+<div class="group" id="rolling.min">
+<pre class="signature"><a class="anchor" href="#rolling.min" aria-label="Link to min">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">min</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each window's least value.</p>
+</div>
+</div>
+<div class="group" id="rolling.max">
+<pre class="signature"><a class="anchor" href="#rolling.max" aria-label="Link to max">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">max</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each window's greatest value.</p>
+</div>
+</div>
+<div class="group" id="rolling.count">
+<pre class="signature"><a class="anchor" href="#rolling.count" aria-label="Link to count">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">count</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each window's values present, a gap where the window has fewer than <code>min_periods</code> rows.</p>
+</div>
+</div>
+<div class="group" id="rolling.agg">
+<pre class="signature"><a class="anchor" href="#rolling.agg" aria-label="Link to agg">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">agg</span>&lt;F&gt;( F f ) <span class="kw">const</span> <span class="kw">where</span> F : <span class="kw">fn</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> ) -&gt; <a class="prim" href="prelude.html#f64">f64</a></code></pre>
+<div class="doc">
+<p><code>f</code> of each window's rows, gaps included, recomputed each time:
+<code>r.agg( fn[]( s ) { return s.max() - s.min(); } )</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">class</span> <span class="type">rolling_frame</span></h2>
+<div class="group" id="rolling_frame">
+<pre class="signature"><a class="anchor" href="#rolling_frame" aria-label="Link to rolling_frame">#</a><code><span class="kw">class</span> <span class="type">rolling_frame</span></code></pre>
+<div class="doc">
+<p>The windows <code>dataframe::rolling</code> makes, applied to each number and bool column as
+<code>kl::rolling</code> applies them to a series, each method answering a frame. <code>strings</code>, <code>times</code> and
+<code>durations</code> columns are left out, where pandas refuses them, but the times a window is measured
+by stay as they are. The index is kept.</p>
+</div>
+</div>
+<h3>Constructors</h3>
+<div class="group" id="rolling_frame.rolling_frame">
+<pre class="signature"><a class="anchor" href="#rolling_frame.rolling_frame" aria-label="Link to rolling_frame">#</a><code><span class="kw">public</span> <span class="type">rolling_frame</span>( <span class="kw">move</span> <a class="type" href="#dataframe">dataframe</a> df, <span class="kw">move</span> <a class="type" href="list.html#list">list</a>&lt;<a class="prim" href="prelude.html#u64">u64</a>&gt; starts, <a class="prim" href="prelude.html#u64">u64</a> min_periods, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> on )</code></pre>
+<div class="doc">
+<p><code>df</code>'s windows; see <code>dataframe::rolling</code>.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="rolling_frame.sum">
+<pre class="signature"><a class="anchor" href="#rolling_frame.sum" aria-label="Link to sum">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">sum</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each window's sum in each column.</p>
+</div>
+</div>
+<div class="group" id="rolling_frame.mean">
+<pre class="signature"><a class="anchor" href="#rolling_frame.mean" aria-label="Link to mean">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">mean</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each window's mean in each column.</p>
+</div>
+</div>
+<div class="group" id="rolling_frame.var">
+<pre class="signature"><a class="anchor" href="#rolling_frame.var" aria-label="Link to var">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">var</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each window's sample variance in each column.</p>
+</div>
+</div>
+<div class="group" id="rolling_frame.std">
+<pre class="signature"><a class="anchor" href="#rolling_frame.std" aria-label="Link to std">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">std</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each window's sample standard deviation in each column.</p>
+</div>
+</div>
+<div class="group" id="rolling_frame.min">
+<pre class="signature"><a class="anchor" href="#rolling_frame.min" aria-label="Link to min">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">min</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each window's least value in each column.</p>
+</div>
+</div>
+<div class="group" id="rolling_frame.max">
+<pre class="signature"><a class="anchor" href="#rolling_frame.max" aria-label="Link to max">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">max</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each window's greatest value in each column.</p>
+</div>
+</div>
+<div class="group" id="rolling_frame.count">
+<pre class="signature"><a class="anchor" href="#rolling_frame.count" aria-label="Link to count">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">count</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each window's values present in each column.</p>
+</div>
+</div>
+<div class="group" id="rolling_frame.agg">
+<pre class="signature"><a class="anchor" href="#rolling_frame.agg" aria-label="Link to agg">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">agg</span>&lt;F&gt;( F f ) <span class="kw">const</span> <span class="kw">where</span> F : <span class="kw">fn</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> ) -&gt; <a class="prim" href="prelude.html#f64">f64</a></code></pre>
+<div class="doc">
+<p><code>f</code> of each window's rows in each column.</p>
 </div>
 </div>
 </section>

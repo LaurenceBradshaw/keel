@@ -959,6 +959,26 @@ class series
         return t >= 0.5 ? v[hi] - diff * ( 1.0 - t ) : v[lo] + diff * t;
     }
 
+    /// --- Windows ---
+
+    /// Windows of `window` rows ending at each row, as pandas' `s.rolling( window )`; a window
+    /// needs every row present. Panics when `window` is 0 or the series holds no numbers or bools.
+    public kl::rolling rolling( u64 window ) const
+    {
+        return rolling( window, window );
+    }
+
+    /// As `rolling( window )`, a window needing only `min_periods` values present.
+    public kl::rolling rolling( u64 window, u64 min_periods ) const
+    {
+        if( min_periods > window )
+        {
+            panic( "min_periods is more than the window" );
+        }
+        window_numbers( this );
+        return kl::rolling( this, row_starts( size(), window ), min_periods );
+    }
+
     // Panics unless the series holds `k`.
     private void holds( dtype k ) const
     {
@@ -1805,6 +1825,42 @@ class dataframe
         return r;
     }
 
+    /// --- Windows ---
+
+    /// Windows of `window` rows ending at each row over each number and bool column, as pandas'
+    /// `df.rolling( window )`; a window needs every row present. Panics when `window` is 0.
+    public rolling_frame rolling( u64 window ) const
+    {
+        return rolling( window, window );
+    }
+
+    /// As `rolling( window )`, a window needing only `min_periods` values present.
+    public rolling_frame rolling( u64 window, u64 min_periods ) const
+    {
+        if( min_periods > window )
+        {
+            panic( "min_periods is more than the window" );
+        }
+        return rolled_frame( row_starts( rows(), window ), min_periods, "" );
+    }
+
+    /// Windows of the rows whose times in the `times` column `on`, or in the index when `on` is
+    /// empty, fall within `window` before each row's, that row's included, as pandas'
+    /// `df.rolling( "2D", on = "t" )`; a window needs `min_periods` values present. The times
+    /// column is kept as it is. Panics unless the times ascend with no gap.
+    public rolling_frame rolling( const ref duration window, str on = "", u64 min_periods = 1 ) const
+    {
+        if( on.size == 0 && index_.is_empty() )
+        {
+            panic( "the frame has no index of times" );
+        }
+        if( on.size == 0 )
+        {
+            return rolled_frame( time_starts( index_[0], window ), min_periods, on );
+        }
+        return rolled_frame( time_starts( this[on], window ), min_periods, on );
+    }
+
     /// --- Combining ---
 
     /// This frame's rows paired with `right`'s where the columns `on` hold equal values, as pandas'
@@ -2184,6 +2240,24 @@ class dataframe
             }
         }
         return names_.size();
+    }
+
+    // The number and bool columns, and `on`, with the index, as windows starting at `starts`.
+    private rolling_frame rolled_frame( move list<u64> starts, u64 min_periods, const ref textual on ) const
+    {
+        dataframe r = dataframe();
+        string times = string( on );
+        for( u64 c : 0..columns_.size() )
+        {
+            dtype k = columns_[c].kind();
+            if( names_[c] == times || is_number( k ) || k == dtype::bools )
+            {
+                r.names_.push( string( names_[c] ) );
+                r.columns_.push( columns_[c].copy() );
+            }
+        }
+        r.keep_index( this );
+        return rolling_frame( move r, move starts, min_periods, on );
     }
 
     // `other`'s index, copied.
@@ -2725,6 +2799,453 @@ class grouped
         return series( ndarray<f64>::from_list( move v ) );
     }
 };
+
+/// The windows `series::rolling` makes: for each row, that row and those before it in its window.
+///
+/// Each method answers `f64s` the length of the series, a gap where the window holds fewer than
+/// `min_periods` values present. Sums add and take away values with Kahan's compensation, and the
+/// variance by Welford's updates, so a window of equal values has a variance of exactly 0.
+class rolling
+{
+    series values_;
+    list<u64> starts_; // row i's window is starts_[i]..i + 1
+    u64 min_periods_;
+
+    /// `s`'s windows; see `series::rolling`.
+    public rolling( const ref series s, move list<u64> starts, u64 min_periods )
+    {
+        values_      = s.copy();
+        starts_      = move starts;
+        min_periods_ = min_periods;
+    }
+
+    /// Each window's sum, 0 for none present when `min_periods` is 0.
+    public series sum() const
+    {
+        return rolled( values_, starts_, min_periods_, reduction::sum );
+    }
+
+    /// Each window's mean.
+    public series mean() const
+    {
+        return rolled( values_, starts_, min_periods_, reduction::mean );
+    }
+
+    /// Each window's sample variance, over n - 1.
+    public series var() const
+    {
+        return rolled( values_, starts_, min_periods_, reduction::var );
+    }
+
+    /// Each window's sample standard deviation.
+    public series std() const
+    {
+        return rolled( values_, starts_, min_periods_, reduction::std );
+    }
+
+    /// Each window's least value.
+    public series min() const
+    {
+        return rolled( values_, starts_, min_periods_, reduction::min );
+    }
+
+    /// Each window's greatest value.
+    public series max() const
+    {
+        return rolled( values_, starts_, min_periods_, reduction::max );
+    }
+
+    /// Each window's values present, a gap where the window has fewer than `min_periods` rows.
+    public series count() const
+    {
+        return rolled( values_, starts_, min_periods_, reduction::count );
+    }
+
+    /// `f` of each window's rows, gaps included, recomputed each time:
+    /// `r.agg( fn[]( s ) { return s.max() - s.min(); } )`.
+    public series agg<F>( F f ) const where F : fn( const ref series ) -> f64
+    {
+        return rolled_by( values_, starts_, min_periods_, f );
+    }
+};
+
+/// The windows `dataframe::rolling` makes, applied to each number and bool column as
+/// `kl::rolling` applies them to a series, each method answering a frame. `strings`, `times` and
+/// `durations` columns are left out, where pandas refuses them, but the times a window is measured
+/// by stay as they are. The index is kept.
+class rolling_frame
+{
+    dataframe frame_;  // the columns to roll, and the times column
+    list<u64> starts_; // row i's window is starts_[i]..i + 1
+    u64 min_periods_;
+    string on_;        // the times column, or empty
+
+    /// `df`'s windows; see `dataframe::rolling`.
+    public rolling_frame( move dataframe df, move list<u64> starts, u64 min_periods, const ref textual on )
+    {
+        frame_       = move df;
+        starts_      = move starts;
+        min_periods_ = min_periods;
+        on_          = string( on );
+    }
+
+    /// Each window's sum in each column.
+    public dataframe sum() const
+    {
+        return reduced( reduction::sum );
+    }
+
+    /// Each window's mean in each column.
+    public dataframe mean() const
+    {
+        return reduced( reduction::mean );
+    }
+
+    /// Each window's sample variance in each column.
+    public dataframe var() const
+    {
+        return reduced( reduction::var );
+    }
+
+    /// Each window's sample standard deviation in each column.
+    public dataframe std() const
+    {
+        return reduced( reduction::std );
+    }
+
+    /// Each window's least value in each column.
+    public dataframe min() const
+    {
+        return reduced( reduction::min );
+    }
+
+    /// Each window's greatest value in each column.
+    public dataframe max() const
+    {
+        return reduced( reduction::max );
+    }
+
+    /// Each window's values present in each column.
+    public dataframe count() const
+    {
+        return reduced( reduction::count );
+    }
+
+    /// `f` of each window's rows in each column.
+    public dataframe agg<F>( F f ) const where F : fn( const ref series ) -> f64
+    {
+        dataframe r = frame_.copy();
+        for( u64 c : 0..frame_.columns().size() )
+        {
+            const ref string name = frame_.columns()[c];
+            if( name != on_ )
+            {
+                r.set( name, rolled_by( frame_[name], starts_, min_periods_, f ) );
+            }
+        }
+        return r;
+    }
+
+    // `op` of each window in each column but the times.
+    private dataframe reduced( reduction op ) const
+    {
+        dataframe r = frame_.copy();
+        for( u64 c : 0..frame_.columns().size() )
+        {
+            const ref string name = frame_.columns()[c];
+            if( name != on_ )
+            {
+                r.set( name, rolled( frame_[name], starts_, min_periods_, op ) );
+            }
+        }
+        return r;
+    }
+};
+
+// Each row's window start for windows of `window` rows.
+private list<u64> row_starts( u64 n, u64 window )
+{
+    if( window == 0 )
+    {
+        panic( "the window is empty" );
+    }
+    list<u64> r = list<u64>::with_capacity( n );
+    for( u64 i : 0..n )
+    {
+        r.push( i + 1 >= window ? i + 1 - window : 0 );
+    }
+    return r;
+}
+
+// Each row's window start for the times within `window` before it, the earlier end open; panics
+// unless the times ascend with no gap.
+private list<u64> time_starts( const ref series t, const ref duration window )
+{
+    if( t.kind() != dtype::times )
+    {
+        panic( "the window is a duration, but the rows are not times" );
+    }
+    if( window.nanoseconds() <= 0 )
+    {
+        panic( "the window is not a positive duration" );
+    }
+    const ref ndarray<i64> ns = t.times();
+    list<u64> r = list<u64>::with_capacity( t.size() );
+    u64 lo = 0;
+    for( u64 i : 0..t.size() )
+    {
+        if( t.is_missing( i ) || ( i > 0 && ns[i] < ns[i - 1] ) )
+        {
+            panic( "the times are not sorted" );
+        }
+        while( ns[lo] <= ns[i] - window.nanoseconds() )
+        {
+            lo += 1;
+        }
+        r.push( lo );
+    }
+    return r;
+}
+
+// `s` as `f64`, a bool as 0 or 1 and a gap NaN; panics on any other dtype.
+private ndarray<f64> window_numbers( const ref series s )
+{
+    if( !is_number( s.kind() ) && s.kind() != dtype::bools )
+    {
+        panic( "the series does not hold numbers" );
+    }
+    list<f64> v = list<f64>::with_capacity( s.size() );
+    for( u64 i : 0..s.size() )
+    {
+        if( s.is_missing( i ) )
+        {
+            v.push( nan() );
+            continue;
+        }
+        switch( s.kind() )
+        {
+            case dtype::f64s:
+                v.push( s.f64s()[i] );
+                break;
+            case dtype::i64s:
+                v.push( cast<f64>( s.i64s()[i] ) );
+                break;
+            default:
+                v.push( s.bools().test( i ) ? 1.0 : 0.0 );
+                break;
+        }
+    }
+    return ndarray<f64>::from_list( move v );
+}
+
+// The running state of one window's sum, mean or variance.
+private struct window_sums
+{
+    f64 total;
+    f64 add_error;    // Kahan's compensation for adding
+    f64 remove_error; // and for taking away
+    f64 mean;         // Welford's
+    f64 peak;         // the most `squares` has been since it was last added up afresh
+    f64 squares;      // Welford's sum of squared differences from the mean
+    u64 present;
+    u64 negatives;
+};
+
+// Adds `x`, unless it is NaN.
+private void add( ref window_sums w, f64 x, bool welford )
+{
+    if( kl::is_nan( x ) )
+    {
+        return;
+    }
+    w.present += 1;
+    w.negatives += x < 0.0 ? 1 : 0;
+    if( welford )
+    {
+        f64 before = w.mean;
+        w.mean += ( x - before ) / cast<f64>( w.present );
+        w.squares += ( x - before ) * ( x - w.mean );
+        return;
+    }
+    f64 y = x - w.add_error;
+    f64 t = w.total + y;
+    w.add_error = t - w.total - y;
+    w.total = t;
+}
+
+// Takes away `x`, unless it is NaN.
+private void remove( ref window_sums w, f64 x, bool welford )
+{
+    if( kl::is_nan( x ) )
+    {
+        return;
+    }
+    w.present -= 1;
+    w.negatives -= x < 0.0 ? 1 : 0;
+    if( welford )
+    {
+        if( w.present == 0 )
+        {
+            w.mean = 0.0;
+            w.squares = 0.0;
+            return;
+        }
+        f64 before = w.mean;
+        w.mean -= ( x - before ) / cast<f64>( w.present );
+        w.squares -= ( x - before ) * ( x - w.mean );
+        return;
+    }
+    f64 y = -x - w.remove_error;
+    f64 t = w.total + y;
+    w.remove_error = t - w.total - y;
+    w.total = t;
+}
+
+// How many of `x`'s first i values are present, for each i up to its size.
+private list<u64> present_before( const ref ndarray<f64> x )
+{
+    list<u64> r = list<u64>::filled( x.size() + 1, 0 );
+    for( u64 i : 0..x.size() )
+    {
+        r[i + 1] = r[i] + ( kl::is_nan( x[i] ) ? 0 : 1 );
+    }
+    return r;
+}
+
+// `op` of each window of `s`, a gap where fewer than `min_periods` values are present.
+private series rolled( const ref series s, const ref list<u64> starts, u64 min_periods, reduction op )
+{
+    ndarray<f64> x = window_numbers( s );
+    u64 n = x.size();
+    list<f64> r = list<f64>::with_capacity( n );
+    if( op == reduction::count )
+    {
+        list<u64> present = present_before( x );
+        for( u64 i : 0..n )
+        {
+            u64 k = present[i + 1] - present[starts[i]];
+            r.push( i + 1 - starts[i] >= min_periods ? cast<f64>( k ) : nan() );
+        }
+        return series( ndarray<f64>::from_list( move r ) );
+    }
+    if( op == reduction::min || op == reduction::max )
+    {
+        return rolled_extreme( x, starts, min_periods, op == reduction::min );
+    }
+
+    bool welford = op == reduction::var || op == reduction::std;
+    window_sums fresh = window_sums { .total = 0.0, .add_error = 0.0, .remove_error = 0.0, .mean = 0.0, .squares = 0.0, .peak = 0.0, .present = 0, .negatives = 0 };
+    window_sums w = fresh;
+    u64 same = 0; // the latest values present that equal the last of them
+    f64 last = nan();
+    for( u64 i : 0..n )
+    {
+        if( i == 0 || starts[i] == i )
+        {
+            // A window sharing no row with the last starts afresh.
+            w = fresh;
+        }
+        else
+        {
+            for( u64 j : starts[i - 1]..starts[i] )
+            {
+                remove( ref w, x[j], welford );
+            }
+        }
+        add( ref w, x[i], welford );
+        if( welford && w.squares < w.peak * 0.01 )
+        {
+            // Taking away cancelled most of the digits: add the window up afresh.
+            w = fresh;
+            for( u64 j : starts[i]..i + 1 )
+            {
+                add( ref w, x[j], true );
+            }
+        }
+        w.peak = w.squares > w.peak ? w.squares : w.peak;
+        if( !kl::is_nan( x[i] ) )
+        {
+            same = x[i] == last ? same + 1 : 1;
+            last = x[i];
+        }
+
+        u64 k = w.present;
+        if( k < min_periods || ( k == 0 && op != reduction::sum ) )
+        {
+            r.push( nan() );
+            continue;
+        }
+        if( op == reduction::sum )
+        {
+            r.push( k == 0 ? 0.0 : same >= k ? last * cast<f64>( k ) : w.total );
+            continue;
+        }
+        if( op == reduction::mean )
+        {
+            f64 m = same >= k ? last : w.total / cast<f64>( k );
+            // A mean of values of one sign keeps that sign.
+            m = w.negatives == 0 && m < 0.0 ? 0.0 : w.negatives == k && m > 0.0 ? 0.0 : m;
+            r.push( m );
+            continue;
+        }
+        if( k < 2 )
+        {
+            r.push( nan() );
+            continue;
+        }
+        f64 v = same >= k ? 0.0 : ( w.squares > 0.0 ? w.squares : 0.0 ) / cast<f64>( k - 1 );
+        r.push( op == reduction::std ? kl::sqrt( v ) : v );
+    }
+    return series( ndarray<f64>::from_list( move r ) );
+}
+
+// The least or greatest value present in each window of `x`, by a deque of rows whose values
+// only grow (or shrink) from its front.
+private series rolled_extreme( const ref ndarray<f64> x, const ref list<u64> starts, u64 min_periods, bool least )
+{
+    u64 n = x.size();
+    list<f64> r = list<f64>::with_capacity( n );
+    list<u64> rows = list<u64>::with_capacity( n );
+    list<u64> present = present_before( x );
+    u64 front = 0;
+    for( u64 i : 0..n )
+    {
+        if( !kl::is_nan( x[i] ) )
+        {
+            while( rows.size() > front && ( least ? x[rows.last()] >= x[i] : x[rows.last()] <= x[i] ) )
+            {
+                rows.pop();
+            }
+            rows.push( i );
+        }
+        while( rows.size() > front && rows[front] < starts[i] )
+        {
+            front += 1;
+        }
+        u64 k = present[i + 1] - present[starts[i]];
+        r.push( k >= min_periods && k > 0 ? x[rows[front]] : nan() );
+    }
+    return series( ndarray<f64>::from_list( move r ) );
+}
+
+// `f` of each window of `s`, a gap where fewer than `min_periods` values are present.
+private series rolled_by<F>( const ref series s, const ref list<u64> starts, u64 min_periods, F f ) where F : fn( const ref series ) -> f64
+{
+    list<u64> all = list<u64>::with_capacity( s.size() );
+    list<u64> present = list<u64>::filled( s.size() + 1, 0 );
+    for( u64 i : 0..s.size() )
+    {
+        all.push( i );
+        present[i + 1] = present[i] + ( s.is_missing( i ) ? 0 : 1 );
+    }
+    list<f64> r = list<f64>::with_capacity( s.size() );
+    for( u64 i : 0..s.size() )
+    {
+        bool enough = present[i + 1] - present[starts[i]] >= min_periods;
+        r.push( enough ? f( s.taken( all.as_run()[starts[i]..i + 1] ) ) : nan() );
+    }
+    return series( ndarray<f64>::from_list( move r ) );
+}
 
 // `text` padded with spaces to `width`, on the left when `right`.
 private void pad( ref string to, const ref textual text, u64 width, bool right )

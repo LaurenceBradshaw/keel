@@ -1,8 +1,8 @@
 // `kl::dataframe`: building and shape, pandas' table, selecting rows and columns, sorting,
 // series arithmetic, comparisons and reductions with missing values, describe, CSV both ways,
-// time and duration columns, concat and merge, the index, pivot_table. The expected texts are
-// pandas 3.1's, but for an integer or bool column with a gap, which stays one, and a pivot's
-// corner, which does not name the column key.
+// time and duration columns, concat and merge, the index, pivot_table, rolling. The expected
+// texts are pandas 3.1's, but for an integer or bool column with a gap, which stays one, and a
+// pivot's corner, which does not name the column key.
 import kl::dataframe;
 import kl::list;
 import kl::mask;
@@ -467,4 +467,48 @@ private void pivot_table_spreads_a_key( ref kl::test::context c )
     c.check_eq( df.pivot_table( "v", "j", "k", fn[]( s ) { return s.sum(); } ).to_string(), "   j    a    b    c\n0  x  NaN  1.0  5.0\n1  y  6.0  3.0  NaN" );
     c.check_eq( parsed( "k,f,v\n1,1.5,1.0\n1,2.0,2.0\n2,1.5,3.0\n", ',' ).pivot_table( "v", "k", "f" ).columns()[2], "2.0" );
     c.expect_panic( "the values column does not aggregate", fn[ df ]() { _ = df.pivot_table( "j", "k", "v" ); } );
+}
+
+private void rolling_by_rows( ref kl::test::context c )
+{
+    kl::series s = kl::series( [ 1.0, 2.0, 0.0, 4.0, 5.0, 6.0 ] );
+    s.set_missing( 2 );
+    kl::dataframe d = kl::dataframe();
+    d.insert( "sum", s.rolling( 3 ).sum() );
+    d.insert( "mean", s.rolling( 3, 1 ).mean() );
+    d.insert( "var", s.rolling( 3, 1 ).var() );
+    d.insert( "min", s.rolling( 3, 1 ).min() );
+    d.insert( "max", s.rolling( 3, 1 ).max() );
+    d.insert( "count", s.rolling( 3 ).count() );
+    d.insert( "agg", s.rolling( 2 ).agg( fn[]( w ) { return w.max() - w.min(); } ) );
+    c.check_eq( d.to_string(), "    sum  mean  var  min  max  count  agg\n0   NaN   1.0  NaN  1.0  1.0    NaN  NaN\n1   NaN   1.5  0.5  1.0  2.0    NaN  1.0\n2   NaN   1.5  0.5  1.0  2.0    2.0  NaN\n3   NaN   3.0  2.0  2.0  4.0    2.0  NaN\n4   NaN   4.5  0.5  4.0  5.0    2.0  1.0\n5  15.0   5.0  1.0  4.0  6.0    3.0  1.0" );
+    c.check_eq( fruit().rolling( 2 ).sum().to_string(), "     n    x    b\n0  NaN  NaN  NaN\n1  4.0  NaN  1.0\n2  3.0  NaN  1.0\n3  3.0  3.0  2.0\n4  6.0  4.5  1.0" );
+    kl::series v = kl::series( [ 1e15, 1.0, 2.0, 3.5 ] ).rolling( 2 ).var();
+    c.check_eq( v.f64s()[2], 0.5 );
+    c.check_eq( kl::series( [ 5.0, 5.0, 5.0, 5.0 ] ).rolling( 3 ).var().f64s()[3], 0.0 );
+    c.expect_panic( "the window is empty", fn[ s ]() { _ = s.rolling( 0 ); } );
+    c.expect_panic( "min_periods is more than the window", fn[ s ]() { _ = s.rolling( 2, 3 ); } );
+    c.expect_panic( "the series does not hold numbers", fn[]() { _ = kl::series( [ "a" ] ).rolling( 1 ); } );
+}
+
+private void rolling_by_time( ref kl::test::context c )
+{
+    kl::dataframe df = kl::dataframe();
+    df.insert( "a", kl::series( [ 1, 2, 3, 4, 5 ] ) );
+    df.insert( "s", kl::series( [ "v", "w", "x", "y", "z" ] ) );
+    df.insert( "t", times_of( "t\n2026-01-01\n2026-01-02\n2026-01-02 12:00\n2026-01-04\n2026-01-09\n", "t" ) );
+    kl::duration two = kl::duration::of_days( 2 );
+    c.check_eq( df.rolling( two, "t" ).sum().to_string(), "     a                   t\n0  1.0 2026-01-01 00:00:00\n1  3.0 2026-01-02 00:00:00\n2  6.0 2026-01-02 12:00:00\n3  7.0 2026-01-04 00:00:00\n4  5.0 2026-01-09 00:00:00" );
+    c.check_eq( df.rolling( two, "t", 2 ).mean()["a"].f64s()[1], 1.5 );
+    c.check( df.rolling( two, "t", 2 ).mean()["a"].is_missing( 4 ) );
+    c.check_eq( df.set_index( "t" ).rolling( two ).count()["a"].f64s()[3], 2.0 );
+    kl::dataframe same = kl::dataframe();
+    same.insert( "a", kl::series( [ 1.0, 2.0, 4.0 ] ) );
+    same.insert( "t", times_of( "t\n2026-01-01\n2026-01-01\n2026-01-02\n", "t" ) );
+    c.check_eq( same.rolling( two, "t" ).sum()["a"].f64s()[0], 1.0 );
+    kl::dataframe back = kl::dataframe();
+    back.insert( "t", times_of( "t\n2026-01-02\n2026-01-01\n", "t" ) );
+    c.expect_panic( "the times are not sorted", fn[ back, two ]() { _ = back.rolling( two, "t" ); } );
+    c.expect_panic( "the frame has no index of times", fn[ df, two ]() { _ = df.rolling( two ); } );
+    c.expect_panic( "the window is a duration, but the rows are not times", fn[ df, two ]() { _ = df.rolling( two, "a" ); } );
 }
