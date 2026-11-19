@@ -484,9 +484,29 @@ std::optional<Argument_shape> Expressions::literal_shape( Node_id value )
         return shape;
     }
 
-    // `nullptr`, which every pointer accepts; a lambda, typed against the parameter chosen
-    if( ast_.kind( value ) == Node_kind::Null_literal || ast_.kind( value ) == Node_kind::Lambda_expr ||
-        is_open_address( value ) )
+    // A lambda is typed against the parameter chosen; what it writes of its parameters selects.
+    if( ast_.kind( value ) == Node_kind::Lambda_expr )
+    {
+        shape.lambda = true;
+        for( const Node_id param : ast_.params( value ) )
+        {
+            if( !ast_.annotation( param ).is_valid() )
+            {
+                shape.lambda_params.push_back( std::nullopt );
+                continue;
+            }
+            Type_id type = types_.type_of( param );
+            if( !type.is_valid() )
+            {
+                type = types_.record( param, annotations_.resolve( ast_.annotation( param ) ) );
+            }
+            shape.lambda_params.push_back( Parameter { type, parameter_mode_of( ast_, param ) } );
+        }
+        return shape;
+    }
+
+    // `nullptr`, which every pointer accepts
+    if( ast_.kind( value ) == Node_kind::Null_literal || is_open_address( value ) )
     {
         return shape;
     }
@@ -5235,6 +5255,7 @@ Type_id Expressions::infer_lambda( Node_id id, Type_id expected, bool slot, bool
     const bool    from_body      = !written_return.is_valid() && ( !fn_expected || open_return ) && !absorbing && !poisoned;
     Type_id       return_type    = written_return.is_valid() ? annotations_.resolve( written_return )
                                    : fn_expected             ? table_.get( expected ).element
+                                   : absorbing               ? expected // its call is refused; its returns are not reported
                                                              : table_.builtin( Type_kind::Void );
 
     if( from_body )
@@ -5342,7 +5363,8 @@ Type_id Expressions::lambda_parameter( Node_id param, std::size_t index, Type_id
 
     const Node_id unwrapped = ast_.unwrap_const( spelled );
     const Node_id bare      = ast_.kind( unwrapped ) == Node_kind::Mode_type ? ast_.inner_type( unwrapped ) : unwrapped;
-    const Type_id type      = annotations_.resolve( spelled );
+    // Selection may have resolved it already, to read the lambda's signature.
+    const Type_id type = types_.type_of( param ).is_valid() ? types_.type_of( param ) : annotations_.resolve( spelled );
 
     annotations_.refuse_void( bare, type, "parameter", "passes" );
     annotations_.refuse_never( bare, type, "parameter" );

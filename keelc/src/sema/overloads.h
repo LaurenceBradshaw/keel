@@ -44,16 +44,18 @@ enum class Tier : u8
 // An `Instance` carries its declaration instead, and ranks nothing. An `Array` ranks by its elements.
 struct Argument_shape
 {
-    Argument_kind               kind        = Argument_kind::Anything;
-    Type_id                     type        = {};
-    Node_id                     declaration = {};
-    bool                        valued      = false; // whether an integer literal folded to the value below
-    u64                         magnitude   = 0;     // an integer's value, or an array literal's count
-    bool                        negative    = false;
-    Keyword                     marker      = Keyword::Count;
-    bool                        recorded    = false; // whether infer() has already run over it
-    std::vector<Argument_shape> elements {};         // Array: each element's shape
-    bool                        fill = false;        // Array: `[x, ..]`, any count, `elements` its one value
+    Argument_kind                         kind        = Argument_kind::Anything;
+    Type_id                               type        = {};
+    Node_id                               declaration = {};
+    bool                                  valued      = false; // whether an integer literal folded to the value below
+    u64                                   magnitude   = 0;     // an integer's value, or an array literal's count
+    bool                                  negative    = false;
+    Keyword                               marker      = Keyword::Count;
+    bool                                  recorded    = false; // whether infer() has already run over it
+    std::vector<Argument_shape>           elements {};         // Array: each element's shape
+    bool                                  fill   = false;      // Array: `[x, ..]`, any count, `elements` its one value
+    bool                                  lambda = false;      // Anything: a lambda, its parameters below
+    std::vector<std::optional<Parameter>> lambda_params {};    // each written one; an untyped one is open
 };
 
 // One argument the caller still has to walk. Returned rather than walked here, which is the whole
@@ -234,6 +236,7 @@ private:
         Node_id callable, u32 implicit_params, std::span<const Argument_shape> shapes, const Bindings& bindings, Tier tier
     );
     bool accepts( Keyword mode, const Argument_shape& shape, Type_id expected, Tier tier );
+    bool lambda_fits( Type_id parameter, const Argument_shape& shape, const Bindings& bindings ) const;
     bool widens( Keyword mode, Type_id from, Type_id to ) const;
     u32  distance( Type_id from, Type_id to ) const;
     // How far `shape` travels to reach `to`, or nothing where it says nothing.
@@ -286,8 +289,17 @@ private:
     bool parameters_collide( Node_id first, Node_id second, bool member, std::optional<std::size_t> count = {} );
     // Why `second` cannot be declared beside `first`, or nothing when it can.
     std::optional<Conflict> conflict( Node_id first, Node_id second, bool member );
-    void                    check_overloaded_pair( Node_id first, Node_id second, bool member );
-    void                    check_top_level_pair( Node_id first, Node_id second );
+    // How two declarations' `fn`-bounded type parameters compare, position by position.
+    enum class Fn_bounds : u8
+    {
+        Same,
+        Distinct,    // some pair no lambda or function could satisfy both of
+        Return_only, // some pair differs, but only in what it returns
+        Could_meet,  // some pair differs, but a type argument could make them one
+    };
+    Fn_bounds compare_fn_bounds( Node_id first, Node_id second ) const;
+    void      check_overloaded_pair( Node_id first, Node_id second, bool member );
+    void      check_top_level_pair( Node_id first, Node_id second );
 
     bool operand_overload( Node_id member ) const;
     void check_aggregate_overloads( Node_id decl );

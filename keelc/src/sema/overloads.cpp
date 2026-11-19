@@ -46,6 +46,16 @@ bool mentions( const Type_table& table, Type_id type, Type_id parameter )
     return named.contains( parameter.v );
 }
 
+// Whether a lambda among `shapes` leaves a parameter's type unwritten.
+bool open_lambda( std::span<const Argument_shape> shapes )
+{
+    return std::ranges::any_of(
+        shapes,
+        []( const Argument_shape& shape )
+        { return shape.lambda && std::ranges::any_of( shape.lambda_params, []( const auto& p ) { return !p; } ); }
+    );
+}
+
 // Whether binding parameters could make `a` and `b` one type. Two kinds never meet, so `i32[R * C]`
 // and `i32[C][R]` stay apart, nor `T` and a type naming `T`, as `vec<T, N>`; past arrays it is
 // coarse, and a union may collapse to a member.
@@ -148,7 +158,16 @@ bool Overloads::deduce_for_candidate(
 
     for( const Node_id parameter : parameters )
     {
-        const auto found = bindings.find( types_.type_of( parameter ).v );
+        const Type_id open  = types_.type_of( parameter );
+        const auto    found = bindings.find( open.v );
+
+        // An `fn`-bounded one is settled by its argument after selection, as is what it returns.
+        if( found == bindings.end() &&
+            ( bounds_.signature_of( open ).is_valid() || returned_by_open_fn( parameters, open, bindings ) ) )
+        {
+            resolved.push_back( open );
+            continue;
+        }
 
         if( found == bindings.end() )
         {
@@ -204,7 +223,16 @@ bool Overloads::bind_own_parameters( Node_id call, Node_id method, std::span<con
 
     for( const Node_id parameter : own )
     {
-        const auto found = deduced.find( types_.type_of( parameter ).v );
+        const Type_id unset = types_.type_of( parameter );
+        const auto    found = deduced.find( unset.v );
+
+        // An `fn`-bounded one is settled by its argument after selection, as is what it returns.
+        if( found == deduced.end() &&
+            ( bounds_.signature_of( unset ).is_valid() || returned_by_open_fn( own, unset, deduced ) ) )
+        {
+            bindings.insert_or_assign( unset.v, unset );
+            continue;
+        }
         if( found == deduced.end() )
         {
             return false;
@@ -756,7 +784,66 @@ bool Overloads::candidate_accepts(
             return false;
         }
 
-        if( !accepts( params[i].mode, shapes[i], expected, tier ) )
+        if( !accepts( params[i].mode, shapes[i], expected, tier ) || !lambda_fits( params[i].type, shapes[i], bindings ) )
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+// A lambda against an `fn` parameter or an `fn`-bounded one: its count, and each type and mode it
+// writes, must be the signature's. So must a function's or closure's against an `fn`-bounded one,
+// which takes any type until selection is done. Anything else is left to the check after selection.
+bool Overloads::lambda_fits( Type_id parameter, const Argument_shape& shape, const Bindings& bindings ) const
+{
+    if( !parameter.is_valid() )
+    {
+        return true;
+    }
+
+    std::vector<std::optional<Parameter>> given = shape.lambda_params;
+    if( !shape.lambda )
+    {
+        const bool typed =
+            shape.kind == Argument_kind::Typed && shape.type.is_valid() && bounds_.signature_of( parameter ).is_valid();
+        const Type_id function = !typed                             ? Type_id {}
+                                 : table_.is_function( shape.type ) ? shape.type
+                                 : table_.is_closure( shape.type )  ? table_.get( shape.type ).element
+                                                                    : Type_id {};
+        if( !function.is_valid() )
+        {
+            return true;
+        }
+        const Type& f = table_.get( function );
+        for( std::size_t k = 0; k < f.arguments.size(); ++k )
+        {
+            given.push_back( Parameter { f.arguments[k], f.modes[k] } );
+        }
+    }
+
+    Type_id signature = table_.is_function( parameter ) ? parameter : bounds_.signature_of( parameter );
+    if( !signature.is_valid() )
+    {
+        return true;
+    }
+    signature = table_.substitute( signature, bindings );
+
+    const Type& fn = table_.get( signature );
+    if( fn.arguments.size() != given.size() )
+    {
+        return false;
+    }
+
+    for( std::size_t k = 0; k < fn.arguments.size(); ++k )
+    {
+        const std::optional<Parameter>& written = given[k];
+        if( !written || table_.is_error( written->type ) || table_.is_error( fn.arguments[k] ) )
+        {
+            continue;
+        }
+        if( written->mode != fn.modes[k] || !could_meet( table_, written->type, fn.arguments[k] ) )
         {
             return false;
         }
@@ -1206,8 +1293,9 @@ Node_id Overloads::select_overload(
         fmt::format(
             "more than one matches: {}; {}",
             candidate_list( matching_candidates, aggregates_.bindings_of( site.instance ) ),
-            all_generic ? fmt::format( "write the type arguments, as in `{}<i32>(...)`", site.name )
-                        : std::string( "write a type the call can be told by" )
+            open_lambda( shapes ) ? std::string( "write the lambda's parameter types" )
+            : all_generic         ? fmt::format( "write the type arguments, as in `{}<i32>(...)`", site.name )
+                                  : std::string( "write a type the call can be told by" )
         )
     );
 
@@ -1395,7 +1483,9 @@ Node_id Overloads::
         ast_.span( call ),
         fmt::format( "this call to `{}` is ambiguous", name ),
         fmt::format(
-            "more than one matches: {}; write a type the call can be told by", candidate_list( ambiguous, ambiguous_bindings )
+            "more than one matches: {}; {}",
+            candidate_list( ambiguous, ambiguous_bindings ),
+            open_lambda( shapes ) ? "write the lambda's parameter types" : "write a type the call can be told by"
         )
     );
 
@@ -1750,6 +1840,61 @@ bool Overloads::parameters_collide( Node_id first, Node_id second, bool member, 
     return true;
 }
 
+Overloads::Fn_bounds Overloads::compare_fn_bounds( Node_id first, Node_id second ) const
+{
+    const std::span<const Node_id> mine             = ast_.explicit_params( first );
+    const std::span<const Node_id> theirs           = ast_.explicit_params( second );
+    const std::vector<Node_id>     my_parameters    = ast_.type_parameters( ast_.type_param_list( first ) );
+    const std::vector<Node_id>     their_parameters = ast_.type_parameters( ast_.type_param_list( second ) );
+
+    if( mine.size() != theirs.size() || my_parameters.size() != their_parameters.size() )
+    {
+        return Fn_bounds::Same;
+    }
+
+    Bindings bindings;
+    for( std::size_t i = 0; i < my_parameters.size(); ++i )
+    {
+        bindings.emplace( types_.type_of( their_parameters[i] ).v, types_.type_of( my_parameters[i] ) );
+    }
+
+    Fn_bounds result = Fn_bounds::Same;
+    for( std::size_t i = 0; i < mine.size(); ++i )
+    {
+        const Type_id left  = bounds_.signature_of( types_.type_of( mine[i] ) );
+        const Type_id bound = bounds_.signature_of( types_.type_of( theirs[i] ) );
+        if( !left.is_valid() || !bound.is_valid() )
+        {
+            continue;
+        }
+
+        const Type_id right = table_.substitute( bound, bindings );
+        const Type&   a     = table_.get( left );
+        const Type&   b     = table_.get( right );
+        bool          apart = a.arguments.size() != b.arguments.size();
+
+        for( std::size_t k = 0; !apart && k < a.arguments.size(); ++k )
+        {
+            apart = a.modes[k] != b.modes[k] || !could_meet( table_, a.arguments[k], b.arguments[k] );
+        }
+
+        if( apart )
+        {
+            return Fn_bounds::Distinct;
+        }
+        if( !could_meet( table_, a.element, b.element ) )
+        {
+            result = Fn_bounds::Return_only;
+        }
+        else if( left != right && result == Fn_bounds::Same )
+        {
+            result = Fn_bounds::Could_meet;
+        }
+    }
+
+    return result;
+}
+
 std::optional<Conflict> Overloads::conflict( Node_id first, Node_id second, bool member )
 {
     const std::string_view name = interner_.text( ast_.name( second ) );
@@ -1781,6 +1926,29 @@ std::optional<Conflict> Overloads::conflict( Node_id first, Node_id second, bool
         ( ast_.own_type_param_list( first ).is_valid() || ast_.own_type_param_list( second ).is_valid() ) )
     {
         return std::nullopt;
+    }
+
+    // Two bounds no one signature satisfies tell their calls apart, by what a lambda writes of its
+    // parameters or by a function's type. One differing only in what it returns cannot: a lambda's
+    // return comes from its body, typed against the parameters.
+    const Fn_bounds bounds = compare_fn_bounds( first, second );
+    if( bounds == Fn_bounds::Distinct )
+    {
+        return std::nullopt;
+    }
+    if( bounds == Fn_bounds::Return_only && parameters_collide( first, second, member ) )
+    {
+        return Conflict {
+            fmt::format( "`{}` is already declared with these parameters", name ),
+            "their `fn` bounds differ only in what they return, which a call cannot tell apart"
+        };
+    }
+    if( bounds == Fn_bounds::Could_meet && parameters_collide( first, second, member ) )
+    {
+        return Conflict {
+            fmt::format( "`{}` is already declared, and a type argument could make their `fn` bounds identical", name ),
+            reporter_.previous_declaration_note( ast_.span( first ) )
+        };
     }
 
     const bool exact = parameters_collide( first, second, false );
@@ -4480,6 +4648,75 @@ TEST_CASE( "overloads_bind_self_to_the_bounded_parameter", "[sema][interfaces][s
             REQUIRE( p.rendered().find( c.message ) != std::string::npos );
             REQUIRE( p.rendered().find( c.help ) != std::string::npos );
             REQUIRE( p.rendered().find( "numeric" ) == std::string::npos );
+        }
+    }
+}
+
+TEST_CASE( "overloads_tell_fn_bounds_and_lambdas_apart", "[sema][overload][lambda]" )
+{
+    const std::string pick = "i32 pick<F>( F f ) where F : fn( i32 ) -> i32 { return f( 1 ); }\n"
+                             "bool pick<F>( F f ) where F : fn( bool ) -> bool { return f( true ); }\n"
+                             "i32 count<F>( F f ) where F : fn( i32, i32 ) -> i32 { return f( 1, 2 ); }\n"
+                             "bool count<F>( F f ) where F : fn( i32 ) -> bool { return f( 1 ); }\n"
+                             "i32 typed( fn( i32 ) -> i32 f ) { return f( 1 ); }\n"
+                             "bool typed( fn( bool ) -> bool f ) { return f( true ); }\n"
+                             "i32 negate( i32 x ) { return -x; }\n";
+
+    SECTION( "a lambda's written types, its count or a function's type choose" )
+    {
+        const Typed p(
+            pick + "i32 main() {\n"
+                   "    i32 k = 2;\n"
+                   "    i32 a = pick( fn[ k ]( i32 x ) { return x + k; } );\n"
+                   "    bool b = pick( fn[]( bool x ) { return !x; } );\n"
+                   "    i32 c = count( fn[]( x, y ) { return x + y; } );\n"
+                   "    bool d = count( fn[]( x ) { return x > 0; } );\n"
+                   "    i32 e = typed( fn[]( i32 x ) { return x; } );\n"
+                   "    i32 g = pick( &negate );\n"
+                   "    return a + c + e + g + ( b && d ? 1 : 0 );\n"
+                   "}"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "an untyped lambda two bounds take is ambiguous, with no cascade" )
+    {
+        const Typed p( pick + "i32 main() { i32 a = pick( fn[]( x ) { return x; } ); return a; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "write the lambda's parameter types" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "returns `void`" ) == std::string::npos );
+        REQUIRE( p.rendered().find( "error:" ) == p.rendered().rfind( "error:" ) );
+    }
+
+    SECTION( "bounds no signature tells apart are refused" )
+    {
+        struct Case
+        {
+            const char* declarations;
+            const char* message;
+        };
+
+        const Case cases[] = {
+            { "i32 f<F>( F g ) where F : fn( i32 ) -> i32 { return 0; }\n"
+              "bool f<F>( F g ) where F : fn( i32 ) -> bool { return true; }\n",
+              "their `fn` bounds differ only in what they return" },
+            { "i32 f<F>( F g ) where F : fn( i32 ) -> i32 { return 0; }\n"
+              "i32 f<G>( G g ) where G : fn( i32 ) -> i32 { return 0; }\n",
+              "already declared with these parameters" },
+            { "struct S<T> { T v; i32 f<F>( F g ) const where F : fn( T ) -> i32 { return 0; }\n"
+              "i32 f<F>( F g ) const where F : fn( i32 ) -> i32 { return 0; } };\n",
+              "a type argument could make their `fn` bounds identical" },
+        };
+
+        for( const Case& c : cases )
+        {
+            const Typed p( std::string( c.declarations ) + "i32 main() { return 0; }" );
+
+            INFO( p.rendered() );
+            REQUIRE( p.rendered().find( c.message ) != std::string::npos );
         }
     }
 }

@@ -275,7 +275,7 @@ private void map_and_apply_take_lambdas( ref kl::test::context c )
     c.check_eq( twice.f64s()[2], -2.0 );
     c.check( twice.is_missing( 1 ) );
     c.check_eq( df["n"].map( fn[]( f64 v ) { return v + 0.5; } ).f64s()[0], 3.5 );
-    c.check_eq( df["s"].map_strings( fn[]( t ) { return t + "!"; } ).strings()[1], "fig!" );
+    c.check_eq( df["s"].map( fn[]( const ref kl::string t ) { return t + "!"; } ).strings()[1], "fig!" );
     c.check_eq( df.select( "n", "x" ).apply( fn[]( s ) { return s.sum(); } ).to_string(), "      n    x\n0  12.0  6.0" );
     c.check_eq( df["b"].sum(), 3.0 );
 }

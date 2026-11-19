@@ -436,8 +436,9 @@ class series
         return series( ndarray<f64>::from_list( move r ) );
     }
 
-    /// `f` of each value of a `strings` series; a missing value stays missing.
-    public series map_strings<F>( F f ) const where F : fn( const ref string ) -> string
+    /// `f` of each value of a `strings` series; a missing value stays missing:
+    /// `s.map( fn[]( const ref string t ) { return t + "!"; } )`.
+    public series map<F>( F f ) const where F : fn( const ref string ) -> string
     {
         holds( dtype::strings );
         list<string> v = list<string>::with_capacity( size() );

@@ -227,11 +227,10 @@ pandas' <code>unique</code>.</p>
 <p><code>f</code> of each value of a number or bool series, as <code>f64s</code>; a missing value stays missing:
 <code>s.map( fn[]( f64 x ) { return x * x; } )</code>.</p>
 </div>
-</div>
-<div class="group" id="series.map_strings">
-<pre class="signature"><a class="anchor" href="#series.map_strings" aria-label="Link to map_strings">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">map_strings</span>&lt;F&gt;( F f ) <span class="kw">const</span> <span class="kw">where</span> F : <span class="kw">fn</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="string.html#string">string</a> ) -&gt; <a class="type" href="string.html#string">string</a></code></pre>
+<pre class="signature"><a class="anchor" href="#series.map" aria-label="Link to map">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">map</span>&lt;F&gt;( F f ) <span class="kw">const</span> <span class="kw">where</span> F : <span class="kw">fn</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="string.html#string">string</a> ) -&gt; <a class="type" href="string.html#string">string</a></code></pre>
 <div class="doc">
-<p><code>f</code> of each value of a <code>strings</code> series; a missing value stays missing.</p>
+<p><code>f</code> of each value of a <code>strings</code> series; a missing value stays missing:
+<code>s.map( fn[]( const ref string t ) { return t + &quot;!&quot;; } )</code>.</p>
 </div>
 </div>
 <h3>Arithmetic</h3>
