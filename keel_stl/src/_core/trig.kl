@@ -27,6 +27,7 @@
 // ====================================================
 
 // The kernels and argument reduction behind `kl::math`'s trigonometry.
+import float_bits;
 
 /// sin of `x + y` on [-pi/4, pi/4], `y` the tail of `x` when `tail`.
 f64 sine_kernel( f64 x, f64 y, bool tail )
@@ -402,23 +403,6 @@ private reduction reduced_large( f64[4] x, i32 e0, i32 nx )
         sum += fq[at( i, 32 )];
     }
     return reduction { n & 7, hi, ih == 0 ? sum : -sum };
-}
-
-// `kl::bits_of` and `kl::from_bits` again, since `kl::math` imports this module.
-private u64 bits_of( f64 x )
-{
-    unsafe
-    {
-        return *cast<u64*>( &x );
-    }
-}
-
-private f64 from_bits( u64 x )
-{
-    unsafe
-    {
-        return *cast<f64*>( &x );
-    }
 }
 
 /// The high 32 bits of `x`: its sign, exponent and top of its fraction.

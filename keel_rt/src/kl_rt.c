@@ -183,7 +183,8 @@ void kl_rt_write_f64( int32_t stream, double value )
     }
 
     char buf[32];
-    for( int p = 1; p <= 17; p++ )
+    int  p = 1;
+    for( ; p <= 17; p++ )
     {
         snprintf( buf, sizeof buf, "%.*g", p, value );
 
@@ -194,7 +195,9 @@ void kl_rt_write_f64( int32_t stream, double value )
         }
     }
 
-    // `%g` writes 10 at one digit as `1e+01`; up to 1e15, print every integer digit instead.
+    // As Python's `repr`, which `kl::string::from( f64 )` also writes: `%g` writes 10 at one digit as
+    // `1e+01`, so up to 1e15 print every integer digit instead; and 17 digits from 1e16 on in fixed,
+    // so write those as an exponent.
     const char* e = memchr( buf, 'e', strlen( buf ) ); // the UCRT has no strchr
     if( e != NULL )
     {
@@ -203,6 +206,10 @@ void kl_rt_write_f64( int32_t stream, double value )
         {
             snprintf( buf, sizeof buf, "%.*g", exponent + 1, value );
         }
+    }
+    else if( fabs( value ) >= 1e16 && !isinf( value ) )
+    {
+        snprintf( buf, sizeof buf, "%.*e", p - 1, value );
     }
 
     const char* digits        = buf + ( buf[0] == '-' );

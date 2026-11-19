@@ -58,6 +58,7 @@
 
 // The exponentials, logarithms, powers and hyperbolic functions behind `kl::math`: the hyperbolic
 // functions within 2 ulps of the true value, the rest within one.
+import float_bits;
 import trig;
 
 /// e^x times 2^s, `s` 0 or -1; -1 keeps e^x / 2 finite up to 710.47, where e^x is not.
@@ -952,23 +953,6 @@ private f64 from_words( u32 high, u32 low )
 private f64 with_high_word( f64 x, u32 high )
 {
     return from_words( high, low_word( x ) );
-}
-
-// `kl::bits_of` and `kl::from_bits` again, since `kl::math` imports this module.
-private u64 bits_of( f64 x )
-{
-    unsafe
-    {
-        return *cast<u64*>( &x );
-    }
-}
-
-private f64 from_bits( u64 x )
-{
-    unsafe
-    {
-        return *cast<f64*>( &x );
-    }
 }
 
 private const f64 TWO52 = 4503599627370496.0;

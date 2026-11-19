@@ -91,6 +91,12 @@
 <div class="doc">
 <p><code>value</code> written in decimal, with a leading <code>-</code> if it is negative and no leading zeros.</p>
 </div>
+<pre class="signature"><a class="anchor" href="#string.from" aria-label="Link to from">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#string">string</a> <span class="fn">from</span>( <span class="kw">move</span> <a class="prim" href="prelude.html#f64">f64</a> value )</code></pre>
+<div class="doc">
+<p><code>value</code> as Python's <code>repr</code> writes it: the fewest digits that read back as <code>value</code>, fixed
+from 1e-4 up to 1e16, with <code>.0</code> on a whole number, and otherwise as <code>1e+16</code> or <code>2.5e-05</code>;
+<code>nan</code>, <code>inf</code> and <code>-inf</code>.</p>
+</div>
 </div>
 <h3>Size</h3>
 <div class="group" id="string.size">

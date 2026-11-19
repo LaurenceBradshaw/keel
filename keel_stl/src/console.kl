@@ -8,9 +8,6 @@ import os;
 import string;
 
 private extern void kl_rt_write( i32 stream, const u8[*] data, u64 size );
-private extern void kl_rt_write_i64( i32 stream, i64 value );
-private extern void kl_rt_write_u64( i32 stream, u64 value );
-private extern void kl_rt_write_f64( i32 stream, f64 value );
 
 private void write_text( i32 stream, const ref textual text )
 {
@@ -35,32 +32,22 @@ void print( const ref textual text, const ref textual end = "\n" )
 /// Writes an integer in decimal, then `end`.
 void print( i64 value, const ref textual end = "\n" )
 {
-    unsafe
-    {
-        kl_rt_write_i64( 1, value );
-    }
+    write_text( 1, string::from( value ) );
     write_text( 1, end );
 }
 
 /// Writes an integer in decimal, then `end`.
 void print( u64 value, const ref textual end = "\n" )
 {
-    unsafe
-    {
-        kl_rt_write_u64( 1, value );
-    }
+    write_text( 1, string::from( value ) );
     write_text( 1, end );
 }
 
-/// Writes a float in the fewest digits that read back as the same value, then `end`.
-///
-/// A whole number gains `.0`, and a NaN is written `nan`.
+/// Writes a float as `string::from` does, in the fewest digits that read back as the same value,
+/// then `end`.
 void print( f64 value, const ref textual end = "\n" )
 {
-    unsafe
-    {
-        kl_rt_write_f64( 1, value );
-    }
+    write_text( 1, string::from( value ) );
     write_text( 1, end );
 }
 
@@ -84,32 +71,22 @@ void eprint( const ref textual text, const ref textual end = "\n" )
 /// Writes an integer in decimal, then `end`.
 void eprint( i64 value, const ref textual end = "\n" )
 {
-    unsafe
-    {
-        kl_rt_write_i64( 2, value );
-    }
+    write_text( 2, string::from( value ) );
     write_text( 2, end );
 }
 
 /// Writes an integer in decimal, then `end`.
 void eprint( u64 value, const ref textual end = "\n" )
 {
-    unsafe
-    {
-        kl_rt_write_u64( 2, value );
-    }
+    write_text( 2, string::from( value ) );
     write_text( 2, end );
 }
 
-/// Writes a float in the fewest digits that read back as the same value, then `end`.
-///
-/// A whole number gains `.0`, and a NaN is written `nan`.
+/// Writes a float as `string::from` does, in the fewest digits that read back as the same value,
+/// then `end`.
 void eprint( f64 value, const ref textual end = "\n" )
 {
-    unsafe
-    {
-        kl_rt_write_f64( 2, value );
-    }
+    write_text( 2, string::from( value ) );
     write_text( 2, end );
 }
 

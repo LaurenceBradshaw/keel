@@ -164,6 +164,16 @@ static void largest_u64( void )
     kl_rt_write_u64( 1, UINT64_MAX );
 }
 
+// 17 digits from 1e16 on take an exponent, as Python's `repr` writes them.
+static void seventeen_digits( void )
+{
+    kl_rt_write_f64( 1, 15320307764497668.0 );
+    kl_rt_write( 1, (const uint8_t*) " ", 1 );
+    kl_rt_write_f64( 1, 1e16 );
+    kl_rt_write( 1, (const uint8_t*) " ", 1 );
+    kl_rt_write_f64( 1, 9999999999999998.0 );
+}
+
 // The message is a count of bytes, not a C string, and what was printed before shows first.
 static void panic_message( void )
 {
@@ -643,6 +653,7 @@ typedef struct
 static const Case cases[] = {
     { "lowest_i64", lowest_i64, "-9223372036854775808", 0 },
     { "largest_u64", largest_u64, "18446744073709551615", 0 },
+    { "seventeen_digits", seventeen_digits, "1.5320307764497668e+16 1e+16 9999999999999998.0", 0 },
     { "panic_message", panic_message, "before|main.kl:7: panic: empty\n", 134 },
     { "panic_at", panic_at, "caller.kl:12: panic: empty\n", 134 },
     { "hash_key", hash_key, NULL, 0 },

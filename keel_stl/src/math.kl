@@ -29,6 +29,7 @@
 
 // Numbers beyond the operators.
 import kl::_core::exponential as exponential;
+import kl::_core::float_bits as float_bits;
 import kl::_core::trig as trig;
 
 /// --- Bits ---
@@ -36,37 +37,25 @@ import kl::_core::trig as trig;
 /// The bits of `x`, sign first: `bits_of( 1.0 )` is `0x3FF0000000000000`.
 u64 bits_of( f64 x )
 {
-    unsafe
-    {
-        return *cast<u64*>( &x );
-    }
+    return float_bits::bits_of( x );
 }
 
 /// The `f64` whose bits are `x`.
 f64 from_bits( u64 x )
 {
-    unsafe
-    {
-        return *cast<f64*>( &x );
-    }
+    return float_bits::from_bits( x );
 }
 
 /// The bits of `x`, sign first: the `f32` 1.0 has `0x3F800000`.
 u32 bits_of( f32 x )
 {
-    unsafe
-    {
-        return *cast<u32*>( &x );
-    }
+    return float_bits::bits_of( x );
 }
 
 /// The `f32` whose bits are `x`.
 f32 from_bits( u32 x )
 {
-    unsafe
-    {
-        return *cast<f32*>( &x );
-    }
+    return float_bits::from_bits( x );
 }
 
 /// --- Roots ---

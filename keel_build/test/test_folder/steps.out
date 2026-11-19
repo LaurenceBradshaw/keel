@@ -2,6 +2,8 @@ compiling kl::iterable
 compiling kl::_core::compare
 compiling kl::optional
 compiling kl::list
+compiling kl::_core::float_bits
+compiling kl::_core::float_format
 compiling kl::string
 compiling kl::os
 compiling kl::console

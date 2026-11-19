@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 import kl::_core::compare as kernel;
+import kl::_core::float_format as float_text;
+import kl::_core::float_bits as float_bits;
 import list;
 import optional;
 
@@ -94,43 +96,133 @@ class string implements textual, equatable, comparable, hashable, from<str>, fro
     /// `value` written in decimal, with no leading zeros.
     public static string from( move u64 value )
     {
-        if( value == 0 )
-        {
-            return string( "0" );
-        }
-
-        string result = string();
-        while( value > 0 )
-        {
-            result.push( cast<u8>( 48 + value % 10 ) );
-            value /= 10;
-        }
-
-        for( u64 i = 0; i < result.size_ / 2; i++ )
-        {
-            unsafe
-            {
-                const u8 low = result.data_[i];
-                result.data_[i] = result.data_[result.size_ - 1 - i];
-                result.data_[result.size_ - 1 - i] = low;
-            }
-        }
-
+        string result = with_capacity( 20 );
+        result.push_digits( value );
         return result;
     }
 
     /// `value` written in decimal, with a leading `-` if it is negative and no leading zeros.
     public static string from( move i64 value )
     {
-        if( value >= 0 )
+        string result = with_capacity( 20 );
+        if( value < 0 )
         {
-            return from( cast<u64>( value ) );
+            result.push( '-' );
+        }
+        result.push_digits( value < 0 ? wrap<u64>( 0 - value ) : cast<u64>( value ) );
+        return result;
+    }
+
+    // Appends `value` in decimal, with no leading zeros.
+    private void push_digits( u64 value )
+    {
+        u8[20] digits = [ 0, .. ];
+        u64 i = 20;
+        u64 rest = value;
+        while( true )
+        {
+            i--;
+            digits[i] = cast<u8>( '0' + rest % 10 );
+            rest /= 10;
+            if( rest == 0 )
+            {
+                break;
+            }
+        }
+        append( digits[i..20] );
+    }
+
+    /// `value` as Python's `repr` writes it: the fewest digits that read back as `value`, fixed
+    /// from 1e-4 up to 1e16, with `.0` on a whole number, and otherwise as `1e+16` or `2.5e-05`;
+    /// `nan`, `inf` and `-inf`.
+    public static string from( move f64 value )
+    {
+        string result = with_capacity( 25 );
+        if( value != value )
+        {
+            result += "nan";
+            return result;
+        }
+        if( ( float_bits::bits_of( value ) >> 63 ) != 0 )
+        {
+            result.push( '-' );
+        }
+        if( value == 0.0 )
+        {
+            result += "0.0";
+            return result;
+        }
+        if( value > 1.7976931348623157e308 || value < -1.7976931348623157e308 )
+        {
+            result += "inf";
+            return result;
         }
 
-        u64 magnitude = wrap<u64>( 0 - value );
-        string result = string();
-        result.push( 45 ); // '-'
-        result += from( magnitude );
+        float_text::decimal d = float_text::shortest( value );
+        while( d.digits % 10 == 0 )
+        {
+            d.digits /= 10;
+            d.exponent++;
+        }
+        u8[17] digits = [ 0, .. ];
+        u64 n = 0;
+        for( u64 rest = d.digits; rest > 0; rest /= 10 )
+        {
+            n++;
+        }
+        u64 rest = d.digits;
+        for( u64 i = n; i > 0; i-- )
+        {
+            digits[i - 1] = cast<u8>( '0' + rest % 10 );
+            rest /= 10;
+        }
+        const i64 e = cast<i64>( d.exponent ) + cast<i64>( n ) - 1; // as in d.ddd * 10^e
+
+        if( e < -4 || e >= 16 )
+        {
+            result.push( digits[0] );
+            if( n > 1 )
+            {
+                result.push( '.' );
+                result.append( digits[1..n] );
+            }
+            result.push( 'e' );
+            result.push( e < 0 ? '-' : '+' );
+            const u64 magnitude = cast<u64>( e < 0 ? -e : e );
+            if( magnitude >= 100 )
+            {
+                result.push( cast<u8>( '0' + magnitude / 100 ) );
+            }
+            result.push( cast<u8>( '0' + magnitude / 10 % 10 ) );
+            result.push( cast<u8>( '0' + magnitude % 10 ) );
+        }
+        else if( e < 0 )
+        {
+            result.push( '0' );
+            result.push( '.' );
+            for( i64 i = 0; i < -e - 1; i++ )
+            {
+                result.push( '0' );
+            }
+            result.append( digits[0..n] );
+        }
+        else if( n <= cast<u64>( e ) + 1 )
+        {
+            result.append( digits[0..n] );
+            for( u64 i = n; i < cast<u64>( e ) + 1; i++ )
+            {
+                result.push( '0' );
+            }
+            result.push( '.' );
+            result.push( '0' );
+        }
+        else
+        {
+            const u64 point = cast<u64>( e ) + 1;
+            result.append( digits[0..point] );
+            result.push( '.' );
+            result.append( digits[point..n] );
+        }
 
         return result;
     }
@@ -449,10 +541,19 @@ class string implements textual, equatable, comparable, hashable, from<str>, fro
     /// Adds a copy of every byte of `bytes` at the end.
     public void append( const ref u8[] bytes )
     {
+        if( size_ + bytes.size > cap_ )
+        {
+            reallocate( size_ + bytes.size > cap_ * 2 ? size_ + bytes.size : cap_ * 2 );
+        }
+
         for( u64 i = 0; i < bytes.size; i++ )
         {
-            push( bytes[i] );
+            unsafe
+            {
+                data_[size_ + i] = bytes[i];
+            }
         }
+        size_ += bytes.size;
     }
 
     /// Adds a copy of every byte of `other` at the end.
@@ -467,17 +568,8 @@ class string implements textual, equatable, comparable, hashable, from<str>, fro
     {
         const ref u8[] text = other.as_text();
         string result = string::with_capacity( size() + text.size );
-
-        for( u64 i = 0; i < size(); i++ )
-        {
-            result.push( as_text()[i] );
-        }
-
-        for( u64 i = 0; i < text.size; i++ )
-        {
-            result.push( text[i] );
-        }
-
+        result.append( as_text() );
+        result.append( text );
         return result;
     }
 
@@ -643,7 +735,7 @@ bool same_text( const ref textual a, const ref textual b )
 /// Whether `byte` is ASCII whitespace.
 private bool is_space( u8 byte )
 {
-    return byte == 32 || (byte >= 9 && byte <= 13); // ' ', '\t', '\n', '\v', '\f', '\r'
+    return byte == ' ' || ( byte >= '\t' && byte <= '\r' ); // and '\n', '\v', '\f' between
 }
 
 /// The parts with `separator` between each pair: `join( [ "a", "b" ], ", " )` gives `"a, b"`.

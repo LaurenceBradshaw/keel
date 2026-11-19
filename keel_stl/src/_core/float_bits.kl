@@ -1,0 +1,41 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// A float's bits and back, behind `kl::bits_of` and `kl::from_bits`, for the modules `kl::math`
+// imports and those that import neither.
+
+/// The bits of `x`, sign first.
+u64 bits_of( f64 x )
+{
+    unsafe
+    {
+        return *cast<u64*>( &x );
+    }
+}
+
+/// The `f64` whose bits are `x`.
+f64 from_bits( u64 x )
+{
+    unsafe
+    {
+        return *cast<f64*>( &x );
+    }
+}
+
+/// The bits of `x`, sign first.
+u32 bits_of( f32 x )
+{
+    unsafe
+    {
+        return *cast<u32*>( &x );
+    }
+}
+
+/// The `f32` whose bits are `x`.
+f32 from_bits( u32 x )
+{
+    unsafe
+    {
+        return *cast<f32*>( &x );
+    }
+}
