@@ -1,7 +1,8 @@
 // `kl::dataframe`: building and shape, pandas' table, selecting rows and columns, sorting,
 // series arithmetic, comparisons and reductions with missing values, describe, CSV both ways,
-// time and duration columns, concat and merge, the index. The expected texts are pandas 3.1's,
-// but for an integer or bool column with a gap, which stays one.
+// time and duration columns, concat and merge, the index, pivot_table. The expected texts are
+// pandas 3.1's, but for an integer or bool column with a gap, which stays one, and a pivot's
+// corner, which does not name the column key.
 import kl::dataframe;
 import kl::list;
 import kl::mask;
@@ -456,4 +457,14 @@ private void index_labels_rows( ref kl::test::context c )
     c.check_eq( df.loc( 3 ).rows(), 1 );
     c.expect_panic( "no row has that label", fn[ a ]() { _ = a.loc( "z" ); } );
     c.expect_panic( "the index is not sorted", fn[ a ]() { _ = a.loc( "a", "b" ); } );
+}
+
+private void pivot_table_spreads_a_key( ref kl::test::context c )
+{
+    kl::dataframe df = parsed( "k,j,v,w\nb,x,1,1.5\na,y,2,\nb,y,3,2.0\na,y,4,3.0\nc,x,5,\n,x,6,1.0\n", ',' );
+    c.check_eq( df.pivot_table( "v", "k", "j" ).to_string(), "   k    x    y\n0  a  NaN  3.0\n1  b  1.0  3.0\n2  c  5.0  NaN" );
+    c.check_eq( df.pivot_table( "w", "k", "j" ).set_index( "k" ).to_string(), "     x    y\nk          \na  NaN  3.0\nb  1.5  2.0" );
+    c.check_eq( df.pivot_table( "v", "j", "k", fn[]( s ) { return s.sum(); } ).to_string(), "   j    a    b    c\n0  x  NaN  1.0  5.0\n1  y  6.0  3.0  NaN" );
+    c.check_eq( parsed( "k,f,v\n1,1.5,1.0\n1,2.0,2.0\n2,1.5,3.0\n", ',' ).pivot_table( "v", "k", "f" ).columns()[2], "2.0" );
+    c.expect_panic( "the values column does not aggregate", fn[ df ]() { _ = df.pivot_table( "j", "k", "v" ); } );
 }

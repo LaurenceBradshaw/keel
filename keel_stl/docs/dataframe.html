@@ -852,6 +852,22 @@ columns, then <code>count</code>, the most frequent first and ties in the order 
 <p><code>f</code> of each column, as a frame of one row: <code>df.apply( fn[]( s ) { return s.max() - s.min(); } )</code>.</p>
 </div>
 </div>
+<div class="group" id="dataframe.pivot_table">
+<pre class="signature"><a class="anchor" href="#dataframe.pivot_table" aria-label="Link to pivot_table">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">pivot_table</span>( <a class="type" href="prelude.html#str">str</a> values, <a class="type" href="prelude.html#str">str</a> index, <a class="type" href="prelude.html#str">str</a> columns ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>pandas' <code>pivot_table</code> over one values column: the <code>index</code> key's values as the first column,
+one row each in sorted order, then a column for each value of the <code>columns</code> key, sorted and
+named as one value prints, holding the mean of <code>values</code> where the two meet. A meeting with
+no rows, or whose mean is NaN, is a gap, and a row or column of gaps only is left out, as
+pandas' <code>dropna</code>; a row missing a key is left out too. <code>.set_index( index )</code> gives pandas'
+look. Panics when <code>values</code> is a <code>strings</code>, <code>times</code> or <code>durations</code> column.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#dataframe.pivot_table" aria-label="Link to pivot_table">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">pivot_table</span>&lt;F&gt;( <a class="type" href="prelude.html#str">str</a> values, <a class="type" href="prelude.html#str">str</a> index, <a class="type" href="prelude.html#str">str</a> columns, F agg ) <span class="kw">const</span> <span class="kw">where</span> F : <span class="kw">fn</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> ) -&gt; <a class="prim" href="prelude.html#f64">f64</a></code></pre>
+<div class="doc">
+<p>As <code>pivot_table( values, index, columns )</code>, with <code>agg</code> of each meeting's values in place of
+the mean: <code>df.pivot_table( &quot;v&quot;, &quot;k&quot;, &quot;j&quot;, fn[]( s ) { return s.sum(); } )</code>.</p>
+</div>
+</div>
 <h3>Combining</h3>
 <div class="group" id="dataframe.merge">
 <pre class="signature"><a class="anchor" href="#dataframe.merge" aria-label="Link to merge">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">merge</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#dataframe">dataframe</a> right, <a class="type" href="#how">how</a> kind, <a class="type" href="prelude.html#str">str</a>... on ) <span class="kw">const</span></code></pre>

@@ -1752,6 +1752,59 @@ class dataframe
         return r;
     }
 
+    /// pandas' `pivot_table` over one values column: the `index` key's values as the first column,
+    /// one row each in sorted order, then a column for each value of the `columns` key, sorted and
+    /// named as one value prints, holding the mean of `values` where the two meet. A meeting with
+    /// no rows, or whose mean is NaN, is a gap, and a row or column of gaps only is left out, as
+    /// pandas' `dropna`; a row missing a key is left out too. `.set_index( index )` gives pandas'
+    /// look. Panics when `values` is a `strings`, `times` or `durations` column.
+    public dataframe pivot_table( str values, str index, str columns ) const
+    {
+        return pivot_table( values, index, columns, fn[]( s ) { return s.mean(); } );
+    }
+
+    /// As `pivot_table( values, index, columns )`, with `agg` of each meeting's values in place of
+    /// the mean: `df.pivot_table( "v", "k", "j", fn[]( s ) { return s.sum(); } )`.
+    public dataframe pivot_table<F>( str values, str index, str columns, F agg ) const where F : fn( const ref series ) -> f64
+    {
+        dataframe met = select( index, columns, values ).groupby( index, columns ).agg( agg );
+        if( !met.has( values ) )
+        {
+            panic( "the values column does not aggregate" );
+        }
+        met = met.filtered( ~met[values].isna() );
+
+        list<string> keys = list<string>();
+        keys.push( string( index ) );
+        list<u64> row_codes = list<u64>();
+        u64 n = group_codes( met, keys, ref row_codes );
+        keys[0] = string( columns );
+        list<u64> column_codes = list<u64>();
+        u64 m = group_codes( met, keys, ref column_codes );
+
+        list<u64> row_firsts = list<u64>::filled( n, u64::max );
+        list<u64> column_firsts = list<u64>::filled( m, u64::max );
+        f64 zero = 0.0;
+        list<f64> cells = list<f64>::filled( n * m, zero / zero );
+        const ref ndarray<f64> v = met[values].f64s();
+        for( u64 i : 0..met.rows() )
+        {
+            row_firsts[row_codes[i]] = row_firsts[row_codes[i]] == u64::max ? i : row_firsts[row_codes[i]];
+            column_firsts[column_codes[i]] = column_firsts[column_codes[i]] == u64::max ? i : column_firsts[column_codes[i]];
+            cells[column_codes[i] * n + row_codes[i]] = v[i];
+        }
+
+        dataframe r = dataframe();
+        r.insert( index, met[index].taken( row_firsts.as_run() ) );
+        for( u64 c : 0..m )
+        {
+            u64[1] at = [ column_firsts[c] ];
+            list<f64> column = list<f64>::of( cells.as_run()[c * n..( c + 1 ) * n] );
+            r.insert( cell_texts( met[columns], at[0..1] )[0].trim_start(), series( ndarray<f64>::from_list( move column ) ) );
+        }
+        return r;
+    }
+
     /// --- Combining ---
 
     /// This frame's rows paired with `right`'s where the columns `on` hold equal values, as pandas'
