@@ -1602,6 +1602,7 @@ private:
         case Rvalue_kind::Unary:
             return unary( r, operand( fr, r.a ) );
         case Rvalue_kind::Overflows:
+        case Rvalue_kind::Rotate:
         {
             const Value a = operand( fr, r.a );
             const Value b = operand( fr, r.b );

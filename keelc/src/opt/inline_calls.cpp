@@ -2,10 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "opt/inline_calls.h"
+#include <limits>
 #include "ir/call_graph.h"
 #include "ir/loops.h"
 #include "ir/simplify.h"
 #include "opt/propagate_constants.h"
+#include "opt/propagate_values.h"
+#include "opt/recognise_rotates.h"
 #include "opt/remove_dead_stores.h"
 
 namespace keel
@@ -112,28 +115,6 @@ bool inlinable( const Function& callee )
     return true;
 }
 
-// The offset in `block`, before `index`, of the last whole write to `operand`'s local; none if the
-// write is in an earlier block.
-std::optional<u32> last_write( const Function& caller, const Block& block, u32 index, const Operand& operand )
-{
-    if( operand.kind != Operand_kind::Copy || operand.place.is_global() || operand.place.num_projections != 0 )
-    {
-        return std::nullopt;
-    }
-
-    for( u32 s = index; s-- > 0; )
-    {
-        const Statement& statement = caller.statements_of( block )[s];
-        if( statement.kind == Statement_kind::Assign && !statement.place.is_global() && statement.place.num_projections == 0 &&
-            statement.place.local == operand.place.local )
-        {
-            return s;
-        }
-    }
-
-    return std::nullopt;
-}
-
 // The offset in `block`, before `index`, of the `&init` that last wrote `pointer`'s local; none if
 // another write comes between, or the `&init` is in an earlier block.
 std::optional<u32> initialised( const Function& caller, const Block& block, u32 index, const Operand& pointer )
@@ -215,9 +196,140 @@ std::optional<Operand> run_count( const Function& caller, Block_id at, u32 index
     return std::nullopt;
 }
 
+// The whole local `argument` points at, through `&x` written in `at` before `index`; none otherwise.
+Local_id borrowed_local( const Function& caller, Block_id at, u32 index, Operand argument )
+{
+    argument.kind              = argument.kind == Operand_kind::Move ? Operand_kind::Copy : argument.kind;
+    const std::optional<u32> s = last_write( caller, caller.blocks[at], index, argument );
+    if( !s )
+    {
+        return {};
+    }
+
+    const Rvalue& value = caller.rvalue( caller.statements_of( at )[*s] );
+    if( value.kind != Rvalue_kind::Address_of || !value.a.place.is_whole_local() ||
+        ( value.address_purpose != Address_purpose::Borrow && value.address_purpose != Address_purpose::Read ) )
+    {
+        return {};
+    }
+
+    return value.a.place.local;
+}
+
+// In `copy`, each pointer parameter the call gives a distinct whole number local becomes a local of
+// its own, as splicing leaves it: `(*p)` reads and writes that local, loaded at entry and stored at
+// each return. Answers how many statements that added, which stand for nothing at the call site.
+u32 bind_borrowed_locals(
+    Function& copy, const Function& caller, Block_id at, u32 index, const Rvalue& call, const Type_table& types
+)
+{
+    const u32             parameters = std::min( copy.parameter_count, narrow_cast<u32>( call.arguments.size() ) );
+    std::vector<Local_id> target( parameters );
+    for( u32 i = 0; i < parameters; ++i )
+    {
+        const Type_id type = copy.locals[Local_id { i + 1 }].type;
+        if( types.is_pointer( type ) && types.is_builtin( types.get( type ).element ) )
+        {
+            target[i] = borrowed_local( caller, at, index, call.arguments[i] );
+        }
+    }
+
+    // Two pointers at one local alias, and a whole use or a write of the pointer lets it escape or move.
+    std::vector<bool> bindable( copy.locals.size(), false );
+    for( u32 i = 0; i < parameters; ++i )
+    {
+        bindable[i + 1] = target[i].is_valid() && std::ranges::count( target, target[i] ) == 1;
+    }
+    for_each_place(
+        std::as_const( copy ),
+        [&]( const Place& place, const Statement* )
+        {
+            if( !place.is_global() && place.local.is_valid() && place.local.v < bindable.size() &&
+                ( place.num_projections == 0 || copy.projections[place.first_projection].kind != Projection_kind::Deref ) )
+            {
+                bindable[place.local.v] = false;
+            }
+        }
+    );
+
+    std::vector<Local_id> fresh( copy.locals.size() );
+    for( u32 i = 0; i < parameters; ++i )
+    {
+        const Local_id parameter { i + 1 };
+        if( bindable[parameter.v] )
+        {
+            const Type_id pointee = types.get( copy.locals[parameter].type ).element;
+            fresh[parameter.v]    = copy.locals.push_back( Local { .type = pointee, .span = copy.locals[parameter].span } );
+        }
+    }
+
+    for_each_place(
+        copy,
+        [&]( Place& place, const Statement* )
+        {
+            if( !place.is_global() && place.local.is_valid() && place.local.v < fresh.size() &&
+                fresh[place.local.v].is_valid() )
+            {
+                place.local = fresh[place.local.v];
+                place.first_projection++;
+                place.num_projections--;
+            }
+        }
+    );
+
+    u32 added = 0;
+    for( u32 i = 0; i < parameters; ++i )
+    {
+        const Local_id parameter { i + 1 };
+        if( !fresh[parameter.v].is_valid() )
+        {
+            continue;
+        }
+
+        const Local_id local   = fresh[parameter.v];
+        const Type_id  pointee = copy.locals[local].type;
+        const Place    through = projected( copy, Place { .local = parameter }, Projection { .kind = Projection_kind::Deref } );
+        const Span     span    = copy.locals[parameter].span;
+
+        insert_statement(
+            copy,
+            Block_id { 0 },
+            0,
+            Statement {
+                .span  = span,
+                .place = Place { .local = local },
+                .value = copy.add_rvalue( use( keel::copy( through, pointee ) ) )
+            }
+        );
+        ++added;
+
+        for( const Block_id b : copy.blocks.ids() )
+        {
+            if( copy.blocks[b].terminator.kind == Terminator_kind::Return )
+            {
+                insert_statement(
+                    copy,
+                    b,
+                    copy.blocks[b].statement_count,
+                    Statement {
+                        .span  = span,
+                        .place = through,
+                        .value = copy.add_rvalue( use( keel::copy( Place { .local = local }, pointee ) ) )
+                    }
+                );
+                ++added;
+            }
+        }
+    }
+
+    return added;
+}
+
 // `callee` priced as the call at `index` of `at` leaves it: a constant argument assigned to its
-// parameter at entry, `size` of a run argument of constant count read as that count, then folded.
-// Each assignment stands for the one splicing makes, which `inline_cost` never sees, so is not counted.
+// parameter at entry, `size` of a run argument of constant count read as that count, a pointer at a
+// distinct local read as that local, then folded. Each assignment stands for the one splicing makes,
+// which `inline_cost` never sees, so is not counted. `straight` rotates the loops first, and prices
+// only a body none is left in.
 u32 folded_cost(
     const Function&       callee,
     const Function&       caller,
@@ -226,7 +338,8 @@ u32 folded_cost(
     const Type_table&     types,
     Literal_pool&         literals,
     const Purity&         purity,
-    const Inline_weights& weights
+    const Inline_weights& weights,
+    bool                  straight = false
 )
 {
     Function                            copy  = callee;
@@ -267,6 +380,8 @@ u32 folded_cost(
         }
     }
 
+    bound += bind_borrowed_locals( copy, caller, at, index, call, types );
+
     for( Statement& statement : copy.statements )
     {
         if( statement.kind != Statement_kind::Assign )
@@ -283,8 +398,20 @@ u32 folded_cost(
 
     remove_statements( copy, std::vector<bool>( copy.statements.size(), false ) );
     propagate_constants( copy, types, literals, true );
+    // Rotated, a loop the call runs once has a constant latch, and goes, as it will once spliced.
+    if( straight && rotate_loops( copy, Loop_weights {} ) )
+    {
+        propagate_constants( copy, types, literals, true );
+    }
+    propagate_values( copy, types, literals );
+    recognise_rotates( copy, types, literals );
     remove_dead_stores( copy, false, purity, types, literals );
     simplify( copy, literals );
+    // A loop left would still grow in the caller's loop phase, which this price does not see.
+    if( straight && !find_loops( copy ).loops.empty() )
+    {
+        return std::numeric_limits<u32>::max();
+    }
     const u32 cost = inline_cost( copy, types, weights );
     return cost - std::min( cost, bound * weights.statement );
 }
@@ -743,9 +870,11 @@ void inline_calls(
                     const u32            limit    = threshold( statement_count, finished, weights, looped[from.v] );
                     std::optional<Place> receiver;
                     bool                 fits = !( keep_trig && callee.trig != Trig::None ) && inlinable( callee );
-                    // Priced first as it stands, then as this call's constants fold it.
+                    // Priced first as it stands, then as this call folds it: finished, and as spliced once
+                    // every loop goes, as one the call runs once does.
                     fits = fits && ( inline_cost( finished, types, weights ) <= limit ||
-                                     folded_cost( finished, caller, at, s, types, literals, purity, weights ) <= limit );
+                                     folded_cost( finished, caller, at, s, types, literals, purity, weights ) <= limit ||
+                                     folded_cost( callee, caller, at, s, types, literals, purity, weights, true ) <= limit );
                     if( fits && callee.constructed.is_valid() )
                     {
                         assert( callee.constructed == Local_id { 1 } );
@@ -979,6 +1108,72 @@ TEST_CASE( "inline_calls_prices_a_callee_as_a_run_of_known_size_folds_it", "[opt
     const Inlined unknown( "i32 f( const ref i32[] r ) { return sized( r ); }\n" + sized );
     REQUIRE( unknown.clean() );
     REQUIRE( unknown.calls() == 1 );
+}
+
+// `mix` reads and writes through its `ref`s, which may name one place, so as it stands every step
+// goes through memory; given two distinct locals, the steps are plain arithmetic and it fits.
+constexpr std::string_view k_mix =
+    "u64 spin( u64 x ) { return ( x << 13 ) ^ ( x >> 7 ); }\n"
+    "void mix( ref u64 a, ref u64 b ) { a = wrap<u64>( a + b ); b = spin( b ); b ^= a; a = spin( a );"
+    " a = wrap<u64>( a + b ); b = spin( b ); b ^= a; a = spin( a ); a = wrap<u64>( a + b ); b = spin( b ); b ^= a; }\n";
+
+TEST_CASE( "inline_calls_prices_a_callee_as_distinct_borrowed_locals_leave_it", "[opt][inline]" )
+{
+    const Inlined distinct(
+        "u64 f( u64 x, u64 y ) { u64 a = x; u64 b = y; mix( ref a, ref b ); return a + b; }\n" + std::string( k_mix )
+    );
+    REQUIRE( distinct.clean() );
+    REQUIRE( verify( distinct.first() ).empty() );
+    REQUIRE( distinct.calls() == 0 );
+
+    const Inlined same( "u64 f( u64 x ) { u64 a = x; mix( ref a, ref a ); return a; }\n" + std::string( k_mix ) );
+    REQUIRE( same.clean() );
+    REQUIRE( same.calls() == 1 );
+}
+
+// SipHash's round takes its four words by `ref` and rotates them: bound to `write`'s and `finish`'s
+// locals, with each rotate one statement, it fits even outside a loop, so no call of it is left.
+TEST_CASE( "inline_calls_takes_the_hashers_rounds", "[opt][inline]" )
+{
+    const Inlined p( "u64 f( u64 x ) { hasher h = hasher( 1, 2 ); h.write( x ); return h.finish(); }\n" );
+    REQUIRE( p.clean() );
+    std::size_t rounds = 0;
+    for( const Function& func : p.all )
+    {
+        for( const Statement& s : func.statements )
+        {
+            rounds += s.kind == Statement_kind::Assign && func.rvalue( s ).kind == Rvalue_kind::Call &&
+                      p.interner.text( p.ast.name( func.rvalue( s ).callee ) ) == "round";
+        }
+    }
+    REQUIRE( rounds == 0 );
+}
+
+// `pick` loops over its indices, so as it stands it is dear; called with one, the rotated loop's latch
+// folds, and only the one turn is priced: within a loop's threshold, as a sort's comparator is, and
+// over a straight call's.
+TEST_CASE( "inline_calls_prices_a_loop_the_call_runs_once_as_straight_code", "[opt][inline]" )
+{
+    const std::string pick =
+        "i64 pick( const ref i64[] v, const ref u64[] shape, u64... at ) { u64 flat = 0; for( u64 k : 0..at.size ) {"
+        " if( at[k] >= shape[k] ) { panic( \"index out of range\" ); } u64 m = at[k] * 7 + 3; u64 n = m ^ ( m >> 2 ); flat = "
+        "flat * shape[k] + at[k] + ( n & 1 ) - ( n & 1 ); }"
+        " return v[flat]; }\n";
+
+    const Inlined once(
+        "i64 f( const ref i64[] v, const ref u64[] shape, u64 n ) { i64 s = 0; for( u64 i : 0..n ) { s += pick( v, shape, i ); "
+        "} return s; }\n" +
+        pick
+    );
+    REQUIRE( once.clean() );
+    REQUIRE( verify( once.first() ).empty() );
+    REQUIRE( once.calls() == 0 );
+
+    const Inlined straight(
+        "i64 f( const ref i64[] v, const ref u64[] shape, u64 i ) { return pick( v, shape, i ); }\n" + pick
+    );
+    REQUIRE( straight.clean() );
+    REQUIRE( straight.calls() == 1 );
 }
 
 // `cross3`'s element addresses are addressing modes, so only its arithmetic counts and it fits.

@@ -1831,6 +1831,23 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
             operand( rvalue.a )
         );
 
+    // Widened first, so a `u8` or `u16` is not promoted to `int` and shifted into its sign.
+    case Rvalue_kind::Rotate:
+    {
+        const std::string a     = operand( rvalue.a );
+        const std::string by    = operand( rvalue.b );
+        const u32         width = types_.table().get( rvalue.type ).width;
+        return fmt::format(
+            "( {} )( ( ( uint64_t )( {} ) << {} ) | ( ( uint64_t )( {} ) >> ( {} - {} ) ) )",
+            spelling_.type( rvalue.type ),
+            a,
+            by,
+            a,
+            width,
+            by
+        );
+    }
+
     case Rvalue_kind::Select:
         return fmt::format( "{} ? {} : {}", operand( rvalue.arguments[0] ), operand( rvalue.a ), operand( rvalue.b ) );
 

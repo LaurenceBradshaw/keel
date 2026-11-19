@@ -54,6 +54,15 @@ public:
             binary( value, at );
             return;
 
+        case Rvalue_kind::Rotate:
+            operand( value.a, at );
+            expect( value.type, value.a.type, at, "a rotate" );
+            if( table_.get( value.a.type ).kind != Type_kind::Int || table_.get( value.a.type ).is_signed )
+            {
+                errors_.push_back( fmt::format( "{}: a rotate of {}", at, name( value.a.type ) ) );
+            }
+            return;
+
         case Rvalue_kind::Overflows:
             operand( value.a, at( "left" ) );
             operand( value.b, at( "right" ) );

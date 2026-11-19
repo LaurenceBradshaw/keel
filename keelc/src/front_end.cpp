@@ -33,6 +33,7 @@
 #include "opt/merge_blocks.h"
 #include "opt/propagate_constants.h"
 #include "opt/propagate_values.h"
+#include "opt/recognise_rotates.h"
 #include "opt/reduce_inductions.h"
 #include "opt/remove_dead_stores.h"
 #include "opt/settle_drops.h"
@@ -292,6 +293,11 @@ Front_end run_front_end(
         // Again, as a join SCCP left fewer paths into may now agree.
         propagate_values( function, front.types.table(), literals );
         verified( function, "propagate_values" );
+        // Once the amounts have folded; its shifts die below.
+        if( build.level >= 2 && recognise_rotates( function, front.types.table(), literals ) )
+        {
+            verified( function, "recognise_rotates" );
+        }
         remove_dead_stores( function, pin_named, purity, front.types.table(), literals );
         verified( function, "remove_dead_stores" );
         // Dead store removal can empty a block, so threading goes first.

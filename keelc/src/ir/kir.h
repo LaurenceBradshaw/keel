@@ -3,6 +3,7 @@
 
 #pragma once
 #include <cassert>
+#include <optional>
 #include <utility>
 #include <vector>
 #include "ast/node.h"
@@ -176,6 +177,7 @@ enum class Rvalue_kind : u8
     Interface_self, // §6.7: `a` is an interface pointer, and the type the `void*` of its object
     Sqrt,           // the correctly rounded square root of the float `a`
     Select,         // `a` if the bool `arguments[0]` holds, else `b`; scalars only
+    Rotate,         // the unsigned `a` rotated left by the constant `b`, more than 0 and less than its width
 };
 
 // D80: a Call of a module's build or drop function, which no declaration has; `callee` is its first global.
@@ -677,6 +679,28 @@ void for_each_place( Func& func, Fn fn )
     }
 }
 
+// The offset in `block`, before `index`, of the last whole write to `operand`'s local; none if the
+// write is in an earlier block.
+inline std::optional<u32> last_write( const Function& func, const Block& block, u32 index, const Operand& operand )
+{
+    if( operand.kind != Operand_kind::Copy || operand.place.is_global() || operand.place.num_projections != 0 )
+    {
+        return std::nullopt;
+    }
+
+    for( u32 s = index; s-- > 0; )
+    {
+        const Statement& statement = func.statements_of( block )[s];
+        if( statement.kind == Statement_kind::Assign && !statement.place.is_global() && statement.place.num_projections == 0 &&
+            statement.place.local == operand.place.local )
+        {
+            return s;
+        }
+    }
+
+    return std::nullopt;
+}
+
 // A block's successors, 0, 1 or 2 of them by terminator kind, appended to `out`.
 inline void successors( const Terminator& terminator, std::vector<Block_id>& out )
 {
@@ -783,6 +807,11 @@ inline Rvalue bits_of( Operand a, Type_id type )
 inline Rvalue sqrt_of( Operand a )
 {
     return Rvalue { .kind = Rvalue_kind::Sqrt, .type = a.type, .a = a };
+}
+
+inline Rvalue rotate_left( Operand a, Operand by )
+{
+    return Rvalue { .kind = Rvalue_kind::Rotate, .type = a.type, .a = a, .b = by };
 }
 
 inline Rvalue select( Operand condition, Operand if_true, Operand if_false )

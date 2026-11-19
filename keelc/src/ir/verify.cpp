@@ -104,6 +104,14 @@ void check_rvalue( const Function& func, const Rvalue& value, const At& where, s
         operand_at( value.a, "operand" );
         return;
 
+    case Rvalue_kind::Rotate:
+        operand_at( value.a, "operand" );
+        if( value.b.kind != Operand_kind::Constant )
+        {
+            errors.push_back( fmt::format( "{}: a rotate's amount is not a constant", where ) );
+        }
+        return;
+
     case Rvalue_kind::Binary:
     case Rvalue_kind::Overflows:
         if( value.op == Token_kind::Unknown )

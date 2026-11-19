@@ -1929,6 +1929,12 @@ llvm::Value* Llvm_emitter::rvalue( const Rvalue& value )
         llvm::Value* a = operand( value.a );
         return builder_.CreateIntrinsic( llvm::Intrinsic::sqrt, { a->getType() }, { a } );
     }
+    case Rvalue_kind::Rotate:
+    {
+        llvm::Value* a  = operand( value.a );
+        llvm::Value* by = builder_.CreateZExtOrTrunc( operand( value.b ), a->getType() );
+        return builder_.CreateIntrinsic( llvm::Intrinsic::fshl, { a->getType() }, { a, a, by } );
+    }
     case Rvalue_kind::Run_of:
     {
         llvm::Value* run = llvm::PoisonValue::get( value_type( value.type ) );

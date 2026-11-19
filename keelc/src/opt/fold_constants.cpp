@@ -320,7 +320,8 @@ std::optional<Rvalue> folded( const Rvalue& value, const Type_table& types, Lite
         return use( constant( literals.add_float( root, static_cast<f32>( root ) ), value.type ) );
     }
 
-    const bool pair = value.kind == Rvalue_kind::Binary || value.kind == Rvalue_kind::Overflows;
+    const bool pair =
+        value.kind == Rvalue_kind::Binary || value.kind == Rvalue_kind::Overflows || value.kind == Rvalue_kind::Rotate;
     if( ( !pair && value.kind != Rvalue_kind::Unary && value.kind != Rvalue_kind::Cast ) || !is_constant( value.a ) ||
         ( pair && !is_constant( value.b ) ) )
     {
@@ -365,7 +366,7 @@ std::optional<u64> evaluate( const Rvalue& value, std::optional<u64> a, std::opt
 {
     // Other kinds may leave `a` a default operand, with no type.
     if( value.kind != Rvalue_kind::Use && value.kind != Rvalue_kind::Binary && value.kind != Rvalue_kind::Overflows &&
-        value.kind != Rvalue_kind::Unary && value.kind != Rvalue_kind::Cast )
+        value.kind != Rvalue_kind::Unary && value.kind != Rvalue_kind::Cast && value.kind != Rvalue_kind::Rotate )
     {
         return std::nullopt;
     }
@@ -407,6 +408,16 @@ std::optional<u64> evaluate( const Rvalue& value, std::optional<u64> a, std::opt
         }
 
         return arithmetic( value.op, *a, *b, *integer );
+    }
+
+    case Rvalue_kind::Rotate:
+    {
+        if( !b || *b == 0 || *b >= integer->width )
+        {
+            return std::nullopt;
+        }
+
+        return truncate( ( *a << *b ) | ( *a >> ( integer->width - *b ) ), integer->width );
     }
 
     case Rvalue_kind::Unary:

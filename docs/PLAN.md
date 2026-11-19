@@ -412,6 +412,7 @@ function's `-O1` code depends on nothing outside it.
 | `eliminate_common` | `-O2` | Pays on all code and adds none: each repeat becomes a copy. In each round, before `propagate_values`: a pure computation every path to it already made, into a local still holding it, copies that local. Exact repeats only, so no float is reassociated; a read through a pointer, of a global or of an addressed local is forgotten at a call, a drop or a store through a pointer, as Keel has no TBAA. A call of a pure function (below) is such a computation, keyed by its callee and its arguments, each a copy or a constant. `i = i + 1` is left as the loop passes' step. `thread_jumps` then decides a branch on a local written once below an edge that branched on it, or written more than once where a path with one way in, which nothing on it writes, leads up from the edge, so a repeated division's zero and `-1` tests and their join go. |
 | `forward_elements` | `-O2` | Off with `splitting`. In each round, after `merge_blocks`, so an unrolled body is one block: a read of an element of a local array no pointer reaches, at an index that is the same local plus the same constant as an earlier store's in the block, reads what that store wrote (a store of a computed value first puts it in a local), and a store a later one to the same element overwrites before any read goes. A store at another index of the same local keeps the fact; one at an index of another local drops it. `propagate_values`, `remove_dead_stores`, `simplify` and `merge_blocks` then run again if it changed anything. With the `k` and `j` loops unrolled (`-O3`), a 4 by 4 matmul's row of `dest` stays in locals across `k`. |
 | `flatten_branches` | `-O2` | In an innermost loop, a triangle or diamond whose arms are each at most 3 assignments of a whole `bool`, integer or float local, from scalars read with no `*` or index and with no integer division, becomes one block: each arm computes into temporaries and each local an arm assigns takes a `Select` of the two, so the vectoriser takes the loop (scan 10% faster, m11 12% fewer instructions, no program's code grows). Only in an innermost loop, since elsewhere a predicted branch is cheaper than waiting for the condition: everywhere, kepler's Newton chain ran 45% slower, as it does through LLVM's own pipeline. A scope both arms end ends after the selects. In the loop phase, after the rounds have threaded each path a constant takes. Whether a `select` becomes `cmov` or a branch is codegen's. |
+| `recognise_rotates` | `-O2` | In each round, after the second `propagate_values`: `( x << c ) \| ( x >> ( w - c ) )` of an unsigned `x` of `w` bits, the shifts earlier in the block with a constant `c` and no write of `x` between, becomes one `Rotate` of `x`, as `Select` is a shape a pass makes, not a language intrinsic. An addressed `x` is left alone. The inliner prices a rotate as one statement, not three, which lets SipHash's round inline. C writes the shift pair back, widened so a `u8` or `u16` keeps its sign bit clear; LLVM gets `fshl`. |
 | `solve_linear_maps` | `-O3` | Landing. On an `@real_arithmetic` function, after the rounds and before the loop passes, a body that computes a linear map becomes the cheapest circuit the solve finds, or the cache holds (D86). A cold solve took up to 1.85 s (an 8-point DCT); a cached one costs about what `-O2` does. `-O2` never reads the cache, so a build at one level makes the same program whatever the cache holds. |
 
 **Order and added functions** (`ir/group_order`): each group of `callees_first` is optimised once,
@@ -1983,14 +1984,20 @@ major), no longer blocked now that D81 has settled lambdas.
   first. A constructor inlines when its `&init` is in the call's block. Neither keel_build nor the
   benchmarks has such a callee (measured 2026-11-13): their kept constructors are over the cost
   threshold.
-- **`folded_cost` sees only what folds inside the callee.** It binds the constant arguments, runs
-  `propagate_constants`, `remove_dead_stores` and `simplify` on a copy and prices the rest, so that
-  folding is measured, not guessed, and a flat discount per constant argument would count it twice.
-  It misses folding in the caller after splicing (a constant result deciding a branch there) and what
-  only later passes remove (unrolling a loop whose count became constant, `flatten_branches`,
-  `forward_elements`, further rounds). When a call misses the limit by a few points, run more of the
-  pipeline on the copy and subtract what goes. None did on 2026-11-18: at `-O2` the vec/mat kernels
-  inline, and the only call left with a constant argument, det's `lu`, is about 126 against 20.
+- **`folded_cost` sees only what folds inside the callee.** It binds the constant arguments, each
+  run argument's constant count, and each pointer argument at a distinct whole number local of the
+  caller (read as a local of its own, loaded at entry and stored at each return), then runs
+  `propagate_constants`, `propagate_values`, `recognise_rotates`, `remove_dead_stores` and `simplify`
+  on a copy and prices the rest, so that folding is measured, not guessed. It prices the finished
+  body, and the saved one with its loops rotated first, which counts only when no loop is left: a
+  variadic index's loop the call runs once goes, as it will once spliced, while a loop that stays
+  would still grow in the caller's loop phase (copies, versions, unrolling), which the saved price
+  does not see. It still misses folding in the caller after splicing (a constant result deciding a
+  branch there), `flatten_branches` and `forward_elements`, and it charges a panic path its
+  message's two statements: `ndarray::operator[]` with one index prices at 35, exactly the limit in
+  a loop, so it inlines into a sort's comparator loop and not into a straight call. Freeing a panic
+  block's statements, or running `eliminate_common` on the copy (its two `shape_[k]` checks are one),
+  is the next lever.
 - **The dataflow analyses cost statements × locals.** `live_locals` keeps a set per statement,
   and `coalesce_moves` and `remove_dead_stores` read only a few of those sets. Each `coalesce_round`
   also renames over the whole function once per merge. Every set is a `std::vector<bool>`, which is

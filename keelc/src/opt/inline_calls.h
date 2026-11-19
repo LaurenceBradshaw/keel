@@ -30,7 +30,8 @@ struct Inline_weights
 // Release only: a call to a small saved body becomes that body. A body not saved yet, as one in the
 // caller's own group, is never taken, which is what stops recursion. Small is measured on the callee
 // as `functions` holds it, finished, since the saved body is what its passes have yet to shrink;
-// one over the threshold is priced again with the call's constants folded in.
+// one over the threshold is priced again as the call's constants, run counts and distinct borrowed
+// locals fold it, both finished and saved.
 // With `keep_trig`, a call to a `@trig_` function stays a call.
 void inline_calls(
     Function&                                   caller,
