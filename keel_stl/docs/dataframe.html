@@ -55,13 +55,25 @@
 <p><code>string</code> values, pandas' <code>str</code>.</p>
 </div>
 </div>
+<div class="group" id="dtype.times">
+<pre class="signature"><a class="anchor" href="#dtype.times" aria-label="Link to times">#</a><code>times</code></pre>
+<div class="doc">
+<p><code>timestamp</code> values, pandas' <code>datetime64[ns]</code>.</p>
+</div>
+</div>
+<div class="group" id="dtype.durations">
+<pre class="signature"><a class="anchor" href="#dtype.durations" aria-label="Link to durations">#</a><code>durations</code></pre>
+<div class="doc">
+<p><code>duration</code> values, pandas' <code>timedelta64[ns]</code>.</p>
+</div>
+</div>
 </section>
 <section class="entry">
 <h2><span class="kind">function</span> <span class="fn">dtype_name</span></h2>
 <div class="group" id="dtype_name">
 <pre class="signature"><a class="anchor" href="#dtype_name" aria-label="Link to dtype_name">#</a><code><a class="type" href="prelude.html#str">str</a> <span class="fn">dtype_name</span>( <a class="type" href="#dtype">dtype</a> d )</code></pre>
 <div class="doc">
-<p>pandas' name for <code>d</code>: <code>float64</code>, <code>int64</code>, <code>bool</code> or <code>str</code>.</p>
+<p>pandas' name for <code>d</code>: <code>float64</code>, <code>int64</code>, <code>bool</code>, <code>str</code>, <code>datetime64[ns]</code> or <code>timedelta64[ns]</code>.</p>
 </div>
 </div>
 </section>
@@ -77,6 +89,9 @@ the same size or a number: two <code>i64</code> sides stay <code>i64</code>, <co
 missing on either side is missing in the result. The comparisons answer a <code>mask</code> that is clear
 where a value is missing, for <code>dataframe::filtered</code>. The reductions skip missing values and
 answer <code>f64</code>, a bool counting as 0 or 1. <code>s.f64s()</code> and its siblings hand a loop the values, panicking on another dtype.</p>
+<p><code>times</code> and <code>durations</code> hold nanoseconds as <code>i64s</code> does. A time less a time is a duration, and a
+time plus or less a duration is a time; <code>year()</code> and its siblings read a time's fields, and
+<code>to_times</code> reads text.</p>
 </div>
 </div>
 <h3>Constructors</h3>
@@ -112,6 +127,14 @@ answer <code>f64</code>, a bool counting as 0 or 1. <code>s.f64s()</code> and it
 <pre class="signature"><a class="anchor" href="#series.series" aria-label="Link to series">#</a><code><span class="kw">public</span> <span class="type">series</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#str">str</a>[] values )</code></pre>
 <div class="doc">
 <p>A copy of <code>values</code> as <code>strings</code>: <code>series( [ &quot;a&quot;, &quot;b&quot; ] )</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.series" aria-label="Link to series">#</a><code><span class="kw">public</span> <span class="type">series</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="time.html#timestamp">timestamp</a>[] values )</code></pre>
+<div class="doc">
+<p>A copy of <code>values</code> as <code>times</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.series" aria-label="Link to series">#</a><code><span class="kw">public</span> <span class="type">series</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="time.html#duration">duration</a>[] values )</code></pre>
+<div class="doc">
+<p>A copy of <code>values</code> as <code>durations</code>.</p>
 </div>
 </div>
 <h3>Methods</h3>
@@ -174,6 +197,32 @@ answer <code>f64</code>, a bool counting as 0 or 1. <code>s.f64s()</code> and it
 <pre class="signature"><a class="anchor" href="#series.strings" aria-label="Link to strings">#</a><code><span class="kw">public</span> <span class="kw">ref</span> <a class="type" href="list.html#list">list</a>&lt;<a class="type" href="string.html#string">string</a>&gt; <span class="fn">strings</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>The values of a <code>strings</code> series, missing ones unspecified; panics on another dtype.</p>
+</div>
+</div>
+<div class="group" id="series.times">
+<pre class="signature"><a class="anchor" href="#series.times" aria-label="Link to times">#</a><code><span class="kw">public</span> <span class="kw">ref</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#i64">i64</a>&gt; <span class="fn">times</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The values of a <code>times</code> series as nanoseconds since 1970, missing ones unspecified; panics on
+another dtype.</p>
+</div>
+</div>
+<div class="group" id="series.durations">
+<pre class="signature"><a class="anchor" href="#series.durations" aria-label="Link to durations">#</a><code><span class="kw">public</span> <span class="kw">ref</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#i64">i64</a>&gt; <span class="fn">durations</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The values of a <code>durations</code> series as nanoseconds, missing ones unspecified; panics on
+another dtype.</p>
+</div>
+</div>
+<div class="group" id="series.timestamp_at">
+<pre class="signature"><a class="anchor" href="#series.timestamp_at" aria-label="Link to timestamp_at">#</a><code><span class="kw">public</span> <a class="type" href="time.html#timestamp">timestamp</a> <span class="fn">timestamp_at</span>( <a class="prim" href="prelude.html#u64">u64</a> i ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Value <code>i</code> of a <code>times</code> series, unspecified when missing; panics on another dtype.</p>
+</div>
+</div>
+<div class="group" id="series.duration_at">
+<pre class="signature"><a class="anchor" href="#series.duration_at" aria-label="Link to duration_at">#</a><code><span class="kw">public</span> <a class="type" href="time.html#duration">duration</a> <span class="fn">duration_at</span>( <a class="prim" href="prelude.html#u64">u64</a> i ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Value <code>i</code> of a <code>durations</code> series, unspecified when missing; panics on another dtype.</p>
 </div>
 </div>
 <div class="group" id="series.taken">
@@ -247,6 +296,10 @@ pandas' <code>unique</code>.</p>
 <div class="doc">
 <p><code>x</code> added to each value; an <code>i64s</code> series stays <code>i64s</code>.</p>
 </div>
+<pre class="signature"><a class="anchor" href="#series.operator+" aria-label="Link to operator+">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">operator+</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="time.html#duration">duration</a> d ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p><code>d</code> added to each time or duration.</p>
+</div>
 </div>
 <div class="group" id="series.operator-">
 <pre class="signature"><a class="anchor" href="#series.operator-" aria-label="Link to operator-">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">operator-</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> o ) <span class="kw">const</span></code></pre>
@@ -260,6 +313,14 @@ pandas' <code>unique</code>.</p>
 <pre class="signature"><a class="anchor" href="#series.operator-" aria-label="Link to operator-">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">operator-</span>( <a class="prim" href="prelude.html#i64">i64</a> x ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p><code>x</code> taken from each value; an <code>i64s</code> series stays <code>i64s</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.operator-" aria-label="Link to operator-">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">operator-</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="time.html#duration">duration</a> d ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p><code>d</code> taken from each time or duration.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.operator-" aria-label="Link to operator-">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">operator-</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="time.html#timestamp">timestamp</a> t ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The duration from <code>t</code> to each time.</p>
 </div>
 </div>
 <div class="group" id="series.operator*">
@@ -300,6 +361,10 @@ pandas' <code>unique</code>.</p>
 <div class="doc">
 <p>Where each value is less than <code>x</code>.</p>
 </div>
+<pre class="signature"><a class="anchor" href="#series.less" aria-label="Link to less">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">less</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="time.html#timestamp">timestamp</a> t ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each time is before <code>t</code>.</p>
+</div>
 </div>
 <div class="group" id="series.greater">
 <pre class="signature"><a class="anchor" href="#series.greater" aria-label="Link to greater">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">greater</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> o ) <span class="kw">const</span></code></pre>
@@ -309,6 +374,10 @@ pandas' <code>unique</code>.</p>
 <pre class="signature"><a class="anchor" href="#series.greater" aria-label="Link to greater">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">greater</span>( <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Where each value is greater than <code>x</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.greater" aria-label="Link to greater">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">greater</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="time.html#timestamp">timestamp</a> t ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each time is after <code>t</code>.</p>
 </div>
 </div>
 <div class="group" id="series.less_equal">
@@ -320,6 +389,10 @@ pandas' <code>unique</code>.</p>
 <div class="doc">
 <p>Where each value is at most <code>x</code>.</p>
 </div>
+<pre class="signature"><a class="anchor" href="#series.less_equal" aria-label="Link to less_equal">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">less_equal</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="time.html#timestamp">timestamp</a> t ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each time is at or before <code>t</code>.</p>
+</div>
 </div>
 <div class="group" id="series.greater_equal">
 <pre class="signature"><a class="anchor" href="#series.greater_equal" aria-label="Link to greater_equal">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">greater_equal</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> o ) <span class="kw">const</span></code></pre>
@@ -329,6 +402,10 @@ pandas' <code>unique</code>.</p>
 <pre class="signature"><a class="anchor" href="#series.greater_equal" aria-label="Link to greater_equal">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">greater_equal</span>( <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Where each value is at least <code>x</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.greater_equal" aria-label="Link to greater_equal">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">greater_equal</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="time.html#timestamp">timestamp</a> t ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each time is at or after <code>t</code>.</p>
 </div>
 </div>
 <div class="group" id="series.equal_each">
@@ -344,6 +421,10 @@ pandas' <code>unique</code>.</p>
 <div class="doc">
 <p>Where each value equals the text <code>x</code>.</p>
 </div>
+<pre class="signature"><a class="anchor" href="#series.equal_each" aria-label="Link to equal_each">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">equal_each</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="time.html#timestamp">timestamp</a> t ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each time is <code>t</code>.</p>
+</div>
 </div>
 <div class="group" id="series.differs">
 <pre class="signature"><a class="anchor" href="#series.differs" aria-label="Link to differs">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">differs</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> o ) <span class="kw">const</span></code></pre>
@@ -357,6 +438,99 @@ pandas' <code>unique</code>.</p>
 <pre class="signature"><a class="anchor" href="#series.differs" aria-label="Link to differs">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">differs</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> x ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Where each value differs from the text <code>x</code>, a missing one included.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.differs" aria-label="Link to differs">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">differs</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="time.html#timestamp">timestamp</a> t ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where each time is not <code>t</code>, a missing one included.</p>
+</div>
+</div>
+<h3>Times</h3>
+<div class="group" id="series.to_times">
+<pre class="signature"><a class="anchor" href="#series.to_times" aria-label="Link to to_times">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="type" href="#series">series</a>, <a class="prim" href="prelude.html#u64">u64</a>&gt; <span class="fn">to_times</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A <code>strings</code> series read as ISO 8601 times, as <code>timestamp::parse</code> reads them; a missing
+value stays missing. As pandas' <code>to_datetime</code> with <code>format=&quot;ISO8601&quot;</code>.</p>
+<h4>Errors</h4>
+<p>The first row that does not read.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.to_times" aria-label="Link to to_times">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="type" href="#series">series</a>, <a class="prim" href="prelude.html#u64">u64</a>&gt; <span class="fn">to_times</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> pattern ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A <code>strings</code> series read as times by <code>pattern</code>, as <code>timestamp::parse</code> reads them: pandas'
+<code>to_datetime( s, format=pattern )</code>.</p>
+<h4>Errors</h4>
+<p>The first row that does not read.</p>
+</div>
+</div>
+<div class="group" id="series.year">
+<pre class="signature"><a class="anchor" href="#series.year" aria-label="Link to year">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">year</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each time's year, as <code>i64s</code>.</p>
+</div>
+</div>
+<div class="group" id="series.month">
+<pre class="signature"><a class="anchor" href="#series.month" aria-label="Link to month">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">month</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each time's month, 1 to 12.</p>
+</div>
+</div>
+<div class="group" id="series.day">
+<pre class="signature"><a class="anchor" href="#series.day" aria-label="Link to day">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">day</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each time's day of the month, from 1.</p>
+</div>
+</div>
+<div class="group" id="series.hour">
+<pre class="signature"><a class="anchor" href="#series.hour" aria-label="Link to hour">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">hour</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each time's hour, 0 to 23.</p>
+</div>
+</div>
+<div class="group" id="series.minute">
+<pre class="signature"><a class="anchor" href="#series.minute" aria-label="Link to minute">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">minute</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each time's minute, 0 to 59.</p>
+</div>
+</div>
+<div class="group" id="series.second">
+<pre class="signature"><a class="anchor" href="#series.second" aria-label="Link to second">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">second</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each time's second, 0 to 59.</p>
+</div>
+</div>
+<div class="group" id="series.nanosecond">
+<pre class="signature"><a class="anchor" href="#series.nanosecond" aria-label="Link to nanosecond">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">nanosecond</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each time's nanoseconds past the second.</p>
+</div>
+</div>
+<div class="group" id="series.weekday">
+<pre class="signature"><a class="anchor" href="#series.weekday" aria-label="Link to weekday">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">weekday</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each time's weekday, 0 for Monday.</p>
+</div>
+</div>
+<div class="group" id="series.day_of_year">
+<pre class="signature"><a class="anchor" href="#series.day_of_year" aria-label="Link to day_of_year">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">day_of_year</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each time's day of the year, from 1.</p>
+</div>
+</div>
+<div class="group" id="series.total_seconds">
+<pre class="signature"><a class="anchor" href="#series.total_seconds" aria-label="Link to total_seconds">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">total_seconds</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each duration in seconds, as <code>f64s</code>.</p>
+</div>
+</div>
+<div class="group" id="series.min_time">
+<pre class="signature"><a class="anchor" href="#series.min_time" aria-label="Link to min_time">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;<a class="type" href="time.html#timestamp">timestamp</a>&gt; <span class="fn">min_time</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The earliest time present, none when there is none.</p>
+</div>
+</div>
+<div class="group" id="series.max_time">
+<pre class="signature"><a class="anchor" href="#series.max_time" aria-label="Link to max_time">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;<a class="type" href="time.html#timestamp">timestamp</a>&gt; <span class="fn">max_time</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The latest time present, none when there is none.</p>
 </div>
 </div>
 <h3>Reducing</h3>
@@ -610,7 +784,8 @@ than 60 rows the first and last five, then <code>[n rows x m columns]</code>.</p
 <pre class="signature"><a class="anchor" href="#dataframe.to_csv" aria-label="Link to to_csv">#</a><code><span class="kw">public</span> <a class="type" href="string.html#string">string</a> <span class="fn">to_csv</span>( <a class="prim" href="prelude.html#u8">u8</a> sep = ',' ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>The frame as CSV: a header, then a line for each row, ended by <code>\n</code>; a missing value is
-empty, a float written as <code>string::from</code> writes it, and a field holding <code>sep</code>, a quote or a
+empty (<code>&quot;&quot;</code> when it is the row's only field), a float written as <code>string::from</code> writes it, a
+time or duration as the table writes its column, and a field holding <code>sep</code>, a quote or a
 line break quoted. The row numbers are not written, as pandas' <code>index=False</code>.</p>
 </div>
 </div>
@@ -625,7 +800,8 @@ groups in sorted key order, and rows missing a key left out.</p>
 <p>Each reduction answers a frame of the keys, one row a group, then a column for each other
 column: <code>count</code> counts every column, while the rest skip <code>strings</code> columns, as pandas'
 <code>numeric_only</code>. <code>sum</code>, <code>min</code> and <code>max</code> keep an <code>i64s</code> column <code>i64s</code>, and <code>min</code> and <code>max</code> keep
-<code>bools</code> <code>bools</code>; the others answer <code>f64s</code>, a bool counting as 0 or 1.</p>
+<code>bools</code> <code>bools</code>; the others answer <code>f64s</code>, a bool counting as 0 or 1. A <code>times</code> column is kept
+by <code>min</code> and <code>max</code> only, and a <code>durations</code> one by <code>sum</code> too.</p>
 </div>
 </div>
 <h3>Constructors</h3>
@@ -693,7 +869,7 @@ column: <code>count</code> counts every column, while the rest skip <code>string
 <div class="group" id="grouped.agg">
 <pre class="signature"><a class="anchor" href="#grouped.agg" aria-label="Link to agg">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">agg</span>&lt;F&gt;( F f ) <span class="kw">const</span> <span class="kw">where</span> F : <span class="kw">fn</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> ) -&gt; <a class="prim" href="prelude.html#f64">f64</a></code></pre>
 <div class="doc">
-<p><code>f</code> of each group's rows of each column but <code>strings</code> ones, as <code>f64s</code>:
+<p><code>f</code> of each group's rows of each number and bool column, as <code>f64s</code>:
 <code>g.agg( fn[]( s ) { return s.max() - s.min(); } )</code>.</p>
 </div>
 </div>
@@ -734,7 +910,7 @@ column: <code>count</code> counts every column, while the rest skip <code>string
 <div class="doc">
 <p>The frame CSV <code>text</code> holds, read as RFC 4180 with pandas' defaults.</p>
 <p>The first line names the columns. Fields are split at <code>sep</code>; a quoted field may hold <code>sep</code>,
-line breaks and doubled quotes. Blank lines are skipped, and a row short of fields has the rest
+line breaks and doubled quotes. Blank lines are skipped, but not one holding <code>&quot;&quot;</code>, and a row short of fields has the rest
 missing, as are pandas' missing tokens (an empty field, <code>NA</code>, <code>NaN</code>, <code>null</code>, <code>None</code> and the
 like). Each column takes the first dtype every value present reads as, <code>i64s</code>, <code>f64s</code>, then
 <code>bools</code> (<code>True</code>, <code>False</code>, and lower or upper case), else <code>strings</code>; a column with no values

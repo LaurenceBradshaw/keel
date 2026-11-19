@@ -6,8 +6,10 @@ import list;
 import mask;
 import math;
 import ndarray;
+import optional;
 import os;
 import string;
+import time;
 
 /// What a `series` holds.
 enum dtype
@@ -19,10 +21,14 @@ enum dtype
     /// `bool` values.
     bools,
     /// `string` values, pandas' `str`.
-    strings
+    strings,
+    /// `timestamp` values, pandas' `datetime64[ns]`.
+    times,
+    /// `duration` values, pandas' `timedelta64[ns]`.
+    durations
 };
 
-/// pandas' name for `d`: `float64`, `int64`, `bool` or `str`.
+/// pandas' name for `d`: `float64`, `int64`, `bool`, `str`, `datetime64[ns]` or `timedelta64[ns]`.
 str dtype_name( dtype d )
 {
     switch( d )
@@ -35,7 +41,17 @@ str dtype_name( dtype d )
             return "bool";
         case dtype::strings:
             return "str";
+        case dtype::times:
+            return "datetime64[ns]";
+        case dtype::durations:
+            return "timedelta64[ns]";
     }
+}
+
+// Whether `d` holds nanoseconds: `times` or `durations`.
+private bool is_time( dtype d )
+{
+    return d == dtype::times || d == dtype::durations;
 }
 
 /// One column of a `dataframe`: values of one `dtype`, any of which may be missing.
@@ -46,11 +62,15 @@ str dtype_name( dtype d )
 /// missing on either side is missing in the result. The comparisons answer a `mask` that is clear
 /// where a value is missing, for `dataframe::filtered`. The reductions skip missing values and
 /// answer `f64`, a bool counting as 0 or 1. `s.f64s()` and its siblings hand a loop the values, panicking on another dtype.
+///
+/// `times` and `durations` hold nanoseconds as `i64s` does. A time less a time is a duration, and a
+/// time plus or less a duration is a time; `year()` and its siblings read a time's fields, and
+/// `to_times` reads text.
 class series
 {
     dtype        kind_;
     ndarray<f64> f_;
-    ndarray<i64> i_;
+    ndarray<i64> i_; // also `times` and `durations`, as nanoseconds
     mask         b_;
     list<string> s_;
     mask         missing_; // no bits when nothing is missing; never set for `f64s`
@@ -151,6 +171,46 @@ class series
         missing_ = mask( 0 );
     }
 
+    /// A copy of `values` as `times`.
+    public series( const ref timestamp[] values )
+    {
+        list<i64> v = list<i64>::with_capacity( values.size );
+        for( u64 i : 0..values.size )
+        {
+            v.push( values[i].nanoseconds() );
+        }
+        kind_    = dtype::times;
+        f_       = ndarray<f64>::from_list( list<f64>() );
+        i_       = ndarray<i64>::from_list( move v );
+        b_       = mask( 0 );
+        s_       = list<string>();
+        missing_ = mask( 0 );
+    }
+
+    /// A copy of `values` as `durations`.
+    public series( const ref duration[] values )
+    {
+        list<i64> v = list<i64>::with_capacity( values.size );
+        for( u64 i : 0..values.size )
+        {
+            v.push( values[i].nanoseconds() );
+        }
+        kind_    = dtype::durations;
+        f_       = ndarray<f64>::from_list( list<f64>() );
+        i_       = ndarray<i64>::from_list( move v );
+        b_       = mask( 0 );
+        s_       = list<string>();
+        missing_ = mask( 0 );
+    }
+
+    // `nanoseconds` as `kind`, `i64s`, `times` or `durations`.
+    private static series of_kind( move ndarray<i64> nanoseconds, dtype kind )
+    {
+        series r = series( move nanoseconds );
+        r.kind_ = kind;
+        return r;
+    }
+
     /// A second series with the same values.
     public series copy() const
     {
@@ -184,6 +244,8 @@ class series
             case dtype::f64s:
                 return f_.size();
             case dtype::i64s:
+            case dtype::times:
+            case dtype::durations:
                 return i_.size();
             case dtype::bools:
                 return b_.size();
@@ -259,6 +321,36 @@ class series
         return s_;
     }
 
+    /// The values of a `times` series as nanoseconds since 1970, missing ones unspecified; panics on
+    /// another dtype.
+    public ref ndarray<i64> times() const
+    {
+        holds( dtype::times );
+        return i_;
+    }
+
+    /// The values of a `durations` series as nanoseconds, missing ones unspecified; panics on
+    /// another dtype.
+    public ref ndarray<i64> durations() const
+    {
+        holds( dtype::durations );
+        return i_;
+    }
+
+    /// Value `i` of a `times` series, unspecified when missing; panics on another dtype.
+    public timestamp timestamp_at( u64 i ) const
+    {
+        holds( dtype::times );
+        return timestamp::of_nanoseconds( i_[i] );
+    }
+
+    /// Value `i` of a `durations` series, unspecified when missing; panics on another dtype.
+    public duration duration_at( u64 i ) const
+    {
+        holds( dtype::durations );
+        return duration::of_nanoseconds( i_[i] );
+    }
+
     /// The values at `rows`, in that order: pandas' `take`.
     public series taken( const ref u64[] rows ) const
     {
@@ -275,6 +367,8 @@ class series
                 r.f_ = ndarray<f64>::from_list( move f );
                 break;
             case dtype::i64s:
+            case dtype::times:
+            case dtype::durations:
                 list<i64> v = list<i64>::with_capacity( rows.size );
                 for( u64 k : rows )
                 {
@@ -525,6 +619,24 @@ class series
         return combine( series( ndarray<i64>::filled( x, size() ) ), '/' );
     }
 
+    /// `d` added to each time or duration.
+    public series operator+( const ref duration d ) const
+    {
+        return combine( of_kind( ndarray<i64>::filled( d.nanoseconds(), size() ), dtype::durations ), '+' );
+    }
+
+    /// `d` taken from each time or duration.
+    public series operator-( const ref duration d ) const
+    {
+        return combine( of_kind( ndarray<i64>::filled( d.nanoseconds(), size() ), dtype::durations ), '-' );
+    }
+
+    /// The duration from `t` to each time.
+    public series operator-( const ref timestamp t ) const
+    {
+        return combine( of_kind( ndarray<i64>::filled( t.nanoseconds(), size() ), dtype::times ), '-' );
+    }
+
     /// --- Comparing ---
 
     /// Where each value is less than `o`'s.
@@ -618,6 +730,144 @@ class series
         return ~equal_each( x );
     }
 
+    /// Where each time is before `t`.
+    public mask less( const ref timestamp t ) const
+    {
+        return compare( at_each( t ), relation::less );
+    }
+
+    /// Where each time is after `t`.
+    public mask greater( const ref timestamp t ) const
+    {
+        return compare( at_each( t ), relation::greater );
+    }
+
+    /// Where each time is at or before `t`.
+    public mask less_equal( const ref timestamp t ) const
+    {
+        return compare( at_each( t ), relation::less_equal );
+    }
+
+    /// Where each time is at or after `t`.
+    public mask greater_equal( const ref timestamp t ) const
+    {
+        return compare( at_each( t ), relation::greater_equal );
+    }
+
+    /// Where each time is `t`.
+    public mask equal_each( const ref timestamp t ) const
+    {
+        return compare( at_each( t ), relation::equal );
+    }
+
+    /// Where each time is not `t`, a missing one included.
+    public mask differs( const ref timestamp t ) const
+    {
+        return ~equal_each( t );
+    }
+
+    /// --- Times ---
+
+    /// A `strings` series read as ISO 8601 times, as `timestamp::parse` reads them; a missing
+    /// value stays missing. As pandas' `to_datetime` with `format="ISO8601"`.
+    ///
+    /// ### Errors
+    ///
+    /// The first row that does not read.
+    public result<series, u64> to_times() const
+    {
+        return read_times( "" );
+    }
+
+    /// A `strings` series read as times by `pattern`, as `timestamp::parse` reads them: pandas'
+    /// `to_datetime( s, format=pattern )`.
+    ///
+    /// ### Errors
+    ///
+    /// The first row that does not read.
+    public result<series, u64> to_times( const ref textual pattern ) const
+    {
+        return read_times( pattern );
+    }
+
+    /// Each time's year, as `i64s`.
+    public series year() const
+    {
+        return each_field( fn[]( const ref timestamp t ) { return t.year(); } );
+    }
+
+    /// Each time's month, 1 to 12.
+    public series month() const
+    {
+        return each_field( fn[]( const ref timestamp t ) { return t.month(); } );
+    }
+
+    /// Each time's day of the month, from 1.
+    public series day() const
+    {
+        return each_field( fn[]( const ref timestamp t ) { return t.day(); } );
+    }
+
+    /// Each time's hour, 0 to 23.
+    public series hour() const
+    {
+        return each_field( fn[]( const ref timestamp t ) { return t.hour(); } );
+    }
+
+    /// Each time's minute, 0 to 59.
+    public series minute() const
+    {
+        return each_field( fn[]( const ref timestamp t ) { return t.minute(); } );
+    }
+
+    /// Each time's second, 0 to 59.
+    public series second() const
+    {
+        return each_field( fn[]( const ref timestamp t ) { return t.second(); } );
+    }
+
+    /// Each time's nanoseconds past the second.
+    public series nanosecond() const
+    {
+        return each_field( fn[]( const ref timestamp t ) { return t.nanosecond(); } );
+    }
+
+    /// Each time's weekday, 0 for Monday.
+    public series weekday() const
+    {
+        return each_field( fn[]( const ref timestamp t ) { return t.weekday(); } );
+    }
+
+    /// Each time's day of the year, from 1.
+    public series day_of_year() const
+    {
+        return each_field( fn[]( const ref timestamp t ) { return t.day_of_year(); } );
+    }
+
+    /// Each duration in seconds, as `f64s`.
+    public series total_seconds() const
+    {
+        holds( dtype::durations );
+        list<f64> v = list<f64>::with_capacity( size() );
+        for( u64 i : 0..size() )
+        {
+            v.push( is_missing( i ) ? nan() : cast<f64>( i_[i] ) / 1e9 );
+        }
+        return series( ndarray<f64>::from_list( move v ) );
+    }
+
+    /// The earliest time present, none when there is none.
+    public optional<timestamp> min_time() const
+    {
+        return extreme_time( true );
+    }
+
+    /// The latest time present, none when there is none.
+    public optional<timestamp> max_time() const
+    {
+        return extreme_time( false );
+    }
+
     /// --- Reducing ---
 
     /// The sum of the values present, 0 when there are none.
@@ -699,6 +949,84 @@ class series
         }
     }
 
+    // `t` at every row, as `times`.
+    private series at_each( const ref timestamp t ) const
+    {
+        return of_kind( ndarray<i64>::filled( t.nanoseconds(), size() ), dtype::times );
+    }
+
+    // `to_times`, ISO 8601 for an empty `pattern`.
+    private result<series, u64> read_times( const ref textual pattern ) const
+    {
+        holds( dtype::strings );
+        bool iso = pattern.as_text().size == 0;
+        list<i64> v = list<i64>::with_capacity( size() );
+        for( u64 i : 0..size() )
+        {
+            if( is_missing( i ) )
+            {
+                v.push( 0 );
+                continue;
+            }
+            switch( iso ? timestamp::parse( s_[i] ) : timestamp::parse( s_[i], pattern ) )
+            {
+                case result::ok( t ):
+                    v.push( t.nanoseconds() );
+                    break;
+                case result::err( _ ):
+                    return result::err( i );
+            }
+        }
+        series r = of_kind( ndarray<i64>::from_list( move v ), dtype::times );
+        r.missing_ = missing_.copy();
+        return result::ok( move r );
+    }
+
+    // `f` of each time, as `i64s`, missing where the time is.
+    private series each_field<F>( F f ) const where F : fn( const ref timestamp ) -> i64
+    {
+        holds( dtype::times );
+        list<i64> v = list<i64>::with_capacity( size() );
+        for( u64 i : 0..size() )
+        {
+            v.push( is_missing( i ) ? 0 : f( timestamp::of_nanoseconds( i_[i] ) ) );
+        }
+        series r = series( ndarray<i64>::from_list( move v ) );
+        r.missing_ = missing_.copy();
+        return r;
+    }
+
+    // The earliest time present when `least`, else the latest.
+    private optional<timestamp> extreme_time( bool least ) const
+    {
+        holds( dtype::times );
+        bool any = false;
+        i64 best = 0;
+        for( u64 i : 0..size() )
+        {
+            if( !is_missing( i ) && ( !any || ( least ? i_[i] < best : i_[i] > best ) ) )
+            {
+                best = i_[i];
+                any = true;
+            }
+        }
+        if( !any )
+        {
+            return optional::none;
+        }
+        return optional::some( timestamp::of_nanoseconds( best ) );
+    }
+
+    // The values missing on either side of a combination with `o`, none when neither has any.
+    private mask missing_either( const ref series o ) const
+    {
+        if( missing_.size() == 0 )
+        {
+            return o.missing_.copy();
+        }
+        return o.missing_.size() == 0 ? missing_.copy() : missing_ | o.missing_;
+    }
+
     // The values present, as `f64`.
     private ndarray<f64> present() const
     {
@@ -723,6 +1051,8 @@ class series
                 }
                 return ndarray<f64>::from_list( move v );
             case dtype::strings:
+            case dtype::times:
+            case dtype::durations:
                 panic( "the series does not hold numbers" );
         }
     }
@@ -744,6 +1074,8 @@ class series
                 }
                 return ndarray<f64>::from_list( move v );
             case dtype::strings:
+            case dtype::times:
+            case dtype::durations:
                 panic( "the series does not hold numbers" );
         }
     }
@@ -756,13 +1088,18 @@ class series
             panic( "the series differ in size" );
         }
 
+        if( is_time( kind_ ) || is_time( o.kind_ ) )
+        {
+            dtype k = time_sum( kind_, o.kind_, op );
+            series r = of_kind( op == '+' ? i_ + o.i_ : i_ - o.i_, k );
+            r.missing_ = missing_either( o );
+            return r;
+        }
+
         if( kind_ == dtype::i64s && o.kind_ == dtype::i64s && op != '/' )
         {
             series r = series( op == '+' ? i_ + o.i_ : op == '-' ? i_ - o.i_ : i_ * o.i_ );
-            if( missing_.size() > 0 || o.missing_.size() > 0 )
-            {
-                r.missing_ = missing_.size() == 0 ? o.missing_.copy() : o.missing_.size() == 0 ? missing_.copy() : missing_ | o.missing_;
-            }
+            r.missing_ = missing_either( o );
             return r;
         }
 
@@ -789,7 +1126,11 @@ class series
         }
 
         mask r = mask( 0 );
-        if( kind_ == dtype::i64s && o.kind_ == dtype::i64s )
+        if( ( is_time( kind_ ) || is_time( o.kind_ ) ) && kind_ != o.kind_ )
+        {
+            panic( "the series hold dtypes that do not compare" );
+        }
+        if( kind_ == o.kind_ && ( kind_ == dtype::i64s || is_time( kind_ ) ) )
         {
             r = relate( i_, o.i_, rel );
         }
@@ -834,6 +1175,21 @@ private enum relation
     greater_equal,
     equal
 };
+
+// The dtype of `a` `op` `b`, `op` `+` or `-`, where one is `times` or `durations`; panics on any
+// other mix.
+private dtype time_sum( dtype a, dtype b, u8 op )
+{
+    if( op == '+' && is_time( a ) && is_time( b ) && ( a == dtype::durations || b == dtype::durations ) )
+    {
+        return a == b ? dtype::durations : dtype::times;
+    }
+    if( op == '-' && is_time( a ) && ( b == a || b == dtype::durations ) )
+    {
+        return a == b ? dtype::durations : dtype::times;
+    }
+    panic( "the dtypes do not combine" );
+}
 
 // Whether `rel` holds for an ordering of two values.
 private bool holds_between( ordering o, relation rel )
@@ -1357,7 +1713,8 @@ class dataframe
         for( u64 c : 0..columns_.size() )
         {
             list<string> column = cell_texts( columns_[c], shown.as_run() );
-            column.insert( 0, string( columns_[c].kind() == dtype::strings ? "" : " " ) + names_[c] );
+            dtype k = columns_[c].kind();
+            column.insert( 0, string( k == dtype::strings || is_time( k ) ? "" : " " ) + names_[c] );
             cells.push( move column );
         }
 
@@ -1408,7 +1765,8 @@ class dataframe
     }
 
     /// The frame as CSV: a header, then a line for each row, ended by `\n`; a missing value is
-    /// empty, a float written as `string::from` writes it, and a field holding `sep`, a quote or a
+    /// empty (`""` when it is the row's only field), a float written as `string::from` writes it, a
+    /// time or duration as the table writes its column, and a field holding `sep`, a quote or a
     /// line break quoted. The row numbers are not written, as pandas' `index=False`.
     public string to_csv( u8 sep = ',' ) const
     {
@@ -1422,6 +1780,16 @@ class dataframe
             push_field( ref r, names_[c], sep );
         }
         r += "\n";
+        list<u64> every = list<u64>::with_capacity( rows() );
+        for( u64 i : 0..rows() )
+        {
+            every.push( i );
+        }
+        list<list<string>> timed = list<list<string>>(); // each column's text when it holds times
+        for( u64 c : 0..columns_.size() )
+        {
+            timed.push( is_time( columns_[c].kind() ) ? time_texts( columns_[c], every.as_run() ) : list<string>() );
+        }
         for( u64 i : 0..rows() )
         {
             for( u64 c : 0..columns_.size() )
@@ -1433,10 +1801,18 @@ class dataframe
                 const ref series s = columns_[c];
                 if( s.is_missing( i ) )
                 {
+                    if( columns_.size() == 1 )
+                    {
+                        r += "\"\""; // else the row is a blank line, which a reader skips
+                    }
                     continue;
                 }
                 switch( s.kind() )
                 {
+                    case dtype::times:
+                    case dtype::durations:
+                        r += timed[c][i];
+                        break;
                     case dtype::f64s:
                         r += string::from( s.f64s()[i] );
                         break;
@@ -1511,7 +1887,9 @@ private list<u64> present_order( const ref series s, bool ascending )
             kl::stable_sort( ref order, fn[ f, ascending ]( a, b ) { return ascending ? f[a] < f[b] : f[b] < f[a]; } );
             break;
         case dtype::i64s:
-            const ref ndarray<i64> v = s.i64s();
+        case dtype::times:
+        case dtype::durations:
+            const ref ndarray<i64> v = integers( s );
             kl::stable_sort( ref order, fn[ v, ascending ]( a, b ) { return ascending ? v[a] < v[b] : v[b] < v[a]; } );
             break;
         case dtype::bools:
@@ -1526,6 +1904,46 @@ private list<u64> present_order( const ref series s, bool ascending )
     return order;
 }
 
+// The values of an `i64s`, `times` or `durations` series.
+private const ref ndarray<i64> integers( const ref series s )
+{
+    switch( s.kind() )
+    {
+        case dtype::times:
+            return s.times();
+        case dtype::durations:
+            return s.durations();
+        default:
+            return s.i64s();
+    }
+}
+
+// Value `i` of an `i64s`, `bools`, `times` or `durations` series as an `i64`, a bool as 0 or 1.
+private i64 integer_at( const ref series s, u64 i )
+{
+    return s.kind() == dtype::bools ? ( s.bools().test( i ) ? 1 : 0 ) : integers( s )[i];
+}
+
+// `v` as `kind`, `times` or `durations`.
+private series of_nanoseconds( const ref list<i64> v, dtype kind )
+{
+    if( kind == dtype::times )
+    {
+        list<timestamp> t = list<timestamp>::with_capacity( v.size() );
+        for( i64 x : v )
+        {
+            t.push( timestamp::of_nanoseconds( x ) );
+        }
+        return series( t.as_run() );
+    }
+    list<duration> d = list<duration>::with_capacity( v.size() );
+    for( i64 x : v )
+    {
+        d.push( duration::of_nanoseconds( x ) );
+    }
+    return series( d.as_run() );
+}
+
 // Whether rows `a` and `b` of `s` hold equal values, both present.
 private bool same( const ref series s, u64 a, u64 b )
 {
@@ -1534,7 +1952,9 @@ private bool same( const ref series s, u64 a, u64 b )
         case dtype::f64s:
             return s.f64s()[a] == s.f64s()[b];
         case dtype::i64s:
-            return s.i64s()[a] == s.i64s()[b];
+        case dtype::times:
+        case dtype::durations:
+            return integers( s )[a] == integers( s )[b];
         case dtype::bools:
             return s.bools().test( a ) == s.bools().test( b );
         case dtype::strings:
@@ -1609,6 +2029,22 @@ private u64 group_codes( const ref dataframe df, const ref list<string> keys, re
     return groups;
 }
 
+// Whether `grouped` works out `op` for a column of `kind`.
+private bool reduces( dtype kind, reduction op )
+{
+    switch( kind )
+    {
+        case dtype::strings:
+            return op == reduction::count;
+        case dtype::times:
+            return op == reduction::count || op == reduction::min || op == reduction::max;
+        case dtype::durations:
+            return op == reduction::count || op == reduction::sum || op == reduction::min || op == reduction::max;
+        default:
+            return true;
+    }
+}
+
 // What `grouped` works out for each group.
 private enum reduction
 {
@@ -1627,7 +2063,8 @@ private enum reduction
 /// Each reduction answers a frame of the keys, one row a group, then a column for each other
 /// column: `count` counts every column, while the rest skip `strings` columns, as pandas'
 /// `numeric_only`. `sum`, `min` and `max` keep an `i64s` column `i64s`, and `min` and `max` keep
-/// `bools` `bools`; the others answer `f64s`, a bool counting as 0 or 1.
+/// `bools` `bools`; the others answer `f64s`, a bool counting as 0 or 1. A `times` column is kept
+/// by `min` and `max` only, and a `durations` one by `sum` too.
 class grouped
 {
     dataframe keys_;   // one row a group
@@ -1746,7 +2183,7 @@ class grouped
         return reduced( reduction::max );
     }
 
-    /// `f` of each group's rows of each column but `strings` ones, as `f64s`:
+    /// `f` of each group's rows of each number and bool column, as `f64s`:
     /// `g.agg( fn[]( s ) { return s.max() - s.min(); } )`.
     public dataframe agg<F>( F f ) const where F : fn( const ref series ) -> f64
     {
@@ -1754,7 +2191,7 @@ class grouped
         for( u64 c : 0..values_.columns().size() )
         {
             const ref series s = values_[values_.columns()[c]];
-            if( s.kind() == dtype::strings )
+            if( s.kind() == dtype::strings || is_time( s.kind() ) )
             {
                 continue;
             }
@@ -1781,7 +2218,7 @@ class grouped
         for( u64 c : 0..values_.columns().size() )
         {
             const ref series s = values_[values_.columns()[c]];
-            if( s.kind() == dtype::strings && op != reduction::count )
+            if( !reduces( s.kind(), op ) )
             {
                 continue;
             }
@@ -1793,7 +2230,7 @@ class grouped
     // `op` of each group of `s`.
     private series reduced( const ref series s, reduction op ) const
     {
-        bool ints = s.kind() == dtype::i64s || s.kind() == dtype::bools;
+        bool ints = s.kind() == dtype::i64s || s.kind() == dtype::bools || is_time( s.kind() );
         if( op == reduction::count || ( ints && op == reduction::sum ) || ( ints && ( op == reduction::min || op == reduction::max ) ) )
         {
             list<i64> v = list<i64>::with_capacity( groups() );
@@ -1814,7 +2251,7 @@ class grouped
                     {
                         continue;
                     }
-                    i64 x = s.kind() == dtype::bools ? ( p.bools().test( i ) ? 1 : 0 ) : p.i64s()[i];
+                    i64 x = integer_at( p, i );
                     total = op == reduction::sum ? total + x : !any ? x : op == reduction::min ? ( x < total ? x : total ) : ( x > total ? x : total );
                     any = true;
                 }
@@ -1829,6 +2266,10 @@ class grouped
                     b.assign( g, v[g] != 0 );
                 }
                 return with_gaps( series( move b ), gaps );
+            }
+            if( is_time( s.kind() ) && op != reduction::count )
+            {
+                return with_gaps( of_nanoseconds( v, s.kind() ), gaps );
             }
             return with_gaps( series( ndarray<i64>::from_list( move v ) ), gaps );
         }
@@ -1887,6 +2328,10 @@ private void pad( ref string to, const ref textual text, u64 width, bool right )
 // The values of `s` at `rows` as pandas prints them, each after a space or its sign, but a float NaN.
 private list<string> cell_texts( const ref series s, const ref u64[] rows )
 {
+    if( is_time( s.kind() ) )
+    {
+        return time_texts( s, rows );
+    }
     list<string> r = list<string>::with_capacity( rows.size );
     if( s.kind() == dtype::f64s )
     {
@@ -1929,6 +2374,76 @@ private list<string> cell_texts( const ref series s, const ref u64[] rows )
         }
     }
     return r;
+}
+
+// The values of a `times` or `durations` series at `rows` as pandas writes the column, `NaT` where
+// missing: the date or whole days alone when every value is midnight or whole days, else to the
+// second, then the fraction digits the finest value needs, 3, 6 or 9 for times and 6 or 9 for
+// durations.
+private list<string> time_texts( const ref series s, const ref u64[] rows )
+{
+    const ref ndarray<i64> v = integers( s );
+    bool times = s.kind() == dtype::times;
+    i64 second = 1000000000;
+    bool whole = true;
+    u64 digits = 0;
+    for( u64 k : rows )
+    {
+        if( s.is_missing( k ) )
+        {
+            continue;
+        }
+        i64 tod = within( v[k], 86400 * second );
+        i64 fraction = tod % second;
+        whole = whole && tod == 0;
+        u64 need = fraction == 0 ? 0 : fraction % 1000000 == 0 && times ? 3 : fraction % 1000 == 0 ? 6 : 9;
+        digits = need > digits ? need : digits;
+    }
+
+    list<string> r = list<string>::with_capacity( rows.size );
+    for( u64 k : rows )
+    {
+        if( s.is_missing( k ) )
+        {
+            r.push( string( "NaT" ) );
+            continue;
+        }
+        i64 tod = within( v[k], 86400 * second );
+        string t = string();
+        if( times )
+        {
+            t = timestamp::of_nanoseconds( v[k] ).format( whole ? "%Y-%m-%d" : "%Y-%m-%d %H:%M:%S" );
+        }
+        else
+        {
+            t = string::from( ( v[k] - tod ) / ( 86400 * second ) );
+            t += whole ? " days" : v[k] < 0 ? " days +" : " days ";
+            if( !whole )
+            {
+                t += timestamp::of_nanoseconds( tod ).format( "%H:%M:%S" );
+            }
+        }
+        if( digits > 0 )
+        {
+            string f = string::from( tod % second );
+            string padded = string( "." );
+            for( u64 i = f.size(); i < 9; i++ )
+            {
+                padded.push( '0' );
+            }
+            padded += f;
+            t.append( padded.as_text()[0..digits + 1] );
+        }
+        r.push( move t );
+    }
+    return r;
+}
+
+// `x` modulo `m`, from 0 to `m` - 1.
+private i64 within( i64 x, i64 m )
+{
+    i64 r = x % m;
+    return r < 0 ? r + m : r;
 }
 
 // pandas' float column: six places, the trailing zeros all values share trimmed down to one, or
@@ -2020,7 +2535,7 @@ enum csv_error
 /// The frame CSV `text` holds, read as RFC 4180 with pandas' defaults.
 ///
 /// The first line names the columns. Fields are split at `sep`; a quoted field may hold `sep`,
-/// line breaks and doubled quotes. Blank lines are skipped, and a row short of fields has the rest
+/// line breaks and doubled quotes. Blank lines are skipped, but not one holding `""`, and a row short of fields has the rest
 /// missing, as are pandas' missing tokens (an empty field, `NA`, `NaN`, `null`, `None` and the
 /// like). Each column takes the first dtype every value present reads as, `i64s`, `f64s`, then
 /// `bools` (`True`, `False`, and lower or upper case), else `strings`; a column with no values
@@ -2038,11 +2553,13 @@ result<dataframe, csv_error> parse_csv( const ref textual text, u8 sep = ',' )
     {
         u64 first_line = line;
         list<string> record = list<string>();
+        bool quoted = false;
         while( true )
         {
             string f = string();
             if( i < t.size && t[i] == '"' )
             {
+                quoted = true;
                 i++;
                 while( true )
                 {
@@ -2094,7 +2611,7 @@ result<dataframe, csv_error> parse_csv( const ref textual text, u8 sep = ',' )
             break;
         }
 
-        if( record.size() == 1 && record[0].is_empty() )
+        if( record.size() == 1 && record[0].is_empty() && !quoted )
         {
             continue;
         }

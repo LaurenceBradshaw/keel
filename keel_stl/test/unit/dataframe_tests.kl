@@ -1,13 +1,15 @@
 // `kl::dataframe`: building and shape, pandas' table, selecting rows and columns, sorting,
-// series arithmetic, comparisons and reductions with missing values, describe, and CSV both ways.
-// The expected texts are pandas 3.1's.
+// series arithmetic, comparisons and reductions with missing values, describe, CSV both ways, and
+// time and duration columns. The expected texts are pandas 3.1's.
 import kl::dataframe;
 import kl::list;
 import kl::mask;
 import kl::math;
 import kl::ndarray;
 import kl::string;
+import kl::optional;
 import kl::test::context;
+import kl::time;
 
 private kl::dataframe fruit()
 {
@@ -278,4 +280,137 @@ private void map_and_apply_take_lambdas( ref kl::test::context c )
     c.check_eq( df["s"].map( fn[]( const ref kl::string t ) { return t + "!"; } ).strings()[1], "fig!" );
     c.check_eq( df.select( "n", "x" ).apply( fn[]( s ) { return s.sum(); } ).to_string(), "      n    x\n0  12.0  6.0" );
     c.check_eq( df["b"].sum(), 3.0 );
+}
+
+// Column `name` of `text`, read as CSV, as times.
+private kl::series times_of( str text, str name )
+{
+    switch( parsed( text, ',' )[name].to_times() )
+    {
+        case result::ok( t ):
+            return t.copy();
+        case result::err( _ ):
+            panic( "the times did not read" );
+    }
+}
+
+// Start and end times with a gap in each, and what lies between.
+private kl::dataframe trips()
+{
+    str text = "k,start,end\nb,2026-11-19 14:03:05,2026-11-20\na,2024-02-29,2024-03-01 12:00\nb,2026-01-01 23:59:59.25,2026-01-01\na,,2026-05-05\nc,1999-12-31 08:00,\n";
+    kl::dataframe df = kl::dataframe();
+    df.insert( "k", parsed( text, ',' )["k"].copy() );
+    df.insert( "start", times_of( text, "start" ) );
+    df.insert( "end", times_of( text, "end" ) );
+    df.set( "took", df["end"] - df["start"] );
+    return df;
+}
+
+private void times_are_read_printed_and_written( ref kl::test::context c )
+{
+    kl::dataframe dates = kl::dataframe();
+    dates.insert( "w", times_of( "w,n\n2026-11-19,1\n2026-01-02,2\n,3\n", "w" ) );
+    c.check_eq( kl::dtype_name( dates.dtypes()[0] ), "datetime64[ns]" );
+    c.check_eq( dates.to_string(), "           w\n0 2026-11-19\n1 2026-01-02\n2        NaT" );
+    c.check_eq( dates.to_csv(), "w\n2026-11-19\n2026-01-02\n\"\"\n" );
+    switch( kl::parse_csv( dates.to_csv() ) )
+    {
+        case result::ok( back ):
+            c.check_eq( back.rows(), 3 );
+            break;
+        case result::err( _ ):
+            c.check( false );
+            break;
+    }
+
+    kl::dataframe fine = kl::dataframe();
+    fine.insert( "w", times_of( "w\n2026-11-19 14:00:00.5\n2026-01-02\n", "w" ) );
+    c.check_eq( fine.to_string(), "                        w\n0 2026-11-19 14:00:00.500\n1 2026-01-02 00:00:00.000" );
+    c.check_eq( times_of( "w\n2026-11-19 14:00:00.000001\n", "w" ).timestamp_at( 0 ).nanosecond(), 1000 );
+
+    kl::dataframe spans = kl::dataframe();
+    kl::duration[3] three = [ kl::duration::of_hours( 1 ), kl::duration::of_seconds( -1 ), kl::duration::of_days( 1 ) + kl::duration::of_seconds( 1 ) ];
+    spans.insert( "d", kl::series( three[0..3] ) );
+    c.check_eq( kl::dtype_name( spans.dtypes()[0] ), "timedelta64[ns]" );
+    c.check_eq( spans.to_string(), "                  d\n0   0 days 01:00:00\n1 -1 days +23:59:59\n2   1 days 00:00:01" );
+    c.check_eq( spans.to_csv(), "d\n0 days 01:00:00\n-1 days +23:59:59\n1 days 00:00:01\n" );
+    kl::dataframe days = kl::dataframe();
+    kl::duration[2] two = [ kl::duration::of_days( 1 ), kl::duration::of_nanoseconds( 500000000 ) ];
+    days.insert( "d", kl::series( two[0..2] ) );
+    c.check_eq( days.to_string(), "                       d\n0 1 days 00:00:00.000000\n1 0 days 00:00:00.500000" );
+    two = [ kl::duration::of_days( 1 ), kl::duration::of_days( 2 ) ];
+    days.set( "d", kl::series( two[0..2] ) );
+    c.check_eq( days.to_string(), "       d\n0 1 days\n1 2 days" );
+
+    switch( kl::series( [ "19/11/2026", "01/02/2003" ] ).to_times( "%d/%m/%Y" ) )
+    {
+        case result::ok( t ):
+            c.check_eq( t.timestamp_at( 1 ).to_string(), "2003-02-01 00:00:00" );
+            break;
+        case result::err( _ ):
+            c.check( false );
+            break;
+    }
+    switch( kl::series( [ "2026-11-19", "nope" ] ).to_times() )
+    {
+        case result::ok( _ ):
+            c.check( false );
+            break;
+        case result::err( row ):
+            c.check_eq( row, 1 );
+            break;
+    }
+}
+
+private void times_take_arithmetic_and_give_fields( ref kl::test::context c )
+{
+    kl::dataframe df = trips();
+    c.check_eq( df.select( "k", "took" ).to_string(), "   k                     took\n0  b   0 days 09:56:55.000000\n1  a   1 days 12:00:00.000000\n2  b -1 days +00:00:00.750000\n3  a                      NaT\n4  c                      NaT" );
+    c.check_eq( ( df["start"] + kl::duration::of_hours( 36 ) ).timestamp_at( 1 ).to_string(), "2024-03-01 12:00:00" );
+    c.check_eq( ( df["took"] - kl::duration::of_hours( 1 ) ).duration_at( 1 ).to_string(), "1 days 11:00:00" );
+    c.check_eq( ( df["end"] - kl::date( 2026, 1, 1 ).at() ).duration_at( 0 ).to_string(), "323 days 00:00:00" );
+    c.check_eq( df["took"].total_seconds().f64s()[2], -86399.25 );
+    c.check( df["took"].total_seconds().is_missing( 4 ) );
+
+    kl::series start = df["start"].copy();
+    c.check_eq( start.year().i64s()[0], 2026 );
+    c.check_eq( start.month().i64s()[1], 2 );
+    c.check_eq( start.day().i64s()[1], 29 );
+    c.check_eq( start.hour().i64s()[2], 23 );
+    c.check_eq( start.minute().i64s()[2], 59 );
+    c.check_eq( start.second().i64s()[0], 5 );
+    c.check_eq( start.nanosecond().i64s()[2], 250000000 );
+    c.check_eq( start.weekday().i64s()[4], 4 );
+    c.check_eq( start.day_of_year().i64s()[1], 60 );
+    c.check( start.year().is_missing( 3 ) );
+
+    c.expect_panic( "the dtypes do not combine", fn[]() { _ = trips()["start"] + trips()["start"]; } );
+    c.expect_panic( "the dtypes do not combine", fn[]() { _ = trips()["took"] - trips()["start"]; } );
+    c.expect_panic( "the series hold dtypes that do not compare", fn[]() { _ = trips()["took"].less( trips()["start"] ); } );
+    c.expect_panic( "the series does not hold numbers", fn[]() { _ = trips()["took"].sum(); } );
+}
+
+private void times_compare_sort_and_group( ref kl::test::context c )
+{
+    kl::dataframe df = trips();
+    kl::timestamp cut = kl::date( 2025, 1, 1 ).at();
+    kl::mask before = df["start"].less( cut );
+    c.check( !before.test( 0 ) && before.test( 1 ) && !before.test( 3 ) && before.test( 4 ) );
+    c.check_eq( df["start"].greater_equal( cut ).count(), 2 );
+    c.check( df["start"].differs( cut ).test( 3 ) );
+    c.check_eq( df.filtered( df["took"].greater( df["took"] - kl::duration::of_seconds( 1 ) ) ).rows(), 3 );
+
+    switch( df["start"].min_time() )
+    {
+        case kl::optional::some( t ):
+            c.check_eq( t.to_string(), "1999-12-31 08:00:00" );
+            break;
+        case kl::optional::none:
+            c.check( false );
+            break;
+    }
+    c.check_eq( df.sort_values( "took", false ).select( "k", "took" ).to_string(), "   k                     took\n0  a   1 days 12:00:00.000000\n1  b   0 days 09:56:55.000000\n2  b -1 days +00:00:00.750000\n3  a                      NaT\n4  c                      NaT" );
+    c.check_eq( df.groupby( "k" ).min().to_string(), "   k                   start                 end                     took\n0  a 2024-02-29 00:00:00.000 2024-03-01 12:00:00   1 days 12:00:00.000000\n1  b 2026-01-01 23:59:59.250 2026-01-01 00:00:00 -1 days +00:00:00.750000\n2  c 1999-12-31 08:00:00.000                 NaT                      NaT" );
+    c.check_eq( df.groupby( "k" ).sum().to_string(), "   k                     took\n0  a   1 days 12:00:00.000000\n1  b -1 days +09:56:55.750000\n2  c   0 days 00:00:00.000000" );
+    c.check_eq( df["start"].unique().size(), 5 );
 }
