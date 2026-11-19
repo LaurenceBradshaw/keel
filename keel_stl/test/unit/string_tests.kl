@@ -350,3 +350,14 @@ private void fixed_and_scientific_write_specials_as_from( ref kl::test::context 
     c.check_eq( kl::string::scientific( kl::from_bits( 0xfff0000000000000 ), 2 ), "-inf" );
     c.check_eq( kl::string::fixed( -0.0, 1 ), "-0.0" );
 }
+
+private void a_string_copies_a_run_of_bytes( ref kl::test::context c )
+{
+    u8[3] bytes = [ 'a', 0, 'b' ];
+    kl::string s = kl::string( bytes[0..3] );
+    c.require( s.size() == 3 );
+    c.check( s[1] == 0 );
+    bytes[0] = 'z';
+    c.check( s[0] == 'a' );
+    c.check( kl::string( bytes[1..1] ).is_empty() );
+}

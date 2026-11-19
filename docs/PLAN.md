@@ -1658,6 +1658,7 @@ Each has a milestone by which it must be decided, or a stated reason it has none
 | **Compile-time evaluation and reflection.** **Direction decided: compile-time only**; runtime reflection needs metadata in every binary, which §4's no-RTTI refuses. The uses are a test framework that discovers tests (D68; the minimum is one directive, `@functions_of( T )`, giving in load order the package's non-generic functions of one function type as a constant array of names and pointers), and `enum` to string as a generated table. The surface is a `@` directive (D69); open: and how much general compile-time evaluation sits under it. A field offset (§6.7) is the runtime half of field access and stays read-only. | After M9.6 |
 | **A `@debug` call marker.** A function marked `@debug` returns `void`, and a call to it, arguments included, runs only under `--debug`, lowered inside the same `branch debug` `assert` uses, so the checks see it in every build. Waiting on a second customer beside `assert`: debug-only logging, or a type's `check_invariants()`. Then `assert` could leave the keywords for the prelude as `@debug @located void assert( bool )`, at the cost of the condition text in its message, which a function cannot see; keeping it needs a further directive (`@text( cond )`), which exists only to rebuild `assert`. | When a second customer appears |
 | **Exiting mid-program.** `kl::exit( code )` would skip every destructor the stack owes, so a `file` is not flushed by its owner; `main`'s return is the only exit code. Open: whether it exists at all, or unwinds, or exits like `panic`. | When a program needs to exit from below `main` |
+| **Must a declaration end with `;`?** A class, a struct and an enum end with `};`, C++'s rule, and a type ending `}` is refused with "expected `;`" at the next declaration, which a newcomer from Rust or a port written in a hurry meets first. The `;` carries no meaning today. It may help recovery, as the parser knows a type ended where a missing `}` inside it would otherwise run on to the next declaration, though nothing measures that. Dropping it, or taking either spelling, needs the parser's recovery checked on a missing `}` first. | Before the syntax is frozen |
 | **ABI stability: is there one at all?** | After the bootstrap |
 
 ---
@@ -1998,6 +1999,12 @@ major), no longer blocked now that D81 has settled lambdas.
   a loop, so it inlines into a sort's comparator loop and not into a straight call. Freeing a panic
   block's statements, or running `eliminate_common` on the copy (its two `shape_[k]` checks are one),
   is the next lever.
+- **Idioms `recognise_idioms` does not yet take** (looked at 2026-11-19). The 64x64->128 multiply,
+  which `float_parse` and `float_format` write as four 32-bit products; Keel has no 128-bit type, so
+  it may need an intrinsic. Trailing zeros: `while( ( x & 1 ) == 0 )` never ends for 0, so no shape
+  proves the count safe, and no kl code wants it. Byte swap: no kl user, and LLVM already selects
+  the shift-or form. memset and memcpy loops: LLVM vectorises them, large ones are memory-bound, and
+  a new rvalue that writes memory is one every pass must respect.
 - **The dataflow analyses cost statements × locals.** `live_locals` keeps a set per statement,
   and `coalesce_moves` and `remove_dead_stores` read only a few of those sets. Each `coalesce_round`
   also renames over the whole function once per merge. Every set is a `std::vector<bool>`, which is

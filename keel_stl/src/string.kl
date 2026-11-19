@@ -51,6 +51,19 @@ class string implements textual, equatable, comparable, hashable, from<str>, fro
         append( bytes );
     }
 
+    /// A string holding a copy of `bytes`, which are taken as text whatever they hold.
+    string( const ref u8[] bytes )
+    {
+        unsafe
+        {
+            data_ = alloc<u8>( bytes.size );
+        }
+
+        size_ = 0;
+        cap_ = bytes.size;
+        append( bytes );
+    }
+
     /// An empty string with room for `capacity` bytes before it reallocates.
     public static string with_capacity( u64 capacity )
     {
