@@ -103,6 +103,44 @@ private void sort_takes_a_named_function( ref kl::test::context c )
     c.check_eq( names[3], "banana" );
 }
 
+private void stable_sort_keeps_equal_elements_in_order( ref kl::test::context c )
+{
+    str[7] texts = [ "kiwi", "fig", "pear", "yam", "apple", "plum", "oat" ];
+    kl::list<kl::string> names = strings( texts );
+    kl::stable_sort( ref names, &shorter );
+    str[7] by_size = [ "fig", "yam", "oat", "kiwi", "pear", "plum", "apple" ];
+    check_strings( ref c, names, by_size );
+
+    kl::list<kl::string> none = kl::list<kl::string>();
+    kl::stable_sort( ref none, &shorter );
+    c.check( none.is_empty() );
+}
+
+// Past one block of 20, so the merges run: each key's indices stay rising.
+private void stable_sort_merges_many_values( ref kl::test::context c )
+{
+    kl::list<u64> order = kl::list<u64>();
+    for( u64 i : 0..300 )
+    {
+        order.push( i );
+    }
+    kl::stable_sort( ref order, fn[]( a, b ) { return ( a * 37 ) % 10 < ( b * 37 ) % 10; } );
+    for( u64 i : 1..300 )
+    {
+        u64 before = ( order[i - 1] * 37 ) % 10;
+        u64 key = ( order[i] * 37 ) % 10;
+        c.check( before < key || ( before == key && order[i - 1] < order[i] ) );
+    }
+
+    i32[6] numbers = [ 3, 1, 2, 1, 3, 0 ];
+    kl::stable_sort( ref numbers );
+    i32[6] sorted = [ 0, 1, 1, 2, 3, 3 ];
+    for( u64 i : 0..6 )
+    {
+        c.check_eq( numbers[i], sorted[i] );
+    }
+}
+
 private void remove_if_drops_what_a_capturing_lambda_picks( ref kl::test::context c )
 {
     str[6] texts = [ "fig", "pear", "fig", "apple", "kiwi", "fig" ];

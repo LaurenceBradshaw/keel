@@ -55,6 +55,105 @@ void sort<C, T>( ref C items ) where C : fixed_memory<T>, where T : comparable
     sort( ref items, fn[]( a, b ) { return a < b; } );
 }
 
+/// Orders `items` so no element is `less` than the one before it, keeping equal elements in order.
+///
+/// In place, with O(n log n) comparisons and O(n log^2 n) swaps: insertion sorts blocks of 20,
+/// then merges them by Kim and Kutzner's symmetric merge.
+void stable_sort<C, T, F>( ref C items, F less ) where C : fixed_memory<T>, where F : fn( const ref T, const ref T ) -> bool
+{
+    u64 n = items.size();
+    u64 block = 20;
+
+    for( u64 a = 0; a < n; a += block )
+    {
+        insertion_sort( ref items, a, a + block < n ? a + block : n, less );
+    }
+
+    while( block < n )
+    {
+        for( u64 a = 0; a + block < n; a += block * 2 )
+        {
+            merge( ref items, a, a + block, a + block * 2 < n ? a + block * 2 : n, less );
+        }
+        block *= 2;
+    }
+}
+
+/// Orders `items` from least to greatest, keeping equal elements in order, as `stable_sort( ref
+/// items, less )` with `<`.
+void stable_sort<C, T>( ref C items ) where C : fixed_memory<T>, where T : comparable
+{
+    stable_sort( ref items, fn[]( a, b ) { return a < b; } );
+}
+
+// Orders `[a, b)` by insertion.
+private void insertion_sort<C, T, F>( ref C items, u64 a, u64 b, F less ) where C : fixed_memory<T>, where F : fn( const ref T, const ref T ) -> bool
+{
+    for( u64 i = a + 1; i < b; i++ )
+    {
+        for( u64 j = i; j > a && less( items[j], items[j - 1] ); j-- )
+        {
+            items.swap( j, j - 1 );
+        }
+    }
+}
+
+// Merges the ordered `[a, m)` and `[m, b)` in place, the left first among equals.
+private void merge<C, T, F>( ref C items, u64 a, u64 m, u64 b, F less ) where C : fixed_memory<T>, where F : fn( const ref T, const ref T ) -> bool
+{
+    if( a == m || m == b || !less( items[m], items[m - 1] ) )
+    {
+        return;
+    }
+
+    // Split both sides where the halves of `[a, b)` meet, swap the middle pieces, merge each half.
+    u64 mid = a + ( b - a ) / 2;
+    u64 n = mid + m;
+    u64 start = a;
+    u64 end = m;
+    if( m > mid )
+    {
+        start = n - b;
+        end = mid;
+    }
+    while( start < end )
+    {
+        u64 c = start + ( end - start ) / 2;
+        if( !less( items[n - 1 - c], items[c] ) )
+        {
+            start = c + 1;
+        }
+        else
+        {
+            end = c;
+        }
+    }
+    end = n - start;
+
+    rotate( ref items, start, m, end );
+    merge( ref items, a, start, mid, less );
+    merge( ref items, mid, end, b, less );
+}
+
+// Moves `[m, b)` before `[a, m)`.
+private void rotate<C, T>( ref C items, u64 a, u64 m, u64 b ) where C : fixed_memory<T>
+{
+    reverse( ref items, a, m );
+    reverse( ref items, m, b );
+    reverse( ref items, a, b );
+}
+
+// Reverses `[a, b)`.
+private void reverse<C, T>( ref C items, u64 a, u64 b ) where C : fixed_memory<T>
+{
+    while( a + 1 < b )
+    {
+        b -= 1;
+        items.swap( a, b );
+        a += 1;
+    }
+}
+
 /// The index of the first element `matches` picks, or none.
 optional<u64> index_if<C, T, F>( const ref C items, F matches ) where C : fixed_memory<T>, where F : fn( const ref T ) -> bool
 {
