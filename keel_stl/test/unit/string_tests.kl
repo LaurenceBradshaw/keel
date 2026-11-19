@@ -193,3 +193,129 @@ private void from_f64_writes_the_shortest_digits( ref kl::test::context c )
         c.check_eq( kl::string::from( kl::from_bits( bits[i] ) ), text[i] );
     }
 }
+
+// Whether `text` parses to the `f64` with `bits`.
+private void check_parse_f64( ref kl::test::context c, const ref textual text, u64 bits )
+{
+    switch( kl::string( text ).parse_f64() )
+    {
+    case result::ok( x ):
+        c.check_eq( kl::bits_of( x ), bits );
+        break;
+    case result::err( e ):
+        c.check( false );
+        break;
+    }
+}
+
+// The index `parse_f64` refuses `text` at, -1 for `no_digits`, or -2 if it parses.
+private i64 f64_refusal( str text )
+{
+    switch( kl::string( text ).parse_f64() )
+    {
+    case result::ok( x ):
+        return -2;
+    case result::err( e ):
+        switch( e )
+        {
+        case kl::parse_error::invalid_digit( at ):
+            return cast<i64>( at );
+        case kl::parse_error::no_digits:
+            return -1;
+        case kl::parse_error::overflow:
+            return -3;
+        }
+    }
+}
+
+private void parse_f64_rounds_to_nearest( ref kl::test::context c )
+{
+    u64[21] bits = [
+        0x0000000000000000, 0x8000000000000000, 0x3ff8000000000000, 0x3fe0000000000000,
+        0x4014000000000000, 0x7fe1ccf385ebc8a0, 0x7fefffffffffffff, 0x7ff0000000000000,
+        0xfff0000000000000, 0x0000000000000001, 0x0000000000000001, 0x0000000000000000,
+        0x000fffffffffffff, 0x4340000000000000, 0x4340000000000001, 0x3fb999999999999a,
+        0x400921fb54442d18, 0x45f8ee90ff6c373e, 0x3ee4f8b588e368f1, 0x7ff0000000000000,
+        0xfff0000000000000
+    ];
+    str[21] text = [
+        "0", "-0", "1.5", ".5",
+        "5.", "1e308", "1.7976931348623158e308", "1e309",
+        "-1e400", "5e-324", "2.4703282292062328e-324", "2.4703282292062327e-324",
+        "2.2250738585072011e-308", "9007199254740993", "9007199254740993.0000000000000000000001", "0.1",
+        "3.141592653589793", "123456789012345678901234567890", "1E-5", "inf",
+        "-Infinity"
+    ];
+    for( u64 i : 0..21 )
+    {
+        check_parse_f64( ref c, text[i], bits[i] );
+    }
+}
+
+// Past 769 digits only whether any is not zero matters, both before the point and after it.
+private void parse_f64_reads_every_digit( ref kl::test::context c )
+{
+    kl::string ones = kl::string( "1" );
+    kl::string tenth = kl::string( "0." );
+    for( u64 i : 0..400 )
+    {
+        ones.push( '0' );
+        tenth.push( '0' );
+    }
+    ones += "e-400";
+    tenth += "1e401";
+    check_parse_f64( ref c, ones, 0x3ff0000000000000 );
+    check_parse_f64( ref c, tenth, 0x3ff0000000000000 );
+}
+
+private void parse_f64_reads_back_from_f64( ref kl::test::context c )
+{
+    u64[6] bits = [
+        0x3fd5555555555555, 0x00005c0ab9347ed7, 0x7fefffffffffffff, 0xdc1b77ae0bf34dad,
+        0x0000000000000001, 0x4341c37937e07fff
+    ];
+    for( u64 i : 0..6 )
+    {
+        check_parse_f64( ref c, kl::string::from( kl::from_bits( bits[i] ) ), bits[i] );
+    }
+}
+
+private void parse_f64_refuses_at_the_first_bad_byte( ref kl::test::context c )
+{
+    c.check_eq( f64_refusal( "" ), -1 );
+    c.check_eq( f64_refusal( "-." ), -1 );
+    c.check_eq( f64_refusal( "1e+" ), -1 );
+    c.check_eq( f64_refusal( "+1" ), 0 );
+    c.check_eq( f64_refusal( "1 " ), 1 );
+    c.check_eq( f64_refusal( "1.2.3" ), 3 );
+    c.check_eq( f64_refusal( "1ex" ), 2 );
+    c.check_eq( f64_refusal( "-infinit" ), 1 );
+    c.check_eq( f64_refusal( "NaN" ), -2 );
+}
+
+private bool u64_parses( str text )
+{
+    switch( kl::string( text ).parse_u64() )
+    {
+    case result::ok( x ):
+        return true;
+    case result::err( e ):
+        return false;
+    }
+}
+
+private void parse_u64_reads_the_whole_range( ref kl::test::context c )
+{
+    switch( kl::string( "18446744073709551615" ).parse_u64() )
+    {
+    case result::ok( x ):
+        c.check_eq( x, u64::max );
+        break;
+    case result::err( e ):
+        c.check( false );
+        break;
+    }
+    c.check( !u64_parses( "18446744073709551616" ) );
+    c.check( !u64_parses( "-1" ) );
+    c.check( !u64_parses( "" ) );
+}

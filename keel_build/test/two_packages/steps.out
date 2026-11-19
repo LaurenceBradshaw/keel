@@ -6,6 +6,7 @@ compiling kl::list
 compiling geo::path
 compiling kl::_core::float_bits
 compiling kl::_core::float_format
+compiling kl::_core::float_parse
 compiling kl::string
 compiling kl::os
 compiling kl::console

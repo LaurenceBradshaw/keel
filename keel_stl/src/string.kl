@@ -3,18 +3,19 @@
 
 import kl::_core::compare as kernel;
 import kl::_core::float_format as float_text;
+import kl::_core::float_parse as float_parse;
 import kl::_core::float_bits as float_bits;
 import list;
 import optional;
 
-/// Why `string::parse_i64` refused its text.
+/// Why `string::parse_i64`, `parse_u64` or `parse_f64` refused its text.
 enum parse_error
 {
-    /// There are no digits: the text is empty, or only `-`.
+    /// A part that needs digits has none: the text is empty, only `-`, or ends after an `e`.
     no_digits,
     /// The byte at `index` cannot continue the number.
     invalid_digit( u64 index ),
-    /// The number lies outside the range of `i64`.
+    /// The number lies outside the range of its integer type.
     overflow
 };
 
@@ -44,15 +45,9 @@ class string implements textual, equatable, comparable, hashable, from<str>, fro
             data_ = alloc<u8>( bytes.size );
         }
 
-        size_ = bytes.size;
+        size_ = 0;
         cap_ = bytes.size;
-        for( u64 i = 0; i < bytes.size; i++ )
-        {
-            unsafe
-            {
-                data_[i] = bytes[ i ];
-            }
-        }
+        append( bytes );
     }
 
     /// An empty string with room for `capacity` bytes before it reallocates.
@@ -283,14 +278,7 @@ class string implements textual, equatable, comparable, hashable, from<str>, fro
         }
 
         string result = string::with_capacity( count );
-        for( u64 i = 0; i < count; i++ )
-        {
-            unsafe
-            {
-                result.push( data_[start + i] );
-            }
-        }
-
+        result.append( as_text()[start..start + count] );
         return result;
     }
 
@@ -414,24 +402,24 @@ class string implements textual, equatable, comparable, hashable, from<str>, fro
 
         string result = string::with_capacity( size() );
 
+        u64 start = 0;
         u64 i = 0;
         while( i < size() )
         {
             if( matches_at( i, pattern_bytes ) )
             {
+                result.append( as_text()[start..i] );
                 result.append( replacement_bytes );
                 i += pattern_bytes.size;
+                start = i;
             }
             else
             {
-                unsafe
-                {
-                    result.push( data_[i] );
-                }
                 i++;
             }
         }
 
+        result.append( as_text()[start..size()] );
         return result;
     }
 
@@ -642,10 +630,125 @@ class string implements textual, equatable, comparable, hashable, from<str>, fro
     /// the number, and `overflow` as soon as the number leaves the range of `i64`.
     public result<i64, parse_error> parse_i64() const
     {
-        const bool is_negative = !is_empty() && as_text()[0] == 45; // '-'
-        const u64 start = is_negative ? 1 : 0;
-        const u64 limit = is_negative ? 9223372036854775808 : 9223372036854775807;
+        const bool is_negative = !is_empty() && as_text()[0] == '-';
+        const u64 limit = is_negative ? cast<u64>( i64::max ) + 1 : cast<u64>( i64::max );
 
+        switch( parse_digits( is_negative ? 1 : 0, limit ) )
+        {
+        case result::ok( magnitude ):
+            return result::ok( is_negative ? wrap<i64>( 0 - magnitude ) : cast<i64>( magnitude ) );
+        case result::err( e ):
+            return result::err( e );
+        }
+    }
+
+    /// The `u64` the string writes in decimal: one or more digits `0` to `9`, which may have
+    /// leading zeros, and nothing else.
+    ///
+    /// ### Errors
+    ///
+    /// As `parse_i64`'s, a `-` being a byte that cannot begin the number, and `overflow` past
+    /// `u64::max`.
+    public result<u64, parse_error> parse_u64() const
+    {
+        return parse_digits( 0, u64::max );
+    }
+
+    /// The `f64` nearest the number the string writes in decimal, ties to even, as Python's
+    /// `float` reads it: an optional `-`, digits with an optional `.` among them (`5.`, `.5`), and
+    /// an optional exponent, `e` or `E` with an optional sign and digits. `nan`, `inf` and
+    /// `infinity`, in any case, are the special values. A number too large for `f64` is an
+    /// infinity and one too small a zero, both signed. Nothing else is read: not a `+` before the
+    /// number, whitespace or a separator.
+    ///
+    /// ### Errors
+    ///
+    /// `no_digits` if the number or its exponent has no digits, and `invalid_digit` naming the
+    /// first byte that cannot continue the number; a word that is not one of the special values
+    /// is refused at its first byte.
+    public result<f64, parse_error> parse_f64() const
+    {
+        const ref u8[] text = as_text();
+        const bool negative = !is_empty() && text[0] == '-';
+        u64 p = negative ? 1 : 0;
+
+        if( p < text.size && ( ( text[p] | 0x20 ) == 'n' || ( text[p] | 0x20 ) == 'i' ) )
+        {
+            return special_value( p, negative );
+        }
+
+        const u64 integer_start = p;
+        u64 digits = 0;
+        while( p < text.size && is_digit( text[p] ) )
+        {
+            digits = wrap<u64>( digits * 10 + ( text[p] - '0' ) );
+            p++;
+        }
+        const u64 integer_end = p;
+
+        u64 fraction_start = p;
+        if( p < text.size && text[p] == '.' )
+        {
+            p++;
+            fraction_start = p;
+            while( p < text.size && is_digit( text[p] ) )
+            {
+                digits = wrap<u64>( digits * 10 + ( text[p] - '0' ) );
+                p++;
+            }
+        }
+        const u64 fraction_end = p;
+
+        if( integer_end == integer_start && fraction_end == fraction_start )
+        {
+            return result::err( p == text.size ? parse_error::no_digits : parse_error::invalid_digit( p ) );
+        }
+
+        i64 exponent = 0;
+        if( p < text.size && ( text[p] | 0x20 ) == 'e' )
+        {
+            p++;
+            const bool negative_exponent = p < text.size && text[p] == '-';
+            if( p < text.size && ( text[p] == '-' || text[p] == '+' ) )
+            {
+                p++;
+            }
+            if( p == text.size )
+            {
+                return result::err( parse_error::no_digits );
+            }
+            if( !is_digit( text[p] ) )
+            {
+                return result::err( parse_error::invalid_digit( p ) );
+            }
+            while( p < text.size && is_digit( text[p] ) )
+            {
+                if( exponent < 0x1000_0000 ) // past any f64; stays clear of overflow
+                {
+                    exponent = exponent * 10 + ( text[p] - '0' );
+                }
+                p++;
+            }
+            if( negative_exponent )
+            {
+                exponent = -exponent;
+            }
+        }
+
+        if( p != text.size )
+        {
+            return result::err( parse_error::invalid_digit( p ) );
+        }
+
+        return result::ok( float_parse::from_decimal( negative, digits, text[integer_start..integer_end],
+            text[fraction_start..fraction_end], exponent ) );
+    }
+
+    /// --- Internals ---
+
+    /// The digits from `start` to the end as a `u64` no greater than `limit`.
+    private result<u64, parse_error> parse_digits( u64 start, u64 limit ) const
+    {
         if( size() == start )
         {
             return result::err( parse_error::no_digits );
@@ -655,14 +758,13 @@ class string implements textual, equatable, comparable, hashable, from<str>, fro
         for( u64 i = start; i < size(); i++ )
         {
             const u8 byte = as_text()[i];
-            if( byte < 48 || byte > 57 ) // '0'..'9'
+            if( !is_digit( byte ) )
             {
                 return result::err( parse_error::invalid_digit( i ) );
             }
-            
-            const u64 digit = byte - 48;
 
-            if( magnitude > (limit - digit) / 10 )
+            const u64 digit = byte - '0';
+            if( magnitude > ( limit - digit ) / 10 )
             {
                 return result::err( parse_error::overflow );
             }
@@ -670,10 +772,24 @@ class string implements textual, equatable, comparable, hashable, from<str>, fro
             magnitude = magnitude * 10 + digit;
         }
 
-        return result::ok( is_negative ? wrap<i64>( 0 - magnitude ) : cast<i64>( magnitude ) );
+        return result::ok( magnitude );
     }
 
-    /// --- Internals ---
+    /// `nan`, `inf` or `infinity` from `start` to the end, in any case.
+    private result<f64, parse_error> special_value( u64 start, bool negative ) const
+    {
+        const ref u8[] word = as_text()[start..size()];
+        const u64 sign = negative ? cast<u64>( 1 ) << 63 : 0;
+        if( same_folded( word, "nan".as_text() ) )
+        {
+            return result::ok( float_bits::from_bits( sign | 0x7ff8_0000_0000_0000 ) );
+        }
+        if( same_folded( word, "inf".as_text() ) || same_folded( word, "infinity".as_text() ) )
+        {
+            return result::ok( float_bits::from_bits( sign | 0x7ff0_0000_0000_0000 ) );
+        }
+        return result::err( parse_error::invalid_digit( start ) );
+    }
 
     /// Whether the bytes of `text` occur at index `at`.
     private bool matches_at( u64 at, const ref u8[] text ) const
@@ -713,22 +829,29 @@ class string implements textual, equatable, comparable, hashable, from<str>, fro
 /// Whether `a` and `b` hold the same bytes in the same order.
 bool same_text( const ref textual a, const ref textual b )
 {
-    const ref u8[] a_bytes = a.as_text();
-    const ref u8[] b_bytes = b.as_text();
+    return kernel::equal( a.as_text(), b.as_text() );
+}
 
-    if( a_bytes.size != b_bytes.size )
+/// Whether `byte` is `0` to `9`.
+private bool is_digit( u8 byte )
+{
+    return byte >= '0' && byte <= '9';
+}
+
+/// Whether `text` is the lower-case ASCII `word` in any case.
+private bool same_folded( const ref u8[] text, const ref u8[] word )
+{
+    if( text.size != word.size )
     {
         return false;
     }
-
-    for( u64 i : 0..a_bytes.size )
+    for( u64 i : 0..text.size )
     {
-        if( a_bytes[i] != b_bytes[i] )
+        if( ( text[i] | 0x20 ) != word[i] )
         {
             return false;
         }
     }
-
     return true;
 }
 

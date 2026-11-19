@@ -22,14 +22,14 @@
 <div class="group" id="parse_error">
 <pre class="signature"><a class="anchor" href="#parse_error" aria-label="Link to parse_error">#</a><code><span class="kw">enum</span> <span class="type">parse_error</span></code></pre>
 <div class="doc">
-<p>Why <code>string::parse_i64</code> refused its text.</p>
+<p>Why <code>string::parse_i64</code>, <code>parse_u64</code> or <code>parse_f64</code> refused its text.</p>
 </div>
 </div>
 <h3>Variants</h3>
 <div class="group" id="parse_error.no_digits">
 <pre class="signature"><a class="anchor" href="#parse_error.no_digits" aria-label="Link to no_digits">#</a><code>no_digits</code></pre>
 <div class="doc">
-<p>There are no digits: the text is empty, or only <code>-</code>.</p>
+<p>A part that needs digits has none: the text is empty, only <code>-</code>, or ends after an <code>e</code>.</p>
 </div>
 </div>
 <div class="group" id="parse_error.invalid_digit">
@@ -41,7 +41,7 @@
 <div class="group" id="parse_error.overflow">
 <pre class="signature"><a class="anchor" href="#parse_error.overflow" aria-label="Link to overflow">#</a><code>overflow</code></pre>
 <div class="doc">
-<p>The number lies outside the range of <code>i64</code>.</p>
+<p>The number lies outside the range of its integer type.</p>
 </div>
 </div>
 </section>
@@ -277,6 +277,31 @@ zeros. Nothing else is read: not a <code>+</code>, whitespace or a separator.</p
 <h4>Errors</h4>
 <p><code>no_digits</code> if there are no digits, <code>invalid_digit</code> naming the first byte that cannot continue
 the number, and <code>overflow</code> as soon as the number leaves the range of <code>i64</code>.</p>
+</div>
+</div>
+<div class="group" id="string.parse_u64">
+<pre class="signature"><a class="anchor" href="#string.parse_u64" aria-label="Link to parse_u64">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="prim" href="prelude.html#u64">u64</a>, <a class="type" href="#parse_error">parse_error</a>&gt; <span class="fn">parse_u64</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The <code>u64</code> the string writes in decimal: one or more digits <code>0</code> to <code>9</code>, which may have
+leading zeros, and nothing else.</p>
+<h4>Errors</h4>
+<p>As <code>parse_i64</code>'s, a <code>-</code> being a byte that cannot begin the number, and <code>overflow</code> past
+<code>u64::max</code>.</p>
+</div>
+</div>
+<div class="group" id="string.parse_f64">
+<pre class="signature"><a class="anchor" href="#string.parse_f64" aria-label="Link to parse_f64">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="prim" href="prelude.html#f64">f64</a>, <a class="type" href="#parse_error">parse_error</a>&gt; <span class="fn">parse_f64</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The <code>f64</code> nearest the number the string writes in decimal, ties to even, as Python's
+<code>float</code> reads it: an optional <code>-</code>, digits with an optional <code>.</code> among them (<code>5.</code>, <code>.5</code>), and
+an optional exponent, <code>e</code> or <code>E</code> with an optional sign and digits. <code>nan</code>, <code>inf</code> and
+<code>infinity</code>, in any case, are the special values. A number too large for <code>f64</code> is an
+infinity and one too small a zero, both signed. Nothing else is read: not a <code>+</code> before the
+number, whitespace or a separator.</p>
+<h4>Errors</h4>
+<p><code>no_digits</code> if the number or its exponent has no digits, and <code>invalid_digit</code> naming the
+first byte that cannot continue the number; a word that is not one of the special values
+is refused at its first byte.</p>
 </div>
 </div>
 </section>

@@ -236,14 +236,15 @@ private struct bounds
     u64 vm;
 };
 
-// The 128-bit product of `a` and `b`.
-private struct wide
+/// A 128-bit number as two halves.
+struct wide
 {
     u64 lo;
     u64 hi;
 };
 
-private wide multiply( u64 a, u64 b )
+/// The 128-bit product of `a` and `b`.
+wide multiply( u64 a, u64 b )
 {
     const u64 a_lo = a & 0xffff_ffff;
     const u64 a_hi = a >> 32;
