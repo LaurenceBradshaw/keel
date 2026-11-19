@@ -3475,6 +3475,30 @@ TEST_CASE( "overloads_rank_a_literal_by_distance", "[sema][overload][literal]" )
     }
 }
 
+// An array literal's elements that are not literals are typed while shaping, so they rank it.
+TEST_CASE( "overloads_read_an_array_literal_by_its_typed_elements", "[sema][overload][literal]" )
+{
+    SECTION( "a call and a variable among them" )
+    {
+        const Typed p( "struct span { i64 n; };\nspan of( i64 n ) { return span { n }; }\n"
+                       "i32 sum( const ref f64[] a ) { return 1; }\ni32 sum( const ref span[] a ) { return 2; }\n"
+                       "i32 main() { span s = of( 1 ); return sum( [ of( 2 ), s ] ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 2 ) == "t:4" );
+    }
+
+    SECTION( "a wrong element is refused once" )
+    {
+        const Typed p( "i32 sum( const ref f64[] a ) { return 1; }\ni32 main() { i64 n = 1; return sum( [ n ] ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "expected `f64`, but got `i64`" ) != std::string::npos );
+    }
+}
+
 // A struct literal names its type, so it ranks as a variable of it; a generic one names only its
 // declaration, and narrows the set to that declaration's instances.
 TEST_CASE( "overloads_read_a_struct_literal_by_its_type", "[sema][overload][literal]" )

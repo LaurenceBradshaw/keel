@@ -329,17 +329,14 @@ private void times_are_read_printed_and_written( ref kl::test::context c )
     c.check_eq( times_of( "w\n2026-11-19 14:00:00.000001\n", "w" ).timestamp_at( 0 ).nanosecond(), 1000 );
 
     kl::dataframe spans = kl::dataframe();
-    kl::duration[3] three = [ kl::duration::of_hours( 1 ), kl::duration::of_seconds( -1 ), kl::duration::of_days( 1 ) + kl::duration::of_seconds( 1 ) ];
-    spans.insert( "d", kl::series( three[0..3] ) );
+    spans.insert( "d", kl::series( [ kl::duration::of_hours( 1 ), kl::duration::of_seconds( -1 ), kl::duration::of_days( 1 ) + kl::duration::of_seconds( 1 ) ] ) );
     c.check_eq( kl::dtype_name( spans.dtypes()[0] ), "timedelta64[ns]" );
     c.check_eq( spans.to_string(), "                  d\n0   0 days 01:00:00\n1 -1 days +23:59:59\n2   1 days 00:00:01" );
     c.check_eq( spans.to_csv(), "d\n0 days 01:00:00\n-1 days +23:59:59\n1 days 00:00:01\n" );
     kl::dataframe days = kl::dataframe();
-    kl::duration[2] two = [ kl::duration::of_days( 1 ), kl::duration::of_nanoseconds( 500000000 ) ];
-    days.insert( "d", kl::series( two[0..2] ) );
+    days.insert( "d", kl::series( [ kl::duration::of_days( 1 ), kl::duration::of_nanoseconds( 500000000 ) ] ) );
     c.check_eq( days.to_string(), "                       d\n0 1 days 00:00:00.000000\n1 0 days 00:00:00.500000" );
-    two = [ kl::duration::of_days( 1 ), kl::duration::of_days( 2 ) ];
-    days.set( "d", kl::series( two[0..2] ) );
+    days.set( "d", kl::series( [ kl::duration::of_days( 1 ), kl::duration::of_days( 2 ) ] ) );
     c.check_eq( days.to_string(), "       d\n0 1 days\n1 2 days" );
 
     switch( kl::series( [ "19/11/2026", "01/02/2003" ] ).to_times( "%d/%m/%Y" ) )

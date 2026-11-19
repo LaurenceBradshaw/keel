@@ -76,9 +76,10 @@ public:
 
     // Every branch of both ends in a `types_.record`, including the error ones: a node the walk
     // reached and left untyped is what later passes assert on rather than report.
-    Type_id infer( Node_id id );                   // expression, no expectation
-    Type_id infer_discarded( Node_id id );         // an expression statement's, whose answer is dropped
-    Type_id check( Node_id id, Type_id expected ); // expression, with one
+    Type_id infer( Node_id id );                                         // expression, no expectation
+    Type_id infer_discarded( Node_id id );                               // an expression statement's, whose answer is dropped
+    Type_id check( Node_id id, Type_id expected );                       // expression, with one
+    Type_id check_typed( Node_id id, Type_id expected, Type_id actual ); // one already inferred
 
     // Walks an expression only for the errors inside it, in a context that has already failed.
     Type_id absorb( Node_id id ); // what it inferred, invalid for a literal

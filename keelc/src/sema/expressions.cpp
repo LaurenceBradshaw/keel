@@ -541,14 +541,15 @@ std::optional<Argument_shape> Expressions::literal_shape( Node_id value )
     return std::nullopt;
 }
 
-// Each element shaped as a lone literal is, and typed no sooner.
+// Each element shaped as an argument is: a literal untyped, anything else typed now, so
+// `[d, e]` of durations ranks `duration[]` over `f64[]`.
 Argument_shape Expressions::array_shape( Node_id literal )
 {
     Argument_shape shape { .kind = Argument_kind::Array, .magnitude = ast_.children( literal ).size() };
 
     for( const Node_id element : ast_.children( literal ) )
     {
-        shape.elements.push_back( literal_shape( element ).value_or( Argument_shape {} ) );
+        shape.elements.push_back( argument_shape( element ) );
     }
 
     return shape;
@@ -4503,11 +4504,15 @@ Type_id Expressions::expected_array( Node_id id )
     const Type_id                  expectation = take_expectation();
     const std::span<const Node_id> elements    = ast_.children( id );
 
+    // An element a call's selection typed is not typed again.
     const auto absorb_all = [&]
     {
         for( const Node_id element : elements )
         {
-            absorb( element );
+            if( !types_.type_of( element ).is_valid() )
+            {
+                absorb( element );
+            }
         }
     };
 
@@ -4581,7 +4586,10 @@ Type_id Expressions::infer_array_literal( Node_id id )
 
         for( const Node_id value : elements )
         {
-            absorb( value );
+            if( !types_.type_of( value ).is_valid() )
+            {
+                absorb( value );
+            }
         }
         return types_.poison( id );
     }
@@ -4601,7 +4609,10 @@ Type_id Expressions::infer_array_literal( Node_id id )
 
         for( const Node_id value : elements )
         {
-            absorb( value );
+            if( !types_.type_of( value ).is_valid() )
+            {
+                absorb( value );
+            }
         }
 
         return types_.poison( id );
@@ -4609,7 +4620,14 @@ Type_id Expressions::infer_array_literal( Node_id id )
 
     for( const Node_id value : elements )
     {
-        check( value, element );
+        if( const Type_id typed = types_.type_of( value ); typed.is_valid() )
+        {
+            check_typed( value, element, typed );
+        }
+        else
+        {
+            check( value, element );
+        }
         places_.check_owning_source( value, element );
     }
 
@@ -5930,6 +5948,11 @@ Type_id Expressions::check( Node_id id, Type_id expected )
     const Type_id actual = infer( id );
     expected_            = Type_id {};
 
+    return check_typed( id, expected, actual );
+}
+
+Type_id Expressions::check_typed( Node_id id, Type_id expected, Type_id actual )
+{
     if( table_.is_error( actual ) )
     {
         return expected;
