@@ -1617,6 +1617,21 @@ private:
             const std::optional<u64> bits = evaluate( r, a.bits, b.bits, types_ );
             return bits ? number( *bits ) : Value {};
         }
+        case Rvalue_kind::Count_ones:
+        case Rvalue_kind::Leading_zeros:
+        {
+            const Value a = operand( fr, r.a );
+            if( linear( a ) )
+            {
+                end( Ending::Unsupported );
+            }
+            if( a.kind != Kind::Number )
+            {
+                return {};
+            }
+            const std::optional<u64> bits = evaluate( r, a.bits, std::nullopt, types_ );
+            return bits ? number( *bits ) : Value {};
+        }
         case Rvalue_kind::Cast:
             return cast( r, operand( fr, r.a ) );
         case Rvalue_kind::Bits:

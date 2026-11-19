@@ -8,7 +8,7 @@
 #include "ir/simplify.h"
 #include "opt/propagate_constants.h"
 #include "opt/propagate_values.h"
-#include "opt/recognise_rotates.h"
+#include "opt/recognise_idioms.h"
 #include "opt/remove_dead_stores.h"
 
 namespace keel
@@ -404,7 +404,7 @@ u32 folded_cost(
         propagate_constants( copy, types, literals, true );
     }
     propagate_values( copy, types, literals );
-    recognise_rotates( copy, types, literals );
+    recognise_idioms( copy, types, literals );
     remove_dead_stores( copy, false, purity, types, literals );
     simplify( copy, literals );
     // A loop left would still grow in the caller's loop phase, which this price does not see.

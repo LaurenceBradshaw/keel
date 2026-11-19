@@ -179,6 +179,12 @@ struct Printer
         case Rvalue_kind::Rotate:
             return fmt::format( "rotate {} by {}", operand( value.a ), operand( value.b ) );
 
+        case Rvalue_kind::Count_ones:
+            return fmt::format( "count_ones {}", operand( value.a ) );
+
+        case Rvalue_kind::Leading_zeros:
+            return fmt::format( "leading_zeros {}", operand( value.a ) );
+
         case Rvalue_kind::Select:
             return fmt::format( "select {}, {}, {}", operand( value.arguments[0] ), operand( value.a ), operand( value.b ) );
 

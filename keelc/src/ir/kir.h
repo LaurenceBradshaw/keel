@@ -178,6 +178,8 @@ enum class Rvalue_kind : u8
     Sqrt,           // the correctly rounded square root of the float `a`
     Select,         // `a` if the bool `arguments[0]` holds, else `b`; scalars only
     Rotate,         // the unsigned `a` rotated left by the constant `b`, more than 0 and less than its width
+    Count_ones,     // the bits set in the unsigned `a`
+    Leading_zeros,  // the zero bits above the highest set bit of the unsigned `a`; its width for 0
 };
 
 // D80: a Call of a module's build or drop function, which no declaration has; `callee` is its first global.
@@ -812,6 +814,16 @@ inline Rvalue sqrt_of( Operand a )
 inline Rvalue rotate_left( Operand a, Operand by )
 {
     return Rvalue { .kind = Rvalue_kind::Rotate, .type = a.type, .a = a, .b = by };
+}
+
+inline Rvalue count_ones( Operand a )
+{
+    return Rvalue { .kind = Rvalue_kind::Count_ones, .type = a.type, .a = a };
+}
+
+inline Rvalue leading_zeros( Operand a )
+{
+    return Rvalue { .kind = Rvalue_kind::Leading_zeros, .type = a.type, .a = a };
 }
 
 inline Rvalue select( Operand condition, Operand if_true, Operand if_false )

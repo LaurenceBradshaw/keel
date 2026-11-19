@@ -322,8 +322,9 @@ std::optional<Rvalue> folded( const Rvalue& value, const Type_table& types, Lite
 
     const bool pair =
         value.kind == Rvalue_kind::Binary || value.kind == Rvalue_kind::Overflows || value.kind == Rvalue_kind::Rotate;
-    if( ( !pair && value.kind != Rvalue_kind::Unary && value.kind != Rvalue_kind::Cast ) || !is_constant( value.a ) ||
-        ( pair && !is_constant( value.b ) ) )
+    const bool single = value.kind == Rvalue_kind::Unary || value.kind == Rvalue_kind::Cast ||
+                        value.kind == Rvalue_kind::Count_ones || value.kind == Rvalue_kind::Leading_zeros;
+    if( ( !pair && !single ) || !is_constant( value.a ) || ( pair && !is_constant( value.b ) ) )
     {
         return std::nullopt;
     }
@@ -366,7 +367,8 @@ std::optional<u64> evaluate( const Rvalue& value, std::optional<u64> a, std::opt
 {
     // Other kinds may leave `a` a default operand, with no type.
     if( value.kind != Rvalue_kind::Use && value.kind != Rvalue_kind::Binary && value.kind != Rvalue_kind::Overflows &&
-        value.kind != Rvalue_kind::Unary && value.kind != Rvalue_kind::Cast && value.kind != Rvalue_kind::Rotate )
+        value.kind != Rvalue_kind::Unary && value.kind != Rvalue_kind::Cast && value.kind != Rvalue_kind::Rotate &&
+        value.kind != Rvalue_kind::Count_ones && value.kind != Rvalue_kind::Leading_zeros )
     {
         return std::nullopt;
     }
@@ -419,6 +421,12 @@ std::optional<u64> evaluate( const Rvalue& value, std::optional<u64> a, std::opt
 
         return truncate( ( *a << *b ) | ( *a >> ( integer->width - *b ) ), integer->width );
     }
+
+    case Rvalue_kind::Count_ones:
+        return static_cast<u64>( std::popcount( truncate( *a, integer->width ) ) );
+
+    case Rvalue_kind::Leading_zeros:
+        return static_cast<u64>( std::countl_zero( truncate( *a, integer->width ) ) ) - ( 64 - integer->width );
 
     case Rvalue_kind::Unary:
         switch( value.op )

@@ -4143,159 +4143,43 @@ uint64_t kl_2kl5_core11float_parse_13leading_zeros__3u64( uint64_t kl_x_1 )
 {
     uint64_t kl_t0;
     uint64_t kl_n_2;
-    uint64_t kl_v_3;
-    uint64_t kl_t4;
-    bool kl_t5;
-    bool kl_t6;
-    uint64_t kl_t7;
-    bool kl_t8;
-    bool kl_t9;
-    uint64_t kl_t10;
-    bool kl_t11;
-    bool kl_t12;
-    uint64_t kl_t13;
-    bool kl_t14;
-    bool kl_t15;
-    uint64_t kl_t16;
-    bool kl_t17;
-    bool kl_t18;
-    uint64_t kl_t19;
-    bool kl_t20;
-    bool kl_t21;
+    bool kl_t3;
+    bool kl_t4;
 #line 212 "<kl>/_core/float_parse.kl"
-    kl_n_2 = 0;
-    kl_v_3 = kl_x_1;
-    kl_t4 = kl_v_3 >> 32;
-#line 214 "<kl>/_core/float_parse.kl"
-    kl_t5 = kl_t4 == 0;
-#line 214 "<kl>/_core/float_parse.kl"
-    if ( kl_t5 ) goto bb1; else goto bb4;
+    kl_n_2 = 64;
+    goto bb1;
     bb1:
-    kl_t6 = __builtin_add_overflow( kl_n_2, 32, &( uint64_t ) { 0 } );
-#line 216 "<kl>/_core/float_parse.kl"
-    if ( kl_t6 ) goto bb2; else goto bb3;
+#line 213 "<kl>/_core/float_parse.kl"
+    kl_t3 = kl_x_1 != 0;
+#line 213 "<kl>/_core/float_parse.kl"
+    if ( kl_t3 ) goto bb2; else goto bb3;
     bb2:
+    kl_x_1 = kl_x_1 >> 1;
+    kl_t4 = __builtin_sub_overflow( kl_n_2, 1, &( uint64_t ) { 0 } );
 #line 216 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 216, "arithmetic overflow: n += 32;" );
+    if ( kl_t4 ) goto bb4; else goto bb5;
     bb3:
-#line 216 "<kl>/_core/float_parse.kl"
-    kl_n_2 = kl_n_2 + 32;
-    kl_v_3 = kl_v_3 << 32;
-#line 214 "<kl>/_core/float_parse.kl"
-    goto bb4;
-    bb4:
-#line 219 "<kl>/_core/float_parse.kl"
-    kl_t7 = kl_v_3 >> 48;
-#line 219 "<kl>/_core/float_parse.kl"
-    kl_t8 = kl_t7 == 0;
-#line 219 "<kl>/_core/float_parse.kl"
-    if ( kl_t8 ) goto bb5; else goto bb8;
-    bb5:
-    kl_t9 = __builtin_add_overflow( kl_n_2, 16, &( uint64_t ) { 0 } );
-#line 221 "<kl>/_core/float_parse.kl"
-    if ( kl_t9 ) goto bb6; else goto bb7;
-    bb6:
-#line 221 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 221, "arithmetic overflow: n += 16;" );
-    bb7:
-#line 221 "<kl>/_core/float_parse.kl"
-    kl_n_2 = kl_n_2 + 16;
-    kl_v_3 = kl_v_3 << 16;
-#line 219 "<kl>/_core/float_parse.kl"
-    goto bb8;
-    bb8:
-#line 224 "<kl>/_core/float_parse.kl"
-    kl_t10 = kl_v_3 >> 56;
-#line 224 "<kl>/_core/float_parse.kl"
-    kl_t11 = kl_t10 == 0;
-#line 224 "<kl>/_core/float_parse.kl"
-    if ( kl_t11 ) goto bb9; else goto bb12;
-    bb9:
-    kl_t12 = __builtin_add_overflow( kl_n_2, 8, &( uint64_t ) { 0 } );
-#line 226 "<kl>/_core/float_parse.kl"
-    if ( kl_t12 ) goto bb10; else goto bb11;
-    bb10:
-#line 226 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 226, "arithmetic overflow: n += 8;" );
-    bb11:
-#line 226 "<kl>/_core/float_parse.kl"
-    kl_n_2 = kl_n_2 + 8;
-    kl_v_3 = kl_v_3 << 8;
-#line 224 "<kl>/_core/float_parse.kl"
-    goto bb12;
-    bb12:
-#line 229 "<kl>/_core/float_parse.kl"
-    kl_t13 = kl_v_3 >> 60;
-#line 229 "<kl>/_core/float_parse.kl"
-    kl_t14 = kl_t13 == 0;
-#line 229 "<kl>/_core/float_parse.kl"
-    if ( kl_t14 ) goto bb13; else goto bb16;
-    bb13:
-    kl_t15 = __builtin_add_overflow( kl_n_2, 4, &( uint64_t ) { 0 } );
-#line 231 "<kl>/_core/float_parse.kl"
-    if ( kl_t15 ) goto bb14; else goto bb15;
-    bb14:
-#line 231 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 231, "arithmetic overflow: n += 4;" );
-    bb15:
-#line 231 "<kl>/_core/float_parse.kl"
-    kl_n_2 = kl_n_2 + 4;
-    kl_v_3 = kl_v_3 << 4;
-#line 229 "<kl>/_core/float_parse.kl"
-    goto bb16;
-    bb16:
-#line 234 "<kl>/_core/float_parse.kl"
-    kl_t16 = kl_v_3 >> 62;
-#line 234 "<kl>/_core/float_parse.kl"
-    kl_t17 = kl_t16 == 0;
-#line 234 "<kl>/_core/float_parse.kl"
-    if ( kl_t17 ) goto bb17; else goto bb20;
-    bb17:
-    kl_t18 = __builtin_add_overflow( kl_n_2, 2, &( uint64_t ) { 0 } );
-#line 236 "<kl>/_core/float_parse.kl"
-    if ( kl_t18 ) goto bb18; else goto bb19;
-    bb18:
-#line 236 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 236, "arithmetic overflow: n += 2;" );
-    bb19:
-#line 236 "<kl>/_core/float_parse.kl"
-    kl_n_2 = kl_n_2 + 2;
-    kl_v_3 = kl_v_3 << 2;
-#line 234 "<kl>/_core/float_parse.kl"
-    goto bb20;
-    bb20:
-#line 239 "<kl>/_core/float_parse.kl"
-    kl_t19 = kl_v_3 >> 63;
-#line 239 "<kl>/_core/float_parse.kl"
-    kl_t20 = kl_t19 == 0;
-#line 239 "<kl>/_core/float_parse.kl"
-    if ( kl_t20 ) goto bb21; else goto bb24;
-    bb21:
-    kl_t21 = __builtin_add_overflow( kl_n_2, 1, &( uint64_t ) { 0 } );
-#line 241 "<kl>/_core/float_parse.kl"
-    if ( kl_t21 ) goto bb22; else goto bb23;
-    bb22:
-#line 241 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 241, "arithmetic overflow: n += 1;" );
-    bb23:
-#line 241 "<kl>/_core/float_parse.kl"
-    kl_n_2 = kl_n_2 + 1;
-#line 239 "<kl>/_core/float_parse.kl"
-    goto bb24;
-    bb24:
-#line 243 "<kl>/_core/float_parse.kl"
     kl_t0 = kl_n_2;
-#line 243 "<kl>/_core/float_parse.kl"
+#line 218 "<kl>/_core/float_parse.kl"
     return kl_t0;
+    bb4:
+#line 216 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 216, "arithmetic overflow: n--;" );
+    bb5:
+#line 216 "<kl>/_core/float_parse.kl"
+    kl_n_2 = kl_n_2 - 1;
+#line 213 "<kl>/_core/float_parse.kl"
+    goto bb1;
+#line 219 "<kl>/_core/float_parse.kl"
 }
 
-#line 247 "<kl>/_core/float_parse.kl"
+#line 222 "<kl>/_core/float_parse.kl"
 uint64_t kl_2kl5_core11float_parse_19leading_zero_digits__L2u8_L2u8( uint8_t* kl_integer_1_data, uint64_t kl_integer_1_size, uint8_t* kl_fraction_2_data, uint64_t kl_fraction_2_size )
 {
     uint64_t kl_t0;
-#line 247 "<kl>/_core/float_parse.kl"
+#line 222 "<kl>/_core/float_parse.kl"
     struct kl__run__L2u8__ref kl_integer_1 = { kl_integer_1_data, kl_integer_1_size };
-#line 247 "<kl>/_core/float_parse.kl"
+#line 222 "<kl>/_core/float_parse.kl"
     struct kl__run__L2u8__ref kl_fraction_2 = { kl_fraction_2_data, kl_fraction_2_size };
     uint64_t kl_n_3;
     bool kl_t4;
@@ -4321,132 +4205,132 @@ uint64_t kl_2kl5_core11float_parse_19leading_zero_digits__L2u8_L2u8( uint8_t* kl
     bool kl_t24;
     bool kl_t25;
     uint64_t kl_t26;
-#line 249 "<kl>/_core/float_parse.kl"
+#line 224 "<kl>/_core/float_parse.kl"
     kl_n_3 = 0;
     goto bb1;
     bb1:
-#line 250 "<kl>/_core/float_parse.kl"
+#line 225 "<kl>/_core/float_parse.kl"
     kl_t5 = ( kl_integer_1 ).size;
-#line 250 "<kl>/_core/float_parse.kl"
+#line 225 "<kl>/_core/float_parse.kl"
     kl_t6 = kl_n_3 < kl_t5;
-#line 250 "<kl>/_core/float_parse.kl"
+#line 225 "<kl>/_core/float_parse.kl"
     kl_t4 = kl_t6;
-#line 250 "<kl>/_core/float_parse.kl"
+#line 225 "<kl>/_core/float_parse.kl"
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb2:
     kl_t12 = __builtin_add_overflow( kl_n_3, 1, &( uint64_t ) { 0 } );
-#line 252 "<kl>/_core/float_parse.kl"
+#line 227 "<kl>/_core/float_parse.kl"
     if ( kl_t12 ) goto bb8; else goto bb9;
     bb3:
-#line 250 "<kl>/_core/float_parse.kl"
+#line 225 "<kl>/_core/float_parse.kl"
     kl_t7 = ( kl_integer_1 ).size;
-#line 250 "<kl>/_core/float_parse.kl"
+#line 225 "<kl>/_core/float_parse.kl"
     kl_t8 = ( kl_integer_1 ).data;
-#line 250 "<kl>/_core/float_parse.kl"
+#line 225 "<kl>/_core/float_parse.kl"
     kl_t9 = kl_n_3 < kl_t7;
-#line 250 "<kl>/_core/float_parse.kl"
+#line 225 "<kl>/_core/float_parse.kl"
     if ( kl_t9 ) goto bb6; else goto bb5;
     bb4:
-#line 250 "<kl>/_core/float_parse.kl"
+#line 225 "<kl>/_core/float_parse.kl"
     if ( kl_t4 ) goto bb2; else goto bb7;
     bb5:
-#line 250 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 250, "out of bounds: integer[n]" );
+#line 225 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 225, "out of bounds: integer[n]" );
     bb6:
-#line 250 "<kl>/_core/float_parse.kl"
+#line 225 "<kl>/_core/float_parse.kl"
     kl_t10 = kl_t8 + kl_n_3;
-#line 250 "<kl>/_core/float_parse.kl"
+#line 225 "<kl>/_core/float_parse.kl"
     kl_t11 = ( *kl_t10 ) == 48;
-#line 250 "<kl>/_core/float_parse.kl"
+#line 225 "<kl>/_core/float_parse.kl"
     kl_t4 = kl_t11;
-#line 250 "<kl>/_core/float_parse.kl"
+#line 225 "<kl>/_core/float_parse.kl"
     goto bb4;
     bb7:
-#line 254 "<kl>/_core/float_parse.kl"
+#line 229 "<kl>/_core/float_parse.kl"
     kl_t13 = ( kl_integer_1 ).size;
-#line 254 "<kl>/_core/float_parse.kl"
+#line 229 "<kl>/_core/float_parse.kl"
     kl_t14 = kl_n_3 < kl_t13;
-#line 254 "<kl>/_core/float_parse.kl"
+#line 229 "<kl>/_core/float_parse.kl"
     if ( kl_t14 ) goto bb10; else goto bb11;
     bb8:
-#line 252 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 252, "arithmetic overflow: n++;" );
+#line 227 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 227, "arithmetic overflow: n++;" );
     bb9:
-#line 252 "<kl>/_core/float_parse.kl"
+#line 227 "<kl>/_core/float_parse.kl"
     kl_n_3 = kl_n_3 + 1;
-#line 250 "<kl>/_core/float_parse.kl"
+#line 225 "<kl>/_core/float_parse.kl"
     goto bb1;
     bb10:
-#line 256 "<kl>/_core/float_parse.kl"
+#line 231 "<kl>/_core/float_parse.kl"
     kl_t0 = kl_n_3;
-#line 256 "<kl>/_core/float_parse.kl"
+#line 231 "<kl>/_core/float_parse.kl"
     return kl_t0;
     bb11:
     kl_f_15 = 0;
     goto bb12;
     bb12:
-#line 259 "<kl>/_core/float_parse.kl"
+#line 234 "<kl>/_core/float_parse.kl"
     kl_t17 = ( kl_fraction_2 ).size;
-#line 259 "<kl>/_core/float_parse.kl"
+#line 234 "<kl>/_core/float_parse.kl"
     kl_t18 = kl_f_15 < kl_t17;
-#line 259 "<kl>/_core/float_parse.kl"
+#line 234 "<kl>/_core/float_parse.kl"
     kl_t16 = kl_t18;
-#line 259 "<kl>/_core/float_parse.kl"
+#line 234 "<kl>/_core/float_parse.kl"
     if ( kl_t16 ) goto bb14; else goto bb15;
     bb13:
     kl_t24 = __builtin_add_overflow( kl_f_15, 1, &( uint64_t ) { 0 } );
-#line 261 "<kl>/_core/float_parse.kl"
+#line 236 "<kl>/_core/float_parse.kl"
     if ( kl_t24 ) goto bb19; else goto bb20;
     bb14:
-#line 259 "<kl>/_core/float_parse.kl"
+#line 234 "<kl>/_core/float_parse.kl"
     kl_t19 = ( kl_fraction_2 ).size;
-#line 259 "<kl>/_core/float_parse.kl"
+#line 234 "<kl>/_core/float_parse.kl"
     kl_t20 = ( kl_fraction_2 ).data;
-#line 259 "<kl>/_core/float_parse.kl"
+#line 234 "<kl>/_core/float_parse.kl"
     kl_t21 = kl_f_15 < kl_t19;
-#line 259 "<kl>/_core/float_parse.kl"
+#line 234 "<kl>/_core/float_parse.kl"
     if ( kl_t21 ) goto bb17; else goto bb16;
     bb15:
-#line 259 "<kl>/_core/float_parse.kl"
+#line 234 "<kl>/_core/float_parse.kl"
     if ( kl_t16 ) goto bb13; else goto bb18;
     bb16:
-#line 259 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 259, "out of bounds: fraction[f]" );
+#line 234 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 234, "out of bounds: fraction[f]" );
     bb17:
-#line 259 "<kl>/_core/float_parse.kl"
+#line 234 "<kl>/_core/float_parse.kl"
     kl_t22 = kl_t20 + kl_f_15;
-#line 259 "<kl>/_core/float_parse.kl"
+#line 234 "<kl>/_core/float_parse.kl"
     kl_t23 = ( *kl_t22 ) == 48;
-#line 259 "<kl>/_core/float_parse.kl"
+#line 234 "<kl>/_core/float_parse.kl"
     kl_t16 = kl_t23;
-#line 259 "<kl>/_core/float_parse.kl"
+#line 234 "<kl>/_core/float_parse.kl"
     goto bb15;
     bb18:
-#line 263 "<kl>/_core/float_parse.kl"
+#line 238 "<kl>/_core/float_parse.kl"
     kl_t25 = __builtin_add_overflow( kl_n_3, kl_f_15, &( uint64_t ) { 0 } );
-#line 263 "<kl>/_core/float_parse.kl"
+#line 238 "<kl>/_core/float_parse.kl"
     if ( kl_t25 ) goto bb21; else goto bb22;
     bb19:
-#line 261 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 261, "arithmetic overflow: f++;" );
+#line 236 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 236, "arithmetic overflow: f++;" );
     bb20:
-#line 261 "<kl>/_core/float_parse.kl"
+#line 236 "<kl>/_core/float_parse.kl"
     kl_f_15 = kl_f_15 + 1;
-#line 259 "<kl>/_core/float_parse.kl"
+#line 234 "<kl>/_core/float_parse.kl"
     goto bb12;
     bb21:
-#line 263 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 263, "arithmetic overflow: n + f" );
+#line 238 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 238, "arithmetic overflow: n + f" );
     bb22:
-#line 263 "<kl>/_core/float_parse.kl"
+#line 238 "<kl>/_core/float_parse.kl"
     kl_t26 = kl_n_3 + kl_f_15;
-#line 263 "<kl>/_core/float_parse.kl"
+#line 238 "<kl>/_core/float_parse.kl"
     kl_t0 = kl_t26;
-#line 263 "<kl>/_core/float_parse.kl"
+#line 238 "<kl>/_core/float_parse.kl"
     return kl_t0;
 }
 
-#line 279 "<kl>/_core/float_parse.kl"
+#line 254 "<kl>/_core/float_parse.kl"
 void kl_2kl5_core11float_parse_5round__RQ2klQ5_core8adjusted_Q2klQ5_core3tie( struct kl_2kl5_core11float_parse_adjusted* kl_am_1, struct kl_2kl5_core11float_parse_tie kl_rule_2 )
 {
     bool kl_t3;
@@ -4468,120 +4352,120 @@ void kl_2kl5_core11float_parse_5round__RQ2klQ5_core8adjusted_Q2klQ5_core3tie( st
     bool kl_t21;
     uint64_t kl_t22;
     bool kl_t23;
-#line 281 "<kl>/_core/float_parse.kl"
+#line 256 "<kl>/_core/float_parse.kl"
     kl_t3 = __builtin_sub_overflow( 0, ( *kl_am_1 ).kl_power2, &( int32_t ) { 0 } );
-#line 281 "<kl>/_core/float_parse.kl"
+#line 256 "<kl>/_core/float_parse.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
-#line 281 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 281, "arithmetic overflow: -am.power2" );
+#line 256 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 256, "arithmetic overflow: -am.power2" );
     bb2:
-#line 281 "<kl>/_core/float_parse.kl"
+#line 256 "<kl>/_core/float_parse.kl"
     kl_t4 = -( *kl_am_1 ).kl_power2;
-#line 281 "<kl>/_core/float_parse.kl"
+#line 256 "<kl>/_core/float_parse.kl"
     kl_t5 = kl_t4 >= 11;
-#line 281 "<kl>/_core/float_parse.kl"
+#line 256 "<kl>/_core/float_parse.kl"
     if ( kl_t5 ) goto bb3; else goto bb14;
     bb3:
     kl_t7 = __builtin_sub_overflow( 0, ( *kl_am_1 ).kl_power2, &( int32_t ) { 0 } );
-#line 283 "<kl>/_core/float_parse.kl"
+#line 258 "<kl>/_core/float_parse.kl"
     if ( kl_t7 ) goto bb4; else goto bb5;
     bb4:
-#line 283 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 283, "arithmetic overflow: -am.power2" );
+#line 258 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 258, "arithmetic overflow: -am.power2" );
     bb5:
-#line 283 "<kl>/_core/float_parse.kl"
+#line 258 "<kl>/_core/float_parse.kl"
     kl_t8 = -( *kl_am_1 ).kl_power2;
-#line 283 "<kl>/_core/float_parse.kl"
+#line 258 "<kl>/_core/float_parse.kl"
     kl_t9 = __builtin_add_overflow( kl_t8, 1, &( int32_t ) { 0 } );
-#line 283 "<kl>/_core/float_parse.kl"
+#line 258 "<kl>/_core/float_parse.kl"
     if ( kl_t9 ) goto bb6; else goto bb7;
     bb6:
-#line 283 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 283, "arithmetic overflow: -am.power2 + 1" );
+#line 258 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 258, "arithmetic overflow: -am.power2 + 1" );
     bb7:
-#line 283 "<kl>/_core/float_parse.kl"
+#line 258 "<kl>/_core/float_parse.kl"
     kl_t10 = kl_t8 + 1;
-#line 283 "<kl>/_core/float_parse.kl"
+#line 258 "<kl>/_core/float_parse.kl"
     kl_shift_6 = kl_t10;
     kl_t11 = &( *kl_am_1 );
-#line 284 "<kl>/_core/float_parse.kl"
+#line 259 "<kl>/_core/float_parse.kl"
     kl_t13 = kl_shift_6 < 64;
-#line 284 "<kl>/_core/float_parse.kl"
+#line 259 "<kl>/_core/float_parse.kl"
     if ( kl_t13 ) goto bb8; else goto bb9;
     bb8:
-#line 284 "<kl>/_core/float_parse.kl"
+#line 259 "<kl>/_core/float_parse.kl"
     kl_t12 = kl_shift_6;
-#line 284 "<kl>/_core/float_parse.kl"
+#line 259 "<kl>/_core/float_parse.kl"
     goto bb10;
     bb9:
-#line 284 "<kl>/_core/float_parse.kl"
+#line 259 "<kl>/_core/float_parse.kl"
     kl_t12 = 64;
-#line 284 "<kl>/_core/float_parse.kl"
+#line 259 "<kl>/_core/float_parse.kl"
     goto bb10;
     bb10:
-#line 284 "<kl>/_core/float_parse.kl"
+#line 259 "<kl>/_core/float_parse.kl"
     kl_2kl5_core11float_parse_9drop_bits__RQ2klQ5_core8adjusted_3i32_Q2klQ5_core3tie( kl_t11, kl_t12, kl_rule_2 );
     kl_t16 = ( *kl_am_1 ).kl_mantissa < 4503599627370496;
-#line 285 "<kl>/_core/float_parse.kl"
+#line 260 "<kl>/_core/float_parse.kl"
     if ( kl_t16 ) goto bb11; else goto bb12;
     bb11:
-#line 285 "<kl>/_core/float_parse.kl"
+#line 260 "<kl>/_core/float_parse.kl"
     kl_t15 = 0;
-#line 285 "<kl>/_core/float_parse.kl"
+#line 260 "<kl>/_core/float_parse.kl"
     goto bb13;
     bb12:
-#line 285 "<kl>/_core/float_parse.kl"
+#line 260 "<kl>/_core/float_parse.kl"
     kl_t15 = 1;
-#line 285 "<kl>/_core/float_parse.kl"
+#line 260 "<kl>/_core/float_parse.kl"
     goto bb13;
     bb13:
-#line 285 "<kl>/_core/float_parse.kl"
+#line 260 "<kl>/_core/float_parse.kl"
     ( *kl_am_1 ).kl_power2 = kl_t15;
     return;
     bb14:
-#line 289 "<kl>/_core/float_parse.kl"
+#line 264 "<kl>/_core/float_parse.kl"
     kl_t17 = &( *kl_am_1 );
-#line 289 "<kl>/_core/float_parse.kl"
+#line 264 "<kl>/_core/float_parse.kl"
     kl_2kl5_core11float_parse_9drop_bits__RQ2klQ5_core8adjusted_3i32_Q2klQ5_core3tie( kl_t17, 11, kl_rule_2 );
     kl_t19 = 2 * 4503599627370496;
-#line 290 "<kl>/_core/float_parse.kl"
+#line 265 "<kl>/_core/float_parse.kl"
     kl_t20 = ( *kl_am_1 ).kl_mantissa >= kl_t19;
-#line 290 "<kl>/_core/float_parse.kl"
+#line 265 "<kl>/_core/float_parse.kl"
     if ( kl_t20 ) goto bb15; else goto bb18;
     bb15:
     ( *kl_am_1 ).kl_mantissa = 4503599627370496;
     kl_t21 = __builtin_add_overflow( ( *kl_am_1 ).kl_power2, 1, &( int32_t ) { 0 } );
-#line 293 "<kl>/_core/float_parse.kl"
+#line 268 "<kl>/_core/float_parse.kl"
     if ( kl_t21 ) goto bb16; else goto bb17;
     bb16:
-#line 293 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 293, "arithmetic overflow: am.power2++;" );
+#line 268 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 268, "arithmetic overflow: am.power2++;" );
     bb17:
-#line 293 "<kl>/_core/float_parse.kl"
+#line 268 "<kl>/_core/float_parse.kl"
     ( *kl_am_1 ).kl_power2 = ( *kl_am_1 ).kl_power2 + 1;
-#line 290 "<kl>/_core/float_parse.kl"
+#line 265 "<kl>/_core/float_parse.kl"
     goto bb18;
     bb18:
-#line 295 "<kl>/_core/float_parse.kl"
+#line 270 "<kl>/_core/float_parse.kl"
     kl_t22 = 4503599627370496 - 1;
-#line 295 "<kl>/_core/float_parse.kl"
+#line 270 "<kl>/_core/float_parse.kl"
     ( *kl_am_1 ).kl_mantissa = ( *kl_am_1 ).kl_mantissa & kl_t22;
     kl_t23 = ( *kl_am_1 ).kl_power2 >= 2047;
-#line 296 "<kl>/_core/float_parse.kl"
+#line 271 "<kl>/_core/float_parse.kl"
     if ( kl_t23 ) goto bb19; else goto bb20;
     bb19:
     ( *kl_am_1 ).kl_power2 = 2047;
     ( *kl_am_1 ).kl_mantissa = 0;
-#line 296 "<kl>/_core/float_parse.kl"
+#line 271 "<kl>/_core/float_parse.kl"
     goto bb20;
     bb20:
-#line 301 "<kl>/_core/float_parse.kl"
+#line 276 "<kl>/_core/float_parse.kl"
     return;
-#line 301 "<kl>/_core/float_parse.kl"
+#line 276 "<kl>/_core/float_parse.kl"
 }
 
-#line 303 "<kl>/_core/float_parse.kl"
+#line 278 "<kl>/_core/float_parse.kl"
 void kl_2kl5_core11float_parse_9drop_bits__RQ2klQ5_core8adjusted_3i32_Q2klQ5_core3tie( struct kl_2kl5_core11float_parse_adjusted* kl_am_1, int32_t kl_shift_2, struct kl_2kl5_core11float_parse_tie kl_rule_3 )
 {
     uint64_t kl_s_4;
@@ -4625,214 +4509,214 @@ void kl_2kl5_core11float_parse_9drop_bits__RQ2klQ5_core8adjusted_3i32_Q2klQ5_cor
     bool kl_t42;
     bool kl_t43;
     bool kl_t44;
-#line 305 "<kl>/_core/float_parse.kl"
+#line 280 "<kl>/_core/float_parse.kl"
     kl_t5 = ( uint64_t ) kl_shift_2;
-#line 305 "<kl>/_core/float_parse.kl"
+#line 280 "<kl>/_core/float_parse.kl"
     kl_t6 = kl_shift_2 >= 0;
-#line 305 "<kl>/_core/float_parse.kl"
+#line 280 "<kl>/_core/float_parse.kl"
     if ( kl_t6 ) goto bb2; else goto bb1;
     bb1:
-#line 305 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 305, "cast out of range: cast<u64>( shift )" );
+#line 280 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 280, "cast out of range: cast<u64>( shift )" );
     bb2:
-#line 305 "<kl>/_core/float_parse.kl"
+#line 280 "<kl>/_core/float_parse.kl"
     kl_s_4 = kl_t5;
     kl_t9 = kl_s_4 == 64;
-#line 306 "<kl>/_core/float_parse.kl"
+#line 281 "<kl>/_core/float_parse.kl"
     if ( kl_t9 ) goto bb3; else goto bb4;
     bb3:
-#line 306 "<kl>/_core/float_parse.kl"
+#line 281 "<kl>/_core/float_parse.kl"
     kl_t8 = 18446744073709551615ull;
-#line 306 "<kl>/_core/float_parse.kl"
+#line 281 "<kl>/_core/float_parse.kl"
     goto bb5;
     bb4:
-#line 306 "<kl>/_core/float_parse.kl"
+#line 281 "<kl>/_core/float_parse.kl"
     kl_t10 = kl_s_4 & 63;
-#line 306 "<kl>/_core/float_parse.kl"
+#line 281 "<kl>/_core/float_parse.kl"
     kl_t11 = ( uint64_t ) 1 << kl_t10;
-#line 306 "<kl>/_core/float_parse.kl"
+#line 281 "<kl>/_core/float_parse.kl"
     kl_t12 = __builtin_sub_overflow( kl_t11, 1, &( uint64_t ) { 0 } );
-#line 306 "<kl>/_core/float_parse.kl"
+#line 281 "<kl>/_core/float_parse.kl"
     if ( kl_t12 ) goto bb6; else goto bb7;
     bb5:
-#line 306 "<kl>/_core/float_parse.kl"
+#line 281 "<kl>/_core/float_parse.kl"
     kl_mask_7 = kl_t8;
     kl_t16 = kl_s_4 == 0;
-#line 307 "<kl>/_core/float_parse.kl"
+#line 282 "<kl>/_core/float_parse.kl"
     if ( kl_t16 ) goto bb8; else goto bb9;
     bb6:
-#line 306 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 306, "arithmetic overflow: ( cast<u64>( 1 ) << s ) - 1" );
+#line 281 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 281, "arithmetic overflow: ( cast<u64>( 1 ) << s ) - 1" );
     bb7:
-#line 306 "<kl>/_core/float_parse.kl"
+#line 281 "<kl>/_core/float_parse.kl"
     kl_t13 = kl_t11 - 1;
-#line 306 "<kl>/_core/float_parse.kl"
+#line 281 "<kl>/_core/float_parse.kl"
     kl_t8 = kl_t13;
-#line 306 "<kl>/_core/float_parse.kl"
+#line 281 "<kl>/_core/float_parse.kl"
     goto bb5;
     bb8:
-#line 307 "<kl>/_core/float_parse.kl"
+#line 282 "<kl>/_core/float_parse.kl"
     kl_t15 = 0;
-#line 307 "<kl>/_core/float_parse.kl"
+#line 282 "<kl>/_core/float_parse.kl"
     goto bb10;
     bb9:
-#line 307 "<kl>/_core/float_parse.kl"
+#line 282 "<kl>/_core/float_parse.kl"
     kl_t17 = __builtin_sub_overflow( kl_s_4, 1, &( uint64_t ) { 0 } );
-#line 307 "<kl>/_core/float_parse.kl"
+#line 282 "<kl>/_core/float_parse.kl"
     if ( kl_t17 ) goto bb11; else goto bb12;
     bb10:
-#line 307 "<kl>/_core/float_parse.kl"
+#line 282 "<kl>/_core/float_parse.kl"
     kl_halfway_14 = kl_t15;
     kl_t22 = ( *kl_am_1 ).kl_mantissa & kl_mask_7;
-#line 308 "<kl>/_core/float_parse.kl"
+#line 283 "<kl>/_core/float_parse.kl"
     kl_dropped_21 = kl_t22;
     kl_t24 = kl_s_4 == 64;
-#line 309 "<kl>/_core/float_parse.kl"
+#line 284 "<kl>/_core/float_parse.kl"
     if ( kl_t24 ) goto bb13; else goto bb14;
     bb11:
-#line 307 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 307, "arithmetic overflow: ( s - 1 )" );
+#line 282 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 282, "arithmetic overflow: ( s - 1 )" );
     bb12:
-#line 307 "<kl>/_core/float_parse.kl"
+#line 282 "<kl>/_core/float_parse.kl"
     kl_t18 = kl_s_4 - 1;
-#line 307 "<kl>/_core/float_parse.kl"
+#line 282 "<kl>/_core/float_parse.kl"
     kl_t19 = kl_t18 & 63;
-#line 307 "<kl>/_core/float_parse.kl"
+#line 282 "<kl>/_core/float_parse.kl"
     kl_t20 = ( uint64_t ) 1 << kl_t19;
-#line 307 "<kl>/_core/float_parse.kl"
+#line 282 "<kl>/_core/float_parse.kl"
     kl_t15 = kl_t20;
-#line 307 "<kl>/_core/float_parse.kl"
+#line 282 "<kl>/_core/float_parse.kl"
     goto bb10;
     bb13:
     kl_t23 = 0;
-#line 309 "<kl>/_core/float_parse.kl"
+#line 284 "<kl>/_core/float_parse.kl"
     goto bb15;
     bb14:
-#line 309 "<kl>/_core/float_parse.kl"
+#line 284 "<kl>/_core/float_parse.kl"
     kl_t25 = kl_s_4 & 63;
-#line 309 "<kl>/_core/float_parse.kl"
+#line 284 "<kl>/_core/float_parse.kl"
     kl_t26 = ( *kl_am_1 ).kl_mantissa >> kl_t25;
-#line 309 "<kl>/_core/float_parse.kl"
+#line 284 "<kl>/_core/float_parse.kl"
     kl_t23 = kl_t26;
-#line 309 "<kl>/_core/float_parse.kl"
+#line 284 "<kl>/_core/float_parse.kl"
     goto bb15;
     bb15:
-#line 309 "<kl>/_core/float_parse.kl"
+#line 284 "<kl>/_core/float_parse.kl"
     ( *kl_am_1 ).kl_mantissa = kl_t23;
     kl_t27 = __builtin_add_overflow( ( *kl_am_1 ).kl_power2, kl_shift_2, &( int32_t ) { 0 } );
-#line 310 "<kl>/_core/float_parse.kl"
+#line 285 "<kl>/_core/float_parse.kl"
     if ( kl_t27 ) goto bb16; else goto bb17;
     bb16:
-#line 310 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 310, "arithmetic overflow: am.power2 += shift;" );
+#line 285 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 285, "arithmetic overflow: am.power2 += shift;" );
     bb17:
-#line 310 "<kl>/_core/float_parse.kl"
+#line 285 "<kl>/_core/float_parse.kl"
     ( *kl_am_1 ).kl_power2 = ( *kl_am_1 ).kl_power2 + kl_shift_2;
-#line 312 "<kl>/_core/float_parse.kl"
+#line 287 "<kl>/_core/float_parse.kl"
     kl_t29 = ( *kl_am_1 ).kl_mantissa & 1;
-#line 312 "<kl>/_core/float_parse.kl"
+#line 287 "<kl>/_core/float_parse.kl"
     kl_t30 = kl_t29 == 1;
-#line 312 "<kl>/_core/float_parse.kl"
+#line 287 "<kl>/_core/float_parse.kl"
     kl_odd_28 = kl_t30;
     kl_up_31 = false;
-#line 316 "<kl>/_core/float_parse.kl"
+#line 291 "<kl>/_core/float_parse.kl"
     kl_t32 = kl_rule_3.tag == 0;
-#line 316 "<kl>/_core/float_parse.kl"
+#line 291 "<kl>/_core/float_parse.kl"
     if ( kl_t32 ) goto bb21; else goto bb20;
     bb18:
     kl_truncated_33 = kl_rule_3.kl_7by_bits_truncated;
     kl_t35 = kl_dropped_21 > kl_halfway_14;
-#line 319 "<kl>/_core/float_parse.kl"
+#line 294 "<kl>/_core/float_parse.kl"
     kl_t34 = kl_t35;
-#line 319 "<kl>/_core/float_parse.kl"
+#line 294 "<kl>/_core/float_parse.kl"
     if ( kl_t34 ) goto bb23; else goto bb22;
     bb19:
     kl_order_39 = kl_rule_3.kl_8by_order_order;
     kl_t41 = kl_order_39 > 0;
-#line 322 "<kl>/_core/float_parse.kl"
+#line 297 "<kl>/_core/float_parse.kl"
     kl_t40 = kl_t41;
-#line 322 "<kl>/_core/float_parse.kl"
+#line 297 "<kl>/_core/float_parse.kl"
     if ( kl_t40 ) goto bb29; else goto bb28;
     bb20:
-#line 318 "<kl>/_core/float_parse.kl"
+#line 293 "<kl>/_core/float_parse.kl"
     kl_t32 = kl_rule_3.tag == 1;
-#line 318 "<kl>/_core/float_parse.kl"
+#line 293 "<kl>/_core/float_parse.kl"
     if ( kl_t32 ) goto bb18; else goto bb19;
     bb21:
-#line 325 "<kl>/_core/float_parse.kl"
+#line 300 "<kl>/_core/float_parse.kl"
     if ( kl_up_31 ) goto bb32; else goto bb35;
     bb22:
-#line 319 "<kl>/_core/float_parse.kl"
+#line 294 "<kl>/_core/float_parse.kl"
     kl_t37 = kl_dropped_21 == kl_halfway_14;
-#line 319 "<kl>/_core/float_parse.kl"
+#line 294 "<kl>/_core/float_parse.kl"
     kl_t36 = kl_t37;
-#line 319 "<kl>/_core/float_parse.kl"
+#line 294 "<kl>/_core/float_parse.kl"
     if ( kl_t36 ) goto bb24; else goto bb25;
     bb23:
-#line 319 "<kl>/_core/float_parse.kl"
+#line 294 "<kl>/_core/float_parse.kl"
     kl_up_31 = kl_t34;
     goto bb21;
     bb24:
-#line 319 "<kl>/_core/float_parse.kl"
+#line 294 "<kl>/_core/float_parse.kl"
     kl_t38 = kl_truncated_33;
-#line 319 "<kl>/_core/float_parse.kl"
+#line 294 "<kl>/_core/float_parse.kl"
     if ( kl_t38 ) goto bb27; else goto bb26;
     bb25:
-#line 319 "<kl>/_core/float_parse.kl"
+#line 294 "<kl>/_core/float_parse.kl"
     kl_t34 = kl_t36;
-#line 319 "<kl>/_core/float_parse.kl"
+#line 294 "<kl>/_core/float_parse.kl"
     goto bb23;
     bb26:
-#line 319 "<kl>/_core/float_parse.kl"
+#line 294 "<kl>/_core/float_parse.kl"
     kl_t38 = kl_odd_28;
-#line 319 "<kl>/_core/float_parse.kl"
+#line 294 "<kl>/_core/float_parse.kl"
     goto bb27;
     bb27:
-#line 319 "<kl>/_core/float_parse.kl"
+#line 294 "<kl>/_core/float_parse.kl"
     kl_t36 = kl_t38;
-#line 319 "<kl>/_core/float_parse.kl"
+#line 294 "<kl>/_core/float_parse.kl"
     goto bb25;
     bb28:
-#line 322 "<kl>/_core/float_parse.kl"
+#line 297 "<kl>/_core/float_parse.kl"
     kl_t43 = kl_order_39 == 0;
-#line 322 "<kl>/_core/float_parse.kl"
+#line 297 "<kl>/_core/float_parse.kl"
     kl_t42 = kl_t43;
-#line 322 "<kl>/_core/float_parse.kl"
+#line 297 "<kl>/_core/float_parse.kl"
     if ( kl_t42 ) goto bb30; else goto bb31;
     bb29:
-#line 322 "<kl>/_core/float_parse.kl"
+#line 297 "<kl>/_core/float_parse.kl"
     kl_up_31 = kl_t40;
     goto bb21;
     bb30:
-#line 322 "<kl>/_core/float_parse.kl"
+#line 297 "<kl>/_core/float_parse.kl"
     kl_t42 = kl_odd_28;
-#line 322 "<kl>/_core/float_parse.kl"
+#line 297 "<kl>/_core/float_parse.kl"
     goto bb31;
     bb31:
-#line 322 "<kl>/_core/float_parse.kl"
+#line 297 "<kl>/_core/float_parse.kl"
     kl_t40 = kl_t42;
-#line 322 "<kl>/_core/float_parse.kl"
+#line 297 "<kl>/_core/float_parse.kl"
     goto bb29;
     bb32:
-#line 327 "<kl>/_core/float_parse.kl"
+#line 302 "<kl>/_core/float_parse.kl"
     kl_t44 = __builtin_add_overflow( ( *kl_am_1 ).kl_mantissa, 1, &( uint64_t ) { 0 } );
-#line 327 "<kl>/_core/float_parse.kl"
+#line 302 "<kl>/_core/float_parse.kl"
     if ( kl_t44 ) goto bb33; else goto bb34;
     bb33:
-#line 327 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 327, "arithmetic overflow: am.mantissa++;" );
+#line 302 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 302, "arithmetic overflow: am.mantissa++;" );
     bb34:
-#line 327 "<kl>/_core/float_parse.kl"
+#line 302 "<kl>/_core/float_parse.kl"
     ( *kl_am_1 ).kl_mantissa = ( *kl_am_1 ).kl_mantissa + 1;
-#line 325 "<kl>/_core/float_parse.kl"
+#line 300 "<kl>/_core/float_parse.kl"
     goto bb35;
     bb35:
-#line 329 "<kl>/_core/float_parse.kl"
+#line 304 "<kl>/_core/float_parse.kl"
     return;
-#line 329 "<kl>/_core/float_parse.kl"
+#line 304 "<kl>/_core/float_parse.kl"
 }
 
-#line 332 "<kl>/_core/float_parse.kl"
+#line 307 "<kl>/_core/float_parse.kl"
 int32_t kl_2kl5_core11float_parse_19scientific_exponent__3u64_3i64( uint64_t kl_mantissa_1, int64_t kl_exponent_2 )
 {
     int32_t kl_t0;
@@ -4847,90 +4731,90 @@ int32_t kl_2kl5_core11float_parse_19scientific_exponent__3u64_3i64( uint64_t kl_
     bool kl_t11;
     bool kl_t12;
     bool kl_t13;
-#line 334 "<kl>/_core/float_parse.kl"
+#line 309 "<kl>/_core/float_parse.kl"
     kl_m_3 = kl_mantissa_1;
     kl_t5 = ( int32_t ) kl_exponent_2;
-#line 335 "<kl>/_core/float_parse.kl"
+#line 310 "<kl>/_core/float_parse.kl"
     kl_t6 = ( int64_t ) kl_t5;
-#line 335 "<kl>/_core/float_parse.kl"
+#line 310 "<kl>/_core/float_parse.kl"
     kl_t7 = kl_t6 == kl_exponent_2;
-#line 335 "<kl>/_core/float_parse.kl"
+#line 310 "<kl>/_core/float_parse.kl"
     if ( kl_t7 ) goto bb2; else goto bb1;
     bb1:
-#line 335 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 335, "cast out of range: cast<i32>( exponent )" );
+#line 310 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 310, "cast out of range: cast<i32>( exponent )" );
     bb2:
-#line 335 "<kl>/_core/float_parse.kl"
+#line 310 "<kl>/_core/float_parse.kl"
     kl_e_4 = kl_t5;
     goto bb3;
     bb3:
-#line 336 "<kl>/_core/float_parse.kl"
+#line 311 "<kl>/_core/float_parse.kl"
     kl_t8 = kl_m_3 >= 10000;
-#line 336 "<kl>/_core/float_parse.kl"
+#line 311 "<kl>/_core/float_parse.kl"
     if ( kl_t8 ) goto bb4; else goto bb7;
     bb4:
     kl_m_3 = kl_m_3 / 10000;
     kl_t9 = __builtin_add_overflow( kl_e_4, 4, &( int32_t ) { 0 } );
-#line 339 "<kl>/_core/float_parse.kl"
+#line 314 "<kl>/_core/float_parse.kl"
     if ( kl_t9 ) goto bb5; else goto bb6;
     bb5:
-#line 339 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 339, "arithmetic overflow: e += 4;" );
+#line 314 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 314, "arithmetic overflow: e += 4;" );
     bb6:
-#line 339 "<kl>/_core/float_parse.kl"
+#line 314 "<kl>/_core/float_parse.kl"
     kl_e_4 = kl_e_4 + 4;
-#line 336 "<kl>/_core/float_parse.kl"
+#line 311 "<kl>/_core/float_parse.kl"
     goto bb3;
     bb7:
-#line 341 "<kl>/_core/float_parse.kl"
+#line 316 "<kl>/_core/float_parse.kl"
     kl_t10 = kl_m_3 >= 100;
-#line 341 "<kl>/_core/float_parse.kl"
+#line 316 "<kl>/_core/float_parse.kl"
     if ( kl_t10 ) goto bb8; else goto bb11;
     bb8:
     kl_m_3 = kl_m_3 / 100;
     kl_t11 = __builtin_add_overflow( kl_e_4, 2, &( int32_t ) { 0 } );
-#line 344 "<kl>/_core/float_parse.kl"
+#line 319 "<kl>/_core/float_parse.kl"
     if ( kl_t11 ) goto bb9; else goto bb10;
     bb9:
-#line 344 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 344, "arithmetic overflow: e += 2;" );
+#line 319 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 319, "arithmetic overflow: e += 2;" );
     bb10:
-#line 344 "<kl>/_core/float_parse.kl"
+#line 319 "<kl>/_core/float_parse.kl"
     kl_e_4 = kl_e_4 + 2;
-#line 341 "<kl>/_core/float_parse.kl"
+#line 316 "<kl>/_core/float_parse.kl"
     goto bb7;
     bb11:
-#line 346 "<kl>/_core/float_parse.kl"
+#line 321 "<kl>/_core/float_parse.kl"
     kl_t12 = kl_m_3 >= 10;
-#line 346 "<kl>/_core/float_parse.kl"
+#line 321 "<kl>/_core/float_parse.kl"
     if ( kl_t12 ) goto bb12; else goto bb13;
     bb12:
     kl_m_3 = kl_m_3 / 10;
     kl_t13 = __builtin_add_overflow( kl_e_4, 1, &( int32_t ) { 0 } );
-#line 349 "<kl>/_core/float_parse.kl"
+#line 324 "<kl>/_core/float_parse.kl"
     if ( kl_t13 ) goto bb14; else goto bb15;
     bb13:
     kl_t0 = kl_e_4;
-#line 351 "<kl>/_core/float_parse.kl"
+#line 326 "<kl>/_core/float_parse.kl"
     return kl_t0;
     bb14:
-#line 349 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 349, "arithmetic overflow: e += 1;" );
+#line 324 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 324, "arithmetic overflow: e += 1;" );
     bb15:
-#line 349 "<kl>/_core/float_parse.kl"
+#line 324 "<kl>/_core/float_parse.kl"
     kl_e_4 = kl_e_4 + 1;
-#line 346 "<kl>/_core/float_parse.kl"
+#line 321 "<kl>/_core/float_parse.kl"
     goto bb11;
-#line 352 "<kl>/_core/float_parse.kl"
+#line 327 "<kl>/_core/float_parse.kl"
 }
 
-#line 355 "<kl>/_core/float_parse.kl"
+#line 330 "<kl>/_core/float_parse.kl"
 struct kl_2kl5_core11float_parse_adjusted kl_2kl5_core11float_parse_10digit_comp__3u64_3i64_L2u8_L2u8_Q2klQ5_core8adjusted( uint64_t kl_w_1, int64_t kl_q_2, uint8_t* kl_integer_3_data, uint64_t kl_integer_3_size, uint8_t* kl_fraction_4_data, uint64_t kl_fraction_4_size, struct kl_2kl5_core11float_parse_adjusted kl_am_5 )
 {
     struct kl_2kl5_core11float_parse_adjusted kl_t0;
-#line 355 "<kl>/_core/float_parse.kl"
+#line 330 "<kl>/_core/float_parse.kl"
     struct kl__run__L2u8__ref kl_integer_3 = { kl_integer_3_data, kl_integer_3_size };
-#line 355 "<kl>/_core/float_parse.kl"
+#line 330 "<kl>/_core/float_parse.kl"
     struct kl__run__L2u8__ref kl_fraction_4 = { kl_fraction_4_data, kl_fraction_4_size };
     struct kl_2kl5_core11float_parse_adjusted kl_estimate_6;
     struct kl_2kl5_core11float_parse_adjusted kl_t7;
@@ -4962,113 +4846,113 @@ struct kl_2kl5_core11float_parse_adjusted kl_2kl5_core11float_parse_10digit_comp
     struct kl_2kl5_core11float_parse_adjusted kl_t33;
     struct kl_2kl5_core11float_parse_big* kl_t34;
     struct kl_2kl5_core11float_parse_adjusted kl_t35;
-#line 357 "<kl>/_core/float_parse.kl"
+#line 332 "<kl>/_core/float_parse.kl"
     kl_t8 = __builtin_sub_overflow( kl_am_5.kl_power2, -32768, &( int32_t ) { 0 } );
-#line 357 "<kl>/_core/float_parse.kl"
+#line 332 "<kl>/_core/float_parse.kl"
     if ( kl_t8 ) goto bb1; else goto bb2;
     bb1:
-#line 357 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 357, "arithmetic overflow: am.power2 - INVALID_BIAS" );
+#line 332 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 332, "arithmetic overflow: am.power2 - INVALID_BIAS" );
     bb2:
-#line 357 "<kl>/_core/float_parse.kl"
+#line 332 "<kl>/_core/float_parse.kl"
     kl_t9 = kl_am_5.kl_power2 - -32768;
-#line 357 "<kl>/_core/float_parse.kl"
+#line 332 "<kl>/_core/float_parse.kl"
     kl_t7.kl_mantissa = kl_am_5.kl_mantissa;
-#line 357 "<kl>/_core/float_parse.kl"
+#line 332 "<kl>/_core/float_parse.kl"
     kl_t7.kl_power2 = kl_t9;
-#line 357 "<kl>/_core/float_parse.kl"
+#line 332 "<kl>/_core/float_parse.kl"
     kl_estimate_6 = kl_t7;
     kl_t11 = kl_2kl5_core11float_parse_19scientific_exponent__3u64_3i64( kl_w_1, kl_q_2 );
-#line 358 "<kl>/_core/float_parse.kl"
+#line 333 "<kl>/_core/float_parse.kl"
     kl_sci_exp_10 = kl_t11;
     kl_t15 = 0;
-#line 359 "<kl>/_core/float_parse.kl"
+#line 334 "<kl>/_core/float_parse.kl"
     goto bb3;
     bb3:
-#line 359 "<kl>/_core/float_parse.kl"
+#line 334 "<kl>/_core/float_parse.kl"
     kl_t14.e[kl_t15] = 0;
-#line 359 "<kl>/_core/float_parse.kl"
+#line 334 "<kl>/_core/float_parse.kl"
     kl_t15 = kl_t15 + 1;
-#line 359 "<kl>/_core/float_parse.kl"
+#line 334 "<kl>/_core/float_parse.kl"
     kl_t16 = kl_t15 < 62;
-#line 359 "<kl>/_core/float_parse.kl"
+#line 334 "<kl>/_core/float_parse.kl"
     if ( kl_t16 ) goto bb3; else goto bb4;
     bb4:
-#line 359 "<kl>/_core/float_parse.kl"
+#line 334 "<kl>/_core/float_parse.kl"
     kl_t13.kl_limbs = kl_t14;
-#line 359 "<kl>/_core/float_parse.kl"
+#line 334 "<kl>/_core/float_parse.kl"
     kl_t13.kl_size = 0;
-#line 359 "<kl>/_core/float_parse.kl"
+#line 334 "<kl>/_core/float_parse.kl"
     kl_digits_12 = kl_t13;
     kl_t18 = &kl_digits_12;
-#line 360 "<kl>/_core/float_parse.kl"
+#line 335 "<kl>/_core/float_parse.kl"
     kl_t19 = kl_integer_3;
-#line 360 "<kl>/_core/float_parse.kl"
+#line 335 "<kl>/_core/float_parse.kl"
     kl_t20 = kl_fraction_4;
-#line 360 "<kl>/_core/float_parse.kl"
+#line 335 "<kl>/_core/float_parse.kl"
     kl_t21 = kl_2kl5_core11float_parse_14parse_mantissa__RQ2klQ5_core3big_L2u8_L2u8( kl_t18, ( kl_t19 ).data, ( kl_t19 ).size, ( kl_t20 ).data, ( kl_t20 ).size );
-#line 360 "<kl>/_core/float_parse.kl"
+#line 335 "<kl>/_core/float_parse.kl"
     kl_count_17 = kl_t21;
     kl_t23 = __builtin_add_overflow( kl_sci_exp_10, 1, &( int32_t ) { 0 } );
-#line 361 "<kl>/_core/float_parse.kl"
+#line 336 "<kl>/_core/float_parse.kl"
     if ( kl_t23 ) goto bb5; else goto bb6;
     bb5:
-#line 361 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 361, "arithmetic overflow: sci_exp + 1" );
+#line 336 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 336, "arithmetic overflow: sci_exp + 1" );
     bb6:
-#line 361 "<kl>/_core/float_parse.kl"
+#line 336 "<kl>/_core/float_parse.kl"
     kl_t24 = kl_sci_exp_10 + 1;
-#line 361 "<kl>/_core/float_parse.kl"
+#line 336 "<kl>/_core/float_parse.kl"
     kl_t25 = ( int32_t ) kl_count_17;
-#line 361 "<kl>/_core/float_parse.kl"
+#line 336 "<kl>/_core/float_parse.kl"
     kl_t26 = ( uint64_t ) kl_t25;
-#line 361 "<kl>/_core/float_parse.kl"
+#line 336 "<kl>/_core/float_parse.kl"
     kl_t27 = kl_t26 == kl_count_17;
-#line 361 "<kl>/_core/float_parse.kl"
+#line 336 "<kl>/_core/float_parse.kl"
     if ( kl_t27 ) goto bb8; else goto bb7;
     bb7:
-#line 361 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 361, "cast out of range: cast<i32>( count )" );
+#line 336 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 336, "cast out of range: cast<i32>( count )" );
     bb8:
-#line 361 "<kl>/_core/float_parse.kl"
+#line 336 "<kl>/_core/float_parse.kl"
     kl_t28 = kl_t25 >= 0;
-#line 361 "<kl>/_core/float_parse.kl"
+#line 336 "<kl>/_core/float_parse.kl"
     if ( kl_t28 ) goto bb9; else goto bb7;
     bb9:
-#line 361 "<kl>/_core/float_parse.kl"
+#line 336 "<kl>/_core/float_parse.kl"
     kl_t29 = __builtin_sub_overflow( kl_t24, kl_t25, &( int32_t ) { 0 } );
-#line 361 "<kl>/_core/float_parse.kl"
+#line 336 "<kl>/_core/float_parse.kl"
     if ( kl_t29 ) goto bb10; else goto bb11;
     bb10:
-#line 361 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 361, "arithmetic overflow: sci_exp + 1 - cast<i32>( count )" );
+#line 336 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 336, "arithmetic overflow: sci_exp + 1 - cast<i32>( count )" );
     bb11:
-#line 361 "<kl>/_core/float_parse.kl"
+#line 336 "<kl>/_core/float_parse.kl"
     kl_t30 = kl_t24 - kl_t25;
-#line 361 "<kl>/_core/float_parse.kl"
+#line 336 "<kl>/_core/float_parse.kl"
     kl_exponent_22 = kl_t30;
     kl_t31 = kl_exponent_22 >= 0;
-#line 362 "<kl>/_core/float_parse.kl"
+#line 337 "<kl>/_core/float_parse.kl"
     if ( kl_t31 ) goto bb12; else goto bb13;
     bb12:
     kl_t32 = &kl_digits_12;
-#line 364 "<kl>/_core/float_parse.kl"
+#line 339 "<kl>/_core/float_parse.kl"
     kl_t33 = kl_2kl5_core11float_parse_19positive_digit_comp__RQ2klQ5_core3big_3i32( kl_t32, kl_exponent_22 );
-#line 364 "<kl>/_core/float_parse.kl"
+#line 339 "<kl>/_core/float_parse.kl"
     kl_t0 = kl_t33;
-#line 364 "<kl>/_core/float_parse.kl"
+#line 339 "<kl>/_core/float_parse.kl"
     return kl_t0;
     bb13:
     kl_t34 = &kl_digits_12;
-#line 366 "<kl>/_core/float_parse.kl"
+#line 341 "<kl>/_core/float_parse.kl"
     kl_t35 = kl_2kl5_core11float_parse_19negative_digit_comp__RQ2klQ5_core3big_Q2klQ5_core8adjusted_3i32( kl_t34, kl_estimate_6, kl_exponent_22 );
-#line 366 "<kl>/_core/float_parse.kl"
+#line 341 "<kl>/_core/float_parse.kl"
     kl_t0 = kl_t35;
-#line 366 "<kl>/_core/float_parse.kl"
+#line 341 "<kl>/_core/float_parse.kl"
     return kl_t0;
 }
 
-#line 369 "<kl>/_core/float_parse.kl"
+#line 344 "<kl>/_core/float_parse.kl"
 struct kl_2kl5_core11float_parse_adjusted kl_2kl5_core11float_parse_19positive_digit_comp__RQ2klQ5_core3big_3i32( struct kl_2kl5_core11float_parse_big* kl_digits_1, int32_t kl_exponent_2 )
 {
     struct kl_2kl5_core11float_parse_adjusted kl_t0;
@@ -5095,97 +4979,97 @@ struct kl_2kl5_core11float_parse_adjusted kl_2kl5_core11float_parse_19positive_d
     int32_t kl_t25;
     struct kl_2kl5_core11float_parse_adjusted* kl_t26;
     struct kl_2kl5_core11float_parse_tie kl_t27;
-#line 371 "<kl>/_core/float_parse.kl"
+#line 346 "<kl>/_core/float_parse.kl"
     kl_t3 = &( *kl_digits_1 );
-#line 371 "<kl>/_core/float_parse.kl"
+#line 346 "<kl>/_core/float_parse.kl"
     kl_t4 = ( uint64_t ) kl_exponent_2;
-#line 371 "<kl>/_core/float_parse.kl"
+#line 346 "<kl>/_core/float_parse.kl"
     kl_t5 = kl_exponent_2 >= 0;
-#line 371 "<kl>/_core/float_parse.kl"
+#line 346 "<kl>/_core/float_parse.kl"
     if ( kl_t5 ) goto bb2; else goto bb1;
     bb1:
-#line 371 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 371, "cast out of range: cast<u64>( exponent )" );
+#line 346 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 346, "cast out of range: cast<u64>( exponent )" );
     bb2:
-#line 371 "<kl>/_core/float_parse.kl"
+#line 346 "<kl>/_core/float_parse.kl"
     kl_2kl5_core11float_parse_4pow5__RQ2klQ5_core3big_3u64( kl_t3, kl_t4 );
     kl_t7 = &( *kl_digits_1 );
-#line 372 "<kl>/_core/float_parse.kl"
+#line 347 "<kl>/_core/float_parse.kl"
     kl_t8 = ( uint64_t ) kl_exponent_2;
-#line 372 "<kl>/_core/float_parse.kl"
+#line 347 "<kl>/_core/float_parse.kl"
     kl_t9 = kl_exponent_2 >= 0;
-#line 372 "<kl>/_core/float_parse.kl"
+#line 347 "<kl>/_core/float_parse.kl"
     if ( kl_t9 ) goto bb4; else goto bb3;
     bb3:
-#line 372 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 372, "cast out of range: cast<u64>( exponent )" );
+#line 347 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 347, "cast out of range: cast<u64>( exponent )" );
     bb4:
-#line 372 "<kl>/_core/float_parse.kl"
+#line 347 "<kl>/_core/float_parse.kl"
     kl_2kl5_core11float_parse_3shl__RQ2klQ5_core3big_3u64( kl_t7, kl_t8 );
     kl_t12 = &( *kl_digits_1 );
-#line 373 "<kl>/_core/float_parse.kl"
+#line 348 "<kl>/_core/float_parse.kl"
     kl_t13 = kl_2kl5_core11float_parse_4hi64__Q2klQ5_core3big( kl_t12 );
-#line 373 "<kl>/_core/float_parse.kl"
+#line 348 "<kl>/_core/float_parse.kl"
     kl_t_11 = kl_t13;
     kl_t16 = &( *kl_digits_1 );
-#line 374 "<kl>/_core/float_parse.kl"
+#line 349 "<kl>/_core/float_parse.kl"
     kl_t17 = kl_2kl5_core11float_parse_10bit_length__Q2klQ5_core3big( kl_t16 );
-#line 374 "<kl>/_core/float_parse.kl"
+#line 349 "<kl>/_core/float_parse.kl"
     kl_t18 = ( int32_t ) kl_t17;
-#line 374 "<kl>/_core/float_parse.kl"
+#line 349 "<kl>/_core/float_parse.kl"
     kl_t19 = ( uint64_t ) kl_t18;
-#line 374 "<kl>/_core/float_parse.kl"
+#line 349 "<kl>/_core/float_parse.kl"
     kl_t20 = kl_t19 == kl_t17;
-#line 374 "<kl>/_core/float_parse.kl"
+#line 349 "<kl>/_core/float_parse.kl"
     if ( kl_t20 ) goto bb6; else goto bb5;
     bb5:
-#line 374 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 374, "cast out of range: cast<i32>( bit_length( digits ) )" );
+#line 349 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 349, "cast out of range: cast<i32>( bit_length( digits ) )" );
     bb6:
-#line 374 "<kl>/_core/float_parse.kl"
+#line 349 "<kl>/_core/float_parse.kl"
     kl_t21 = kl_t18 >= 0;
-#line 374 "<kl>/_core/float_parse.kl"
+#line 349 "<kl>/_core/float_parse.kl"
     if ( kl_t21 ) goto bb7; else goto bb5;
     bb7:
-#line 374 "<kl>/_core/float_parse.kl"
+#line 349 "<kl>/_core/float_parse.kl"
     kl_t22 = __builtin_sub_overflow( kl_t18, 64, &( int32_t ) { 0 } );
-#line 374 "<kl>/_core/float_parse.kl"
+#line 349 "<kl>/_core/float_parse.kl"
     if ( kl_t22 ) goto bb8; else goto bb9;
     bb8:
-#line 374 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 374, "arithmetic overflow: cast<i32>( bit_length( digits ) ) - 64" );
+#line 349 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 349, "arithmetic overflow: cast<i32>( bit_length( digits ) ) - 64" );
     bb9:
-#line 374 "<kl>/_core/float_parse.kl"
+#line 349 "<kl>/_core/float_parse.kl"
     kl_t23 = kl_t18 - 64;
-#line 374 "<kl>/_core/float_parse.kl"
+#line 349 "<kl>/_core/float_parse.kl"
     kl_t24 = __builtin_add_overflow( kl_t23, 1075, &( int32_t ) { 0 } );
-#line 374 "<kl>/_core/float_parse.kl"
+#line 349 "<kl>/_core/float_parse.kl"
     if ( kl_t24 ) goto bb10; else goto bb11;
     bb10:
-#line 374 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 374, "arithmetic overflow: cast<i32>( bit_length( digits ) ) - 64 + 1075" );
+#line 349 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 349, "arithmetic overflow: cast<i32>( bit_length( digits ) ) - 64 + 1075" );
     bb11:
-#line 374 "<kl>/_core/float_parse.kl"
+#line 349 "<kl>/_core/float_parse.kl"
     kl_t25 = kl_t23 + 1075;
-#line 374 "<kl>/_core/float_parse.kl"
+#line 349 "<kl>/_core/float_parse.kl"
     kl_t15.kl_mantissa = kl_t_11.kl_bits;
-#line 374 "<kl>/_core/float_parse.kl"
+#line 349 "<kl>/_core/float_parse.kl"
     kl_t15.kl_power2 = kl_t25;
-#line 374 "<kl>/_core/float_parse.kl"
+#line 349 "<kl>/_core/float_parse.kl"
     kl_answer_14 = kl_t15;
     kl_t26 = &kl_answer_14;
-#line 375 "<kl>/_core/float_parse.kl"
+#line 350 "<kl>/_core/float_parse.kl"
     kl_t27.tag = 1;
-#line 375 "<kl>/_core/float_parse.kl"
+#line 350 "<kl>/_core/float_parse.kl"
     kl_t27.kl_7by_bits_truncated = kl_t_11.kl_truncated;
-#line 375 "<kl>/_core/float_parse.kl"
+#line 350 "<kl>/_core/float_parse.kl"
     kl_2kl5_core11float_parse_5round__RQ2klQ5_core8adjusted_Q2klQ5_core3tie( kl_t26, kl_t27 );
     kl_t0 = kl_answer_14;
-#line 376 "<kl>/_core/float_parse.kl"
+#line 351 "<kl>/_core/float_parse.kl"
     return kl_t0;
 }
 
-#line 380 "<kl>/_core/float_parse.kl"
+#line 355 "<kl>/_core/float_parse.kl"
 struct kl_2kl5_core11float_parse_adjusted kl_2kl5_core11float_parse_19negative_digit_comp__RQ2klQ5_core3big_Q2klQ5_core8adjusted_3i32( struct kl_2kl5_core11float_parse_big* kl_real_1, struct kl_2kl5_core11float_parse_adjusted kl_am_2, int32_t kl_real_exp_3 )
 {
     struct kl_2kl5_core11float_parse_adjusted kl_t0;
@@ -5236,217 +5120,217 @@ struct kl_2kl5_core11float_parse_adjusted kl_2kl5_core11float_parse_19negative_d
     struct kl_2kl5_core11float_parse_big* kl_t53;
     struct kl_2kl5_core11float_parse_big* kl_t54;
     int32_t kl_t55;
-#line 382 "<kl>/_core/float_parse.kl"
+#line 357 "<kl>/_core/float_parse.kl"
     kl_b_4 = kl_am_2;
     kl_t5 = &kl_b_4;
-#line 383 "<kl>/_core/float_parse.kl"
+#line 358 "<kl>/_core/float_parse.kl"
     kl_t6.tag = 0;
-#line 383 "<kl>/_core/float_parse.kl"
+#line 358 "<kl>/_core/float_parse.kl"
     kl_2kl5_core11float_parse_5round__RQ2klQ5_core8adjusted_Q2klQ5_core3tie( kl_t5, kl_t6 );
     kl_t10 = kl_b_4.kl_power2 == 0;
-#line 384 "<kl>/_core/float_parse.kl"
+#line 359 "<kl>/_core/float_parse.kl"
     if ( kl_t10 ) goto bb1; else goto bb2;
     bb1:
-#line 384 "<kl>/_core/float_parse.kl"
+#line 359 "<kl>/_core/float_parse.kl"
     kl_t12 = 1 - 1075;
-#line 384 "<kl>/_core/float_parse.kl"
+#line 359 "<kl>/_core/float_parse.kl"
     kl_t11.kl_mantissa = kl_b_4.kl_mantissa;
-#line 384 "<kl>/_core/float_parse.kl"
+#line 359 "<kl>/_core/float_parse.kl"
     kl_t11.kl_power2 = kl_t12;
-#line 384 "<kl>/_core/float_parse.kl"
+#line 359 "<kl>/_core/float_parse.kl"
     kl_t9 = kl_t11;
-#line 384 "<kl>/_core/float_parse.kl"
+#line 359 "<kl>/_core/float_parse.kl"
     goto bb3;
     bb2:
-#line 384 "<kl>/_core/float_parse.kl"
+#line 359 "<kl>/_core/float_parse.kl"
     kl_t14 = kl_b_4.kl_mantissa | 4503599627370496;
-#line 384 "<kl>/_core/float_parse.kl"
+#line 359 "<kl>/_core/float_parse.kl"
     kl_t15 = __builtin_sub_overflow( kl_b_4.kl_power2, 1075, &( int32_t ) { 0 } );
-#line 384 "<kl>/_core/float_parse.kl"
+#line 359 "<kl>/_core/float_parse.kl"
     if ( kl_t15 ) goto bb4; else goto bb5;
     bb3:
-#line 384 "<kl>/_core/float_parse.kl"
+#line 359 "<kl>/_core/float_parse.kl"
     kl_halfway_8 = kl_t9;
     kl_t17 = __builtin_mul_overflow( kl_halfway_8.kl_mantissa, 2, &( uint64_t ) { 0 } );
-#line 385 "<kl>/_core/float_parse.kl"
+#line 360 "<kl>/_core/float_parse.kl"
     if ( kl_t17 ) goto bb6; else goto bb7;
     bb4:
-#line 384 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 384, "arithmetic overflow: b.power2 - 1075" );
+#line 359 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 359, "arithmetic overflow: b.power2 - 1075" );
     bb5:
-#line 384 "<kl>/_core/float_parse.kl"
+#line 359 "<kl>/_core/float_parse.kl"
     kl_t16 = kl_b_4.kl_power2 - 1075;
-#line 384 "<kl>/_core/float_parse.kl"
+#line 359 "<kl>/_core/float_parse.kl"
     kl_t13.kl_mantissa = kl_t14;
-#line 384 "<kl>/_core/float_parse.kl"
+#line 359 "<kl>/_core/float_parse.kl"
     kl_t13.kl_power2 = kl_t16;
-#line 384 "<kl>/_core/float_parse.kl"
+#line 359 "<kl>/_core/float_parse.kl"
     kl_t9 = kl_t13;
-#line 384 "<kl>/_core/float_parse.kl"
+#line 359 "<kl>/_core/float_parse.kl"
     goto bb3;
     bb6:
-#line 385 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 385, "arithmetic overflow: halfway.mantissa * 2" );
+#line 360 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 360, "arithmetic overflow: halfway.mantissa * 2" );
     bb7:
-#line 385 "<kl>/_core/float_parse.kl"
+#line 360 "<kl>/_core/float_parse.kl"
     kl_t18 = kl_halfway_8.kl_mantissa * 2;
-#line 385 "<kl>/_core/float_parse.kl"
+#line 360 "<kl>/_core/float_parse.kl"
     kl_t19 = __builtin_add_overflow( kl_t18, 1, &( uint64_t ) { 0 } );
-#line 385 "<kl>/_core/float_parse.kl"
+#line 360 "<kl>/_core/float_parse.kl"
     if ( kl_t19 ) goto bb8; else goto bb9;
     bb8:
-#line 385 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 385, "arithmetic overflow: halfway.mantissa * 2 + 1" );
+#line 360 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 360, "arithmetic overflow: halfway.mantissa * 2 + 1" );
     bb9:
-#line 385 "<kl>/_core/float_parse.kl"
+#line 360 "<kl>/_core/float_parse.kl"
     kl_t20 = kl_t18 + 1;
-#line 385 "<kl>/_core/float_parse.kl"
+#line 360 "<kl>/_core/float_parse.kl"
     kl_halfway_8.kl_mantissa = kl_t20;
     kl_t21 = __builtin_sub_overflow( kl_halfway_8.kl_power2, 1, &( int32_t ) { 0 } );
-#line 386 "<kl>/_core/float_parse.kl"
+#line 361 "<kl>/_core/float_parse.kl"
     if ( kl_t21 ) goto bb10; else goto bb11;
     bb10:
-#line 386 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 386, "arithmetic overflow: halfway.power2 -= 1;" );
+#line 361 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 361, "arithmetic overflow: halfway.power2 -= 1;" );
     bb11:
-#line 386 "<kl>/_core/float_parse.kl"
+#line 361 "<kl>/_core/float_parse.kl"
     kl_halfway_8.kl_power2 = kl_halfway_8.kl_power2 - 1;
-#line 388 "<kl>/_core/float_parse.kl"
+#line 363 "<kl>/_core/float_parse.kl"
     kl_t25 = 0;
-#line 388 "<kl>/_core/float_parse.kl"
+#line 363 "<kl>/_core/float_parse.kl"
     goto bb12;
     bb12:
-#line 388 "<kl>/_core/float_parse.kl"
+#line 363 "<kl>/_core/float_parse.kl"
     kl_t24.e[kl_t25] = 0;
-#line 388 "<kl>/_core/float_parse.kl"
+#line 363 "<kl>/_core/float_parse.kl"
     kl_t25 = kl_t25 + 1;
-#line 388 "<kl>/_core/float_parse.kl"
+#line 363 "<kl>/_core/float_parse.kl"
     kl_t26 = kl_t25 < 62;
-#line 388 "<kl>/_core/float_parse.kl"
+#line 363 "<kl>/_core/float_parse.kl"
     if ( kl_t26 ) goto bb12; else goto bb13;
     bb13:
-#line 388 "<kl>/_core/float_parse.kl"
+#line 363 "<kl>/_core/float_parse.kl"
     kl_t23.kl_limbs = kl_t24;
-#line 388 "<kl>/_core/float_parse.kl"
+#line 363 "<kl>/_core/float_parse.kl"
     kl_t23.kl_size = 0;
-#line 388 "<kl>/_core/float_parse.kl"
+#line 363 "<kl>/_core/float_parse.kl"
     kl_theory_22 = kl_t23;
     kl_t27 = &kl_theory_22;
-#line 389 "<kl>/_core/float_parse.kl"
+#line 364 "<kl>/_core/float_parse.kl"
     kl_2kl5_core11float_parse_4push__RQ2klQ5_core3big_3u64( kl_t27, kl_halfway_8.kl_mantissa );
     kl_t30 = __builtin_sub_overflow( kl_halfway_8.kl_power2, kl_real_exp_3, &( int32_t ) { 0 } );
-#line 390 "<kl>/_core/float_parse.kl"
+#line 365 "<kl>/_core/float_parse.kl"
     if ( kl_t30 ) goto bb14; else goto bb15;
     bb14:
-#line 390 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 390, "arithmetic overflow: halfway.power2 - real_exp" );
+#line 365 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 365, "arithmetic overflow: halfway.power2 - real_exp" );
     bb15:
-#line 390 "<kl>/_core/float_parse.kl"
+#line 365 "<kl>/_core/float_parse.kl"
     kl_t31 = kl_halfway_8.kl_power2 - kl_real_exp_3;
-#line 390 "<kl>/_core/float_parse.kl"
+#line 365 "<kl>/_core/float_parse.kl"
     kl_pow2_exp_29 = kl_t31;
     kl_t32 = &kl_theory_22;
-#line 391 "<kl>/_core/float_parse.kl"
+#line 366 "<kl>/_core/float_parse.kl"
     kl_t33 = __builtin_sub_overflow( 0, kl_real_exp_3, &( int32_t ) { 0 } );
-#line 391 "<kl>/_core/float_parse.kl"
+#line 366 "<kl>/_core/float_parse.kl"
     if ( kl_t33 ) goto bb16; else goto bb17;
     bb16:
-#line 391 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 391, "arithmetic overflow: -real_exp" );
+#line 366 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 366, "arithmetic overflow: -real_exp" );
     bb17:
-#line 391 "<kl>/_core/float_parse.kl"
+#line 366 "<kl>/_core/float_parse.kl"
     kl_t34 = -kl_real_exp_3;
-#line 391 "<kl>/_core/float_parse.kl"
+#line 366 "<kl>/_core/float_parse.kl"
     kl_t35 = ( uint64_t ) kl_t34;
-#line 391 "<kl>/_core/float_parse.kl"
+#line 366 "<kl>/_core/float_parse.kl"
     kl_t36 = kl_t34 >= 0;
-#line 391 "<kl>/_core/float_parse.kl"
+#line 366 "<kl>/_core/float_parse.kl"
     if ( kl_t36 ) goto bb19; else goto bb18;
     bb18:
-#line 391 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 391, "cast out of range: cast<u64>( -real_exp )" );
+#line 366 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 366, "cast out of range: cast<u64>( -real_exp )" );
     bb19:
-#line 391 "<kl>/_core/float_parse.kl"
+#line 366 "<kl>/_core/float_parse.kl"
     kl_2kl5_core11float_parse_4pow5__RQ2klQ5_core3big_3u64( kl_t32, kl_t35 );
     kl_t38 = kl_pow2_exp_29 > 0;
-#line 392 "<kl>/_core/float_parse.kl"
+#line 367 "<kl>/_core/float_parse.kl"
     if ( kl_t38 ) goto bb20; else goto bb21;
     bb20:
     kl_t39 = &kl_theory_22;
-#line 394 "<kl>/_core/float_parse.kl"
+#line 369 "<kl>/_core/float_parse.kl"
     kl_t40 = ( uint64_t ) kl_pow2_exp_29;
-#line 394 "<kl>/_core/float_parse.kl"
+#line 369 "<kl>/_core/float_parse.kl"
     kl_t41 = kl_pow2_exp_29 >= 0;
-#line 394 "<kl>/_core/float_parse.kl"
+#line 369 "<kl>/_core/float_parse.kl"
     if ( kl_t41 ) goto bb23; else goto bb22;
     bb21:
     kl_t43 = kl_pow2_exp_29 < 0;
-#line 396 "<kl>/_core/float_parse.kl"
+#line 371 "<kl>/_core/float_parse.kl"
     if ( kl_t43 ) goto bb25; else goto bb24;
     bb22:
-#line 394 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 394, "cast out of range: cast<u64>( pow2_exp )" );
+#line 369 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 369, "cast out of range: cast<u64>( pow2_exp )" );
     bb23:
-#line 394 "<kl>/_core/float_parse.kl"
+#line 369 "<kl>/_core/float_parse.kl"
     kl_2kl5_core11float_parse_3shl__RQ2klQ5_core3big_3u64( kl_t39, kl_t40 );
-#line 392 "<kl>/_core/float_parse.kl"
+#line 367 "<kl>/_core/float_parse.kl"
     goto bb24;
     bb24:
-#line 401 "<kl>/_core/float_parse.kl"
+#line 376 "<kl>/_core/float_parse.kl"
     kl_answer_50 = kl_am_2;
     kl_t51 = &kl_answer_50;
-#line 402 "<kl>/_core/float_parse.kl"
+#line 377 "<kl>/_core/float_parse.kl"
     kl_t53 = &( *kl_real_1 );
-#line 402 "<kl>/_core/float_parse.kl"
+#line 377 "<kl>/_core/float_parse.kl"
     kl_t54 = &kl_theory_22;
-#line 402 "<kl>/_core/float_parse.kl"
+#line 377 "<kl>/_core/float_parse.kl"
     kl_t55 = kl_2kl5_core11float_parse_7compare__Q2klQ5_core3big_Q2klQ5_core3big( kl_t53, kl_t54 );
-#line 402 "<kl>/_core/float_parse.kl"
+#line 377 "<kl>/_core/float_parse.kl"
     kl_t52.tag = 2;
-#line 402 "<kl>/_core/float_parse.kl"
+#line 377 "<kl>/_core/float_parse.kl"
     kl_t52.kl_8by_order_order = kl_t55;
-#line 402 "<kl>/_core/float_parse.kl"
+#line 377 "<kl>/_core/float_parse.kl"
     kl_2kl5_core11float_parse_5round__RQ2klQ5_core8adjusted_Q2klQ5_core3tie( kl_t51, kl_t52 );
     kl_t0 = kl_answer_50;
-#line 403 "<kl>/_core/float_parse.kl"
+#line 378 "<kl>/_core/float_parse.kl"
     return kl_t0;
     bb25:
-#line 398 "<kl>/_core/float_parse.kl"
+#line 373 "<kl>/_core/float_parse.kl"
     kl_t44 = &( *kl_real_1 );
-#line 398 "<kl>/_core/float_parse.kl"
+#line 373 "<kl>/_core/float_parse.kl"
     kl_t45 = __builtin_sub_overflow( 0, kl_pow2_exp_29, &( int32_t ) { 0 } );
-#line 398 "<kl>/_core/float_parse.kl"
+#line 373 "<kl>/_core/float_parse.kl"
     if ( kl_t45 ) goto bb26; else goto bb27;
     bb26:
-#line 398 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 398, "arithmetic overflow: -pow2_exp" );
+#line 373 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 373, "arithmetic overflow: -pow2_exp" );
     bb27:
-#line 398 "<kl>/_core/float_parse.kl"
+#line 373 "<kl>/_core/float_parse.kl"
     kl_t46 = -kl_pow2_exp_29;
-#line 398 "<kl>/_core/float_parse.kl"
+#line 373 "<kl>/_core/float_parse.kl"
     kl_t47 = ( uint64_t ) kl_t46;
-#line 398 "<kl>/_core/float_parse.kl"
+#line 373 "<kl>/_core/float_parse.kl"
     kl_t48 = kl_t46 >= 0;
-#line 398 "<kl>/_core/float_parse.kl"
+#line 373 "<kl>/_core/float_parse.kl"
     if ( kl_t48 ) goto bb29; else goto bb28;
     bb28:
-#line 398 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 398, "cast out of range: cast<u64>( -pow2_exp )" );
+#line 373 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 373, "cast out of range: cast<u64>( -pow2_exp )" );
     bb29:
-#line 398 "<kl>/_core/float_parse.kl"
+#line 373 "<kl>/_core/float_parse.kl"
     kl_2kl5_core11float_parse_3shl__RQ2klQ5_core3big_3u64( kl_t44, kl_t47 );
-#line 396 "<kl>/_core/float_parse.kl"
+#line 371 "<kl>/_core/float_parse.kl"
     goto bb24;
-#line 404 "<kl>/_core/float_parse.kl"
+#line 379 "<kl>/_core/float_parse.kl"
 }
 
-#line 408 "<kl>/_core/float_parse.kl"
+#line 383 "<kl>/_core/float_parse.kl"
 uint64_t kl_2kl5_core11float_parse_14parse_mantissa__RQ2klQ5_core3big_L2u8_L2u8( struct kl_2kl5_core11float_parse_big* kl_result_1, uint8_t* kl_integer_2_data, uint64_t kl_integer_2_size, uint8_t* kl_fraction_3_data, uint64_t kl_fraction_3_size )
 {
     uint64_t kl_t0;
-#line 408 "<kl>/_core/float_parse.kl"
+#line 383 "<kl>/_core/float_parse.kl"
     struct kl__run__L2u8__ref kl_integer_2 = { kl_integer_2_data, kl_integer_2_size };
-#line 408 "<kl>/_core/float_parse.kl"
+#line 383 "<kl>/_core/float_parse.kl"
     struct kl__run__L2u8__ref kl_fraction_3 = { kl_fraction_3_data, kl_fraction_3_size };
     uint64_t kl_count_4;
     uint64_t kl_p_5;
@@ -5558,537 +5442,537 @@ uint64_t kl_2kl5_core11float_parse_14parse_mantissa__RQ2klQ5_core3big_L2u8_L2u8(
     bool kl_t114;
     struct kl_2kl5_core11float_parse_big* kl_t115;
     bool kl_t117;
-#line 410 "<kl>/_core/float_parse.kl"
+#line 385 "<kl>/_core/float_parse.kl"
     kl_count_4 = 0;
     kl_p_5 = 0;
     goto bb1;
     bb1:
-#line 412 "<kl>/_core/float_parse.kl"
+#line 387 "<kl>/_core/float_parse.kl"
     kl_t7 = ( kl_integer_2 ).size;
-#line 412 "<kl>/_core/float_parse.kl"
+#line 387 "<kl>/_core/float_parse.kl"
     kl_t8 = kl_p_5 < kl_t7;
-#line 412 "<kl>/_core/float_parse.kl"
+#line 387 "<kl>/_core/float_parse.kl"
     kl_t6 = kl_t8;
-#line 412 "<kl>/_core/float_parse.kl"
+#line 387 "<kl>/_core/float_parse.kl"
     if ( kl_t6 ) goto bb3; else goto bb4;
     bb2:
     kl_t14 = __builtin_add_overflow( kl_p_5, 1, &( uint64_t ) { 0 } );
-#line 414 "<kl>/_core/float_parse.kl"
+#line 389 "<kl>/_core/float_parse.kl"
     if ( kl_t14 ) goto bb7; else goto bb8;
     bb3:
-#line 412 "<kl>/_core/float_parse.kl"
+#line 387 "<kl>/_core/float_parse.kl"
     kl_t9 = ( kl_integer_2 ).size;
-#line 412 "<kl>/_core/float_parse.kl"
+#line 387 "<kl>/_core/float_parse.kl"
     kl_t10 = ( kl_integer_2 ).data;
-#line 412 "<kl>/_core/float_parse.kl"
+#line 387 "<kl>/_core/float_parse.kl"
     kl_t11 = kl_p_5 < kl_t9;
-#line 412 "<kl>/_core/float_parse.kl"
+#line 387 "<kl>/_core/float_parse.kl"
     if ( kl_t11 ) goto bb6; else goto bb5;
     bb4:
-#line 412 "<kl>/_core/float_parse.kl"
+#line 387 "<kl>/_core/float_parse.kl"
     if ( kl_t6 ) goto bb2; else goto bb9;
     bb5:
-#line 412 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 412, "out of bounds: integer[p]" );
+#line 387 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 387, "out of bounds: integer[p]" );
     bb6:
-#line 412 "<kl>/_core/float_parse.kl"
+#line 387 "<kl>/_core/float_parse.kl"
     kl_t12 = kl_t10 + kl_p_5;
-#line 412 "<kl>/_core/float_parse.kl"
+#line 387 "<kl>/_core/float_parse.kl"
     kl_t13 = ( *kl_t12 ) == 48;
-#line 412 "<kl>/_core/float_parse.kl"
+#line 387 "<kl>/_core/float_parse.kl"
     kl_t6 = kl_t13;
-#line 412 "<kl>/_core/float_parse.kl"
+#line 387 "<kl>/_core/float_parse.kl"
     goto bb4;
     bb7:
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 414, "arithmetic overflow: p++;" );
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 389, "arithmetic overflow: p++;" );
     bb8:
-#line 414 "<kl>/_core/float_parse.kl"
+#line 389 "<kl>/_core/float_parse.kl"
     kl_p_5 = kl_p_5 + 1;
-#line 412 "<kl>/_core/float_parse.kl"
+#line 387 "<kl>/_core/float_parse.kl"
     goto bb1;
     bb9:
-#line 416 "<kl>/_core/float_parse.kl"
+#line 391 "<kl>/_core/float_parse.kl"
     kl_t15 = ( kl_integer_2 ).size;
-#line 416 "<kl>/_core/float_parse.kl"
+#line 391 "<kl>/_core/float_parse.kl"
     kl_t16 = kl_p_5 < kl_t15;
-#line 416 "<kl>/_core/float_parse.kl"
+#line 391 "<kl>/_core/float_parse.kl"
     if ( kl_t16 ) goto bb10; else goto bb11;
     bb10:
     kl_start_17 = kl_p_5;
     kl_value_18 = 0;
     goto bb12;
     bb11:
-#line 438 "<kl>/_core/float_parse.kl"
+#line 413 "<kl>/_core/float_parse.kl"
     kl_p_5 = 0;
     kl_t63 = kl_count_4 == 0;
-#line 439 "<kl>/_core/float_parse.kl"
+#line 414 "<kl>/_core/float_parse.kl"
     if ( kl_t63 ) goto bb48; else goto bb56;
     bb12:
-#line 420 "<kl>/_core/float_parse.kl"
+#line 395 "<kl>/_core/float_parse.kl"
     kl_t21 = __builtin_sub_overflow( kl_p_5, kl_start_17, &( uint64_t ) { 0 } );
-#line 420 "<kl>/_core/float_parse.kl"
+#line 395 "<kl>/_core/float_parse.kl"
     if ( kl_t21 ) goto bb14; else goto bb15;
     bb13:
     kl_t27 = __builtin_mul_overflow( kl_value_18, 10, &( uint64_t ) { 0 } );
-#line 422 "<kl>/_core/float_parse.kl"
+#line 397 "<kl>/_core/float_parse.kl"
     if ( kl_t27 ) goto bb21; else goto bb22;
     bb14:
-#line 420 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 420, "arithmetic overflow: p - start" );
+#line 395 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 395, "arithmetic overflow: p - start" );
     bb15:
-#line 420 "<kl>/_core/float_parse.kl"
+#line 395 "<kl>/_core/float_parse.kl"
     kl_t22 = kl_p_5 - kl_start_17;
-#line 420 "<kl>/_core/float_parse.kl"
+#line 395 "<kl>/_core/float_parse.kl"
     kl_t23 = kl_t22 < 19;
-#line 420 "<kl>/_core/float_parse.kl"
+#line 395 "<kl>/_core/float_parse.kl"
     kl_t20 = kl_t23;
-#line 420 "<kl>/_core/float_parse.kl"
+#line 395 "<kl>/_core/float_parse.kl"
     if ( kl_t20 ) goto bb16; else goto bb17;
     bb16:
-#line 420 "<kl>/_core/float_parse.kl"
+#line 395 "<kl>/_core/float_parse.kl"
     kl_t24 = ( kl_integer_2 ).size;
-#line 420 "<kl>/_core/float_parse.kl"
+#line 395 "<kl>/_core/float_parse.kl"
     kl_t25 = kl_p_5 < kl_t24;
-#line 420 "<kl>/_core/float_parse.kl"
+#line 395 "<kl>/_core/float_parse.kl"
     kl_t20 = kl_t25;
-#line 420 "<kl>/_core/float_parse.kl"
+#line 395 "<kl>/_core/float_parse.kl"
     goto bb17;
     bb17:
-#line 420 "<kl>/_core/float_parse.kl"
+#line 395 "<kl>/_core/float_parse.kl"
     kl_t19 = kl_t20;
-#line 420 "<kl>/_core/float_parse.kl"
+#line 395 "<kl>/_core/float_parse.kl"
     if ( kl_t19 ) goto bb18; else goto bb19;
     bb18:
-#line 420 "<kl>/_core/float_parse.kl"
+#line 395 "<kl>/_core/float_parse.kl"
     kl_t26 = kl_count_4 < 769;
-#line 420 "<kl>/_core/float_parse.kl"
+#line 395 "<kl>/_core/float_parse.kl"
     kl_t19 = kl_t26;
-#line 420 "<kl>/_core/float_parse.kl"
+#line 395 "<kl>/_core/float_parse.kl"
     goto bb19;
     bb19:
-#line 420 "<kl>/_core/float_parse.kl"
+#line 395 "<kl>/_core/float_parse.kl"
     if ( kl_t19 ) goto bb13; else goto bb20;
     bb20:
-#line 426 "<kl>/_core/float_parse.kl"
+#line 401 "<kl>/_core/float_parse.kl"
     kl_t40 = &( *kl_result_1 );
-#line 426 "<kl>/_core/float_parse.kl"
+#line 401 "<kl>/_core/float_parse.kl"
     kl_t41 = __builtin_sub_overflow( kl_p_5, kl_start_17, &( uint64_t ) { 0 } );
-#line 426 "<kl>/_core/float_parse.kl"
+#line 401 "<kl>/_core/float_parse.kl"
     if ( kl_t41 ) goto bb33; else goto bb34;
     bb21:
-#line 422 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 422, "arithmetic overflow: value * 10" );
+#line 397 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 397, "arithmetic overflow: value * 10" );
     bb22:
-#line 422 "<kl>/_core/float_parse.kl"
+#line 397 "<kl>/_core/float_parse.kl"
     kl_t28 = kl_value_18 * 10;
-#line 422 "<kl>/_core/float_parse.kl"
+#line 397 "<kl>/_core/float_parse.kl"
     kl_t29 = ( kl_integer_2 ).size;
-#line 422 "<kl>/_core/float_parse.kl"
+#line 397 "<kl>/_core/float_parse.kl"
     kl_t30 = ( kl_integer_2 ).data;
-#line 422 "<kl>/_core/float_parse.kl"
+#line 397 "<kl>/_core/float_parse.kl"
     kl_t31 = kl_p_5 < kl_t29;
-#line 422 "<kl>/_core/float_parse.kl"
+#line 397 "<kl>/_core/float_parse.kl"
     if ( kl_t31 ) goto bb24; else goto bb23;
     bb23:
-#line 422 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 422, "out of bounds: integer[p]" );
+#line 397 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 397, "out of bounds: integer[p]" );
     bb24:
-#line 422 "<kl>/_core/float_parse.kl"
+#line 397 "<kl>/_core/float_parse.kl"
     kl_t32 = kl_t30 + kl_p_5;
-#line 422 "<kl>/_core/float_parse.kl"
+#line 397 "<kl>/_core/float_parse.kl"
     kl_t33 = __builtin_sub_overflow( ( *kl_t32 ), 48, &( uint8_t ) { 0 } );
-#line 422 "<kl>/_core/float_parse.kl"
+#line 397 "<kl>/_core/float_parse.kl"
     if ( kl_t33 ) goto bb25; else goto bb26;
     bb25:
-#line 422 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 422, "arithmetic overflow: integer[p] - '0'" );
+#line 397 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 397, "arithmetic overflow: integer[p] - '0'" );
     bb26:
-#line 422 "<kl>/_core/float_parse.kl"
+#line 397 "<kl>/_core/float_parse.kl"
     kl_t34 = ( *kl_t32 ) - 48;
-#line 422 "<kl>/_core/float_parse.kl"
+#line 397 "<kl>/_core/float_parse.kl"
     kl_t35 = ( uint64_t ) kl_t34;
-#line 422 "<kl>/_core/float_parse.kl"
+#line 397 "<kl>/_core/float_parse.kl"
     kl_t36 = __builtin_add_overflow( kl_t28, kl_t35, &( uint64_t ) { 0 } );
-#line 422 "<kl>/_core/float_parse.kl"
+#line 397 "<kl>/_core/float_parse.kl"
     if ( kl_t36 ) goto bb27; else goto bb28;
     bb27:
-#line 422 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 422, "arithmetic overflow: value * 10 + cast<u64>( integer[p] - '0' )" );
+#line 397 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 397, "arithmetic overflow: value * 10 + cast<u64>( integer[p] - '0' )" );
     bb28:
-#line 422 "<kl>/_core/float_parse.kl"
+#line 397 "<kl>/_core/float_parse.kl"
     kl_t37 = kl_t28 + kl_t35;
-#line 422 "<kl>/_core/float_parse.kl"
+#line 397 "<kl>/_core/float_parse.kl"
     kl_value_18 = kl_t37;
     kl_t38 = __builtin_add_overflow( kl_p_5, 1, &( uint64_t ) { 0 } );
-#line 423 "<kl>/_core/float_parse.kl"
+#line 398 "<kl>/_core/float_parse.kl"
     if ( kl_t38 ) goto bb29; else goto bb30;
     bb29:
-#line 423 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 423, "arithmetic overflow: p++;" );
+#line 398 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 398, "arithmetic overflow: p++;" );
     bb30:
-#line 423 "<kl>/_core/float_parse.kl"
+#line 398 "<kl>/_core/float_parse.kl"
     kl_p_5 = kl_p_5 + 1;
     kl_t39 = __builtin_add_overflow( kl_count_4, 1, &( uint64_t ) { 0 } );
-#line 424 "<kl>/_core/float_parse.kl"
+#line 399 "<kl>/_core/float_parse.kl"
     if ( kl_t39 ) goto bb31; else goto bb32;
     bb31:
-#line 424 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 424, "arithmetic overflow: count++;" );
+#line 399 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 399, "arithmetic overflow: count++;" );
     bb32:
-#line 424 "<kl>/_core/float_parse.kl"
+#line 399 "<kl>/_core/float_parse.kl"
     kl_count_4 = kl_count_4 + 1;
-#line 420 "<kl>/_core/float_parse.kl"
+#line 395 "<kl>/_core/float_parse.kl"
     goto bb12;
     bb33:
-#line 426 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 426, "arithmetic overflow: p - start" );
+#line 401 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 401, "arithmetic overflow: p - start" );
     bb34:
-#line 426 "<kl>/_core/float_parse.kl"
+#line 401 "<kl>/_core/float_parse.kl"
     kl_t42 = kl_p_5 - kl_start_17;
-#line 426 "<kl>/_core/float_parse.kl"
+#line 401 "<kl>/_core/float_parse.kl"
     kl_t43 = kl_t42;
-#line 426 "<kl>/_core/float_parse.kl"
+#line 401 "<kl>/_core/float_parse.kl"
     kl_t44 = kl_t43 < 20;
-#line 426 "<kl>/_core/float_parse.kl"
+#line 401 "<kl>/_core/float_parse.kl"
     if ( kl_t44 ) goto bb35; else goto bb36;
     bb35:
-#line 426 "<kl>/_core/float_parse.kl"
+#line 401 "<kl>/_core/float_parse.kl"
     kl_2kl5_core11float_parse_10add_native__RQ2klQ5_core3big_3u64_3u64( kl_t40, kl_2kl5_core11float_parse_POWER_OF_TEN__G.e[kl_t43], kl_value_18 );
     kl_t46 = kl_count_4 == 769;
-#line 427 "<kl>/_core/float_parse.kl"
+#line 402 "<kl>/_core/float_parse.kl"
     if ( kl_t46 ) goto bb37; else goto bb47;
     bb36:
-#line 426 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 426, "out of bounds: POWER_OF_TEN[p - start]" );
+#line 401 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 401, "out of bounds: POWER_OF_TEN[p - start]" );
     bb37:
-#line 429 "<kl>/_core/float_parse.kl"
+#line 404 "<kl>/_core/float_parse.kl"
     kl_t48 = ( kl_integer_2 ).size;
-#line 429 "<kl>/_core/float_parse.kl"
+#line 404 "<kl>/_core/float_parse.kl"
     kl_t49 = ( kl_integer_2 ).data;
-#line 429 "<kl>/_core/float_parse.kl"
+#line 404 "<kl>/_core/float_parse.kl"
     kl_t50 = ( kl_integer_2 ).size;
-#line 429 "<kl>/_core/float_parse.kl"
+#line 404 "<kl>/_core/float_parse.kl"
     kl_t51 = kl_p_5 <= kl_t50;
-#line 429 "<kl>/_core/float_parse.kl"
+#line 404 "<kl>/_core/float_parse.kl"
     if ( kl_t51 ) goto bb39; else goto bb38;
     bb38:
-#line 429 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 429, "out of bounds: integer[p..integer.size]" );
+#line 404 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 404, "out of bounds: integer[p..integer.size]" );
     bb39:
-#line 429 "<kl>/_core/float_parse.kl"
+#line 404 "<kl>/_core/float_parse.kl"
     kl_t52 = kl_t50 <= kl_t48;
-#line 429 "<kl>/_core/float_parse.kl"
+#line 404 "<kl>/_core/float_parse.kl"
     if ( kl_t52 ) goto bb40; else goto bb38;
     bb40:
-#line 429 "<kl>/_core/float_parse.kl"
+#line 404 "<kl>/_core/float_parse.kl"
     kl_t53 = kl_t49 + kl_p_5;
-#line 429 "<kl>/_core/float_parse.kl"
+#line 404 "<kl>/_core/float_parse.kl"
     kl_t54 = kl_t50 - kl_p_5;
-#line 429 "<kl>/_core/float_parse.kl"
+#line 404 "<kl>/_core/float_parse.kl"
     kl_t55 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t53, kl_t54 };
-#line 429 "<kl>/_core/float_parse.kl"
+#line 404 "<kl>/_core/float_parse.kl"
     kl_t56 = kl_t55;
-#line 429 "<kl>/_core/float_parse.kl"
+#line 404 "<kl>/_core/float_parse.kl"
     kl_t57 = kl_2kl5_core11float_parse_11any_nonzero__L2u8( ( kl_t56 ).data, ( kl_t56 ).size );
-#line 429 "<kl>/_core/float_parse.kl"
+#line 404 "<kl>/_core/float_parse.kl"
     kl_t47 = kl_t57;
-#line 429 "<kl>/_core/float_parse.kl"
+#line 404 "<kl>/_core/float_parse.kl"
     if ( kl_t47 ) goto bb42; else goto bb41;
     bb41:
-#line 429 "<kl>/_core/float_parse.kl"
+#line 404 "<kl>/_core/float_parse.kl"
     kl_t58 = kl_fraction_3;
-#line 429 "<kl>/_core/float_parse.kl"
+#line 404 "<kl>/_core/float_parse.kl"
     kl_t59 = kl_2kl5_core11float_parse_11any_nonzero__L2u8( ( kl_t58 ).data, ( kl_t58 ).size );
-#line 429 "<kl>/_core/float_parse.kl"
+#line 404 "<kl>/_core/float_parse.kl"
     kl_t47 = kl_t59;
-#line 429 "<kl>/_core/float_parse.kl"
+#line 404 "<kl>/_core/float_parse.kl"
     goto bb42;
     bb42:
-#line 429 "<kl>/_core/float_parse.kl"
+#line 404 "<kl>/_core/float_parse.kl"
     if ( kl_t47 ) goto bb43; else goto bb46;
     bb43:
     kl_t60 = &( *kl_result_1 );
-#line 431 "<kl>/_core/float_parse.kl"
+#line 406 "<kl>/_core/float_parse.kl"
     kl_2kl5_core11float_parse_10add_native__RQ2klQ5_core3big_3u64_3u64( kl_t60, 10, 1 );
     kl_t62 = __builtin_add_overflow( kl_count_4, 1, &( uint64_t ) { 0 } );
-#line 432 "<kl>/_core/float_parse.kl"
+#line 407 "<kl>/_core/float_parse.kl"
     if ( kl_t62 ) goto bb44; else goto bb45;
     bb44:
-#line 432 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 432, "arithmetic overflow: count++;" );
+#line 407 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 407, "arithmetic overflow: count++;" );
     bb45:
-#line 432 "<kl>/_core/float_parse.kl"
+#line 407 "<kl>/_core/float_parse.kl"
     kl_count_4 = kl_count_4 + 1;
-#line 429 "<kl>/_core/float_parse.kl"
+#line 404 "<kl>/_core/float_parse.kl"
     goto bb46;
     bb46:
-#line 434 "<kl>/_core/float_parse.kl"
+#line 409 "<kl>/_core/float_parse.kl"
     kl_t0 = kl_count_4;
-#line 434 "<kl>/_core/float_parse.kl"
+#line 409 "<kl>/_core/float_parse.kl"
     return kl_t0;
     bb47:
-#line 416 "<kl>/_core/float_parse.kl"
+#line 391 "<kl>/_core/float_parse.kl"
     goto bb9;
     bb48:
-#line 441 "<kl>/_core/float_parse.kl"
+#line 416 "<kl>/_core/float_parse.kl"
     kl_t65 = ( kl_fraction_3 ).size;
-#line 441 "<kl>/_core/float_parse.kl"
+#line 416 "<kl>/_core/float_parse.kl"
     kl_t66 = kl_p_5 < kl_t65;
-#line 441 "<kl>/_core/float_parse.kl"
+#line 416 "<kl>/_core/float_parse.kl"
     kl_t64 = kl_t66;
-#line 441 "<kl>/_core/float_parse.kl"
+#line 416 "<kl>/_core/float_parse.kl"
     if ( kl_t64 ) goto bb50; else goto bb51;
     bb49:
     kl_t72 = __builtin_add_overflow( kl_p_5, 1, &( uint64_t ) { 0 } );
-#line 443 "<kl>/_core/float_parse.kl"
+#line 418 "<kl>/_core/float_parse.kl"
     if ( kl_t72 ) goto bb54; else goto bb55;
     bb50:
-#line 441 "<kl>/_core/float_parse.kl"
+#line 416 "<kl>/_core/float_parse.kl"
     kl_t67 = ( kl_fraction_3 ).size;
-#line 441 "<kl>/_core/float_parse.kl"
+#line 416 "<kl>/_core/float_parse.kl"
     kl_t68 = ( kl_fraction_3 ).data;
-#line 441 "<kl>/_core/float_parse.kl"
+#line 416 "<kl>/_core/float_parse.kl"
     kl_t69 = kl_p_5 < kl_t67;
-#line 441 "<kl>/_core/float_parse.kl"
+#line 416 "<kl>/_core/float_parse.kl"
     if ( kl_t69 ) goto bb53; else goto bb52;
     bb51:
-#line 441 "<kl>/_core/float_parse.kl"
+#line 416 "<kl>/_core/float_parse.kl"
     if ( kl_t64 ) goto bb49; else goto bb56;
     bb52:
-#line 441 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 441, "out of bounds: fraction[p]" );
+#line 416 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 416, "out of bounds: fraction[p]" );
     bb53:
-#line 441 "<kl>/_core/float_parse.kl"
+#line 416 "<kl>/_core/float_parse.kl"
     kl_t70 = kl_t68 + kl_p_5;
-#line 441 "<kl>/_core/float_parse.kl"
+#line 416 "<kl>/_core/float_parse.kl"
     kl_t71 = ( *kl_t70 ) == 48;
-#line 441 "<kl>/_core/float_parse.kl"
+#line 416 "<kl>/_core/float_parse.kl"
     kl_t64 = kl_t71;
-#line 441 "<kl>/_core/float_parse.kl"
+#line 416 "<kl>/_core/float_parse.kl"
     goto bb51;
     bb54:
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 443, "arithmetic overflow: p++;" );
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 418, "arithmetic overflow: p++;" );
     bb55:
-#line 443 "<kl>/_core/float_parse.kl"
+#line 418 "<kl>/_core/float_parse.kl"
     kl_p_5 = kl_p_5 + 1;
-#line 441 "<kl>/_core/float_parse.kl"
+#line 416 "<kl>/_core/float_parse.kl"
     goto bb48;
     bb56:
-#line 446 "<kl>/_core/float_parse.kl"
+#line 421 "<kl>/_core/float_parse.kl"
     kl_t73 = ( kl_fraction_3 ).size;
-#line 446 "<kl>/_core/float_parse.kl"
+#line 421 "<kl>/_core/float_parse.kl"
     kl_t74 = kl_p_5 < kl_t73;
-#line 446 "<kl>/_core/float_parse.kl"
+#line 421 "<kl>/_core/float_parse.kl"
     if ( kl_t74 ) goto bb57; else goto bb58;
     bb57:
     kl_start_75 = kl_p_5;
     kl_value_76 = 0;
     goto bb59;
     bb58:
-#line 467 "<kl>/_core/float_parse.kl"
+#line 442 "<kl>/_core/float_parse.kl"
     kl_t0 = kl_count_4;
-#line 467 "<kl>/_core/float_parse.kl"
+#line 442 "<kl>/_core/float_parse.kl"
     return kl_t0;
     bb59:
-#line 450 "<kl>/_core/float_parse.kl"
+#line 425 "<kl>/_core/float_parse.kl"
     kl_t79 = __builtin_sub_overflow( kl_p_5, kl_start_75, &( uint64_t ) { 0 } );
-#line 450 "<kl>/_core/float_parse.kl"
+#line 425 "<kl>/_core/float_parse.kl"
     if ( kl_t79 ) goto bb61; else goto bb62;
     bb60:
     kl_t85 = __builtin_mul_overflow( kl_value_76, 10, &( uint64_t ) { 0 } );
-#line 452 "<kl>/_core/float_parse.kl"
+#line 427 "<kl>/_core/float_parse.kl"
     if ( kl_t85 ) goto bb68; else goto bb69;
     bb61:
-#line 450 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 450, "arithmetic overflow: p - start" );
+#line 425 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 425, "arithmetic overflow: p - start" );
     bb62:
-#line 450 "<kl>/_core/float_parse.kl"
+#line 425 "<kl>/_core/float_parse.kl"
     kl_t80 = kl_p_5 - kl_start_75;
-#line 450 "<kl>/_core/float_parse.kl"
+#line 425 "<kl>/_core/float_parse.kl"
     kl_t81 = kl_t80 < 19;
-#line 450 "<kl>/_core/float_parse.kl"
+#line 425 "<kl>/_core/float_parse.kl"
     kl_t78 = kl_t81;
-#line 450 "<kl>/_core/float_parse.kl"
+#line 425 "<kl>/_core/float_parse.kl"
     if ( kl_t78 ) goto bb63; else goto bb64;
     bb63:
-#line 450 "<kl>/_core/float_parse.kl"
+#line 425 "<kl>/_core/float_parse.kl"
     kl_t82 = ( kl_fraction_3 ).size;
-#line 450 "<kl>/_core/float_parse.kl"
+#line 425 "<kl>/_core/float_parse.kl"
     kl_t83 = kl_p_5 < kl_t82;
-#line 450 "<kl>/_core/float_parse.kl"
+#line 425 "<kl>/_core/float_parse.kl"
     kl_t78 = kl_t83;
-#line 450 "<kl>/_core/float_parse.kl"
+#line 425 "<kl>/_core/float_parse.kl"
     goto bb64;
     bb64:
-#line 450 "<kl>/_core/float_parse.kl"
+#line 425 "<kl>/_core/float_parse.kl"
     kl_t77 = kl_t78;
-#line 450 "<kl>/_core/float_parse.kl"
+#line 425 "<kl>/_core/float_parse.kl"
     if ( kl_t77 ) goto bb65; else goto bb66;
     bb65:
-#line 450 "<kl>/_core/float_parse.kl"
+#line 425 "<kl>/_core/float_parse.kl"
     kl_t84 = kl_count_4 < 769;
-#line 450 "<kl>/_core/float_parse.kl"
+#line 425 "<kl>/_core/float_parse.kl"
     kl_t77 = kl_t84;
-#line 450 "<kl>/_core/float_parse.kl"
+#line 425 "<kl>/_core/float_parse.kl"
     goto bb66;
     bb66:
-#line 450 "<kl>/_core/float_parse.kl"
+#line 425 "<kl>/_core/float_parse.kl"
     if ( kl_t77 ) goto bb60; else goto bb67;
     bb67:
-#line 456 "<kl>/_core/float_parse.kl"
+#line 431 "<kl>/_core/float_parse.kl"
     kl_t98 = &( *kl_result_1 );
-#line 456 "<kl>/_core/float_parse.kl"
+#line 431 "<kl>/_core/float_parse.kl"
     kl_t99 = __builtin_sub_overflow( kl_p_5, kl_start_75, &( uint64_t ) { 0 } );
-#line 456 "<kl>/_core/float_parse.kl"
+#line 431 "<kl>/_core/float_parse.kl"
     if ( kl_t99 ) goto bb80; else goto bb81;
     bb68:
-#line 452 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 452, "arithmetic overflow: value * 10" );
+#line 427 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 427, "arithmetic overflow: value * 10" );
     bb69:
-#line 452 "<kl>/_core/float_parse.kl"
+#line 427 "<kl>/_core/float_parse.kl"
     kl_t86 = kl_value_76 * 10;
-#line 452 "<kl>/_core/float_parse.kl"
+#line 427 "<kl>/_core/float_parse.kl"
     kl_t87 = ( kl_fraction_3 ).size;
-#line 452 "<kl>/_core/float_parse.kl"
+#line 427 "<kl>/_core/float_parse.kl"
     kl_t88 = ( kl_fraction_3 ).data;
-#line 452 "<kl>/_core/float_parse.kl"
+#line 427 "<kl>/_core/float_parse.kl"
     kl_t89 = kl_p_5 < kl_t87;
-#line 452 "<kl>/_core/float_parse.kl"
+#line 427 "<kl>/_core/float_parse.kl"
     if ( kl_t89 ) goto bb71; else goto bb70;
     bb70:
-#line 452 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 452, "out of bounds: fraction[p]" );
+#line 427 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 427, "out of bounds: fraction[p]" );
     bb71:
-#line 452 "<kl>/_core/float_parse.kl"
+#line 427 "<kl>/_core/float_parse.kl"
     kl_t90 = kl_t88 + kl_p_5;
-#line 452 "<kl>/_core/float_parse.kl"
+#line 427 "<kl>/_core/float_parse.kl"
     kl_t91 = __builtin_sub_overflow( ( *kl_t90 ), 48, &( uint8_t ) { 0 } );
-#line 452 "<kl>/_core/float_parse.kl"
+#line 427 "<kl>/_core/float_parse.kl"
     if ( kl_t91 ) goto bb72; else goto bb73;
     bb72:
-#line 452 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 452, "arithmetic overflow: fraction[p] - '0'" );
+#line 427 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 427, "arithmetic overflow: fraction[p] - '0'" );
     bb73:
-#line 452 "<kl>/_core/float_parse.kl"
+#line 427 "<kl>/_core/float_parse.kl"
     kl_t92 = ( *kl_t90 ) - 48;
-#line 452 "<kl>/_core/float_parse.kl"
+#line 427 "<kl>/_core/float_parse.kl"
     kl_t93 = ( uint64_t ) kl_t92;
-#line 452 "<kl>/_core/float_parse.kl"
+#line 427 "<kl>/_core/float_parse.kl"
     kl_t94 = __builtin_add_overflow( kl_t86, kl_t93, &( uint64_t ) { 0 } );
-#line 452 "<kl>/_core/float_parse.kl"
+#line 427 "<kl>/_core/float_parse.kl"
     if ( kl_t94 ) goto bb74; else goto bb75;
     bb74:
-#line 452 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 452, "arithmetic overflow: value * 10 + cast<u64>( fraction[p] - '0' )" );
+#line 427 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 427, "arithmetic overflow: value * 10 + cast<u64>( fraction[p] - '0' )" );
     bb75:
-#line 452 "<kl>/_core/float_parse.kl"
+#line 427 "<kl>/_core/float_parse.kl"
     kl_t95 = kl_t86 + kl_t93;
-#line 452 "<kl>/_core/float_parse.kl"
+#line 427 "<kl>/_core/float_parse.kl"
     kl_value_76 = kl_t95;
     kl_t96 = __builtin_add_overflow( kl_p_5, 1, &( uint64_t ) { 0 } );
-#line 453 "<kl>/_core/float_parse.kl"
+#line 428 "<kl>/_core/float_parse.kl"
     if ( kl_t96 ) goto bb76; else goto bb77;
     bb76:
-#line 453 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 453, "arithmetic overflow: p++;" );
+#line 428 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 428, "arithmetic overflow: p++;" );
     bb77:
-#line 453 "<kl>/_core/float_parse.kl"
+#line 428 "<kl>/_core/float_parse.kl"
     kl_p_5 = kl_p_5 + 1;
     kl_t97 = __builtin_add_overflow( kl_count_4, 1, &( uint64_t ) { 0 } );
-#line 454 "<kl>/_core/float_parse.kl"
+#line 429 "<kl>/_core/float_parse.kl"
     if ( kl_t97 ) goto bb78; else goto bb79;
     bb78:
-#line 454 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 454, "arithmetic overflow: count++;" );
+#line 429 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 429, "arithmetic overflow: count++;" );
     bb79:
-#line 454 "<kl>/_core/float_parse.kl"
+#line 429 "<kl>/_core/float_parse.kl"
     kl_count_4 = kl_count_4 + 1;
-#line 450 "<kl>/_core/float_parse.kl"
+#line 425 "<kl>/_core/float_parse.kl"
     goto bb59;
     bb80:
-#line 456 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 456, "arithmetic overflow: p - start" );
+#line 431 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 431, "arithmetic overflow: p - start" );
     bb81:
-#line 456 "<kl>/_core/float_parse.kl"
+#line 431 "<kl>/_core/float_parse.kl"
     kl_t100 = kl_p_5 - kl_start_75;
-#line 456 "<kl>/_core/float_parse.kl"
+#line 431 "<kl>/_core/float_parse.kl"
     kl_t101 = kl_t100;
-#line 456 "<kl>/_core/float_parse.kl"
+#line 431 "<kl>/_core/float_parse.kl"
     kl_t102 = kl_t101 < 20;
-#line 456 "<kl>/_core/float_parse.kl"
+#line 431 "<kl>/_core/float_parse.kl"
     if ( kl_t102 ) goto bb82; else goto bb83;
     bb82:
-#line 456 "<kl>/_core/float_parse.kl"
+#line 431 "<kl>/_core/float_parse.kl"
     kl_2kl5_core11float_parse_10add_native__RQ2klQ5_core3big_3u64_3u64( kl_t98, kl_2kl5_core11float_parse_POWER_OF_TEN__G.e[kl_t101], kl_value_76 );
     kl_t104 = kl_count_4 == 769;
-#line 457 "<kl>/_core/float_parse.kl"
+#line 432 "<kl>/_core/float_parse.kl"
     if ( kl_t104 ) goto bb84; else goto bb92;
     bb83:
-#line 456 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 456, "out of bounds: POWER_OF_TEN[p - start]" );
+#line 431 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 431, "out of bounds: POWER_OF_TEN[p - start]" );
     bb84:
-#line 459 "<kl>/_core/float_parse.kl"
+#line 434 "<kl>/_core/float_parse.kl"
     kl_t105 = ( kl_fraction_3 ).size;
-#line 459 "<kl>/_core/float_parse.kl"
+#line 434 "<kl>/_core/float_parse.kl"
     kl_t106 = ( kl_fraction_3 ).data;
-#line 459 "<kl>/_core/float_parse.kl"
+#line 434 "<kl>/_core/float_parse.kl"
     kl_t107 = ( kl_fraction_3 ).size;
-#line 459 "<kl>/_core/float_parse.kl"
+#line 434 "<kl>/_core/float_parse.kl"
     kl_t108 = kl_p_5 <= kl_t107;
-#line 459 "<kl>/_core/float_parse.kl"
+#line 434 "<kl>/_core/float_parse.kl"
     if ( kl_t108 ) goto bb86; else goto bb85;
     bb85:
-#line 459 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 459, "out of bounds: fraction[p..fraction.size]" );
+#line 434 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 434, "out of bounds: fraction[p..fraction.size]" );
     bb86:
-#line 459 "<kl>/_core/float_parse.kl"
+#line 434 "<kl>/_core/float_parse.kl"
     kl_t109 = kl_t107 <= kl_t105;
-#line 459 "<kl>/_core/float_parse.kl"
+#line 434 "<kl>/_core/float_parse.kl"
     if ( kl_t109 ) goto bb87; else goto bb85;
     bb87:
-#line 459 "<kl>/_core/float_parse.kl"
+#line 434 "<kl>/_core/float_parse.kl"
     kl_t110 = kl_t106 + kl_p_5;
-#line 459 "<kl>/_core/float_parse.kl"
+#line 434 "<kl>/_core/float_parse.kl"
     kl_t111 = kl_t107 - kl_p_5;
-#line 459 "<kl>/_core/float_parse.kl"
+#line 434 "<kl>/_core/float_parse.kl"
     kl_t112 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t110, kl_t111 };
-#line 459 "<kl>/_core/float_parse.kl"
+#line 434 "<kl>/_core/float_parse.kl"
     kl_t113 = kl_t112;
-#line 459 "<kl>/_core/float_parse.kl"
+#line 434 "<kl>/_core/float_parse.kl"
     kl_t114 = kl_2kl5_core11float_parse_11any_nonzero__L2u8( ( kl_t113 ).data, ( kl_t113 ).size );
-#line 459 "<kl>/_core/float_parse.kl"
+#line 434 "<kl>/_core/float_parse.kl"
     if ( kl_t114 ) goto bb88; else goto bb91;
     bb88:
     kl_t115 = &( *kl_result_1 );
-#line 461 "<kl>/_core/float_parse.kl"
+#line 436 "<kl>/_core/float_parse.kl"
     kl_2kl5_core11float_parse_10add_native__RQ2klQ5_core3big_3u64_3u64( kl_t115, 10, 1 );
     kl_t117 = __builtin_add_overflow( kl_count_4, 1, &( uint64_t ) { 0 } );
-#line 462 "<kl>/_core/float_parse.kl"
+#line 437 "<kl>/_core/float_parse.kl"
     if ( kl_t117 ) goto bb89; else goto bb90;
     bb89:
-#line 462 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 462, "arithmetic overflow: count++;" );
+#line 437 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 437, "arithmetic overflow: count++;" );
     bb90:
-#line 462 "<kl>/_core/float_parse.kl"
+#line 437 "<kl>/_core/float_parse.kl"
     kl_count_4 = kl_count_4 + 1;
-#line 459 "<kl>/_core/float_parse.kl"
+#line 434 "<kl>/_core/float_parse.kl"
     goto bb91;
     bb91:
-#line 464 "<kl>/_core/float_parse.kl"
+#line 439 "<kl>/_core/float_parse.kl"
     kl_t0 = kl_count_4;
-#line 464 "<kl>/_core/float_parse.kl"
+#line 439 "<kl>/_core/float_parse.kl"
     return kl_t0;
     bb92:
-#line 446 "<kl>/_core/float_parse.kl"
+#line 421 "<kl>/_core/float_parse.kl"
     goto bb56;
-#line 468 "<kl>/_core/float_parse.kl"
+#line 443 "<kl>/_core/float_parse.kl"
 }
 
-#line 470 "<kl>/_core/float_parse.kl"
+#line 445 "<kl>/_core/float_parse.kl"
 bool kl_2kl5_core11float_parse_11any_nonzero__L2u8( uint8_t* kl_digits_1_data, uint64_t kl_digits_1_size )
 {
     bool kl_t0;
-#line 470 "<kl>/_core/float_parse.kl"
+#line 445 "<kl>/_core/float_parse.kl"
     struct kl__run__L2u8__ref kl_digits_1 = { kl_digits_1_data, kl_digits_1_size };
     uint64_t kl_i_2;
     uint64_t kl_t3;
@@ -6099,86 +5983,86 @@ bool kl_2kl5_core11float_parse_11any_nonzero__L2u8( uint8_t* kl_digits_1_data, u
     bool kl_t8;
     uint8_t* kl_t9;
     bool kl_t10;
-#line 472 "<kl>/_core/float_parse.kl"
+#line 447 "<kl>/_core/float_parse.kl"
     kl_i_2 = 0;
-#line 472 "<kl>/_core/float_parse.kl"
+#line 447 "<kl>/_core/float_parse.kl"
     kl_t4 = ( kl_digits_1 ).size;
-#line 472 "<kl>/_core/float_parse.kl"
+#line 447 "<kl>/_core/float_parse.kl"
     kl_t3 = kl_t4;
-#line 472 "<kl>/_core/float_parse.kl"
+#line 447 "<kl>/_core/float_parse.kl"
     goto bb1;
     bb1:
-#line 472 "<kl>/_core/float_parse.kl"
+#line 447 "<kl>/_core/float_parse.kl"
     kl_t5 = kl_i_2 < kl_t3;
-#line 472 "<kl>/_core/float_parse.kl"
+#line 447 "<kl>/_core/float_parse.kl"
     if ( kl_t5 ) goto bb2; else goto bb3;
     bb2:
     kl_t6 = ( kl_digits_1 ).size;
-#line 474 "<kl>/_core/float_parse.kl"
+#line 449 "<kl>/_core/float_parse.kl"
     kl_t7 = ( kl_digits_1 ).data;
-#line 474 "<kl>/_core/float_parse.kl"
+#line 449 "<kl>/_core/float_parse.kl"
     kl_t8 = kl_i_2 < kl_t6;
-#line 474 "<kl>/_core/float_parse.kl"
+#line 449 "<kl>/_core/float_parse.kl"
     if ( kl_t8 ) goto bb5; else goto bb4;
     bb3:
-#line 479 "<kl>/_core/float_parse.kl"
+#line 454 "<kl>/_core/float_parse.kl"
     kl_t0 = false;
-#line 479 "<kl>/_core/float_parse.kl"
+#line 454 "<kl>/_core/float_parse.kl"
     return kl_t0;
     bb4:
-#line 474 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 474, "out of bounds: digits[i]" );
+#line 449 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 449, "out of bounds: digits[i]" );
     bb5:
-#line 474 "<kl>/_core/float_parse.kl"
+#line 449 "<kl>/_core/float_parse.kl"
     kl_t9 = kl_t7 + kl_i_2;
-#line 474 "<kl>/_core/float_parse.kl"
+#line 449 "<kl>/_core/float_parse.kl"
     kl_t10 = ( *kl_t9 ) != 48;
-#line 474 "<kl>/_core/float_parse.kl"
+#line 449 "<kl>/_core/float_parse.kl"
     if ( kl_t10 ) goto bb6; else goto bb7;
     bb6:
     kl_t0 = true;
-#line 476 "<kl>/_core/float_parse.kl"
+#line 451 "<kl>/_core/float_parse.kl"
     return kl_t0;
     bb7:
-#line 472 "<kl>/_core/float_parse.kl"
+#line 447 "<kl>/_core/float_parse.kl"
     kl_i_2 = kl_i_2 + 1;
-#line 472 "<kl>/_core/float_parse.kl"
+#line 447 "<kl>/_core/float_parse.kl"
     goto bb1;
-#line 480 "<kl>/_core/float_parse.kl"
+#line 455 "<kl>/_core/float_parse.kl"
 }
 
-#line 499 "<kl>/_core/float_parse.kl"
+#line 474 "<kl>/_core/float_parse.kl"
 void kl_2kl5_core11float_parse_4push__RQ2klQ5_core3big_3u64( struct kl_2kl5_core11float_parse_big* kl_x_1, uint64_t kl_limb_2 )
 {
     uint64_t kl_t3;
     bool kl_t4;
     bool kl_t5;
-#line 501 "<kl>/_core/float_parse.kl"
+#line 476 "<kl>/_core/float_parse.kl"
     kl_t3 = ( *kl_x_1 ).kl_size;
-#line 501 "<kl>/_core/float_parse.kl"
+#line 476 "<kl>/_core/float_parse.kl"
     kl_t4 = kl_t3 < 62;
-#line 501 "<kl>/_core/float_parse.kl"
+#line 476 "<kl>/_core/float_parse.kl"
     if ( kl_t4 ) goto bb1; else goto bb2;
     bb1:
-#line 501 "<kl>/_core/float_parse.kl"
+#line 476 "<kl>/_core/float_parse.kl"
     ( *kl_x_1 ).kl_limbs.e[kl_t3] = kl_limb_2;
     kl_t5 = __builtin_add_overflow( ( *kl_x_1 ).kl_size, 1, &( uint64_t ) { 0 } );
-#line 502 "<kl>/_core/float_parse.kl"
+#line 477 "<kl>/_core/float_parse.kl"
     if ( kl_t5 ) goto bb3; else goto bb4;
     bb2:
-#line 501 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 501, "out of bounds: x.limbs[x.size]" );
+#line 476 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 476, "out of bounds: x.limbs[x.size]" );
     bb3:
-#line 502 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 502, "arithmetic overflow: x.size++;" );
+#line 477 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 477, "arithmetic overflow: x.size++;" );
     bb4:
-#line 502 "<kl>/_core/float_parse.kl"
+#line 477 "<kl>/_core/float_parse.kl"
     ( *kl_x_1 ).kl_size = ( *kl_x_1 ).kl_size + 1;
     return;
-#line 503 "<kl>/_core/float_parse.kl"
+#line 478 "<kl>/_core/float_parse.kl"
 }
 
-#line 506 "<kl>/_core/float_parse.kl"
+#line 481 "<kl>/_core/float_parse.kl"
 void kl_2kl5_core11float_parse_9normalize__RQ2klQ5_core3big( struct kl_2kl5_core11float_parse_big* kl_x_1 )
 {
     bool kl_t2;
@@ -6189,80 +6073,80 @@ void kl_2kl5_core11float_parse_9normalize__RQ2klQ5_core3big( struct kl_2kl5_core
     bool kl_t7;
     bool kl_t8;
     bool kl_t9;
-#line 508 "<kl>/_core/float_parse.kl"
+#line 483 "<kl>/_core/float_parse.kl"
     goto bb1;
     bb1:
-#line 508 "<kl>/_core/float_parse.kl"
+#line 483 "<kl>/_core/float_parse.kl"
     kl_t3 = ( *kl_x_1 ).kl_size > 0;
-#line 508 "<kl>/_core/float_parse.kl"
+#line 483 "<kl>/_core/float_parse.kl"
     kl_t2 = kl_t3;
-#line 508 "<kl>/_core/float_parse.kl"
+#line 483 "<kl>/_core/float_parse.kl"
     if ( kl_t2 ) goto bb3; else goto bb4;
     bb2:
     kl_t9 = __builtin_sub_overflow( ( *kl_x_1 ).kl_size, 1, &( uint64_t ) { 0 } );
-#line 510 "<kl>/_core/float_parse.kl"
+#line 485 "<kl>/_core/float_parse.kl"
     if ( kl_t9 ) goto bb10; else goto bb11;
     bb3:
-#line 508 "<kl>/_core/float_parse.kl"
+#line 483 "<kl>/_core/float_parse.kl"
     kl_t4 = __builtin_sub_overflow( ( *kl_x_1 ).kl_size, 1, &( uint64_t ) { 0 } );
-#line 508 "<kl>/_core/float_parse.kl"
+#line 483 "<kl>/_core/float_parse.kl"
     if ( kl_t4 ) goto bb5; else goto bb6;
     bb4:
-#line 508 "<kl>/_core/float_parse.kl"
+#line 483 "<kl>/_core/float_parse.kl"
     if ( kl_t2 ) goto bb2; else goto bb9;
     bb5:
-#line 508 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 508, "arithmetic overflow: x.size - 1" );
+#line 483 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 483, "arithmetic overflow: x.size - 1" );
     bb6:
-#line 508 "<kl>/_core/float_parse.kl"
+#line 483 "<kl>/_core/float_parse.kl"
     kl_t5 = ( *kl_x_1 ).kl_size - 1;
-#line 508 "<kl>/_core/float_parse.kl"
+#line 483 "<kl>/_core/float_parse.kl"
     kl_t6 = kl_t5;
-#line 508 "<kl>/_core/float_parse.kl"
+#line 483 "<kl>/_core/float_parse.kl"
     kl_t7 = kl_t6 < 62;
-#line 508 "<kl>/_core/float_parse.kl"
+#line 483 "<kl>/_core/float_parse.kl"
     if ( kl_t7 ) goto bb7; else goto bb8;
     bb7:
-#line 508 "<kl>/_core/float_parse.kl"
+#line 483 "<kl>/_core/float_parse.kl"
     kl_t8 = ( *kl_x_1 ).kl_limbs.e[kl_t6] == 0;
-#line 508 "<kl>/_core/float_parse.kl"
+#line 483 "<kl>/_core/float_parse.kl"
     kl_t2 = kl_t8;
-#line 508 "<kl>/_core/float_parse.kl"
+#line 483 "<kl>/_core/float_parse.kl"
     goto bb4;
     bb8:
-#line 508 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 508, "out of bounds: x.limbs[x.size - 1]" );
+#line 483 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 483, "out of bounds: x.limbs[x.size - 1]" );
     bb9:
-#line 512 "<kl>/_core/float_parse.kl"
+#line 487 "<kl>/_core/float_parse.kl"
     return;
     bb10:
-#line 510 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 510, "arithmetic overflow: x.size--;" );
+#line 485 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 485, "arithmetic overflow: x.size--;" );
     bb11:
-#line 510 "<kl>/_core/float_parse.kl"
+#line 485 "<kl>/_core/float_parse.kl"
     ( *kl_x_1 ).kl_size = ( *kl_x_1 ).kl_size - 1;
-#line 508 "<kl>/_core/float_parse.kl"
+#line 483 "<kl>/_core/float_parse.kl"
     goto bb1;
-#line 512 "<kl>/_core/float_parse.kl"
+#line 487 "<kl>/_core/float_parse.kl"
 }
 
-#line 514 "<kl>/_core/float_parse.kl"
+#line 489 "<kl>/_core/float_parse.kl"
 void kl_2kl5_core11float_parse_10add_native__RQ2klQ5_core3big_3u64_3u64( struct kl_2kl5_core11float_parse_big* kl_x_1, uint64_t kl_power_2, uint64_t kl_value_3 )
 {
     struct kl_2kl5_core11float_parse_big* kl_t4;
     struct kl_2kl5_core11float_parse_big* kl_t6;
-#line 516 "<kl>/_core/float_parse.kl"
+#line 491 "<kl>/_core/float_parse.kl"
     kl_t4 = &( *kl_x_1 );
-#line 516 "<kl>/_core/float_parse.kl"
+#line 491 "<kl>/_core/float_parse.kl"
     kl_2kl5_core11float_parse_9small_mul__RQ2klQ5_core3big_3u64( kl_t4, kl_power_2 );
     kl_t6 = &( *kl_x_1 );
-#line 517 "<kl>/_core/float_parse.kl"
+#line 492 "<kl>/_core/float_parse.kl"
     kl_2kl5_core11float_parse_14small_add_from__RQ2klQ5_core3big_3u64_3u64( kl_t6, kl_value_3, 0 );
     return;
-#line 518 "<kl>/_core/float_parse.kl"
+#line 493 "<kl>/_core/float_parse.kl"
 }
 
-#line 521 "<kl>/_core/float_parse.kl"
+#line 496 "<kl>/_core/float_parse.kl"
 void kl_2kl5_core11float_parse_9small_mul__RQ2klQ5_core3big_3u64( struct kl_2kl5_core11float_parse_big* kl_x_1, uint64_t kl_y_2 )
 {
     uint64_t kl_carry_3;
@@ -6283,97 +6167,97 @@ void kl_2kl5_core11float_parse_9small_mul__RQ2klQ5_core3big_3u64( struct kl_2kl5
     bool kl_t18;
     bool kl_t19;
     struct kl_2kl5_core11float_parse_big* kl_t20;
-#line 523 "<kl>/_core/float_parse.kl"
+#line 498 "<kl>/_core/float_parse.kl"
     kl_carry_3 = 0;
     kl_i_4 = 0;
-#line 524 "<kl>/_core/float_parse.kl"
+#line 499 "<kl>/_core/float_parse.kl"
     kl_t5 = ( *kl_x_1 ).kl_size;
-#line 524 "<kl>/_core/float_parse.kl"
+#line 499 "<kl>/_core/float_parse.kl"
     goto bb1;
     bb1:
-#line 524 "<kl>/_core/float_parse.kl"
+#line 499 "<kl>/_core/float_parse.kl"
     kl_t6 = kl_i_4 < kl_t5;
-#line 524 "<kl>/_core/float_parse.kl"
+#line 499 "<kl>/_core/float_parse.kl"
     if ( kl_t6 ) goto bb2; else goto bb3;
     bb2:
     kl_t8 = kl_i_4;
-#line 526 "<kl>/_core/float_parse.kl"
+#line 501 "<kl>/_core/float_parse.kl"
     kl_t9 = kl_t8 < 62;
-#line 526 "<kl>/_core/float_parse.kl"
+#line 501 "<kl>/_core/float_parse.kl"
     if ( kl_t9 ) goto bb4; else goto bb5;
     bb3:
-#line 531 "<kl>/_core/float_parse.kl"
+#line 506 "<kl>/_core/float_parse.kl"
     kl_t19 = kl_carry_3 != 0;
-#line 531 "<kl>/_core/float_parse.kl"
+#line 506 "<kl>/_core/float_parse.kl"
     if ( kl_t19 ) goto bb14; else goto bb15;
     bb4:
-#line 526 "<kl>/_core/float_parse.kl"
+#line 501 "<kl>/_core/float_parse.kl"
     kl_t10 = kl_2kl5_core12float_format_8multiply__3u64_3u64( ( *kl_x_1 ).kl_limbs.e[kl_t8], kl_y_2 );
-#line 526 "<kl>/_core/float_parse.kl"
+#line 501 "<kl>/_core/float_parse.kl"
     kl_z_7 = kl_t10;
     kl_t12 = kl_z_7.kl_lo + kl_carry_3;
-#line 527 "<kl>/_core/float_parse.kl"
+#line 502 "<kl>/_core/float_parse.kl"
     kl_lo_11 = kl_t12;
     kl_t14 = kl_lo_11 < kl_carry_3;
-#line 528 "<kl>/_core/float_parse.kl"
+#line 503 "<kl>/_core/float_parse.kl"
     if ( kl_t14 ) goto bb6; else goto bb7;
     bb5:
-#line 526 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 526, "out of bounds: x.limbs[i]" );
+#line 501 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 501, "out of bounds: x.limbs[i]" );
     bb6:
     kl_t13 = 1;
-#line 528 "<kl>/_core/float_parse.kl"
+#line 503 "<kl>/_core/float_parse.kl"
     goto bb8;
     bb7:
-#line 528 "<kl>/_core/float_parse.kl"
+#line 503 "<kl>/_core/float_parse.kl"
     kl_t13 = 0;
-#line 528 "<kl>/_core/float_parse.kl"
+#line 503 "<kl>/_core/float_parse.kl"
     goto bb8;
     bb8:
-#line 528 "<kl>/_core/float_parse.kl"
+#line 503 "<kl>/_core/float_parse.kl"
     kl_t15 = __builtin_add_overflow( kl_z_7.kl_hi, kl_t13, &( uint64_t ) { 0 } );
-#line 528 "<kl>/_core/float_parse.kl"
+#line 503 "<kl>/_core/float_parse.kl"
     if ( kl_t15 ) goto bb9; else goto bb10;
     bb9:
-#line 528 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 528, "arithmetic overflow: z.hi + ( lo < carry \077 1 : 0 )" );
+#line 503 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 503, "arithmetic overflow: z.hi + ( lo < carry \077 1 : 0 )" );
     bb10:
-#line 528 "<kl>/_core/float_parse.kl"
+#line 503 "<kl>/_core/float_parse.kl"
     kl_t16 = kl_z_7.kl_hi + kl_t13;
-#line 528 "<kl>/_core/float_parse.kl"
+#line 503 "<kl>/_core/float_parse.kl"
     kl_carry_3 = kl_t16;
     kl_t17 = kl_i_4;
-#line 529 "<kl>/_core/float_parse.kl"
+#line 504 "<kl>/_core/float_parse.kl"
     kl_t18 = kl_t17 < 62;
-#line 529 "<kl>/_core/float_parse.kl"
+#line 504 "<kl>/_core/float_parse.kl"
     if ( kl_t18 ) goto bb11; else goto bb12;
     bb11:
-#line 529 "<kl>/_core/float_parse.kl"
+#line 504 "<kl>/_core/float_parse.kl"
     ( *kl_x_1 ).kl_limbs.e[kl_t17] = kl_lo_11;
-#line 524 "<kl>/_core/float_parse.kl"
+#line 499 "<kl>/_core/float_parse.kl"
     goto bb13;
     bb12:
-#line 529 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 529, "out of bounds: x.limbs[i]" );
+#line 504 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 504, "out of bounds: x.limbs[i]" );
     bb13:
-#line 524 "<kl>/_core/float_parse.kl"
+#line 499 "<kl>/_core/float_parse.kl"
     kl_i_4 = kl_i_4 + 1;
-#line 524 "<kl>/_core/float_parse.kl"
+#line 499 "<kl>/_core/float_parse.kl"
     goto bb1;
     bb14:
-#line 533 "<kl>/_core/float_parse.kl"
+#line 508 "<kl>/_core/float_parse.kl"
     kl_t20 = &( *kl_x_1 );
-#line 533 "<kl>/_core/float_parse.kl"
+#line 508 "<kl>/_core/float_parse.kl"
     kl_2kl5_core11float_parse_4push__RQ2klQ5_core3big_3u64( kl_t20, kl_carry_3 );
-#line 531 "<kl>/_core/float_parse.kl"
+#line 506 "<kl>/_core/float_parse.kl"
     goto bb15;
     bb15:
-#line 535 "<kl>/_core/float_parse.kl"
+#line 510 "<kl>/_core/float_parse.kl"
     return;
-#line 535 "<kl>/_core/float_parse.kl"
+#line 510 "<kl>/_core/float_parse.kl"
 }
 
-#line 537 "<kl>/_core/float_parse.kl"
+#line 512 "<kl>/_core/float_parse.kl"
 void kl_2kl5_core11float_parse_14small_add_from__RQ2klQ5_core3big_3u64_3u64( struct kl_2kl5_core11float_parse_big* kl_x_1, uint64_t kl_y_2, uint64_t kl_start_3 )
 {
     uint64_t kl_i_4;
@@ -6392,101 +6276,101 @@ void kl_2kl5_core11float_parse_14small_add_from__RQ2klQ5_core3big_3u64_3u64( str
     bool kl_t17;
     bool kl_t18;
     struct kl_2kl5_core11float_parse_big* kl_t19;
-#line 539 "<kl>/_core/float_parse.kl"
+#line 514 "<kl>/_core/float_parse.kl"
     kl_i_4 = kl_start_3;
     kl_carry_5 = kl_y_2;
     goto bb1;
     bb1:
-#line 541 "<kl>/_core/float_parse.kl"
+#line 516 "<kl>/_core/float_parse.kl"
     kl_t7 = kl_carry_5 != 0;
-#line 541 "<kl>/_core/float_parse.kl"
+#line 516 "<kl>/_core/float_parse.kl"
     kl_t6 = kl_t7;
-#line 541 "<kl>/_core/float_parse.kl"
+#line 516 "<kl>/_core/float_parse.kl"
     if ( kl_t6 ) goto bb3; else goto bb4;
     bb2:
     kl_t10 = kl_i_4;
-#line 543 "<kl>/_core/float_parse.kl"
+#line 518 "<kl>/_core/float_parse.kl"
     kl_t11 = kl_t10 < 62;
-#line 543 "<kl>/_core/float_parse.kl"
+#line 518 "<kl>/_core/float_parse.kl"
     if ( kl_t11 ) goto bb6; else goto bb7;
     bb3:
-#line 541 "<kl>/_core/float_parse.kl"
+#line 516 "<kl>/_core/float_parse.kl"
     kl_t8 = kl_i_4 < ( *kl_x_1 ).kl_size;
-#line 541 "<kl>/_core/float_parse.kl"
+#line 516 "<kl>/_core/float_parse.kl"
     kl_t6 = kl_t8;
-#line 541 "<kl>/_core/float_parse.kl"
+#line 516 "<kl>/_core/float_parse.kl"
     goto bb4;
     bb4:
-#line 541 "<kl>/_core/float_parse.kl"
+#line 516 "<kl>/_core/float_parse.kl"
     if ( kl_t6 ) goto bb2; else goto bb5;
     bb5:
-#line 548 "<kl>/_core/float_parse.kl"
+#line 523 "<kl>/_core/float_parse.kl"
     kl_t18 = kl_carry_5 != 0;
-#line 548 "<kl>/_core/float_parse.kl"
+#line 523 "<kl>/_core/float_parse.kl"
     if ( kl_t18 ) goto bb15; else goto bb16;
     bb6:
-#line 543 "<kl>/_core/float_parse.kl"
+#line 518 "<kl>/_core/float_parse.kl"
     kl_t12 = ( *kl_x_1 ).kl_limbs.e[kl_t10] + kl_carry_5;
-#line 543 "<kl>/_core/float_parse.kl"
+#line 518 "<kl>/_core/float_parse.kl"
     kl_sum_9 = kl_t12;
     kl_t14 = kl_sum_9 < kl_carry_5;
-#line 544 "<kl>/_core/float_parse.kl"
+#line 519 "<kl>/_core/float_parse.kl"
     if ( kl_t14 ) goto bb8; else goto bb9;
     bb7:
-#line 543 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 543, "out of bounds: x.limbs[i]" );
+#line 518 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 518, "out of bounds: x.limbs[i]" );
     bb8:
-#line 544 "<kl>/_core/float_parse.kl"
+#line 519 "<kl>/_core/float_parse.kl"
     kl_t13 = 1;
-#line 544 "<kl>/_core/float_parse.kl"
+#line 519 "<kl>/_core/float_parse.kl"
     goto bb10;
     bb9:
-#line 544 "<kl>/_core/float_parse.kl"
+#line 519 "<kl>/_core/float_parse.kl"
     kl_t13 = 0;
-#line 544 "<kl>/_core/float_parse.kl"
+#line 519 "<kl>/_core/float_parse.kl"
     goto bb10;
     bb10:
-#line 544 "<kl>/_core/float_parse.kl"
+#line 519 "<kl>/_core/float_parse.kl"
     kl_carry_5 = kl_t13;
     kl_t15 = kl_i_4;
-#line 545 "<kl>/_core/float_parse.kl"
+#line 520 "<kl>/_core/float_parse.kl"
     kl_t16 = kl_t15 < 62;
-#line 545 "<kl>/_core/float_parse.kl"
+#line 520 "<kl>/_core/float_parse.kl"
     if ( kl_t16 ) goto bb11; else goto bb12;
     bb11:
-#line 545 "<kl>/_core/float_parse.kl"
+#line 520 "<kl>/_core/float_parse.kl"
     ( *kl_x_1 ).kl_limbs.e[kl_t15] = kl_sum_9;
     kl_t17 = __builtin_add_overflow( kl_i_4, 1, &( uint64_t ) { 0 } );
-#line 546 "<kl>/_core/float_parse.kl"
+#line 521 "<kl>/_core/float_parse.kl"
     if ( kl_t17 ) goto bb13; else goto bb14;
     bb12:
-#line 545 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 545, "out of bounds: x.limbs[i]" );
+#line 520 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 520, "out of bounds: x.limbs[i]" );
     bb13:
-#line 546 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 546, "arithmetic overflow: i++;" );
+#line 521 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 521, "arithmetic overflow: i++;" );
     bb14:
-#line 546 "<kl>/_core/float_parse.kl"
+#line 521 "<kl>/_core/float_parse.kl"
     kl_i_4 = kl_i_4 + 1;
-#line 541 "<kl>/_core/float_parse.kl"
+#line 516 "<kl>/_core/float_parse.kl"
     goto bb1;
     bb15:
-#line 550 "<kl>/_core/float_parse.kl"
+#line 525 "<kl>/_core/float_parse.kl"
     kl_t19 = &( *kl_x_1 );
-#line 550 "<kl>/_core/float_parse.kl"
+#line 525 "<kl>/_core/float_parse.kl"
     kl_2kl5_core11float_parse_4push__RQ2klQ5_core3big_3u64( kl_t19, kl_carry_5 );
-#line 548 "<kl>/_core/float_parse.kl"
+#line 523 "<kl>/_core/float_parse.kl"
     goto bb16;
     bb16:
-#line 552 "<kl>/_core/float_parse.kl"
+#line 527 "<kl>/_core/float_parse.kl"
     return;
-#line 552 "<kl>/_core/float_parse.kl"
+#line 527 "<kl>/_core/float_parse.kl"
 }
 
-#line 554 "<kl>/_core/float_parse.kl"
+#line 529 "<kl>/_core/float_parse.kl"
 void kl_2kl5_core11float_parse_14large_add_from__RQ2klQ5_core3big_L3u64_3u64( struct kl_2kl5_core11float_parse_big* kl_x_1, uint64_t* kl_y_2_data, uint64_t kl_y_2_size, uint64_t kl_start_3 )
 {
-#line 554 "<kl>/_core/float_parse.kl"
+#line 529 "<kl>/_core/float_parse.kl"
     struct kl__run__L3u64__ref kl_y_2 = { kl_y_2_data, kl_y_2_size };
     uint64_t kl_t4;
     bool kl_t5;
@@ -6523,176 +6407,176 @@ void kl_2kl5_core11float_parse_14large_add_from__RQ2klQ5_core3big_L3u64_3u64( st
     uint64_t kl_t37;
     bool kl_t38;
     uint64_t kl_t39;
-#line 556 "<kl>/_core/float_parse.kl"
+#line 531 "<kl>/_core/float_parse.kl"
     goto bb1;
     bb1:
-#line 556 "<kl>/_core/float_parse.kl"
+#line 531 "<kl>/_core/float_parse.kl"
     kl_t4 = ( kl_y_2 ).size;
-#line 556 "<kl>/_core/float_parse.kl"
+#line 531 "<kl>/_core/float_parse.kl"
     kl_t5 = __builtin_add_overflow( kl_t4, kl_start_3, &( uint64_t ) { 0 } );
-#line 556 "<kl>/_core/float_parse.kl"
+#line 531 "<kl>/_core/float_parse.kl"
     if ( kl_t5 ) goto bb3; else goto bb4;
     bb2:
     kl_t8 = &( *kl_x_1 );
-#line 558 "<kl>/_core/float_parse.kl"
+#line 533 "<kl>/_core/float_parse.kl"
     kl_2kl5_core11float_parse_4push__RQ2klQ5_core3big_3u64( kl_t8, 0 );
-#line 556 "<kl>/_core/float_parse.kl"
+#line 531 "<kl>/_core/float_parse.kl"
     goto bb1;
     bb3:
-#line 556 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 556, "arithmetic overflow: y.size + start" );
+#line 531 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 531, "arithmetic overflow: y.size + start" );
     bb4:
-#line 556 "<kl>/_core/float_parse.kl"
+#line 531 "<kl>/_core/float_parse.kl"
     kl_t6 = kl_t4 + kl_start_3;
-#line 556 "<kl>/_core/float_parse.kl"
+#line 531 "<kl>/_core/float_parse.kl"
     kl_t7 = ( *kl_x_1 ).kl_size < kl_t6;
-#line 556 "<kl>/_core/float_parse.kl"
+#line 531 "<kl>/_core/float_parse.kl"
     if ( kl_t7 ) goto bb2; else goto bb5;
     bb5:
-#line 561 "<kl>/_core/float_parse.kl"
+#line 536 "<kl>/_core/float_parse.kl"
     kl_carry_10 = false;
     kl_i_11 = 0;
-#line 562 "<kl>/_core/float_parse.kl"
+#line 537 "<kl>/_core/float_parse.kl"
     kl_t13 = ( kl_y_2 ).size;
-#line 562 "<kl>/_core/float_parse.kl"
+#line 537 "<kl>/_core/float_parse.kl"
     kl_t12 = kl_t13;
-#line 562 "<kl>/_core/float_parse.kl"
+#line 537 "<kl>/_core/float_parse.kl"
     goto bb6;
     bb6:
-#line 562 "<kl>/_core/float_parse.kl"
+#line 537 "<kl>/_core/float_parse.kl"
     kl_t14 = kl_i_11 < kl_t12;
-#line 562 "<kl>/_core/float_parse.kl"
+#line 537 "<kl>/_core/float_parse.kl"
     if ( kl_t14 ) goto bb7; else goto bb8;
     bb7:
     kl_t16 = __builtin_add_overflow( kl_i_11, kl_start_3, &( uint64_t ) { 0 } );
-#line 564 "<kl>/_core/float_parse.kl"
+#line 539 "<kl>/_core/float_parse.kl"
     if ( kl_t16 ) goto bb9; else goto bb10;
     bb8:
-#line 570 "<kl>/_core/float_parse.kl"
+#line 545 "<kl>/_core/float_parse.kl"
     if ( kl_carry_10 ) goto bb25; else goto bb28;
     bb9:
-#line 564 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 564, "arithmetic overflow: i + start" );
+#line 539 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 539, "arithmetic overflow: i + start" );
     bb10:
-#line 564 "<kl>/_core/float_parse.kl"
+#line 539 "<kl>/_core/float_parse.kl"
     kl_t17 = kl_i_11 + kl_start_3;
-#line 564 "<kl>/_core/float_parse.kl"
+#line 539 "<kl>/_core/float_parse.kl"
     kl_t18 = kl_t17;
-#line 564 "<kl>/_core/float_parse.kl"
+#line 539 "<kl>/_core/float_parse.kl"
     kl_t19 = kl_t18 < 62;
-#line 564 "<kl>/_core/float_parse.kl"
+#line 539 "<kl>/_core/float_parse.kl"
     if ( kl_t19 ) goto bb11; else goto bb12;
     bb11:
-#line 564 "<kl>/_core/float_parse.kl"
+#line 539 "<kl>/_core/float_parse.kl"
     kl_xi_15 = ( *kl_x_1 ).kl_limbs.e[kl_t18];
     kl_t21 = ( kl_y_2 ).size;
-#line 565 "<kl>/_core/float_parse.kl"
+#line 540 "<kl>/_core/float_parse.kl"
     kl_t22 = ( kl_y_2 ).data;
-#line 565 "<kl>/_core/float_parse.kl"
+#line 540 "<kl>/_core/float_parse.kl"
     kl_t23 = kl_i_11 < kl_t21;
-#line 565 "<kl>/_core/float_parse.kl"
+#line 540 "<kl>/_core/float_parse.kl"
     if ( kl_t23 ) goto bb14; else goto bb13;
     bb12:
-#line 564 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 564, "out of bounds: x.limbs[i + start]" );
+#line 539 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 539, "out of bounds: x.limbs[i + start]" );
     bb13:
-#line 565 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 565, "out of bounds: y[i]" );
+#line 540 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 540, "out of bounds: y[i]" );
     bb14:
-#line 565 "<kl>/_core/float_parse.kl"
+#line 540 "<kl>/_core/float_parse.kl"
     kl_t24 = kl_t22 + kl_i_11;
-#line 565 "<kl>/_core/float_parse.kl"
+#line 540 "<kl>/_core/float_parse.kl"
     kl_t25 = kl_xi_15 + ( *kl_t24 );
-#line 565 "<kl>/_core/float_parse.kl"
+#line 540 "<kl>/_core/float_parse.kl"
     kl_sum_20 = kl_t25;
     if ( kl_carry_10 ) goto bb15; else goto bb16;
     bb15:
-#line 566 "<kl>/_core/float_parse.kl"
+#line 541 "<kl>/_core/float_parse.kl"
     kl_t27 = 1;
-#line 566 "<kl>/_core/float_parse.kl"
+#line 541 "<kl>/_core/float_parse.kl"
     goto bb17;
     bb16:
-#line 566 "<kl>/_core/float_parse.kl"
+#line 541 "<kl>/_core/float_parse.kl"
     kl_t27 = 0;
-#line 566 "<kl>/_core/float_parse.kl"
+#line 541 "<kl>/_core/float_parse.kl"
     goto bb17;
     bb17:
-#line 566 "<kl>/_core/float_parse.kl"
+#line 541 "<kl>/_core/float_parse.kl"
     kl_t28 = kl_sum_20 + kl_t27;
-#line 566 "<kl>/_core/float_parse.kl"
+#line 541 "<kl>/_core/float_parse.kl"
     kl_total_26 = kl_t28;
     kl_t30 = kl_sum_20 < kl_xi_15;
-#line 567 "<kl>/_core/float_parse.kl"
+#line 542 "<kl>/_core/float_parse.kl"
     kl_t29 = kl_t30;
-#line 567 "<kl>/_core/float_parse.kl"
+#line 542 "<kl>/_core/float_parse.kl"
     if ( kl_t29 ) goto bb19; else goto bb18;
     bb18:
-#line 567 "<kl>/_core/float_parse.kl"
+#line 542 "<kl>/_core/float_parse.kl"
     kl_t31 = kl_total_26 < kl_sum_20;
-#line 567 "<kl>/_core/float_parse.kl"
+#line 542 "<kl>/_core/float_parse.kl"
     kl_t29 = kl_t31;
-#line 567 "<kl>/_core/float_parse.kl"
+#line 542 "<kl>/_core/float_parse.kl"
     goto bb19;
     bb19:
-#line 567 "<kl>/_core/float_parse.kl"
+#line 542 "<kl>/_core/float_parse.kl"
     kl_carry_10 = kl_t29;
     kl_t32 = __builtin_add_overflow( kl_i_11, kl_start_3, &( uint64_t ) { 0 } );
-#line 568 "<kl>/_core/float_parse.kl"
+#line 543 "<kl>/_core/float_parse.kl"
     if ( kl_t32 ) goto bb20; else goto bb21;
     bb20:
-#line 568 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 568, "arithmetic overflow: i + start" );
+#line 543 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 543, "arithmetic overflow: i + start" );
     bb21:
-#line 568 "<kl>/_core/float_parse.kl"
+#line 543 "<kl>/_core/float_parse.kl"
     kl_t33 = kl_i_11 + kl_start_3;
-#line 568 "<kl>/_core/float_parse.kl"
+#line 543 "<kl>/_core/float_parse.kl"
     kl_t34 = kl_t33;
-#line 568 "<kl>/_core/float_parse.kl"
+#line 543 "<kl>/_core/float_parse.kl"
     kl_t35 = kl_t34 < 62;
-#line 568 "<kl>/_core/float_parse.kl"
+#line 543 "<kl>/_core/float_parse.kl"
     if ( kl_t35 ) goto bb22; else goto bb23;
     bb22:
-#line 568 "<kl>/_core/float_parse.kl"
+#line 543 "<kl>/_core/float_parse.kl"
     ( *kl_x_1 ).kl_limbs.e[kl_t34] = kl_total_26;
-#line 562 "<kl>/_core/float_parse.kl"
+#line 537 "<kl>/_core/float_parse.kl"
     goto bb24;
     bb23:
-#line 568 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 568, "out of bounds: x.limbs[i + start]" );
+#line 543 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 543, "out of bounds: x.limbs[i + start]" );
     bb24:
-#line 562 "<kl>/_core/float_parse.kl"
+#line 537 "<kl>/_core/float_parse.kl"
     kl_i_11 = kl_i_11 + 1;
-#line 562 "<kl>/_core/float_parse.kl"
+#line 537 "<kl>/_core/float_parse.kl"
     goto bb6;
     bb25:
-#line 572 "<kl>/_core/float_parse.kl"
+#line 547 "<kl>/_core/float_parse.kl"
     kl_t36 = &( *kl_x_1 );
-#line 572 "<kl>/_core/float_parse.kl"
+#line 547 "<kl>/_core/float_parse.kl"
     kl_t37 = ( kl_y_2 ).size;
-#line 572 "<kl>/_core/float_parse.kl"
+#line 547 "<kl>/_core/float_parse.kl"
     kl_t38 = __builtin_add_overflow( kl_t37, kl_start_3, &( uint64_t ) { 0 } );
-#line 572 "<kl>/_core/float_parse.kl"
+#line 547 "<kl>/_core/float_parse.kl"
     if ( kl_t38 ) goto bb26; else goto bb27;
     bb26:
-#line 572 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 572, "arithmetic overflow: y.size + start" );
+#line 547 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 547, "arithmetic overflow: y.size + start" );
     bb27:
-#line 572 "<kl>/_core/float_parse.kl"
+#line 547 "<kl>/_core/float_parse.kl"
     kl_t39 = kl_t37 + kl_start_3;
-#line 572 "<kl>/_core/float_parse.kl"
+#line 547 "<kl>/_core/float_parse.kl"
     kl_2kl5_core11float_parse_14small_add_from__RQ2klQ5_core3big_3u64_3u64( kl_t36, 1, kl_t39 );
-#line 570 "<kl>/_core/float_parse.kl"
+#line 545 "<kl>/_core/float_parse.kl"
     goto bb28;
     bb28:
-#line 574 "<kl>/_core/float_parse.kl"
+#line 549 "<kl>/_core/float_parse.kl"
     return;
-#line 574 "<kl>/_core/float_parse.kl"
+#line 549 "<kl>/_core/float_parse.kl"
 }
 
-#line 577 "<kl>/_core/float_parse.kl"
+#line 552 "<kl>/_core/float_parse.kl"
 void kl_2kl5_core11float_parse_9large_mul__RQ2klQ5_core3big_L3u64( struct kl_2kl5_core11float_parse_big* kl_x_1, uint64_t* kl_y_2_data, uint64_t kl_y_2_size )
 {
-#line 577 "<kl>/_core/float_parse.kl"
+#line 552 "<kl>/_core/float_parse.kl"
     struct kl__run__L3u64__ref kl_y_2 = { kl_y_2_data, kl_y_2_size };
     uint64_t kl_t3;
     bool kl_t4;
@@ -6736,151 +6620,151 @@ void kl_2kl5_core11float_parse_9large_mul__RQ2klQ5_core3big_L3u64( struct kl_2kl
     struct kl__run__L3u64__ref kl_t45;
     struct kl_2kl5_core11float_parse_big* kl_t47;
     ( void ) kl_t37;
-#line 579 "<kl>/_core/float_parse.kl"
+#line 554 "<kl>/_core/float_parse.kl"
     kl_t3 = ( kl_y_2 ).size;
-#line 579 "<kl>/_core/float_parse.kl"
+#line 554 "<kl>/_core/float_parse.kl"
     kl_t4 = kl_t3 == 1;
-#line 579 "<kl>/_core/float_parse.kl"
+#line 554 "<kl>/_core/float_parse.kl"
     if ( kl_t4 ) goto bb1; else goto bb4;
     bb1:
     kl_t5 = &( *kl_x_1 );
-#line 581 "<kl>/_core/float_parse.kl"
+#line 556 "<kl>/_core/float_parse.kl"
     kl_t6 = ( kl_y_2 ).size;
-#line 581 "<kl>/_core/float_parse.kl"
+#line 556 "<kl>/_core/float_parse.kl"
     kl_t7 = ( kl_y_2 ).data;
-#line 581 "<kl>/_core/float_parse.kl"
+#line 556 "<kl>/_core/float_parse.kl"
     kl_t8 = ( uint64_t ) 0;
-#line 581 "<kl>/_core/float_parse.kl"
+#line 556 "<kl>/_core/float_parse.kl"
     kl_t9 = kl_t8 < kl_t6;
-#line 581 "<kl>/_core/float_parse.kl"
+#line 556 "<kl>/_core/float_parse.kl"
     if ( kl_t9 ) goto bb3; else goto bb2;
     bb2:
-#line 581 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 581, "out of bounds: y[0]" );
+#line 556 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 556, "out of bounds: y[0]" );
     bb3:
-#line 581 "<kl>/_core/float_parse.kl"
+#line 556 "<kl>/_core/float_parse.kl"
     kl_t10 = kl_t7 + kl_t8;
-#line 581 "<kl>/_core/float_parse.kl"
+#line 556 "<kl>/_core/float_parse.kl"
     kl_2kl5_core11float_parse_9small_mul__RQ2klQ5_core3big_3u64( kl_t5, ( *kl_t10 ) );
     return;
     bb4:
-#line 585 "<kl>/_core/float_parse.kl"
+#line 560 "<kl>/_core/float_parse.kl"
     kl_z_12 = ( *kl_x_1 );
     kl_t13 = &( *kl_x_1 );
-#line 586 "<kl>/_core/float_parse.kl"
+#line 561 "<kl>/_core/float_parse.kl"
     kl_t14 = ( kl_y_2 ).size;
-#line 586 "<kl>/_core/float_parse.kl"
+#line 561 "<kl>/_core/float_parse.kl"
     kl_t15 = ( kl_y_2 ).data;
-#line 586 "<kl>/_core/float_parse.kl"
+#line 561 "<kl>/_core/float_parse.kl"
     kl_t16 = ( uint64_t ) 0;
-#line 586 "<kl>/_core/float_parse.kl"
+#line 561 "<kl>/_core/float_parse.kl"
     kl_t17 = kl_t16 < kl_t14;
-#line 586 "<kl>/_core/float_parse.kl"
+#line 561 "<kl>/_core/float_parse.kl"
     if ( kl_t17 ) goto bb6; else goto bb5;
     bb5:
-#line 586 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 586, "out of bounds: y[0]" );
+#line 561 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 561, "out of bounds: y[0]" );
     bb6:
-#line 586 "<kl>/_core/float_parse.kl"
+#line 561 "<kl>/_core/float_parse.kl"
     kl_t18 = kl_t15 + kl_t16;
-#line 586 "<kl>/_core/float_parse.kl"
+#line 561 "<kl>/_core/float_parse.kl"
     kl_2kl5_core11float_parse_9small_mul__RQ2klQ5_core3big_3u64( kl_t13, ( *kl_t18 ) );
     kl_i_20 = 1;
-#line 587 "<kl>/_core/float_parse.kl"
+#line 562 "<kl>/_core/float_parse.kl"
     kl_t22 = ( kl_y_2 ).size;
-#line 587 "<kl>/_core/float_parse.kl"
+#line 562 "<kl>/_core/float_parse.kl"
     kl_t21 = kl_t22;
-#line 587 "<kl>/_core/float_parse.kl"
+#line 562 "<kl>/_core/float_parse.kl"
     goto bb7;
     bb7:
-#line 587 "<kl>/_core/float_parse.kl"
+#line 562 "<kl>/_core/float_parse.kl"
     kl_t23 = kl_i_20 < kl_t21;
-#line 587 "<kl>/_core/float_parse.kl"
+#line 562 "<kl>/_core/float_parse.kl"
     if ( kl_t23 ) goto bb8; else goto bb9;
     bb8:
     kl_t24 = ( kl_y_2 ).size;
-#line 589 "<kl>/_core/float_parse.kl"
+#line 564 "<kl>/_core/float_parse.kl"
     kl_t25 = ( kl_y_2 ).data;
-#line 589 "<kl>/_core/float_parse.kl"
+#line 564 "<kl>/_core/float_parse.kl"
     kl_t26 = kl_i_20 < kl_t24;
-#line 589 "<kl>/_core/float_parse.kl"
+#line 564 "<kl>/_core/float_parse.kl"
     if ( kl_t26 ) goto bb11; else goto bb10;
     bb9:
-#line 596 "<kl>/_core/float_parse.kl"
+#line 571 "<kl>/_core/float_parse.kl"
     kl_t47 = &( *kl_x_1 );
-#line 596 "<kl>/_core/float_parse.kl"
+#line 571 "<kl>/_core/float_parse.kl"
     kl_2kl5_core11float_parse_9normalize__RQ2klQ5_core3big( kl_t47 );
     return;
     bb10:
-#line 589 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 589, "out of bounds: y[i]" );
+#line 564 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 564, "out of bounds: y[i]" );
     bb11:
-#line 589 "<kl>/_core/float_parse.kl"
+#line 564 "<kl>/_core/float_parse.kl"
     kl_t27 = kl_t25 + kl_i_20;
-#line 589 "<kl>/_core/float_parse.kl"
+#line 564 "<kl>/_core/float_parse.kl"
     kl_t28 = ( *kl_t27 ) != 0;
-#line 589 "<kl>/_core/float_parse.kl"
+#line 564 "<kl>/_core/float_parse.kl"
     if ( kl_t28 ) goto bb12; else goto bb18;
     bb12:
     kl_zi_29 = kl_z_12;
     kl_t30 = &kl_zi_29;
-#line 592 "<kl>/_core/float_parse.kl"
+#line 567 "<kl>/_core/float_parse.kl"
     kl_t31 = ( kl_y_2 ).size;
-#line 592 "<kl>/_core/float_parse.kl"
+#line 567 "<kl>/_core/float_parse.kl"
     kl_t32 = ( kl_y_2 ).data;
-#line 592 "<kl>/_core/float_parse.kl"
+#line 567 "<kl>/_core/float_parse.kl"
     kl_t33 = kl_i_20 < kl_t31;
-#line 592 "<kl>/_core/float_parse.kl"
+#line 567 "<kl>/_core/float_parse.kl"
     if ( kl_t33 ) goto bb14; else goto bb13;
     bb13:
-#line 592 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 592, "out of bounds: y[i]" );
+#line 567 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 567, "out of bounds: y[i]" );
     bb14:
-#line 592 "<kl>/_core/float_parse.kl"
+#line 567 "<kl>/_core/float_parse.kl"
     kl_t34 = kl_t32 + kl_i_20;
-#line 592 "<kl>/_core/float_parse.kl"
+#line 567 "<kl>/_core/float_parse.kl"
     kl_2kl5_core11float_parse_9small_mul__RQ2klQ5_core3big_3u64( kl_t30, ( *kl_t34 ) );
     kl_t36 = &( *kl_x_1 );
-#line 593 "<kl>/_core/float_parse.kl"
+#line 568 "<kl>/_core/float_parse.kl"
     kl_t37 = 0;
-#line 593 "<kl>/_core/float_parse.kl"
+#line 568 "<kl>/_core/float_parse.kl"
     kl_t38 = &kl_zi_29.kl_limbs.e[kl_t37];
-#line 593 "<kl>/_core/float_parse.kl"
+#line 568 "<kl>/_core/float_parse.kl"
     kl_t39 = ( uint64_t ) 0;
-#line 593 "<kl>/_core/float_parse.kl"
+#line 568 "<kl>/_core/float_parse.kl"
     kl_t40 = kl_t39 <= kl_zi_29.kl_size;
-#line 593 "<kl>/_core/float_parse.kl"
+#line 568 "<kl>/_core/float_parse.kl"
     if ( kl_t40 ) goto bb16; else goto bb15;
     bb15:
-#line 593 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 593, "out of bounds: zi.limbs[0..zi.size]" );
+#line 568 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 568, "out of bounds: zi.limbs[0..zi.size]" );
     bb16:
-#line 593 "<kl>/_core/float_parse.kl"
+#line 568 "<kl>/_core/float_parse.kl"
     kl_t41 = kl_zi_29.kl_size <= 62;
-#line 593 "<kl>/_core/float_parse.kl"
+#line 568 "<kl>/_core/float_parse.kl"
     if ( kl_t41 ) goto bb17; else goto bb15;
     bb17:
-#line 593 "<kl>/_core/float_parse.kl"
+#line 568 "<kl>/_core/float_parse.kl"
     kl_t42 = kl_t38 + kl_t39;
-#line 593 "<kl>/_core/float_parse.kl"
+#line 568 "<kl>/_core/float_parse.kl"
     kl_t43 = kl_zi_29.kl_size - kl_t39;
-#line 593 "<kl>/_core/float_parse.kl"
+#line 568 "<kl>/_core/float_parse.kl"
     kl_t44 = ( struct kl__run__L3u64__ref ) { ( uint64_t* ) kl_t42, kl_t43 };
-#line 593 "<kl>/_core/float_parse.kl"
+#line 568 "<kl>/_core/float_parse.kl"
     kl_t45 = kl_t44;
-#line 593 "<kl>/_core/float_parse.kl"
+#line 568 "<kl>/_core/float_parse.kl"
     kl_2kl5_core11float_parse_14large_add_from__RQ2klQ5_core3big_L3u64_3u64( kl_t36, ( kl_t45 ).data, ( kl_t45 ).size, kl_i_20 );
-#line 589 "<kl>/_core/float_parse.kl"
+#line 564 "<kl>/_core/float_parse.kl"
     goto bb18;
     bb18:
-#line 587 "<kl>/_core/float_parse.kl"
+#line 562 "<kl>/_core/float_parse.kl"
     kl_i_20 = kl_i_20 + 1;
-#line 587 "<kl>/_core/float_parse.kl"
+#line 562 "<kl>/_core/float_parse.kl"
     goto bb7;
-#line 597 "<kl>/_core/float_parse.kl"
+#line 572 "<kl>/_core/float_parse.kl"
 }
 
-#line 599 "<kl>/_core/float_parse.kl"
+#line 574 "<kl>/_core/float_parse.kl"
 struct kl_2kl5_core11float_parse_top kl_2kl5_core11float_parse_4hi64__Q2klQ5_core3big( struct kl_2kl5_core11float_parse_big* kl_x_1 )
 {
     struct kl_2kl5_core11float_parse_top kl_t0;
@@ -6929,204 +6813,204 @@ struct kl_2kl5_core11float_parse_top kl_2kl5_core11float_parse_4hi64__Q2klQ5_cor
     bool kl_t44;
     bool kl_t45;
     struct kl_2kl5_core11float_parse_top kl_t46;
-#line 601 "<kl>/_core/float_parse.kl"
+#line 576 "<kl>/_core/float_parse.kl"
     kl_t2 = ( *kl_x_1 ).kl_size == 0;
-#line 601 "<kl>/_core/float_parse.kl"
+#line 576 "<kl>/_core/float_parse.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
     kl_t3.kl_bits = 0;
-#line 603 "<kl>/_core/float_parse.kl"
+#line 578 "<kl>/_core/float_parse.kl"
     kl_t3.kl_truncated = false;
-#line 603 "<kl>/_core/float_parse.kl"
+#line 578 "<kl>/_core/float_parse.kl"
     kl_t0 = kl_t3;
-#line 603 "<kl>/_core/float_parse.kl"
+#line 578 "<kl>/_core/float_parse.kl"
     return kl_t0;
     bb2:
     kl_t5 = __builtin_sub_overflow( ( *kl_x_1 ).kl_size, 1, &( uint64_t ) { 0 } );
-#line 605 "<kl>/_core/float_parse.kl"
+#line 580 "<kl>/_core/float_parse.kl"
     if ( kl_t5 ) goto bb3; else goto bb4;
     bb3:
-#line 605 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 605, "arithmetic overflow: x.size - 1" );
+#line 580 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 580, "arithmetic overflow: x.size - 1" );
     bb4:
-#line 605 "<kl>/_core/float_parse.kl"
+#line 580 "<kl>/_core/float_parse.kl"
     kl_t6 = ( *kl_x_1 ).kl_size - 1;
-#line 605 "<kl>/_core/float_parse.kl"
+#line 580 "<kl>/_core/float_parse.kl"
     kl_t7 = kl_t6;
-#line 605 "<kl>/_core/float_parse.kl"
+#line 580 "<kl>/_core/float_parse.kl"
     kl_t8 = kl_t7 < 62;
-#line 605 "<kl>/_core/float_parse.kl"
+#line 580 "<kl>/_core/float_parse.kl"
     if ( kl_t8 ) goto bb5; else goto bb6;
     bb5:
-#line 605 "<kl>/_core/float_parse.kl"
+#line 580 "<kl>/_core/float_parse.kl"
     kl_r0_4 = ( *kl_x_1 ).kl_limbs.e[kl_t7];
     kl_t10 = kl_2kl5_core11float_parse_13leading_zeros__3u64( kl_r0_4 );
-#line 606 "<kl>/_core/float_parse.kl"
+#line 581 "<kl>/_core/float_parse.kl"
     kl_shl_9 = kl_t10;
     kl_t11 = ( *kl_x_1 ).kl_size == 1;
-#line 607 "<kl>/_core/float_parse.kl"
+#line 582 "<kl>/_core/float_parse.kl"
     if ( kl_t11 ) goto bb7; else goto bb8;
     bb6:
-#line 605 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 605, "out of bounds: x.limbs[x.size - 1]" );
+#line 580 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 580, "out of bounds: x.limbs[x.size - 1]" );
     bb7:
-#line 609 "<kl>/_core/float_parse.kl"
+#line 584 "<kl>/_core/float_parse.kl"
     kl_t13 = kl_shl_9 & 63;
-#line 609 "<kl>/_core/float_parse.kl"
+#line 584 "<kl>/_core/float_parse.kl"
     kl_t14 = kl_r0_4 << kl_t13;
-#line 609 "<kl>/_core/float_parse.kl"
+#line 584 "<kl>/_core/float_parse.kl"
     kl_t12.kl_bits = kl_t14;
-#line 609 "<kl>/_core/float_parse.kl"
+#line 584 "<kl>/_core/float_parse.kl"
     kl_t12.kl_truncated = false;
-#line 609 "<kl>/_core/float_parse.kl"
+#line 584 "<kl>/_core/float_parse.kl"
     kl_t0 = kl_t12;
-#line 609 "<kl>/_core/float_parse.kl"
+#line 584 "<kl>/_core/float_parse.kl"
     return kl_t0;
     bb8:
-#line 612 "<kl>/_core/float_parse.kl"
+#line 587 "<kl>/_core/float_parse.kl"
     kl_t16 = __builtin_sub_overflow( ( *kl_x_1 ).kl_size, 2, &( uint64_t ) { 0 } );
-#line 612 "<kl>/_core/float_parse.kl"
+#line 587 "<kl>/_core/float_parse.kl"
     if ( kl_t16 ) goto bb9; else goto bb10;
     bb9:
-#line 612 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 612, "arithmetic overflow: x.size - 2" );
+#line 587 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 587, "arithmetic overflow: x.size - 2" );
     bb10:
-#line 612 "<kl>/_core/float_parse.kl"
+#line 587 "<kl>/_core/float_parse.kl"
     kl_t17 = ( *kl_x_1 ).kl_size - 2;
-#line 612 "<kl>/_core/float_parse.kl"
+#line 587 "<kl>/_core/float_parse.kl"
     kl_t18 = kl_t17;
-#line 612 "<kl>/_core/float_parse.kl"
+#line 587 "<kl>/_core/float_parse.kl"
     kl_t19 = kl_t18 < 62;
-#line 612 "<kl>/_core/float_parse.kl"
+#line 587 "<kl>/_core/float_parse.kl"
     if ( kl_t19 ) goto bb11; else goto bb12;
     bb11:
-#line 612 "<kl>/_core/float_parse.kl"
+#line 587 "<kl>/_core/float_parse.kl"
     kl_r1_15 = ( *kl_x_1 ).kl_limbs.e[kl_t18];
     kl_t22 = kl_shl_9 == 0;
-#line 613 "<kl>/_core/float_parse.kl"
+#line 588 "<kl>/_core/float_parse.kl"
     if ( kl_t22 ) goto bb13; else goto bb14;
     bb12:
-#line 612 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 612, "out of bounds: x.limbs[x.size - 2]" );
+#line 587 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 587, "out of bounds: x.limbs[x.size - 2]" );
     bb13:
-#line 613 "<kl>/_core/float_parse.kl"
+#line 588 "<kl>/_core/float_parse.kl"
     kl_t23 = kl_r1_15 != 0;
-#line 613 "<kl>/_core/float_parse.kl"
+#line 588 "<kl>/_core/float_parse.kl"
     kl_t21 = kl_t23;
-#line 613 "<kl>/_core/float_parse.kl"
+#line 588 "<kl>/_core/float_parse.kl"
     goto bb15;
     bb14:
-#line 613 "<kl>/_core/float_parse.kl"
+#line 588 "<kl>/_core/float_parse.kl"
     kl_t24 = kl_shl_9 & 63;
-#line 613 "<kl>/_core/float_parse.kl"
+#line 588 "<kl>/_core/float_parse.kl"
     kl_t25 = kl_r1_15 << kl_t24;
-#line 613 "<kl>/_core/float_parse.kl"
+#line 588 "<kl>/_core/float_parse.kl"
     kl_t26 = kl_t25 != 0;
-#line 613 "<kl>/_core/float_parse.kl"
+#line 588 "<kl>/_core/float_parse.kl"
     kl_t21 = kl_t26;
-#line 613 "<kl>/_core/float_parse.kl"
+#line 588 "<kl>/_core/float_parse.kl"
     goto bb15;
     bb15:
-#line 613 "<kl>/_core/float_parse.kl"
+#line 588 "<kl>/_core/float_parse.kl"
     kl_truncated_20 = kl_t21;
     kl_t29 = kl_shl_9 == 0;
-#line 614 "<kl>/_core/float_parse.kl"
+#line 589 "<kl>/_core/float_parse.kl"
     if ( kl_t29 ) goto bb16; else goto bb17;
     bb16:
-#line 614 "<kl>/_core/float_parse.kl"
+#line 589 "<kl>/_core/float_parse.kl"
     kl_t28 = kl_r0_4;
-#line 614 "<kl>/_core/float_parse.kl"
+#line 589 "<kl>/_core/float_parse.kl"
     goto bb18;
     bb17:
-#line 614 "<kl>/_core/float_parse.kl"
+#line 589 "<kl>/_core/float_parse.kl"
     kl_t30 = kl_shl_9 & 63;
-#line 614 "<kl>/_core/float_parse.kl"
+#line 589 "<kl>/_core/float_parse.kl"
     kl_t31 = kl_r0_4 << kl_t30;
-#line 614 "<kl>/_core/float_parse.kl"
+#line 589 "<kl>/_core/float_parse.kl"
     kl_t32 = __builtin_sub_overflow( 64, kl_shl_9, &( uint64_t ) { 0 } );
-#line 614 "<kl>/_core/float_parse.kl"
+#line 589 "<kl>/_core/float_parse.kl"
     if ( kl_t32 ) goto bb19; else goto bb20;
     bb18:
-#line 614 "<kl>/_core/float_parse.kl"
+#line 589 "<kl>/_core/float_parse.kl"
     kl_bits_27 = kl_t28;
     kl_i_37 = 0;
-#line 615 "<kl>/_core/float_parse.kl"
+#line 590 "<kl>/_core/float_parse.kl"
     kl_t39 = __builtin_sub_overflow( ( *kl_x_1 ).kl_size, 2, &( uint64_t ) { 0 } );
-#line 615 "<kl>/_core/float_parse.kl"
+#line 590 "<kl>/_core/float_parse.kl"
     if ( kl_t39 ) goto bb21; else goto bb22;
     bb19:
-#line 614 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 614, "arithmetic overflow: ( 64 - shl )" );
+#line 589 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 589, "arithmetic overflow: ( 64 - shl )" );
     bb20:
-#line 614 "<kl>/_core/float_parse.kl"
+#line 589 "<kl>/_core/float_parse.kl"
     kl_t33 = 64 - kl_shl_9;
-#line 614 "<kl>/_core/float_parse.kl"
+#line 589 "<kl>/_core/float_parse.kl"
     kl_t34 = kl_t33 & 63;
-#line 614 "<kl>/_core/float_parse.kl"
+#line 589 "<kl>/_core/float_parse.kl"
     kl_t35 = kl_r1_15 >> kl_t34;
-#line 614 "<kl>/_core/float_parse.kl"
+#line 589 "<kl>/_core/float_parse.kl"
     kl_t36 = kl_t31 | kl_t35;
-#line 614 "<kl>/_core/float_parse.kl"
+#line 589 "<kl>/_core/float_parse.kl"
     kl_t28 = kl_t36;
-#line 614 "<kl>/_core/float_parse.kl"
+#line 589 "<kl>/_core/float_parse.kl"
     goto bb18;
     bb21:
-#line 615 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 615, "arithmetic overflow: x.size - 2" );
+#line 590 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 590, "arithmetic overflow: x.size - 2" );
     bb22:
-#line 615 "<kl>/_core/float_parse.kl"
+#line 590 "<kl>/_core/float_parse.kl"
     kl_t40 = ( *kl_x_1 ).kl_size - 2;
-#line 615 "<kl>/_core/float_parse.kl"
+#line 590 "<kl>/_core/float_parse.kl"
     kl_t38 = kl_t40;
-#line 615 "<kl>/_core/float_parse.kl"
+#line 590 "<kl>/_core/float_parse.kl"
     goto bb23;
     bb23:
-#line 615 "<kl>/_core/float_parse.kl"
+#line 590 "<kl>/_core/float_parse.kl"
     kl_t41 = kl_i_37 < kl_t38;
-#line 615 "<kl>/_core/float_parse.kl"
+#line 590 "<kl>/_core/float_parse.kl"
     if ( kl_t41 ) goto bb24; else goto bb25;
     bb24:
     kl_t42 = kl_truncated_20;
-#line 617 "<kl>/_core/float_parse.kl"
+#line 592 "<kl>/_core/float_parse.kl"
     if ( kl_t42 ) goto bb27; else goto bb26;
     bb25:
     kl_t46.kl_bits = kl_bits_27;
-#line 619 "<kl>/_core/float_parse.kl"
+#line 594 "<kl>/_core/float_parse.kl"
     kl_t46.kl_truncated = kl_truncated_20;
-#line 619 "<kl>/_core/float_parse.kl"
+#line 594 "<kl>/_core/float_parse.kl"
     kl_t0 = kl_t46;
-#line 619 "<kl>/_core/float_parse.kl"
+#line 594 "<kl>/_core/float_parse.kl"
     return kl_t0;
     bb26:
-#line 617 "<kl>/_core/float_parse.kl"
+#line 592 "<kl>/_core/float_parse.kl"
     kl_t43 = kl_i_37;
-#line 617 "<kl>/_core/float_parse.kl"
+#line 592 "<kl>/_core/float_parse.kl"
     kl_t44 = kl_t43 < 62;
-#line 617 "<kl>/_core/float_parse.kl"
+#line 592 "<kl>/_core/float_parse.kl"
     if ( kl_t44 ) goto bb28; else goto bb29;
     bb27:
-#line 617 "<kl>/_core/float_parse.kl"
+#line 592 "<kl>/_core/float_parse.kl"
     kl_truncated_20 = kl_t42;
-#line 615 "<kl>/_core/float_parse.kl"
+#line 590 "<kl>/_core/float_parse.kl"
     goto bb30;
     bb28:
     kl_t45 = ( *kl_x_1 ).kl_limbs.e[kl_t43] != 0;
-#line 617 "<kl>/_core/float_parse.kl"
+#line 592 "<kl>/_core/float_parse.kl"
     kl_t42 = kl_t45;
-#line 617 "<kl>/_core/float_parse.kl"
+#line 592 "<kl>/_core/float_parse.kl"
     goto bb27;
     bb29:
-#line 617 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 617, "out of bounds: x.limbs[i]" );
+#line 592 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 592, "out of bounds: x.limbs[i]" );
     bb30:
-#line 615 "<kl>/_core/float_parse.kl"
+#line 590 "<kl>/_core/float_parse.kl"
     kl_i_37 = kl_i_37 + 1;
-#line 615 "<kl>/_core/float_parse.kl"
+#line 590 "<kl>/_core/float_parse.kl"
     goto bb23;
-#line 620 "<kl>/_core/float_parse.kl"
+#line 595 "<kl>/_core/float_parse.kl"
 }
 
-#line 623 "<kl>/_core/float_parse.kl"
+#line 598 "<kl>/_core/float_parse.kl"
 int32_t kl_2kl5_core11float_parse_7compare__Q2klQ5_core3big_Q2klQ5_core3big( struct kl_2kl5_core11float_parse_big* kl_a_1, struct kl_2kl5_core11float_parse_big* kl_b_2 )
 {
     int32_t kl_t0;
@@ -7147,118 +7031,118 @@ int32_t kl_2kl5_core11float_parse_7compare__Q2klQ5_core3big_Q2klQ5_core3big( str
     uint64_t kl_t17;
     bool kl_t18;
     bool kl_t19;
-#line 625 "<kl>/_core/float_parse.kl"
+#line 600 "<kl>/_core/float_parse.kl"
     kl_t3 = ( *kl_a_1 ).kl_size != ( *kl_b_2 ).kl_size;
-#line 625 "<kl>/_core/float_parse.kl"
+#line 600 "<kl>/_core/float_parse.kl"
     if ( kl_t3 ) goto bb1; else goto bb5;
     bb1:
     kl_t5 = ( *kl_a_1 ).kl_size > ( *kl_b_2 ).kl_size;
-#line 627 "<kl>/_core/float_parse.kl"
+#line 602 "<kl>/_core/float_parse.kl"
     if ( kl_t5 ) goto bb2; else goto bb3;
     bb2:
-#line 627 "<kl>/_core/float_parse.kl"
+#line 602 "<kl>/_core/float_parse.kl"
     kl_t4 = 1;
-#line 627 "<kl>/_core/float_parse.kl"
+#line 602 "<kl>/_core/float_parse.kl"
     goto bb4;
     bb3:
-#line 627 "<kl>/_core/float_parse.kl"
+#line 602 "<kl>/_core/float_parse.kl"
     kl_t4 = -1;
-#line 627 "<kl>/_core/float_parse.kl"
+#line 602 "<kl>/_core/float_parse.kl"
     goto bb4;
     bb4:
-#line 627 "<kl>/_core/float_parse.kl"
+#line 602 "<kl>/_core/float_parse.kl"
     kl_t0 = kl_t4;
-#line 627 "<kl>/_core/float_parse.kl"
+#line 602 "<kl>/_core/float_parse.kl"
     return kl_t0;
     bb5:
     kl_i_6 = ( *kl_a_1 ).kl_size;
     goto bb6;
     bb6:
-#line 630 "<kl>/_core/float_parse.kl"
+#line 605 "<kl>/_core/float_parse.kl"
     kl_t7 = kl_i_6 > 0;
-#line 630 "<kl>/_core/float_parse.kl"
+#line 605 "<kl>/_core/float_parse.kl"
     if ( kl_t7 ) goto bb7; else goto bb8;
     bb7:
     kl_t8 = __builtin_sub_overflow( kl_i_6, 1, &( uint64_t ) { 0 } );
-#line 632 "<kl>/_core/float_parse.kl"
+#line 607 "<kl>/_core/float_parse.kl"
     if ( kl_t8 ) goto bb9; else goto bb10;
     bb8:
-#line 638 "<kl>/_core/float_parse.kl"
+#line 613 "<kl>/_core/float_parse.kl"
     kl_t0 = 0;
-#line 638 "<kl>/_core/float_parse.kl"
+#line 613 "<kl>/_core/float_parse.kl"
     return kl_t0;
     bb9:
-#line 632 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 632, "arithmetic overflow: i--;" );
+#line 607 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 607, "arithmetic overflow: i--;" );
     bb10:
-#line 632 "<kl>/_core/float_parse.kl"
+#line 607 "<kl>/_core/float_parse.kl"
     kl_i_6 = kl_i_6 - 1;
     kl_t9 = kl_i_6;
-#line 633 "<kl>/_core/float_parse.kl"
+#line 608 "<kl>/_core/float_parse.kl"
     kl_t10 = kl_t9 < 62;
-#line 633 "<kl>/_core/float_parse.kl"
+#line 608 "<kl>/_core/float_parse.kl"
     if ( kl_t10 ) goto bb11; else goto bb12;
     bb11:
-#line 633 "<kl>/_core/float_parse.kl"
+#line 608 "<kl>/_core/float_parse.kl"
     kl_t11 = kl_i_6;
-#line 633 "<kl>/_core/float_parse.kl"
+#line 608 "<kl>/_core/float_parse.kl"
     kl_t12 = kl_t11 < 62;
-#line 633 "<kl>/_core/float_parse.kl"
+#line 608 "<kl>/_core/float_parse.kl"
     if ( kl_t12 ) goto bb13; else goto bb14;
     bb12:
-#line 633 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 633, "out of bounds: a.limbs[i]" );
+#line 608 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 608, "out of bounds: a.limbs[i]" );
     bb13:
-#line 633 "<kl>/_core/float_parse.kl"
+#line 608 "<kl>/_core/float_parse.kl"
     kl_t13 = ( *kl_a_1 ).kl_limbs.e[kl_t9] != ( *kl_b_2 ).kl_limbs.e[kl_t11];
-#line 633 "<kl>/_core/float_parse.kl"
+#line 608 "<kl>/_core/float_parse.kl"
     if ( kl_t13 ) goto bb15; else goto bb6;
     bb14:
-#line 633 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 633, "out of bounds: b.limbs[i]" );
+#line 608 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 608, "out of bounds: b.limbs[i]" );
     bb15:
     kl_t15 = kl_i_6;
-#line 635 "<kl>/_core/float_parse.kl"
+#line 610 "<kl>/_core/float_parse.kl"
     kl_t16 = kl_t15 < 62;
-#line 635 "<kl>/_core/float_parse.kl"
+#line 610 "<kl>/_core/float_parse.kl"
     if ( kl_t16 ) goto bb19; else goto bb20;
     bb16:
-#line 635 "<kl>/_core/float_parse.kl"
+#line 610 "<kl>/_core/float_parse.kl"
     kl_t14 = 1;
-#line 635 "<kl>/_core/float_parse.kl"
+#line 610 "<kl>/_core/float_parse.kl"
     goto bb18;
     bb17:
-#line 635 "<kl>/_core/float_parse.kl"
+#line 610 "<kl>/_core/float_parse.kl"
     kl_t14 = -1;
-#line 635 "<kl>/_core/float_parse.kl"
+#line 610 "<kl>/_core/float_parse.kl"
     goto bb18;
     bb18:
-#line 635 "<kl>/_core/float_parse.kl"
+#line 610 "<kl>/_core/float_parse.kl"
     kl_t0 = kl_t14;
-#line 635 "<kl>/_core/float_parse.kl"
+#line 610 "<kl>/_core/float_parse.kl"
     return kl_t0;
     bb19:
-#line 635 "<kl>/_core/float_parse.kl"
+#line 610 "<kl>/_core/float_parse.kl"
     kl_t17 = kl_i_6;
-#line 635 "<kl>/_core/float_parse.kl"
+#line 610 "<kl>/_core/float_parse.kl"
     kl_t18 = kl_t17 < 62;
-#line 635 "<kl>/_core/float_parse.kl"
+#line 610 "<kl>/_core/float_parse.kl"
     if ( kl_t18 ) goto bb21; else goto bb22;
     bb20:
-#line 635 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 635, "out of bounds: a.limbs[i]" );
+#line 610 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 610, "out of bounds: a.limbs[i]" );
     bb21:
-#line 635 "<kl>/_core/float_parse.kl"
+#line 610 "<kl>/_core/float_parse.kl"
     kl_t19 = ( *kl_a_1 ).kl_limbs.e[kl_t15] > ( *kl_b_2 ).kl_limbs.e[kl_t17];
-#line 635 "<kl>/_core/float_parse.kl"
+#line 610 "<kl>/_core/float_parse.kl"
     if ( kl_t19 ) goto bb16; else goto bb17;
     bb22:
-#line 635 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 635, "out of bounds: b.limbs[i]" );
-#line 639 "<kl>/_core/float_parse.kl"
+#line 610 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 610, "out of bounds: b.limbs[i]" );
+#line 614 "<kl>/_core/float_parse.kl"
 }
 
-#line 642 "<kl>/_core/float_parse.kl"
+#line 617 "<kl>/_core/float_parse.kl"
 void kl_2kl5_core11float_parse_3shl__RQ2klQ5_core3big_3u64( struct kl_2kl5_core11float_parse_big* kl_x_1, uint64_t kl_n_2 )
 {
     uint64_t kl_bits_3;
@@ -7313,246 +7197,246 @@ void kl_2kl5_core11float_parse_3shl__RQ2klQ5_core3big_3u64( struct kl_2kl5_core1
     uint64_t kl_t54;
     bool kl_t55;
     bool kl_t56;
-#line 644 "<kl>/_core/float_parse.kl"
+#line 619 "<kl>/_core/float_parse.kl"
     kl_t4 = kl_n_2 % 64;
-#line 644 "<kl>/_core/float_parse.kl"
+#line 619 "<kl>/_core/float_parse.kl"
     kl_bits_3 = kl_t4;
     kl_t6 = kl_n_2 / 64;
-#line 645 "<kl>/_core/float_parse.kl"
+#line 620 "<kl>/_core/float_parse.kl"
     kl_limbs_5 = kl_t6;
     kl_t7 = kl_bits_3 != 0;
-#line 646 "<kl>/_core/float_parse.kl"
+#line 621 "<kl>/_core/float_parse.kl"
     if ( kl_t7 ) goto bb1; else goto bb16;
     bb1:
     kl_prev_8 = 0;
     kl_i_9 = 0;
-#line 649 "<kl>/_core/float_parse.kl"
+#line 624 "<kl>/_core/float_parse.kl"
     kl_t10 = ( *kl_x_1 ).kl_size;
-#line 649 "<kl>/_core/float_parse.kl"
+#line 624 "<kl>/_core/float_parse.kl"
     goto bb2;
     bb2:
-#line 649 "<kl>/_core/float_parse.kl"
+#line 624 "<kl>/_core/float_parse.kl"
     kl_t11 = kl_i_9 < kl_t10;
-#line 649 "<kl>/_core/float_parse.kl"
+#line 624 "<kl>/_core/float_parse.kl"
     if ( kl_t11 ) goto bb3; else goto bb4;
     bb3:
     kl_t13 = kl_i_9;
-#line 651 "<kl>/_core/float_parse.kl"
+#line 626 "<kl>/_core/float_parse.kl"
     kl_t14 = kl_t13 < 62;
-#line 651 "<kl>/_core/float_parse.kl"
+#line 626 "<kl>/_core/float_parse.kl"
     if ( kl_t14 ) goto bb5; else goto bb6;
     bb4:
-#line 655 "<kl>/_core/float_parse.kl"
+#line 630 "<kl>/_core/float_parse.kl"
     kl_t25 = __builtin_sub_overflow( 64, kl_bits_3, &( uint64_t ) { 0 } );
-#line 655 "<kl>/_core/float_parse.kl"
+#line 630 "<kl>/_core/float_parse.kl"
     if ( kl_t25 ) goto bb12; else goto bb13;
     bb5:
-#line 651 "<kl>/_core/float_parse.kl"
+#line 626 "<kl>/_core/float_parse.kl"
     kl_xi_12 = ( *kl_x_1 ).kl_limbs.e[kl_t13];
     kl_t15 = kl_i_9;
-#line 652 "<kl>/_core/float_parse.kl"
+#line 627 "<kl>/_core/float_parse.kl"
     kl_t16 = kl_t15 < 62;
-#line 652 "<kl>/_core/float_parse.kl"
+#line 627 "<kl>/_core/float_parse.kl"
     if ( kl_t16 ) goto bb7; else goto bb8;
     bb6:
-#line 651 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 651, "out of bounds: x.limbs[i]" );
+#line 626 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 626, "out of bounds: x.limbs[i]" );
     bb7:
-#line 652 "<kl>/_core/float_parse.kl"
+#line 627 "<kl>/_core/float_parse.kl"
     kl_t17 = kl_bits_3 & 63;
-#line 652 "<kl>/_core/float_parse.kl"
+#line 627 "<kl>/_core/float_parse.kl"
     kl_t18 = kl_xi_12 << kl_t17;
-#line 652 "<kl>/_core/float_parse.kl"
+#line 627 "<kl>/_core/float_parse.kl"
     kl_t19 = __builtin_sub_overflow( 64, kl_bits_3, &( uint64_t ) { 0 } );
-#line 652 "<kl>/_core/float_parse.kl"
+#line 627 "<kl>/_core/float_parse.kl"
     if ( kl_t19 ) goto bb9; else goto bb10;
     bb8:
-#line 652 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 652, "out of bounds: x.limbs[i]" );
+#line 627 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 627, "out of bounds: x.limbs[i]" );
     bb9:
-#line 652 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 652, "arithmetic overflow: ( 64 - bits )" );
+#line 627 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 627, "arithmetic overflow: ( 64 - bits )" );
     bb10:
-#line 652 "<kl>/_core/float_parse.kl"
+#line 627 "<kl>/_core/float_parse.kl"
     kl_t20 = 64 - kl_bits_3;
-#line 652 "<kl>/_core/float_parse.kl"
+#line 627 "<kl>/_core/float_parse.kl"
     kl_t21 = kl_t20 & 63;
-#line 652 "<kl>/_core/float_parse.kl"
+#line 627 "<kl>/_core/float_parse.kl"
     kl_t22 = kl_prev_8 >> kl_t21;
-#line 652 "<kl>/_core/float_parse.kl"
+#line 627 "<kl>/_core/float_parse.kl"
     kl_t23 = kl_t18 | kl_t22;
-#line 652 "<kl>/_core/float_parse.kl"
+#line 627 "<kl>/_core/float_parse.kl"
     ( *kl_x_1 ).kl_limbs.e[kl_t15] = kl_t23;
     kl_prev_8 = kl_xi_12;
-#line 649 "<kl>/_core/float_parse.kl"
+#line 624 "<kl>/_core/float_parse.kl"
     goto bb11;
     bb11:
-#line 649 "<kl>/_core/float_parse.kl"
+#line 624 "<kl>/_core/float_parse.kl"
     kl_i_9 = kl_i_9 + 1;
-#line 649 "<kl>/_core/float_parse.kl"
+#line 624 "<kl>/_core/float_parse.kl"
     goto bb2;
     bb12:
-#line 655 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 655, "arithmetic overflow: ( 64 - bits )" );
+#line 630 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 630, "arithmetic overflow: ( 64 - bits )" );
     bb13:
-#line 655 "<kl>/_core/float_parse.kl"
+#line 630 "<kl>/_core/float_parse.kl"
     kl_t26 = 64 - kl_bits_3;
-#line 655 "<kl>/_core/float_parse.kl"
+#line 630 "<kl>/_core/float_parse.kl"
     kl_t27 = kl_t26 & 63;
-#line 655 "<kl>/_core/float_parse.kl"
+#line 630 "<kl>/_core/float_parse.kl"
     kl_t28 = kl_prev_8 >> kl_t27;
-#line 655 "<kl>/_core/float_parse.kl"
+#line 630 "<kl>/_core/float_parse.kl"
     kl_carry_24 = kl_t28;
     kl_t29 = kl_carry_24 != 0;
-#line 656 "<kl>/_core/float_parse.kl"
+#line 631 "<kl>/_core/float_parse.kl"
     if ( kl_t29 ) goto bb14; else goto bb15;
     bb14:
     kl_t30 = &( *kl_x_1 );
-#line 658 "<kl>/_core/float_parse.kl"
+#line 633 "<kl>/_core/float_parse.kl"
     kl_2kl5_core11float_parse_4push__RQ2klQ5_core3big_3u64( kl_t30, kl_carry_24 );
-#line 656 "<kl>/_core/float_parse.kl"
+#line 631 "<kl>/_core/float_parse.kl"
     goto bb15;
     bb15:
-#line 646 "<kl>/_core/float_parse.kl"
+#line 621 "<kl>/_core/float_parse.kl"
     goto bb16;
     bb16:
-#line 661 "<kl>/_core/float_parse.kl"
+#line 636 "<kl>/_core/float_parse.kl"
     kl_t33 = kl_limbs_5 != 0;
-#line 661 "<kl>/_core/float_parse.kl"
+#line 636 "<kl>/_core/float_parse.kl"
     kl_t32 = kl_t33;
-#line 661 "<kl>/_core/float_parse.kl"
+#line 636 "<kl>/_core/float_parse.kl"
     if ( kl_t32 ) goto bb17; else goto bb18;
     bb17:
-#line 661 "<kl>/_core/float_parse.kl"
+#line 636 "<kl>/_core/float_parse.kl"
     kl_t34 = ( *kl_x_1 ).kl_size != 0;
-#line 661 "<kl>/_core/float_parse.kl"
+#line 636 "<kl>/_core/float_parse.kl"
     kl_t32 = kl_t34;
-#line 661 "<kl>/_core/float_parse.kl"
+#line 636 "<kl>/_core/float_parse.kl"
     goto bb18;
     bb18:
-#line 661 "<kl>/_core/float_parse.kl"
+#line 636 "<kl>/_core/float_parse.kl"
     if ( kl_t32 ) goto bb19; else goto bb43;
     bb19:
     kl_t35 = __builtin_add_overflow( ( *kl_x_1 ).kl_size, kl_limbs_5, &( uint64_t ) { 0 } );
-#line 663 "<kl>/_core/float_parse.kl"
+#line 638 "<kl>/_core/float_parse.kl"
     if ( kl_t35 ) goto bb20; else goto bb21;
     bb20:
-#line 663 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 663, "arithmetic overflow: x.size + limbs" );
+#line 638 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 638, "arithmetic overflow: x.size + limbs" );
     bb21:
-#line 663 "<kl>/_core/float_parse.kl"
+#line 638 "<kl>/_core/float_parse.kl"
     kl_t36 = ( *kl_x_1 ).kl_size + kl_limbs_5;
-#line 663 "<kl>/_core/float_parse.kl"
+#line 638 "<kl>/_core/float_parse.kl"
     kl_t37 = kl_t36 > 62;
-#line 663 "<kl>/_core/float_parse.kl"
+#line 638 "<kl>/_core/float_parse.kl"
     if ( kl_t37 ) goto bb22; else goto bb23;
     bb22:
     kl_t39 = &kl_t38;
-#line 665 "<kl>/_core/float_parse.kl"
+#line 640 "<kl>/_core/float_parse.kl"
     kl_t40 = ( uint8_t* ) "big integer overflow";
-#line 665 "<kl>/_core/float_parse.kl"
+#line 640 "<kl>/_core/float_parse.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t39, kl_t40, 20 );
-#line 665 "<kl>/_core/float_parse.kl"
-    kl_rt_panic_message( "<kl>/_core/float_parse.kl", 665, kl_t38.kl_data, kl_t38.kl_size );
+#line 640 "<kl>/_core/float_parse.kl"
+    kl_rt_panic_message( "<kl>/_core/float_parse.kl", 640, kl_t38.kl_data, kl_t38.kl_size );
     bb23:
     kl_i_42 = ( *kl_x_1 ).kl_size;
     goto bb24;
     bb24:
-#line 668 "<kl>/_core/float_parse.kl"
+#line 643 "<kl>/_core/float_parse.kl"
     kl_t43 = kl_i_42 > 0;
-#line 668 "<kl>/_core/float_parse.kl"
+#line 643 "<kl>/_core/float_parse.kl"
     if ( kl_t43 ) goto bb25; else goto bb26;
     bb25:
     kl_t44 = __builtin_sub_overflow( kl_i_42, 1, &( uint64_t ) { 0 } );
-#line 670 "<kl>/_core/float_parse.kl"
+#line 645 "<kl>/_core/float_parse.kl"
     if ( kl_t44 ) goto bb27; else goto bb28;
     bb26:
-#line 673 "<kl>/_core/float_parse.kl"
+#line 648 "<kl>/_core/float_parse.kl"
     kl_j_51 = 0;
-#line 673 "<kl>/_core/float_parse.kl"
+#line 648 "<kl>/_core/float_parse.kl"
     kl_t52 = kl_limbs_5;
-#line 673 "<kl>/_core/float_parse.kl"
+#line 648 "<kl>/_core/float_parse.kl"
     goto bb35;
     bb27:
-#line 670 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 670, "arithmetic overflow: i--;" );
+#line 645 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 645, "arithmetic overflow: i--;" );
     bb28:
-#line 670 "<kl>/_core/float_parse.kl"
+#line 645 "<kl>/_core/float_parse.kl"
     kl_i_42 = kl_i_42 - 1;
     kl_t45 = __builtin_add_overflow( kl_i_42, kl_limbs_5, &( uint64_t ) { 0 } );
-#line 671 "<kl>/_core/float_parse.kl"
+#line 646 "<kl>/_core/float_parse.kl"
     if ( kl_t45 ) goto bb29; else goto bb30;
     bb29:
-#line 671 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 671, "arithmetic overflow: i + limbs" );
+#line 646 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 646, "arithmetic overflow: i + limbs" );
     bb30:
-#line 671 "<kl>/_core/float_parse.kl"
+#line 646 "<kl>/_core/float_parse.kl"
     kl_t46 = kl_i_42 + kl_limbs_5;
-#line 671 "<kl>/_core/float_parse.kl"
+#line 646 "<kl>/_core/float_parse.kl"
     kl_t47 = kl_t46;
-#line 671 "<kl>/_core/float_parse.kl"
+#line 646 "<kl>/_core/float_parse.kl"
     kl_t48 = kl_t47 < 62;
-#line 671 "<kl>/_core/float_parse.kl"
+#line 646 "<kl>/_core/float_parse.kl"
     if ( kl_t48 ) goto bb31; else goto bb32;
     bb31:
-#line 671 "<kl>/_core/float_parse.kl"
+#line 646 "<kl>/_core/float_parse.kl"
     kl_t49 = kl_i_42;
-#line 671 "<kl>/_core/float_parse.kl"
+#line 646 "<kl>/_core/float_parse.kl"
     kl_t50 = kl_t49 < 62;
-#line 671 "<kl>/_core/float_parse.kl"
+#line 646 "<kl>/_core/float_parse.kl"
     if ( kl_t50 ) goto bb33; else goto bb34;
     bb32:
-#line 671 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 671, "out of bounds: x.limbs[i + limbs]" );
+#line 646 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 646, "out of bounds: x.limbs[i + limbs]" );
     bb33:
-#line 671 "<kl>/_core/float_parse.kl"
+#line 646 "<kl>/_core/float_parse.kl"
     ( *kl_x_1 ).kl_limbs.e[kl_t47] = ( *kl_x_1 ).kl_limbs.e[kl_t49];
-#line 668 "<kl>/_core/float_parse.kl"
+#line 643 "<kl>/_core/float_parse.kl"
     goto bb24;
     bb34:
-#line 671 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 671, "out of bounds: x.limbs[i]" );
+#line 646 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 646, "out of bounds: x.limbs[i]" );
     bb35:
     kl_t53 = kl_j_51 < kl_t52;
-#line 673 "<kl>/_core/float_parse.kl"
+#line 648 "<kl>/_core/float_parse.kl"
     if ( kl_t53 ) goto bb36; else goto bb37;
     bb36:
     kl_t54 = kl_j_51;
-#line 675 "<kl>/_core/float_parse.kl"
+#line 650 "<kl>/_core/float_parse.kl"
     kl_t55 = kl_t54 < 62;
-#line 675 "<kl>/_core/float_parse.kl"
+#line 650 "<kl>/_core/float_parse.kl"
     if ( kl_t55 ) goto bb38; else goto bb39;
     bb37:
     kl_t56 = __builtin_add_overflow( ( *kl_x_1 ).kl_size, kl_limbs_5, &( uint64_t ) { 0 } );
-#line 677 "<kl>/_core/float_parse.kl"
+#line 652 "<kl>/_core/float_parse.kl"
     if ( kl_t56 ) goto bb41; else goto bb42;
     bb38:
-#line 675 "<kl>/_core/float_parse.kl"
+#line 650 "<kl>/_core/float_parse.kl"
     ( *kl_x_1 ).kl_limbs.e[kl_t54] = 0;
-#line 673 "<kl>/_core/float_parse.kl"
+#line 648 "<kl>/_core/float_parse.kl"
     goto bb40;
     bb39:
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 675, "out of bounds: x.limbs[j]" );
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 650, "out of bounds: x.limbs[j]" );
     bb40:
-#line 673 "<kl>/_core/float_parse.kl"
+#line 648 "<kl>/_core/float_parse.kl"
     kl_j_51 = kl_j_51 + 1;
-#line 673 "<kl>/_core/float_parse.kl"
+#line 648 "<kl>/_core/float_parse.kl"
     goto bb35;
     bb41:
-#line 677 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 677, "arithmetic overflow: x.size += limbs;" );
+#line 652 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 652, "arithmetic overflow: x.size += limbs;" );
     bb42:
-#line 677 "<kl>/_core/float_parse.kl"
+#line 652 "<kl>/_core/float_parse.kl"
     ( *kl_x_1 ).kl_size = ( *kl_x_1 ).kl_size + kl_limbs_5;
-#line 661 "<kl>/_core/float_parse.kl"
+#line 636 "<kl>/_core/float_parse.kl"
     goto bb43;
     bb43:
-#line 679 "<kl>/_core/float_parse.kl"
+#line 654 "<kl>/_core/float_parse.kl"
     return;
-#line 679 "<kl>/_core/float_parse.kl"
+#line 654 "<kl>/_core/float_parse.kl"
 }
 
-#line 681 "<kl>/_core/float_parse.kl"
+#line 656 "<kl>/_core/float_parse.kl"
 uint64_t kl_2kl5_core11float_parse_10bit_length__Q2klQ5_core3big( struct kl_2kl5_core11float_parse_big* kl_x_1 )
 {
     uint64_t kl_t0;
@@ -7567,70 +7451,70 @@ uint64_t kl_2kl5_core11float_parse_10bit_length__Q2klQ5_core3big( struct kl_2kl5
     uint64_t kl_t10;
     bool kl_t11;
     uint64_t kl_t12;
-#line 683 "<kl>/_core/float_parse.kl"
+#line 658 "<kl>/_core/float_parse.kl"
     kl_t3 = ( *kl_x_1 ).kl_size == 0;
-#line 683 "<kl>/_core/float_parse.kl"
+#line 658 "<kl>/_core/float_parse.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
-#line 683 "<kl>/_core/float_parse.kl"
+#line 658 "<kl>/_core/float_parse.kl"
     kl_t2 = 0;
-#line 683 "<kl>/_core/float_parse.kl"
+#line 658 "<kl>/_core/float_parse.kl"
     goto bb3;
     bb2:
-#line 683 "<kl>/_core/float_parse.kl"
+#line 658 "<kl>/_core/float_parse.kl"
     kl_t4 = __builtin_mul_overflow( 64, ( *kl_x_1 ).kl_size, &( uint64_t ) { 0 } );
-#line 683 "<kl>/_core/float_parse.kl"
+#line 658 "<kl>/_core/float_parse.kl"
     if ( kl_t4 ) goto bb4; else goto bb5;
     bb3:
-#line 683 "<kl>/_core/float_parse.kl"
+#line 658 "<kl>/_core/float_parse.kl"
     kl_t0 = kl_t2;
-#line 683 "<kl>/_core/float_parse.kl"
+#line 658 "<kl>/_core/float_parse.kl"
     return kl_t0;
     bb4:
-#line 683 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 683, "arithmetic overflow: 64 * x.size" );
+#line 658 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 658, "arithmetic overflow: 64 * x.size" );
     bb5:
-#line 683 "<kl>/_core/float_parse.kl"
+#line 658 "<kl>/_core/float_parse.kl"
     kl_t5 = 64 * ( *kl_x_1 ).kl_size;
-#line 683 "<kl>/_core/float_parse.kl"
+#line 658 "<kl>/_core/float_parse.kl"
     kl_t6 = __builtin_sub_overflow( ( *kl_x_1 ).kl_size, 1, &( uint64_t ) { 0 } );
-#line 683 "<kl>/_core/float_parse.kl"
+#line 658 "<kl>/_core/float_parse.kl"
     if ( kl_t6 ) goto bb6; else goto bb7;
     bb6:
-#line 683 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 683, "arithmetic overflow: x.size - 1" );
+#line 658 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 658, "arithmetic overflow: x.size - 1" );
     bb7:
-#line 683 "<kl>/_core/float_parse.kl"
+#line 658 "<kl>/_core/float_parse.kl"
     kl_t7 = ( *kl_x_1 ).kl_size - 1;
-#line 683 "<kl>/_core/float_parse.kl"
+#line 658 "<kl>/_core/float_parse.kl"
     kl_t8 = kl_t7;
-#line 683 "<kl>/_core/float_parse.kl"
+#line 658 "<kl>/_core/float_parse.kl"
     kl_t9 = kl_t8 < 62;
-#line 683 "<kl>/_core/float_parse.kl"
+#line 658 "<kl>/_core/float_parse.kl"
     if ( kl_t9 ) goto bb8; else goto bb9;
     bb8:
-#line 683 "<kl>/_core/float_parse.kl"
+#line 658 "<kl>/_core/float_parse.kl"
     kl_t10 = kl_2kl5_core11float_parse_13leading_zeros__3u64( ( *kl_x_1 ).kl_limbs.e[kl_t8] );
-#line 683 "<kl>/_core/float_parse.kl"
+#line 658 "<kl>/_core/float_parse.kl"
     kl_t11 = __builtin_sub_overflow( kl_t5, kl_t10, &( uint64_t ) { 0 } );
-#line 683 "<kl>/_core/float_parse.kl"
+#line 658 "<kl>/_core/float_parse.kl"
     if ( kl_t11 ) goto bb10; else goto bb11;
     bb9:
-#line 683 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 683, "out of bounds: x.limbs[x.size - 1]" );
+#line 658 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 658, "out of bounds: x.limbs[x.size - 1]" );
     bb10:
-#line 683 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 683, "arithmetic overflow: 64 * x.size - leading_zeros( x.limbs[x.size - 1] )" );
+#line 658 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 658, "arithmetic overflow: 64 * x.size - leading_zeros( x.limbs[x.size - 1] )" );
     bb11:
-#line 683 "<kl>/_core/float_parse.kl"
+#line 658 "<kl>/_core/float_parse.kl"
     kl_t12 = kl_t5 - kl_t10;
-#line 683 "<kl>/_core/float_parse.kl"
+#line 658 "<kl>/_core/float_parse.kl"
     kl_t2 = kl_t12;
-#line 683 "<kl>/_core/float_parse.kl"
+#line 658 "<kl>/_core/float_parse.kl"
     goto bb3;
 }
 
-#line 687 "<kl>/_core/float_parse.kl"
+#line 662 "<kl>/_core/float_parse.kl"
 void kl_2kl5_core11float_parse_4pow5__RQ2klQ5_core3big_3u64( struct kl_2kl5_core11float_parse_big* kl_x_1, uint64_t kl_n_2 )
 {
     uint64_t kl_rest_3;
@@ -7648,78 +7532,78 @@ void kl_2kl5_core11float_parse_4pow5__RQ2klQ5_core3big_3u64( struct kl_2kl5_core
     uint64_t kl_t17;
     bool kl_t18;
     ( void ) kl_t6;
-#line 689 "<kl>/_core/float_parse.kl"
+#line 664 "<kl>/_core/float_parse.kl"
     kl_rest_3 = kl_n_2;
     goto bb1;
     bb1:
-#line 690 "<kl>/_core/float_parse.kl"
+#line 665 "<kl>/_core/float_parse.kl"
     kl_t4 = kl_rest_3 >= 135;
-#line 690 "<kl>/_core/float_parse.kl"
+#line 665 "<kl>/_core/float_parse.kl"
     if ( kl_t4 ) goto bb2; else goto bb5;
     bb2:
     kl_t5 = &( *kl_x_1 );
-#line 692 "<kl>/_core/float_parse.kl"
+#line 667 "<kl>/_core/float_parse.kl"
     kl_t6 = 0;
-#line 692 "<kl>/_core/float_parse.kl"
+#line 667 "<kl>/_core/float_parse.kl"
     kl_t7 = &kl_2kl5_core11float_parse_LARGE_POWER_OF_FIVE__G.e[kl_t6];
-#line 692 "<kl>/_core/float_parse.kl"
+#line 667 "<kl>/_core/float_parse.kl"
     kl_t8 = ( struct kl__run__L3u64__ref ) { ( uint64_t* ) kl_t7, 5 };
-#line 692 "<kl>/_core/float_parse.kl"
+#line 667 "<kl>/_core/float_parse.kl"
     kl_2kl5_core11float_parse_9large_mul__RQ2klQ5_core3big_L3u64( kl_t5, ( kl_t8 ).data, ( kl_t8 ).size );
     kl_t10 = __builtin_sub_overflow( kl_rest_3, 135, &( uint64_t ) { 0 } );
-#line 693 "<kl>/_core/float_parse.kl"
+#line 668 "<kl>/_core/float_parse.kl"
     if ( kl_t10 ) goto bb3; else goto bb4;
     bb3:
-#line 693 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 693, "arithmetic overflow: rest -= 135;" );
+#line 668 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 668, "arithmetic overflow: rest -= 135;" );
     bb4:
-#line 693 "<kl>/_core/float_parse.kl"
+#line 668 "<kl>/_core/float_parse.kl"
     kl_rest_3 = kl_rest_3 - 135;
-#line 690 "<kl>/_core/float_parse.kl"
+#line 665 "<kl>/_core/float_parse.kl"
     goto bb1;
     bb5:
-#line 695 "<kl>/_core/float_parse.kl"
+#line 670 "<kl>/_core/float_parse.kl"
     kl_t11 = kl_rest_3 >= 27;
-#line 695 "<kl>/_core/float_parse.kl"
+#line 670 "<kl>/_core/float_parse.kl"
     if ( kl_t11 ) goto bb6; else goto bb7;
     bb6:
     kl_t12 = &( *kl_x_1 );
-#line 697 "<kl>/_core/float_parse.kl"
+#line 672 "<kl>/_core/float_parse.kl"
     kl_2kl5_core11float_parse_9small_mul__RQ2klQ5_core3big_3u64( kl_t12, 7450580596923828125 );
     kl_t14 = __builtin_sub_overflow( kl_rest_3, 27, &( uint64_t ) { 0 } );
-#line 698 "<kl>/_core/float_parse.kl"
+#line 673 "<kl>/_core/float_parse.kl"
     if ( kl_t14 ) goto bb8; else goto bb9;
     bb7:
     kl_t15 = kl_rest_3 != 0;
-#line 700 "<kl>/_core/float_parse.kl"
+#line 675 "<kl>/_core/float_parse.kl"
     if ( kl_t15 ) goto bb10; else goto bb13;
     bb8:
-#line 698 "<kl>/_core/float_parse.kl"
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 698, "arithmetic overflow: rest -= 27;" );
+#line 673 "<kl>/_core/float_parse.kl"
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 673, "arithmetic overflow: rest -= 27;" );
     bb9:
-#line 698 "<kl>/_core/float_parse.kl"
+#line 673 "<kl>/_core/float_parse.kl"
     kl_rest_3 = kl_rest_3 - 27;
-#line 695 "<kl>/_core/float_parse.kl"
+#line 670 "<kl>/_core/float_parse.kl"
     goto bb5;
     bb10:
-#line 702 "<kl>/_core/float_parse.kl"
+#line 677 "<kl>/_core/float_parse.kl"
     kl_t16 = &( *kl_x_1 );
-#line 702 "<kl>/_core/float_parse.kl"
+#line 677 "<kl>/_core/float_parse.kl"
     kl_t17 = kl_rest_3;
-#line 702 "<kl>/_core/float_parse.kl"
+#line 677 "<kl>/_core/float_parse.kl"
     kl_t18 = kl_t17 < 28;
-#line 702 "<kl>/_core/float_parse.kl"
+#line 677 "<kl>/_core/float_parse.kl"
     if ( kl_t18 ) goto bb11; else goto bb12;
     bb11:
-#line 702 "<kl>/_core/float_parse.kl"
+#line 677 "<kl>/_core/float_parse.kl"
     kl_2kl5_core11float_parse_9small_mul__RQ2klQ5_core3big_3u64( kl_t16, kl_2kl5_core11float_parse_SMALL_POWER_OF_FIVE__G.e[kl_t17] );
-#line 700 "<kl>/_core/float_parse.kl"
+#line 675 "<kl>/_core/float_parse.kl"
     goto bb13;
     bb12:
-    kl_rt_panic( "<kl>/_core/float_parse.kl", 702, "out of bounds: SMALL_POWER_OF_FIVE[rest]" );
+    kl_rt_panic( "<kl>/_core/float_parse.kl", 677, "out of bounds: SMALL_POWER_OF_FIVE[rest]" );
     bb13:
     return;
-#line 704 "<kl>/_core/float_parse.kl"
+#line 679 "<kl>/_core/float_parse.kl"
 }
 
 // <kl>/_core/float_exact.kl

@@ -65,6 +65,8 @@ bool speculable( const Function& func, const Type_table& table, const Statement&
     case Rvalue_kind::Bits:
     case Rvalue_kind::Sqrt:
     case Rvalue_kind::Rotate:
+    case Rvalue_kind::Count_ones:
+    case Rvalue_kind::Leading_zeros:
         break;
     case Rvalue_kind::Binary:
         // An integer division by zero, or of the least value by -1, is undefined.

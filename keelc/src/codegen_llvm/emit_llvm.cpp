@@ -1935,6 +1935,17 @@ llvm::Value* Llvm_emitter::rvalue( const Rvalue& value )
         llvm::Value* by = builder_.CreateZExtOrTrunc( operand( value.b ), a->getType() );
         return builder_.CreateIntrinsic( llvm::Intrinsic::fshl, { a->getType() }, { a, a, by } );
     }
+    case Rvalue_kind::Count_ones:
+    {
+        llvm::Value* a = operand( value.a );
+        return builder_.CreateIntrinsic( llvm::Intrinsic::ctpop, { a->getType() }, { a } );
+    }
+    // Defined at 0, as the width.
+    case Rvalue_kind::Leading_zeros:
+    {
+        llvm::Value* a = operand( value.a );
+        return builder_.CreateIntrinsic( llvm::Intrinsic::ctlz, { a->getType() }, { a, builder_.getFalse() } );
+    }
     case Rvalue_kind::Run_of:
     {
         llvm::Value* run = llvm::PoisonValue::get( value_type( value.type ) );

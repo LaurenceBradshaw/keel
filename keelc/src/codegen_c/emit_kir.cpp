@@ -1848,6 +1848,26 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
         );
     }
 
+    case Rvalue_kind::Count_ones:
+        return fmt::format(
+            "( {} ) __builtin_popcountll( ( uint64_t )( {} ) )", spelling_.type( rvalue.type ), operand( rvalue.a )
+        );
+
+    // The builtin is undefined at 0, and counts the zeros of all 64 bits.
+    case Rvalue_kind::Leading_zeros:
+    {
+        const std::string a     = operand( rvalue.a );
+        const u32         width = types_.table().get( rvalue.type ).width;
+        return fmt::format(
+            "( {} )( ( {} ) == 0 ? {} : __builtin_clzll( ( uint64_t )( {} ) ) - {} )",
+            spelling_.type( rvalue.type ),
+            a,
+            width,
+            a,
+            64 - width
+        );
+    }
+
     case Rvalue_kind::Select:
         return fmt::format( "{} ? {} : {}", operand( rvalue.arguments[0] ), operand( rvalue.a ), operand( rvalue.b ) );
 

@@ -206,39 +206,14 @@ private f64 to_float( bool negative, adjusted am )
     return from_bits( am.mantissa | ( cast<u64>( am.power2 ) << 52 ) | ( negative ? cast<u64>( 1 ) << 63 : 0 ) );
 }
 
-// `x != 0`'s leading zero bits.
+// The zero bits above `x`'s highest set bit, 64 for 0: keelc makes the loop one instruction.
 private u64 leading_zeros( u64 x )
 {
-    u64 n = 0;
-    u64 v = x;
-    if( ( v >> 32 ) == 0 )
+    u64 n = 64;
+    while( x != 0 )
     {
-        n += 32;
-        v <<= 32;
-    }
-    if( ( v >> 48 ) == 0 )
-    {
-        n += 16;
-        v <<= 16;
-    }
-    if( ( v >> 56 ) == 0 )
-    {
-        n += 8;
-        v <<= 8;
-    }
-    if( ( v >> 60 ) == 0 )
-    {
-        n += 4;
-        v <<= 4;
-    }
-    if( ( v >> 62 ) == 0 )
-    {
-        n += 2;
-        v <<= 2;
-    }
-    if( ( v >> 63 ) == 0 )
-    {
-        n += 1;
+        x >>= 1;
+        n--;
     }
     return n;
 }

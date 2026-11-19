@@ -55,11 +55,13 @@ public:
             return;
 
         case Rvalue_kind::Rotate:
+        case Rvalue_kind::Count_ones:
+        case Rvalue_kind::Leading_zeros:
             operand( value.a, at );
-            expect( value.type, value.a.type, at, "a rotate" );
+            expect( value.type, value.a.type, at, "a bit operation" );
             if( table_.get( value.a.type ).kind != Type_kind::Int || table_.get( value.a.type ).is_signed )
             {
-                errors_.push_back( fmt::format( "{}: a rotate of {}", at, name( value.a.type ) ) );
+                errors_.push_back( fmt::format( "{}: a bit operation of {}", at, name( value.a.type ) ) );
             }
             return;
 

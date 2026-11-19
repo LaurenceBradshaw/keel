@@ -112,6 +112,8 @@ private:
         case Rvalue_kind::Cast:
         case Rvalue_kind::Sqrt:
         case Rvalue_kind::Rotate:
+        case Rvalue_kind::Count_ones:
+        case Rvalue_kind::Leading_zeros:
         case Rvalue_kind::Select:
         case Rvalue_kind::Call:
             return true;
