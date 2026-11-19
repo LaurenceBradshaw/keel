@@ -14,6 +14,7 @@
 <ul class="contents">
 <li><a href="#dtype"><code>dtype</code></a> <span class="kind">enum</span></li>
 <li><a href="#dtype_name"><code>dtype_name</code></a> <span class="kind">function</span></li>
+<li><a href="#how"><code>how</code></a> <span class="kind">enum</span></li>
 <li><a href="#series"><code>series</code></a> <span class="kind">class</span></li>
 <li><a href="#dataframe"><code>dataframe</code></a> <span class="kind">class</span></li>
 <li><a href="#grouped"><code>grouped</code></a> <span class="kind">class</span></li>
@@ -21,6 +22,7 @@
 <li><a href="#csv_error"><code>csv_error</code></a> <span class="kind">enum</span></li>
 <li><a href="#parse_csv"><code>parse_csv</code></a> <span class="kind">function</span></li>
 <li><a href="#read_csv"><code>read_csv</code></a> <span class="kind">function</span></li>
+<li><a href="#concat"><code>concat</code></a> <span class="kind">function</span></li>
 </ul>
 <section class="entry">
 <h2><span class="kind">enum</span> <span class="type">dtype</span></h2>
@@ -74,6 +76,40 @@
 <pre class="signature"><a class="anchor" href="#dtype_name" aria-label="Link to dtype_name">#</a><code><a class="type" href="prelude.html#str">str</a> <span class="fn">dtype_name</span>( <a class="type" href="#dtype">dtype</a> d )</code></pre>
 <div class="doc">
 <p>pandas' name for <code>d</code>: <code>float64</code>, <code>int64</code>, <code>bool</code>, <code>str</code>, <code>datetime64[ns]</code> or <code>timedelta64[ns]</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">enum</span> <span class="type">how</span></h2>
+<div class="group" id="how">
+<pre class="signature"><a class="anchor" href="#how" aria-label="Link to how">#</a><code><span class="kw">enum</span> <span class="type">how</span></code></pre>
+<div class="doc">
+<p>Which rows <code>dataframe::merge</code> keeps.</p>
+</div>
+</div>
+<h3>Variants</h3>
+<div class="group" id="how.inner">
+<pre class="signature"><a class="anchor" href="#how.inner" aria-label="Link to inner">#</a><code>inner</code></pre>
+<div class="doc">
+<p>The rows whose keys both sides hold, in the left side's order.</p>
+</div>
+</div>
+<div class="group" id="how.left">
+<pre class="signature"><a class="anchor" href="#how.left" aria-label="Link to left">#</a><code>left</code></pre>
+<div class="doc">
+<p>Every left row, in its order, with gaps where the right side lacks its keys.</p>
+</div>
+</div>
+<div class="group" id="how.right">
+<pre class="signature"><a class="anchor" href="#how.right" aria-label="Link to right">#</a><code>right</code></pre>
+<div class="doc">
+<p>Every right row, in its order, with gaps where the left side lacks its keys.</p>
+</div>
+</div>
+<div class="group" id="how.outer">
+<pre class="signature"><a class="anchor" href="#how.outer" aria-label="Link to outer">#</a><code>outer</code></pre>
+<div class="doc">
+<p>Every row of both sides, in sorted key order, a missing key last.</p>
 </div>
 </div>
 </section>
@@ -764,6 +800,19 @@ columns, then <code>count</code>, the most frequent first and ties in the order 
 <p><code>f</code> of each column, as a frame of one row: <code>df.apply( fn[]( s ) { return s.max() - s.min(); } )</code>.</p>
 </div>
 </div>
+<h3>Combining</h3>
+<div class="group" id="dataframe.merge">
+<pre class="signature"><a class="anchor" href="#dataframe.merge" aria-label="Link to merge">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">merge</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#dataframe">dataframe</a> right, <a class="type" href="#how">how</a> kind, <a class="type" href="prelude.html#str">str</a>... on ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>This frame's rows paired with <code>right</code>'s where the columns <code>on</code> hold equal values, as pandas'
+<code>merge</code>; with no <code>on</code>, the columns both frames have. A gap in a key pairs with a gap. A row
+with several partners gives one row each, in the partners' order. The keys come once, where
+this frame has them, then this frame's other columns, then <code>right</code>'s, and two with one name
+become <code>_x</code> and <code>_y</code>. A side's columns have gaps where that side lacks the keys and keep
+their dtype, where pandas makes an integer column <code>float64</code>. An <code>i64s</code> key against an <code>f64s</code>
+one is <code>f64s</code>. Panics when a side lacks a key or the two sides' dtypes for it differ otherwise.</p>
+</div>
+</div>
 <h3>Summarising</h3>
 <div class="group" id="dataframe.describe">
 <pre class="signature"><a class="anchor" href="#dataframe.describe" aria-label="Link to describe">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">describe</span>() <span class="kw">const</span></code></pre>
@@ -924,6 +973,18 @@ present is <code>f64s</code>.</p>
 <pre class="signature"><a class="anchor" href="#read_csv" aria-label="Link to read_csv">#</a><code><a class="type" href="prelude.html#result">result</a>&lt;<a class="type" href="#dataframe">dataframe</a>, <a class="type" href="#csv_error">csv_error</a>&gt; <span class="fn">read_csv</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> <a class="type" href="os.html#path">path</a>, <a class="prim" href="prelude.html#u8">u8</a> sep = ',' )</code></pre>
 <div class="doc">
 <p>The frame the CSV file at <code>path</code> holds, as <code>parse_csv</code> reads it.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">concat</span></h2>
+<div class="group" id="concat">
+<pre class="signature"><a class="anchor" href="#concat" aria-label="Link to concat">#</a><code><a class="type" href="#dataframe">dataframe</a> <span class="fn">concat</span>( <a class="type" href="#dataframe">dataframe</a>... frames )</code></pre>
+<div class="doc">
+<p>The rows of each of <code>frames</code>, one frame after another and numbered afresh, as pandas'
+<code>concat( frames, ignore_index=True )</code>. The columns are every frame's, in the order they first
+appear, and a frame without one has gaps there in its dtype. <code>i64s</code> beside <code>f64s</code> becomes
+<code>f64s</code>; any other mix of dtypes panics. Pass the frames with <code>move</code>, or a <code>copy()</code> of each.</p>
 </div>
 </div>
 </section>

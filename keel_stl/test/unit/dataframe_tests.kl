@@ -1,6 +1,7 @@
 // `kl::dataframe`: building and shape, pandas' table, selecting rows and columns, sorting,
-// series arithmetic, comparisons and reductions with missing values, describe, CSV both ways, and
-// time and duration columns. The expected texts are pandas 3.1's.
+// series arithmetic, comparisons and reductions with missing values, describe, CSV both ways,
+// time and duration columns, concat and merge. The expected texts are pandas 3.1's, but for an
+// integer or bool column with a gap, which stays one.
 import kl::dataframe;
 import kl::list;
 import kl::mask;
@@ -410,4 +411,32 @@ private void times_compare_sort_and_group( ref kl::test::context c )
     c.check_eq( df.groupby( "k" ).min().to_string(), "   k                   start                 end                     took\n0  a 2024-02-29 00:00:00.000 2024-03-01 12:00:00   1 days 12:00:00.000000\n1  b 2026-01-01 23:59:59.250 2026-01-01 00:00:00 -1 days +00:00:00.750000\n2  c 1999-12-31 08:00:00.000                 NaT                      NaT" );
     c.check_eq( df.groupby( "k" ).sum().to_string(), "   k                     took\n0  a   1 days 12:00:00.000000\n1  b -1 days +09:56:55.750000\n2  c   0 days 00:00:00.000000" );
     c.check_eq( df["start"].unique().size(), 5 );
+}
+
+private void concat_stacks_rows( ref kl::test::context c )
+{
+    kl::dataframe both = kl::concat( parsed( "x,y\n1,p\n2,q\n", ',' ), parsed( "x,z\n1.5,True\n", ',' ) );
+    c.check_eq( both.to_string(), "     x    y     z\n0  1.0    p  <NA>\n1  2.0    q  <NA>\n2  1.5  NaN  True" );
+    kl::dataframe ints = kl::concat( parsed( "n\n1\n", ',' ), parsed( "m\n2\n", ',' ) );
+    c.check_eq( ints.to_string(), "      n     m\n0     1  <NA>\n1  <NA>     2" );
+    c.check_eq( kl::concat().rows(), 0 );
+    c.expect_panic( "the frames hold a column in dtypes that do not concatenate", fn[]() { _ = kl::concat( parsed( "a\n1\n", ',' ), parsed( "a\nx\n", ',' ) ); } );
+}
+
+private void merge_pairs_rows( ref kl::test::context c )
+{
+    kl::dataframe l = parsed( "k,v\nb,1\na,2\nb,3\nc,4\n,5\n", ',' );
+    kl::dataframe r = parsed( "k,w\na,10.0\nb,20.0\nd,30.0\nb,40.0\n,50.0\n", ',' );
+    c.check_eq( l.merge( r, kl::how::inner, "k" ).to_string(), "     k  v     w\n0    b  1  20.0\n1    b  1  40.0\n2    a  2  10.0\n3    b  3  20.0\n4    b  3  40.0\n5  NaN  5  50.0" );
+    c.check_eq( l.merge( r, kl::how::left, "k" ).to_string(), "     k  v     w\n0    b  1  20.0\n1    b  1  40.0\n2    a  2  10.0\n3    b  3  20.0\n4    b  3  40.0\n5    c  4   NaN\n6  NaN  5  50.0" );
+    c.check_eq( l.merge( r, kl::how::right, "k" ).to_string(), "     k     v     w\n0    a     2  10.0\n1    b     1  20.0\n2    b     3  20.0\n3    d  <NA>  30.0\n4    b     1  40.0\n5    b     3  40.0\n6  NaN     5  50.0" );
+    c.check_eq( l.merge( r, kl::how::outer ).to_string(), "     k     v     w\n0    a     2  10.0\n1    b     1  20.0\n2    b     1  40.0\n3    b     3  20.0\n4    b     3  40.0\n5    c     4   NaN\n6    d  <NA>  30.0\n7  NaN     5  50.0" );
+
+    kl::dataframe d = parsed( "k,j,v\n1,x,1\n2,y,2\n1,y,3\n", ',' );
+    kl::dataframe e = parsed( "k,j,v\n1,y,7\n1,x,8\n3,z,9\n", ',' );
+    c.check_eq( d.merge( e, kl::how::outer, "k", "j" ).to_string(), "   k  j   v_x   v_y\n0  1  x     1     8\n1  1  y     3     7\n2  2  y     2  <NA>\n3  3  z  <NA>     9" );
+    c.check_eq( d.merge( e, kl::how::inner, "k" ).columns()[1], "j_x" );
+    c.check_eq( d.merge( parsed( "k,w\n", ',' ), kl::how::left, "k" )["w"].count(), 0 );
+    c.expect_panic( "the key columns' dtypes differ", fn[]() { _ = parsed( "k\n1\n", ',' ).merge( parsed( "k\nx\n", ',' ), kl::how::inner ); } );
+    c.expect_panic( "the frames share no column to merge on", fn[]() { _ = parsed( "a\n1\n", ',' ).merge( parsed( "b\n1\n", ',' ), kl::how::inner ); } );
 }

@@ -48,6 +48,25 @@ str dtype_name( dtype d )
     }
 }
 
+/// Which rows `dataframe::merge` keeps.
+enum how
+{
+    /// The rows whose keys both sides hold, in the left side's order.
+    inner,
+    /// Every left row, in its order, with gaps where the right side lacks its keys.
+    left,
+    /// Every right row, in its order, with gaps where the left side lacks its keys.
+    right,
+    /// Every row of both sides, in sorted key order, a missing key last.
+    outer
+};
+
+// Whether `d` is `f64s` or `i64s`.
+private bool is_number( dtype d )
+{
+    return d == dtype::f64s || d == dtype::i64s;
+}
+
 // Whether `d` holds nanoseconds: `times` or `durations`.
 private bool is_time( dtype d )
 {
@@ -1643,6 +1662,154 @@ class dataframe
         return r;
     }
 
+    /// --- Combining ---
+
+    /// This frame's rows paired with `right`'s where the columns `on` hold equal values, as pandas'
+    /// `merge`; with no `on`, the columns both frames have. A gap in a key pairs with a gap. A row
+    /// with several partners gives one row each, in the partners' order. The keys come once, where
+    /// this frame has them, then this frame's other columns, then `right`'s, and two with one name
+    /// become `_x` and `_y`. A side's columns have gaps where that side lacks the keys and keep
+    /// their dtype, where pandas makes an integer column `float64`. An `i64s` key against an `f64s`
+    /// one is `f64s`. Panics when a side lacks a key or the two sides' dtypes for it differ otherwise.
+    public dataframe merge( const ref dataframe right, how kind, str... on ) const
+    {
+        list<string> keys = list<string>();
+        for( str n : on )
+        {
+            keys.push( string( n ) );
+        }
+        if( keys.is_empty() )
+        {
+            for( u64 c : 0..names_.size() )
+            {
+                if( right.has( names_[c] ) )
+                {
+                    keys.push( string( names_[c] ) );
+                }
+            }
+        }
+        if( keys.is_empty() )
+        {
+            panic( "the frames share no column to merge on" );
+        }
+
+        dataframe a = dataframe();
+        dataframe b = dataframe();
+        for( u64 k : 0..keys.size() )
+        {
+            const ref series x = columns_[position( keys[k] )];
+            const ref series y = right[keys[k]];
+            if( x.kind() != y.kind() && !( is_number( x.kind() ) && is_number( y.kind() ) ) )
+            {
+                panic( "the key columns' dtypes differ" );
+            }
+            a.insert( keys[k], x.copy() );
+            b.insert( keys[k], y.copy() );
+        }
+        u64 l = rows();
+        u64 n = right.rows();
+        dataframe both = concat( move a, move b );
+        list<u64> codes = list<u64>();
+        u64 groups = group_codes( both, keys, ref codes, true );
+        list<u64> ls = list<u64>();
+        list<u64> lrows = bucketed( codes, 0, l, groups, ref ls );
+        list<u64> rs = list<u64>();
+        list<u64> rrows = bucketed( codes, l, l + n, groups, ref rs );
+
+        list<u64> lp = list<u64>();
+        list<u64> rp = list<u64>();
+        switch( kind )
+        {
+            case how::inner:
+            case how::left:
+                for( u64 i : 0..l )
+                {
+                    u64 g = codes[i];
+                    for( u64 k : rs[g]..rs[g + 1] )
+                    {
+                        lp.push( i );
+                        rp.push( rrows[k] );
+                    }
+                    if( kind == how::left && rs[g] == rs[g + 1] )
+                    {
+                        lp.push( i );
+                        rp.push( u64::max );
+                    }
+                }
+                break;
+            case how::right:
+                for( u64 j : 0..n )
+                {
+                    u64 g = codes[l + j];
+                    for( u64 k : ls[g]..ls[g + 1] )
+                    {
+                        lp.push( lrows[k] );
+                        rp.push( j );
+                    }
+                    if( ls[g] == ls[g + 1] )
+                    {
+                        lp.push( u64::max );
+                        rp.push( j );
+                    }
+                }
+                break;
+            case how::outer:
+                for( u64 g : 0..groups )
+                {
+                    for( u64 q : ls[g]..ls[g + 1] )
+                    {
+                        for( u64 k : rs[g]..rs[g + 1] )
+                        {
+                            lp.push( lrows[q] );
+                            rp.push( rrows[k] );
+                        }
+                        if( rs[g] == rs[g + 1] )
+                        {
+                            lp.push( lrows[q] );
+                            rp.push( u64::max );
+                        }
+                    }
+                    if( ls[g] == ls[g + 1] )
+                    {
+                        for( u64 k : rs[g]..rs[g + 1] )
+                        {
+                            lp.push( u64::max );
+                            rp.push( rrows[k] );
+                        }
+                    }
+                }
+                break;
+        }
+
+        list<u64> kp = list<u64>::with_capacity( lp.size() );
+        for( u64 p : 0..lp.size() )
+        {
+            kp.push( lp[p] != u64::max ? lp[p] : l + rp[p] );
+        }
+        dataframe r = dataframe();
+        for( u64 c : 0..names_.size() )
+        {
+            const ref string name = names_[c];
+            if( kl::contains( keys, name ) )
+            {
+                r.insert( name, gathered( both[name], kp ) );
+            }
+            else
+            {
+                r.insert( right.has( name ) ? name + "_x" : string( name ), gathered( columns_[c], lp ) );
+            }
+        }
+        for( u64 c : 0..right.columns().size() )
+        {
+            const ref string name = right.columns()[c];
+            if( !kl::contains( keys, name ) )
+            {
+                r.insert( has( name ) ? name + "_y" : string( name ), gathered( right[name], rp ) );
+            }
+        }
+        return r;
+    }
+
     /// --- Summarising ---
 
     /// pandas' `describe`: the count, mean, standard deviation, least, quartiles and greatest of
@@ -2009,17 +2176,18 @@ private u64 dense( ref list<u64> codes )
 
 // Each row's group among the distinct rows of the columns `keys`, in sorted order, `u64::max`
 // where a key is missing, written to `codes`; answers how many groups there are.
-private u64 group_codes( const ref dataframe df, const ref list<string> keys, ref list<u64> codes )
+// With `gaps_match`, a missing key is a value of its own, after the rest, as `merge` pairs them.
+private u64 group_codes( const ref dataframe df, const ref list<string> keys, ref list<u64> codes, bool gaps_match = false )
 {
     if( keys.is_empty() )
     {
         panic( "no column is named to group by" );
     }
-    u64 groups = factorize( df[keys[0]], ref codes );
+    u64 groups = coded( df[keys[0]], ref codes, gaps_match );
     for( u64 k : 1..keys.size() )
     {
         list<u64> c = list<u64>();
-        u64 m = factorize( df[keys[k]], ref c );
+        u64 m = coded( df[keys[k]], ref c, gaps_match );
         for( u64 i : 0..codes.size() )
         {
             codes[i] = codes[i] == u64::max || c[i] == u64::max ? u64::max : codes[i] * m + c[i];
@@ -2027,6 +2195,53 @@ private u64 group_codes( const ref dataframe df, const ref list<string> keys, re
         groups = dense( ref codes );
     }
     return groups;
+}
+
+// `factorize`'s codes, a gap given a last code of its own when `gaps_match`.
+private u64 coded( const ref series s, ref list<u64> codes, bool gaps_match )
+{
+    u64 n = factorize( s, ref codes );
+    if( !gaps_match )
+    {
+        return n;
+    }
+    bool gap = false;
+    for( u64 i : 0..codes.size() )
+    {
+        if( codes[i] == u64::max )
+        {
+            codes[i] = n;
+            gap = true;
+        }
+    }
+    return gap ? n + 1 : n;
+}
+
+// The rows `from..to` of `codes`, as offsets from `from`, grouped by code and each group's in row
+// order; `starts` gets where each code's rows begin, then the end.
+private list<u64> bucketed( const ref list<u64> codes, u64 from, u64 to, u64 groups, ref list<u64> starts )
+{
+    starts = list<u64>::filled( groups + 1, 0 );
+    for( u64 i : from..to )
+    {
+        starts[codes[i] + 1] = starts[codes[i] + 1] + 1;
+    }
+    for( u64 g : 0..groups )
+    {
+        starts[g + 1] = starts[g + 1] + starts[g];
+    }
+    list<u64> next = list<u64>::filled( groups + 1, 0 );
+    for( u64 g : 0..groups )
+    {
+        next[g] = starts[g];
+    }
+    list<u64> rows = list<u64>::filled( to - from, 0 );
+    for( u64 i : from..to )
+    {
+        rows[next[codes[i]]] = i - from;
+        next[codes[i]] = next[codes[i]] + 1;
+    }
+    return rows;
 }
 
 // Whether `grouped` works out `op` for a column of `kind`.
@@ -2797,4 +3012,197 @@ private series with_gaps( move series s, const ref mask gaps )
         }
     }
     return s;
+}
+
+/// The rows of each of `frames`, one frame after another and numbered afresh, as pandas'
+/// `concat( frames, ignore_index=True )`. The columns are every frame's, in the order they first
+/// appear, and a frame without one has gaps there in its dtype. `i64s` beside `f64s` becomes
+/// `f64s`; any other mix of dtypes panics. Pass the frames with `move`, or a `copy()` of each.
+dataframe concat( dataframe... frames )
+{
+    list<string> names = list<string>();
+    for( u64 f : 0..frames.size )
+    {
+        const ref list<string> own = frames[f].columns();
+        for( u64 c : 0..own.size() )
+        {
+            if( !kl::contains( names, own[c] ) )
+            {
+                names.push( string( own[c] ) );
+            }
+        }
+    }
+    dataframe r = dataframe();
+    for( u64 c : 0..names.size() )
+    {
+        dtype kind = stacked_kind( frames, names[c] );
+        list<series> parts = list<series>::with_capacity( frames.size );
+        for( u64 f : 0..frames.size )
+        {
+            const ref dataframe d = frames[f];
+            if( !d.has( names[c] ) )
+            {
+                parts.push( gaps_of( kind, d.rows() ) );
+            }
+            else if( kind == dtype::f64s && d[names[c]].kind() == dtype::i64s )
+            {
+                parts.push( with_gaps( series( d[names[c]].i64s().to<f64>() ), d[names[c]].isna() ) );
+            }
+            else
+            {
+                parts.push( d[names[c]].copy() );
+            }
+        }
+        r.insert( names[c], stacked( parts, kind ) );
+    }
+    return r;
+}
+
+// The dtype `concat` gives column `name` of `frames`.
+private dtype stacked_kind( const ref dataframe[] frames, const ref string name )
+{
+    bool found = false;
+    dtype kind = dtype::f64s;
+    for( u64 f : 0..frames.size )
+    {
+        if( !frames[f].has( name ) )
+        {
+            continue;
+        }
+        dtype k = frames[f][name].kind();
+        if( !found || k == kind )
+        {
+            found = true;
+            kind = k;
+        }
+        else if( is_number( k ) && is_number( kind ) )
+        {
+            kind = dtype::f64s;
+        }
+        else
+        {
+            panic( "the frames hold a column in dtypes that do not concatenate" );
+        }
+    }
+    return kind;
+}
+
+// The values of `parts`, one after another, each holding `kind`.
+private series stacked( const ref list<series> parts, dtype kind )
+{
+    u64 n = 0;
+    for( u64 p : 0..parts.size() )
+    {
+        n += parts[p].size();
+    }
+    mask gaps = mask( n );
+    u64 at = 0;
+    for( u64 p : 0..parts.size() )
+    {
+        for( u64 i : 0..parts[p].size() )
+        {
+            gaps.assign( at, parts[p].is_missing( i ) );
+            at++;
+        }
+    }
+    switch( kind )
+    {
+        case dtype::f64s:
+            list<f64> f = list<f64>::with_capacity( n );
+            for( u64 p : 0..parts.size() )
+            {
+                const ref ndarray<f64> x = parts[p].f64s();
+                for( u64 i : 0..x.size() )
+                {
+                    f.push( x[i] );
+                }
+            }
+            return series( ndarray<f64>::from_list( move f ) );
+        case dtype::i64s:
+        case dtype::times:
+        case dtype::durations:
+            list<i64> v = list<i64>::with_capacity( n );
+            for( u64 p : 0..parts.size() )
+            {
+                const ref ndarray<i64> x = integers( parts[p] );
+                for( u64 i : 0..x.size() )
+                {
+                    v.push( x[i] );
+                }
+            }
+            if( kind == dtype::i64s )
+            {
+                return with_gaps( series( ndarray<i64>::from_list( move v ) ), gaps );
+            }
+            return with_gaps( of_nanoseconds( v, kind ), gaps );
+        case dtype::bools:
+            mask b = mask( n );
+            at = 0;
+            for( u64 p : 0..parts.size() )
+            {
+                for( u64 i : 0..parts[p].size() )
+                {
+                    b.assign( at, parts[p].bools().test( i ) );
+                    at++;
+                }
+            }
+            return with_gaps( series( move b ), gaps );
+        case dtype::strings:
+            list<string> t = list<string>::with_capacity( n );
+            for( u64 p : 0..parts.size() )
+            {
+                const ref list<string> x = parts[p].strings();
+                for( u64 i : 0..x.size() )
+                {
+                    t.push( string( x[i] ) );
+                }
+            }
+            return with_gaps( series( move t ), gaps );
+    }
+}
+
+// `n` gaps of dtype `kind`.
+private series gaps_of( dtype kind, u64 n )
+{
+    mask all = mask( n );
+    for( u64 i : 0..n )
+    {
+        all.assign( i, true );
+    }
+    switch( kind )
+    {
+        case dtype::f64s:
+            return series( ndarray<f64>::filled( nan(), n ) );
+        case dtype::i64s:
+            return with_gaps( series( ndarray<i64>::filled( 0, n ) ), all );
+        case dtype::times:
+        case dtype::durations:
+            return with_gaps( of_nanoseconds( list<i64>::filled( n, 0 ), kind ), all );
+        case dtype::bools:
+            return with_gaps( series( mask( n ) ), all );
+        case dtype::strings:
+            list<string> t = list<string>::with_capacity( n );
+            for( u64 i : 0..n )
+            {
+                t.push( string() );
+            }
+            return with_gaps( series( move t ), all );
+    }
+}
+
+// The values of `s` at `rows`, a gap where a row is `u64::max`.
+private series gathered( const ref series s, const ref list<u64> rows )
+{
+    if( s.size() == 0 )
+    {
+        return gaps_of( s.kind(), rows.size() );
+    }
+    mask gaps = mask( rows.size() );
+    list<u64> at = list<u64>::with_capacity( rows.size() );
+    for( u64 j : 0..rows.size() )
+    {
+        gaps.assign( j, rows[j] == u64::max );
+        at.push( rows[j] == u64::max ? 0 : rows[j] );
+    }
+    return with_gaps( s.taken( at.as_run() ), gaps );
 }
