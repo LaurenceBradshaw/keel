@@ -207,3 +207,75 @@ private void csv_both_ways( ref kl::test::context c )
             break;
     }
 }
+
+private void missing_values_found_filled_and_dropped( ref kl::test::context c )
+{
+    kl::dataframe df = fruit();
+    c.check_eq( df["x"].isna().count(), 1 );
+    c.check( df.isna()["x"].bools().test( 1 ) );
+    c.check_eq( df.dropna().rows(), 4 );
+    c.check_eq( df.dropna( "n", "s" ).rows(), 5 );
+    c.check_eq( df["x"].dropna().size(), 4 );
+    c.check_eq( df.fillna( 0 ).to_string(), "   n    x      s      b\n0  3  2.5   pear   True\n1  1  0.0    fig  False\n2  2 -1.0  apple   True\n3  1  4.0    fig   True\n4  5  0.5   kiwi  False" );
+    c.check_eq( df["x"].fillna( 9.5 ).f64s()[1], 9.5 );
+
+    kl::series gappy = kl::series( [ "a", "b" ] );
+    gappy.set_missing( 0 );
+    c.check_eq( gappy.fillna( "z" ).strings()[0], "z" );
+    c.check( !gappy.fillna( "z" ).is_missing( 0 ) );
+    kl::series flags = kl::series( [ true, false ] );
+    flags.set_missing( 1 );
+    c.check( flags.fillna( true ).bools().test( 1 ) );
+
+    df.set( "x", df["x"].fillna( 0 ) );
+    c.check_eq( df["x"].count(), 5 );
+    df.set( "y", df["n"] * 2 );
+    c.check_eq( df.columns()[4], "y" );
+    c.expect_panic( "the series holds another dtype", fn[]() { _ = kl::series( [ 1 ] ).fillna( 0.5 ); } );
+}
+
+private void groupby_reduces_each_group( ref kl::test::context c )
+{
+    kl::grouped g = fruit().groupby( "s" );
+    c.check_eq( g.groups(), 4 );
+    c.check_eq( g.sum().to_string(), "       s  n    x  b\n0  apple  2 -1.0  1\n1    fig  2  4.0  1\n2   kiwi  5  0.5  0\n3   pear  3  2.5  1" );
+    c.check_eq( g.mean().to_string(), "       s    n    x    b\n0  apple  2.0 -1.0  1.0\n1    fig  1.0  4.0  0.5\n2   kiwi  5.0  0.5  0.0\n3   pear  3.0  2.5  1.0" );
+    c.check_eq( g.count()["x"].i64s()[1], 1 );
+    c.check_eq( g.max().to_string(), "       s  n    x      b\n0  apple  2 -1.0   True\n1    fig  1  4.0   True\n2   kiwi  5  0.5  False\n3   pear  3  2.5   True" );
+    c.check_eq( g.std().to_string(), "       s    n   x         b\n0  apple  NaN NaN       NaN\n1    fig  0.0 NaN  0.707107\n2   kiwi  NaN NaN       NaN\n3   pear  NaN NaN       NaN" );
+    c.check_eq( g.size()["size"].i64s()[1], 2 );
+    c.check_eq( g.agg( fn[]( s ) { return s.max() - s.min(); } )["b"].f64s()[1], 1.0 );
+    c.check_eq( fruit().groupby( "b", "n" ).sum().to_string(), "       b  n    x\n0  False  1  0.0\n1  False  5  0.5\n2   True  1  4.0\n3   True  2 -1.0\n4   True  3  2.5" );
+
+    // A row missing its key is left out; a group with no value present has no least one.
+    kl::dataframe ints = parsed( "a,b\n1,\n,2\n1,3\n", ',' );
+    c.check_eq( ints.groupby( "a" ).sum().to_string(), "   a  b\n0  1  3" );
+    c.check_eq( ints.groupby( "b" ).min().to_string(), "   b     a\n0  2  <NA>\n1  3     1" );
+    c.expect_panic( "no column is named to group by", fn[]() { _ = fruit().groupby().groups(); } );
+}
+
+private void value_counts_and_unique_keep_first_appearance( ref kl::test::context c )
+{
+    kl::dataframe df = fruit();
+    c.check_eq( df.value_counts( "s" ).to_string(), "       s  count\n0    fig      2\n1   pear      1\n2  apple      1\n3   kiwi      1" );
+    c.check_eq( df.value_counts( "n" ).to_string(), "   n  count\n0  1      2\n1  3      1\n2  2      1\n3  5      1" );
+    c.check_eq( df.value_counts( "b", "n" ).rows(), 5 );
+
+    kl::series u = df["x"].unique();
+    c.check_eq( u.size(), 5 );
+    c.check( u.is_missing( 1 ) );
+    c.check_eq( df["s"].unique().strings()[2], "apple" );
+    c.check_eq( df["n"].unique().size(), 4 );
+}
+
+private void map_and_apply_take_lambdas( ref kl::test::context c )
+{
+    kl::dataframe df = fruit();
+    kl::series twice = df["x"].map( fn[]( f64 v ) { return v * 2.0; } );
+    c.check_eq( twice.f64s()[2], -2.0 );
+    c.check( twice.is_missing( 1 ) );
+    c.check_eq( df["n"].map( fn[]( f64 v ) { return v + 0.5; } ).f64s()[0], 3.5 );
+    c.check_eq( df["s"].map_strings( fn[]( t ) { return t + "!"; } ).strings()[1], "fig!" );
+    c.check_eq( df.select( "n", "x" ).apply( fn[]( s ) { return s.sum(); } ).to_string(), "      n    x\n0  12.0  6.0" );
+    c.check_eq( df["b"].sum(), 3.0 );
+}

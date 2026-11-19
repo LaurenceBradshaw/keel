@@ -16,6 +16,7 @@
 <li><a href="#dtype_name"><code>dtype_name</code></a> <span class="kind">function</span></li>
 <li><a href="#series"><code>series</code></a> <span class="kind">class</span></li>
 <li><a href="#dataframe"><code>dataframe</code></a> <span class="kind">class</span></li>
+<li><a href="#grouped"><code>grouped</code></a> <span class="kind">class</span></li>
 <li class="divider">CSV</li>
 <li><a href="#csv_error"><code>csv_error</code></a> <span class="kind">enum</span></li>
 <li><a href="#parse_csv"><code>parse_csv</code></a> <span class="kind">function</span></li>
@@ -75,7 +76,7 @@
 the same size or a number: two <code>i64</code> sides stay <code>i64</code>, <code>/</code> always gives <code>f64</code>, and a value
 missing on either side is missing in the result. The comparisons answer a <code>mask</code> that is clear
 where a value is missing, for <code>dataframe::filtered</code>. The reductions skip missing values and
-answer <code>f64</code>. <code>s.f64s()</code> and its siblings hand a loop the values, panicking on another dtype.</p>
+answer <code>f64</code>, a bool counting as 0 or 1. <code>s.f64s()</code> and its siblings hand a loop the values, panicking on another dtype.</p>
 </div>
 </div>
 <h3>Constructors</h3>
@@ -179,6 +180,58 @@ answer <code>f64</code>. <code>s.f64s()</code> and its siblings hand a loop the 
 <pre class="signature"><a class="anchor" href="#series.taken" aria-label="Link to taken">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">taken</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="prim" href="prelude.html#u64">u64</a>[] rows ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>The values at <code>rows</code>, in that order: pandas' <code>take</code>.</p>
+</div>
+</div>
+<h3>Missing values</h3>
+<div class="group" id="series.isna">
+<pre class="signature"><a class="anchor" href="#series.isna" aria-label="Link to isna">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">isna</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Where a value is missing.</p>
+</div>
+</div>
+<div class="group" id="series.dropna">
+<pre class="signature"><a class="anchor" href="#series.dropna" aria-label="Link to dropna">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">dropna</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The values present, in order.</p>
+</div>
+</div>
+<div class="group" id="series.fillna">
+<pre class="signature"><a class="anchor" href="#series.fillna" aria-label="Link to fillna">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">fillna</span>( <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each missing value of an <code>f64s</code> series as <code>x</code>; panics on another dtype.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.fillna" aria-label="Link to fillna">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">fillna</span>( <a class="prim" href="prelude.html#i64">i64</a> x ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each missing value of an <code>i64s</code> or <code>f64s</code> series as <code>x</code>; panics on another dtype.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.fillna" aria-label="Link to fillna">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">fillna</span>( <a class="prim" href="prelude.html#bool">bool</a> x ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each missing value of a <code>bools</code> series as <code>x</code>; panics on another dtype.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#series.fillna" aria-label="Link to fillna">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">fillna</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> x ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each missing value of a <code>strings</code> series as <code>x</code>; panics on another dtype.</p>
+</div>
+</div>
+<h3>Mapping</h3>
+<div class="group" id="series.unique">
+<pre class="signature"><a class="anchor" href="#series.unique" aria-label="Link to unique">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">unique</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The distinct values in the order they first appear, a missing one among them once, as
+pandas' <code>unique</code>.</p>
+</div>
+</div>
+<div class="group" id="series.map">
+<pre class="signature"><a class="anchor" href="#series.map" aria-label="Link to map">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">map</span>&lt;F&gt;( F f ) <span class="kw">const</span> <span class="kw">where</span> F : <span class="kw">fn</span>( <a class="prim" href="prelude.html#f64">f64</a> ) -&gt; <a class="prim" href="prelude.html#f64">f64</a></code></pre>
+<div class="doc">
+<p><code>f</code> of each value of a number or bool series, as <code>f64s</code>; a missing value stays missing:
+<code>s.map( fn[]( f64 x ) { return x * x; } )</code>.</p>
+</div>
+</div>
+<div class="group" id="series.map_strings">
+<pre class="signature"><a class="anchor" href="#series.map_strings" aria-label="Link to map_strings">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">map_strings</span>&lt;F&gt;( F f ) <span class="kw">const</span> <span class="kw">where</span> F : <span class="kw">fn</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="string.html#string">string</a> ) -&gt; <a class="type" href="string.html#string">string</a></code></pre>
+<div class="doc">
+<p><code>f</code> of each value of a <code>strings</code> series; a missing value stays missing.</p>
 </div>
 </div>
 <h3>Arithmetic</h3>
@@ -361,7 +414,8 @@ two nearest as pandas' default; NaN when there are none.</p>
 <p>Named <code>series</code> of one length, in order, with rows numbered from 0, as pandas' <code>DataFrame</code>.</p>
 <p>Build one empty and <code>insert</code> columns, or read one with <code>read_csv</code>. <code>df[&quot;a&quot;]</code> is a column;
 <code>head</code>, <code>tail</code>, <code>iloc</code>, <code>filtered</code>, <code>select</code> and <code>sort_values</code> answer new frames holding copies,
-as pandas' copy-on-write behaves, while <code>insert</code>, <code>drop</code> and <code>rename</code> change the frame itself.
+as pandas' copy-on-write behaves, while <code>insert</code>, <code>set</code>, <code>drop</code> and <code>rename</code> change the frame
+itself. <code>groupby</code> answers a <code>grouped</code>.
 <code>to_string</code> writes pandas' table.</p>
 </div>
 </div>
@@ -424,6 +478,13 @@ as pandas' copy-on-write behaves, while <code>insert</code>, <code>drop</code> a
 size is not the frame's rows; the first column sets them.</p>
 </div>
 </div>
+<div class="group" id="dataframe.set">
+<pre class="signature"><a class="anchor" href="#dataframe.set" aria-label="Link to set">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">set</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> name, <span class="kw">move</span> <a class="type" href="#series">series</a> s )</code></pre>
+<div class="doc">
+<p>Puts <code>s</code> in place of the column named <code>name</code>, or adds it last when there is none, as
+pandas' <code>df[name] = s</code>; panics when <code>s</code>'s size is not the frame's rows.</p>
+</div>
+</div>
 <div class="group" id="dataframe.drop">
 <pre class="signature"><a class="anchor" href="#dataframe.drop" aria-label="Link to drop">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">drop</span>( <a class="type" href="prelude.html#str">str</a>... names )</code></pre>
 <div class="doc">
@@ -479,6 +540,57 @@ size is not the frame's rows; the first column sets them.</p>
 <p>The rows ordered by column <code>name</code>, a stable sort, missing values last either way.</p>
 </div>
 </div>
+<div class="group" id="dataframe.dropna">
+<pre class="signature"><a class="anchor" href="#dataframe.dropna" aria-label="Link to dropna">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">dropna</span>( <a class="type" href="prelude.html#str">str</a>... names ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The rows where none of <code>names</code> is missing, or none of the columns when no name is given.</p>
+</div>
+</div>
+<h3>Missing values</h3>
+<div class="group" id="dataframe.isna">
+<pre class="signature"><a class="anchor" href="#dataframe.isna" aria-label="Link to isna">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">isna</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A <code>bools</code> column for each column, set where a value is missing.</p>
+</div>
+</div>
+<div class="group" id="dataframe.fillna">
+<pre class="signature"><a class="anchor" href="#dataframe.fillna" aria-label="Link to fillna">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">fillna</span>( <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each missing value of the <code>f64s</code> columns as <code>x</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#dataframe.fillna" aria-label="Link to fillna">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">fillna</span>( <a class="prim" href="prelude.html#i64">i64</a> x ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each missing value of the <code>i64s</code> and <code>f64s</code> columns as <code>x</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#dataframe.fillna" aria-label="Link to fillna">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">fillna</span>( <a class="prim" href="prelude.html#bool">bool</a> x ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each missing value of the <code>bools</code> columns as <code>x</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#dataframe.fillna" aria-label="Link to fillna">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">fillna</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> x ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each missing value of the <code>strings</code> columns as <code>x</code>.</p>
+</div>
+</div>
+<h3>Grouping</h3>
+<div class="group" id="dataframe.groupby">
+<pre class="signature"><a class="anchor" href="#dataframe.groupby" aria-label="Link to groupby">#</a><code><span class="kw">public</span> <a class="type" href="#grouped">grouped</a> <span class="fn">groupby</span>( <a class="type" href="prelude.html#str">str</a>... names ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The rows grouped by their values in the columns <code>names</code>; panics when none is given.</p>
+</div>
+</div>
+<div class="group" id="dataframe.value_counts">
+<pre class="signature"><a class="anchor" href="#dataframe.value_counts" aria-label="Link to value_counts">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">value_counts</span>( <a class="type" href="prelude.html#str">str</a>... names ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>How often each distinct row of the columns <code>names</code> occurs, missing ones left out: those
+columns, then <code>count</code>, the most frequent first and ties in the order they first appear.</p>
+</div>
+</div>
+<div class="group" id="dataframe.apply">
+<pre class="signature"><a class="anchor" href="#dataframe.apply" aria-label="Link to apply">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">apply</span>&lt;F&gt;( F f ) <span class="kw">const</span> <span class="kw">where</span> F : <span class="kw">fn</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> ) -&gt; <a class="prim" href="prelude.html#f64">f64</a></code></pre>
+<div class="doc">
+<p><code>f</code> of each column, as a frame of one row: <code>df.apply( fn[]( s ) { return s.max() - s.min(); } )</code>.</p>
+</div>
+</div>
 <h3>Summarising</h3>
 <div class="group" id="dataframe.describe">
 <pre class="signature"><a class="anchor" href="#dataframe.describe" aria-label="Link to describe">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">describe</span>() <span class="kw">const</span></code></pre>
@@ -501,6 +613,89 @@ than 60 rows the first and last five, then <code>[n rows x m columns]</code>.</p
 <p>The frame as CSV: a header, then a line for each row, ended by <code>\n</code>; a missing value is
 empty, a float written as <code>string::from</code> writes it, and a field holding <code>sep</code>, a quote or a
 line break quoted. The row numbers are not written, as pandas' <code>index=False</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">class</span> <span class="type">grouped</span></h2>
+<div class="group" id="grouped">
+<pre class="signature"><a class="anchor" href="#grouped" aria-label="Link to grouped">#</a><code><span class="kw">class</span> <span class="type">grouped</span></code></pre>
+<div class="doc">
+<p>The groups <code>dataframe::groupby</code> makes: the rows sharing their values in the key columns, the
+groups in sorted key order, and rows missing a key left out.</p>
+<p>Each reduction answers a frame of the keys, one row a group, then a column for each other
+column: <code>count</code> counts every column, while the rest skip <code>strings</code> columns, as pandas'
+<code>numeric_only</code>. <code>sum</code>, <code>min</code> and <code>max</code> keep an <code>i64s</code> column <code>i64s</code>, and <code>min</code> and <code>max</code> keep
+<code>bools</code> <code>bools</code>; the others answer <code>f64s</code>, a bool counting as 0 or 1.</p>
+</div>
+</div>
+<h3>Constructors</h3>
+<div class="group" id="grouped.grouped">
+<pre class="signature"><a class="anchor" href="#grouped.grouped" aria-label="Link to grouped">#</a><code><span class="kw">public</span> <span class="type">grouped</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#dataframe">dataframe</a> df, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="list.html#list">list</a>&lt;<a class="type" href="string.html#string">string</a>&gt; keys )</code></pre>
+<div class="doc">
+<p>The rows of <code>df</code> grouped by the columns <code>keys</code>.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="grouped.groups">
+<pre class="signature"><a class="anchor" href="#grouped.groups" aria-label="Link to groups">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">groups</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>How many groups there are.</p>
+</div>
+</div>
+<div class="group" id="grouped.size">
+<pre class="signature"><a class="anchor" href="#grouped.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">size</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The keys, then <code>size</code>, each group's rows.</p>
+</div>
+</div>
+<div class="group" id="grouped.count">
+<pre class="signature"><a class="anchor" href="#grouped.count" aria-label="Link to count">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">count</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each group's values present in each column.</p>
+</div>
+</div>
+<div class="group" id="grouped.sum">
+<pre class="signature"><a class="anchor" href="#grouped.sum" aria-label="Link to sum">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">sum</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each group's sum, 0 when no value is present.</p>
+</div>
+</div>
+<div class="group" id="grouped.mean">
+<pre class="signature"><a class="anchor" href="#grouped.mean" aria-label="Link to mean">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">mean</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each group's mean.</p>
+</div>
+</div>
+<div class="group" id="grouped.var">
+<pre class="signature"><a class="anchor" href="#grouped.var" aria-label="Link to var">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">var</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each group's sample variance, over n - 1.</p>
+</div>
+</div>
+<div class="group" id="grouped.std">
+<pre class="signature"><a class="anchor" href="#grouped.std" aria-label="Link to std">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">std</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each group's sample standard deviation.</p>
+</div>
+</div>
+<div class="group" id="grouped.min">
+<pre class="signature"><a class="anchor" href="#grouped.min" aria-label="Link to min">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">min</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each group's least value.</p>
+</div>
+</div>
+<div class="group" id="grouped.max">
+<pre class="signature"><a class="anchor" href="#grouped.max" aria-label="Link to max">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">max</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each group's greatest value.</p>
+</div>
+</div>
+<div class="group" id="grouped.agg">
+<pre class="signature"><a class="anchor" href="#grouped.agg" aria-label="Link to agg">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">agg</span>&lt;F&gt;( F f ) <span class="kw">const</span> <span class="kw">where</span> F : <span class="kw">fn</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> ) -&gt; <a class="prim" href="prelude.html#f64">f64</a></code></pre>
+<div class="doc">
+<p><code>f</code> of each group's rows of each column but <code>strings</code> ones, as <code>f64s</code>:
+<code>g.agg( fn[]( s ) { return s.max() - s.min(); } )</code>.</p>
 </div>
 </div>
 </section>

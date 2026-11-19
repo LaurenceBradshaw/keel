@@ -45,7 +45,7 @@ str dtype_name( dtype d )
 /// the same size or a number: two `i64` sides stay `i64`, `/` always gives `f64`, and a value
 /// missing on either side is missing in the result. The comparisons answer a `mask` that is clear
 /// where a value is missing, for `dataframe::filtered`. The reductions skip missing values and
-/// answer `f64`. `s.f64s()` and its siblings hand a loop the values, panicking on another dtype.
+/// answer `f64`, a bool counting as 0 or 1. `s.f64s()` and its siblings hand a loop the values, panicking on another dtype.
 class series
 {
     dtype        kind_;
@@ -305,6 +305,148 @@ class series
                 r.missing_.assign( j, missing_.test( rows[j] ) );
             }
         }
+        return r;
+    }
+
+    /// --- Missing values ---
+
+    /// Where a value is missing.
+    public mask isna() const
+    {
+        if( kind_ == dtype::f64s )
+        {
+            return kl::is_nan( f_ );
+        }
+        return missing_.size() == 0 ? mask( size() ) : missing_.copy();
+    }
+
+    /// The values present, in order.
+    public series dropna() const
+    {
+        list<u64> picked = list<u64>::with_capacity( size() );
+        for( u64 i : 0..size() )
+        {
+            if( !is_missing( i ) )
+            {
+                picked.push( i );
+            }
+        }
+        return taken( picked.as_run() );
+    }
+
+    /// Each missing value of an `f64s` series as `x`; panics on another dtype.
+    public series fillna( f64 x ) const
+    {
+        holds( dtype::f64s );
+        series r = copy();
+        for( u64 i : 0..size() )
+        {
+            if( kl::is_nan( r.f_[i] ) )
+            {
+                r.f_[i] = x;
+            }
+        }
+        return r;
+    }
+
+    /// Each missing value of an `i64s` or `f64s` series as `x`; panics on another dtype.
+    public series fillna( i64 x ) const
+    {
+        if( kind_ == dtype::f64s )
+        {
+            return fillna( cast<f64>( x ) );
+        }
+        holds( dtype::i64s );
+        series r = copy();
+        for( u64 i : 0..size() )
+        {
+            if( is_missing( i ) )
+            {
+                r.i_[i] = x;
+            }
+        }
+        r.missing_ = mask( 0 );
+        return r;
+    }
+
+    /// Each missing value of a `bools` series as `x`; panics on another dtype.
+    public series fillna( bool x ) const
+    {
+        holds( dtype::bools );
+        series r = copy();
+        for( u64 i : 0..size() )
+        {
+            if( is_missing( i ) )
+            {
+                r.b_.assign( i, x );
+            }
+        }
+        r.missing_ = mask( 0 );
+        return r;
+    }
+
+    /// Each missing value of a `strings` series as `x`; panics on another dtype.
+    public series fillna( const ref textual x ) const
+    {
+        holds( dtype::strings );
+        series r = copy();
+        for( u64 i : 0..size() )
+        {
+            if( is_missing( i ) )
+            {
+                r.s_[i] = string( x );
+            }
+        }
+        r.missing_ = mask( 0 );
+        return r;
+    }
+
+    /// --- Mapping ---
+
+    /// The distinct values in the order they first appear, a missing one among them once, as
+    /// pandas' `unique`.
+    public series unique() const
+    {
+        list<u64> codes = list<u64>();
+        u64 n = factorize( this, ref codes );
+        mask seen = mask( n + 1 );
+        list<u64> firsts = list<u64>();
+        for( u64 i : 0..size() )
+        {
+            u64 c = codes[i] == u64::max ? n : codes[i];
+            if( !seen.test( c ) )
+            {
+                seen.assign( c, true );
+                firsts.push( i );
+            }
+        }
+        return taken( firsts.as_run() );
+    }
+
+    /// `f` of each value of a number or bool series, as `f64s`; a missing value stays missing:
+    /// `s.map( fn[]( f64 x ) { return x * x; } )`.
+    public series map<F>( F f ) const where F : fn( f64 ) -> f64
+    {
+        ndarray<f64> v = numbers();
+        list<f64> r = list<f64>::with_capacity( size() );
+        for( u64 i : 0..size() )
+        {
+            r.push( is_missing( i ) ? nan() : f( v[i] ) );
+        }
+        return series( ndarray<f64>::from_list( move r ) );
+    }
+
+    /// `f` of each value of a `strings` series; a missing value stays missing.
+    public series map_strings<F>( F f ) const where F : fn( const ref string ) -> string
+    {
+        holds( dtype::strings );
+        list<string> v = list<string>::with_capacity( size() );
+        for( u64 i : 0..size() )
+        {
+            v.push( is_missing( i ) ? string() : f( s_[i] ) );
+        }
+        series r = series( move v );
+        r.missing_ = missing_.copy();
         return r;
     }
 
@@ -570,12 +712,21 @@ class series
                 }
                 return i_.selected( ~missing_ ).to<f64>();
             case dtype::bools:
+                list<f64> v = list<f64>::with_capacity( size() );
+                for( u64 i : 0..size() )
+                {
+                    if( !is_missing( i ) )
+                    {
+                        v.push( b_.test( i ) ? 1.0 : 0.0 );
+                    }
+                }
+                return ndarray<f64>::from_list( move v );
             case dtype::strings:
                 panic( "the series does not hold numbers" );
         }
     }
 
-    // Every value as `f64`, missing ones unspecified.
+    // Every value as `f64`, a bool as 0 or 1, missing ones unspecified.
     private ndarray<f64> numbers() const
     {
         switch( kind_ )
@@ -585,6 +736,12 @@ class series
             case dtype::i64s:
                 return i_.to<f64>();
             case dtype::bools:
+                list<f64> v = list<f64>::with_capacity( size() );
+                for( u64 i : 0..size() )
+                {
+                    v.push( b_.test( i ) ? 1.0 : 0.0 );
+                }
+                return ndarray<f64>::from_list( move v );
             case dtype::strings:
                 panic( "the series does not hold numbers" );
         }
@@ -740,7 +897,8 @@ private f64 nan()
 ///
 /// Build one empty and `insert` columns, or read one with `read_csv`. `df["a"]` is a column;
 /// `head`, `tail`, `iloc`, `filtered`, `select` and `sort_values` answer new frames holding copies,
-/// as pandas' copy-on-write behaves, while `insert`, `drop` and `rename` change the frame itself.
+/// as pandas' copy-on-write behaves, while `insert`, `set`, `drop` and `rename` change the frame
+/// itself. `groupby` answers a `grouped`.
 /// `to_string` writes pandas' table.
 class dataframe
 {
@@ -832,6 +990,23 @@ class dataframe
         }
         names_.push( string( name ) );
         columns_.push( move s );
+    }
+
+    /// Puts `s` in place of the column named `name`, or adds it last when there is none, as
+    /// pandas' `df[name] = s`; panics when `s`'s size is not the frame's rows.
+    public void set( const ref textual name, move series s )
+    {
+        u64 c = find( name );
+        if( c == names_.size() )
+        {
+            insert( name, move s );
+            return;
+        }
+        if( s.size() != rows() )
+        {
+            panic( "the column's size is not the frame's rows" );
+        }
+        columns_[c] = move s;
     }
 
     /// Drops each column in `names`; panics on a name no column has.
@@ -935,45 +1110,180 @@ class dataframe
     public dataframe sort_values( const ref textual name, bool ascending = true ) const
     {
         const ref series s = columns_[position( name )];
-        list<u64> order = list<u64>::with_capacity( rows() );
-        list<u64> gaps = list<u64>();
+        list<u64> order = present_order( s, ascending );
         for( u64 i : 0..rows() )
         {
             if( s.is_missing( i ) )
             {
-                gaps.push( i );
-            }
-            else
-            {
                 order.push( i );
             }
         }
-
-        switch( s.kind() )
-        {
-            case dtype::f64s:
-                const ref ndarray<f64> f = s.f64s();
-                kl::stable_sort( ref order, fn[ f, ascending ]( a, b ) { return ascending ? f[a] < f[b] : f[b] < f[a]; } );
-                break;
-            case dtype::i64s:
-                const ref ndarray<i64> v = s.i64s();
-                kl::stable_sort( ref order, fn[ v, ascending ]( a, b ) { return ascending ? v[a] < v[b] : v[b] < v[a]; } );
-                break;
-            case dtype::bools:
-                const ref mask m = s.bools();
-                kl::stable_sort( ref order, fn[ m, ascending ]( a, b ) { return m.test( ascending ? b : a ) && !m.test( ascending ? a : b ); } );
-                break;
-            case dtype::strings:
-                const ref list<string> t = s.strings();
-                kl::stable_sort( ref order, fn[ t, ascending ]( a, b ) { return ascending ? t[a] < t[b] : t[b] < t[a]; } );
-                break;
-        }
-
-        for( u64 i : 0..gaps.size() )
-        {
-            order.push( gaps[i] );
-        }
         return taken( order.as_run() );
+    }
+
+    /// The rows where none of `names` is missing, or none of the columns when no name is given.
+    public dataframe dropna( str... names ) const
+    {
+        list<u64> checked = list<u64>();
+        for( str n : names )
+        {
+            checked.push( position( n ) );
+        }
+        if( checked.is_empty() )
+        {
+            for( u64 c : 0..columns_.size() )
+            {
+                checked.push( c );
+            }
+        }
+        list<u64> picked = list<u64>::with_capacity( rows() );
+        for( u64 i : 0..rows() )
+        {
+            bool gap = false;
+            for( u64 c : checked )
+            {
+                gap = gap || columns_[c].is_missing( i );
+            }
+            if( !gap )
+            {
+                picked.push( i );
+            }
+        }
+        return taken( picked.as_run() );
+    }
+
+    /// --- Missing values ---
+
+    /// A `bools` column for each column, set where a value is missing.
+    public dataframe isna() const
+    {
+        dataframe r = dataframe();
+        for( u64 c : 0..columns_.size() )
+        {
+            r.insert( names_[c], series( columns_[c].isna() ) );
+        }
+        r.labels_ = copied( labels_ );
+        return r;
+    }
+
+    /// Each missing value of the `f64s` columns as `x`.
+    public dataframe fillna( f64 x ) const
+    {
+        dataframe r = copy();
+        for( u64 c : 0..columns_.size() )
+        {
+            if( columns_[c].kind() == dtype::f64s )
+            {
+                r.columns_[c] = columns_[c].fillna( x );
+            }
+        }
+        return r;
+    }
+
+    /// Each missing value of the `i64s` and `f64s` columns as `x`.
+    public dataframe fillna( i64 x ) const
+    {
+        dataframe r = copy();
+        for( u64 c : 0..columns_.size() )
+        {
+            if( columns_[c].kind() == dtype::i64s || columns_[c].kind() == dtype::f64s )
+            {
+                r.columns_[c] = columns_[c].fillna( x );
+            }
+        }
+        return r;
+    }
+
+    /// Each missing value of the `bools` columns as `x`.
+    public dataframe fillna( bool x ) const
+    {
+        dataframe r = copy();
+        for( u64 c : 0..columns_.size() )
+        {
+            if( columns_[c].kind() == dtype::bools )
+            {
+                r.columns_[c] = columns_[c].fillna( x );
+            }
+        }
+        return r;
+    }
+
+    /// Each missing value of the `strings` columns as `x`.
+    public dataframe fillna( const ref textual x ) const
+    {
+        dataframe r = copy();
+        for( u64 c : 0..columns_.size() )
+        {
+            if( columns_[c].kind() == dtype::strings )
+            {
+                r.columns_[c] = columns_[c].fillna( x );
+            }
+        }
+        return r;
+    }
+
+    /// --- Grouping ---
+
+    /// The rows grouped by their values in the columns `names`; panics when none is given.
+    public grouped groupby( str... names ) const
+    {
+        list<string> keys = list<string>();
+        for( str n : names )
+        {
+            keys.push( string( n ) );
+        }
+        return grouped( this, keys );
+    }
+
+    /// How often each distinct row of the columns `names` occurs, missing ones left out: those
+    /// columns, then `count`, the most frequent first and ties in the order they first appear.
+    public dataframe value_counts( str... names ) const
+    {
+        list<string> keys = list<string>();
+        for( str n : names )
+        {
+            keys.push( string( n ) );
+        }
+        list<u64> codes = list<u64>();
+        u64 groups = group_codes( this, keys, ref codes );
+        list<i64> counts = list<i64>::filled( groups, 0 );
+        list<u64> firsts = list<u64>();
+        for( u64 i : 0..rows() )
+        {
+            if( codes[i] != u64::max )
+            {
+                if( counts[codes[i]] == 0 )
+                {
+                    firsts.push( i );
+                }
+                counts[codes[i]] += 1;
+            }
+        }
+        kl::stable_sort( ref firsts, fn[ codes, counts ]( a, b ) { return counts[codes[a]] > counts[codes[b]]; } );
+
+        dataframe r = dataframe();
+        for( u64 k : 0..keys.size() )
+        {
+            r.insert( keys[k], columns_[position( keys[k] )].taken( firsts.as_run() ) );
+        }
+        list<i64> n = list<i64>::with_capacity( firsts.size() );
+        for( u64 i : firsts )
+        {
+            n.push( counts[codes[i]] );
+        }
+        r.insert( "count", series( ndarray<i64>::from_list( move n ) ) );
+        return r;
+    }
+
+    /// `f` of each column, as a frame of one row: `df.apply( fn[]( s ) { return s.max() - s.min(); } )`.
+    public dataframe apply<F>( F f ) const where F : fn( const ref series ) -> f64
+    {
+        dataframe r = dataframe();
+        for( u64 c : 0..columns_.size() )
+        {
+            r.insert( names_[c], series( ndarray<f64>::filled( f( columns_[c] ), 1 ) ) );
+        }
+        return r;
     }
 
     /// --- Summarising ---
@@ -1182,6 +1492,376 @@ private list<string> copied( const ref list<string> a )
     return r;
 }
 
+// The rows of `s` with a value present, ordered by value, ties in row order.
+private list<u64> present_order( const ref series s, bool ascending )
+{
+    list<u64> order = list<u64>::with_capacity( s.size() );
+    for( u64 i : 0..s.size() )
+    {
+        if( !s.is_missing( i ) )
+        {
+            order.push( i );
+        }
+    }
+    switch( s.kind() )
+    {
+        case dtype::f64s:
+            const ref ndarray<f64> f = s.f64s();
+            kl::stable_sort( ref order, fn[ f, ascending ]( a, b ) { return ascending ? f[a] < f[b] : f[b] < f[a]; } );
+            break;
+        case dtype::i64s:
+            const ref ndarray<i64> v = s.i64s();
+            kl::stable_sort( ref order, fn[ v, ascending ]( a, b ) { return ascending ? v[a] < v[b] : v[b] < v[a]; } );
+            break;
+        case dtype::bools:
+            const ref mask m = s.bools();
+            kl::stable_sort( ref order, fn[ m, ascending ]( a, b ) { return m.test( ascending ? b : a ) && !m.test( ascending ? a : b ); } );
+            break;
+        case dtype::strings:
+            const ref list<string> t = s.strings();
+            kl::stable_sort( ref order, fn[ t, ascending ]( a, b ) { return ascending ? t[a] < t[b] : t[b] < t[a]; } );
+            break;
+    }
+    return order;
+}
+
+// Whether rows `a` and `b` of `s` hold equal values, both present.
+private bool same( const ref series s, u64 a, u64 b )
+{
+    switch( s.kind() )
+    {
+        case dtype::f64s:
+            return s.f64s()[a] == s.f64s()[b];
+        case dtype::i64s:
+            return s.i64s()[a] == s.i64s()[b];
+        case dtype::bools:
+            return s.bools().test( a ) == s.bools().test( b );
+        case dtype::strings:
+            return s.strings()[a] == s.strings()[b];
+    }
+}
+
+// Each row's place among the distinct values of `s` in sorted order, `u64::max` where missing,
+// written to `codes`; answers how many distinct values there are.
+private u64 factorize( const ref series s, ref list<u64> codes )
+{
+    codes = list<u64>::filled( s.size(), u64::max );
+    list<u64> order = present_order( s, true );
+    u64 n = 0;
+    for( u64 k : 0..order.size() )
+    {
+        if( k > 0 && !same( s, order[k - 1], order[k] ) )
+        {
+            n++;
+        }
+        codes[order[k]] = n;
+    }
+    return order.is_empty() ? 0 : n + 1;
+}
+
+// `codes` renumbered from 0 in their order, `u64::max` kept; answers how many distinct there are.
+private u64 dense( ref list<u64> codes )
+{
+    list<u64> order = list<u64>::with_capacity( codes.size() );
+    for( u64 i : 0..codes.size() )
+    {
+        if( codes[i] != u64::max )
+        {
+            order.push( i );
+        }
+    }
+    kl::stable_sort( ref order, fn[ codes ]( a, b ) { return codes[a] < codes[b]; } );
+    u64 n = 0;
+    u64 last = 0;
+    for( u64 k : 0..order.size() )
+    {
+        u64 v = codes[order[k]];
+        if( k > 0 && v != last )
+        {
+            n++;
+        }
+        last = v;
+        codes[order[k]] = n;
+    }
+    return order.is_empty() ? 0 : n + 1;
+}
+
+// Each row's group among the distinct rows of the columns `keys`, in sorted order, `u64::max`
+// where a key is missing, written to `codes`; answers how many groups there are.
+private u64 group_codes( const ref dataframe df, const ref list<string> keys, ref list<u64> codes )
+{
+    if( keys.is_empty() )
+    {
+        panic( "no column is named to group by" );
+    }
+    u64 groups = factorize( df[keys[0]], ref codes );
+    for( u64 k : 1..keys.size() )
+    {
+        list<u64> c = list<u64>();
+        u64 m = factorize( df[keys[k]], ref c );
+        for( u64 i : 0..codes.size() )
+        {
+            codes[i] = codes[i] == u64::max || c[i] == u64::max ? u64::max : codes[i] * m + c[i];
+        }
+        groups = dense( ref codes );
+    }
+    return groups;
+}
+
+// What `grouped` works out for each group.
+private enum reduction
+{
+    sum,
+    mean,
+    var,
+    std,
+    min,
+    max,
+    count
+};
+
+/// The groups `dataframe::groupby` makes: the rows sharing their values in the key columns, the
+/// groups in sorted key order, and rows missing a key left out.
+///
+/// Each reduction answers a frame of the keys, one row a group, then a column for each other
+/// column: `count` counts every column, while the rest skip `strings` columns, as pandas'
+/// `numeric_only`. `sum`, `min` and `max` keep an `i64s` column `i64s`, and `min` and `max` keep
+/// `bools` `bools`; the others answer `f64s`, a bool counting as 0 or 1.
+class grouped
+{
+    dataframe keys_;   // one row a group
+    dataframe values_; // the other columns, every row
+    list<u64> order_;  // the rows, group by group, each group's in row order
+    list<u64> starts_; // where each group starts in `order_`, then its size
+
+    /// The rows of `df` grouped by the columns `keys`.
+    public grouped( const ref dataframe df, const ref list<string> keys )
+    {
+        list<u64> codes = list<u64>();
+        u64 n = group_codes( df, keys, ref codes );
+        starts_ = list<u64>::filled( n + 1, 0 );
+        for( u64 c : codes )
+        {
+            if( c != u64::max )
+            {
+                starts_[c + 1] += 1;
+            }
+        }
+        for( u64 g : 0..n )
+        {
+            starts_[g + 1] += starts_[g];
+        }
+        list<u64> next = list<u64>::of( starts_.as_run() );
+        order_ = list<u64>::filled( starts_[n], 0 );
+        for( u64 i : 0..codes.size() )
+        {
+            if( codes[i] != u64::max )
+            {
+                order_[next[codes[i]]] = i;
+                next[codes[i]] += 1;
+            }
+        }
+
+        list<u64> firsts = list<u64>::with_capacity( n );
+        for( u64 g : 0..n )
+        {
+            firsts.push( order_[starts_[g]] );
+        }
+        keys_   = dataframe();
+        values_ = dataframe();
+        for( u64 c : 0..df.columns().size() )
+        {
+            const ref string name = df.columns()[c];
+            if( kl::contains( keys, name ) )
+            {
+                continue;
+            }
+            values_.insert( name, df[name].copy() );
+        }
+        for( u64 k : 0..keys.size() )
+        {
+            keys_.insert( keys[k], df[keys[k]].taken( firsts.as_run() ) );
+        }
+    }
+
+    /// How many groups there are.
+    public u64 groups() const
+    {
+        return starts_.size() - 1;
+    }
+
+    /// The keys, then `size`, each group's rows.
+    public dataframe size() const
+    {
+        dataframe r = keys_.copy();
+        list<i64> n = list<i64>::with_capacity( groups() );
+        for( u64 g : 0..groups() )
+        {
+            n.push( cast<i64>( starts_[g + 1] - starts_[g] ) );
+        }
+        r.insert( "size", series( ndarray<i64>::from_list( move n ) ) );
+        return r;
+    }
+
+    /// Each group's values present in each column.
+    public dataframe count() const
+    {
+        return reduced( reduction::count );
+    }
+
+    /// Each group's sum, 0 when no value is present.
+    public dataframe sum() const
+    {
+        return reduced( reduction::sum );
+    }
+
+    /// Each group's mean.
+    public dataframe mean() const
+    {
+        return reduced( reduction::mean );
+    }
+
+    /// Each group's sample variance, over n - 1.
+    public dataframe var() const
+    {
+        return reduced( reduction::var );
+    }
+
+    /// Each group's sample standard deviation.
+    public dataframe std() const
+    {
+        return reduced( reduction::std );
+    }
+
+    /// Each group's least value.
+    public dataframe min() const
+    {
+        return reduced( reduction::min );
+    }
+
+    /// Each group's greatest value.
+    public dataframe max() const
+    {
+        return reduced( reduction::max );
+    }
+
+    /// `f` of each group's rows of each column but `strings` ones, as `f64s`:
+    /// `g.agg( fn[]( s ) { return s.max() - s.min(); } )`.
+    public dataframe agg<F>( F f ) const where F : fn( const ref series ) -> f64
+    {
+        dataframe r = keys_.copy();
+        for( u64 c : 0..values_.columns().size() )
+        {
+            const ref series s = values_[values_.columns()[c]];
+            if( s.kind() == dtype::strings )
+            {
+                continue;
+            }
+            list<f64> v = list<f64>::with_capacity( groups() );
+            for( u64 g : 0..groups() )
+            {
+                v.push( f( part( s, g ) ) );
+            }
+            r.insert( values_.columns()[c], series( ndarray<f64>::from_list( move v ) ) );
+        }
+        return r;
+    }
+
+    // Group `g`'s rows of `s`.
+    private series part( const ref series s, u64 g ) const
+    {
+        return s.taken( order_.as_run()[starts_[g]..starts_[g + 1]] );
+    }
+
+    // The keys, then `op` of each group in each column it applies to.
+    private dataframe reduced( reduction op ) const
+    {
+        dataframe r = keys_.copy();
+        for( u64 c : 0..values_.columns().size() )
+        {
+            const ref series s = values_[values_.columns()[c]];
+            if( s.kind() == dtype::strings && op != reduction::count )
+            {
+                continue;
+            }
+            r.insert( values_.columns()[c], reduced( s, op ) );
+        }
+        return r;
+    }
+
+    // `op` of each group of `s`.
+    private series reduced( const ref series s, reduction op ) const
+    {
+        bool ints = s.kind() == dtype::i64s || s.kind() == dtype::bools;
+        if( op == reduction::count || ( ints && op == reduction::sum ) || ( ints && ( op == reduction::min || op == reduction::max ) ) )
+        {
+            list<i64> v = list<i64>::with_capacity( groups() );
+            mask gaps = mask( groups() );
+            for( u64 g : 0..groups() )
+            {
+                series p = part( s, g );
+                if( op == reduction::count )
+                {
+                    v.push( cast<i64>( p.count() ) );
+                    continue;
+                }
+                i64 total = 0;
+                bool any = false;
+                for( u64 i : 0..p.size() )
+                {
+                    if( p.is_missing( i ) )
+                    {
+                        continue;
+                    }
+                    i64 x = s.kind() == dtype::bools ? ( p.bools().test( i ) ? 1 : 0 ) : p.i64s()[i];
+                    total = op == reduction::sum ? total + x : !any ? x : op == reduction::min ? ( x < total ? x : total ) : ( x > total ? x : total );
+                    any = true;
+                }
+                v.push( total );
+                gaps.assign( g, !any && op != reduction::sum );
+            }
+            if( s.kind() == dtype::bools && op != reduction::sum && op != reduction::count )
+            {
+                mask b = mask( groups() );
+                for( u64 g : 0..groups() )
+                {
+                    b.assign( g, v[g] != 0 );
+                }
+                return with_gaps( series( move b ), gaps );
+            }
+            return with_gaps( series( ndarray<i64>::from_list( move v ) ), gaps );
+        }
+
+        list<f64> v = list<f64>::with_capacity( groups() );
+        for( u64 g : 0..groups() )
+        {
+            series p = part( s, g );
+            switch( op )
+            {
+                case reduction::sum:
+                    v.push( p.sum() );
+                    break;
+                case reduction::mean:
+                    v.push( p.mean() );
+                    break;
+                case reduction::var:
+                    v.push( p.var() );
+                    break;
+                case reduction::std:
+                    v.push( p.std() );
+                    break;
+                case reduction::min:
+                    v.push( p.min() );
+                    break;
+                default:
+                    v.push( p.max() );
+                    break;
+            }
+        }
+        return series( ndarray<f64>::from_list( move v ) );
+    }
+};
+
 // `text` padded with spaces to `width`, on the left when `right`.
 private void pad( ref string to, const ref textual text, u64 width, bool right )
 {
@@ -1203,7 +1883,7 @@ private void pad( ref string to, const ref textual text, u64 width, bool right )
     }
 }
 
-// The values of `s` at `rows` as pandas prints them, each after a space or its sign.
+// The values of `s` at `rows` as pandas prints them, each after a space or its sign, but a float NaN.
 private list<string> cell_texts( const ref series s, const ref u64[] rows )
 {
     list<string> r = list<string>::with_capacity( rows.size );
@@ -1235,8 +1915,13 @@ private list<string> cell_texts( const ref series s, const ref u64[] rows )
         }
     }
 
+    bool floats = s.kind() == dtype::f64s;
     for( u64 i : 0..r.size() )
     {
+        if( floats && r[i] == "NaN" )
+        {
+            continue;
+        }
         if( r[i].is_empty() || r[i][0] != '-' )
         {
             r[i] = string( " " ) + r[i];
