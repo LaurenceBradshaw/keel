@@ -381,6 +381,11 @@ u32 folded_cost(
     }
 
     bound += bind_borrowed_locals( copy, caller, at, index, call, types );
+    // With nothing from the site, no loop runs once that the finished callee did not fold itself.
+    if( straight && bound == 0 && std::ranges::none_of( counts, []( const auto& c ) { return c.has_value(); } ) )
+    {
+        return std::numeric_limits<u32>::max();
+    }
 
     for( Statement& statement : copy.statements )
     {
