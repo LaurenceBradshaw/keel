@@ -410,7 +410,11 @@ static std::size_t first_where_clause( const Ast& ast, Node_id list )
     const std::span<const Node_id> all = ast.children( list );
 
     return static_cast<std::size_t>(
-        std::find_if( all.begin(), all.end(), [&]( Node_id n ) { return ast.kind( n ) == Node_kind::Where_clause; } ) -
+        std::find_if(
+            all.begin(),
+            all.end(),
+            [&]( Node_id n ) { return ast.kind( n ) == Node_kind::Where_clause || ast.kind( n ) == Node_kind::Size_condition; }
+        ) -
         all.begin()
     );
 }

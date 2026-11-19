@@ -1,0 +1,40 @@
+// What a comparison in a `where` clause may compare, and where one may be written.
+u64 typed<T, u64 N>( T _ ) where T > 1
+{
+    return N;
+}
+
+u64 unknown<u64 N>() where Q < N
+{
+    return N;
+}
+
+u64 missing<u64 N>() where N >
+{
+    return N;
+}
+
+u64 bare<u64 N>() where N
+{
+    return N;
+}
+
+u64 plain() where 1 < 2
+{
+    return 0;
+}
+
+class Box<u64 N>
+{
+    u64[N] v;
+
+    u64 get<u64 M>() const where M > N
+    {
+        return M;
+    }
+};
+
+i32 main()
+{
+    return 0;
+}

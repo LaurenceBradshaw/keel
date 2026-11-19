@@ -31,7 +31,7 @@ void Size_suffixes::check(
 {
     collect( ast_.root(), Node_id {} );
 
-    if( suffixes_.empty() )
+    if( suffixes_.empty() && conditions_.empty() )
     {
         return;
     }
@@ -105,6 +105,16 @@ void Size_suffixes::collect( Node_id id, Node_id owner, Node_kind parent )
 {
     const Node_kind kind = ast_.kind( id );
 
+    // A method's list repeats its aggregate's clauses, which the aggregate's instance checks.
+    if( kind == Node_kind::Function_decl || is_aggregate( kind ) || kind == Node_kind::Enum_decl )
+    {
+        collect_conditions( id );
+    }
+    if( kind == Node_kind::Size_condition )
+    {
+        return;
+    }
+
     if( is_function_like( kind ) )
     {
         owner = id;
@@ -127,6 +137,31 @@ void Size_suffixes::collect( Node_id id, Node_id owner, Node_kind parent )
         if( child.is_valid() )
         {
             collect( child, owner, kind );
+        }
+    }
+}
+
+void Size_suffixes::collect_conditions( Node_id declaration )
+{
+    for( const Node_id clause : ast_.where_clauses( ast_.type_param_list( declaration ) ) )
+    {
+        if( ast_.kind( clause ) != Node_kind::Size_condition )
+        {
+            continue;
+        }
+
+        const Node_id comparison = ast_.child( clause, 0 );
+        const Node_id lhs        = ast_.lhs( comparison );
+        const Node_id rhs        = ast_.rhs( comparison );
+
+        const auto size = [&]( Node_id side )
+        { return side.v < types_.size() && types_[side.v].is_valid() && !table_.is_error( types_[side.v] ); };
+
+        if( size( lhs ) && size( rhs ) )
+        {
+            conditions_[declaration.v].push_back(
+                Condition { .node = clause, .op = ast_.op( comparison ), .lhs = types_[lhs.v], .rhs = types_[rhs.v] }
+            );
         }
     }
 }
@@ -201,16 +236,21 @@ Bindings Size_suffixes::bindings_of( const Instance& instance ) const
     return bindings;
 }
 
-// Whether the instance holds a bad suffix, reporting the first.
+// Whether the instance fails a condition or holds a bad suffix, reporting the first.
 bool Size_suffixes::report( const Instance& instance, Span origin )
 {
+    const Bindings bindings = bindings_of( instance );
+
+    if( report_condition( instance, origin, bindings ) )
+    {
+        return true;
+    }
+
     const auto found = suffixes_.find( instance.declaration.v );
     if( found == suffixes_.end() )
     {
         return false;
     }
-
-    const Bindings bindings = bindings_of( instance );
 
     for( const Suffix& suffix : found->second )
     {
@@ -242,33 +282,13 @@ bool Size_suffixes::report( const Instance& instance, Span origin )
         const Size_op op      = Size_op( table_.get( step ).width );
         const bool    divides = !value && ( op == Size_op::Divide || op == Size_op::Remainder );
 
-        std::vector<Type_id> blamed;
-        parameters_of( divides ? table_.get( step ).arguments[1] : step, blamed );
-
-        const std::vector<Node_id> parameters = ast_.type_parameters( ast_.type_param_list( instance.declaration ) );
-
-        std::vector<u64>    values;
-        std::vector<Source> sources;
-        for( const Type_id parameter : blamed )
-        {
-            values.push_back( *table_.evaluate( parameter, bindings ) );
-
-            for( std::size_t p = 0; p < parameters.size() && p < instance.sources.size(); ++p )
-            {
-                if( parameters[p].v < types_.size() && types_[parameters[p].v] == parameter && instance.sources[p] )
-                {
-                    sources.push_back( *instance.sources[p] );
-                }
-            }
-        }
-
         const std::string reason = value                     ? "is 0"
                                    : divides                 ? "divides by 0"
                                    : op == Size_op::Subtract ? "is below 0"
                                                              : "overflows a `u64`";
 
         reporter_.error_at(
-            written( origin, values, sources ),
+            blame( instance, bindings, divides ? table_.get( step ).arguments[1] : step, origin ),
             fmt::format(
                 "`{}` makes {}",
                 name_of( instance ),
@@ -288,6 +308,103 @@ bool Size_suffixes::report( const Instance& instance, Span origin )
     }
 
     return false;
+}
+
+// D78 (8): a side that cannot be computed fails its condition, as a bad suffix would.
+bool Size_suffixes::report_condition( const Instance& instance, Span origin, const Bindings& bindings )
+{
+    const auto found = conditions_.find( instance.declaration.v );
+    if( found == conditions_.end() )
+    {
+        return false;
+    }
+
+    for( const Condition& condition : found->second )
+    {
+        std::vector<Type_id> read;
+        parameters_of( condition.lhs, read );
+        parameters_of( condition.rhs, read );
+
+        if( !std::ranges::all_of( read, [&]( Type_id parameter ) { return bindings.contains( parameter.v ); } ) )
+        {
+            continue;
+        }
+
+        const std::optional<u64> lhs = table_.evaluate( condition.lhs, bindings );
+        const std::optional<u64> rhs = table_.evaluate( condition.rhs, bindings );
+
+        if( lhs && rhs )
+        {
+            const bool holds = condition.op == Token_kind::Less            ? *lhs < *rhs
+                               : condition.op == Token_kind::Less_equal    ? *lhs <= *rhs
+                               : condition.op == Token_kind::Greater       ? *lhs > *rhs
+                               : condition.op == Token_kind::Greater_equal ? *lhs >= *rhs
+                               : condition.op == Token_kind::Equal_equal   ? *lhs == *rhs
+                                                                           : *lhs != *rhs;
+            if( holds )
+            {
+                continue;
+            }
+        }
+
+        std::string when;
+        for( const Type_id parameter : read )
+        {
+            when += fmt::format(
+                "{}`{}` is {}", when.empty() ? "" : " and ", table_.name( parameter ), *table_.evaluate( parameter, bindings )
+            );
+        }
+
+        const std::string written_condition =
+            fmt::format( "{} {} {}", spelled( condition.lhs ), token_kind_spelling( condition.op ), spelled( condition.rhs ) );
+
+        reporter_.error_at(
+            blame( instance, bindings, read.empty() ? condition.lhs : read.front(), origin ),
+            fmt::format( "`{}` needs `{}`", name_of( instance ), written_condition ),
+            fmt::format(
+                "the condition at {} {} when {}",
+                reporter_.position( ast_.span( condition.node ) ),
+                lhs && rhs ? "fails" : "cannot be computed",
+                when.empty() ? "nothing varies" : when
+            )
+        );
+        return true;
+    }
+
+    return false;
+}
+
+// The size the caller wrote for the first parameter `size` reads.
+Span Size_suffixes::blame( const Instance& instance, const Bindings& bindings, Type_id size, Span origin ) const
+{
+    std::vector<Type_id> blamed;
+    parameters_of( size, blamed );
+
+    const std::vector<Node_id> parameters = ast_.type_parameters( ast_.type_param_list( instance.declaration ) );
+
+    std::vector<u64>    values;
+    std::vector<Source> sources;
+    for( const Type_id parameter : blamed )
+    {
+        values.push_back( *table_.evaluate( parameter, bindings ) );
+
+        for( std::size_t p = 0; p < parameters.size() && p < instance.sources.size(); ++p )
+        {
+            if( parameters[p].v < types_.size() && types_[parameters[p].v] == parameter && instance.sources[p] )
+            {
+                sources.push_back( *instance.sources[p] );
+            }
+        }
+    }
+
+    return written( origin, values, sources );
+}
+
+// `R`, `0` or `(R * C)`, as a clause writes it.
+std::string Size_suffixes::spelled( Type_id size ) const
+{
+    const std::string name( table_.name( size ) );
+    return table_.get( size ).kind == Type_kind::Size && table_.get( size ).width != 0 ? fmt::format( "({})", name ) : name;
 }
 
 // `Ring<1>`. A method that shares its aggregate's parameters is named by the aggregate.

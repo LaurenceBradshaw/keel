@@ -41,6 +41,7 @@ private:
     std::string parameters( Node_id fn ) const;
     std::string type_parameters( Node_id list ) const;
     std::string where_clauses( Node_id list ) const;
+    std::string size_side( Node_id side ) const;   // `R`, `0` or `(R * C)`
     std::string implemented( Node_id decl ) const; // " implements A, B", or empty
     std::string type_parameter( Node_id param ) const;
     std::string access( Node_id member ) const;
@@ -330,6 +331,23 @@ std::string Signature_printer::where_clauses( Node_id list ) const
     std::string clauses;
     for( const Node_id clause : ast_.where_clauses( list ) )
     {
+        // An instance's sizes are known, so its conditions say nothing.
+        if( ast_.kind( clause ) == Node_kind::Size_condition )
+        {
+            const Node_id comparison = ast_.child( clause, 0 );
+            if( std::ranges::none_of( params, [&]( Node_id param ) { return bound( param ).is_valid(); } ) )
+            {
+                clauses += fmt::format(
+                    "{} where {} {} {}",
+                    clauses.empty() ? "" : ",",
+                    size_side( ast_.lhs( comparison ) ),
+                    token_kind_spelling( ast_.op( comparison ) ),
+                    size_side( ast_.rhs( comparison ) )
+                );
+            }
+            continue;
+        }
+
         const auto subject =
             std::ranges::find_if( params, [&]( Node_id param ) { return ast_.name( param ) == ast_.name( clause ); } );
 
@@ -365,6 +383,20 @@ std::string Signature_printer::where_clauses( Node_id list ) const
         clauses += fmt::format( "{} where {} : {}", clauses.empty() ? "" : ",", text( ast_.name( clause ) ), bounds );
     }
     return clauses;
+}
+
+std::string Signature_printer::size_side( Node_id side ) const
+{
+    const Type_id size = types_.type_of( side );
+    if( !size.is_valid() || types_.table().is_error( size ) )
+    {
+        return ast_.kind( side ) == Node_kind::Name_expr ? std::string( text( ast_.name( side ) ) ) : std::string();
+    }
+
+    const std::string name( types_.table().name( size ) );
+    return types_.table().get( size ).kind == Type_kind::Size && types_.table().get( size ).width != 0
+               ? fmt::format( "({})", name )
+               : name;
 }
 
 std::string Signature_printer::type_parameter( Node_id param ) const

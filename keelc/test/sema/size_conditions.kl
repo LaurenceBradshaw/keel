@@ -1,0 +1,25 @@
+// `where` comparisons over sizes that hold at every instance: a literal side, computed sides, a
+// type's condition, and a generic forwarding its own size.
+u64 tall<u64 R, u64 C>( const ref u64[R] _, const ref u64[C] _ ) where R >= C, where (R * C) <= 64
+{
+    return R - C;
+}
+
+u64 forwards<u64 N>( const ref u64[N] a ) where N > 1
+{
+    u64[2] b = [ 0, .. ];
+    return tall( a, b );
+}
+
+struct Window<u64 N> where N != 1, where (N - 1) < 8
+{
+    u64[N] slots;
+};
+
+i32 main()
+{
+    u64[3] a = [ 0, .. ];
+    u64[3] b = [ 0, .. ];
+    Window<2> w = Window<2> { [ 0, .. ] };
+    return cast<i32>( tall( a, b ) + forwards( a ) + tall<4, 4>( [ 0, .. ], [ 0, .. ] ) + w.slots[0] );
+}

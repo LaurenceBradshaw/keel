@@ -1,0 +1,36 @@
+// A comparison that fails at an instance: reported at the size the caller wrote, or at the call
+// whose arguments gave it, however many generics carried it, with the clause in the help.
+const u64 Two = 2;
+
+u64 tall<u64 R, u64 C>( const ref u64[R] _, const ref u64[C] _ ) where R >= C
+{
+    return R;
+}
+
+u64 carried<u64 N>() where (N - 3) == 0
+{
+    return N;
+}
+
+u64 outer<u64 N>() { return carried<N>(); }
+
+struct Window<u64 N> where N > 1
+{
+    u64[N] slots;
+};
+
+struct Holder
+{
+    Window<1> window;
+};
+
+i32 main()
+{
+    u64[2] a = [ 0, .. ];
+    u64[3] b = [ 0, .. ];
+    u64[1] c = [ 0 ];
+    u64 x = tall<Two, 3>( a, b );
+    u64 y = tall( c, b );
+    u64 z = outer<4>() + outer<1>();
+    return cast<i32>( x + y + z );
+}

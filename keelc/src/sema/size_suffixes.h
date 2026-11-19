@@ -9,6 +9,7 @@
 #include <vector>
 #include "ast/ast.h"
 #include "common/interner.h"
+#include "lex/token.h"
 #include "sema/reporter.h"
 #include "sema/type_checker.h"
 
@@ -59,10 +60,23 @@ private:
         bool    argument = false; // `bitset<(N - 1)>` rather than `u64[N - 1]`
     };
 
+    // `where R >= C`, its sides as sizes.
+    struct Condition
+    {
+        Node_id    node;
+        Token_kind op;
+        Type_id    lhs;
+        Type_id    rhs;
+    };
+
     void                    collect( Node_id id, Node_id owner, Node_kind parent = Node_kind::Error );
     std::optional<Instance> reach( const Generic_call& edge, const Bindings& bindings, const Instance* caller );
     Bindings                bindings_of( const Instance& instance ) const;
+    void                    collect_conditions( Node_id declaration );
     bool                    report( const Instance& instance, Span origin );
+    bool                    report_condition( const Instance& instance, Span origin, const Bindings& bindings );
+    Span                    blame( const Instance& instance, const Bindings& bindings, Type_id size, Span origin ) const;
+    std::string             spelled( Type_id size ) const;
     std::string             name_of( const Instance& instance ) const;
     Span                    written( Span origin, std::span<const u64> values, std::span<const Source> sources ) const;
     Type_id                 failing( Type_id size, const Bindings& bindings ) const;
@@ -74,7 +88,8 @@ private:
     std::span<const Type_id> types_;
     Reporter&                reporter_;
 
-    std::unordered_map<u32, std::vector<Suffix>> suffixes_; // by the generic that holds them
+    std::unordered_map<u32, std::vector<Suffix>>    suffixes_;   // by the generic that holds them
+    std::unordered_map<u32, std::vector<Condition>> conditions_; // by the declaration they constrain
 };
 
 } // namespace keel::sema

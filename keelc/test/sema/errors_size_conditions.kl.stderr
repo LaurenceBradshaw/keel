@@ -1,0 +1,31 @@
+error: `Window<1>` needs `N > 1`
+  --> sema/errors_size_conditions.kl:24:12
+   |
+24 |     Window<1> window;
+   |            ^ the condition at sema/errors_size_conditions.kl:17:22 fails when `N` is 1
+
+error: `tall<2, 3>` needs `R >= C`
+  --> sema/errors_size_conditions.kl:32:18
+   |
+32 |     u64 x = tall<Two, 3>( a, b );
+   |                  ^^^ the condition at sema/errors_size_conditions.kl:5:66 fails when `R` is 2 and `C` is 3
+
+error: `tall<1, 3>` needs `R >= C`
+  --> sema/errors_size_conditions.kl:33:13
+   |
+33 |     u64 y = tall( c, b );
+   |             ^^^^^^^^^^^^ the condition at sema/errors_size_conditions.kl:5:66 fails when `R` is 1 and `C` is 3
+
+error: `carried<4>` needs `(N - 3) == 0`
+  --> sema/errors_size_conditions.kl:34:19
+   |
+34 |     u64 z = outer<4>() + outer<1>();
+   |                   ^ the condition at sema/errors_size_conditions.kl:10:22 fails when `N` is 4
+
+error: `carried<1>` needs `(N - 3) == 0`
+  --> sema/errors_size_conditions.kl:34:32
+   |
+34 |     u64 z = outer<4>() + outer<1>();
+   |                                ^ the condition at sema/errors_size_conditions.kl:10:22 cannot be computed when `N` is 1
+
+5 errors generated

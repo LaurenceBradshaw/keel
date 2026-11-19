@@ -186,6 +186,8 @@ enum class Node_kind : u16
     // aux: the bound's name; children: its Type_arg_list slot, when it names an interface's
     // instance or a package, then the package Name_expr, when written.
     Bound_name,
+    // `where R >= C`; children: the comparison, a Binary_expr over two sizes.
+    Size_condition,
     // aux: 0. children: the operand.
     Try_expr,
     // aux: the name; children: the Type_param_list slot, then the Implements_list slot, then the Method_decls.

@@ -1,0 +1,37 @@
+error: `T` is a type; a comparison in a `where` clause takes sizes
+ --> sema/errors_size_condition_forms.kl:2:34
+  |
+2 | u64 typed<T, u64 N>( T _ ) where T > 1
+  |                                  ^ write `where T : ...` to bound it
+
+error: `Q` is not declared
+ --> sema/errors_size_condition_forms.kl:7:28
+  |
+7 | u64 unknown<u64 N>() where Q < N
+  |                            ^
+
+error: expected a size
+  --> sema/errors_size_condition_forms.kl:13:1
+   |
+13 | {
+   | ^ a size is a literal, a size parameter or a `const`, or arithmetic over them in parentheses
+
+error: expected `:`, found `{`
+  --> sema/errors_size_condition_forms.kl:17:26
+   |
+17 | u64 bare<u64 N>() where N
+   |                          ^
+
+error: a `where` clause needs type parameters
+  --> sema/errors_size_condition_forms.kl:22:13
+   |
+22 | u64 plain() where 1 < 2
+   |             ^^^^^^^^^^^ write them on the name, as in `T f<T>(T a) where T : copyable`
+
+error: a method cannot take a comparison of sizes
+  --> sema/errors_size_condition_forms.kl:31:28
+   |
+31 |     u64 get<u64 M>() const where M > N
+   |                            ^^^^^^^^^^^ write it on a free generic function, or on the type
+
+6 errors generated

@@ -92,6 +92,9 @@ private:
     // One `where T : A & B`. Several are separated by `, where` - the comma is for the reader, and
     // `where` is what the parser keys on.
     Node_id parse_where_clause();
+    // `where R >= C`, its `where` consumed: each side a literal, a name, or arithmetic in parentheses.
+    Node_id parse_size_condition( Span start );
+    Node_id parse_size_side();
     // Every `where` clause at the cursor, appended to `generics`; refused when `generic` is false.
     // One naming `outer`, the enclosing aggregate's parameters, goes to `conditions`, or is refused
     // when that is null.
@@ -1224,6 +1227,17 @@ void Parser::parse_where_clauses(
         const Node_id clause = parse_where_clause();
 
         // A method's clause on the aggregate's parameter is a condition; a block's is refused.
+        if( ast_.kind( clause ) == Node_kind::Size_condition && ( outer.is_valid() || block_type_.is_valid() ) )
+        {
+            recovery_.error_at(
+                ast_.span( clause ),
+                block_type_.is_valid() ? "a block cannot take a comparison of sizes"
+                                       : "a method cannot take a comparison of sizes",
+                "write it on a free generic function, or on the type"
+            );
+            continue;
+        }
+
         const std::vector<Node_id> outer_params = ast_.type_parameters( outer );
         if( ast_.kind( clause ) == Node_kind::Where_clause &&
             std::any_of(
@@ -1412,6 +1426,11 @@ Node_id Parser::parse_where_clause()
 
     cursor_.advance(); // the `where`, which parse_function_decl has already seen
 
+    if( !( cursor_.check( Token_kind::Identifier ) && cursor_.peek( 1 ).kind == Token_kind::Colon ) )
+    {
+        return parse_size_condition( start );
+    }
+
     const Span      subject_span = cursor_.peek().span;
     const Symbol_id subject      = expect_name();
 
@@ -1506,6 +1525,64 @@ Node_id Parser::parse_where_clause()
     const Node_id node = ast_.add( Node_kind::Where_clause, Span::merge( start, cursor_.previous().span ), subject.v, bounds );
     ast_.set_name_span( node, subject_span );
     return node;
+}
+
+Node_id Parser::parse_size_condition( Span start )
+{
+    static constexpr Token_kind comparisons[] = {
+        Token_kind::Less,
+        Token_kind::Less_equal,
+        Token_kind::Greater,
+        Token_kind::Greater_equal,
+        Token_kind::Equal_equal,
+        Token_kind::Bang_equal,
+    };
+
+    const Node_id lhs = parse_size_side();
+
+    if( std::ranges::find( comparisons, cursor_.peek().kind ) == std::end( comparisons ) )
+    {
+        recovery_.error_at(
+            cursor_.peek().span,
+            "expected `:` and a bound, or a comparison of sizes",
+            "write `where T : copyable`, or `where R >= C`"
+        );
+        cursor_.match( Token_kind::Comma );
+        return error_node( Span::merge( start, cursor_.previous().span ) );
+    }
+
+    const Token_kind op  = cursor_.advance().kind;
+    const Node_id    rhs = parse_size_side();
+
+    const Node_id comparison = ast_.add(
+        Node_kind::Binary_expr, Span::merge( ast_.span( lhs ), cursor_.previous().span ), static_cast<u32>( op ), { lhs, rhs }
+    );
+
+    cursor_.match( Token_kind::Comma ); // before a following `where`, as parse_where_clause does
+
+    return ast_.add( Node_kind::Size_condition, Span::merge( start, ast_.span( comparison ) ), 0, { comparison } );
+}
+
+// A bare name stops at itself, so `where R >= C {` leaves the body's brace alone.
+Node_id Parser::parse_size_side()
+{
+    if( cursor_.check( Token_kind::Identifier ) )
+    {
+        const Token& name = cursor_.advance();
+        return ast_.add( Node_kind::Name_expr, name.span, name.symbol.v, {} );
+    }
+
+    if( cursor_.check( Token_kind::Int_literal ) || cursor_.check( Token_kind::L_paren ) )
+    {
+        return parse_type_argument();
+    }
+
+    recovery_.error_at(
+        cursor_.peek().span,
+        "expected a size",
+        "a size is a literal, a size parameter or a `const`, or arithmetic over them in parentheses"
+    );
+    return error_node( cursor_.peek().span );
 }
 
 Node_id Parser::parse_aggregate_decl()

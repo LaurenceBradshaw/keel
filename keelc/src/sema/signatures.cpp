@@ -217,6 +217,14 @@ void Signatures::resolve_clause_bounds( Node_id list )
 {
     for( const Node_id clause : ast_.where_clauses( list ) )
     {
+        if( ast_.kind( clause ) == Node_kind::Size_condition )
+        {
+            const Node_id comparison = ast_.child( clause, 0 );
+            annotations_.resolve_size_side( ast_.lhs( comparison ) );
+            annotations_.resolve_size_side( ast_.rhs( comparison ) );
+            continue;
+        }
+
         if( ast_.kind( clause ) != Node_kind::Where_clause )
         {
             continue;
@@ -560,6 +568,11 @@ bool Signatures::refuse_block( Node_id block, Type_id type, Type_id interface )
 
     for( const Node_id clause : ast_.where_clauses( list ) )
     {
+        if( ast_.kind( clause ) != Node_kind::Where_clause )
+        {
+            continue;
+        }
+
         const auto subject =
             std::ranges::find_if( parameters, [&]( Node_id p ) { return ast_.name( p ) == ast_.name( clause ); } );
 

@@ -1096,6 +1096,33 @@ Node_id Annotations::size_parameter_read( Node_id size ) const
     return Node_id {};
 }
 
+Type_id Annotations::resolve_size_side( Node_id side )
+{
+    if( ast_.kind( side ) == Node_kind::Error )
+    {
+        return table_.builtin( Type_kind::Error );
+    }
+
+    const Node_id decl = ast_.kind( side ) == Node_kind::Name_expr ? resolution_.declaration_of( side ) : Node_id {};
+    if( ast_.kind( side ) == Node_kind::Name_expr && !decl.is_valid() )
+    {
+        return table_.builtin( Type_kind::Error ); // the resolver reported it
+    }
+    if( decl.is_valid() && ast_.kind( decl ) == Node_kind::Type_param_decl &&
+        !table_.is_size_parameter( types_.type_of( decl ) ) )
+    {
+        reporter_.error_at(
+            ast_.span( side ),
+            fmt::format( "`{}` is a type; a comparison in a `where` clause takes sizes", interner_.text( ast_.name( side ) ) ),
+            fmt::format( "write `where {} : ...` to bound it", interner_.text( ast_.name( side ) ) )
+        );
+        return table_.builtin( Type_kind::Error );
+    }
+
+    const Type_id size = size_tree( side, size_parameter_read( side ), "a size in a comparison" );
+    return table_.is_error( size ) ? size : types_.record( side, size );
+}
+
 // Folded when it reads no parameter; otherwise built as a size, to be computed per instance.
 Type_id Annotations::size_tree( Node_id size, Node_id parameter, std::string_view what )
 {

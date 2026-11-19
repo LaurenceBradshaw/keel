@@ -1196,6 +1196,28 @@ bool Lookahead::scan_where_clauses()
 {
     while( cursor_.match_keyword( Keyword::Where ) )
     {
+        // `where R >= C`: a literal, a name or parentheses on each side of one comparison.
+        if( !( cursor_.check( Token_kind::Identifier ) && cursor_.peek( 1 ).kind == Token_kind::Colon ) )
+        {
+            // `where T {` still wants the `:`; a missing right side is the parser's to report.
+            const auto side = [&]
+            {
+                return cursor_.match( Token_kind::Identifier ) || cursor_.match( Token_kind::Int_literal ) ||
+                       ( cursor_.check( Token_kind::L_paren ) && skip_parens() );
+            };
+            const bool compared =
+                side() && ( cursor_.match( Token_kind::Less ) || cursor_.match( Token_kind::Less_equal ) ||
+                            cursor_.match( Token_kind::Greater ) || cursor_.match( Token_kind::Greater_equal ) ||
+                            cursor_.match( Token_kind::Equal_equal ) || cursor_.match( Token_kind::Bang_equal ) );
+            if( !compared )
+            {
+                return fail( Wanted::Token, Token_kind::Colon );
+            }
+            side();
+            cursor_.match( Token_kind::Comma );
+            continue;
+        }
+
         if( !want_name() || !want( Token_kind::Colon ) )
         {
             return false;
@@ -2128,6 +2150,8 @@ TEST_CASE( "lookahead_recognises_each_declaration_head", "[scan]" )
         require_declaration( "T f<T, U>( T a, U b ) { }", Declaration_kind::Function, "{" );
         require_declaration( "T f<T>( T a ) where T : copyable { }", Declaration_kind::Function, "{" );
         require_declaration( "T f<T>( T a ) where T : copyable & equatable { }", Declaration_kind::Function, "{" );
+        require_declaration( "u64 f<u64 R, u64 C>() where R >= C, where (R * C) < 9 { }", Declaration_kind::Function, "{" );
+        require_declaration( "u64 f<u64 N>() where N > { }", Declaration_kind::Function, "{" );
         require_declaration( "T f<T>( T a ) where T : sink<i64> & both<i64, bool> { }", Declaration_kind::Function, "{" );
         require_declaration( "T f<T>( T a ) where T : kl::sink<i64> & a::b::c { }", Declaration_kind::Function, "{" );
         require_declaration( "T f<T, U>( T a ) where T : copyable, where U : equatable { }", Declaration_kind::Function, "{" );
