@@ -60,7 +60,9 @@ enum how
     /// Every right row, in its order, with gaps where the left side lacks its keys.
     right,
     /// Every row of both sides, in sorted key order, a missing key last.
-    outer
+    outer,
+    /// Every left row with every right row, left row by left row; no keys.
+    cross
 };
 
 // Whether `d` is `f64s` or `i64s`.
@@ -528,6 +530,22 @@ class series
         return r;
     }
 
+    /// `n` values, value `k` at row `rows[k]` and gaps elsewhere: `taken`'s inverse, numpy's
+    /// `r[rows] = s`.
+    public series placed( const ref u64[] rows, u64 n ) const
+    {
+        if( rows.size != size() )
+        {
+            panic( "the rows' size is not the series'" );
+        }
+        list<u64> from = list<u64>::filled( n, u64::max );
+        for( u64 k : 0..rows.size )
+        {
+            from[rows[k]] = k;
+        }
+        return gathered( this, from );
+    }
+
     /// --- Missing values ---
 
     /// Where a value is missing.
@@ -683,6 +701,224 @@ class series
         return r;
     }
 
+    /// `f` of each value of a number or bool series, as `strings`, a missing value staying missing:
+    /// pandas' `map( dict )`, `s.to_strings( fn[]( f64 x ) { return kl::string( x > 0.0 ? "up" : "down" ); } )`.
+    public series to_strings<F>( F f ) const where F : fn( f64 ) -> string
+    {
+        ndarray<f64> v = numbers();
+        text_column t = text_column();
+        str empty = "";
+        for( u64 i : 0..size() )
+        {
+            if( is_missing( i ) )
+            {
+                t.push( empty.as_text() );
+                continue;
+            }
+            t.push( f( v[i] ).as_text() );
+        }
+        return with_gaps( series( move t ), isna() );
+    }
+
+    /// Each value as text, as `to_csv` writes it, a missing value staying missing: pandas'
+    /// `astype( str )`, but a bool is `true` or `false`.
+    public series to_strings() const
+    {
+        if( kind_ == dtype::strings )
+        {
+            return copy();
+        }
+        list<u64> every = list<u64>::with_capacity( size() );
+        for( u64 i : 0..size() )
+        {
+            every.push( i );
+        }
+        list<string> timed = is_time( kind_ ) ? time_texts( this, every.as_run() ) : list<string>();
+        text_column t = text_column();
+        str empty = "";
+        for( u64 i : 0..size() )
+        {
+            if( is_missing( i ) )
+            {
+                t.push( empty.as_text() );
+                continue;
+            }
+            switch( kind_ )
+            {
+                case dtype::f64s:
+                    t.push( string::from( f_[i] ).as_text() );
+                    break;
+                case dtype::i64s:
+                    t.push( string::from( i_[i] ).as_text() );
+                    break;
+                case dtype::bools:
+                    str b = b_.test( i ) ? "true" : "false";
+                    t.push( b.as_text() );
+                    break;
+                default:
+                    t.push( timed[i].as_text() );
+                    break;
+            }
+        }
+        return with_gaps( series( move t ), isna() );
+    }
+
+    /// A `strings` series read as numbers, a value that does not read missing: pandas'
+    /// `to_numeric( errors="coerce" )`. `i64s` when every value is present and reads as one, else
+    /// `f64s`. A number series is copied; panics on another dtype.
+    public series to_numeric() const
+    {
+        if( is_number( kind_ ) )
+        {
+            return copy();
+        }
+        holds( dtype::strings );
+        string scratch = string();
+        bool ints = true;
+        list<i64> iv = list<i64>::with_capacity( size() );
+        list<f64> fv = list<f64>::with_capacity( size() );
+        for( u64 i : 0..size() )
+        {
+            i64 x = 0;
+            f64 y = nan();
+            bool here = !is_missing( i );
+            ints = ints && here && reads_i64( s_[i], ref scratch, ref x );
+            _ = here && reads_f64( s_[i], ref scratch, ref y );
+            iv.push( x );
+            fv.push( y );
+        }
+        if( ints )
+        {
+            return series( ndarray<i64>::from_list( move iv ) );
+        }
+        return series( ndarray<f64>::from_list( move fv ) );
+    }
+
+    /// Where each text holds `needle`, ASCII letters matched in either case when `ignore_case`,
+    /// clear where missing: pandas' `str.contains( needle, case=False, regex=False )`.
+    public mask contains( const ref textual needle, bool ignore_case = false ) const
+    {
+        holds( dtype::strings );
+        const ref u8[] n = needle.as_text();
+        mask r = mask( size() );
+        for( u64 i : 0..size() )
+        {
+            const ref u8[] t = s_[i];
+            bool found = false;
+            for( u64 at = 0; !found && at + n.size <= t.size; at++ )
+            {
+                found = text_at( t, at, n, ignore_case );
+            }
+            r.assign( i, found );
+        }
+        return without_missing( move r );
+    }
+
+    /// Where each text starts with `prefix`, clear where missing: pandas' `str.startswith`.
+    public mask starts_with( const ref textual prefix ) const
+    {
+        holds( dtype::strings );
+        const ref u8[] p = prefix.as_text();
+        mask r = mask( size() );
+        for( u64 i : 0..size() )
+        {
+            r.assign( i, s_[i].size >= p.size && text_at( s_[i], 0, p, false ) );
+        }
+        return without_missing( move r );
+    }
+
+    /// Where each value is one of `values`', clear where missing: pandas' `isin`. Numbers of either
+    /// dtype compare as `f64`; panics on any other mix of dtypes.
+    public mask isin( const ref series values ) const
+    {
+        series both = beside( this, values );
+        list<u64> codes = list<u64>();
+        list<u64> firsts = appearance( both, ref codes );
+        mask wanted = mask( firsts.size() );
+        for( u64 j : size()..both.size() )
+        {
+            if( codes[j] != u64::max )
+            {
+                wanted.assign( codes[j], true );
+            }
+        }
+        mask r = mask( size() );
+        for( u64 i : 0..size() )
+        {
+            r.assign( i, codes[i] != u64::max && wanted.test( codes[i] ) );
+        }
+        return r;
+    }
+
+    /// Where each value is at least `lo` and at most `hi`, clear where missing: pandas' `between`.
+    public mask between( f64 lo, f64 hi ) const
+    {
+        return greater_equal( lo ) & less_equal( hi );
+    }
+
+    /// Each value where `m` holds, else `other`'s at that row: pandas' `where( m, other )`. Numbers
+    /// of either dtype give `f64s`; panics on any other mix of dtypes.
+    public series kept( const ref mask m, const ref series other ) const
+    {
+        sized_as( m );
+        if( other.size() != size() )
+        {
+            panic( "the series differ in size" );
+        }
+        series both = beside( this, other );
+        list<u64> rows = list<u64>::with_capacity( size() );
+        for( u64 i : 0..size() )
+        {
+            rows.push( m.test( i ) ? i : size() + i );
+        }
+        return both.taken( rows.as_run() );
+    }
+
+    /// Each value where `m` holds, else `x`.
+    public series kept( const ref mask m, f64 x ) const
+    {
+        return kept( m, series( ndarray<f64>::filled( x, size() ) ) );
+    }
+
+    /// Each value where `m` holds, else a gap: pandas' `where( m )`.
+    public series kept( const ref mask m ) const
+    {
+        sized_as( m );
+        list<u64> rows = list<u64>::with_capacity( size() );
+        for( u64 i : 0..size() )
+        {
+            rows.push( m.test( i ) ? i : u64::max );
+        }
+        return gathered( this, rows );
+    }
+
+    /// Each value of a number or bool series held to `lo`..`hi`, as `f64s`, a missing value staying
+    /// missing: pandas' `clip`.
+    public series clip( f64 lo, f64 hi ) const
+    {
+        return map( fn[ lo, hi ]( f64 x ) { return x < lo ? lo : x > hi ? hi : x; } );
+    }
+
+    /// Each `f64` rounded to `decimals` places, a half to the even neighbour, as numpy's `round`
+    /// scales, rounds and scales back; any other dtype is copied.
+    public series round( i64 decimals = 0 ) const
+    {
+        if( kind_ != dtype::f64s )
+        {
+            return copy();
+        }
+        f64 scale = 1.0;
+        for( i64 k = 0; k < decimals || k < -decimals; k++ )
+        {
+            scale *= 10.0;
+        }
+        if( decimals < 0 )
+        {
+            return map( fn[ scale ]( f64 x ) { return half_even( x / scale ) * scale; } );
+        }
+        return map( fn[ scale ]( f64 x ) { return half_even( x * scale ) / scale; } );
+    }
+
     /// --- Arithmetic ---
 
     /// Element by element against `o`, of the same size.
@@ -731,6 +967,12 @@ class series
     public series operator/( f64 x ) const
     {
         return combine( series( ndarray<f64>::filled( x, size() ) ), '/' );
+    }
+
+    /// The text `x` after each text of a `strings` series, a missing value staying missing.
+    public series operator+( const ref textual x ) const
+    {
+        return combine( repeated( x, size() ), '+' );
     }
 
     /// `x` added to each value; an `i64s` series stays `i64s`.
@@ -1089,6 +1331,29 @@ class series
         return t >= 0.5 ? high - diff * ( 1.0 - t ) : low + diff * t;
     }
 
+    /// The middle value present, or the mean of the two middle ones, NaN when there are none.
+    public f64 median() const
+    {
+        list<f64> v = present_values();
+        u64 n = v.size();
+        if( n == 0 )
+        {
+            return nan();
+        }
+        u64 mid = n / 2;
+        kl::nth_element( ref v, mid, fn[]( a, b ) { return a < b; } );
+        if( n % 2 == 1 )
+        {
+            return v[mid];
+        }
+        f64 low = v[0];
+        for( u64 i : 1..mid )
+        {
+            low = v[i] > low ? v[i] : low;
+        }
+        return ( low + v[mid] ) / 2.0;
+    }
+
     /// --- Windows ---
 
     /// Windows of `window` rows ending at each row, as pandas' `s.rolling( window )`; a window
@@ -1115,6 +1380,15 @@ class series
         if( kind_ != k )
         {
             panic( "the series holds another dtype" );
+        }
+    }
+
+    // Panics unless `m` has a bit for each value.
+    private void sized_as( const ref mask m ) const
+    {
+        if( m.size() != size() )
+        {
+            panic( "the mask's size is not the series'" );
         }
     }
 
@@ -1284,6 +1558,22 @@ class series
             return r;
         }
 
+        if( kind_ == dtype::strings && o.kind_ == dtype::strings && op == '+' )
+        {
+            text_column t = text_column::with_capacity( size(), 0 );
+            string both = string();
+            for( u64 i : 0..size() )
+            {
+                both.clear();
+                both.append( s_[i] );
+                both.append( o.s_[i] );
+                t.push( both.as_text() );
+            }
+            series r = series( move t );
+            r.missing_ = missing_either( o );
+            return r;
+        }
+
         if( kind_ == dtype::i64s && o.kind_ == dtype::i64s && op != '/' )
         {
             series r = series( op == '+' ? i_ + o.i_ : op == '-' ? i_ - o.i_ : i_ * o.i_ );
@@ -1438,6 +1728,63 @@ private f64 nan()
     return zero / zero;
 }
 
+// `x` to the nearest whole value, a half to the even one.
+private f64 half_even( f64 x )
+{
+    f64 r = kl::round( x );
+    return kl::abs( r - x ) == 0.5 ? 2.0 * kl::round( x / 2.0 ) : r;
+}
+
+// Whether `t` holds `n` at `at`, ASCII letters in either case when `fold`.
+private bool text_at( const ref u8[] t, u64 at, const ref u8[] n, bool fold )
+{
+    for( u64 k : 0..n.size )
+    {
+        u8 a = t[at + k];
+        u8 b = n[k];
+        if( fold )
+        {
+            a = a >= 'A' && a <= 'Z' ? a + 32 : a;
+            b = b >= 'A' && b <= 'Z' ? b + 32 : b;
+        }
+        if( a != b )
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+/// `yes` where `m` holds and `no` elsewhere, as `strings`: numpy's `where( m, yes, no )`.
+series choose( const ref mask m, const ref textual yes, const ref textual no )
+{
+    text_column t = text_column::with_capacity( m.size(), 0 );
+    for( u64 i : 0..m.size() )
+    {
+        if( m.test( i ) )
+        {
+            t.push( yes.as_text() );
+        }
+        else
+        {
+            t.push( no.as_text() );
+        }
+    }
+    return series( move t );
+}
+
+/// `yes` where `m` holds and `no` elsewhere, as `f64s`: `choose( m, 1.0, 0.0 )` is numpy's
+/// `m.astype( float )`.
+series choose( const ref mask m, f64 yes, f64 no )
+{
+    list<f64> v = list<f64>::with_capacity( m.size() );
+    for( u64 i : 0..m.size() )
+    {
+        v.push( m.test( i ) ? yes : no );
+    }
+    return series( ndarray<f64>::from_list( move v ) );
+}
+
 /// Named `series` of one length, in order, with rows numbered from 0, as pandas' `DataFrame`.
 ///
 /// Build one empty and `insert` columns, or read one with `read_csv`. `df["a"]` is a column;
@@ -1515,6 +1862,21 @@ class dataframe
     public const ref series operator[]( const ref textual name ) const
     {
         return columns_[position( name )];
+    }
+
+    /// The values of the `f64s` column `name`, as a run writable where the frame is; panics on
+    /// another dtype or a name no column has.
+    public ref f64[] f64s( const ref textual name ) const
+    {
+        return columns_[position( name )].f64s().as_run();
+    }
+
+    /// The values of the `i64s` column `name`, missing ones unspecified, as a run writable where
+    /// the frame is; a value written to a missing row leaves it missing. Panics on another dtype or
+    /// a name no column has.
+    public ref i64[] i64s( const ref textual name ) const
+    {
+        return columns_[position( name )].i64s().as_run();
     }
 
     /// Whether a column is named `name`.
@@ -1668,6 +2030,55 @@ class dataframe
         return taken( order.as_run() );
     }
 
+    /// The rows ordered by the columns `names`, the first deciding, each ascending where
+    /// `ascending` holds for it: a stable sort, missing values last in each column, as pandas'
+    /// `sort_values( names, ascending=ascending )`. Panics unless there is an order for each name.
+    public dataframe sort_values( const ref str[] names, const ref bool[] ascending ) const
+    {
+        if( names.size != ascending.size )
+        {
+            panic( "each column to sort by needs an order" );
+        }
+        list<u64> order = list<u64>::with_capacity( rows() );
+        for( u64 i : 0..rows() )
+        {
+            order.push( i );
+        }
+        // Least significant column first: each stable pass keeps the later columns' order in ties.
+        for( u64 k = names.size; k > 0; k-- )
+        {
+            series s = columns_[position( names[k - 1] )].taken( order.as_run() );
+            list<u64> by = present_order( s, ascending[k - 1] );
+            for( u64 i : 0..s.size() )
+            {
+                if( s.is_missing( i ) )
+                {
+                    by.push( i );
+                }
+            }
+            list<u64> next = list<u64>::with_capacity( rows() );
+            for( u64 j : by )
+            {
+                next.push( order[j] );
+            }
+            order = move next;
+        }
+        return taken( order.as_run() );
+    }
+
+    /// Where a row repeats an earlier one in the columns `names`, or in every column when no name
+    /// is given, a gap equal to a gap: pandas' `duplicated( keep="first" )`.
+    public mask duplicated( str... names ) const
+    {
+        return repeats( names );
+    }
+
+    /// The rows `duplicated( names )` leaves clear: each distinct row's first, in order.
+    public dataframe drop_duplicates( str... names ) const
+    {
+        return filtered( ~repeats( names ) );
+    }
+
     /// The rows where none of `names` is missing, or none of the columns when no name is given.
     public dataframe dropna( str... names ) const
     {
@@ -1722,6 +2133,31 @@ class dataframe
         {
             r.insert( names_[c], columns_[c].copy() );
         }
+        return r;
+    }
+
+    /// A row for each of `labels`, in that order, the first row with that label or gaps where
+    /// none has it, and `labels` as the index: pandas' `reindex`. Without an index the labels are
+    /// the row numbers. Numbers of either dtype match as `f64`; panics on any other mix of dtypes.
+    public dataframe reindex( const ref series labels ) const
+    {
+        u64 n = rows();
+        series both = beside( this.labels(), labels );
+        list<u64> codes = list<u64>();
+        list<u64> firsts = appearance( both, ref codes );
+        list<u64> at = list<u64>::with_capacity( labels.size() );
+        for( u64 j : 0..labels.size() )
+        {
+            u64 c = codes[n + j];
+            at.push( c != u64::max && firsts[c] < n ? firsts[c] : u64::max );
+        }
+        dataframe r = dataframe();
+        for( u64 c : 0..columns_.size() )
+        {
+            r.insert( names_[c], gathered( columns_[c], at ) );
+        }
+        r.index_.push( labels.copy() );
+        r.index_name_ = string( index_name_ );
         return r;
     }
 
@@ -1855,6 +2291,17 @@ class dataframe
         return r;
     }
 
+    /// Each `f64s` column rounded to `decimals` places, as `series::round`.
+    public dataframe round( i64 decimals = 0 ) const
+    {
+        dataframe r = copy();
+        for( u64 c : 0..columns_.size() )
+        {
+            r.columns_[c] = columns_[c].round( decimals );
+        }
+        return r;
+    }
+
     /// --- Grouping ---
 
     /// The rows grouped by their values in the columns `names`; panics when none is given.
@@ -1927,25 +2374,72 @@ class dataframe
     /// look. Panics when `values` is a `strings`, `times` or `durations` column.
     public dataframe pivot_table( str values, str index, str columns ) const
     {
-        return spread( select( index, columns, values ).groupby( index, columns ).mean(), values, index, columns );
+        return spread( select( index, columns, values ).groupby( index, columns ).mean(), values, index, columns, true );
     }
 
     /// As `pivot_table( values, index, columns )`, with `agg` of each meeting's values in place of
     /// the mean: `df.pivot_table( "v", "k", "j", fn[]( s ) { return s.sum(); } )`.
     public dataframe pivot_table<F>( str values, str index, str columns, F agg ) const where F : fn( const ref series ) -> f64
     {
-        return spread( select( index, columns, values ).groupby( index, columns ).agg( agg ), values, index, columns );
+        return spread( select( index, columns, values ).groupby( index, columns ).agg( agg ), values, index, columns, true );
+    }
+
+    /// pandas' `pivot`: as `pivot_table`, but each meeting of the keys holds one row's `values`
+    /// as `f64s`, and no row or column of gaps is left out, so `.fillna( 0.0 )` gives pandas'
+    /// `unstack( fill_value=0 )`. A row missing a key is left out. Panics when two rows share both
+    /// keys, or `values` holds no numbers or bools.
+    public dataframe pivot( str values, str index, str columns ) const
+    {
+        dataframe met = select( index, columns, values ).dropna( index, columns );
+        if( met.duplicated( index, columns ).count() > 0 )
+        {
+            panic( "two rows share both keys" );
+        }
+        met.set( values, series( numbers_of( met[values] ) ) );
+        return spread( move met, values, index, columns, false );
+    }
+
+    /// pandas' `melt( id_vars=ids )`: for each column not in `ids`, in order, every row's `ids`, a
+    /// `var_name` column holding that column's name, and a `value_name` column holding its values.
+    /// The value columns' dtypes combine as `concat`'s do.
+    public dataframe melt( const ref str[] ids, str var_name = "variable", str value_name = "value" ) const
+    {
+        list<dataframe> parts = list<dataframe>();
+        for( u64 c : 0..names_.size() )
+        {
+            bool id = false;
+            for( str k : ids )
+            {
+                id = id || names_[c] == string( k );
+            }
+            if( id )
+            {
+                continue;
+            }
+            dataframe p = dataframe();
+            for( str k : ids )
+            {
+                p.insert( k, columns_[position( k )].copy() );
+            }
+            p.insert( var_name, repeated( names_[c], rows() ) );
+            p.insert( value_name, columns_[c].copy() );
+            parts.push( move p );
+        }
+        return stacked_frames( parts.as_run() );
     }
 
     // `met`, one row a meeting of the `index` and `columns` keys, spread out as `pivot_table` lays
-    // it out.
-    private static dataframe spread( move dataframe met, str values, str index, str columns )
+    // it out; with `drop_gaps`, a meeting whose value is missing is left out first.
+    private static dataframe spread( move dataframe met, str values, str index, str columns, bool drop_gaps )
     {
         if( !met.has( values ) )
         {
             panic( "the values column does not aggregate" );
         }
-        met = met.filtered( ~met[values].isna() );
+        if( drop_gaps )
+        {
+            met = met.filtered( ~met[values].isna() );
+        }
 
         list<string> keys = list<string>();
         keys.push( string( index ) );
@@ -2022,13 +2516,32 @@ class dataframe
     /// this frame has them, then this frame's other columns, then `right`'s, and two with one name
     /// become `_x` and `_y`. A side's columns have gaps where that side lacks the keys and keep
     /// their dtype, where pandas makes an integer column `float64`. An `i64s` key against an `f64s`
-    /// one is `f64s`. Panics when a side lacks a key or the two sides' dtypes for it differ otherwise.
+    /// one is `f64s`. `how::cross` pairs every row with every row and takes no `on`. Panics when a
+    /// side lacks a key or the two sides' dtypes for it differ otherwise.
     public dataframe merge( const ref dataframe right, how kind, str... on ) const
     {
         list<string> keys = list<string>();
         for( str n : on )
         {
             keys.push( string( n ) );
+        }
+        if( kind == how::cross )
+        {
+            if( !keys.is_empty() )
+            {
+                panic( "a cross merge takes no keys" );
+            }
+            list<u64> lp = list<u64>::with_capacity( rows() * right.rows() );
+            list<u64> rp = list<u64>::with_capacity( rows() * right.rows() );
+            for( u64 i : 0..rows() )
+            {
+                for( u64 j : 0..right.rows() )
+                {
+                    lp.push( i );
+                    rp.push( j );
+                }
+            }
+            return paired( right, keys, dataframe(), lp, rp, lp );
         }
         if( keys.is_empty() )
         {
@@ -2131,6 +2644,8 @@ class dataframe
                     }
                 }
                 break;
+            case how::cross:
+                break; // answered above
         }
 
         list<u64> kp = list<u64>::with_capacity( lp.size() );
@@ -2138,6 +2653,13 @@ class dataframe
         {
             kp.push( lp[p] != u64::max ? lp[p] : l + rp[p] );
         }
+        return paired( right, keys, both, lp, rp, kp );
+    }
+
+    // `merge`'s frame: the keys from `both` at `kp`, this frame's other columns at `lp`, then
+    // `right`'s at `rp`.
+    private dataframe paired( const ref dataframe right, const ref list<string> keys, const ref dataframe both, const ref list<u64> lp, const ref list<u64> rp, const ref list<u64> kp ) const
+    {
         dataframe r = dataframe();
         for( u64 c : 0..names_.size() )
         {
@@ -2303,7 +2825,7 @@ class dataframe
     }
 
     /// The frame as CSV: a header, then a line for each row, ended by `\n`; a missing value is
-    /// empty (`""` when it is the row's only field), a float written as `string::from` writes it, a
+    /// empty (`""` when it is the row's only field), a float written as `string::from` writes it, a bool as `true` or `false`, a
     /// time or duration as the table writes its column, and a field holding `sep`, a quote or a
     /// line break quoted. The row numbers or index are not written, as pandas' `index=False`.
     public string to_csv( u8 sep = ',' ) const
@@ -2358,7 +2880,7 @@ class dataframe
                         r += string::from( s.i64s()[i] );
                         break;
                     case dtype::bools:
-                        r += s.bools().test( i ) ? "True" : "False";
+                        r += s.bools().test( i ) ? "true" : "false";
                         break;
                     case dtype::strings:
                         push_field( ref r, s.strings()[i], sep );
@@ -2366,6 +2888,32 @@ class dataframe
                 }
             }
             r += "\n";
+        }
+        return r;
+    }
+
+    // `duplicated( names )`.
+    private mask repeats( const ref str[] names ) const
+    {
+        list<string> keys = list<string>();
+        for( str n : names )
+        {
+            keys.push( string( n ) );
+        }
+        if( keys.is_empty() )
+        {
+            for( u64 c : 0..names_.size() )
+            {
+                keys.push( string( names_[c] ) );
+            }
+        }
+        list<u64> codes = list<u64>();
+        mask seen = mask( group_codes( this, keys, ref codes, true ) );
+        mask r = mask( rows() );
+        for( u64 i : 0..rows() )
+        {
+            r.assign( i, seen.test( codes[i] ) );
+            seen.assign( codes[i], true );
         }
         return r;
     }
@@ -2482,6 +3030,29 @@ class dataframe
         return filtered( m );
     }
 };
+
+// `a`'s values then `b`'s, in one dtype: `f64s` for a mix of numbers.
+private series beside( const ref series a, const ref series b )
+{
+    list<series> parts = list<series>::with_capacity( 2 );
+    dtype k = a.kind();
+    if( a.kind() == b.kind() )
+    {
+        parts.push( a.copy() );
+        parts.push( b.copy() );
+    }
+    else if( is_number( a.kind() ) && is_number( b.kind() ) )
+    {
+        k = dtype::f64s;
+        parts.push( series( numbers_of( a ) ) );
+        parts.push( series( numbers_of( b ) ) );
+    }
+    else
+    {
+        panic( "the series hold dtypes that do not compare" );
+    }
+    return stacked( parts, k );
+}
 
 // The first of `0..n` where `holds`, which is false then true across them, or `n`.
 private u64 first_where<F>( u64 n, F holds ) where F : fn( u64 ) -> bool
@@ -2944,6 +3515,22 @@ private bool reduces( dtype kind, reduction op )
     }
 }
 
+// The reduction `grouped::transform` names `op`; panics on a name none has.
+private reduction reduction_named( str op )
+{
+    string n = string( op );
+    str[7] names = [ "sum", "mean", "var", "std", "min", "max", "count" ];
+    reduction[7] ops = [ reduction::sum, reduction::mean, reduction::var, reduction::std, reduction::min, reduction::max, reduction::count ];
+    for( u64 k : 0..7 )
+    {
+        if( n == string( names[k] ) )
+        {
+            return ops[k];
+        }
+    }
+    panic( "no reduction has that name" );
+}
+
 // What `grouped` works out for each group.
 private enum reduction
 {
@@ -2970,6 +3557,7 @@ class grouped
     dataframe values_; // the other columns, every row
     list<u64> order_;  // the rows, group by group, each group's in row order
     list<u64> starts_; // where each group starts in `order_`, then its size
+    list<u64> codes_;  // each row's group, `u64::max` where a key is missing
 
     /// The rows of `df` grouped by the columns `keys`.
     public grouped( const ref dataframe df, const ref list<string> keys )
@@ -3019,6 +3607,19 @@ class grouped
         {
             keys_.insert( keys[k], df[keys[k]].taken( firsts.as_run() ) );
         }
+        codes_ = move codes;
+    }
+
+    /// The keys, one row a group, group `g`'s at row `g`.
+    public const ref dataframe keys() const
+    {
+        return keys_;
+    }
+
+    /// Group `g`'s rows, in row order.
+    public const ref u64[] rows_of( u64 g ) const
+    {
+        return order_.as_run()[starts_[g]..starts_[g + 1]];
     }
 
     /// How many groups there are.
@@ -3091,6 +3692,219 @@ class grouped
         {
             const ref series s = values_[values_.columns()[c]];
             if( s.kind() == dtype::strings || is_time( s.kind() ) )
+            {
+                continue;
+            }
+            list<f64> v = list<f64>::with_capacity( groups() );
+            for( u64 g : 0..groups() )
+            {
+                v.push( f( part( s, g ) ) );
+            }
+            r.insert( values_.columns()[c], series( ndarray<f64>::from_list( move v ) ) );
+        }
+        return r;
+    }
+
+    /// Each group's `q` quantile in each number and bool column, as `series::quantile`.
+    public dataframe quantile( f64 q ) const
+    {
+        return each_group( fn[ q ]( s ) { return s.quantile( q ); } );
+    }
+
+    /// Each group's median in each number and bool column, as `series::median`.
+    public dataframe median() const
+    {
+        return each_group( fn[]( s ) { return s.median(); } );
+    }
+
+    /// How many distinct values each group has present in each column, as `i64s`.
+    public dataframe nunique() const
+    {
+        dataframe r = keys_.copy();
+        for( u64 c : 0..values_.columns().size() )
+        {
+            const ref series s = values_[values_.columns()[c]];
+            list<u64> codes = list<u64>();
+            mask seen = mask( appearance( s, ref codes ).size() );
+            list<i64> v = list<i64>::with_capacity( groups() );
+            for( u64 g : 0..groups() )
+            {
+                i64 n = 0;
+                for( u64 k : starts_[g]..starts_[g + 1] )
+                {
+                    u64 e = codes[order_[k]];
+                    if( e != u64::max && !seen.test( e ) )
+                    {
+                        seen.assign( e, true );
+                        n++;
+                    }
+                }
+                for( u64 k : starts_[g]..starts_[g + 1] )
+                {
+                    u64 e = codes[order_[k]];
+                    if( e != u64::max )
+                    {
+                        seen.assign( e, false );
+                    }
+                }
+                v.push( n );
+            }
+            r.insert( values_.columns()[c], series( ndarray<i64>::from_list( move v ) ) );
+        }
+        return r;
+    }
+
+    /// --- Row by row ---
+    ///
+    /// These answer a value for every row of the grouped frame, in its order, a gap where a key is
+    /// missing; the frames hold the columns other than the keys, as pandas' do.
+
+    /// Each row's group number, groups in key order: pandas' `ngroup`.
+    public series ngroup() const
+    {
+        list<i64> v = list<i64>::with_capacity( codes_.size() );
+        mask gaps = mask( codes_.size() );
+        for( u64 i : 0..codes_.size() )
+        {
+            v.push( codes_[i] == u64::max ? 0 : cast<i64>( codes_[i] ) );
+            gaps.assign( i, codes_[i] == u64::max );
+        }
+        return with_gaps( series( ndarray<i64>::from_list( move v ) ), gaps );
+    }
+
+    /// Each row's place within its group from 0, in row order: pandas' `cumcount`.
+    public series cumcount() const
+    {
+        list<i64> v = list<i64>::filled( codes_.size(), 0 );
+        for( u64 g : 0..groups() )
+        {
+            for( u64 k : starts_[g]..starts_[g + 1] )
+            {
+                v[order_[k]] = cast<i64>( k - starts_[g] );
+            }
+        }
+        return with_gaps( series( ndarray<i64>::from_list( move v ) ), ngroup().isna() );
+    }
+
+    /// The reduction named `op` of each group, `size`, `count`, `sum`, `mean`, `var`, `std`,
+    /// `min` or `max`, given to each of its rows: pandas' `transform( op )`. `size` answers one
+    /// column, `size`. Panics on any other name.
+    public dataframe transform( str op ) const
+    {
+        dataframe totals = string( op ) == "size" ? size() : reduced( reduction_named( op ) );
+        dataframe r = dataframe();
+        for( u64 c : 0..totals.columns().size() )
+        {
+            const ref string name = totals.columns()[c];
+            if( !keys_.has( name ) )
+            {
+                r.insert( name, gathered( totals[name], codes_ ) );
+            }
+        }
+        return r;
+    }
+
+    /// Each row's value `lag` rows earlier in its group, a gap where that is before the group's
+    /// first; a negative `lag` looks later: pandas' `shift( lag )`. Columns keep their dtypes.
+    public dataframe shift( i64 lag = 1 ) const
+    {
+        list<u64> from = list<u64>::filled( codes_.size(), u64::max );
+        for( u64 g : 0..groups() )
+        {
+            for( u64 k : starts_[g]..starts_[g + 1] )
+            {
+                i64 j = cast<i64>( k ) - lag;
+                if( j >= cast<i64>( starts_[g] ) && j < cast<i64>( starts_[g + 1] ) )
+                {
+                    from[order_[k]] = order_[cast<u64>( j )];
+                }
+            }
+        }
+        dataframe r = dataframe();
+        for( u64 c : 0..values_.columns().size() )
+        {
+            const ref string name = values_.columns()[c];
+            r.insert( name, gathered( values_[name], from ) );
+        }
+        return r;
+    }
+
+    /// Each row's value less the one before it in its group, in each number, time and duration
+    /// column: pandas' `diff()`. Two times give a duration.
+    public dataframe diff() const
+    {
+        dataframe before = shift( 1 );
+        dataframe r = dataframe();
+        for( u64 c : 0..values_.columns().size() )
+        {
+            const ref string name = values_.columns()[c];
+            const ref series s = values_[name];
+            if( is_number( s.kind() ) || is_time( s.kind() ) )
+            {
+                r.insert( name, s - before[name] );
+            }
+        }
+        return r;
+    }
+
+    /// Each row's rank within its group in each number and bool column, from 1, ties given their
+    /// mean rank and missing values a gap, as `f64s`: pandas' `rank( method="average" )`.
+    public dataframe rank( bool ascending = true ) const
+    {
+        dataframe r = dataframe();
+        for( u64 c : 0..values_.columns().size() )
+        {
+            const ref string name = values_.columns()[c];
+            const ref series s = values_[name];
+            if( !is_number( s.kind() ) && s.kind() != dtype::bools )
+            {
+                continue;
+            }
+            series x = series( numbers_of( s ) );
+            const ref ndarray<f64> v = x.f64s();
+            // Each group's present rows, by value.
+            list<u64> ends = list<u64>::of( starts_.as_run() );
+            list<u64> by = list<u64>::filled( order_.size(), 0 );
+            for( u64 i : present_order( x, ascending ) )
+            {
+                if( codes_[i] != u64::max )
+                {
+                    by[ends[codes_[i]]] = i;
+                    ends[codes_[i]] += 1;
+                }
+            }
+            list<f64> ranks = list<f64>::filled( codes_.size(), nan() );
+            for( u64 g : 0..groups() )
+            {
+                u64 a = starts_[g];
+                while( a < ends[g] )
+                {
+                    u64 b = a + 1;
+                    while( b < ends[g] && v[by[b]] == v[by[a]] )
+                    {
+                        b++;
+                    }
+                    f64 tied = cast<f64>( a + b + 1 - 2 * starts_[g] ) / 2.0;
+                    for( u64 k : a..b )
+                    {
+                        ranks[by[k]] = tied;
+                    }
+                    a = b;
+                }
+            }
+            r.insert( name, series( ndarray<f64>::from_list( move ranks ) ) );
+        }
+        return r;
+    }
+
+    // The keys, then `f` of each group's rows of each number and bool column, as `f64s`.
+    private dataframe each_group<F>( F f ) const where F : fn( const ref series ) -> f64
+    {
+        dataframe r = keys_.copy();
+        for( u64 c : 0..values_.columns().size() )
+        {
+            const ref series s = values_[values_.columns()[c]];
+            if( !is_number( s.kind() ) && s.kind() != dtype::bools )
             {
                 continue;
             }
@@ -3735,7 +4549,7 @@ private list<string> cell_texts( const ref series s, const ref u64[] rows )
                     r.push( string::from( s.i64s()[k] ) );
                     break;
                 case dtype::bools:
-                    r.push( string( s.bools().test( k ) ? "True" : "False" ) );
+                    r.push( string( s.bools().test( k ) ? "true" : "false" ) );
                     break;
                 default:
                     r.push( s.strings().at( k ) );
@@ -3921,7 +4735,7 @@ enum csv_error
 /// line breaks and doubled quotes. Blank lines are skipped, but not one holding `""`, and a row short of fields has the rest
 /// missing, as are pandas' missing tokens (an empty field, `NA`, `NaN`, `null`, `None` and the
 /// like). Each column takes the first dtype every value present reads as, `i64s`, `f64s`, then
-/// `bools` (`True`, `False`, and lower or upper case), else `strings`; a column with no values
+/// `bools` (`true`, `false`, and capitalised or upper case), else `strings`; a column with no values
 /// present is `f64s`.
 result<dataframe, csv_error> parse_csv( const ref textual text, u8 sep = ',' )
 {
@@ -4241,6 +5055,12 @@ private series with_gaps( move series s, const ref mask gaps )
 /// appear, and a frame without one has gaps there in its dtype. `i64s` beside `f64s` becomes
 /// `f64s`; any other mix of dtypes panics. Pass the frames with `move`, or a `copy()` of each.
 dataframe concat( dataframe... frames )
+{
+    return stacked_frames( frames );
+}
+
+// `concat`'s answer.
+private dataframe stacked_frames( const ref dataframe[] frames )
 {
     list<string> names = list<string>();
     for( u64 f : 0..frames.size )

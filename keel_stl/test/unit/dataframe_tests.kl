@@ -1,8 +1,9 @@
 // `kl::dataframe`: building and shape, pandas' table, selecting rows and columns, sorting,
 // series arithmetic, comparisons and reductions with missing values, describe, CSV both ways,
-// time and duration columns, concat and merge, the index, pivot_table, rolling. The expected
-// texts are pandas 3.1's, but for an integer or bool column with a gap, which stays one, and a
-// pivot's corner, which does not name the column key.
+// time and duration columns, concat and merge, the index, pivot_table, rolling, the grouped
+// row-by-row operations, duplicates, reshaping, text columns, writing a column in place. The
+// expected texts are pandas 3.1's, but for an integer or bool column with a gap, which stays one,
+// a pivot's corner, which does not name the column key, and bools, written `true` and `false`.
 import kl::dataframe;
 import kl::list;
 import kl::mask;
@@ -61,7 +62,7 @@ private void building_and_shape( ref kl::test::context c )
 
 private void printing_as_pandas( ref kl::test::context c )
 {
-    c.check_eq( fruit().to_string(), "   n    x      s      b\n0  3  2.5   pear   True\n1  1  NaN    fig  False\n2  2 -1.0  apple   True\n3  1  4.0    fig   True\n4  5  0.5   kiwi  False" );
+    c.check_eq( fruit().to_string(), "   n    x      s      b\n0  3  2.5   pear   true\n1  1  NaN    fig  false\n2  2 -1.0  apple   true\n3  1  4.0    fig   true\n4  5  0.5   kiwi  false" );
 
     kl::dataframe f = kl::dataframe();
     f.insert( "a", kl::series( [ 1e7, 2.0 ] ) );
@@ -80,7 +81,7 @@ private void printing_as_pandas( ref kl::test::context c )
 private void selecting_rows_and_columns( ref kl::test::context c )
 {
     kl::dataframe df = fruit();
-    c.check_eq( df.head( 2 ).to_string(), "   n    x     s      b\n0  3  2.5  pear   True\n1  1  NaN   fig  False" );
+    c.check_eq( df.head( 2 ).to_string(), "   n    x     s      b\n0  3  2.5  pear   true\n1  1  NaN   fig  false" );
     c.check_eq( df.tail( 2 )["s"].strings().at( 0 ), "fig" );
     c.check_eq( df.tail( 9 ).rows(), 5 );
     c.check_eq( df.iloc( 1..3 )["n"].i64s()[1], 2 );
@@ -162,7 +163,7 @@ private void reductions_skip_missing( ref kl::test::context c )
 
 private void csv_both_ways( ref kl::test::context c )
 {
-    c.check_eq( fruit().to_csv(), "n,x,s,b\n3,2.5,pear,True\n1,,fig,False\n2,-1.0,apple,True\n1,4.0,fig,True\n5,0.5,kiwi,False\n" );
+    c.check_eq( fruit().to_csv(), "n,x,s,b\n3,2.5,pear,true\n1,,fig,false\n2,-1.0,apple,true\n1,4.0,fig,true\n5,0.5,kiwi,false\n" );
 
     kl::dataframe df = parsed( "id,v,t,flag,e\r\n1,1.5,\"a\nb\",TRUE,\r\n\r\n2,-2e3,\"x\"\"y\",false,\r\n3,inf,plain,True,\r\n4,,\"\",FALSE,NA\r\n5,0.1\r\n", ',' );
     c.check_eq( kl::dtype_name( df.dtypes()[0] ), "int64" );
@@ -170,7 +171,7 @@ private void csv_both_ways( ref kl::test::context c )
     c.check_eq( kl::dtype_name( df.dtypes()[2] ), "str" );
     c.check_eq( kl::dtype_name( df.dtypes()[3] ), "bool" );
     c.check_eq( kl::dtype_name( df.dtypes()[4] ), "float64" );
-    c.check_eq( df.to_csv(), "id,v,t,flag,e\n1,1.5,\"a\nb\",True,\n2,-2000.0,\"x\"\"y\",False,\n3,inf,plain,True,\n4,,,False,\n5,0.1,,,\n" );
+    c.check_eq( df.to_csv(), "id,v,t,flag,e\n1,1.5,\"a\nb\",true,\n2,-2000.0,\"x\"\"y\",false,\n3,inf,plain,true,\n4,,,false,\n5,0.1,,,\n" );
 
     // An integer column with a gap stays integer.
     kl::dataframe ints = parsed( "a;b\n1;\n;2\n", ';' );
@@ -220,7 +221,7 @@ private void missing_values_found_filled_and_dropped( ref kl::test::context c )
     c.check_eq( df.dropna().rows(), 4 );
     c.check_eq( df.dropna( "n", "s" ).rows(), 5 );
     c.check_eq( df["x"].dropna().size(), 4 );
-    c.check_eq( df.fillna( 0 ).to_string(), "   n    x      s      b\n0  3  2.5   pear   True\n1  1  0.0    fig  False\n2  2 -1.0  apple   True\n3  1  4.0    fig   True\n4  5  0.5   kiwi  False" );
+    c.check_eq( df.fillna( 0 ).to_string(), "   n    x      s      b\n0  3  2.5   pear   true\n1  1  0.0    fig  false\n2  2 -1.0  apple   true\n3  1  4.0    fig   true\n4  5  0.5   kiwi  false" );
     c.check_eq( df["x"].fillna( 9.5 ).f64s()[1], 9.5 );
 
     kl::series gappy = kl::series( [ "a", "b" ] );
@@ -245,11 +246,11 @@ private void groupby_reduces_each_group( ref kl::test::context c )
     c.check_eq( g.sum().to_string(), "       s  n    x  b\n0  apple  2 -1.0  1\n1    fig  2  4.0  1\n2   kiwi  5  0.5  0\n3   pear  3  2.5  1" );
     c.check_eq( g.mean().to_string(), "       s    n    x    b\n0  apple  2.0 -1.0  1.0\n1    fig  1.0  4.0  0.5\n2   kiwi  5.0  0.5  0.0\n3   pear  3.0  2.5  1.0" );
     c.check_eq( g.count()["x"].i64s()[1], 1 );
-    c.check_eq( g.max().to_string(), "       s  n    x      b\n0  apple  2 -1.0   True\n1    fig  1  4.0   True\n2   kiwi  5  0.5  False\n3   pear  3  2.5   True" );
+    c.check_eq( g.max().to_string(), "       s  n    x      b\n0  apple  2 -1.0   true\n1    fig  1  4.0   true\n2   kiwi  5  0.5  false\n3   pear  3  2.5   true" );
     c.check_eq( g.std().to_string(), "       s    n   x         b\n0  apple  NaN NaN       NaN\n1    fig  0.0 NaN  0.707107\n2   kiwi  NaN NaN       NaN\n3   pear  NaN NaN       NaN" );
     c.check_eq( g.size()["size"].i64s()[1], 2 );
     c.check_eq( g.agg( fn[]( s ) { return s.max() - s.min(); } )["b"].f64s()[1], 1.0 );
-    c.check_eq( fruit().groupby( "b", "n" ).sum().to_string(), "       b  n    x\n0  False  1  0.0\n1  False  5  0.5\n2   True  1  4.0\n3   True  2 -1.0\n4   True  3  2.5" );
+    c.check_eq( fruit().groupby( "b", "n" ).sum().to_string(), "       b  n    x\n0  false  1  0.0\n1  false  5  0.5\n2   true  1  4.0\n3   true  2 -1.0\n4   true  3  2.5" );
 
     // A row missing its key is left out; a group with no value present has no least one.
     kl::dataframe ints = parsed( "a,b\n1,\n,2\n1,3\n", ',' );
@@ -417,7 +418,7 @@ private void times_compare_sort_and_group( ref kl::test::context c )
 private void concat_stacks_rows( ref kl::test::context c )
 {
     kl::dataframe both = kl::concat( parsed( "x,y\n1,p\n2,q\n", ',' ), parsed( "x,z\n1.5,True\n", ',' ) );
-    c.check_eq( both.to_string(), "     x    y     z\n0  1.0    p  <NA>\n1  2.0    q  <NA>\n2  1.5  NaN  True" );
+    c.check_eq( both.to_string(), "     x    y     z\n0  1.0    p  <NA>\n1  2.0    q  <NA>\n2  1.5  NaN  true" );
     kl::dataframe ints = kl::concat( parsed( "n\n1\n", ',' ), parsed( "m\n2\n", ',' ) );
     c.check_eq( ints.to_string(), "      n     m\n0     1  <NA>\n1  <NA>     2" );
     c.check_eq( kl::concat().rows(), 0 );
@@ -530,4 +531,127 @@ private void rolling_by_time( ref kl::test::context c )
     c.expect_panic( "the times are not sorted", fn[ back, two ]() { _ = back.rolling( two, "t" ); } );
     c.expect_panic( "the frame has no index of times", fn[ df, two ]() { _ = df.rolling( two ); } );
     c.expect_panic( "the window is a duration, but the rows are not times", fn[ df, two ]() { _ = df.rolling( two, "a" ); } );
+}
+
+private kl::dataframe keyed()
+{
+    f64 zero = 0.0;
+    kl::dataframe df = kl::dataframe();
+    df.insert( "k", kl::series( [ "a", "b", "a", "b", "a", "c", "b" ] ) );
+    df.insert( "j", kl::series( [ 1, 1, 2, 1, 1, 2, 1 ] ) );
+    df.insert( "x", kl::series( [ 3.0, 1.0, zero / zero, 1.0, 3.0, 2.5, -0.5 ] ) );
+    df.insert( "b", kl::series( [ true, false, true, false, true, true, false ] ) );
+    return df;
+}
+
+private kl::dataframe one( str name, move kl::series s )
+{
+    kl::dataframe d = kl::dataframe();
+    d.insert( name, move s );
+    return d;
+}
+
+private void grouping_row_by_row( ref kl::test::context c )
+{
+    kl::grouped g = keyed().groupby( "k" );
+    c.check_eq( one( "ngroup", g.ngroup() ).to_string(), "   ngroup\n0       0\n1       1\n2       0\n3       1\n4       0\n5       2\n6       1" );
+    c.check_eq( one( "cumcount", g.cumcount() ).to_string(), "   cumcount\n0         0\n1         0\n2         1\n3         1\n4         2\n5         0\n6         2" );
+    c.check_eq( g.transform( "size" ).to_string(), "   size\n0     3\n1     3\n2     3\n3     3\n4     3\n5     1\n6     3" );
+    c.check_eq( g.transform( "sum" ).to_string(), "   j    x  b\n0  4  6.0  3\n1  3  1.5  0\n2  4  6.0  3\n3  3  1.5  0\n4  4  6.0  3\n5  2  2.5  1\n6  3  1.5  0" );
+    c.check_eq( g.shift( 1 ).to_string(), "      j    x      b\n0  <NA>  NaN   <NA>\n1  <NA>  NaN   <NA>\n2     1  3.0   true\n3     1  1.0  false\n4     2  NaN   true\n5  <NA>  NaN   <NA>\n6     1  1.0  false" );
+    c.check_eq( g.shift( -1 ).to_string(), "      j    x      b\n0     2  NaN   true\n1     1  1.0  false\n2     1  3.0   true\n3     1 -0.5  false\n4  <NA>  NaN   <NA>\n5  <NA>  NaN   <NA>\n6  <NA>  NaN   <NA>" );
+    c.check_eq( g.diff().to_string(), "      j    x\n0  <NA>  NaN\n1  <NA>  NaN\n2     1  NaN\n3     0  0.0\n4    -1  NaN\n5  <NA>  NaN\n6     0 -1.5" );
+    c.check_eq( g.rank( true ).to_string(), "     j    x    b\n0  1.5  1.5  2.0\n1  2.0  2.5  2.0\n2  3.0  NaN  2.0\n3  2.0  2.5  2.0\n4  1.5  1.5  2.0\n5  1.0  1.0  1.0\n6  2.0  1.0  2.0" );
+    c.check_eq( g.rank( false ).to_string(), "     j    x    b\n0  2.5  1.5  2.0\n1  2.0  1.5  2.0\n2  1.0  NaN  2.0\n3  2.0  1.5  2.0\n4  2.5  1.5  2.0\n5  1.0  1.0  1.0\n6  2.0  3.0  2.0" );
+    c.check_eq( g.keys()["k"].strings().at( 1 ), "b" );
+    c.check_eq( g.rows_of( 1 ).size, 3 );
+    c.check_eq( g.rows_of( 1 )[2], 6 );
+    kl::dataframe gap = keyed();
+    gap.set( "k", kl::series( [ "a", "b", "a", "b", "a", "c", "b" ] ).kept( keyed()["b"].bools() ) );
+    c.check( gap.groupby( "k" ).ngroup().is_missing( 1 ) && gap.groupby( "k" ).cumcount().is_missing( 1 ) );
+    c.check( gap.groupby( "k" ).shift( -1 )["j"].is_missing( 1 ) );
+    c.expect_panic( "no reduction has that name", fn[ g ]() { _ = g.transform( "any" ); } );
+}
+
+private void grouping_reductions( ref kl::test::context c )
+{
+    kl::grouped g = keyed().groupby( "k" );
+    c.check_eq( g.quantile( 0.25 ).to_string(), "   k    j     x    b\n0  a  1.0  3.00  1.0\n1  b  1.0  0.25  0.0\n2  c  2.0  2.50  1.0" );
+    c.check_eq( g.median().to_string(), "   k    j    x    b\n0  a  1.0  3.0  1.0\n1  b  1.0  1.0  0.0\n2  c  2.0  2.5  1.0" );
+    c.check_eq( g.nunique().to_string(), "   k  j  x  b\n0  a  2  1  1\n1  b  1  2  1\n2  c  1  1  1" );
+    c.check_eq( keyed().groupby( "k", "j" ).sum().to_string(), "   k  j    x  b\n0  a  1  6.0  2\n1  a  2  0.0  1\n2  b  1  1.5  0\n3  c  2  2.5  1" );
+    c.check_eq( kl::series( [ 1.0, 4.0, 2.0, 3.0 ] ).median(), 2.5 );
+    c.check_eq( kl::series( [ 5, 1, 3 ] ).median(), 3.0 );
+}
+
+private void duplicates_and_sorting_by_columns( ref kl::test::context c )
+{
+    kl::dataframe df = keyed();
+    c.check_eq( one( "d", kl::series( df.duplicated( "k", "j" ) ) ).to_string(), "       d\n0  false\n1  false\n2  false\n3   true\n4   true\n5  false\n6   true" );
+    c.check_eq( df.drop_duplicates( "k" ).to_string(), "   k  j    x      b\n0  a  1  3.0   true\n1  b  1  1.0  false\n2  c  2  2.5   true" );
+    c.check_eq( df.duplicated().count(), 2 );
+    c.check_eq( df.sort_values( [ "j", "x" ], [ true, false ] ).to_string(), "   k  j    x      b\n0  a  1  3.0   true\n1  a  1  3.0   true\n2  b  1  1.0  false\n3  b  1  1.0  false\n4  b  1 -0.5  false\n5  c  2  2.5   true\n6  a  2  NaN   true" );
+    c.expect_panic( "each column to sort by needs an order", fn[ df ]() { _ = df.sort_values( [ "j", "x" ], [ true ] ); } );
+}
+
+private void masks_and_rounding( ref kl::test::context c )
+{
+    kl::dataframe df = keyed();
+    c.check_eq( one( "i", kl::series( df["x"].isin( kl::series( [ 1, 3 ] ) ) ) ).to_string(), "       i\n0   true\n1   true\n2  false\n3   true\n4   true\n5  false\n6  false" );
+    c.check_eq( one( "i", kl::series( df["x"].between( 0.0, 2.5 ) ) ).to_string(), "       i\n0  false\n1   true\n2  false\n3   true\n4  false\n5   true\n6  false" );
+    c.check_eq( one( "w", df["x"].kept( df["b"].bools(), 0.0 ) ).to_string(), "     w\n0  3.0\n1  0.0\n2  NaN\n3  0.0\n4  3.0\n5  2.5\n6  0.0" );
+    c.check_eq( one( "w", df["j"].kept( df["b"].bools() ) ).to_string(), "      w\n0     1\n1  <NA>\n2     2\n3  <NA>\n4     1\n5     2\n6  <NA>" );
+    c.check_eq( one( "c", df["x"].clip( 0.0, 2.0 ) ).to_string(), "     c\n0  2.0\n1  1.0\n2  NaN\n3  1.0\n4  2.0\n5  2.0\n6  0.0" );
+    c.check_eq( one( "r", kl::series( [ 0.5, 1.5, 2.5, -0.5, 2.675, 1.005, 123.456 ] ).round( 2 ) ).to_string(), "        r\n0    0.50\n1    1.50\n2    2.50\n3   -0.50\n4    2.68\n5    1.00\n6  123.46" );
+    c.check_eq( one( "r", kl::series( [ 0.5, 1.5, 2.5, -0.5, -1.5, 3.7 ] ).round() ).to_string(), "     r\n0  0.0\n1  2.0\n2  2.0\n3 -0.0\n4 -2.0\n5  4.0" );
+    c.check_eq( one( "r", kl::series( [ 15.0, 25.0, 34.0 ] ).round( -1 ) ).to_string(), "      r\n0  20.0\n1  20.0\n2  30.0" );
+    c.check_eq( df.round( 0 )["j"].i64s()[2], 2 );
+    c.expect_panic( "the series hold dtypes that do not compare", fn[ df ]() { _ = df["x"].isin( df["k"] ); } );
+    c.expect_panic( "the mask's size is not the series'", fn[ df ]() { _ = df["x"].kept( kl::mask( 2 ) ); } );
+}
+
+private void reshaping( ref kl::test::context c )
+{
+    kl::dataframe df = keyed();
+    c.check_eq( df.drop_duplicates( "k" ).set_index( "k" ).reindex( kl::series( [ "c", "z", "a" ] ) ).to_string(), "      j    x     b\nk                 \nc     2  2.5  true\nz  <NA>  NaN  <NA>\na     1  3.0  true" );
+    c.check_eq( df.select( "k", "j", "x" ).melt( [ "k" ], "var", "val" ).to_string(), "    k var  val\n0   a   j  1.0\n1   b   j  1.0\n2   a   j  2.0\n3   b   j  1.0\n4   a   j  1.0\n5   c   j  2.0\n6   b   j  1.0\n7   a   x  3.0\n8   b   x  1.0\n9   a   x  NaN\n10  b   x  1.0\n11  a   x  3.0\n12  c   x  2.5\n13  b   x -0.5" );
+    kl::dataframe p = kl::dataframe();
+    p.insert( "r", kl::series( [ "u", "u", "v" ] ) );
+    p.insert( "c", kl::series( [ 2020, 2021, 2020 ] ) );
+    p.insert( "v", kl::series( [ 1.0, 2.0, 3.0 ] ) );
+    c.check_eq( p.pivot( "v", "r", "c" ).to_string(), "   r  2020  2021\n0  u   1.0   2.0\n1  v   3.0   NaN" );
+    c.check_eq( p.pivot( "v", "r", "c" ).fillna( 0.0 ).to_string(), "   r  2020  2021\n0  u   1.0   2.0\n1  v   3.0   0.0" );
+    kl::dataframe q = kl::dataframe();
+    q.insert( "j", kl::series( [ 7, 8 ] ) );
+    c.check_eq( df.select( "k", "j" ).head( 2 ).merge( q, kl::how::cross ).to_string(), "   k  j_x  j_y\n0  a    1    7\n1  a    1    8\n2  b    1    7\n3  b    1    8" );
+    c.expect_panic( "two rows share both keys", fn[ p ]() { _ = kl::concat( p.copy(), p.copy() ).pivot( "v", "r", "c" ); } );
+    c.expect_panic( "a cross merge takes no keys", fn[ df, q ]() { _ = df.merge( q, kl::how::cross, "j" ); } );
+}
+
+private void text_columns( ref kl::test::context c )
+{
+    kl::dataframe df = keyed();
+    c.check_eq( one( "n", kl::series( [ "1", "2.5", "x", "4" ] ).to_numeric() ).to_string(), "     n\n0  1.0\n1  2.5\n2  NaN\n3  4.0" );
+    c.check_eq( one( "n", kl::series( [ "1", "2", "-4" ] ).to_numeric() ).to_string(), "   n\n0  1\n1  2\n2 -4" );
+    c.check_eq( one( "p", kl::series( [ 10, 20, 30 ] ).placed( [ 2, 0, 4 ], 5 ) ).to_string(), "      p\n0    20\n1  <NA>\n2    10\n3  <NA>\n4    30" );
+    c.check_eq( one( "s", df["k"] + "_" + df["j"].to_strings() ).to_string(), "     s\n0  a_1\n1  b_1\n2  a_2\n3  b_1\n4  a_1\n5  c_2\n6  b_1" );
+    c.check_eq( one( "s", df["x"].to_strings( fn[]( f64 v ) { return kl::string( v > 2.0 ? "hi" : "lo" ); } ) ).to_string(), "     s\n0   hi\n1   lo\n2  NaN\n3   lo\n4   hi\n5   hi\n6   lo" );
+    c.check_eq( one( "s", df["x"].to_strings() ).to_string(), "     s\n0  3.0\n1  1.0\n2  NaN\n3  1.0\n4  3.0\n5  2.5\n6 -0.5" );
+    c.check_eq( df["b"].to_strings().strings().at( 1 ), "false" );
+    c.check_eq( one( "s", kl::choose( df["b"].bools(), "good", "bad" ) ).to_string(), "      s\n0  good\n1   bad\n2  good\n3   bad\n4  good\n5  good\n6   bad" );
+    c.check_eq( one( "s", kl::choose( df["b"].bools(), 1.0, 0.0 ) ).to_string(), "     s\n0  1.0\n1  0.0\n2  1.0\n3  0.0\n4  1.0\n5  1.0\n6  0.0" );
+    kl::series e = kl::series( [ "Import Quantity", "export value", "IMPORT", "x" ] );
+    c.check_eq( one( "c", kl::series( e.contains( "import", true ) ) ).to_string(), "       c\n0   true\n1  false\n2   true\n3  false" );
+    c.check_eq( one( "c", kl::series( e.contains( "Import" ) ) ).to_string(), "       c\n0   true\n1  false\n2  false\n3  false" );
+    c.check_eq( one( "c", kl::series( e.starts_with( "ex" ) ) ).to_string(), "       c\n0  false\n1   true\n2  false\n3  false" );
+    c.expect_panic( "the series does not hold numbers", fn[ df ]() { _ = df["k"] - df["k"]; } );
+}
+
+private void writing_columns_in_place( ref kl::test::context c )
+{
+    kl::dataframe df = keyed();
+    df.f64s( "x" )[0] = 9.0;
+    df.i64s( "j" )[1] = 5;
+    c.check_eq( df.to_string(), "   k  j    x      b\n0  a  1  9.0   true\n1  b  5  1.0  false\n2  a  2  NaN   true\n3  b  1  1.0  false\n4  a  1  3.0   true\n5  c  2  2.5   true\n6  b  1 -0.5  false" );
+    c.expect_panic( "the series holds another dtype", fn[]() { kl::dataframe d = keyed(); d.f64s( "j" )[0] = 1.0; } );
 }
