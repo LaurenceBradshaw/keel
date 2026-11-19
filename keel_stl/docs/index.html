@@ -604,8 +604,19 @@ rate-corrected towards true seconds. Only meaningful against another <code>insta
 <dd>A reading of the oscillator's own clock, never corrected, for comparing this machine's clock
 against another's. Use <code>instant</code> for measuring.</dd>
 <dt><a href="time.html#wall_time"><code>wall_time</code></a> <span class="kind">function</span></dt>
-<dd>Nanoseconds since 1970-01-01 UTC, which can step when the system clock is set; measure with
-<code>instant</code>.</dd>
+<dd>The system clock's reading, which can step when the clock is set; measure with <code>instant</code>.</dd>
+</dl>
+<h4 class="divider">Civil time</h4>
+<dl class="summaries">
+<dt><a href="time.html#time_error"><code>time_error</code></a> <span class="kind">enum</span></dt>
+<dd>Why <code>timestamp::parse</code> or <code>date::parse</code> refused its text.</dd>
+<dt><a href="time.html#date"><code>date</code></a> <span class="kind">class</span></dt>
+<dd>A day on the proleptic Gregorian calendar, from 0001-01-01 to 9999-12-31, held as days since
+1970-01-01.</dd>
+<dt><a href="time.html#timestamp"><code>timestamp</code></a> <span class="kind">class</span></dt>
+<dd>A point in time as nanoseconds since 1970-01-01 UTC, from 1677-09-21 to 2262-04-11, the range
+of an <code>i64</code>. Leap seconds are not counted, as POSIX does not, and a time read without a zone
+is taken as UTC.</dd>
 </dl>
 </section>
 <h2><span class="kind">package</span> kl::test</h2>

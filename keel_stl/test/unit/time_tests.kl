@@ -1,5 +1,7 @@
 // `kl::time`: both clocks never go backwards, `duration` arithmetic, positive resolutions and a
-// plausible wall time.
+// plausible wall time; then `date` and `timestamp`, their calendar arithmetic, text and edges.
+import kl::set;
+import kl::string;
 import kl::test::context;
 import kl::time;
 
@@ -39,5 +41,149 @@ private void resolutions_are_positive( ref kl::test::context c )
 private void wall_time_is_plausible( ref kl::test::context c )
 {
     // 2026-01-01 UTC.
-    c.check( kl::wall_time() >= 1767225600000000000 );
+    c.check( kl::wall_time().nanoseconds() >= 1767225600000000000 );
+    c.check( kl::wall_time().year() >= 2026 );
+}
+
+private void durations_of_units_and_their_text( ref kl::test::context c )
+{
+    kl::duration d = kl::duration::of_hours( 1 ) + kl::duration::of_minutes( 2 ) + kl::duration::of_seconds( 3 );
+    c.check_eq( d.to_string(), "0 days 01:02:03" );
+    c.check_eq( kl::duration::of_nanoseconds( 1 ).to_string(), "0 days 00:00:00.000000001" );
+    c.check_eq( kl::duration::of_nanoseconds( 500000 ).to_string(), "0 days 00:00:00.000500" );
+    c.check_eq( kl::duration::of_seconds( -1 ).to_string(), "-1 days +23:59:59" );
+    c.check_eq( ( kl::duration::of_days( 2 ) * 3 ).to_string(), "6 days 00:00:00" );
+    c.check( kl::duration::of_weeks( 1 ) == kl::duration::of_days( 7 ) );
+}
+
+private void dates_and_their_arithmetic( ref kl::test::context c )
+{
+    c.check_eq( kl::date( 2024, 1, 31 ).add_months( 1 ).to_string(), "2024-02-29" );
+    c.check_eq( kl::date( 2024, 2, 29 ).add_years( 1 ).to_string(), "2025-02-28" );
+    c.check_eq( kl::date( 2024, 3, 31 ).add_months( -13 ).to_string(), "2023-02-28" );
+    c.check_eq( kl::date( 2026, 12, 31 ).add_days( 1 ).to_string(), "2027-01-01" );
+    c.check_eq( kl::date( 1970, 1, 1 ).weekday(), 3 );
+    c.check_eq( kl::date( 2024, 12, 31 ).day_of_year(), 366 );
+    c.check_eq( kl::date( 2026, 11, 19 ) - kl::date( 1970, 1, 1 ), 20776 );
+    c.check_eq( kl::date::of_days( -719162 ).to_string(), "0001-01-01" );
+    c.check_eq( kl::date::of_days( 2932896 ).to_string(), "9999-12-31" );
+    c.check( kl::date( 2026, 1, 1 ) < kl::date( 2026, 1, 2 ) );
+}
+
+private void timestamps_reach_the_ends_of_i64( ref kl::test::context c )
+{
+    const kl::timestamp last = kl::timestamp::of_nanoseconds( i64::max );
+    const kl::timestamp first = kl::timestamp::of_nanoseconds( i64::min );
+    c.check_eq( last.to_string(), "2262-04-11 23:47:16.854775807" );
+    c.check_eq( first.to_string(), "1677-09-21 00:12:43.145224192" );
+    c.check_eq( parsed( "2262-04-11 23:47:16.854775807" ), last.to_string() );
+    c.check_eq( parsed( "1677-09-21 00:12:43.145224192" ), first.to_string() );
+    c.check_eq( parsed( "2262-04-11 23:47:16.854775808" ), "out_of_range" );
+    c.check_eq( parsed( "1677-09-21 00:12:43.145224191" ), "out_of_range" );
+    c.check_eq( parsed( "2262-04-12 00:00:00+01:00" ), "2262-04-11 23:00:00" );
+}
+
+private void timestamps_and_their_arithmetic( ref kl::test::context c )
+{
+    const kl::timestamp t = kl::date( 2026, 1, 31 ).at( 14, 3, 5, 250000000 );
+    c.check_eq( t.to_string(), "2026-01-31 14:03:05.250000" );
+    c.check_eq( t.add_months( 1 ).to_string(), "2026-02-28 14:03:05.250000" );
+    c.check_eq( ( t + kl::duration::of_hours( 10 ) ).to_string(), "2026-02-01 00:03:05.250000" );
+    c.check_eq( ( t - kl::date( 2026, 1, 1 ).at() ).to_string(), "30 days 14:03:05.250000" );
+    c.check_eq( t.hour() * 10000 + t.minute() * 100 + t.second(), 140305 );
+    c.check_eq( t.nanosecond(), 250000000 );
+    c.check_eq( t.to_date().to_string(), "2026-01-31" );
+    c.check_eq( t.format( "%a %d %b %Y %j %H:%M:%S.%f %z %%" ), "Sat 31 Jan 2026 031 14:03:05.250000 +0000 %" );
+    c.check_eq( kl::timestamp::of_nanoseconds( -1 ).to_string(), "1969-12-31 23:59:59.999999999" );
+
+    kl::set<kl::timestamp> seen = kl::set<kl::timestamp>();
+    seen.insert( t );
+    seen.insert( kl::date( 2026, 1, 31 ).at( 14, 3, 5, 250000000 ) );
+    c.check_eq( seen.size(), 1 );
+}
+
+private void iso_text_is_read( ref kl::test::context c )
+{
+    c.check_eq( parsed( "2026-11-19" ), "2026-11-19 00:00:00" );
+    c.check_eq( parsed( "2026-11-19T14:03" ), "2026-11-19 14:03:00" );
+    c.check_eq( parsed( "2026-11-19 14:03:05.5Z" ), "2026-11-19 14:03:05.500000" );
+    c.check_eq( parsed( "2026-11-19 14:03:05+01:00" ), "2026-11-19 13:03:05" );
+    c.check_eq( parsed( "2026-11-19 14:03:05-0530" ), "2026-11-19 19:33:05" );
+    c.check_eq( parsed( "2026-11-19 00:30+01" ), "2026-11-18 23:30:00" );
+    c.check_eq( parsed( "2026-13-01" ), "no_such_time" );
+    c.check_eq( parsed( "2026-02-29" ), "no_such_time" );
+    c.check_eq( parsed( "2026-11-19 24:00" ), "no_such_time" );
+    c.check_eq( parsed( "2026/11/19" ), "malformed 4" );
+    c.check_eq( parsed( "2026-11-1" ), "malformed 9" );
+    c.check_eq( parsed( "2026-11-19x" ), "malformed 10" );
+    c.check_eq( parsed( "2026-11-19 14:03:05.1234567890" ), "malformed 29" );
+}
+
+private void patterns_are_read( ref kl::test::context c )
+{
+    c.check_eq( parsed_as( "19/11/2026", "%d/%m/%Y" ), "2026-11-19 00:00:00" );
+    c.check_eq( parsed_as( "thu 19 NOV 2026 14:03:05.25 +0100", "%a %d %b %Y %H:%M:%S.%f %z" ),
+        "2026-11-19 13:03:05.250000" );
+    c.check_eq( parsed_as( "2024-366", "%Y-%j" ), "2024-12-31 00:00:00" );
+    c.check_eq( parsed_as( "2025-366", "%Y-%j" ), "no_such_time" );
+    c.check_eq( parsed_as( "7:5", "%H:%M" ), "1900-01-01 07:05:00" );
+    c.check_eq( parsed_as( "100%", "%d%%" ), "malformed 2" );
+    c.check_eq( parsed_as( "19 Nox 2026", "%d %b %Y" ), "malformed 3" );
+
+    switch( kl::date::parse( "5/1/2026", "%d/%m/%Y" ) )
+    {
+    case result::ok( d ):
+        c.check_eq( d.to_string(), "2026-01-05" );
+        break;
+    case result::err( e ):
+        c.check( false );
+        break;
+    }
+
+    switch( kl::date::parse( "2026-11-19 00:00" ) )
+    {
+    case result::ok( d ):
+        c.check( false );
+        break;
+    case result::err( e ):
+        c.check_eq( refusal( e ), "malformed 10" );
+        break;
+    }
+}
+
+// `timestamp::parse( text )` written back, or why it was refused.
+private kl::string parsed( str text )
+{
+    switch( kl::timestamp::parse( text ) )
+    {
+    case result::ok( t ):
+        return t.to_string();
+    case result::err( e ):
+        return refusal( e );
+    }
+}
+
+// As `parsed`, reading `text` by `pattern`.
+private kl::string parsed_as( str text, str pattern )
+{
+    switch( kl::timestamp::parse( text, pattern ) )
+    {
+    case result::ok( t ):
+        return t.to_string();
+    case result::err( e ):
+        return refusal( e );
+    }
+}
+
+private kl::string refusal( const ref kl::time_error e )
+{
+    switch( e )
+    {
+    case kl::time_error::malformed( at ):
+        return kl::string( "malformed " ) + kl::string::from( at );
+    case kl::time_error::no_such_time:
+        return kl::string( "no_such_time" );
+    case kl::time_error::out_of_range:
+        return kl::string( "out_of_range" );
+    }
 }

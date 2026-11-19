@@ -18,12 +18,16 @@
 <li><a href="#instant"><code>instant</code></a> <span class="kind">class</span></li>
 <li><a href="#raw_instant"><code>raw_instant</code></a> <span class="kind">class</span></li>
 <li><a href="#wall_time"><code>wall_time</code></a> <span class="kind">function</span></li>
+<li class="divider">Civil time</li>
+<li><a href="#time_error"><code>time_error</code></a> <span class="kind">enum</span></li>
+<li><a href="#date"><code>date</code></a> <span class="kind">class</span></li>
+<li><a href="#timestamp"><code>timestamp</code></a> <span class="kind">class</span></li>
 </ul>
 <h2 class="divider">Durations</h2>
 <section class="entry">
 <h2><span class="kind">class</span> <span class="type">duration</span></h2>
 <div class="group" id="duration">
-<pre class="signature"><a class="anchor" href="#duration" aria-label="Link to duration">#</a><code><span class="kw">class</span> <span class="type">duration</span> <span class="kw">implements</span> <a class="type" href="prelude.html#equatable">equatable</a>, <a class="type" href="prelude.html#comparable">comparable</a></code></pre>
+<pre class="signature"><a class="anchor" href="#duration" aria-label="Link to duration">#</a><code><span class="kw">class</span> <span class="type">duration</span> <span class="kw">implements</span> <a class="type" href="prelude.html#equatable">equatable</a>, <a class="type" href="prelude.html#comparable">comparable</a>, <a class="type" href="prelude.html#hashable">hashable</a></code></pre>
 <div class="doc">
 <p>A span of time in whole nanoseconds, which may be negative; one holds about 292 years either
 way.</p>
@@ -36,11 +40,52 @@ way.</p>
 <p>A span of <code>nanoseconds</code>.</p>
 </div>
 </div>
+<div class="group" id="duration.of_seconds">
+<pre class="signature"><a class="anchor" href="#duration.of_seconds" aria-label="Link to of_seconds">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#duration">duration</a> <span class="fn">of_seconds</span>( <a class="prim" href="prelude.html#i64">i64</a> seconds )</code></pre>
+<div class="doc">
+<p>A span of <code>seconds</code> seconds.</p>
+</div>
+</div>
+<div class="group" id="duration.of_minutes">
+<pre class="signature"><a class="anchor" href="#duration.of_minutes" aria-label="Link to of_minutes">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#duration">duration</a> <span class="fn">of_minutes</span>( <a class="prim" href="prelude.html#i64">i64</a> minutes )</code></pre>
+<div class="doc">
+<p>A span of <code>minutes</code> minutes.</p>
+</div>
+</div>
+<div class="group" id="duration.of_hours">
+<pre class="signature"><a class="anchor" href="#duration.of_hours" aria-label="Link to of_hours">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#duration">duration</a> <span class="fn">of_hours</span>( <a class="prim" href="prelude.html#i64">i64</a> hours )</code></pre>
+<div class="doc">
+<p>A span of <code>hours</code> hours.</p>
+</div>
+</div>
+<div class="group" id="duration.of_days">
+<pre class="signature"><a class="anchor" href="#duration.of_days" aria-label="Link to of_days">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#duration">duration</a> <span class="fn">of_days</span>( <a class="prim" href="prelude.html#i64">i64</a> days )</code></pre>
+<div class="doc">
+<p>A span of <code>days</code> days of 24 hours.</p>
+</div>
+</div>
+<div class="group" id="duration.of_weeks">
+<pre class="signature"><a class="anchor" href="#duration.of_weeks" aria-label="Link to of_weeks">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#duration">duration</a> <span class="fn">of_weeks</span>( <a class="prim" href="prelude.html#i64">i64</a> weeks )</code></pre>
+<div class="doc">
+<p>A span of <code>weeks</code> weeks of 7 days.</p>
+</div>
+</div>
 <div class="group" id="duration.nanoseconds">
 <pre class="signature"><a class="anchor" href="#duration.nanoseconds" aria-label="Link to nanoseconds">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#i64">i64</a> <span class="fn">nanoseconds</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>The span in nanoseconds.</p>
 </div>
+</div>
+<div class="group" id="duration.to_string">
+<pre class="signature"><a class="anchor" href="#duration.to_string" aria-label="Link to to_string">#</a><code><span class="kw">public</span> <a class="type" href="string.html#string">string</a> <span class="fn">to_string</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The span as pandas writes a <code>Timedelta</code>: <code>1 days 02:03:04</code>, with 6 or 9 fraction digits
+when there is a fraction, and a negative span as whole days back and the time forward,
+<code>-1 days +23:59:59</code>.</p>
+</div>
+</div>
+<div class="group" id="duration.operator*">
+<pre class="signature"><a class="anchor" href="#duration.operator*" aria-label="Link to operator*">#</a><code><span class="kw">public</span> <a class="type" href="#duration">duration</a> <span class="fn">operator*</span>( <a class="prim" href="prelude.html#i64">i64</a> n ) <span class="kw">const</span></code></pre>
 </div>
 <div class="group" id="duration.operator+">
 <pre class="signature"><a class="anchor" href="#duration.operator+" aria-label="Link to operator+">#</a><code><span class="kw">public</span> <a class="type" href="#duration">duration</a> <span class="fn">operator+</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#duration">duration</a> other ) <span class="kw">const</span></code></pre>
@@ -53,6 +98,9 @@ way.</p>
 </div>
 <div class="group" id="duration.operator&lt;=&gt;">
 <pre class="signature"><a class="anchor" href="#duration.operator&lt;=&gt;" aria-label="Link to operator&lt;=&gt;">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#ordering">ordering</a> <span class="fn">operator&lt;=&gt;</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#duration">duration</a> other ) <span class="kw">const</span></code></pre>
+</div>
+<div class="group" id="duration.hash">
+<pre class="signature"><a class="anchor" href="#duration.hash" aria-label="Link to hash">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">hash</span>( <span class="kw">ref</span> <a class="type" href="prelude.html#hasher">hasher</a> h ) <span class="kw">const</span></code></pre>
 </div>
 </section>
 <h2 class="divider">Clocks</h2>
@@ -129,10 +177,319 @@ against another's. Use <code>instant</code> for measuring.</p>
 <section class="entry">
 <h2><span class="kind">function</span> <span class="fn">wall_time</span></h2>
 <div class="group" id="wall_time">
-<pre class="signature"><a class="anchor" href="#wall_time" aria-label="Link to wall_time">#</a><code><a class="prim" href="prelude.html#i64">i64</a> <span class="fn">wall_time</span>()</code></pre>
+<pre class="signature"><a class="anchor" href="#wall_time" aria-label="Link to wall_time">#</a><code><a class="type" href="#timestamp">timestamp</a> <span class="fn">wall_time</span>()</code></pre>
 <div class="doc">
-<p>Nanoseconds since 1970-01-01 UTC, which can step when the system clock is set; measure with
-<code>instant</code>.</p>
+<p>The system clock's reading, which can step when the clock is set; measure with <code>instant</code>.</p>
+</div>
+</div>
+</section>
+<h2 class="divider">Civil time</h2>
+<section class="entry">
+<h2><span class="kind">enum</span> <span class="type">time_error</span></h2>
+<div class="group" id="time_error">
+<pre class="signature"><a class="anchor" href="#time_error" aria-label="Link to time_error">#</a><code><span class="kw">enum</span> <span class="type">time_error</span></code></pre>
+<div class="doc">
+<p>Why <code>timestamp::parse</code> or <code>date::parse</code> refused its text.</p>
+</div>
+</div>
+<h3>Variants</h3>
+<div class="group" id="time_error.malformed">
+<pre class="signature"><a class="anchor" href="#time_error.malformed" aria-label="Link to malformed">#</a><code>malformed( <a class="prim" href="prelude.html#u64">u64</a> index )</code></pre>
+<div class="doc">
+<p>The byte at <code>index</code> does not fit; <code>index</code> is the text's size when the text ends early.</p>
+</div>
+</div>
+<div class="group" id="time_error.no_such_time">
+<pre class="signature"><a class="anchor" href="#time_error.no_such_time" aria-label="Link to no_such_time">#</a><code>no_such_time</code></pre>
+<div class="doc">
+<p>The fields name no such day or time, such as a 13th month or a 25th hour.</p>
+</div>
+</div>
+<div class="group" id="time_error.out_of_range">
+<pre class="signature"><a class="anchor" href="#time_error.out_of_range" aria-label="Link to out_of_range">#</a><code>out_of_range</code></pre>
+<div class="doc">
+<p>The time lies outside what the type holds: for a <code>timestamp</code> 1677-09-21 to 2262-04-11, for
+a <code>date</code> the years 1 to 9999.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">class</span> <span class="type">date</span></h2>
+<div class="group" id="date">
+<pre class="signature"><a class="anchor" href="#date" aria-label="Link to date">#</a><code><span class="kw">class</span> <span class="type">date</span> <span class="kw">implements</span> <a class="type" href="prelude.html#equatable">equatable</a>, <a class="type" href="prelude.html#comparable">comparable</a>, <a class="type" href="prelude.html#hashable">hashable</a></code></pre>
+<div class="doc">
+<p>A day on the proleptic Gregorian calendar, from 0001-01-01 to 9999-12-31, held as days since
+1970-01-01.</p>
+</div>
+</div>
+<h3>Constructors</h3>
+<div class="group" id="date.date">
+<pre class="signature"><a class="anchor" href="#date.date" aria-label="Link to date">#</a><code><span class="kw">public</span> <span class="type">date</span>( <a class="prim" href="prelude.html#i64">i64</a> year, <a class="prim" href="prelude.html#i64">i64</a> month, <a class="prim" href="prelude.html#i64">i64</a> day )</code></pre>
+<div class="doc">
+<p>Day <code>day</code> of month <code>month</code> of <code>year</code>.</p>
+<h4>Panics</h4>
+<p>If there is no such day, or the year lies outside 1 to 9999.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="date.of_days">
+<pre class="signature"><a class="anchor" href="#date.of_days" aria-label="Link to of_days">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#date">date</a> <span class="fn">of_days</span>( <a class="prim" href="prelude.html#i64">i64</a> days )</code></pre>
+<div class="doc">
+<p>The day <code>days</code> days after 1970-01-01, or before it if negative.</p>
+<h4>Panics</h4>
+<p>If the day lies outside the years 1 to 9999.</p>
+</div>
+</div>
+<div class="group" id="date.days">
+<pre class="signature"><a class="anchor" href="#date.days" aria-label="Link to days">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#i64">i64</a> <span class="fn">days</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The days since 1970-01-01, negative before it.</p>
+</div>
+</div>
+<div class="group" id="date.year">
+<pre class="signature"><a class="anchor" href="#date.year" aria-label="Link to year">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#i64">i64</a> <span class="fn">year</span>() <span class="kw">const</span></code></pre>
+</div>
+<div class="group" id="date.month">
+<pre class="signature"><a class="anchor" href="#date.month" aria-label="Link to month">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#i64">i64</a> <span class="fn">month</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The month, 1 for January.</p>
+</div>
+</div>
+<div class="group" id="date.day">
+<pre class="signature"><a class="anchor" href="#date.day" aria-label="Link to day">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#i64">i64</a> <span class="fn">day</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The day of the month, from 1.</p>
+</div>
+</div>
+<div class="group" id="date.weekday">
+<pre class="signature"><a class="anchor" href="#date.weekday" aria-label="Link to weekday">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#i64">i64</a> <span class="fn">weekday</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The day of the week, 0 for Monday to 6 for Sunday.</p>
+</div>
+</div>
+<div class="group" id="date.day_of_year">
+<pre class="signature"><a class="anchor" href="#date.day_of_year" aria-label="Link to day_of_year">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#i64">i64</a> <span class="fn">day_of_year</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The day of the year, 1 for January 1st.</p>
+</div>
+</div>
+<div class="group" id="date.at">
+<pre class="signature"><a class="anchor" href="#date.at" aria-label="Link to at">#</a><code><span class="kw">public</span> <a class="type" href="#timestamp">timestamp</a> <span class="fn">at</span>( <a class="prim" href="prelude.html#i64">i64</a> hour = 0, <a class="prim" href="prelude.html#i64">i64</a> minute = 0, <a class="prim" href="prelude.html#i64">i64</a> second = 0, <a class="prim" href="prelude.html#i64">i64</a> nanosecond = 0 ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>This day at the time of day given, in UTC.</p>
+<h4>Panics</h4>
+<p>If there is no such time of day, or the time lies outside a <code>timestamp</code>'s range.</p>
+</div>
+</div>
+<div class="group" id="date.add_days">
+<pre class="signature"><a class="anchor" href="#date.add_days" aria-label="Link to add_days">#</a><code><span class="kw">public</span> <a class="type" href="#date">date</a> <span class="fn">add_days</span>( <a class="prim" href="prelude.html#i64">i64</a> n ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The day <code>n</code> days later, or earlier if <code>n</code> is negative.</p>
+<h4>Panics</h4>
+<p>If the day leaves the years 1 to 9999.</p>
+</div>
+</div>
+<div class="group" id="date.add_months">
+<pre class="signature"><a class="anchor" href="#date.add_months" aria-label="Link to add_months">#</a><code><span class="kw">public</span> <a class="type" href="#date">date</a> <span class="fn">add_months</span>( <a class="prim" href="prelude.html#i64">i64</a> n ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The same day <code>n</code> months later, or earlier if <code>n</code> is negative, moved back to the month's last
+day where the month is shorter: January 31st and one month is February 28th or 29th.</p>
+<h4>Panics</h4>
+<p>If the day leaves the years 1 to 9999.</p>
+</div>
+</div>
+<div class="group" id="date.add_years">
+<pre class="signature"><a class="anchor" href="#date.add_years" aria-label="Link to add_years">#</a><code><span class="kw">public</span> <a class="type" href="#date">date</a> <span class="fn">add_years</span>( <a class="prim" href="prelude.html#i64">i64</a> n ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>As <code>add_months( n * 12 )</code>, so February 29th and one year is February 28th.</p>
+</div>
+</div>
+<div class="group" id="date.operator-">
+<pre class="signature"><a class="anchor" href="#date.operator-" aria-label="Link to operator-">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#i64">i64</a> <span class="fn">operator-</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#date">date</a> earlier ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The days from <code>earlier</code> to this one, negative if <code>earlier</code> is later.</p>
+</div>
+</div>
+<div class="group" id="date.operator==">
+<pre class="signature"><a class="anchor" href="#date.operator==" aria-label="Link to operator==">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">operator==</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#date">date</a> other ) <span class="kw">const</span></code></pre>
+</div>
+<div class="group" id="date.operator&lt;=&gt;">
+<pre class="signature"><a class="anchor" href="#date.operator&lt;=&gt;" aria-label="Link to operator&lt;=&gt;">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#ordering">ordering</a> <span class="fn">operator&lt;=&gt;</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#date">date</a> other ) <span class="kw">const</span></code></pre>
+</div>
+<div class="group" id="date.hash">
+<pre class="signature"><a class="anchor" href="#date.hash" aria-label="Link to hash">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">hash</span>( <span class="kw">ref</span> <a class="type" href="prelude.html#hasher">hasher</a> h ) <span class="kw">const</span></code></pre>
+</div>
+<div class="group" id="date.to_string">
+<pre class="signature"><a class="anchor" href="#date.to_string" aria-label="Link to to_string">#</a><code><span class="kw">public</span> <a class="type" href="string.html#string">string</a> <span class="fn">to_string</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The day as ISO 8601 writes it, <code>2026-11-19</code>.</p>
+</div>
+</div>
+<div class="group" id="date.format">
+<pre class="signature"><a class="anchor" href="#date.format" aria-label="Link to format">#</a><code><span class="kw">public</span> <a class="type" href="string.html#string">string</a> <span class="fn">format</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> pattern ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The day written by <code>pattern</code>, as <code>timestamp::format</code> writes this day at midnight.</p>
+</div>
+</div>
+<div class="group" id="date.parse">
+<pre class="signature"><a class="anchor" href="#date.parse" aria-label="Link to parse">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="type" href="#date">date</a>, <a class="type" href="#time_error">time_error</a>&gt; <span class="fn">parse</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> text )</code></pre>
+<div class="doc">
+<p>The day ISO 8601 writes as <code>2026-11-19</code>, and nothing more.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#date.parse" aria-label="Link to parse">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="type" href="#date">date</a>, <a class="type" href="#time_error">time_error</a>&gt; <span class="fn">parse</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> text, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> pattern )</code></pre>
+<div class="doc">
+<p>The day <code>text</code> gives as <code>pattern</code> reads it, as <code>timestamp::parse</code> reads one; a time of day
+and an offset are read and then dropped. The year is 1900, the month and day 1, when the
+pattern does not give them.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">class</span> <span class="type">timestamp</span></h2>
+<div class="group" id="timestamp">
+<pre class="signature"><a class="anchor" href="#timestamp" aria-label="Link to timestamp">#</a><code><span class="kw">class</span> <span class="type">timestamp</span> <span class="kw">implements</span> <a class="type" href="prelude.html#equatable">equatable</a>, <a class="type" href="prelude.html#comparable">comparable</a>, <a class="type" href="prelude.html#hashable">hashable</a></code></pre>
+<div class="doc">
+<p>A point in time as nanoseconds since 1970-01-01 UTC, from 1677-09-21 to 2262-04-11, the range
+of an <code>i64</code>. Leap seconds are not counted, as POSIX does not, and a time read without a zone
+is taken as UTC.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="timestamp.of_nanoseconds">
+<pre class="signature"><a class="anchor" href="#timestamp.of_nanoseconds" aria-label="Link to of_nanoseconds">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#timestamp">timestamp</a> <span class="fn">of_nanoseconds</span>( <a class="prim" href="prelude.html#i64">i64</a> nanoseconds )</code></pre>
+<div class="doc">
+<p>The point <code>nanoseconds</code> after 1970-01-01 UTC, or before it if negative.</p>
+</div>
+</div>
+<div class="group" id="timestamp.nanoseconds">
+<pre class="signature"><a class="anchor" href="#timestamp.nanoseconds" aria-label="Link to nanoseconds">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#i64">i64</a> <span class="fn">nanoseconds</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The nanoseconds since 1970-01-01 UTC, negative before it.</p>
+</div>
+</div>
+<div class="group" id="timestamp.to_date">
+<pre class="signature"><a class="anchor" href="#timestamp.to_date" aria-label="Link to to_date">#</a><code><span class="kw">public</span> <a class="type" href="#date">date</a> <span class="fn">to_date</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The day, in UTC.</p>
+</div>
+</div>
+<div class="group" id="timestamp.year">
+<pre class="signature"><a class="anchor" href="#timestamp.year" aria-label="Link to year">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#i64">i64</a> <span class="fn">year</span>() <span class="kw">const</span></code></pre>
+</div>
+<div class="group" id="timestamp.month">
+<pre class="signature"><a class="anchor" href="#timestamp.month" aria-label="Link to month">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#i64">i64</a> <span class="fn">month</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The month, 1 for January.</p>
+</div>
+</div>
+<div class="group" id="timestamp.day">
+<pre class="signature"><a class="anchor" href="#timestamp.day" aria-label="Link to day">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#i64">i64</a> <span class="fn">day</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The day of the month, from 1.</p>
+</div>
+</div>
+<div class="group" id="timestamp.hour">
+<pre class="signature"><a class="anchor" href="#timestamp.hour" aria-label="Link to hour">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#i64">i64</a> <span class="fn">hour</span>() <span class="kw">const</span></code></pre>
+</div>
+<div class="group" id="timestamp.minute">
+<pre class="signature"><a class="anchor" href="#timestamp.minute" aria-label="Link to minute">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#i64">i64</a> <span class="fn">minute</span>() <span class="kw">const</span></code></pre>
+</div>
+<div class="group" id="timestamp.second">
+<pre class="signature"><a class="anchor" href="#timestamp.second" aria-label="Link to second">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#i64">i64</a> <span class="fn">second</span>() <span class="kw">const</span></code></pre>
+</div>
+<div class="group" id="timestamp.nanosecond">
+<pre class="signature"><a class="anchor" href="#timestamp.nanosecond" aria-label="Link to nanosecond">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#i64">i64</a> <span class="fn">nanosecond</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The nanoseconds into the second.</p>
+</div>
+</div>
+<div class="group" id="timestamp.weekday">
+<pre class="signature"><a class="anchor" href="#timestamp.weekday" aria-label="Link to weekday">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#i64">i64</a> <span class="fn">weekday</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The day of the week, 0 for Monday to 6 for Sunday.</p>
+</div>
+</div>
+<div class="group" id="timestamp.day_of_year">
+<pre class="signature"><a class="anchor" href="#timestamp.day_of_year" aria-label="Link to day_of_year">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#i64">i64</a> <span class="fn">day_of_year</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The day of the year, 1 for January 1st.</p>
+</div>
+</div>
+<div class="group" id="timestamp.add_months">
+<pre class="signature"><a class="anchor" href="#timestamp.add_months" aria-label="Link to add_months">#</a><code><span class="kw">public</span> <a class="type" href="#timestamp">timestamp</a> <span class="fn">add_months</span>( <a class="prim" href="prelude.html#i64">i64</a> n ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The same time of day <code>n</code> months later, or earlier, the day moved back as <code>date::add_months</code>
+moves it.</p>
+<h4>Panics</h4>
+<p>If the time leaves a <code>timestamp</code>'s range.</p>
+</div>
+</div>
+<div class="group" id="timestamp.add_years">
+<pre class="signature"><a class="anchor" href="#timestamp.add_years" aria-label="Link to add_years">#</a><code><span class="kw">public</span> <a class="type" href="#timestamp">timestamp</a> <span class="fn">add_years</span>( <a class="prim" href="prelude.html#i64">i64</a> n ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>As <code>add_months( n * 12 )</code>.</p>
+</div>
+</div>
+<div class="group" id="timestamp.operator-">
+<pre class="signature"><a class="anchor" href="#timestamp.operator-" aria-label="Link to operator-">#</a><code><span class="kw">public</span> <a class="type" href="#duration">duration</a> <span class="fn">operator-</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#timestamp">timestamp</a> earlier ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The time from <code>earlier</code> to this one, negative if <code>earlier</code> is later.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#timestamp.operator-" aria-label="Link to operator-">#</a><code><span class="kw">public</span> <a class="type" href="#timestamp">timestamp</a> <span class="fn">operator-</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#duration">duration</a> d ) <span class="kw">const</span></code></pre>
+</div>
+<div class="group" id="timestamp.operator+">
+<pre class="signature"><a class="anchor" href="#timestamp.operator+" aria-label="Link to operator+">#</a><code><span class="kw">public</span> <a class="type" href="#timestamp">timestamp</a> <span class="fn">operator+</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#duration">duration</a> d ) <span class="kw">const</span></code></pre>
+</div>
+<div class="group" id="timestamp.operator==">
+<pre class="signature"><a class="anchor" href="#timestamp.operator==" aria-label="Link to operator==">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">operator==</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#timestamp">timestamp</a> other ) <span class="kw">const</span></code></pre>
+</div>
+<div class="group" id="timestamp.operator&lt;=&gt;">
+<pre class="signature"><a class="anchor" href="#timestamp.operator&lt;=&gt;" aria-label="Link to operator&lt;=&gt;">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#ordering">ordering</a> <span class="fn">operator&lt;=&gt;</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#timestamp">timestamp</a> other ) <span class="kw">const</span></code></pre>
+</div>
+<div class="group" id="timestamp.hash">
+<pre class="signature"><a class="anchor" href="#timestamp.hash" aria-label="Link to hash">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">hash</span>( <span class="kw">ref</span> <a class="type" href="prelude.html#hasher">hasher</a> h ) <span class="kw">const</span></code></pre>
+</div>
+<div class="group" id="timestamp.to_string">
+<pre class="signature"><a class="anchor" href="#timestamp.to_string" aria-label="Link to to_string">#</a><code><span class="kw">public</span> <a class="type" href="string.html#string">string</a> <span class="fn">to_string</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The time as pandas writes a <code>Timestamp</code>: <code>2026-11-19 14:03:05</code>, with 6 fraction digits
+when the fraction is whole microseconds and 9 when it is not.</p>
+</div>
+</div>
+<div class="group" id="timestamp.format">
+<pre class="signature"><a class="anchor" href="#timestamp.format" aria-label="Link to format">#</a><code><span class="kw">public</span> <a class="type" href="string.html#string">string</a> <span class="fn">format</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> pattern ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The time written by <code>pattern</code>, in UTC: each directive is replaced by its field and every
+other byte copied. <code>%Y</code> the year in 4 digits, <code>%m</code> the month and <code>%d</code> the day in 2, <code>%H</code>
+<code>%M</code> <code>%S</code> the hour, minute and second in 2, <code>%f</code> the microseconds in 6, <code>%j</code> the day of the
+year in 3, <code>%b</code> and <code>%a</code> the month's and the weekday's English name in 3 letters, <code>%z</code> the
+offset, always <code>+0000</code>, and <code>%%</code> a <code>%</code>.</p>
+<h4>Panics</h4>
+<p>On any other directive.</p>
+</div>
+</div>
+<div class="group" id="timestamp.parse">
+<pre class="signature"><a class="anchor" href="#timestamp.parse" aria-label="Link to parse">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="type" href="#timestamp">timestamp</a>, <a class="type" href="#time_error">time_error</a>&gt; <span class="fn">parse</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> text )</code></pre>
+<div class="doc">
+<p>The time ISO 8601 writes in <code>text</code>: <code>2026-11-19</code>, then optionally a space or <code>T</code> and
+<code>14:03</code>, <code>14:03:05</code> or <code>14:03:05.123456789</code> with 1 to 9 fraction digits, then optionally
+<code>Z</code> or an offset <code>+01:00</code>, <code>+0100</code> or <code>+01</code>, which the answer has been moved to UTC by.</p>
+<h4>Errors</h4>
+<p><code>malformed</code> at the first byte that does not fit, <code>no_such_time</code> for fields naming no day or
+time, and <code>out_of_range</code> outside a <code>timestamp</code>'s range.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#timestamp.parse" aria-label="Link to parse">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="type" href="#timestamp">timestamp</a>, <a class="type" href="#time_error">time_error</a>&gt; <span class="fn">parse</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> text, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> pattern )</code></pre>
+<div class="doc">
+<p>The time <code>text</code> gives as <code>pattern</code> reads it. A directive reads its field, as <code>format</code>
+writes it, and every other byte must match itself: <code>%Y</code> 4 digits, <code>%m</code> <code>%d</code> <code>%H</code> <code>%M</code> <code>%S</code>
+1 or 2, <code>%j</code> 1 to 3, <code>%f</code> 1 to 9 fraction digits, <code>%b</code> an English month name in 3 letters
+of any case, <code>%a</code> a weekday's, which is checked against nothing, and <code>%z</code> as <code>parse</code>'s
+offset. The year is 1900, the month and day 1 and the time midnight when the pattern does
+not give them.</p>
+<h4>Errors</h4>
+<p>As <code>parse</code>'s.</p>
+<h4>Panics</h4>
+<p>On a directive not listed.</p>
 </div>
 </div>
 </section>

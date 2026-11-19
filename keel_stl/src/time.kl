@@ -1,7 +1,11 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// The clocks, through the runtime's calls: whole nanoseconds in an `i64`, never through `f64`.
+// The clocks, through the runtime's calls: whole nanoseconds in an `i64`, never through `f64`. Then
+// civil time: `timestamp` and `date` on the proleptic Gregorian calendar, in UTC.
+
+import optional;
+import string;
 
 private extern i32 kl_rt_clock( i32 which, i64* nanoseconds );
 private extern i32 kl_rt_clock_resolution( i32 which, i64* nanoseconds );
@@ -10,7 +14,7 @@ private extern i32 kl_rt_clock_resolution( i32 which, i64* nanoseconds );
 
 /// A span of time in whole nanoseconds, which may be negative; one holds about 292 years either
 /// way.
-class duration implements equatable, comparable
+class duration implements equatable, comparable, hashable
 {
     private duration( i64 nanoseconds )
     {
@@ -23,10 +27,57 @@ class duration implements equatable, comparable
         return duration( nanoseconds );
     }
 
+    /// A span of `seconds` seconds.
+    public static duration of_seconds( i64 seconds )
+    {
+        return duration( seconds * nanoseconds_per_second );
+    }
+
+    /// A span of `minutes` minutes.
+    public static duration of_minutes( i64 minutes )
+    {
+        return duration( minutes * 60 * nanoseconds_per_second );
+    }
+
+    /// A span of `hours` hours.
+    public static duration of_hours( i64 hours )
+    {
+        return duration( hours * 3600 * nanoseconds_per_second );
+    }
+
+    /// A span of `days` days of 24 hours.
+    public static duration of_days( i64 days )
+    {
+        return duration( days * nanoseconds_per_day );
+    }
+
+    /// A span of `weeks` weeks of 7 days.
+    public static duration of_weeks( i64 weeks )
+    {
+        return duration( weeks * 7 * nanoseconds_per_day );
+    }
+
     /// The span in nanoseconds.
     public i64 nanoseconds() const
     {
         return nanoseconds_;
+    }
+
+    /// The span as pandas writes a `Timedelta`: `1 days 02:03:04`, with 6 or 9 fraction digits
+    /// when there is a fraction, and a negative span as whole days back and the time forward,
+    /// `-1 days +23:59:59`.
+    public string to_string() const
+    {
+        const i64 days = day_part( nanoseconds_ );
+        string r = string::from( days );
+        r += days < 0 ? " days +" : " days ";
+        write_time_of_day( ref r, time_part( nanoseconds_ ) );
+        return r;
+    }
+
+    public duration operator*( i64 n ) const
+    {
+        return duration( nanoseconds_ * n );
     }
 
     public duration operator+( const ref duration other ) const
@@ -46,17 +97,12 @@ class duration implements equatable, comparable
 
     public ordering operator<=>( const ref duration other ) const
     {
-        if( nanoseconds_ < other.nanoseconds_ )
-        {
-            return ordering::less;
-        }
+        return nanoseconds_ <=> other.nanoseconds_;
+    }
 
-        if( nanoseconds_ > other.nanoseconds_ )
-        {
-            return ordering::greater;
-        }
-
-        return ordering::equal;
+    public void hash( ref hasher h ) const
+    {
+        h.write( wrap<u64>( nanoseconds_ ) );
     }
 
     private i64 nanoseconds_;
@@ -129,17 +175,7 @@ class instant implements equatable, comparable
 
     public ordering operator<=>( const ref instant other ) const
     {
-        if( nanoseconds_ < other.nanoseconds_ )
-        {
-            return ordering::less;
-        }
-
-        if( nanoseconds_ > other.nanoseconds_ )
-        {
-            return ordering::greater;
-        }
-
-        return ordering::equal;
+        return nanoseconds_ <=> other.nanoseconds_;
     }
 
     private i64 nanoseconds_;
@@ -179,25 +215,973 @@ class raw_instant implements equatable, comparable
 
     public ordering operator<=>( const ref raw_instant other ) const
     {
-        if( nanoseconds_ < other.nanoseconds_ )
-        {
-            return ordering::less;
-        }
-
-        if( nanoseconds_ > other.nanoseconds_ )
-        {
-            return ordering::greater;
-        }
-
-        return ordering::equal;
+        return nanoseconds_ <=> other.nanoseconds_;
     }
 
     private i64 nanoseconds_;
 };
 
-/// Nanoseconds since 1970-01-01 UTC, which can step when the system clock is set; measure with
-/// `instant`.
-i64 wall_time()
+/// The system clock's reading, which can step when the clock is set; measure with `instant`.
+timestamp wall_time()
 {
-    return clock_reading( 0 );
+    return timestamp::of_nanoseconds( clock_reading( 0 ) );
+}
+
+/// --- Civil time ---
+
+private const i64 nanoseconds_per_second = 1_000_000_000;
+private const i64 nanoseconds_per_day = 86_400_000_000_000;
+
+/// Why `timestamp::parse` or `date::parse` refused its text.
+enum time_error
+{
+    /// The byte at `index` does not fit; `index` is the text's size when the text ends early.
+    malformed( u64 index ),
+    /// The fields name no such day or time, such as a 13th month or a 25th hour.
+    no_such_time,
+    /// The time lies outside what the type holds: for a `timestamp` 1677-09-21 to 2262-04-11, for
+    /// a `date` the years 1 to 9999.
+    out_of_range
+};
+
+/// A day on the proleptic Gregorian calendar, from 0001-01-01 to 9999-12-31, held as days since
+/// 1970-01-01.
+class date implements equatable, comparable, hashable
+{
+    /// Day `day` of month `month` of `year`.
+    ///
+    /// ### Panics
+    ///
+    /// If there is no such day, or the year lies outside 1 to 9999.
+    public date( i64 year, i64 month, i64 day )
+    {
+        if( !is_civil_day( year, month, day ) )
+        {
+            panic( "no such date" );
+        }
+
+        days_ = days_from_civil( year, month, day );
+    }
+
+    private date( i64 days )
+    {
+        days_ = days;
+    }
+
+    /// The day `days` days after 1970-01-01, or before it if negative.
+    ///
+    /// ### Panics
+    ///
+    /// If the day lies outside the years 1 to 9999.
+    public static date of_days( i64 days )
+    {
+        if( days < first_day || days > last_day )
+        {
+            panic( "the date leaves the years 1 to 9999" );
+        }
+
+        return date( days );
+    }
+
+    /// The days since 1970-01-01, negative before it.
+    public i64 days() const
+    {
+        return days_;
+    }
+
+    public i64 year() const
+    {
+        return civil_from_days( days_ ).year;
+    }
+
+    /// The month, 1 for January.
+    public i64 month() const
+    {
+        return civil_from_days( days_ ).month;
+    }
+
+    /// The day of the month, from 1.
+    public i64 day() const
+    {
+        return civil_from_days( days_ ).day;
+    }
+
+    /// The day of the week, 0 for Monday to 6 for Sunday.
+    public i64 weekday() const
+    {
+        return weekday_of( days_ );
+    }
+
+    /// The day of the year, 1 for January 1st.
+    public i64 day_of_year() const
+    {
+        return day_of_year_of( days_ );
+    }
+
+    /// This day at the time of day given, in UTC.
+    ///
+    /// ### Panics
+    ///
+    /// If there is no such time of day, or the time lies outside a `timestamp`'s range.
+    public timestamp at( i64 hour = 0, i64 minute = 0, i64 second = 0, i64 nanosecond = 0 ) const
+    {
+        if( !is_time_of_day( hour, minute, second ) || nanosecond < 0 || nanosecond >= nanoseconds_per_second )
+        {
+            panic( "no such time of day" );
+        }
+
+        const i64 tod = clock_time( hour, minute, second, nanosecond );
+        return timestamp::of_nanoseconds( expect( nanoseconds_at( days_, tod ), timestamp_range ) );
+    }
+
+    /// The day `n` days later, or earlier if `n` is negative.
+    ///
+    /// ### Panics
+    ///
+    /// If the day leaves the years 1 to 9999.
+    public date add_days( i64 n ) const
+    {
+        return of_days( days_ + n );
+    }
+
+    /// The same day `n` months later, or earlier if `n` is negative, moved back to the month's last
+    /// day where the month is shorter: January 31st and one month is February 28th or 29th.
+    ///
+    /// ### Panics
+    ///
+    /// If the day leaves the years 1 to 9999.
+    public date add_months( i64 n ) const
+    {
+        return date( shifted_months( days_, n ) );
+    }
+
+    /// As `add_months( n * 12 )`, so February 29th and one year is February 28th.
+    public date add_years( i64 n ) const
+    {
+        return add_months( n * 12 );
+    }
+
+    /// The days from `earlier` to this one, negative if `earlier` is later.
+    public i64 operator-( const ref date earlier ) const
+    {
+        return days_ - earlier.days_;
+    }
+
+    public bool operator==( const ref date other ) const
+    {
+        return days_ == other.days_;
+    }
+
+    public ordering operator<=>( const ref date other ) const
+    {
+        return days_ <=> other.days_;
+    }
+
+    public void hash( ref hasher h ) const
+    {
+        h.write( wrap<u64>( days_ ) );
+    }
+
+    /// The day as ISO 8601 writes it, `2026-11-19`.
+    public string to_string() const
+    {
+        return format_civil( days_, 0, "%Y-%m-%d".as_text() );
+    }
+
+    /// The day written by `pattern`, as `timestamp::format` writes this day at midnight.
+    public string format( const ref textual pattern ) const
+    {
+        return format_civil( days_, 0, pattern.as_text() );
+    }
+
+    /// The day ISO 8601 writes as `2026-11-19`, and nothing more.
+    public static result<date, time_error> parse( const ref textual text )
+    {
+        const civil_fields f = try read_iso( text.as_text(), true );
+        return result::ok( date( try day_of_fields( f ) ) );
+    }
+
+    /// The day `text` gives as `pattern` reads it, as `timestamp::parse` reads one; a time of day
+    /// and an offset are read and then dropped. The year is 1900, the month and day 1, when the
+    /// pattern does not give them.
+    public static result<date, time_error> parse( const ref textual text, const ref textual pattern )
+    {
+        const civil_fields f = try read_pattern( text.as_text(), pattern.as_text() );
+        return result::ok( date( try day_of_fields( f ) ) );
+    }
+
+    private i64 days_;
+};
+
+/// A point in time as nanoseconds since 1970-01-01 UTC, from 1677-09-21 to 2262-04-11, the range
+/// of an `i64`. Leap seconds are not counted, as POSIX does not, and a time read without a zone
+/// is taken as UTC.
+class timestamp implements equatable, comparable, hashable
+{
+    private timestamp( i64 nanoseconds )
+    {
+        nanoseconds_ = nanoseconds;
+    }
+
+    /// The point `nanoseconds` after 1970-01-01 UTC, or before it if negative.
+    public static timestamp of_nanoseconds( i64 nanoseconds )
+    {
+        return timestamp( nanoseconds );
+    }
+
+    /// The nanoseconds since 1970-01-01 UTC, negative before it.
+    public i64 nanoseconds() const
+    {
+        return nanoseconds_;
+    }
+
+    /// The day, in UTC.
+    public date to_date() const
+    {
+        return date::of_days( days() );
+    }
+
+    public i64 year() const
+    {
+        return to_date().year();
+    }
+
+    /// The month, 1 for January.
+    public i64 month() const
+    {
+        return to_date().month();
+    }
+
+    /// The day of the month, from 1.
+    public i64 day() const
+    {
+        return to_date().day();
+    }
+
+    public i64 hour() const
+    {
+        return hour_of( time_of_day() );
+    }
+
+    public i64 minute() const
+    {
+        return minute_of( time_of_day() );
+    }
+
+    public i64 second() const
+    {
+        return second_of( time_of_day() );
+    }
+
+    /// The nanoseconds into the second.
+    public i64 nanosecond() const
+    {
+        return time_of_day() % nanoseconds_per_second;
+    }
+
+    /// The day of the week, 0 for Monday to 6 for Sunday.
+    public i64 weekday() const
+    {
+        return to_date().weekday();
+    }
+
+    /// The day of the year, 1 for January 1st.
+    public i64 day_of_year() const
+    {
+        return to_date().day_of_year();
+    }
+
+    /// The same time of day `n` months later, or earlier, the day moved back as `date::add_months`
+    /// moves it.
+    ///
+    /// ### Panics
+    ///
+    /// If the time leaves a `timestamp`'s range.
+    public timestamp add_months( i64 n ) const
+    {
+        return timestamp( expect( nanoseconds_at( shifted_months( days(), n ), time_of_day() ), timestamp_range ) );
+    }
+
+    /// As `add_months( n * 12 )`.
+    public timestamp add_years( i64 n ) const
+    {
+        return add_months( n * 12 );
+    }
+
+    /// The time from `earlier` to this one, negative if `earlier` is later.
+    public duration operator-( const ref timestamp earlier ) const
+    {
+        return duration::of_nanoseconds( nanoseconds_ - earlier.nanoseconds_ );
+    }
+
+    public timestamp operator+( const ref duration d ) const
+    {
+        return timestamp( nanoseconds_ + d.nanoseconds() );
+    }
+
+    public timestamp operator-( const ref duration d ) const
+    {
+        return timestamp( nanoseconds_ - d.nanoseconds() );
+    }
+
+    public bool operator==( const ref timestamp other ) const
+    {
+        return nanoseconds_ == other.nanoseconds_;
+    }
+
+    public ordering operator<=>( const ref timestamp other ) const
+    {
+        return nanoseconds_ <=> other.nanoseconds_;
+    }
+
+    public void hash( ref hasher h ) const
+    {
+        h.write( wrap<u64>( nanoseconds_ ) );
+    }
+
+    /// The time as pandas writes a `Timestamp`: `2026-11-19 14:03:05`, with 6 fraction digits
+    /// when the fraction is whole microseconds and 9 when it is not.
+    public string to_string() const
+    {
+        string r = format_civil( days(), 0, "%Y-%m-%d ".as_text() );
+        write_time_of_day( ref r, time_of_day() );
+        return r;
+    }
+
+    /// The time written by `pattern`, in UTC: each directive is replaced by its field and every
+    /// other byte copied. `%Y` the year in 4 digits, `%m` the month and `%d` the day in 2, `%H`
+    /// `%M` `%S` the hour, minute and second in 2, `%f` the microseconds in 6, `%j` the day of the
+    /// year in 3, `%b` and `%a` the month's and the weekday's English name in 3 letters, `%z` the
+    /// offset, always `+0000`, and `%%` a `%`.
+    ///
+    /// ### Panics
+    ///
+    /// On any other directive.
+    public string format( const ref textual pattern ) const
+    {
+        return format_civil( days(), time_of_day(), pattern.as_text() );
+    }
+
+    /// The time ISO 8601 writes in `text`: `2026-11-19`, then optionally a space or `T` and
+    /// `14:03`, `14:03:05` or `14:03:05.123456789` with 1 to 9 fraction digits, then optionally
+    /// `Z` or an offset `+01:00`, `+0100` or `+01`, which the answer has been moved to UTC by.
+    ///
+    /// ### Errors
+    ///
+    /// `malformed` at the first byte that does not fit, `no_such_time` for fields naming no day or
+    /// time, and `out_of_range` outside a `timestamp`'s range.
+    public static result<timestamp, time_error> parse( const ref textual text )
+    {
+        const civil_fields f = try read_iso( text.as_text(), false );
+        return result::ok( timestamp( try nanoseconds_of_fields( f ) ) );
+    }
+
+    /// The time `text` gives as `pattern` reads it. A directive reads its field, as `format`
+    /// writes it, and every other byte must match itself: `%Y` 4 digits, `%m` `%d` `%H` `%M` `%S`
+    /// 1 or 2, `%j` 1 to 3, `%f` 1 to 9 fraction digits, `%b` an English month name in 3 letters
+    /// of any case, `%a` a weekday's, which is checked against nothing, and `%z` as `parse`'s
+    /// offset. The year is 1900, the month and day 1 and the time midnight when the pattern does
+    /// not give them.
+    ///
+    /// ### Errors
+    ///
+    /// As `parse`'s.
+    ///
+    /// ### Panics
+    ///
+    /// On a directive not listed.
+    public static result<timestamp, time_error> parse( const ref textual text, const ref textual pattern )
+    {
+        const civil_fields f = try read_pattern( text.as_text(), pattern.as_text() );
+        return result::ok( timestamp( try nanoseconds_of_fields( f ) ) );
+    }
+
+    private i64 days() const
+    {
+        return day_part( nanoseconds_ );
+    }
+
+    private i64 time_of_day() const
+    {
+        return time_part( nanoseconds_ );
+    }
+
+    private i64 nanoseconds_;
+};
+
+// --- Calendar arithmetic ---
+
+private const str timestamp_range = "the time leaves 1677-09-21 to 2262-04-11";
+private const str month_names = "JanFebMarAprMayJunJulAugSepOctNovDec";
+private const str weekday_names = "MonTueWedThuFriSatSun";
+
+// 0001-01-01 and 9999-12-31 as days since 1970-01-01.
+private const i64 first_day = -719162;
+private const i64 last_day = 2932896;
+
+private i64 floor_div( i64 a, i64 b )
+{
+    return a % b < 0 ? a / b - 1 : a / b;
+}
+
+private i64 floor_mod( i64 a, i64 b )
+{
+    return a % b < 0 ? a % b + b : a % b;
+}
+
+// The day of nanoseconds since 1970-01-01, and the nanoseconds into it.
+private i64 day_part( i64 nanoseconds )
+{
+    return floor_div( nanoseconds, nanoseconds_per_day );
+}
+
+private i64 time_part( i64 nanoseconds )
+{
+    return floor_mod( nanoseconds, nanoseconds_per_day );
+}
+
+// A time of day's fields in nanoseconds into the day, and back.
+private i64 clock_time( i64 hour, i64 minute, i64 second, i64 nanosecond )
+{
+    return ( ( hour * 60 + minute ) * 60 + second ) * nanoseconds_per_second + nanosecond;
+}
+
+private i64 hour_of( i64 tod )
+{
+    return tod / ( 3600 * nanoseconds_per_second );
+}
+
+private i64 minute_of( i64 tod )
+{
+    return tod / ( 60 * nanoseconds_per_second ) % 60;
+}
+
+private i64 second_of( i64 tod )
+{
+    return tod / nanoseconds_per_second % 60;
+}
+
+// 0 for Monday; 1970-01-01 was a Thursday.
+private i64 weekday_of( i64 days )
+{
+    return floor_mod( days + 3, 7 );
+}
+
+private i64 day_of_year_of( i64 days )
+{
+    return days - days_from_civil( civil_from_days( days ).year, 1, 1 ) + 1;
+}
+
+private bool is_leap( i64 year )
+{
+    return year % 4 == 0 && ( year % 100 != 0 || year % 400 == 0 );
+}
+
+private i64 days_in_month( i64 year, i64 month )
+{
+    if( month == 2 )
+    {
+        return is_leap( year ) ? 29 : 28;
+    }
+
+    return 30 + ( ( month + month / 8 ) & 1 );
+}
+
+private bool is_civil_day( i64 year, i64 month, i64 day )
+{
+    return year >= 1 && year <= 9999 && month >= 1 && month <= 12 && day >= 1 && day <= days_in_month( year, month );
+}
+
+private bool is_time_of_day( i64 hour, i64 minute, i64 second )
+{
+    return hour >= 0 && hour < 24 && minute >= 0 && minute < 60 && second >= 0 && second < 60;
+}
+
+private struct civil
+{
+    i64 year;
+    i64 month;
+    i64 day;
+};
+
+// Hinnant's days_from_civil: years start in March, so the leap day ends one.
+private i64 days_from_civil( i64 year, i64 month, i64 day )
+{
+    const i64 y = month <= 2 ? year - 1 : year;
+    const i64 era = floor_div( y, 400 );
+    const i64 year_of_era = y - era * 400;
+    const i64 day_of_year = ( 153 * ( month > 2 ? month - 3 : month + 9 ) + 2 ) / 5 + day - 1;
+    const i64 day_of_era = year_of_era * 365 + year_of_era / 4 - year_of_era / 100 + day_of_year;
+    return era * 146097 + day_of_era - 719468;
+}
+
+// Hinnant's civil_from_days, the inverse.
+private civil civil_from_days( i64 days )
+{
+    const i64 z = days + 719468;
+    const i64 era = floor_div( z, 146097 );
+    const i64 day_of_era = z - era * 146097;
+    const i64 year_of_era = ( day_of_era - day_of_era / 1460 + day_of_era / 36524 - day_of_era / 146096 ) / 365;
+    const i64 day_of_year = day_of_era - ( 365 * year_of_era + year_of_era / 4 - year_of_era / 100 );
+    const i64 m = ( 5 * day_of_year + 2 ) / 153;
+    const i64 month = m < 10 ? m + 3 : m - 9;
+    return civil{ year_of_era + era * 400 + ( month <= 2 ? 1 : 0 ), month, day_of_year - ( 153 * m + 2 ) / 5 + 1 };
+}
+
+// Day `days` moved `n` months, clamped to the month's last day.
+private i64 shifted_months( i64 days, i64 n )
+{
+    const civil c = civil_from_days( days );
+    const i64 months = c.year * 12 + c.month - 1 + n;
+    const i64 year = floor_div( months, 12 );
+    const i64 month = months - year * 12 + 1;
+    if( year < 1 || year > 9999 )
+    {
+        panic( "the date leaves the years 1 to 9999" );
+    }
+
+    const i64 last = days_in_month( year, month );
+    return days_from_civil( year, month, c.day < last ? c.day : last );
+}
+
+// Day `days` at `tod` nanoseconds into it, if an `i64` holds it: whole days from -106751 to 106751,
+// and part of day -106752.
+private optional<i64> nanoseconds_at( i64 days, i64 tod )
+{
+    if( days >= -106751 && days <= 106751 )
+    {
+        const i64 start = days * nanoseconds_per_day;
+        if( start > 0 && tod > i64::max - start )
+        {
+            return optional::none;
+        }
+
+        return optional::some( start + tod );
+    }
+
+    if( days == -106752 )
+    {
+        const i64 next = -106751 * nanoseconds_per_day;
+        const i64 back = nanoseconds_per_day - tod;
+        if( back > next - i64::min )
+        {
+            return optional::none;
+        }
+
+        return optional::some( next - back );
+    }
+
+    return optional::none;
+}
+
+// --- Text ---
+
+private void write_padded( ref string r, i64 value, u64 width )
+{
+    const string digits = string::from( value );
+    for( u64 i = digits.size(); i < width; i++ )
+    {
+        r.push( '0' );
+    }
+
+    r += digits;
+}
+
+// `HH:MM:SS`, then 6 fraction digits for whole microseconds or 9 otherwise, none for none.
+private void write_time_of_day( ref string r, i64 tod )
+{
+    r += format_civil( 0, tod, "%H:%M:%S".as_text() );
+
+    const i64 fraction = tod % nanoseconds_per_second;
+    if( fraction != 0 )
+    {
+        r.push( '.' );
+        if( fraction % 1000 == 0 )
+        {
+            write_padded( ref r, fraction / 1000, 6 );
+        }
+        else
+        {
+            write_padded( ref r, fraction, 9 );
+        }
+    }
+}
+
+private string format_civil( i64 days, i64 tod, const ref u8[] pattern )
+{
+    const civil c = civil_from_days( days );
+    string r = string();
+    u64 i = 0;
+    while( i < pattern.size )
+    {
+        if( pattern[i] != '%' )
+        {
+            r.push( pattern[i] );
+            i++;
+            continue;
+        }
+
+        if( i + 1 == pattern.size )
+        {
+            panic( "the pattern ends in %" );
+        }
+
+        const u8 d = pattern[i + 1];
+        i += 2;
+        if( d == 'Y' )
+        {
+            write_padded( ref r, c.year, 4 );
+        }
+        else if( d == 'm' )
+        {
+            write_padded( ref r, c.month, 2 );
+        }
+        else if( d == 'd' )
+        {
+            write_padded( ref r, c.day, 2 );
+        }
+        else if( d == 'H' )
+        {
+            write_padded( ref r, hour_of( tod ), 2 );
+        }
+        else if( d == 'M' )
+        {
+            write_padded( ref r, minute_of( tod ), 2 );
+        }
+        else if( d == 'S' )
+        {
+            write_padded( ref r, second_of( tod ), 2 );
+        }
+        else if( d == 'f' )
+        {
+            write_padded( ref r, tod % nanoseconds_per_second / 1000, 6 );
+        }
+        else if( d == 'j' )
+        {
+            write_padded( ref r, day_of_year_of( days ), 3 );
+        }
+        else if( d == 'b' )
+        {
+            const u64 k = cast<u64>( c.month - 1 ) * 3;
+            r.append( month_names.as_text()[k..k + 3] );
+        }
+        else if( d == 'a' )
+        {
+            const u64 k = cast<u64>( weekday_of( days ) ) * 3;
+            r.append( weekday_names.as_text()[k..k + 3] );
+        }
+        else if( d == 'z' )
+        {
+            r += "+0000";
+        }
+        else if( d == '%' )
+        {
+            r.push( '%' );
+        }
+        else
+        {
+            panic( "unknown directive in the pattern" );
+        }
+    }
+
+    return r;
+}
+
+// The fields a text gives; `day_of_year` is 0 when it gives none.
+private struct civil_fields
+{
+    i64 year;
+    i64 month;
+    i64 day;
+    i64 day_of_year;
+    i64 hour;
+    i64 minute;
+    i64 second;
+    i64 nanosecond;
+    i64 offset_seconds;
+};
+
+private bool digit_at( const ref u8[] text, u64 p )
+{
+    return p < text.size && text[p] >= '0' && text[p] <= '9';
+}
+
+// `least` to `most` digits at `p`.
+private result<i64, time_error> read_number( const ref u8[] text, ref u64 p, u64 least, u64 most )
+{
+    i64 value = 0;
+    u64 n = 0;
+    while( n < most && digit_at( text, p ) )
+    {
+        value = value * 10 + cast<i64>( text[p] - '0' );
+        p++;
+        n++;
+    }
+
+    if( n < least )
+    {
+        return result::err( time_error::malformed( p ) );
+    }
+
+    return result::ok( value );
+}
+
+private result<void, time_error> read_byte( const ref u8[] text, ref u64 p, u8 byte )
+{
+    if( p == text.size || text[p] != byte )
+    {
+        return result::err( time_error::malformed( p ) );
+    }
+
+    p++;
+    return result::ok();
+}
+
+// 1 to 9 fraction digits as nanoseconds.
+private result<i64, time_error> read_fraction( const ref u8[] text, ref u64 p )
+{
+    const u64 start = p;
+    i64 value = try read_number( text, ref p, 1, 9 );
+    for( u64 n = p - start; n < 9; n++ )
+    {
+        value *= 10;
+    }
+
+    return result::ok( value );
+}
+
+// `Z`, or a sign and `hh`, `hhmm` or `hh:mm`, as seconds east of UTC.
+private result<i64, time_error> read_offset( const ref u8[] text, ref u64 p )
+{
+    if( p < text.size && text[p] == 'Z' )
+    {
+        p++;
+        return result::ok( 0 );
+    }
+
+    if( p == text.size || ( text[p] != '+' && text[p] != '-' ) )
+    {
+        return result::err( time_error::malformed( p ) );
+    }
+
+    const bool west = text[p] == '-';
+    p++;
+    const i64 hours = try read_number( text, ref p, 2, 2 );
+    i64 minutes = 0;
+    if( p < text.size && text[p] == ':' )
+    {
+        p++;
+        minutes = try read_number( text, ref p, 2, 2 );
+    }
+    else if( digit_at( text, p ) )
+    {
+        minutes = try read_number( text, ref p, 2, 2 );
+    }
+
+    if( hours > 23 || minutes > 59 )
+    {
+        return result::err( time_error::no_such_time );
+    }
+
+    const i64 seconds = ( hours * 60 + minutes ) * 60;
+    return result::ok( west ? -seconds : seconds );
+}
+
+// The 3-letter name at `p` among `names`, in any case, as its index.
+private result<i64, time_error> read_name( const ref u8[] text, ref u64 p, const ref u8[] names )
+{
+    if( p + 3 <= text.size )
+    {
+        for( u64 k = 0; k < names.size; k += 3 )
+        {
+            if( ( text[p] | 0x20 ) == ( names[k] | 0x20 ) && ( text[p + 1] | 0x20 ) == names[k + 1]
+                && ( text[p + 2] | 0x20 ) == names[k + 2] )
+            {
+                p += 3;
+                return result::ok( cast<i64>( k / 3 ) );
+            }
+        }
+    }
+
+    return result::err( time_error::malformed( p ) );
+}
+
+private civil_fields no_fields()
+{
+    return civil_fields{ 1900, 1, 1, 0, 0, 0, 0, 0, 0 };
+}
+
+private result<civil_fields, time_error> read_iso( const ref u8[] text, bool date_only )
+{
+    civil_fields f = no_fields();
+    u64 p = 0;
+    f.year = try read_number( text, ref p, 4, 4 );
+    try read_byte( text, ref p, '-' );
+    f.month = try read_number( text, ref p, 2, 2 );
+    try read_byte( text, ref p, '-' );
+    f.day = try read_number( text, ref p, 2, 2 );
+
+    if( !date_only && p < text.size && ( text[p] == ' ' || text[p] == 'T' ) )
+    {
+        p++;
+        f.hour = try read_number( text, ref p, 2, 2 );
+        try read_byte( text, ref p, ':' );
+        f.minute = try read_number( text, ref p, 2, 2 );
+        if( p < text.size && text[p] == ':' )
+        {
+            p++;
+            f.second = try read_number( text, ref p, 2, 2 );
+            if( p < text.size && text[p] == '.' )
+            {
+                p++;
+                f.nanosecond = try read_fraction( text, ref p );
+            }
+        }
+
+        if( p < text.size )
+        {
+            f.offset_seconds = try read_offset( text, ref p );
+        }
+    }
+
+    if( p != text.size )
+    {
+        return result::err( time_error::malformed( p ) );
+    }
+
+    return result::ok( f );
+}
+
+private result<civil_fields, time_error> read_pattern( const ref u8[] text, const ref u8[] pattern )
+{
+    civil_fields f = no_fields();
+    u64 p = 0;
+    u64 i = 0;
+    while( i < pattern.size )
+    {
+        if( pattern[i] != '%' )
+        {
+            try read_byte( text, ref p, pattern[i] );
+            i++;
+            continue;
+        }
+
+        if( i + 1 == pattern.size )
+        {
+            panic( "the pattern ends in %" );
+        }
+
+        const u8 d = pattern[i + 1];
+        i += 2;
+        if( d == 'Y' )
+        {
+            f.year = try read_number( text, ref p, 4, 4 );
+        }
+        else if( d == 'm' )
+        {
+            f.month = try read_number( text, ref p, 1, 2 );
+        }
+        else if( d == 'd' )
+        {
+            f.day = try read_number( text, ref p, 1, 2 );
+        }
+        else if( d == 'H' )
+        {
+            f.hour = try read_number( text, ref p, 1, 2 );
+        }
+        else if( d == 'M' )
+        {
+            f.minute = try read_number( text, ref p, 1, 2 );
+        }
+        else if( d == 'S' )
+        {
+            f.second = try read_number( text, ref p, 1, 2 );
+        }
+        else if( d == 'f' )
+        {
+            f.nanosecond = try read_fraction( text, ref p );
+        }
+        else if( d == 'j' )
+        {
+            const u64 at = p;
+            f.day_of_year = try read_number( text, ref p, 1, 3 );
+            if( f.day_of_year == 0 )
+            {
+                return result::err( time_error::malformed( at ) );
+            }
+        }
+        else if( d == 'b' )
+        {
+            f.month = try read_name( text, ref p, month_names.as_text() ) + 1;
+        }
+        else if( d == 'a' )
+        {
+            try read_name( text, ref p, weekday_names.as_text() );
+        }
+        else if( d == 'z' )
+        {
+            f.offset_seconds = try read_offset( text, ref p );
+        }
+        else if( d == '%' )
+        {
+            try read_byte( text, ref p, '%' );
+        }
+        else
+        {
+            panic( "unknown directive in the pattern" );
+        }
+    }
+
+    if( p != text.size )
+    {
+        return result::err( time_error::malformed( p ) );
+    }
+
+    return result::ok( f );
+}
+
+// The day the fields name, as days since 1970-01-01.
+private result<i64, time_error> day_of_fields( const ref civil_fields f )
+{
+    if( f.year < 1 || f.year > 9999 )
+    {
+        return result::err( time_error::out_of_range );
+    }
+
+    if( f.day_of_year != 0 )
+    {
+        if( f.day_of_year > ( is_leap( f.year ) ? 366 : 365 ) )
+        {
+            return result::err( time_error::no_such_time );
+        }
+
+        return result::ok( days_from_civil( f.year, 1, 1 ) + f.day_of_year - 1 );
+    }
+
+    if( !is_civil_day( f.year, f.month, f.day ) )
+    {
+        return result::err( time_error::no_such_time );
+    }
+
+    return result::ok( days_from_civil( f.year, f.month, f.day ) );
+}
+
+// The time the fields name, moved to UTC, as nanoseconds since 1970-01-01.
+private result<i64, time_error> nanoseconds_of_fields( const ref civil_fields f )
+{
+    const i64 day = try day_of_fields( f );
+    if( !is_time_of_day( f.hour, f.minute, f.second ) )
+    {
+        return result::err( time_error::no_such_time );
+    }
+
+    const i64 offset = f.offset_seconds * nanoseconds_per_second;
+    const i64 local = clock_time( f.hour, f.minute, f.second, f.nanosecond ) - offset;
+    switch( nanoseconds_at( day + floor_div( local, nanoseconds_per_day ), floor_mod( local, nanoseconds_per_day ) ) )
+    {
+    case optional::some( n ):
+        return result::ok( n );
+    case optional::none:
+        return result::err( time_error::out_of_range );
+    }
 }
