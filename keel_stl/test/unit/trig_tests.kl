@@ -12,16 +12,30 @@ extern f64 atan( f64 x );
 
 private f64 ours( u64 which, f64 x )
 {
-    f64[6] y = [ kl::sin( x ), kl::cos( x ), kl::tan( x ), kl::asin( x ), kl::acos( x ), kl::atan( x ) ];
-    return y[which];
+    switch( which )
+    {
+        case 0: return kl::sin( x );
+        case 1: return kl::cos( x );
+        case 2: return kl::tan( x );
+        case 3: return kl::asin( x );
+        case 4: return kl::acos( x );
+        default: return kl::atan( x );
+    }
 }
 
 private f64 theirs( u64 which, f64 x )
 {
     unsafe
     {
-        f64[6] y = [ sin( x ), cos( x ), tan( x ), asin( x ), acos( x ), atan( x ) ];
-        return y[which];
+        switch( which )
+        {
+            case 0: return sin( x );
+            case 1: return cos( x );
+            case 2: return tan( x );
+            case 3: return asin( x );
+            case 4: return acos( x );
+            default: return atan( x );
+        }
     }
 }
 

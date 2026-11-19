@@ -29,16 +29,36 @@ private const i64[9] ALLOWED = [ 1, 1, 1, 1, 1, 2, 2, 2, 3 ];
 
 private f64 ours( u64 which, f64 x )
 {
-    f64[9] y = [ kl::exp( x ), kl::expm1( x ), kl::log( x ), kl::log1p( x ), kl::log2( x ), kl::log10( x ), kl::sinh( x ), kl::cosh( x ), kl::tanh( x ) ];
-    return y[which];
+    switch( which )
+    {
+        case 0: return kl::exp( x );
+        case 1: return kl::expm1( x );
+        case 2: return kl::log( x );
+        case 3: return kl::log1p( x );
+        case 4: return kl::log2( x );
+        case 5: return kl::log10( x );
+        case 6: return kl::sinh( x );
+        case 7: return kl::cosh( x );
+        default: return kl::tanh( x );
+    }
 }
 
 private f64 theirs( u64 which, f64 x )
 {
     unsafe
     {
-        f64[9] y = [ exp( x ), expm1( x ), log( x ), log1p( x ), log2( x ), log10( x ), sinh( x ), cosh( x ), tanh( x ) ];
-        return y[which];
+        switch( which )
+        {
+            case 0: return exp( x );
+            case 1: return expm1( x );
+            case 2: return log( x );
+            case 3: return log1p( x );
+            case 4: return log2( x );
+            case 5: return log10( x );
+            case 6: return sinh( x );
+            case 7: return cosh( x );
+            default: return tanh( x );
+        }
     }
 }
 
