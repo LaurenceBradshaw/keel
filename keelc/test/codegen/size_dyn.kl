@@ -1,0 +1,125 @@
+// Run-time sizes: `Grid<i32, dyn, 3>` and `Grid<f64, dyn, dyn, dyn>` built from values by `S... n`,
+// their sizes kept in the object, read back by methods, passed to a free function that reads them
+// from its argument, and forwarded to a static and a function that take them hidden.
+import t::console;
+
+class Grid<T, u64... S(dyn)> where T : copyable
+{
+    T[64] cells;
+
+    public Grid( T fill )
+    {
+        cells = [ fill, .. ];
+    }
+
+    public static u64 count()
+    {
+        u64 p = 1;
+        for( u64 i = 0; i < S.size; i += 1 )
+        {
+            p *= S[i];
+        }
+        return p;
+    }
+
+    public u64 extent( u64 axis ) const
+    {
+        return S[axis];
+    }
+
+    // Row-major: the last axis is contiguous.
+    public u64 offset( u64... index ) const
+    {
+        u64 at     = 0;
+        u64 stride = 1;
+        for( u64 k = S.size; k > 0; k -= 1 )
+        {
+            at += index[k - 1] * stride;
+            stride *= S[k - 1];
+        }
+        return at;
+    }
+
+    public T get( u64... index ) const
+    {
+        return cells[offset( index )];
+    }
+
+    public void set( T value, u64... index )
+    {
+        cells[offset( index )] = value;
+    }
+
+    public u64 size() const
+    {
+        return Grid<T, S...>::count();
+    }
+};
+
+struct Line<u64 N(dyn)>
+{
+    u64 start;
+
+    u64 end() const
+    {
+        return start + N;
+    }
+};
+
+// A known value binds its constant, any other `dyn`.
+Grid<T, S...> filled<T, u64... S>( T fill, S... n ) where T : copyable
+{
+    return Grid<T, S...>( fill );
+}
+
+Line<N> line<u64 N>( u64 start, N n )
+{
+    return Line<N> { start };
+}
+
+u64 leading<u64... S>()
+{
+    return S[0] * 100 + S.size;
+}
+
+// The sizes come from `g`; `leading` is handed them.
+u64 total<T, u64... S>( const ref Grid<T, S...> g ) where T : copyable
+{
+    return Grid<T, S...>::count() * 1000 + leading<S...>() + g.extent( 0 ) * 0;
+}
+
+Grid<T, S...> copied<T, u64... S>( Grid<T, S...> g ) where T : copyable
+{
+    Grid<T, S...> other = g;
+    return other;
+}
+
+i32 main()
+{
+    u64 rows = 4;
+    Grid<i32, dyn, 3> g = filled( 0, rows, 3 );
+    g.set( 7, 3, 2 );
+    t::print( g.get( 3, 2 ) );
+    t::print( g.offset( 3, 2 ) );
+    t::print( g.size() );
+    t::print( total( g ) );
+
+    Grid<i32, dyn, 3> c = copied( g );
+    t::print( c.extent( 0 ) * 10 + c.extent( 1 ) );
+    t::print( c.get( 3, 2 ) );
+
+    Grid<f64, dyn, dyn, dyn> cube = filled( 0.5, rows - 2, rows - 1, rows );
+    cube.set( 2.5, 1, 2, 3 );
+    t::print( cube.size() );
+    t::print( cube.get( 1, 2, 3 ) + cube.get( 0, 0, 0 ) );
+    t::print( total( cube ) );
+
+    Grid<i32, 2, 3> fixed = filled( 1, 2, 3 );
+    t::print( fixed.size() );
+
+    Line<dyn> l = line( 10, rows * 5 );
+    t::print( l.end() );
+
+    u64 axis = 2;
+    return cast<i32>( g.extent( axis ) ); // past the rank: out of bounds
+}

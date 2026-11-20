@@ -189,7 +189,7 @@ Types Checker::run()
     generic_recursion_.record_bodies( ast_.root(), Node_id {}, types_.recorded() );
     if( generic_recursion_.check() )
     {
-        Size_suffixes( ast_, interner_, table_, types_.recorded(), reporter_ )
+        Size_suffixes( ast_, resolution_, interner_, table_, types_.recorded(), reporter_ )
             .check( generic_recursion_.size_roots(), generic_recursion_.calls(), generic_recursion_.implied() );
     }
 
@@ -364,8 +364,9 @@ void report_unused(
 
         if( ast.kind( unused ) == Node_kind::Param_decl )
         {
-            // An unassigned `out` parameter is already an error.
-            if( parameter_mode_of( ast, unused ) == Param_mode::Out )
+            // An unassigned `out` parameter is already an error; `N n` gives its size.
+            if( parameter_mode_of( ast, unused ) == Param_mode::Out ||
+                given_size( ast, resolution, types.recorded(), types.table(), unused ).is_valid() )
             {
                 continue;
             }
@@ -557,6 +558,11 @@ Type_id field_type( const Ast& ast, Type_table& table, Type_id aggregate, Node_i
         return Type_id {};
     }
 
+    if( ast.kind( field ) == Node_kind::Sizes_decl )
+    {
+        return table.array_of( table.integer( 64, false ), dyn_count( table, aggregate ) );
+    }
+
     if( table.is_closure( aggregate ) )
     {
         const Type_id held = table.substitute( recorded[field.v], table.instance_bindings( aggregate ) );
@@ -566,6 +572,23 @@ Type_id field_type( const Ast& ast, Type_table& table, Type_id aggregate, Node_i
     // An empty map makes this the identity, which is every non-generic aggregate - so the ordinary
     // path costs a lookup that finds nothing rather than a branch here.
     return table.substitute( recorded[field.v], aggregate_bindings( ast, table, aggregate, recorded ) );
+}
+
+u32 dyn_count( const Type_table& table, Type_id instance )
+{
+    return narrow_cast<u32>( std::ranges::count( table.get( instance ).arguments, table.dyn() ) );
+}
+
+std::vector<Node_id> laid_out_fields( const Ast& ast, const Type_table& table, Type_id instance )
+{
+    const Node_id        declaration = table.get( instance ).declaration;
+    std::vector<Node_id> fields      = ast.contained_fields( declaration );
+    if( const Node_id sizes = is_aggregate( ast.kind( declaration ) ) ? ast.sizes_member( declaration ) : Node_id {};
+        sizes.is_valid() && dyn_count( table, instance ) > 0 )
+    {
+        fields.push_back( sizes );
+    }
+    return fields;
 }
 
 bool copies_capture( const Ast& ast, Type_table& table, Node_id capture, Type_id held, std::span<const Type_id> recorded )
@@ -791,6 +814,24 @@ bool instance_holds_address( const Ast& ast, Type_table& table, Type_id instance
 Type_id binding_type( const Ast& ast, const Types& types, Node_id param )
 {
     return is_borrowed_binding( ast, types, param ) ? types.type_of( ast.declared_type( param ) ) : types.type_of( param );
+}
+
+Type_id given_size(
+    const Ast& ast, const Resolution& resolution, std::span<const Type_id> recorded, const Type_table& table, Node_id param
+)
+{
+    if( !param.is_valid() || ast.kind( param ) != Node_kind::Param_decl || !ast.annotation( param ).is_valid() )
+    {
+        return Type_id {};
+    }
+    Node_id named      = ast.unwrap_const( ast.annotation( param ) );
+    named              = ast.kind( named ) == Node_kind::Mode_type ? ast.inner_type( named ) : named;
+    named              = ast.kind( named ) == Node_kind::Run_type ? ast.inner_type( named ) : named;
+    const Node_id decl = ast.kind( named ) == Node_kind::Named_type ? resolution.declaration_of( named ) : Node_id {};
+    const Type_id size = decl.is_valid() && ast.kind( decl ) == Node_kind::Type_param_decl && decl.v < recorded.size()
+                             ? recorded[decl.v]
+                             : Type_id {};
+    return size.is_valid() && table.is_size_parameter( size ) ? size : Type_id {};
 }
 
 Constant_value numeric_limit( const Type_table& table, Type_id type, bool maximum )

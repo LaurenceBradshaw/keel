@@ -107,7 +107,20 @@ Type_id Expressions::infer( Node_id id )
         return resolution_.declaration_of( id ).is_valid() ? infer_name( id ) : infer_path( id );
 
     case Node_kind::Struct_literal:
-        return infer_struct_literal( id );
+    {
+        // D90: a literal names its sizes, and a written `dyn` has no value.
+        const Type_id built = infer_struct_literal( id );
+        if( table_.is_struct( built ) &&
+            std::ranges::find( table_.get( built ).arguments, table_.dyn() ) != table_.get( built ).arguments.end() )
+        {
+            reporter_.error_at(
+                ast_.type_name_span( id ),
+                fmt::format( "nothing here gives `{}` its run-time sizes", table_.name( built ) ),
+                "a `dyn` size comes in through a parameter `N n`, or an argument holding it"
+            );
+        }
+        return built;
+    }
 
     case Node_kind::Array_literal:
         return infer_array_literal( id );
@@ -431,6 +444,16 @@ Argument_shape Expressions::argument_shape( Node_id argument )
 
     // A broken argument is already reported, so it rules out no candidate.
     shape.kind = table_.is_error( shape.type ) ? Argument_kind::Anything : Argument_kind::Typed;
+
+    // What a `N n` parameter's size is bound to.
+    if( shape.kind == Argument_kind::Typed && table_.is_integer( shape.type ) )
+    {
+        if( const Folded folded = constant_folder_.fold_integer( value ); folded.constant && !folded.value.negative )
+        {
+            shape.known     = true;
+            shape.magnitude = folded.value.magnitude;
+        }
+    }
 
     return shape;
 }

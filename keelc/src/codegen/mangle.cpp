@@ -111,11 +111,11 @@ void encode_type( std::string& out, Type_id id, const Type_table& types )
         return;
     }
 
-    // `64` is `V64_`: `V` starts no other encoding, and the `_` ends the digits. Only constants reach here.
+    // `64` is `V64_`: `V` starts no other encoding, and the `_` ends the digits; `dyn` is `VD_`.
     if( types.is_size( id ) )
     {
-        assert( types.get( id ).width == 0 );
-        out += fmt::format( "V{}_", types.get( id ).count );
+        assert( types.get( id ).width == 0 || types.is_dyn( id ) );
+        out += types.is_dyn( id ) ? std::string( "VD_" ) : fmt::format( "V{}_", types.get( id ).count );
         return;
     }
 
@@ -732,6 +732,14 @@ TEST_CASE( "mangle_encodes_every_type_injectively", "[codegen][mangle]" )
 
         REQUIRE( table.name( bitset ) == "bitset<64>" );
         REQUIRE( mangle_function( {}, "f", one, table ) == "kl__1f__6bitsetIV64_E" );
+    }
+
+    SECTION( "a run-time size is `VD_`, which no value spells" )
+    {
+        const Type_id           grid  = table.structure( Node_id { 5 }, std::vector { table.dyn(), table.size( 3 ) }, "Grid" );
+        const Mangled_parameter one[] = { by_value( grid ) };
+
+        REQUIRE( mangle_function( {}, "f", one, table ) == "kl__1f__4GridIVD__V3_E" );
     }
 
     SECTION( "two parameters cannot be read as one" )

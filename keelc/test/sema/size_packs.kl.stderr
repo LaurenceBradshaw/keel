@@ -1,0 +1,13 @@
+error: `S` takes no run-time size
+  --> sema/size_packs.kl:29:82
+   |
+29 | u64 shapes( const ref Grid<i32> _, const ref Grid<f64, 4> _, const ref Grid<f64, dyn, 3, 2> _, const ref Line<dyn> _ )
+   |                                                                                  ^^^ mark it `u64... S(dyn)` in `Grid`
+
+error: `N` takes no run-time size
+  --> sema/size_packs.kl:29:111
+   |
+29 | u64 shapes( const ref Grid<i32> _, const ref Grid<f64, 4> _, const ref Grid<f64, dyn, 3, 2> _, const ref Line<dyn> _ )
+   |                                                                                                               ^^^ mark it `u64 N(dyn)` in `Line`
+
+2 errors generated

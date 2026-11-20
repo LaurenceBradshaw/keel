@@ -183,6 +183,7 @@ std::string write_state(
     );
     write_table( tree, refs, nodes_where( refs, [&]( Node_id id ) { return ast.is_located( id ); } ), []( Node_id ) {} );
     write_table( tree, refs, nodes_where( refs, [&]( Node_id id ) { return ast.is_variadic( id ); } ), []( Node_id ) {} );
+    write_table( tree, refs, nodes_where( refs, [&]( Node_id id ) { return ast.takes_dyn( id ); } ), []( Node_id ) {} );
     write_table(
         tree, refs, nodes_where( refs, [&]( Node_id id ) { return ast.is_real_arithmetic( id ); } ), []( Node_id ) {}
     );
@@ -418,6 +419,7 @@ std::optional<Loaded_state> read_state(
     read_table( in, refs, [&]( Node_id id ) { ast.set_access( id, Access( in.get_u8() ) ); } );
     read_table( in, refs, [&]( Node_id id ) { ast.set_located( id ); } );
     read_table( in, refs, [&]( Node_id id ) { ast.set_variadic( id ); } );
+    read_table( in, refs, [&]( Node_id id ) { ast.set_takes_dyn( id ); } );
     read_table( in, refs, [&]( Node_id id ) { ast.set_real_arithmetic( id ); } );
     read_table(
         in,

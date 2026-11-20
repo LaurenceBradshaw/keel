@@ -1234,6 +1234,14 @@ bool Lookahead::scan_type_params()
         skip_ellipsis();                         // `u64... S`
         cursor_.match( Token_kind::Identifier ); // terse bound the parser reports
         skip_ellipsis();                         // `u64 S...`, which the parser reports
+        // `(dyn)`, which sema places.
+        if( cursor_.check( Token_kind::L_paren ) && cursor_.peek( 1 ).kind == Token_kind::Identifier &&
+            cursor_.peek( 2 ).kind == Token_kind::R_paren )
+        {
+            cursor_.advance();
+            cursor_.advance();
+            cursor_.advance();
+        }
     } while( cursor_.match( Token_kind::Comma ) );
 
     if( !cursor_.match_generic_close() )

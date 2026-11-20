@@ -21,7 +21,7 @@ bool is_constant_size( const Type_table& table, Type_id id )
 // Whether the edge writes a size of its own, which makes it the origin of what it reaches.
 bool writes( const Type_table& table, const Generic_call& edge )
 {
-    const auto constant = [&]( Type_id argument ) { return is_constant_size( table, argument ); };
+    const auto constant = [&]( Type_id argument ) { return is_constant_size( table, argument ) || table.is_dyn( argument ); };
     return std::ranges::any_of(
         edge.arguments,
         [&]( Type_id argument )
@@ -135,11 +135,43 @@ void Size_suffixes::collect( Node_id id, Node_id owner, Node_kind parent )
 
     if( owner.is_valid() && id.v < types_.size() && types_[id.v].is_valid() &&
         ( ( table_.is_size( types_[id.v] ) && table_.get( types_[id.v] ).width != 0 && !table_.is_dyn( types_[id.v] ) ) ||
-          table_.is_shape( types_[id.v] ) ) )
+          table_.is_shape( types_[id.v] ) ||
+          ( parent == Node_kind::Array_type && table_.is_size_parameter( types_[id.v] ) &&
+            !table_.is_pack_parameter( types_[id.v] ) ) ) )
     {
         suffixes_[owner.v].push_back(
             Suffix { .node = id, .extent = types_[id.v], .argument = parent == Node_kind::Type_arg_list }
         );
+    }
+
+    // A type's size argument, which a run-time size reaches only where its parameter is marked.
+    const bool lists = kind == Node_kind::Generic_type || kind == Node_kind::Struct_literal || kind == Node_kind::Call_expr ||
+                       kind == Node_kind::Path_expr;
+    const Node_id named       = !lists                              ? Node_id {}
+                                : kind == Node_kind::Generic_type   ? ast_.child( id, 0 )
+                                : kind == Node_kind::Struct_literal ? id
+                                : kind == Node_kind::Call_expr      ? ast_.callee( id )
+                                                                    : ast_.child( id, 0 );
+    const Node_id declaration = named.is_valid() ? resolution_.declaration_of( named ) : Node_id {};
+    if( owner.is_valid() && declaration.is_valid() && is_aggregate( ast_.kind( declaration ) ) &&
+        ast_.type_arg_list( kind == Node_kind::Generic_type || kind == Node_kind::Struct_literal ? id : named ).is_valid() )
+    {
+        const std::vector<Node_id>     parameters = ast_.type_parameters( ast_.type_param_list( declaration ) );
+        const std::span<const Node_id> arguments =
+            ast_.type_args( kind == Node_kind::Generic_type || kind == Node_kind::Struct_literal ? id : named );
+        for( std::size_t i = 0; i < arguments.size() && !parameters.empty(); ++i )
+        {
+            const Node_id parameter = parameters[std::min( i, parameters.size() - 1 )];
+            const Type_id argument  = arguments[i].v < types_.size() ? types_[arguments[i].v] : Type_id {};
+            if( !ast_.takes_dyn( parameter ) && argument.is_valid() &&
+                ( table_.is_size_parameter( argument ) || table_.is_shape( argument ) ||
+                  ( table_.is_size( argument ) && table_.get( argument ).width != 0 && !table_.is_dyn( argument ) ) ) )
+            {
+                suffixes_[owner.v].push_back( Suffix {
+                    .node = arguments[i], .extent = argument, .argument = true, .takes_dyn = false, .taker = parameter
+                } );
+            }
+        }
     }
 
     for( const Node_id child : ast_.children( id ) )
@@ -206,16 +238,23 @@ Size_suffixes::reach( const Generic_call& edge, const Bindings& bindings, const 
             arguments.push_back( argument );
             continue;
         }
-        const std::optional<std::vector<u64>> sizes = table_.evaluate_pack( argument, bindings );
-        if( !sizes )
+        // Constants, or `dyn`, which reaches the callee as itself.
+        std::vector<Type_id> read;
+        parameters_of( argument, read );
+        if( !std::ranges::all_of( read, [&]( Type_id parameter ) { return bindings.contains( parameter.v ); } ) )
         {
             return std::nullopt;
         }
-        std::vector<Type_id> each;
-        for( const u64 size : *sizes )
+        const Type_id under = table_.substitute( argument, bindings );
+        if( !table_.is_pack( under ) ||
+            !std::ranges::all_of(
+                table_.get( under ).arguments,
+                [&]( Type_id size ) { return is_constant_size( table_, size ) || size == table_.dyn(); }
+            ) )
         {
-            each.push_back( table_.size( size ) );
+            return std::nullopt;
         }
+        const std::vector<Type_id> each( table_.get( under ).arguments.begin(), table_.get( under ).arguments.end() );
         if( whole )
         {
             arguments.push_back( table_.pack( each ) );
@@ -248,6 +287,14 @@ Size_suffixes::reach( const Generic_call& edge, const Bindings& bindings, const 
         }
 
         const std::optional<u64> value = table_.evaluate( argument, bindings );
+        if( !value && table_.reaches_dyn( argument, bindings ) )
+        {
+            instance.sizes.push_back( table_.dyn() );
+            instance.sources.emplace_back();
+            instance.types.emplace_back();
+            sized = true;
+            continue;
+        }
         if( !value )
         {
             return std::nullopt;
@@ -327,9 +374,51 @@ bool Size_suffixes::report( const Instance& instance, Span origin )
             continue; // a method's own size, bound per call rather than per instance
         }
 
-        const bool               shape = table_.is_shape( suffix.extent );
+        // A run-time size may be an argument, to a parameter marked for one, but never an extent.
+        const bool run_time = runtime( suffix.extent, bindings );
+        if( suffix.taker.is_valid() && !run_time )
+        {
+            continue; // the unmarked parameter's own check; the rest is the argument's other entry
+        }
+        if( run_time )
+        {
+            if( suffix.argument && suffix.takes_dyn )
+            {
+                continue;
+            }
+            const Node_id     taker = suffix.taker;
+            const Node_id     held  = taker.is_valid() ? owner_of_parameter( taker ) : Node_id {};
+            const std::string named = held.is_valid() ? std::string( interner_.text( ast_.name( held ) ) ) : std::string();
+            const std::string param = taker.is_valid() ? std::string( interner_.text( ast_.name( taker ) ) ) : std::string();
+            reporter_.error_at(
+                written_dyn( origin ),
+                suffix.argument
+                    ? fmt::format(
+                          "`{}` gives `{}`'s `{}` a run-time size, which it does not take", name_of( instance ), named, param
+                      )
+                    : fmt::format( "`{}` makes an array whose length is `dyn`", name_of( instance ) ),
+                suffix.argument ? fmt::format(
+                                      "`{}` at {} is `dyn`; mark it `{}{} {}(dyn)` in `{}`",
+                                      table_.name( suffix.extent ),
+                                      reporter_.position( ast_.span( suffix.node ) ),
+                                      interner_.text( ast_.name( ast_.children( taker )[0] ) ),
+                                      table_.is_pack_parameter( types_[taker.v] ) ? "..." : "",
+                                      param,
+                                      named
+                                  )
+                                : fmt::format(
+                                      "`{}` at {} is `dyn`, and an array's length is a constant",
+                                      table_.name( suffix.extent ),
+                                      reporter_.position( ast_.span( suffix.node ) )
+                                  )
+            );
+            return true;
+        }
+
+        // A size argument may be 0; an array's extent may not.
+        const bool               shape = table_.get( suffix.extent ).kind == Type_kind::Pack;
         const std::optional<u64> value = shape ? std::nullopt : table_.evaluate( suffix.extent, bindings );
-        if( shape ? computes( suffix.extent, bindings ) : value && *value != 0 )
+        if( shape ? computes( suffix.extent, bindings ) : value && ( *value != 0 || suffix.argument ) )
         {
             continue;
         }
@@ -378,11 +467,11 @@ bool Size_suffixes::report( const Instance& instance, Span origin )
                                          : "an array whose size " + reason
             ),
             fmt::format(
-                "`{}` at {} {} when {}",
+                "`{}` at {} {}{}",
                 table_.name( suffix.extent ),
                 reporter_.position( ast_.span( suffix.node ) ),
                 reason,
-                when
+                table_.is_size_parameter( suffix.extent ) ? "" : " when " + when
             )
         );
         return true;
@@ -407,6 +496,12 @@ bool Size_suffixes::report_condition( const Instance& instance, Span origin, con
         parameters_of( condition.rhs, read );
 
         if( !std::ranges::all_of( read, [&]( Type_id parameter ) { return bindings.contains( parameter.v ); } ) )
+        {
+            continue;
+        }
+
+        // A run-time side is checked where it runs.
+        if( runtime( condition.lhs, bindings ) || runtime( condition.rhs, bindings ) )
         {
             continue;
         }
@@ -487,6 +582,46 @@ Span Size_suffixes::blame( const Instance& instance, const Bindings& bindings, T
     }
 
     return written( origin, values, sources );
+}
+
+// The aggregate a type parameter belongs to.
+Node_id Size_suffixes::owner_of_parameter( Node_id parameter ) const
+{
+    for( u32 i = 0; i < ast_.node_count(); ++i )
+    {
+        const Node_id each { i };
+        if( !is_aggregate( ast_.kind( each ) ) )
+        {
+            continue;
+        }
+        const std::vector<Node_id> parameters = ast_.type_parameters( ast_.type_param_list( each ) );
+        if( std::ranges::find( parameters, parameter ) != parameters.end() )
+        {
+            return each;
+        }
+    }
+    return Node_id {};
+}
+
+// Whether a size or pack comes out `dyn`, or holds one, under `bindings`.
+bool Size_suffixes::runtime( Type_id size, const Bindings& bindings ) const
+{
+    return table_.reaches_dyn( size, bindings );
+}
+
+// The `dyn` the caller wrote, else the whole edge, whose sizes came from values.
+Span Size_suffixes::written_dyn( Span origin ) const
+{
+    for( u32 i = 0; i < ast_.node_count(); ++i )
+    {
+        const Span span = ast_.span( Node_id { i } );
+        if( ast_.kind( Node_id { i } ) == Node_kind::Dyn_size && span.file == origin.file && span.start >= origin.start &&
+            span.end <= origin.end )
+        {
+            return span;
+        }
+    }
+    return origin;
 }
 
 // `R`, `0` or `(R * C)`, as a clause writes it.

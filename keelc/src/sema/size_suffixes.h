@@ -23,9 +23,15 @@ class Size_suffixes
 {
 public:
     Size_suffixes(
-        const Ast& ast, const Interner& interner, Type_table& table, std::span<const Type_id> types, Reporter& reporter
+        const Ast&               ast,
+        const Resolution&        resolution,
+        const Interner&          interner,
+        Type_table&              table,
+        std::span<const Type_id> types,
+        Reporter&                reporter
     )
         : ast_( ast ),
+          resolution_( resolution ),
           interner_( interner ),
           table_( table ),
           types_( types ),
@@ -58,7 +64,9 @@ private:
     {
         Node_id node;
         Type_id extent;
-        bool    argument = false; // `bitset<(N - 1)>` rather than `u64[N - 1]`
+        bool    argument  = false; // `bitset<(N - 1)>` rather than `u64[N - 1]`
+        bool    takes_dyn = true;  // an argument: its parameter is marked `(dyn)`
+        Node_id taker     = {};    // else that unmarked parameter
     };
 
     // `where R >= C`, its sides as sizes.
@@ -78,6 +86,9 @@ private:
     bool                    report_condition( const Instance& instance, Span origin, const Bindings& bindings );
     Span                    blame( const Instance& instance, const Bindings& bindings, Type_id size, Span origin ) const;
     std::string             spelled( Type_id size ) const;
+    bool                    runtime( Type_id size, const Bindings& bindings ) const;
+    Node_id                 owner_of_parameter( Node_id parameter ) const;
+    Span                    written_dyn( Span origin ) const;
     std::string             value_of( Type_id parameter, const Bindings& bindings ) const;
     bool                    computes( Type_id size, const Bindings& bindings ) const;
     std::string             name_of( const Instance& instance ) const;
@@ -86,6 +97,7 @@ private:
     void                    parameters_of( Type_id size, std::vector<Type_id>& into ) const;
 
     const Ast&               ast_;
+    const Resolution&        resolution_;
     const Interner&          interner_;
     Type_table&              table_;
     std::span<const Type_id> types_;

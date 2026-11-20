@@ -1,0 +1,19 @@
+error: `lined<dyn>` gives `Line`'s `N` a run-time size, which it does not take
+  --> sema/errors_size_dyn_instances.kl:39:13
+   |
+39 |     u64 a = lined( rows ) + lined( 4 ) + boxed( rows ) + boxed( 2 ) + local( rows ) + local( 5 );
+   |             ^^^^^^^^^^^^^ `N` at sema/errors_size_dyn_instances.kl:20:10 is `dyn`; mark it `u64 N(dyn)` in `Line`
+
+error: `Box<dyn>` makes an array whose length is `dyn`
+  --> sema/errors_size_dyn_instances.kl:39:42
+   |
+39 |     u64 a = lined( rows ) + lined( 4 ) + boxed( rows ) + boxed( 2 ) + local( rows ) + local( 5 );
+   |                                          ^^^^^^^^^^^^^ `N` at sema/errors_size_dyn_instances.kl:10:9 is `dyn`, and an array's length is a constant
+
+error: `local<dyn>` makes an array whose length is `dyn`
+  --> sema/errors_size_dyn_instances.kl:39:71
+   |
+39 |     u64 a = lined( rows ) + lined( 4 ) + boxed( rows ) + boxed( 2 ) + local( rows ) + local( 5 );
+   |                                                                       ^^^^^^^^^^^^^ `N` at sema/errors_size_dyn_instances.kl:32:9 is `dyn`, and an array's length is a constant
+
+3 errors generated

@@ -199,7 +199,7 @@ Description describe( const Ast& ast, Types& types, const Interner& interner )
         {
             description.declarations_.emplace( n, describe_function( ast, types, interner, decl ) );
         }
-        else if( kind == Node_kind::Field_decl || kind == Node_kind::Capture_decl )
+        else if( kind == Node_kind::Field_decl || kind == Node_kind::Capture_decl || kind == Node_kind::Sizes_decl )
         {
             description.declarations_.emplace(
                 n,
@@ -293,7 +293,7 @@ Description describe( const Ast& ast, Types& types, const Interner& interner )
         }
         else if( declaration.is_valid() )
         {
-            held = ast.contained_fields( declaration );
+            held = laid_out_fields( ast, table, type );
         }
 
         Description::Instance described { .owns = instance_owns( ast, table, type, types.recorded() ) };

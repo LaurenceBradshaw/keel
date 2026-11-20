@@ -468,12 +468,15 @@ void split_locals( Function& func, const Local_set& split, std::vector<u64> indi
                 ( ( statement.place.is_whole_local() && split[statement.place.local.v] ) ||
                   ( func.rvalue( statement ).a.place.is_whole_local() && split[func.rvalue( statement ).a.place.local.v] ) ) )
             {
-                const Type_id type    = func.rvalue( statement ).type;
-                const Node_id holder  = types.table().get( type ).declaration;
-                const bool    closure = types.table().is_closure( type );
-                for( const Node_id& member : closure ? ast.captures( holder ) : ast.members( holder ) )
+                const Type_id                  type     = func.rvalue( statement ).type;
+                const Node_id                  holder   = types.table().get( type ).declaration;
+                const bool                     closure  = types.table().is_closure( type );
+                const std::span<const Node_id> captured = closure ? ast.captures( holder ) : std::span<const Node_id> {};
+                const std::vector<Node_id>     members  = closure ? std::vector<Node_id>( captured.begin(), captured.end() )
+                                                                  : laid_out_fields( ast, types.table(), type );
+                for( const Node_id& member : members )
                 {
-                    if( ast.kind( member ) != ( closure ? Node_kind::Capture_decl : Node_kind::Field_decl ) )
+                    if( closure && ast.kind( member ) != Node_kind::Capture_decl )
                     {
                         continue;
                     }

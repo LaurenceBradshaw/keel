@@ -22,11 +22,17 @@ error: `N` is known only per instance
 20 |         case N:                                     // error: known only per instance
    |              ^ a `switch` decides which arm runs by comparing constants
 
-error: `N` is a size, which is at least 1
+error: `first<0>` makes an array of 0 elements
   --> sema/errors_size_param_uses.kl:32:11
    |
 32 |     first<0>( a );                                  // error: at least 1
-   |           ^
+   |           ^ `N` at sema/errors_size_param_uses.kl:4:33 is 0
+
+error: expected `i32[0]`, but got `i32[2]`
+  --> sema/errors_size_param_uses.kl:32:15
+   |
+32 |     first<0>( a );                                  // error: at least 1
+   |               ^
 
 error: `N` takes a size, but `i32` is a type
   --> sema/errors_size_param_uses.kl:33:11
@@ -46,4 +52,4 @@ error: `T` takes a type, but `4` is a size
 35 |     Box<4>* b = nullptr;                            // error: `T` takes a type
    |         ^
 
-8 errors generated
+9 errors generated

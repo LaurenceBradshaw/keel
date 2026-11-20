@@ -1,0 +1,55 @@
+error: only a size parameter is marked `(dyn)`
+ --> sema/errors_size_dyn.kl:8:13
+  |
+8 | struct Wide<T(dyn), u64 N(dyn)>
+  |             ^
+
+error: a function's size parameters take `dyn` unmarked
+  --> sema/errors_size_dyn.kl:13:16
+   |
+13 | u64 marked<u64 N(dyn)>()
+   |                ^
+
+error: `N` is one size, so it gives one value
+  --> sema/errors_size_dyn.kl:43:17
+   |
+43 | u64 one<u64 N>( N... n )
+   |                 ^ write `N n`
+
+error: `S` is a pack of sizes, so it gives one value each
+  --> sema/errors_size_dyn.kl:48:21
+   |
+48 | u64 each<u64... S>( S n )
+   |                     ^ write `S... n`
+
+error: `N` takes no run-time size
+  --> sema/errors_size_dyn.kl:53:27
+   |
+53 | u64 lined( const ref Line<dyn> _ )
+   |                           ^^^ mark it `u64 N(dyn)` in `Line`
+
+error: nothing here gives `S` its run-time value
+  --> sema/errors_size_dyn.kl:60:27
+   |
+60 |     Grid<i32, dyn, 3> g = Grid<i32, dyn, 3>( 0 );
+   |                           ^^^^^^^^^^^^^^^^^^^^^^ a `dyn` size comes in through a parameter `S... n`, or an argument holding it
+
+error: nothing here gives `Held<dyn>` its run-time sizes
+  --> sema/errors_size_dyn.kl:61:19
+   |
+61 |     Held<dyn> h = Held<dyn> { 1 };
+   |                   ^^^^ a `dyn` size comes in through a parameter `N n`, or an argument holding it
+
+error: nothing here gives `S` its run-time value
+  --> sema/errors_size_dyn.kl:62:13
+   |
+62 |     u64 a = lead<dyn, 2>() + Grid<i32, dyn>::rank();
+   |             ^^^^^^^^^^^^^^ a `dyn` size comes in through a parameter `S... n`, or an argument holding it
+
+error: nothing here gives `S` its run-time value
+  --> sema/errors_size_dyn.kl:62:30
+   |
+62 |     u64 a = lead<dyn, 2>() + Grid<i32, dyn>::rank();
+   |                              ^^^^^^^^^^^^^^^^^^^^^^ a `dyn` size comes in through a parameter `S... n`, or an argument holding it
+
+9 errors generated

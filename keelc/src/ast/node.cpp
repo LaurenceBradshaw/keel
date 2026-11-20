@@ -168,6 +168,8 @@ std::string_view node_kind_name( Node_kind kind )
         return "Type_param_decl";
     case Node_kind::Dyn_size:
         return "Dyn_size";
+    case Node_kind::Sizes_decl:
+        return "Sizes_decl";
     case Node_kind::Where_clause:
         return "Where_clause";
     case Node_kind::Bound_name:
@@ -228,6 +230,7 @@ Aux_meaning aux_meaning( Node_kind kind )
     case Node_kind::Interface_decl:
     case Node_kind::Implements_decl:
     case Node_kind::Capture_decl:
+    case Node_kind::Sizes_decl:
         return Aux_meaning::Symbol;
     case Node_kind::Int_literal:
     case Node_kind::Float_literal:

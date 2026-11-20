@@ -331,6 +331,8 @@ public:
     Type_id declared( Node_id declaration ) const;
     // A size's value once `bindings` are read through, or none while it is open or fails.
     std::optional<u64> evaluate( Type_id size, const Bindings& bindings ) const;
+    // Whether a size or pack is, or holds, `dyn` once `bindings` are read through.
+    bool reaches_dyn( Type_id size, const Bindings& bindings ) const;
     // A pack's sizes, as evaluate() gives one.
     std::optional<std::vector<u64>> evaluate_pack( Type_id pack, const Bindings& bindings ) const;
 
@@ -338,7 +340,6 @@ private:
     Type_id                                 add( const Type& type, std::string_view name );
     std::string                             const_spelling( Type_id element, bool const_element ) const;
     static u8                               width_index( u8 width );
-    bool                                    reaches_dyn( Type_id size, const Bindings& bindings ) const;
     Type_id                                 bound_value( Type_id parameter, const Bindings& bindings ) const;
     std::optional<std::span<const Type_id>> known_sizes( Type_id operand ) const;
     // Interns the tail of `arguments` that the pack of its declaration's open form `open` takes.

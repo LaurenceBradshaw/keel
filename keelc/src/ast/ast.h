@@ -41,6 +41,7 @@ public:
     void set_access( Node_id id, Access access );
     void set_located( Node_id decl );
     void set_variadic( Node_id param );
+    void set_takes_dyn( Node_id param );
     void set_intrinsic( Node_id decl );
     void set_real_arithmetic( Node_id decl );
     void set_trig( Node_id decl, Trig trig, Span directive );
@@ -69,6 +70,10 @@ public:
     bool is_located( Node_id decl ) const;
     // `T... name`: the last parameter, a `const ref T[]` taking the call's trailing arguments.
     bool is_variadic( Node_id param ) const;
+    // `u64 N(dyn)`: a type's size parameter that may be bound to `dyn`.
+    bool takes_dyn( Node_id param ) const;
+    // A type's Sizes_decl, or invalid when no parameter takes `dyn`.
+    Node_id sizes_member( Node_id aggregate ) const;
     // Its last explicit parameter is variadic.
     bool takes_variadic( Node_id fn ) const;
 
@@ -252,6 +257,7 @@ private:
     std::unordered_map<u32, Access>                access_; // absence means public
     std::unordered_set<u32>                        located_;
     std::unordered_set<u32>                        variadic_;
+    std::unordered_set<u32>                        takes_dyn_;
     std::unordered_set<u32>                        intrinsic_;
     std::unordered_set<u32>                        real_arithmetic_;
     std::unordered_map<u32, std::pair<Trig, Span>> trig_;

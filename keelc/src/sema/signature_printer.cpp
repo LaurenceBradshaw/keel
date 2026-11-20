@@ -421,10 +421,11 @@ std::string Signature_printer::type_parameter( Node_id param ) const
     const Type_id parameter = types_.type_of( param );
     return parameter.is_valid() && types_.table().is_size_parameter( parameter )
                ? fmt::format(
-                     "{}{} {}",
+                     "{}{} {}{}",
                      types_.table().name( types_.table().get( parameter ).element ),
                      types_.table().is_pack_parameter( parameter ) ? "..." : "",
-                     text( ast_.name( param ) )
+                     text( ast_.name( param ) ),
+                     ast_.takes_dyn( param ) ? "(dyn)" : ""
                  )
                : std::string( text( ast_.name( param ) ) );
 }
@@ -686,14 +687,22 @@ TEST_CASE( "signatures_print_a_size_parameter_with_its_type", "[sema][signature]
 
 TEST_CASE( "signatures_print_a_size_pack_and_dyn", "[sema][signature][size][packs]" )
 {
-    const Printed printed( "class Grid<T, u64... S> where T : copyable { T x; };\n"
+    const Printed printed( "class Grid<T, u64... S(dyn)> where T : copyable { T x; };\n"
                            "void f<u64... S>( const ref Grid<f64, S...> g, const ref Grid<i32, dyn, 3> h ) { }\n" );
 
-    REQUIRE( printed( Node_kind::Class_decl, "Grid" ) == "class Grid<T, u64... S> where T : copyable" );
+    REQUIRE( printed( Node_kind::Class_decl, "Grid" ) == "class Grid<T, u64... S(dyn)> where T : copyable" );
     REQUIRE(
         printed( Node_kind::Function_decl, "f" ) ==
         "void f<u64... S>( const ref Grid<f64, S...> g, const ref Grid<i32, dyn, 3> h )"
     );
+}
+
+TEST_CASE( "signatures_print_a_dyn_mark", "[sema][signature][size][dyn]" )
+{
+    const Printed printed( "struct Line<u64 N(dyn)> { u64 n; };\nclass Grid<T, u64... S(dyn)> { T x; };\n" );
+
+    REQUIRE( printed( Node_kind::Struct_decl, "Line" ) == "struct Line<u64 N(dyn)>" );
+    REQUIRE( printed( Node_kind::Class_decl, "Grid" ) == "class Grid<T, u64... S(dyn)>" );
 }
 
 TEST_CASE( "signatures_print_a_used_size_parameter_by_name", "[sema][signature][size]" )

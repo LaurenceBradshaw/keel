@@ -259,7 +259,27 @@ Type_id Annotations::resolve_named( Node_id annotation )
             return table_.builtin( Type_kind::Error );
         }
 
-        if( table_.is_size_parameter( types_.type_of( decl ) ) )
+        // `N n` or `S... n`: a `u64` that gives the call its size.
+        const Type_id sized = types_.type_of( decl );
+        const bool    run   = parameter_.is_valid() && ast_.kind( parameter_ ) == Node_kind::Run_type &&
+                         ast_.inner_type( parameter_ ) == annotation;
+        if( table_.is_size_parameter( sized ) && ( annotation == parameter_ || run ) )
+        {
+            const std::string_view name = interner_.text( ast_.name( annotation ) );
+            if( table_.is_pack_parameter( sized ) != run )
+            {
+                reporter_.error_at(
+                    ast_.span( annotation ),
+                    run ? fmt::format( "`{}` is one size, so it gives one value", name )
+                        : fmt::format( "`{}` is a pack of sizes, so it gives one value each", name ),
+                    run ? fmt::format( "write `{} n`", name ) : fmt::format( "write `{}... n`", name )
+                );
+                return table_.builtin( Type_kind::Error );
+            }
+            return table_.get( sized ).element;
+        }
+
+        if( table_.is_size_parameter( sized ) )
         {
             reporter_.error_at(
                 ast_.span( annotation ), fmt::format( "`{}` is a size, not a type", interner_.text( ast_.name( annotation ) ) )
@@ -815,6 +835,24 @@ Type_id Annotations::resolve_size_argument( Node_id parameter, Node_id argument 
 {
     if( ast_.kind( argument ) == Node_kind::Dyn_size )
     {
+        // A type stores its run-time sizes only where it said it would.
+        const Node_id owner = bounds_.owner_of( types_.type_of( parameter ) );
+        if( owner.is_valid() && is_aggregate( ast_.kind( owner ) ) && !ast_.takes_dyn( parameter ) )
+        {
+            const std::string_view name = interner_.text( ast_.name( parameter ) );
+            reporter_.error_at(
+                ast_.span( argument ),
+                fmt::format( "`{}` takes no run-time size", name ),
+                fmt::format(
+                    "mark it `{}{} {}(dyn)` in `{}`",
+                    interner_.text( ast_.name( ast_.children( parameter )[0] ) ),
+                    table_.is_pack_parameter( types_.type_of( parameter ) ) ? "..." : "",
+                    name,
+                    interner_.text( ast_.name( owner ) )
+                )
+            );
+            return table_.builtin( Type_kind::Error );
+        }
         return types_.record( argument, table_.dyn() );
     }
 
@@ -886,9 +924,9 @@ Type_id Annotations::resolve_size_argument( Node_id parameter, Node_id argument 
         return table_.builtin( Type_kind::Error );
     }
 
-    if( folded.value.magnitude == 0 || folded.value.negative )
+    if( folded.value.negative && folded.value.magnitude != 0 )
     {
-        reporter_.error_at( ast_.span( argument ), fmt::format( "`{}` is a size, which is at least 1", name ) );
+        reporter_.error_at( ast_.span( argument ), fmt::format( "`{}` is a size, which is never negative", name ) );
         return table_.builtin( Type_kind::Error );
     }
 

@@ -290,12 +290,20 @@ bool instance_holds_address( const Ast& ast, Type_table& table, Type_id instance
 // emitter needs the same answers and has no checker.
 Bindings aggregate_bindings( const Ast& ast, const Type_table& table, Type_id aggregate, std::span<const Type_id> recorded );
 Type_id  field_type( const Ast& ast, Type_table& table, Type_id aggregate, Node_id field, std::span<const Type_id> recorded );
+// D90: how many of an instance's sizes are `dyn`, each a `u64` in its Sizes_decl.
+u32 dyn_count( const Type_table& table, Type_id instance );
+// The fields an instance lays out: contained_fields, then the Sizes_decl where it holds a `dyn`.
+std::vector<Node_id> laid_out_fields( const Ast& ast, const Type_table& table, Type_id instance );
 // A closure's capture holds a copy when it is written bare and is neither a run nor owning; otherwise an address.
 bool copies_capture( const Ast& ast, Type_table& table, Node_id capture, Type_id held, std::span<const Type_id> recorded );
 std::vector<Node_id>
 carried_payload( const Ast& ast, Type_table& table, Type_id instance, Node_id variant, std::span<const Type_id> recorded );
 
 Type_id binding_type( const Ast& ast, const Types& types, Node_id decl );
+// The size parameter `N n` or `S... n` gives a value of, or invalid.
+Type_id given_size(
+    const Ast& ast, const Resolution& resolution, std::span<const Type_id> recorded, const Type_table& table, Node_id param
+);
 
 // `i32::max` or `i32::min` of a builtin number; a float's `min` is its most negative finite value.
 Constant_value numeric_limit( const Type_table& table, Type_id type, bool maximum );

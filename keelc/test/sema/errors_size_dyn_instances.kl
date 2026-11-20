@@ -1,0 +1,41 @@
+// At an instance, a `dyn` is no array's length, and reaches a type's size parameter only where it
+// is marked `(dyn)`. Each error is at the call the `dyn` came in by.
+struct Line<u64 N>
+{
+    u64 n;
+};
+
+class Box<u64 N(dyn)>
+{
+    u64[N] cells;
+
+    public Box()
+    {
+        cells = [ 0, .. ];
+    }
+};
+
+u64 lined<u64 N>( N n )
+{
+    Line<N> l = Line<N> { n };
+    return l.n;
+}
+
+u64 boxed<u64 N>( N n )
+{
+    Box<N> b = Box<N>();
+    return n;
+}
+
+u64 local<u64 N>( N n )
+{
+    u64[N] here = [ 1, .. ];
+    return here[0];
+}
+
+i32 main()
+{
+    u64 rows = 3;
+    u64 a = lined( rows ) + lined( 4 ) + boxed( rows ) + boxed( 2 ) + local( rows ) + local( 5 );
+    return cast<i32>( a );
+}

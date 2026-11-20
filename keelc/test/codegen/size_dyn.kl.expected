@@ -1,0 +1,2478 @@
+// ../test_lib/console.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl_7prelude_str;
+
+struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
+
+struct kl_7prelude_textual__vtable;
+struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
+
+typedef struct kl__run__L2u8__ref ( *kl__fn__FMP4voidEPL2u8 )( void* );
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
+};
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
+
+struct kl_7prelude_textual__vtable
+{
+    void ( *drop )( void* );
+    struct kl__run__L2u8__ref ( *kl__7as_text__ )( void* );
+};
+
+void kl_rt_write( int32_t, uint8_t*, uint64_t );
+void kl_rt_write_i64( int32_t, int64_t );
+void kl_rt_write_u64( int32_t, uint64_t );
+void kl_rt_write_f64( int32_t, double );
+
+void kl_1t7console_10write_text__3i32_7textual( int32_t, struct kl_7prelude_textual__ref );
+void kl_1t7console_5print__7textual_7textual( struct kl_7prelude_textual__ref, struct kl_7prelude_textual__ref );
+void kl_1t7console_5print__3i64_7textual( int64_t, struct kl_7prelude_textual__ref );
+void kl_1t7console_5print__3u64_7textual( uint64_t, struct kl_7prelude_textual__ref );
+void kl_1t7console_5print__3f64_7textual( double, struct kl_7prelude_textual__ref );
+void kl_1t7console_5print__4bool_7textual( bool, struct kl_7prelude_textual__ref );
+void kl_1t7console_6eprint__7textual_7textual( struct kl_7prelude_textual__ref, struct kl_7prelude_textual__ref );
+void kl_1t7console_6eprint__3i64_7textual( int64_t, struct kl_7prelude_textual__ref );
+void kl_1t7console_6eprint__3u64_7textual( uint64_t, struct kl_7prelude_textual__ref );
+void kl_1t7console_6eprint__3f64_7textual( double, struct kl_7prelude_textual__ref );
+void kl_1t7console_6eprint__4bool_7textual( bool, struct kl_7prelude_textual__ref );
+void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
+void kl_7prelude_str__drop( void* );
+struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__( void* );
+
+static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
+
+#line 12 "../test_lib/console.kl"
+void kl_1t7console_10write_text__3i32_7textual( int32_t kl_stream_1, struct kl_7prelude_textual__ref kl_text_2 )
+{
+    struct kl__run__L2u8__ref kl_r_3;
+    struct kl_7prelude_textual__ref kl_t4;
+    struct kl__run__L2u8__ref kl_t5;
+    uint8_t* kl_t6;
+    uint64_t kl_t7;
+    kl__fn__FMP4voidEPL2u8 kl_t9;
+    void* kl_t10;
+#line 14 "../test_lib/console.kl"
+    kl_t4 = kl_text_2;
+#line 14 "../test_lib/console.kl"
+    kl_t9 = ( kl_t4 ).vtable->kl__7as_text__;
+#line 14 "../test_lib/console.kl"
+    kl_t10 = ( kl_t4 ).self;
+#line 14 "../test_lib/console.kl"
+    kl_t5 = kl_t9( kl_t10 );
+#line 14 "../test_lib/console.kl"
+    kl_r_3 = kl_t5;
+#line 17 "../test_lib/console.kl"
+    kl_t6 = ( kl_r_3 ).data;
+#line 17 "../test_lib/console.kl"
+    kl_t7 = ( kl_r_3 ).size;
+#line 17 "../test_lib/console.kl"
+    kl_rt_write( kl_stream_1, kl_t6, kl_t7 );
+#line 19 "../test_lib/console.kl"
+    return;
+#line 19 "../test_lib/console.kl"
+}
+
+#line 24 "../test_lib/console.kl"
+void kl_1t7console_5print__7textual_7textual( struct kl_7prelude_textual__ref kl_text_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_textual__ref kl_t3;
+    struct kl_7prelude_textual__ref kl_t5;
+#line 26 "../test_lib/console.kl"
+    kl_t3 = kl_text_1;
+#line 26 "../test_lib/console.kl"
+    kl_1t7console_10write_text__3i32_7textual( 1, kl_t3 );
+    kl_t5 = kl_end_2;
+#line 27 "../test_lib/console.kl"
+    kl_1t7console_10write_text__3i32_7textual( 1, kl_t5 );
+    return;
+#line 28 "../test_lib/console.kl"
+}
+
+#line 31 "../test_lib/console.kl"
+void kl_1t7console_5print__3i64_7textual( int64_t kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_textual__ref kl_t4;
+#line 35 "../test_lib/console.kl"
+    kl_rt_write_i64( 1, kl_value_1 );
+#line 37 "../test_lib/console.kl"
+    kl_t4 = kl_end_2;
+#line 37 "../test_lib/console.kl"
+    kl_1t7console_10write_text__3i32_7textual( 1, kl_t4 );
+    return;
+#line 38 "../test_lib/console.kl"
+}
+
+#line 41 "../test_lib/console.kl"
+void kl_1t7console_5print__3u64_7textual( uint64_t kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_textual__ref kl_t4;
+#line 45 "../test_lib/console.kl"
+    kl_rt_write_u64( 1, kl_value_1 );
+#line 47 "../test_lib/console.kl"
+    kl_t4 = kl_end_2;
+#line 47 "../test_lib/console.kl"
+    kl_1t7console_10write_text__3i32_7textual( 1, kl_t4 );
+    return;
+#line 48 "../test_lib/console.kl"
+}
+
+#line 53 "../test_lib/console.kl"
+void kl_1t7console_5print__3f64_7textual( double kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_textual__ref kl_t4;
+#line 57 "../test_lib/console.kl"
+    kl_rt_write_f64( 1, kl_value_1 );
+#line 59 "../test_lib/console.kl"
+    kl_t4 = kl_end_2;
+#line 59 "../test_lib/console.kl"
+    kl_1t7console_10write_text__3i32_7textual( 1, kl_t4 );
+    return;
+#line 60 "../test_lib/console.kl"
+}
+
+#line 63 "../test_lib/console.kl"
+void kl_1t7console_5print__4bool_7textual( bool kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_str kl_t3;
+    struct kl_7prelude_str kl_t4;
+    struct kl_7prelude_str* kl_t5;
+    uint8_t* kl_t6;
+    struct kl_7prelude_str kl_t8;
+    struct kl_7prelude_str* kl_t9;
+    uint8_t* kl_t10;
+    struct kl_7prelude_str* kl_t12;
+    struct kl_7prelude_textual__ref kl_t13;
+    struct kl_7prelude_textual__ref kl_t14;
+#line 65 "../test_lib/console.kl"
+    if ( kl_value_1 ) goto bb1; else goto bb2;
+    bb1:
+#line 65 "../test_lib/console.kl"
+    kl_t5 = &kl_t4;
+#line 65 "../test_lib/console.kl"
+    kl_t6 = ( uint8_t* ) "true";
+#line 65 "../test_lib/console.kl"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 4 );
+#line 65 "../test_lib/console.kl"
+    kl_t3 = kl_t4;
+#line 65 "../test_lib/console.kl"
+    goto bb3;
+    bb2:
+#line 65 "../test_lib/console.kl"
+    kl_t9 = &kl_t8;
+#line 65 "../test_lib/console.kl"
+    kl_t10 = ( uint8_t* ) "false";
+#line 65 "../test_lib/console.kl"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t9, kl_t10, 5 );
+#line 65 "../test_lib/console.kl"
+    kl_t3 = kl_t8;
+#line 65 "../test_lib/console.kl"
+    goto bb3;
+    bb3:
+#line 65 "../test_lib/console.kl"
+    kl_t12 = &kl_t3;
+#line 65 "../test_lib/console.kl"
+    kl_t13 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t12, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 65 "../test_lib/console.kl"
+    kl_t14 = kl_end_2;
+#line 65 "../test_lib/console.kl"
+    kl_1t7console_5print__7textual_7textual( kl_t13, kl_t14 );
+    return;
+#line 66 "../test_lib/console.kl"
+}
+
+#line 71 "../test_lib/console.kl"
+void kl_1t7console_6eprint__7textual_7textual( struct kl_7prelude_textual__ref kl_text_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_textual__ref kl_t3;
+    struct kl_7prelude_textual__ref kl_t5;
+#line 73 "../test_lib/console.kl"
+    kl_t3 = kl_text_1;
+#line 73 "../test_lib/console.kl"
+    kl_1t7console_10write_text__3i32_7textual( 2, kl_t3 );
+    kl_t5 = kl_end_2;
+#line 74 "../test_lib/console.kl"
+    kl_1t7console_10write_text__3i32_7textual( 2, kl_t5 );
+    return;
+#line 75 "../test_lib/console.kl"
+}
+
+#line 78 "../test_lib/console.kl"
+void kl_1t7console_6eprint__3i64_7textual( int64_t kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_textual__ref kl_t4;
+#line 82 "../test_lib/console.kl"
+    kl_rt_write_i64( 2, kl_value_1 );
+#line 84 "../test_lib/console.kl"
+    kl_t4 = kl_end_2;
+#line 84 "../test_lib/console.kl"
+    kl_1t7console_10write_text__3i32_7textual( 2, kl_t4 );
+    return;
+#line 85 "../test_lib/console.kl"
+}
+
+#line 88 "../test_lib/console.kl"
+void kl_1t7console_6eprint__3u64_7textual( uint64_t kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_textual__ref kl_t4;
+#line 92 "../test_lib/console.kl"
+    kl_rt_write_u64( 2, kl_value_1 );
+#line 94 "../test_lib/console.kl"
+    kl_t4 = kl_end_2;
+#line 94 "../test_lib/console.kl"
+    kl_1t7console_10write_text__3i32_7textual( 2, kl_t4 );
+    return;
+#line 95 "../test_lib/console.kl"
+}
+
+#line 100 "../test_lib/console.kl"
+void kl_1t7console_6eprint__3f64_7textual( double kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_textual__ref kl_t4;
+#line 104 "../test_lib/console.kl"
+    kl_rt_write_f64( 2, kl_value_1 );
+#line 106 "../test_lib/console.kl"
+    kl_t4 = kl_end_2;
+#line 106 "../test_lib/console.kl"
+    kl_1t7console_10write_text__3i32_7textual( 2, kl_t4 );
+    return;
+#line 107 "../test_lib/console.kl"
+}
+
+#line 110 "../test_lib/console.kl"
+void kl_1t7console_6eprint__4bool_7textual( bool kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_str kl_t3;
+    struct kl_7prelude_str kl_t4;
+    struct kl_7prelude_str* kl_t5;
+    uint8_t* kl_t6;
+    struct kl_7prelude_str kl_t8;
+    struct kl_7prelude_str* kl_t9;
+    uint8_t* kl_t10;
+    struct kl_7prelude_str* kl_t12;
+    struct kl_7prelude_textual__ref kl_t13;
+    struct kl_7prelude_textual__ref kl_t14;
+#line 112 "../test_lib/console.kl"
+    if ( kl_value_1 ) goto bb1; else goto bb2;
+    bb1:
+#line 112 "../test_lib/console.kl"
+    kl_t5 = &kl_t4;
+#line 112 "../test_lib/console.kl"
+    kl_t6 = ( uint8_t* ) "true";
+#line 112 "../test_lib/console.kl"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 4 );
+#line 112 "../test_lib/console.kl"
+    kl_t3 = kl_t4;
+#line 112 "../test_lib/console.kl"
+    goto bb3;
+    bb2:
+#line 112 "../test_lib/console.kl"
+    kl_t9 = &kl_t8;
+#line 112 "../test_lib/console.kl"
+    kl_t10 = ( uint8_t* ) "false";
+#line 112 "../test_lib/console.kl"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t9, kl_t10, 5 );
+#line 112 "../test_lib/console.kl"
+    kl_t3 = kl_t8;
+#line 112 "../test_lib/console.kl"
+    goto bb3;
+    bb3:
+#line 112 "../test_lib/console.kl"
+    kl_t12 = &kl_t3;
+#line 112 "../test_lib/console.kl"
+    kl_t13 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t12, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 112 "../test_lib/console.kl"
+    kl_t14 = kl_end_2;
+#line 112 "../test_lib/console.kl"
+    kl_1t7console_6eprint__7textual_7textual( kl_t13, kl_t14 );
+    return;
+#line 113 "../test_lib/console.kl"
+}
+
+// codegen/size_dyn.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl_7prelude_str;
+struct kl__A64_3i32;
+struct kl__A1_3u64;
+struct kl_7codegen_Grid__I3i32_VD__V3_E;
+struct kl__A64_3f64;
+struct kl__A3_3u64;
+struct kl_7codegen_Grid__I3f64_VD__VD__VD_E;
+struct kl_7codegen_Grid__I3i32_V2__V3_E;
+struct kl_7codegen_Line__IVD_E;
+struct kl__A2_3u64;
+
+struct kl__run__L3u64__ref { uint64_t* data; uint64_t size; };
+struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
+
+struct kl_7prelude_textual__vtable;
+struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
+};
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
+
+struct kl__A64_3i32
+{
+    int32_t e[64];
+};
+_Static_assert( sizeof( struct kl__A64_3i32 ) == 256 && _Alignof( struct kl__A64_3i32 ) == 4, "layout" );
+
+struct kl__A1_3u64
+{
+    uint64_t e[1];
+};
+_Static_assert( sizeof( struct kl__A1_3u64 ) == 8 && _Alignof( struct kl__A1_3u64 ) == 8, "layout" );
+
+struct kl_7codegen_Grid__I3i32_VD__V3_E
+{
+    struct kl__A64_3i32 kl_cells;
+    struct kl__A1_3u64 kl_dyn;
+};
+_Static_assert( sizeof( struct kl_7codegen_Grid__I3i32_VD__V3_E ) == 264 && _Alignof( struct kl_7codegen_Grid__I3i32_VD__V3_E ) == 8 && offsetof( struct kl_7codegen_Grid__I3i32_VD__V3_E, kl_cells ) == 0 && offsetof( struct kl_7codegen_Grid__I3i32_VD__V3_E, kl_dyn ) == 256, "layout" );
+
+struct kl__A64_3f64
+{
+    double e[64];
+};
+_Static_assert( sizeof( struct kl__A64_3f64 ) == 512 && _Alignof( struct kl__A64_3f64 ) == 8, "layout" );
+
+struct kl__A3_3u64
+{
+    uint64_t e[3];
+};
+_Static_assert( sizeof( struct kl__A3_3u64 ) == 24 && _Alignof( struct kl__A3_3u64 ) == 8, "layout" );
+
+struct kl_7codegen_Grid__I3f64_VD__VD__VD_E
+{
+    struct kl__A64_3f64 kl_cells;
+    struct kl__A3_3u64 kl_dyn;
+};
+_Static_assert( sizeof( struct kl_7codegen_Grid__I3f64_VD__VD__VD_E ) == 536 && _Alignof( struct kl_7codegen_Grid__I3f64_VD__VD__VD_E ) == 8 && offsetof( struct kl_7codegen_Grid__I3f64_VD__VD__VD_E, kl_cells ) == 0 && offsetof( struct kl_7codegen_Grid__I3f64_VD__VD__VD_E, kl_dyn ) == 512, "layout" );
+
+struct kl_7codegen_Grid__I3i32_V2__V3_E
+{
+    struct kl__A64_3i32 kl_cells;
+};
+_Static_assert( sizeof( struct kl_7codegen_Grid__I3i32_V2__V3_E ) == 256 && _Alignof( struct kl_7codegen_Grid__I3i32_V2__V3_E ) == 4 && offsetof( struct kl_7codegen_Grid__I3i32_V2__V3_E, kl_cells ) == 0, "layout" );
+
+struct kl_7codegen_Line__IVD_E
+{
+    uint64_t kl_start;
+    struct kl__A1_3u64 kl_dyn;
+};
+_Static_assert( sizeof( struct kl_7codegen_Line__IVD_E ) == 16 && _Alignof( struct kl_7codegen_Line__IVD_E ) == 8 && offsetof( struct kl_7codegen_Line__IVD_E, kl_start ) == 0 && offsetof( struct kl_7codegen_Line__IVD_E, kl_dyn ) == 8, "layout" );
+
+struct kl__A2_3u64
+{
+    uint64_t e[2];
+};
+_Static_assert( sizeof( struct kl__A2_3u64 ) == 16 && _Alignof( struct kl__A2_3u64 ) == 8, "layout" );
+
+struct kl_7prelude_textual__vtable
+{
+    void ( *drop )( void* );
+    struct kl__run__L2u8__ref ( *kl__7as_text__ )( void* );
+};
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int32_t kl_7codegen_4main__( void );
+struct kl_7codegen_Grid__I3i32_VD__V3_E kl_7codegen_6filled__I3i32_VD__V3_E__3i32_L3u64( int32_t, uint64_t*, uint64_t );
+void kl_7codegen_3set__I3i32_VD__V3_E__SQ7codegen4GridI3i32_VD__V3_E_3i32_L3u64( struct kl_7codegen_Grid__I3i32_VD__V3_E*, int32_t, uint64_t*, uint64_t );
+int32_t kl_7codegen_3get__I3i32_VD__V3_E__SQ7codegen4GridI3i32_VD__V3_E_L3u64( struct kl_7codegen_Grid__I3i32_VD__V3_E*, uint64_t*, uint64_t );
+uint64_t kl_7codegen_6offset__I3i32_VD__V3_E__SQ7codegen4GridI3i32_VD__V3_E_L3u64( struct kl_7codegen_Grid__I3i32_VD__V3_E*, uint64_t*, uint64_t );
+uint64_t kl_7codegen_4size__I3i32_VD__V3_E__SQ7codegen4GridI3i32_VD__V3_E( struct kl_7codegen_Grid__I3i32_VD__V3_E* );
+uint64_t kl_7codegen_5total__I3i32_VD__V3_E__Q7codegen4GridI3i32_VD__V3_E( struct kl_7codegen_Grid__I3i32_VD__V3_E* );
+struct kl_7codegen_Grid__I3i32_VD__V3_E kl_7codegen_6copied__I3i32_VD__V3_E__Q7codegen4GridI3i32_VD__V3_E( struct kl_7codegen_Grid__I3i32_VD__V3_E );
+uint64_t kl_7codegen_6extent__I3i32_VD__V3_E__SQ7codegen4GridI3i32_VD__V3_E_3u64( struct kl_7codegen_Grid__I3i32_VD__V3_E*, uint64_t );
+struct kl_7codegen_Grid__I3f64_VD__VD__VD_E kl_7codegen_6filled__I3f64_VD__VD__VD_E__3f64_L3u64( double, uint64_t*, uint64_t );
+void kl_7codegen_3set__I3f64_VD__VD__VD_E__SQ7codegen4GridI3f64_VD__VD__VD_E_3f64_L3u64( struct kl_7codegen_Grid__I3f64_VD__VD__VD_E*, double, uint64_t*, uint64_t );
+uint64_t kl_7codegen_4size__I3f64_VD__VD__VD_E__SQ7codegen4GridI3f64_VD__VD__VD_E( struct kl_7codegen_Grid__I3f64_VD__VD__VD_E* );
+double kl_7codegen_3get__I3f64_VD__VD__VD_E__SQ7codegen4GridI3f64_VD__VD__VD_E_L3u64( struct kl_7codegen_Grid__I3f64_VD__VD__VD_E*, uint64_t*, uint64_t );
+uint64_t kl_7codegen_5total__I3f64_VD__VD__VD_E__Q7codegen4GridI3f64_VD__VD__VD_E( struct kl_7codegen_Grid__I3f64_VD__VD__VD_E* );
+struct kl_7codegen_Grid__I3i32_V2__V3_E kl_7codegen_6filled__I3i32_V2__V3_E__3i32_L3u64( int32_t, uint64_t*, uint64_t );
+uint64_t kl_7codegen_4size__I3i32_V2__V3_E__SQ7codegen4GridI3i32_V2__V3_E( struct kl_7codegen_Grid__I3i32_V2__V3_E* );
+struct kl_7codegen_Line__IVD_E kl_7codegen_4line__IVD_E__3u64_3u64( uint64_t, uint64_t );
+uint64_t kl_7codegen_3end__IVD_E__SQ7codegen4LineIVD_E( struct kl_7codegen_Line__IVD_E* );
+void kl_7codegen_4Grid__I3i32_VD__V3_E__RQ7codegen4GridI3i32_VD__V3_E_3i32__ctor( struct kl_7codegen_Grid__I3i32_VD__V3_E*, int32_t, uint64_t );
+uint64_t kl_7codegen_5count__I3i32_VD__V3_E__SQ7codegen4GridI3i32_VD__V3_E( uint64_t );
+uint64_t kl_7codegen_7leading__IVD__V3_E__( uint64_t );
+void kl_7codegen_4Grid__I3f64_VD__VD__VD_E__RQ7codegen4GridI3f64_VD__VD__VD_E_3f64__ctor( struct kl_7codegen_Grid__I3f64_VD__VD__VD_E*, double, uint64_t, uint64_t, uint64_t );
+uint64_t kl_7codegen_6offset__I3f64_VD__VD__VD_E__SQ7codegen4GridI3f64_VD__VD__VD_E_L3u64( struct kl_7codegen_Grid__I3f64_VD__VD__VD_E*, uint64_t*, uint64_t );
+uint64_t kl_7codegen_5count__I3f64_VD__VD__VD_E__SQ7codegen4GridI3f64_VD__VD__VD_E( uint64_t, uint64_t, uint64_t );
+uint64_t kl_7codegen_7leading__IVD__VD__VD_E__( uint64_t, uint64_t, uint64_t );
+uint64_t kl_7codegen_6extent__I3f64_VD__VD__VD_E__SQ7codegen4GridI3f64_VD__VD__VD_E_3u64( struct kl_7codegen_Grid__I3f64_VD__VD__VD_E*, uint64_t );
+void kl_7codegen_4Grid__I3i32_V2__V3_E__RQ7codegen4GridI3i32_V2__V3_E_3i32__ctor( struct kl_7codegen_Grid__I3i32_V2__V3_E*, int32_t );
+uint64_t kl_7codegen_5count__I3i32_V2__V3_E__SQ7codegen4GridI3i32_V2__V3_E( void );
+void kl_1t7console_5print__3i64_7textual( int64_t, struct kl_7prelude_textual__ref );
+void kl_1t7console_5print__3u64_7textual( uint64_t, struct kl_7prelude_textual__ref );
+void kl_1t7console_5print__3f64_7textual( double, struct kl_7prelude_textual__ref );
+void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
+void kl_7prelude_str__drop( void* );
+struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__( void* );
+
+static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
+
+#line 97 "codegen/size_dyn.kl"
+int32_t kl_7codegen_4main__( void )
+{
+    int32_t kl_t0;
+    uint64_t kl_rows_1;
+    struct kl_7codegen_Grid__I3i32_VD__V3_E kl_g_2;
+    struct kl__A2_3u64 kl_t3;
+    uint64_t kl_t4;
+    uint64_t kl_t5;
+    uint64_t kl_t6;
+    uint64_t* kl_t7;
+    struct kl__run__L3u64__ref kl_t8;
+    struct kl_7codegen_Grid__I3i32_VD__V3_E kl_t9;
+    struct kl_7codegen_Grid__I3i32_VD__V3_E* kl_t10;
+    struct kl__A2_3u64 kl_t11;
+    uint64_t kl_t12;
+    uint64_t kl_t13;
+    uint64_t kl_t14;
+    uint64_t* kl_t15;
+    struct kl__run__L3u64__ref kl_t16;
+    struct kl_7codegen_Grid__I3i32_VD__V3_E* kl_t18;
+    struct kl__A2_3u64 kl_t19;
+    uint64_t kl_t20;
+    uint64_t kl_t21;
+    uint64_t kl_t22;
+    uint64_t* kl_t23;
+    struct kl__run__L3u64__ref kl_t24;
+    int32_t kl_t25;
+    int64_t kl_t26;
+    struct kl_7prelude_str kl_t27;
+    struct kl_7prelude_str* kl_t28;
+    uint8_t* kl_t29;
+    struct kl_7prelude_str* kl_t31;
+    struct kl_7prelude_textual__ref kl_t32;
+    struct kl_7codegen_Grid__I3i32_VD__V3_E* kl_t34;
+    struct kl__A2_3u64 kl_t35;
+    uint64_t kl_t36;
+    uint64_t kl_t37;
+    uint64_t kl_t38;
+    uint64_t* kl_t39;
+    struct kl__run__L3u64__ref kl_t40;
+    uint64_t kl_t41;
+    struct kl_7prelude_str kl_t42;
+    struct kl_7prelude_str* kl_t43;
+    uint8_t* kl_t44;
+    struct kl_7prelude_str* kl_t46;
+    struct kl_7prelude_textual__ref kl_t47;
+    struct kl_7codegen_Grid__I3i32_VD__V3_E* kl_t49;
+    uint64_t kl_t50;
+    struct kl_7prelude_str kl_t51;
+    struct kl_7prelude_str* kl_t52;
+    uint8_t* kl_t53;
+    struct kl_7prelude_str* kl_t55;
+    struct kl_7prelude_textual__ref kl_t56;
+    struct kl_7codegen_Grid__I3i32_VD__V3_E* kl_t58;
+    uint64_t kl_t59;
+    struct kl_7prelude_str kl_t60;
+    struct kl_7prelude_str* kl_t61;
+    uint8_t* kl_t62;
+    struct kl_7prelude_str* kl_t64;
+    struct kl_7prelude_textual__ref kl_t65;
+    struct kl_7codegen_Grid__I3i32_VD__V3_E kl_c_67;
+    struct kl_7codegen_Grid__I3i32_VD__V3_E kl_t68;
+    struct kl_7codegen_Grid__I3i32_VD__V3_E* kl_t69;
+    uint64_t kl_t70;
+    bool kl_t71;
+    uint64_t kl_t72;
+    struct kl_7codegen_Grid__I3i32_VD__V3_E* kl_t73;
+    uint64_t kl_t74;
+    bool kl_t75;
+    uint64_t kl_t76;
+    struct kl_7prelude_str kl_t77;
+    struct kl_7prelude_str* kl_t78;
+    uint8_t* kl_t79;
+    struct kl_7prelude_str* kl_t81;
+    struct kl_7prelude_textual__ref kl_t82;
+    struct kl_7codegen_Grid__I3i32_VD__V3_E* kl_t84;
+    struct kl__A2_3u64 kl_t85;
+    uint64_t kl_t86;
+    uint64_t kl_t87;
+    uint64_t kl_t88;
+    uint64_t* kl_t89;
+    struct kl__run__L3u64__ref kl_t90;
+    int32_t kl_t91;
+    int64_t kl_t92;
+    struct kl_7prelude_str kl_t93;
+    struct kl_7prelude_str* kl_t94;
+    uint8_t* kl_t95;
+    struct kl_7prelude_str* kl_t97;
+    struct kl_7prelude_textual__ref kl_t98;
+    struct kl_7codegen_Grid__I3f64_VD__VD__VD_E kl_cube_100;
+    struct kl__A3_3u64 kl_t101;
+    bool kl_t102;
+    uint64_t kl_t103;
+    bool kl_t104;
+    uint64_t kl_t105;
+    uint64_t kl_t106;
+    uint64_t kl_t107;
+    uint64_t kl_t108;
+    uint64_t kl_t109;
+    uint64_t* kl_t110;
+    struct kl__run__L3u64__ref kl_t111;
+    struct kl_7codegen_Grid__I3f64_VD__VD__VD_E kl_t112;
+    struct kl_7codegen_Grid__I3f64_VD__VD__VD_E* kl_t113;
+    struct kl__A3_3u64 kl_t114;
+    uint64_t kl_t115;
+    uint64_t kl_t116;
+    uint64_t kl_t117;
+    uint64_t kl_t118;
+    uint64_t* kl_t119;
+    struct kl__run__L3u64__ref kl_t120;
+    struct kl_7codegen_Grid__I3f64_VD__VD__VD_E* kl_t122;
+    uint64_t kl_t123;
+    struct kl_7prelude_str kl_t124;
+    struct kl_7prelude_str* kl_t125;
+    uint8_t* kl_t126;
+    struct kl_7prelude_str* kl_t128;
+    struct kl_7prelude_textual__ref kl_t129;
+    struct kl_7codegen_Grid__I3f64_VD__VD__VD_E* kl_t131;
+    struct kl__A3_3u64 kl_t132;
+    uint64_t kl_t133;
+    uint64_t kl_t134;
+    uint64_t kl_t135;
+    uint64_t kl_t136;
+    uint64_t* kl_t137;
+    struct kl__run__L3u64__ref kl_t138;
+    double kl_t139;
+    struct kl_7codegen_Grid__I3f64_VD__VD__VD_E* kl_t140;
+    struct kl__A3_3u64 kl_t141;
+    uint64_t kl_t142;
+    uint64_t kl_t143;
+    uint64_t kl_t144;
+    uint64_t kl_t145;
+    uint64_t* kl_t146;
+    struct kl__run__L3u64__ref kl_t147;
+    double kl_t148;
+    double kl_t149;
+    struct kl_7prelude_str kl_t150;
+    struct kl_7prelude_str* kl_t151;
+    uint8_t* kl_t152;
+    struct kl_7prelude_str* kl_t154;
+    struct kl_7prelude_textual__ref kl_t155;
+    struct kl_7codegen_Grid__I3f64_VD__VD__VD_E* kl_t157;
+    uint64_t kl_t158;
+    struct kl_7prelude_str kl_t159;
+    struct kl_7prelude_str* kl_t160;
+    uint8_t* kl_t161;
+    struct kl_7prelude_str* kl_t163;
+    struct kl_7prelude_textual__ref kl_t164;
+    struct kl_7codegen_Grid__I3i32_V2__V3_E kl_fixed_166;
+    struct kl__A2_3u64 kl_t167;
+    uint64_t kl_t168;
+    uint64_t kl_t169;
+    uint64_t kl_t170;
+    uint64_t* kl_t171;
+    struct kl__run__L3u64__ref kl_t172;
+    struct kl_7codegen_Grid__I3i32_V2__V3_E kl_t173;
+    struct kl_7codegen_Grid__I3i32_V2__V3_E* kl_t174;
+    uint64_t kl_t175;
+    struct kl_7prelude_str kl_t176;
+    struct kl_7prelude_str* kl_t177;
+    uint8_t* kl_t178;
+    struct kl_7prelude_str* kl_t180;
+    struct kl_7prelude_textual__ref kl_t181;
+    struct kl_7codegen_Line__IVD_E kl_l_183;
+    bool kl_t184;
+    uint64_t kl_t185;
+    struct kl_7codegen_Line__IVD_E kl_t186;
+    struct kl_7codegen_Line__IVD_E* kl_t187;
+    uint64_t kl_t188;
+    struct kl_7prelude_str kl_t189;
+    struct kl_7prelude_str* kl_t190;
+    uint8_t* kl_t191;
+    struct kl_7prelude_str* kl_t193;
+    struct kl_7prelude_textual__ref kl_t194;
+    uint64_t kl_axis_196;
+    struct kl_7codegen_Grid__I3i32_VD__V3_E* kl_t197;
+    uint64_t kl_t198;
+    int32_t kl_t199;
+    uint64_t kl_t200;
+    bool kl_t201;
+    bool kl_t202;
+    ( void ) kl_t4;
+    ( void ) kl_t5;
+    ( void ) kl_t6;
+    ( void ) kl_t12;
+    ( void ) kl_t13;
+    ( void ) kl_t14;
+    ( void ) kl_t20;
+    ( void ) kl_t21;
+    ( void ) kl_t22;
+    ( void ) kl_t36;
+    ( void ) kl_t37;
+    ( void ) kl_t38;
+    ( void ) kl_t86;
+    ( void ) kl_t87;
+    ( void ) kl_t88;
+    ( void ) kl_t106;
+    ( void ) kl_t107;
+    ( void ) kl_t108;
+    ( void ) kl_t109;
+    ( void ) kl_t115;
+    ( void ) kl_t116;
+    ( void ) kl_t117;
+    ( void ) kl_t118;
+    ( void ) kl_t133;
+    ( void ) kl_t134;
+    ( void ) kl_t135;
+    ( void ) kl_t136;
+    ( void ) kl_t142;
+    ( void ) kl_t143;
+    ( void ) kl_t144;
+    ( void ) kl_t145;
+    ( void ) kl_t168;
+    ( void ) kl_t169;
+    ( void ) kl_t170;
+#line 99 "codegen/size_dyn.kl"
+    kl_rows_1 = 4;
+    kl_t4 = 0;
+#line 100 "codegen/size_dyn.kl"
+    kl_t3.e[kl_t4] = kl_rows_1;
+#line 100 "codegen/size_dyn.kl"
+    kl_t5 = 1;
+#line 100 "codegen/size_dyn.kl"
+    kl_t3.e[kl_t5] = 3;
+#line 100 "codegen/size_dyn.kl"
+    kl_t6 = 0;
+#line 100 "codegen/size_dyn.kl"
+    kl_t7 = &kl_t3.e[kl_t6];
+#line 100 "codegen/size_dyn.kl"
+    kl_t8 = ( struct kl__run__L3u64__ref ) { ( uint64_t* ) kl_t7, 2 };
+#line 100 "codegen/size_dyn.kl"
+    kl_t9 = kl_7codegen_6filled__I3i32_VD__V3_E__3i32_L3u64( 0, ( kl_t8 ).data, ( kl_t8 ).size );
+#line 100 "codegen/size_dyn.kl"
+    kl_g_2 = kl_t9;
+    kl_t10 = &kl_g_2;
+#line 101 "codegen/size_dyn.kl"
+    kl_t12 = 0;
+#line 101 "codegen/size_dyn.kl"
+    kl_t11.e[kl_t12] = 3;
+#line 101 "codegen/size_dyn.kl"
+    kl_t13 = 1;
+#line 101 "codegen/size_dyn.kl"
+    kl_t11.e[kl_t13] = 2;
+#line 101 "codegen/size_dyn.kl"
+    kl_t14 = 0;
+#line 101 "codegen/size_dyn.kl"
+    kl_t15 = &kl_t11.e[kl_t14];
+#line 101 "codegen/size_dyn.kl"
+    kl_t16 = ( struct kl__run__L3u64__ref ) { ( uint64_t* ) kl_t15, 2 };
+#line 101 "codegen/size_dyn.kl"
+    kl_7codegen_3set__I3i32_VD__V3_E__SQ7codegen4GridI3i32_VD__V3_E_3i32_L3u64( kl_t10, 7, ( kl_t16 ).data, ( kl_t16 ).size );
+    kl_t18 = &kl_g_2;
+#line 102 "codegen/size_dyn.kl"
+    kl_t20 = 0;
+#line 102 "codegen/size_dyn.kl"
+    kl_t19.e[kl_t20] = 3;
+#line 102 "codegen/size_dyn.kl"
+    kl_t21 = 1;
+#line 102 "codegen/size_dyn.kl"
+    kl_t19.e[kl_t21] = 2;
+#line 102 "codegen/size_dyn.kl"
+    kl_t22 = 0;
+#line 102 "codegen/size_dyn.kl"
+    kl_t23 = &kl_t19.e[kl_t22];
+#line 102 "codegen/size_dyn.kl"
+    kl_t24 = ( struct kl__run__L3u64__ref ) { ( uint64_t* ) kl_t23, 2 };
+#line 102 "codegen/size_dyn.kl"
+    kl_t25 = kl_7codegen_3get__I3i32_VD__V3_E__SQ7codegen4GridI3i32_VD__V3_E_L3u64( kl_t18, ( kl_t24 ).data, ( kl_t24 ).size );
+#line 102 "codegen/size_dyn.kl"
+    kl_t26 = ( int64_t ) kl_t25;
+#line 31 "../test_lib/console.kl"
+    kl_t28 = &kl_t27;
+#line 31 "../test_lib/console.kl"
+    kl_t29 = ( uint8_t* ) "\012";
+#line 31 "../test_lib/console.kl"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t28, kl_t29, 1 );
+#line 31 "../test_lib/console.kl"
+    kl_t31 = &kl_t27;
+#line 31 "../test_lib/console.kl"
+    kl_t32 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t31, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 102 "codegen/size_dyn.kl"
+    kl_1t7console_5print__3i64_7textual( kl_t26, kl_t32 );
+    kl_t34 = &kl_g_2;
+#line 103 "codegen/size_dyn.kl"
+    kl_t36 = 0;
+#line 103 "codegen/size_dyn.kl"
+    kl_t35.e[kl_t36] = 3;
+#line 103 "codegen/size_dyn.kl"
+    kl_t37 = 1;
+#line 103 "codegen/size_dyn.kl"
+    kl_t35.e[kl_t37] = 2;
+#line 103 "codegen/size_dyn.kl"
+    kl_t38 = 0;
+#line 103 "codegen/size_dyn.kl"
+    kl_t39 = &kl_t35.e[kl_t38];
+#line 103 "codegen/size_dyn.kl"
+    kl_t40 = ( struct kl__run__L3u64__ref ) { ( uint64_t* ) kl_t39, 2 };
+#line 103 "codegen/size_dyn.kl"
+    kl_t41 = kl_7codegen_6offset__I3i32_VD__V3_E__SQ7codegen4GridI3i32_VD__V3_E_L3u64( kl_t34, ( kl_t40 ).data, ( kl_t40 ).size );
+#line 41 "../test_lib/console.kl"
+    kl_t43 = &kl_t42;
+#line 41 "../test_lib/console.kl"
+    kl_t44 = ( uint8_t* ) "\012";
+#line 41 "../test_lib/console.kl"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t43, kl_t44, 1 );
+#line 41 "../test_lib/console.kl"
+    kl_t46 = &kl_t42;
+#line 41 "../test_lib/console.kl"
+    kl_t47 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t46, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 103 "codegen/size_dyn.kl"
+    kl_1t7console_5print__3u64_7textual( kl_t41, kl_t47 );
+    kl_t49 = &kl_g_2;
+#line 104 "codegen/size_dyn.kl"
+    kl_t50 = kl_7codegen_4size__I3i32_VD__V3_E__SQ7codegen4GridI3i32_VD__V3_E( kl_t49 );
+#line 41 "../test_lib/console.kl"
+    kl_t52 = &kl_t51;
+#line 41 "../test_lib/console.kl"
+    kl_t53 = ( uint8_t* ) "\012";
+#line 41 "../test_lib/console.kl"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t52, kl_t53, 1 );
+#line 41 "../test_lib/console.kl"
+    kl_t55 = &kl_t51;
+#line 41 "../test_lib/console.kl"
+    kl_t56 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t55, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 104 "codegen/size_dyn.kl"
+    kl_1t7console_5print__3u64_7textual( kl_t50, kl_t56 );
+    kl_t58 = &kl_g_2;
+#line 105 "codegen/size_dyn.kl"
+    kl_t59 = kl_7codegen_5total__I3i32_VD__V3_E__Q7codegen4GridI3i32_VD__V3_E( kl_t58 );
+#line 41 "../test_lib/console.kl"
+    kl_t61 = &kl_t60;
+#line 41 "../test_lib/console.kl"
+    kl_t62 = ( uint8_t* ) "\012";
+#line 41 "../test_lib/console.kl"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t61, kl_t62, 1 );
+#line 41 "../test_lib/console.kl"
+    kl_t64 = &kl_t60;
+#line 41 "../test_lib/console.kl"
+    kl_t65 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t64, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 105 "codegen/size_dyn.kl"
+    kl_1t7console_5print__3u64_7textual( kl_t59, kl_t65 );
+#line 107 "codegen/size_dyn.kl"
+    kl_t68 = kl_7codegen_6copied__I3i32_VD__V3_E__Q7codegen4GridI3i32_VD__V3_E( kl_g_2 );
+#line 107 "codegen/size_dyn.kl"
+    kl_c_67 = kl_t68;
+    kl_t69 = &kl_c_67;
+#line 108 "codegen/size_dyn.kl"
+    kl_t70 = kl_7codegen_6extent__I3i32_VD__V3_E__SQ7codegen4GridI3i32_VD__V3_E_3u64( kl_t69, 0 );
+#line 108 "codegen/size_dyn.kl"
+    kl_t71 = __builtin_mul_overflow( kl_t70, 10, &( uint64_t ) { 0 } );
+#line 108 "codegen/size_dyn.kl"
+    if ( kl_t71 ) goto bb1; else goto bb2;
+    bb1:
+#line 108 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 108, "arithmetic overflow: c.extent( 0 ) * 10" );
+    bb2:
+#line 108 "codegen/size_dyn.kl"
+    kl_t72 = kl_t70 * 10;
+#line 108 "codegen/size_dyn.kl"
+    kl_t73 = &kl_c_67;
+#line 108 "codegen/size_dyn.kl"
+    kl_t74 = kl_7codegen_6extent__I3i32_VD__V3_E__SQ7codegen4GridI3i32_VD__V3_E_3u64( kl_t73, 1 );
+#line 108 "codegen/size_dyn.kl"
+    kl_t75 = __builtin_add_overflow( kl_t72, kl_t74, &( uint64_t ) { 0 } );
+#line 108 "codegen/size_dyn.kl"
+    if ( kl_t75 ) goto bb3; else goto bb4;
+    bb3:
+#line 108 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 108, "arithmetic overflow: c.extent( 0 ) * 10 + c.extent( 1 )" );
+    bb4:
+#line 108 "codegen/size_dyn.kl"
+    kl_t76 = kl_t72 + kl_t74;
+#line 41 "../test_lib/console.kl"
+    kl_t78 = &kl_t77;
+#line 41 "../test_lib/console.kl"
+    kl_t79 = ( uint8_t* ) "\012";
+#line 41 "../test_lib/console.kl"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t78, kl_t79, 1 );
+#line 41 "../test_lib/console.kl"
+    kl_t81 = &kl_t77;
+#line 41 "../test_lib/console.kl"
+    kl_t82 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t81, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 108 "codegen/size_dyn.kl"
+    kl_1t7console_5print__3u64_7textual( kl_t76, kl_t82 );
+    kl_t84 = &kl_c_67;
+#line 109 "codegen/size_dyn.kl"
+    kl_t86 = 0;
+#line 109 "codegen/size_dyn.kl"
+    kl_t85.e[kl_t86] = 3;
+#line 109 "codegen/size_dyn.kl"
+    kl_t87 = 1;
+#line 109 "codegen/size_dyn.kl"
+    kl_t85.e[kl_t87] = 2;
+#line 109 "codegen/size_dyn.kl"
+    kl_t88 = 0;
+#line 109 "codegen/size_dyn.kl"
+    kl_t89 = &kl_t85.e[kl_t88];
+#line 109 "codegen/size_dyn.kl"
+    kl_t90 = ( struct kl__run__L3u64__ref ) { ( uint64_t* ) kl_t89, 2 };
+#line 109 "codegen/size_dyn.kl"
+    kl_t91 = kl_7codegen_3get__I3i32_VD__V3_E__SQ7codegen4GridI3i32_VD__V3_E_L3u64( kl_t84, ( kl_t90 ).data, ( kl_t90 ).size );
+#line 109 "codegen/size_dyn.kl"
+    kl_t92 = ( int64_t ) kl_t91;
+#line 31 "../test_lib/console.kl"
+    kl_t94 = &kl_t93;
+#line 31 "../test_lib/console.kl"
+    kl_t95 = ( uint8_t* ) "\012";
+#line 31 "../test_lib/console.kl"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t94, kl_t95, 1 );
+#line 31 "../test_lib/console.kl"
+    kl_t97 = &kl_t93;
+#line 31 "../test_lib/console.kl"
+    kl_t98 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t97, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 109 "codegen/size_dyn.kl"
+    kl_1t7console_5print__3i64_7textual( kl_t92, kl_t98 );
+#line 111 "codegen/size_dyn.kl"
+    kl_t102 = __builtin_sub_overflow( kl_rows_1, 2, &( uint64_t ) { 0 } );
+#line 111 "codegen/size_dyn.kl"
+    if ( kl_t102 ) goto bb5; else goto bb6;
+    bb5:
+#line 111 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 111, "arithmetic overflow: rows - 2" );
+    bb6:
+#line 111 "codegen/size_dyn.kl"
+    kl_t103 = kl_rows_1 - 2;
+#line 111 "codegen/size_dyn.kl"
+    kl_t104 = __builtin_sub_overflow( kl_rows_1, 1, &( uint64_t ) { 0 } );
+#line 111 "codegen/size_dyn.kl"
+    if ( kl_t104 ) goto bb7; else goto bb8;
+    bb7:
+#line 111 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 111, "arithmetic overflow: rows - 1" );
+    bb8:
+#line 111 "codegen/size_dyn.kl"
+    kl_t105 = kl_rows_1 - 1;
+#line 111 "codegen/size_dyn.kl"
+    kl_t106 = 0;
+#line 111 "codegen/size_dyn.kl"
+    kl_t101.e[kl_t106] = kl_t103;
+#line 111 "codegen/size_dyn.kl"
+    kl_t107 = 1;
+#line 111 "codegen/size_dyn.kl"
+    kl_t101.e[kl_t107] = kl_t105;
+#line 111 "codegen/size_dyn.kl"
+    kl_t108 = 2;
+#line 111 "codegen/size_dyn.kl"
+    kl_t101.e[kl_t108] = kl_rows_1;
+#line 111 "codegen/size_dyn.kl"
+    kl_t109 = 0;
+#line 111 "codegen/size_dyn.kl"
+    kl_t110 = &kl_t101.e[kl_t109];
+#line 111 "codegen/size_dyn.kl"
+    kl_t111 = ( struct kl__run__L3u64__ref ) { ( uint64_t* ) kl_t110, 3 };
+#line 111 "codegen/size_dyn.kl"
+    kl_t112 = kl_7codegen_6filled__I3f64_VD__VD__VD_E__3f64_L3u64( 0.5, ( kl_t111 ).data, ( kl_t111 ).size );
+#line 111 "codegen/size_dyn.kl"
+    kl_cube_100 = kl_t112;
+    kl_t113 = &kl_cube_100;
+#line 112 "codegen/size_dyn.kl"
+    kl_t115 = 0;
+#line 112 "codegen/size_dyn.kl"
+    kl_t114.e[kl_t115] = 1;
+#line 112 "codegen/size_dyn.kl"
+    kl_t116 = 1;
+#line 112 "codegen/size_dyn.kl"
+    kl_t114.e[kl_t116] = 2;
+#line 112 "codegen/size_dyn.kl"
+    kl_t117 = 2;
+#line 112 "codegen/size_dyn.kl"
+    kl_t114.e[kl_t117] = 3;
+#line 112 "codegen/size_dyn.kl"
+    kl_t118 = 0;
+#line 112 "codegen/size_dyn.kl"
+    kl_t119 = &kl_t114.e[kl_t118];
+#line 112 "codegen/size_dyn.kl"
+    kl_t120 = ( struct kl__run__L3u64__ref ) { ( uint64_t* ) kl_t119, 3 };
+#line 112 "codegen/size_dyn.kl"
+    kl_7codegen_3set__I3f64_VD__VD__VD_E__SQ7codegen4GridI3f64_VD__VD__VD_E_3f64_L3u64( kl_t113, 2.5, ( kl_t120 ).data, ( kl_t120 ).size );
+    kl_t122 = &kl_cube_100;
+#line 113 "codegen/size_dyn.kl"
+    kl_t123 = kl_7codegen_4size__I3f64_VD__VD__VD_E__SQ7codegen4GridI3f64_VD__VD__VD_E( kl_t122 );
+#line 41 "../test_lib/console.kl"
+    kl_t125 = &kl_t124;
+#line 41 "../test_lib/console.kl"
+    kl_t126 = ( uint8_t* ) "\012";
+#line 41 "../test_lib/console.kl"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t125, kl_t126, 1 );
+#line 41 "../test_lib/console.kl"
+    kl_t128 = &kl_t124;
+#line 41 "../test_lib/console.kl"
+    kl_t129 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t128, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 113 "codegen/size_dyn.kl"
+    kl_1t7console_5print__3u64_7textual( kl_t123, kl_t129 );
+    kl_t131 = &kl_cube_100;
+#line 114 "codegen/size_dyn.kl"
+    kl_t133 = 0;
+#line 114 "codegen/size_dyn.kl"
+    kl_t132.e[kl_t133] = 1;
+#line 114 "codegen/size_dyn.kl"
+    kl_t134 = 1;
+#line 114 "codegen/size_dyn.kl"
+    kl_t132.e[kl_t134] = 2;
+#line 114 "codegen/size_dyn.kl"
+    kl_t135 = 2;
+#line 114 "codegen/size_dyn.kl"
+    kl_t132.e[kl_t135] = 3;
+#line 114 "codegen/size_dyn.kl"
+    kl_t136 = 0;
+#line 114 "codegen/size_dyn.kl"
+    kl_t137 = &kl_t132.e[kl_t136];
+#line 114 "codegen/size_dyn.kl"
+    kl_t138 = ( struct kl__run__L3u64__ref ) { ( uint64_t* ) kl_t137, 3 };
+#line 114 "codegen/size_dyn.kl"
+    kl_t139 = kl_7codegen_3get__I3f64_VD__VD__VD_E__SQ7codegen4GridI3f64_VD__VD__VD_E_L3u64( kl_t131, ( kl_t138 ).data, ( kl_t138 ).size );
+#line 114 "codegen/size_dyn.kl"
+    kl_t140 = &kl_cube_100;
+#line 114 "codegen/size_dyn.kl"
+    kl_t142 = 0;
+#line 114 "codegen/size_dyn.kl"
+    kl_t141.e[kl_t142] = 0;
+#line 114 "codegen/size_dyn.kl"
+    kl_t143 = 1;
+#line 114 "codegen/size_dyn.kl"
+    kl_t141.e[kl_t143] = 0;
+#line 114 "codegen/size_dyn.kl"
+    kl_t144 = 2;
+#line 114 "codegen/size_dyn.kl"
+    kl_t141.e[kl_t144] = 0;
+#line 114 "codegen/size_dyn.kl"
+    kl_t145 = 0;
+#line 114 "codegen/size_dyn.kl"
+    kl_t146 = &kl_t141.e[kl_t145];
+#line 114 "codegen/size_dyn.kl"
+    kl_t147 = ( struct kl__run__L3u64__ref ) { ( uint64_t* ) kl_t146, 3 };
+#line 114 "codegen/size_dyn.kl"
+    kl_t148 = kl_7codegen_3get__I3f64_VD__VD__VD_E__SQ7codegen4GridI3f64_VD__VD__VD_E_L3u64( kl_t140, ( kl_t147 ).data, ( kl_t147 ).size );
+#line 114 "codegen/size_dyn.kl"
+    kl_t149 = kl_t139 + kl_t148;
+#line 53 "../test_lib/console.kl"
+    kl_t151 = &kl_t150;
+#line 53 "../test_lib/console.kl"
+    kl_t152 = ( uint8_t* ) "\012";
+#line 53 "../test_lib/console.kl"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t151, kl_t152, 1 );
+#line 53 "../test_lib/console.kl"
+    kl_t154 = &kl_t150;
+#line 53 "../test_lib/console.kl"
+    kl_t155 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t154, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 114 "codegen/size_dyn.kl"
+    kl_1t7console_5print__3f64_7textual( kl_t149, kl_t155 );
+    kl_t157 = &kl_cube_100;
+#line 115 "codegen/size_dyn.kl"
+    kl_t158 = kl_7codegen_5total__I3f64_VD__VD__VD_E__Q7codegen4GridI3f64_VD__VD__VD_E( kl_t157 );
+#line 41 "../test_lib/console.kl"
+    kl_t160 = &kl_t159;
+#line 41 "../test_lib/console.kl"
+    kl_t161 = ( uint8_t* ) "\012";
+#line 41 "../test_lib/console.kl"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t160, kl_t161, 1 );
+#line 41 "../test_lib/console.kl"
+    kl_t163 = &kl_t159;
+#line 41 "../test_lib/console.kl"
+    kl_t164 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t163, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 115 "codegen/size_dyn.kl"
+    kl_1t7console_5print__3u64_7textual( kl_t158, kl_t164 );
+#line 117 "codegen/size_dyn.kl"
+    kl_t168 = 0;
+#line 117 "codegen/size_dyn.kl"
+    kl_t167.e[kl_t168] = 2;
+#line 117 "codegen/size_dyn.kl"
+    kl_t169 = 1;
+#line 117 "codegen/size_dyn.kl"
+    kl_t167.e[kl_t169] = 3;
+#line 117 "codegen/size_dyn.kl"
+    kl_t170 = 0;
+#line 117 "codegen/size_dyn.kl"
+    kl_t171 = &kl_t167.e[kl_t170];
+#line 117 "codegen/size_dyn.kl"
+    kl_t172 = ( struct kl__run__L3u64__ref ) { ( uint64_t* ) kl_t171, 2 };
+#line 117 "codegen/size_dyn.kl"
+    kl_t173 = kl_7codegen_6filled__I3i32_V2__V3_E__3i32_L3u64( 1, ( kl_t172 ).data, ( kl_t172 ).size );
+#line 117 "codegen/size_dyn.kl"
+    kl_fixed_166 = kl_t173;
+    kl_t174 = &kl_fixed_166;
+#line 118 "codegen/size_dyn.kl"
+    kl_t175 = kl_7codegen_4size__I3i32_V2__V3_E__SQ7codegen4GridI3i32_V2__V3_E( kl_t174 );
+#line 41 "../test_lib/console.kl"
+    kl_t177 = &kl_t176;
+#line 41 "../test_lib/console.kl"
+    kl_t178 = ( uint8_t* ) "\012";
+#line 41 "../test_lib/console.kl"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t177, kl_t178, 1 );
+#line 41 "../test_lib/console.kl"
+    kl_t180 = &kl_t176;
+#line 41 "../test_lib/console.kl"
+    kl_t181 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t180, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 118 "codegen/size_dyn.kl"
+    kl_1t7console_5print__3u64_7textual( kl_t175, kl_t181 );
+#line 120 "codegen/size_dyn.kl"
+    kl_t184 = __builtin_mul_overflow( kl_rows_1, 5, &( uint64_t ) { 0 } );
+#line 120 "codegen/size_dyn.kl"
+    if ( kl_t184 ) goto bb9; else goto bb10;
+    bb9:
+#line 120 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 120, "arithmetic overflow: rows * 5" );
+    bb10:
+#line 120 "codegen/size_dyn.kl"
+    kl_t185 = kl_rows_1 * 5;
+#line 120 "codegen/size_dyn.kl"
+    kl_t186 = kl_7codegen_4line__IVD_E__3u64_3u64( 10, kl_t185 );
+#line 120 "codegen/size_dyn.kl"
+    kl_l_183 = kl_t186;
+    kl_t187 = &kl_l_183;
+#line 121 "codegen/size_dyn.kl"
+    kl_t188 = kl_7codegen_3end__IVD_E__SQ7codegen4LineIVD_E( kl_t187 );
+#line 41 "../test_lib/console.kl"
+    kl_t190 = &kl_t189;
+#line 41 "../test_lib/console.kl"
+    kl_t191 = ( uint8_t* ) "\012";
+#line 41 "../test_lib/console.kl"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t190, kl_t191, 1 );
+#line 41 "../test_lib/console.kl"
+    kl_t193 = &kl_t189;
+#line 41 "../test_lib/console.kl"
+    kl_t194 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t193, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 121 "codegen/size_dyn.kl"
+    kl_1t7console_5print__3u64_7textual( kl_t188, kl_t194 );
+#line 123 "codegen/size_dyn.kl"
+    kl_axis_196 = 2;
+    kl_t197 = &kl_g_2;
+#line 124 "codegen/size_dyn.kl"
+    kl_t198 = kl_7codegen_6extent__I3i32_VD__V3_E__SQ7codegen4GridI3i32_VD__V3_E_3u64( kl_t197, kl_axis_196 );
+#line 124 "codegen/size_dyn.kl"
+    kl_t199 = ( int32_t ) kl_t198;
+#line 124 "codegen/size_dyn.kl"
+    kl_t200 = ( uint64_t ) kl_t199;
+#line 124 "codegen/size_dyn.kl"
+    kl_t201 = kl_t200 == kl_t198;
+#line 124 "codegen/size_dyn.kl"
+    if ( kl_t201 ) goto bb12; else goto bb11;
+    bb11:
+#line 124 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 124, "cast out of range: cast<i32>( g.extent( axis ) )" );
+    bb12:
+#line 124 "codegen/size_dyn.kl"
+    kl_t202 = kl_t199 >= 0;
+#line 124 "codegen/size_dyn.kl"
+    if ( kl_t202 ) goto bb13; else goto bb11;
+    bb13:
+#line 124 "codegen/size_dyn.kl"
+    kl_t0 = kl_t199;
+#line 124 "codegen/size_dyn.kl"
+    return kl_t0;
+}
+
+#line 70 "codegen/size_dyn.kl"
+struct kl_7codegen_Grid__I3i32_VD__V3_E kl_7codegen_6filled__I3i32_VD__V3_E__3i32_L3u64( int32_t kl_fill_1, uint64_t* kl_n_2_data, uint64_t kl_n_2_size )
+{
+    struct kl_7codegen_Grid__I3i32_VD__V3_E kl_t0;
+#line 70 "codegen/size_dyn.kl"
+    struct kl__run__L3u64__ref kl_n_2 = { kl_n_2_data, kl_n_2_size };
+    uint64_t* kl_t3;
+    uint64_t* kl_t4;
+    struct kl_7codegen_Grid__I3i32_VD__V3_E kl_t5;
+    struct kl_7codegen_Grid__I3i32_VD__V3_E* kl_t6;
+#line 70 "codegen/size_dyn.kl"
+    kl_t3 = ( kl_n_2 ).data;
+#line 70 "codegen/size_dyn.kl"
+    kl_t4 = kl_t3 + 0;
+#line 72 "codegen/size_dyn.kl"
+    kl_t6 = &kl_t5;
+#line 72 "codegen/size_dyn.kl"
+    kl_7codegen_4Grid__I3i32_VD__V3_E__RQ7codegen4GridI3i32_VD__V3_E_3i32__ctor( kl_t6, kl_fill_1, ( *kl_t4 ) );
+#line 72 "codegen/size_dyn.kl"
+    kl_t0 = kl_t5;
+#line 72 "codegen/size_dyn.kl"
+    return kl_t0;
+}
+
+#line 48 "codegen/size_dyn.kl"
+void kl_7codegen_3set__I3i32_VD__V3_E__SQ7codegen4GridI3i32_VD__V3_E_3i32_L3u64( struct kl_7codegen_Grid__I3i32_VD__V3_E* kl_this_1, int32_t kl_value_2, uint64_t* kl_index_3_data, uint64_t kl_index_3_size )
+{
+#line 48 "codegen/size_dyn.kl"
+    struct kl__run__L3u64__ref kl_index_3 = { kl_index_3_data, kl_index_3_size };
+    uint64_t kl_t4;
+    struct kl_7codegen_Grid__I3i32_VD__V3_E* kl_t5;
+    struct kl__run__L3u64__ref kl_t6;
+    uint64_t kl_t7;
+    uint64_t kl_t8;
+    bool kl_t9;
+    ( void ) kl_t4;
+#line 48 "codegen/size_dyn.kl"
+    kl_t4 = 0;
+#line 50 "codegen/size_dyn.kl"
+    kl_t5 = &( *kl_this_1 );
+#line 50 "codegen/size_dyn.kl"
+    kl_t6 = kl_index_3;
+#line 50 "codegen/size_dyn.kl"
+    kl_t7 = kl_7codegen_6offset__I3i32_VD__V3_E__SQ7codegen4GridI3i32_VD__V3_E_L3u64( kl_t5, ( kl_t6 ).data, ( kl_t6 ).size );
+#line 50 "codegen/size_dyn.kl"
+    kl_t8 = kl_t7;
+#line 50 "codegen/size_dyn.kl"
+    kl_t9 = kl_t8 < 64;
+#line 50 "codegen/size_dyn.kl"
+    if ( kl_t9 ) goto bb1; else goto bb2;
+    bb1:
+#line 50 "codegen/size_dyn.kl"
+    ( *kl_this_1 ).kl_cells.e[kl_t8] = kl_value_2;
+    return;
+    bb2:
+#line 50 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 50, "out of bounds: cells[offset( index )]" );
+}
+
+#line 43 "codegen/size_dyn.kl"
+int32_t kl_7codegen_3get__I3i32_VD__V3_E__SQ7codegen4GridI3i32_VD__V3_E_L3u64( struct kl_7codegen_Grid__I3i32_VD__V3_E* kl_this_1, uint64_t* kl_index_2_data, uint64_t kl_index_2_size )
+{
+    int32_t kl_t0;
+#line 43 "codegen/size_dyn.kl"
+    struct kl__run__L3u64__ref kl_index_2 = { kl_index_2_data, kl_index_2_size };
+    uint64_t kl_t3;
+    struct kl_7codegen_Grid__I3i32_VD__V3_E* kl_t4;
+    struct kl__run__L3u64__ref kl_t5;
+    uint64_t kl_t6;
+    uint64_t kl_t7;
+    bool kl_t8;
+    ( void ) kl_t3;
+#line 43 "codegen/size_dyn.kl"
+    kl_t3 = 0;
+#line 45 "codegen/size_dyn.kl"
+    kl_t4 = &( *kl_this_1 );
+#line 45 "codegen/size_dyn.kl"
+    kl_t5 = kl_index_2;
+#line 45 "codegen/size_dyn.kl"
+    kl_t6 = kl_7codegen_6offset__I3i32_VD__V3_E__SQ7codegen4GridI3i32_VD__V3_E_L3u64( kl_t4, ( kl_t5 ).data, ( kl_t5 ).size );
+#line 45 "codegen/size_dyn.kl"
+    kl_t7 = kl_t6;
+#line 45 "codegen/size_dyn.kl"
+    kl_t8 = kl_t7 < 64;
+#line 45 "codegen/size_dyn.kl"
+    if ( kl_t8 ) goto bb1; else goto bb2;
+    bb1:
+#line 45 "codegen/size_dyn.kl"
+    kl_t0 = ( *kl_this_1 ).kl_cells.e[kl_t7];
+#line 45 "codegen/size_dyn.kl"
+    return kl_t0;
+    bb2:
+#line 45 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 45, "out of bounds: cells[offset( index )]" );
+}
+
+#line 31 "codegen/size_dyn.kl"
+uint64_t kl_7codegen_6offset__I3i32_VD__V3_E__SQ7codegen4GridI3i32_VD__V3_E_L3u64( struct kl_7codegen_Grid__I3i32_VD__V3_E* kl_this_1, uint64_t* kl_index_2_data, uint64_t kl_index_2_size )
+{
+    uint64_t kl_t0;
+#line 31 "codegen/size_dyn.kl"
+    struct kl__run__L3u64__ref kl_index_2 = { kl_index_2_data, kl_index_2_size };
+    uint64_t kl_t3;
+    uint64_t kl_at_4;
+    uint64_t kl_stride_5;
+    uint64_t kl_k_6;
+    bool kl_t7;
+    uint64_t kl_t8;
+    uint64_t* kl_t9;
+    bool kl_t10;
+    uint64_t kl_t11;
+    bool kl_t12;
+    uint64_t* kl_t13;
+    bool kl_t14;
+    uint64_t kl_t15;
+    bool kl_t16;
+    bool kl_t17;
+    uint64_t kl_t18;
+    uint64_t kl_t19;
+    bool kl_t20;
+    struct kl__A2_3u64 kl_t21;
+    uint64_t kl_t22;
+    uint64_t kl_t23;
+    bool kl_t24;
+    bool kl_t25;
+    ( void ) kl_t3;
+    ( void ) kl_t22;
+    ( void ) kl_t23;
+#line 31 "codegen/size_dyn.kl"
+    kl_t3 = 0;
+#line 33 "codegen/size_dyn.kl"
+    kl_at_4 = 0;
+    kl_stride_5 = 1;
+    kl_k_6 = 2;
+#line 35 "codegen/size_dyn.kl"
+    goto bb1;
+    bb1:
+#line 35 "codegen/size_dyn.kl"
+    kl_t7 = kl_k_6 > 0;
+#line 35 "codegen/size_dyn.kl"
+    if ( kl_t7 ) goto bb2; else goto bb3;
+    bb2:
+    kl_t8 = ( kl_index_2 ).size;
+#line 37 "codegen/size_dyn.kl"
+    kl_t9 = ( kl_index_2 ).data;
+#line 37 "codegen/size_dyn.kl"
+    kl_t10 = __builtin_sub_overflow( kl_k_6, 1, &( uint64_t ) { 0 } );
+#line 37 "codegen/size_dyn.kl"
+    if ( kl_t10 ) goto bb4; else goto bb5;
+    bb3:
+#line 40 "codegen/size_dyn.kl"
+    kl_t0 = kl_at_4;
+#line 40 "codegen/size_dyn.kl"
+    return kl_t0;
+    bb4:
+#line 37 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 37, "arithmetic overflow: k - 1" );
+    bb5:
+#line 37 "codegen/size_dyn.kl"
+    kl_t11 = kl_k_6 - 1;
+#line 37 "codegen/size_dyn.kl"
+    kl_t12 = kl_t11 < kl_t8;
+#line 37 "codegen/size_dyn.kl"
+    if ( kl_t12 ) goto bb7; else goto bb6;
+    bb6:
+#line 37 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 37, "out of bounds: index[k - 1]" );
+    bb7:
+#line 37 "codegen/size_dyn.kl"
+    kl_t13 = kl_t9 + kl_t11;
+#line 37 "codegen/size_dyn.kl"
+    kl_t14 = __builtin_mul_overflow( ( *kl_t13 ), kl_stride_5, &( uint64_t ) { 0 } );
+#line 37 "codegen/size_dyn.kl"
+    if ( kl_t14 ) goto bb8; else goto bb9;
+    bb8:
+#line 37 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 37, "arithmetic overflow: index[k - 1] * stride" );
+    bb9:
+#line 37 "codegen/size_dyn.kl"
+    kl_t15 = ( *kl_t13 ) * kl_stride_5;
+#line 37 "codegen/size_dyn.kl"
+    kl_t16 = __builtin_add_overflow( kl_at_4, kl_t15, &( uint64_t ) { 0 } );
+#line 37 "codegen/size_dyn.kl"
+    if ( kl_t16 ) goto bb10; else goto bb11;
+    bb10:
+#line 37 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 37, "arithmetic overflow: at += index[k - 1] * stride;" );
+    bb11:
+#line 37 "codegen/size_dyn.kl"
+    kl_at_4 = kl_at_4 + kl_t15;
+    kl_t17 = __builtin_sub_overflow( kl_k_6, 1, &( uint64_t ) { 0 } );
+#line 38 "codegen/size_dyn.kl"
+    if ( kl_t17 ) goto bb12; else goto bb13;
+    bb12:
+#line 38 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 38, "arithmetic overflow: k - 1" );
+    bb13:
+#line 38 "codegen/size_dyn.kl"
+    kl_t18 = kl_k_6 - 1;
+#line 38 "codegen/size_dyn.kl"
+    kl_t19 = kl_t18;
+#line 38 "codegen/size_dyn.kl"
+    kl_t20 = kl_t19 < 2;
+#line 38 "codegen/size_dyn.kl"
+    if ( kl_t20 ) goto bb14; else goto bb15;
+    bb14:
+#line 38 "codegen/size_dyn.kl"
+    kl_t22 = 0;
+#line 38 "codegen/size_dyn.kl"
+    kl_t21.e[kl_t22] = ( *kl_this_1 ).kl_dyn.e[kl_t3];
+#line 38 "codegen/size_dyn.kl"
+    kl_t23 = 1;
+#line 38 "codegen/size_dyn.kl"
+    kl_t21.e[kl_t23] = 3;
+#line 38 "codegen/size_dyn.kl"
+    kl_t24 = __builtin_mul_overflow( kl_stride_5, kl_t21.e[kl_t19], &( uint64_t ) { 0 } );
+#line 38 "codegen/size_dyn.kl"
+    if ( kl_t24 ) goto bb16; else goto bb17;
+    bb15:
+#line 38 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 38, "out of bounds: S[k - 1]" );
+    bb16:
+#line 38 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 38, "arithmetic overflow: stride *= S[k - 1];" );
+    bb17:
+#line 38 "codegen/size_dyn.kl"
+    kl_stride_5 = kl_stride_5 * kl_t21.e[kl_t19];
+#line 35 "codegen/size_dyn.kl"
+    goto bb18;
+    bb18:
+#line 35 "codegen/size_dyn.kl"
+    kl_t25 = __builtin_sub_overflow( kl_k_6, 1, &( uint64_t ) { 0 } );
+#line 35 "codegen/size_dyn.kl"
+    if ( kl_t25 ) goto bb19; else goto bb20;
+    bb19:
+#line 35 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 35, "arithmetic overflow: k -= 1" );
+    bb20:
+#line 35 "codegen/size_dyn.kl"
+    kl_k_6 = kl_k_6 - 1;
+#line 35 "codegen/size_dyn.kl"
+    goto bb1;
+#line 41 "codegen/size_dyn.kl"
+}
+
+#line 53 "codegen/size_dyn.kl"
+uint64_t kl_7codegen_4size__I3i32_VD__V3_E__SQ7codegen4GridI3i32_VD__V3_E( struct kl_7codegen_Grid__I3i32_VD__V3_E* kl_this_1 )
+{
+    uint64_t kl_t0;
+    uint64_t kl_t2;
+    uint64_t kl_t3;
+    ( void ) kl_t2;
+#line 53 "codegen/size_dyn.kl"
+    kl_t2 = 0;
+#line 55 "codegen/size_dyn.kl"
+    kl_t3 = kl_7codegen_5count__I3i32_VD__V3_E__SQ7codegen4GridI3i32_VD__V3_E( ( *kl_this_1 ).kl_dyn.e[kl_t2] );
+#line 55 "codegen/size_dyn.kl"
+    kl_t0 = kl_t3;
+#line 55 "codegen/size_dyn.kl"
+    return kl_t0;
+}
+
+#line 86 "codegen/size_dyn.kl"
+uint64_t kl_7codegen_5total__I3i32_VD__V3_E__Q7codegen4GridI3i32_VD__V3_E( struct kl_7codegen_Grid__I3i32_VD__V3_E* kl_g_1 )
+{
+    uint64_t kl_t0;
+    uint64_t kl_t2;
+    uint64_t kl_t3;
+    bool kl_t4;
+    uint64_t kl_t5;
+    uint64_t kl_t6;
+    bool kl_t7;
+    uint64_t kl_t8;
+    struct kl_7codegen_Grid__I3i32_VD__V3_E* kl_t9;
+    uint64_t kl_t10;
+    bool kl_t11;
+    uint64_t kl_t12;
+    bool kl_t13;
+    uint64_t kl_t14;
+    ( void ) kl_t2;
+#line 86 "codegen/size_dyn.kl"
+    kl_t2 = 0;
+#line 88 "codegen/size_dyn.kl"
+    kl_t3 = kl_7codegen_5count__I3i32_VD__V3_E__SQ7codegen4GridI3i32_VD__V3_E( ( *kl_g_1 ).kl_dyn.e[kl_t2] );
+#line 88 "codegen/size_dyn.kl"
+    kl_t4 = __builtin_mul_overflow( kl_t3, 1000, &( uint64_t ) { 0 } );
+#line 88 "codegen/size_dyn.kl"
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+#line 88 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 88, "arithmetic overflow: Grid<T, S...>::count() * 1000" );
+    bb2:
+#line 88 "codegen/size_dyn.kl"
+    kl_t5 = kl_t3 * 1000;
+#line 88 "codegen/size_dyn.kl"
+    kl_t6 = kl_7codegen_7leading__IVD__V3_E__( ( *kl_g_1 ).kl_dyn.e[kl_t2] );
+#line 88 "codegen/size_dyn.kl"
+    kl_t7 = __builtin_add_overflow( kl_t5, kl_t6, &( uint64_t ) { 0 } );
+#line 88 "codegen/size_dyn.kl"
+    if ( kl_t7 ) goto bb3; else goto bb4;
+    bb3:
+#line 88 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 88, "arithmetic overflow: Grid<T, S...>::count() * 1000 + leading<S...>()" );
+    bb4:
+#line 88 "codegen/size_dyn.kl"
+    kl_t8 = kl_t5 + kl_t6;
+#line 88 "codegen/size_dyn.kl"
+    kl_t9 = &( *kl_g_1 );
+#line 88 "codegen/size_dyn.kl"
+    kl_t10 = kl_7codegen_6extent__I3i32_VD__V3_E__SQ7codegen4GridI3i32_VD__V3_E_3u64( kl_t9, 0 );
+#line 88 "codegen/size_dyn.kl"
+    kl_t11 = __builtin_mul_overflow( kl_t10, 0, &( uint64_t ) { 0 } );
+#line 88 "codegen/size_dyn.kl"
+    if ( kl_t11 ) goto bb5; else goto bb6;
+    bb5:
+#line 88 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 88, "arithmetic overflow: g.extent( 0 ) * 0" );
+    bb6:
+#line 88 "codegen/size_dyn.kl"
+    kl_t12 = kl_t10 * 0;
+#line 88 "codegen/size_dyn.kl"
+    kl_t13 = __builtin_add_overflow( kl_t8, kl_t12, &( uint64_t ) { 0 } );
+#line 88 "codegen/size_dyn.kl"
+    if ( kl_t13 ) goto bb7; else goto bb8;
+    bb7:
+#line 88 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 88, "arithmetic overflow: Grid<T, S...>::count() * 1000 + leading<S...>() + g.extent( 0 ) * 0" );
+    bb8:
+#line 88 "codegen/size_dyn.kl"
+    kl_t14 = kl_t8 + kl_t12;
+#line 88 "codegen/size_dyn.kl"
+    kl_t0 = kl_t14;
+#line 88 "codegen/size_dyn.kl"
+    return kl_t0;
+}
+
+#line 91 "codegen/size_dyn.kl"
+struct kl_7codegen_Grid__I3i32_VD__V3_E kl_7codegen_6copied__I3i32_VD__V3_E__Q7codegen4GridI3i32_VD__V3_E( struct kl_7codegen_Grid__I3i32_VD__V3_E kl_g_1 )
+{
+    struct kl_7codegen_Grid__I3i32_VD__V3_E kl_t0;
+    uint64_t kl_t2;
+    struct kl_7codegen_Grid__I3i32_VD__V3_E kl_other_3;
+    ( void ) kl_t2;
+#line 91 "codegen/size_dyn.kl"
+    kl_t2 = 0;
+#line 93 "codegen/size_dyn.kl"
+    kl_other_3 = kl_g_1;
+    kl_t0 = kl_other_3;
+#line 94 "codegen/size_dyn.kl"
+    return kl_t0;
+}
+
+#line 25 "codegen/size_dyn.kl"
+uint64_t kl_7codegen_6extent__I3i32_VD__V3_E__SQ7codegen4GridI3i32_VD__V3_E_3u64( struct kl_7codegen_Grid__I3i32_VD__V3_E* kl_this_1, uint64_t kl_axis_2 )
+{
+    uint64_t kl_t0;
+    uint64_t kl_t3;
+    uint64_t kl_t4;
+    bool kl_t5;
+    struct kl__A2_3u64 kl_t6;
+    uint64_t kl_t7;
+    uint64_t kl_t8;
+    ( void ) kl_t3;
+    ( void ) kl_t7;
+    ( void ) kl_t8;
+#line 25 "codegen/size_dyn.kl"
+    kl_t3 = 0;
+#line 27 "codegen/size_dyn.kl"
+    kl_t4 = kl_axis_2;
+#line 27 "codegen/size_dyn.kl"
+    kl_t5 = kl_t4 < 2;
+#line 27 "codegen/size_dyn.kl"
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+#line 27 "codegen/size_dyn.kl"
+    kl_t7 = 0;
+#line 27 "codegen/size_dyn.kl"
+    kl_t6.e[kl_t7] = ( *kl_this_1 ).kl_dyn.e[kl_t3];
+#line 27 "codegen/size_dyn.kl"
+    kl_t8 = 1;
+#line 27 "codegen/size_dyn.kl"
+    kl_t6.e[kl_t8] = 3;
+#line 27 "codegen/size_dyn.kl"
+    kl_t0 = kl_t6.e[kl_t4];
+#line 27 "codegen/size_dyn.kl"
+    return kl_t0;
+    bb2:
+#line 27 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 27, "out of bounds: S[axis]" );
+}
+
+#line 70 "codegen/size_dyn.kl"
+struct kl_7codegen_Grid__I3f64_VD__VD__VD_E kl_7codegen_6filled__I3f64_VD__VD__VD_E__3f64_L3u64( double kl_fill_1, uint64_t* kl_n_2_data, uint64_t kl_n_2_size )
+{
+    struct kl_7codegen_Grid__I3f64_VD__VD__VD_E kl_t0;
+#line 70 "codegen/size_dyn.kl"
+    struct kl__run__L3u64__ref kl_n_2 = { kl_n_2_data, kl_n_2_size };
+    uint64_t* kl_t3;
+    uint64_t* kl_t4;
+    uint64_t* kl_t5;
+    uint64_t* kl_t6;
+    uint64_t* kl_t7;
+    uint64_t* kl_t8;
+    struct kl_7codegen_Grid__I3f64_VD__VD__VD_E kl_t9;
+    struct kl_7codegen_Grid__I3f64_VD__VD__VD_E* kl_t10;
+#line 70 "codegen/size_dyn.kl"
+    kl_t3 = ( kl_n_2 ).data;
+#line 70 "codegen/size_dyn.kl"
+    kl_t4 = kl_t3 + 0;
+#line 70 "codegen/size_dyn.kl"
+    kl_t5 = ( kl_n_2 ).data;
+#line 70 "codegen/size_dyn.kl"
+    kl_t6 = kl_t5 + 1;
+#line 70 "codegen/size_dyn.kl"
+    kl_t7 = ( kl_n_2 ).data;
+#line 70 "codegen/size_dyn.kl"
+    kl_t8 = kl_t7 + 2;
+#line 72 "codegen/size_dyn.kl"
+    kl_t10 = &kl_t9;
+#line 72 "codegen/size_dyn.kl"
+    kl_7codegen_4Grid__I3f64_VD__VD__VD_E__RQ7codegen4GridI3f64_VD__VD__VD_E_3f64__ctor( kl_t10, kl_fill_1, ( *kl_t4 ), ( *kl_t6 ), ( *kl_t8 ) );
+#line 72 "codegen/size_dyn.kl"
+    kl_t0 = kl_t9;
+#line 72 "codegen/size_dyn.kl"
+    return kl_t0;
+}
+
+#line 48 "codegen/size_dyn.kl"
+void kl_7codegen_3set__I3f64_VD__VD__VD_E__SQ7codegen4GridI3f64_VD__VD__VD_E_3f64_L3u64( struct kl_7codegen_Grid__I3f64_VD__VD__VD_E* kl_this_1, double kl_value_2, uint64_t* kl_index_3_data, uint64_t kl_index_3_size )
+{
+#line 48 "codegen/size_dyn.kl"
+    struct kl__run__L3u64__ref kl_index_3 = { kl_index_3_data, kl_index_3_size };
+    uint64_t kl_t4;
+    uint64_t kl_t5;
+    uint64_t kl_t6;
+    struct kl_7codegen_Grid__I3f64_VD__VD__VD_E* kl_t7;
+    struct kl__run__L3u64__ref kl_t8;
+    uint64_t kl_t9;
+    uint64_t kl_t10;
+    bool kl_t11;
+    ( void ) kl_t4;
+    ( void ) kl_t5;
+    ( void ) kl_t6;
+#line 48 "codegen/size_dyn.kl"
+    kl_t4 = 0;
+#line 48 "codegen/size_dyn.kl"
+    kl_t5 = 1;
+#line 48 "codegen/size_dyn.kl"
+    kl_t6 = 2;
+#line 50 "codegen/size_dyn.kl"
+    kl_t7 = &( *kl_this_1 );
+#line 50 "codegen/size_dyn.kl"
+    kl_t8 = kl_index_3;
+#line 50 "codegen/size_dyn.kl"
+    kl_t9 = kl_7codegen_6offset__I3f64_VD__VD__VD_E__SQ7codegen4GridI3f64_VD__VD__VD_E_L3u64( kl_t7, ( kl_t8 ).data, ( kl_t8 ).size );
+#line 50 "codegen/size_dyn.kl"
+    kl_t10 = kl_t9;
+#line 50 "codegen/size_dyn.kl"
+    kl_t11 = kl_t10 < 64;
+#line 50 "codegen/size_dyn.kl"
+    if ( kl_t11 ) goto bb1; else goto bb2;
+    bb1:
+#line 50 "codegen/size_dyn.kl"
+    ( *kl_this_1 ).kl_cells.e[kl_t10] = kl_value_2;
+    return;
+    bb2:
+#line 50 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 50, "out of bounds: cells[offset( index )]" );
+}
+
+#line 53 "codegen/size_dyn.kl"
+uint64_t kl_7codegen_4size__I3f64_VD__VD__VD_E__SQ7codegen4GridI3f64_VD__VD__VD_E( struct kl_7codegen_Grid__I3f64_VD__VD__VD_E* kl_this_1 )
+{
+    uint64_t kl_t0;
+    uint64_t kl_t2;
+    uint64_t kl_t3;
+    uint64_t kl_t4;
+    uint64_t kl_t5;
+    ( void ) kl_t2;
+    ( void ) kl_t3;
+    ( void ) kl_t4;
+#line 53 "codegen/size_dyn.kl"
+    kl_t2 = 0;
+#line 53 "codegen/size_dyn.kl"
+    kl_t3 = 1;
+#line 53 "codegen/size_dyn.kl"
+    kl_t4 = 2;
+#line 55 "codegen/size_dyn.kl"
+    kl_t5 = kl_7codegen_5count__I3f64_VD__VD__VD_E__SQ7codegen4GridI3f64_VD__VD__VD_E( ( *kl_this_1 ).kl_dyn.e[kl_t2], ( *kl_this_1 ).kl_dyn.e[kl_t3], ( *kl_this_1 ).kl_dyn.e[kl_t4] );
+#line 55 "codegen/size_dyn.kl"
+    kl_t0 = kl_t5;
+#line 55 "codegen/size_dyn.kl"
+    return kl_t0;
+}
+
+#line 43 "codegen/size_dyn.kl"
+double kl_7codegen_3get__I3f64_VD__VD__VD_E__SQ7codegen4GridI3f64_VD__VD__VD_E_L3u64( struct kl_7codegen_Grid__I3f64_VD__VD__VD_E* kl_this_1, uint64_t* kl_index_2_data, uint64_t kl_index_2_size )
+{
+    double kl_t0;
+#line 43 "codegen/size_dyn.kl"
+    struct kl__run__L3u64__ref kl_index_2 = { kl_index_2_data, kl_index_2_size };
+    uint64_t kl_t3;
+    uint64_t kl_t4;
+    uint64_t kl_t5;
+    struct kl_7codegen_Grid__I3f64_VD__VD__VD_E* kl_t6;
+    struct kl__run__L3u64__ref kl_t7;
+    uint64_t kl_t8;
+    uint64_t kl_t9;
+    bool kl_t10;
+    ( void ) kl_t3;
+    ( void ) kl_t4;
+    ( void ) kl_t5;
+#line 43 "codegen/size_dyn.kl"
+    kl_t3 = 0;
+#line 43 "codegen/size_dyn.kl"
+    kl_t4 = 1;
+#line 43 "codegen/size_dyn.kl"
+    kl_t5 = 2;
+#line 45 "codegen/size_dyn.kl"
+    kl_t6 = &( *kl_this_1 );
+#line 45 "codegen/size_dyn.kl"
+    kl_t7 = kl_index_2;
+#line 45 "codegen/size_dyn.kl"
+    kl_t8 = kl_7codegen_6offset__I3f64_VD__VD__VD_E__SQ7codegen4GridI3f64_VD__VD__VD_E_L3u64( kl_t6, ( kl_t7 ).data, ( kl_t7 ).size );
+#line 45 "codegen/size_dyn.kl"
+    kl_t9 = kl_t8;
+#line 45 "codegen/size_dyn.kl"
+    kl_t10 = kl_t9 < 64;
+#line 45 "codegen/size_dyn.kl"
+    if ( kl_t10 ) goto bb1; else goto bb2;
+    bb1:
+#line 45 "codegen/size_dyn.kl"
+    kl_t0 = ( *kl_this_1 ).kl_cells.e[kl_t9];
+#line 45 "codegen/size_dyn.kl"
+    return kl_t0;
+    bb2:
+#line 45 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 45, "out of bounds: cells[offset( index )]" );
+}
+
+#line 86 "codegen/size_dyn.kl"
+uint64_t kl_7codegen_5total__I3f64_VD__VD__VD_E__Q7codegen4GridI3f64_VD__VD__VD_E( struct kl_7codegen_Grid__I3f64_VD__VD__VD_E* kl_g_1 )
+{
+    uint64_t kl_t0;
+    uint64_t kl_t2;
+    uint64_t kl_t3;
+    uint64_t kl_t4;
+    uint64_t kl_t5;
+    bool kl_t6;
+    uint64_t kl_t7;
+    uint64_t kl_t8;
+    bool kl_t9;
+    uint64_t kl_t10;
+    struct kl_7codegen_Grid__I3f64_VD__VD__VD_E* kl_t11;
+    uint64_t kl_t12;
+    bool kl_t13;
+    uint64_t kl_t14;
+    bool kl_t15;
+    uint64_t kl_t16;
+    ( void ) kl_t2;
+    ( void ) kl_t3;
+    ( void ) kl_t4;
+#line 86 "codegen/size_dyn.kl"
+    kl_t2 = 0;
+#line 86 "codegen/size_dyn.kl"
+    kl_t3 = 1;
+#line 86 "codegen/size_dyn.kl"
+    kl_t4 = 2;
+#line 88 "codegen/size_dyn.kl"
+    kl_t5 = kl_7codegen_5count__I3f64_VD__VD__VD_E__SQ7codegen4GridI3f64_VD__VD__VD_E( ( *kl_g_1 ).kl_dyn.e[kl_t2], ( *kl_g_1 ).kl_dyn.e[kl_t3], ( *kl_g_1 ).kl_dyn.e[kl_t4] );
+#line 88 "codegen/size_dyn.kl"
+    kl_t6 = __builtin_mul_overflow( kl_t5, 1000, &( uint64_t ) { 0 } );
+#line 88 "codegen/size_dyn.kl"
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb1:
+#line 88 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 88, "arithmetic overflow: Grid<T, S...>::count() * 1000" );
+    bb2:
+#line 88 "codegen/size_dyn.kl"
+    kl_t7 = kl_t5 * 1000;
+#line 88 "codegen/size_dyn.kl"
+    kl_t8 = kl_7codegen_7leading__IVD__VD__VD_E__( ( *kl_g_1 ).kl_dyn.e[kl_t2], ( *kl_g_1 ).kl_dyn.e[kl_t3], ( *kl_g_1 ).kl_dyn.e[kl_t4] );
+#line 88 "codegen/size_dyn.kl"
+    kl_t9 = __builtin_add_overflow( kl_t7, kl_t8, &( uint64_t ) { 0 } );
+#line 88 "codegen/size_dyn.kl"
+    if ( kl_t9 ) goto bb3; else goto bb4;
+    bb3:
+#line 88 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 88, "arithmetic overflow: Grid<T, S...>::count() * 1000 + leading<S...>()" );
+    bb4:
+#line 88 "codegen/size_dyn.kl"
+    kl_t10 = kl_t7 + kl_t8;
+#line 88 "codegen/size_dyn.kl"
+    kl_t11 = &( *kl_g_1 );
+#line 88 "codegen/size_dyn.kl"
+    kl_t12 = kl_7codegen_6extent__I3f64_VD__VD__VD_E__SQ7codegen4GridI3f64_VD__VD__VD_E_3u64( kl_t11, 0 );
+#line 88 "codegen/size_dyn.kl"
+    kl_t13 = __builtin_mul_overflow( kl_t12, 0, &( uint64_t ) { 0 } );
+#line 88 "codegen/size_dyn.kl"
+    if ( kl_t13 ) goto bb5; else goto bb6;
+    bb5:
+#line 88 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 88, "arithmetic overflow: g.extent( 0 ) * 0" );
+    bb6:
+#line 88 "codegen/size_dyn.kl"
+    kl_t14 = kl_t12 * 0;
+#line 88 "codegen/size_dyn.kl"
+    kl_t15 = __builtin_add_overflow( kl_t10, kl_t14, &( uint64_t ) { 0 } );
+#line 88 "codegen/size_dyn.kl"
+    if ( kl_t15 ) goto bb7; else goto bb8;
+    bb7:
+#line 88 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 88, "arithmetic overflow: Grid<T, S...>::count() * 1000 + leading<S...>() + g.extent( 0 ) * 0" );
+    bb8:
+#line 88 "codegen/size_dyn.kl"
+    kl_t16 = kl_t10 + kl_t14;
+#line 88 "codegen/size_dyn.kl"
+    kl_t0 = kl_t16;
+#line 88 "codegen/size_dyn.kl"
+    return kl_t0;
+}
+
+#line 70 "codegen/size_dyn.kl"
+struct kl_7codegen_Grid__I3i32_V2__V3_E kl_7codegen_6filled__I3i32_V2__V3_E__3i32_L3u64( int32_t kl_fill_1, uint64_t* kl_n_2_data, uint64_t kl_n_2_size )
+{
+    struct kl_7codegen_Grid__I3i32_V2__V3_E kl_t0;
+#line 70 "codegen/size_dyn.kl"
+    struct kl__run__L3u64__ref kl_n_2 = { kl_n_2_data, kl_n_2_size };
+    struct kl_7codegen_Grid__I3i32_V2__V3_E kl_t3;
+    struct kl_7codegen_Grid__I3i32_V2__V3_E* kl_t4;
+    ( void ) kl_n_2;
+#line 72 "codegen/size_dyn.kl"
+    kl_t4 = &kl_t3;
+#line 72 "codegen/size_dyn.kl"
+    kl_7codegen_4Grid__I3i32_V2__V3_E__RQ7codegen4GridI3i32_V2__V3_E_3i32__ctor( kl_t4, kl_fill_1 );
+#line 72 "codegen/size_dyn.kl"
+    kl_t0 = kl_t3;
+#line 72 "codegen/size_dyn.kl"
+    return kl_t0;
+}
+
+#line 53 "codegen/size_dyn.kl"
+uint64_t kl_7codegen_4size__I3i32_V2__V3_E__SQ7codegen4GridI3i32_V2__V3_E( struct kl_7codegen_Grid__I3i32_V2__V3_E* kl_this_1 )
+{
+    uint64_t kl_t0;
+    uint64_t kl_t2;
+    ( void ) kl_this_1;
+#line 55 "codegen/size_dyn.kl"
+    kl_t2 = kl_7codegen_5count__I3i32_V2__V3_E__SQ7codegen4GridI3i32_V2__V3_E(  );
+#line 55 "codegen/size_dyn.kl"
+    kl_t0 = kl_t2;
+#line 55 "codegen/size_dyn.kl"
+    return kl_t0;
+}
+
+#line 75 "codegen/size_dyn.kl"
+struct kl_7codegen_Line__IVD_E kl_7codegen_4line__IVD_E__3u64_3u64( uint64_t kl_start_1, uint64_t kl_n_2 )
+{
+    struct kl_7codegen_Line__IVD_E kl_t0;
+    struct kl_7codegen_Line__IVD_E kl_t3;
+    struct kl__A1_3u64 kl_t4;
+    uint64_t kl_t5;
+    ( void ) kl_t5;
+#line 77 "codegen/size_dyn.kl"
+    kl_t3.kl_start = kl_start_1;
+#line 77 "codegen/size_dyn.kl"
+    kl_t5 = 0;
+#line 77 "codegen/size_dyn.kl"
+    kl_t4.e[kl_t5] = kl_n_2;
+#line 77 "codegen/size_dyn.kl"
+    kl_t3.kl_dyn = kl_t4;
+#line 77 "codegen/size_dyn.kl"
+    kl_t0 = kl_t3;
+#line 77 "codegen/size_dyn.kl"
+    return kl_t0;
+}
+
+#line 63 "codegen/size_dyn.kl"
+uint64_t kl_7codegen_3end__IVD_E__SQ7codegen4LineIVD_E( struct kl_7codegen_Line__IVD_E* kl_this_1 )
+{
+    uint64_t kl_t0;
+    uint64_t kl_t2;
+    bool kl_t3;
+    uint64_t kl_t4;
+    ( void ) kl_t2;
+#line 63 "codegen/size_dyn.kl"
+    kl_t2 = 0;
+#line 65 "codegen/size_dyn.kl"
+    kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_start, ( *kl_this_1 ).kl_dyn.e[kl_t2], &( uint64_t ) { 0 } );
+#line 65 "codegen/size_dyn.kl"
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 65 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 65, "arithmetic overflow: start + N" );
+    bb2:
+#line 65 "codegen/size_dyn.kl"
+    kl_t4 = ( *kl_this_1 ).kl_start + ( *kl_this_1 ).kl_dyn.e[kl_t2];
+#line 65 "codegen/size_dyn.kl"
+    kl_t0 = kl_t4;
+#line 65 "codegen/size_dyn.kl"
+    return kl_t0;
+}
+
+#line 10 "codegen/size_dyn.kl"
+void kl_7codegen_4Grid__I3i32_VD__V3_E__RQ7codegen4GridI3i32_VD__V3_E_3i32__ctor( struct kl_7codegen_Grid__I3i32_VD__V3_E* kl_this_1, int32_t kl_fill_2, uint64_t kl_t3 )
+{
+    struct kl__A1_3u64 kl_t4;
+    uint64_t kl_t5;
+    struct kl__A64_3i32 kl_t6;
+    uint64_t kl_t7;
+    bool kl_t8;
+    ( void ) kl_t5;
+#line 10 "codegen/size_dyn.kl"
+    kl_t5 = 0;
+#line 10 "codegen/size_dyn.kl"
+    kl_t4.e[kl_t5] = kl_t3;
+#line 10 "codegen/size_dyn.kl"
+    ( *kl_this_1 ).kl_dyn = kl_t4;
+#line 12 "codegen/size_dyn.kl"
+    kl_t7 = 0;
+#line 12 "codegen/size_dyn.kl"
+    goto bb1;
+    bb1:
+#line 12 "codegen/size_dyn.kl"
+    kl_t6.e[kl_t7] = kl_fill_2;
+#line 12 "codegen/size_dyn.kl"
+    kl_t7 = kl_t7 + 1;
+#line 12 "codegen/size_dyn.kl"
+    kl_t8 = kl_t7 < 64;
+#line 12 "codegen/size_dyn.kl"
+    if ( kl_t8 ) goto bb1; else goto bb2;
+    bb2:
+#line 12 "codegen/size_dyn.kl"
+    ( *kl_this_1 ).kl_cells = kl_t6;
+    return;
+#line 13 "codegen/size_dyn.kl"
+}
+
+#line 15 "codegen/size_dyn.kl"
+uint64_t kl_7codegen_5count__I3i32_VD__V3_E__SQ7codegen4GridI3i32_VD__V3_E( uint64_t kl_t1 )
+{
+    uint64_t kl_t0;
+    uint64_t kl_p_2;
+    uint64_t kl_i_3;
+    bool kl_t4;
+    uint64_t kl_t5;
+    bool kl_t6;
+    struct kl__A2_3u64 kl_t7;
+    uint64_t kl_t8;
+    uint64_t kl_t9;
+    bool kl_t10;
+    bool kl_t11;
+    ( void ) kl_t8;
+    ( void ) kl_t9;
+#line 17 "codegen/size_dyn.kl"
+    kl_p_2 = 1;
+    kl_i_3 = 0;
+#line 18 "codegen/size_dyn.kl"
+    goto bb1;
+    bb1:
+#line 18 "codegen/size_dyn.kl"
+    kl_t4 = kl_i_3 < 2;
+#line 18 "codegen/size_dyn.kl"
+    if ( kl_t4 ) goto bb2; else goto bb3;
+    bb2:
+    kl_t5 = kl_i_3;
+#line 20 "codegen/size_dyn.kl"
+    kl_t6 = kl_t5 < 2;
+#line 20 "codegen/size_dyn.kl"
+    if ( kl_t6 ) goto bb4; else goto bb5;
+    bb3:
+    kl_t0 = kl_p_2;
+#line 22 "codegen/size_dyn.kl"
+    return kl_t0;
+    bb4:
+#line 20 "codegen/size_dyn.kl"
+    kl_t8 = 0;
+#line 20 "codegen/size_dyn.kl"
+    kl_t7.e[kl_t8] = kl_t1;
+#line 20 "codegen/size_dyn.kl"
+    kl_t9 = 1;
+#line 20 "codegen/size_dyn.kl"
+    kl_t7.e[kl_t9] = 3;
+#line 20 "codegen/size_dyn.kl"
+    kl_t10 = __builtin_mul_overflow( kl_p_2, kl_t7.e[kl_t5], &( uint64_t ) { 0 } );
+#line 20 "codegen/size_dyn.kl"
+    if ( kl_t10 ) goto bb6; else goto bb7;
+    bb5:
+#line 20 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 20, "out of bounds: S[i]" );
+    bb6:
+#line 20 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 20, "arithmetic overflow: p *= S[i];" );
+    bb7:
+#line 20 "codegen/size_dyn.kl"
+    kl_p_2 = kl_p_2 * kl_t7.e[kl_t5];
+#line 18 "codegen/size_dyn.kl"
+    goto bb8;
+    bb8:
+#line 18 "codegen/size_dyn.kl"
+    kl_t11 = __builtin_add_overflow( kl_i_3, 1, &( uint64_t ) { 0 } );
+#line 18 "codegen/size_dyn.kl"
+    if ( kl_t11 ) goto bb9; else goto bb10;
+    bb9:
+#line 18 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 18, "arithmetic overflow: i += 1" );
+    bb10:
+#line 18 "codegen/size_dyn.kl"
+    kl_i_3 = kl_i_3 + 1;
+#line 18 "codegen/size_dyn.kl"
+    goto bb1;
+#line 23 "codegen/size_dyn.kl"
+}
+
+#line 80 "codegen/size_dyn.kl"
+uint64_t kl_7codegen_7leading__IVD__V3_E__( uint64_t kl_t1 )
+{
+    uint64_t kl_t0;
+    uint64_t kl_t2;
+    bool kl_t3;
+    struct kl__A2_3u64 kl_t4;
+    uint64_t kl_t5;
+    uint64_t kl_t6;
+    bool kl_t7;
+    uint64_t kl_t8;
+    bool kl_t9;
+    uint64_t kl_t10;
+    ( void ) kl_t5;
+    ( void ) kl_t6;
+#line 82 "codegen/size_dyn.kl"
+    kl_t2 = 0;
+#line 82 "codegen/size_dyn.kl"
+    kl_t3 = kl_t2 < 2;
+#line 82 "codegen/size_dyn.kl"
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 82 "codegen/size_dyn.kl"
+    kl_t5 = 0;
+#line 82 "codegen/size_dyn.kl"
+    kl_t4.e[kl_t5] = kl_t1;
+#line 82 "codegen/size_dyn.kl"
+    kl_t6 = 1;
+#line 82 "codegen/size_dyn.kl"
+    kl_t4.e[kl_t6] = 3;
+#line 82 "codegen/size_dyn.kl"
+    kl_t7 = __builtin_mul_overflow( kl_t4.e[kl_t2], 100, &( uint64_t ) { 0 } );
+#line 82 "codegen/size_dyn.kl"
+    if ( kl_t7 ) goto bb3; else goto bb4;
+    bb2:
+#line 82 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 82, "out of bounds: S[0]" );
+    bb3:
+#line 82 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 82, "arithmetic overflow: S[0] * 100" );
+    bb4:
+#line 82 "codegen/size_dyn.kl"
+    kl_t8 = kl_t4.e[kl_t2] * 100;
+#line 82 "codegen/size_dyn.kl"
+    kl_t9 = __builtin_add_overflow( kl_t8, 2, &( uint64_t ) { 0 } );
+#line 82 "codegen/size_dyn.kl"
+    if ( kl_t9 ) goto bb5; else goto bb6;
+    bb5:
+#line 82 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 82, "arithmetic overflow: S[0] * 100 + S.size" );
+    bb6:
+#line 82 "codegen/size_dyn.kl"
+    kl_t10 = kl_t8 + 2;
+#line 82 "codegen/size_dyn.kl"
+    kl_t0 = kl_t10;
+#line 82 "codegen/size_dyn.kl"
+    return kl_t0;
+}
+
+#line 10 "codegen/size_dyn.kl"
+void kl_7codegen_4Grid__I3f64_VD__VD__VD_E__RQ7codegen4GridI3f64_VD__VD__VD_E_3f64__ctor( struct kl_7codegen_Grid__I3f64_VD__VD__VD_E* kl_this_1, double kl_fill_2, uint64_t kl_t3, uint64_t kl_t4, uint64_t kl_t5 )
+{
+    struct kl__A3_3u64 kl_t6;
+    uint64_t kl_t7;
+    uint64_t kl_t8;
+    uint64_t kl_t9;
+    struct kl__A64_3f64 kl_t10;
+    uint64_t kl_t11;
+    bool kl_t12;
+    ( void ) kl_t7;
+    ( void ) kl_t8;
+    ( void ) kl_t9;
+#line 10 "codegen/size_dyn.kl"
+    kl_t7 = 0;
+#line 10 "codegen/size_dyn.kl"
+    kl_t6.e[kl_t7] = kl_t3;
+#line 10 "codegen/size_dyn.kl"
+    kl_t8 = 1;
+#line 10 "codegen/size_dyn.kl"
+    kl_t6.e[kl_t8] = kl_t4;
+#line 10 "codegen/size_dyn.kl"
+    kl_t9 = 2;
+#line 10 "codegen/size_dyn.kl"
+    kl_t6.e[kl_t9] = kl_t5;
+#line 10 "codegen/size_dyn.kl"
+    ( *kl_this_1 ).kl_dyn = kl_t6;
+#line 12 "codegen/size_dyn.kl"
+    kl_t11 = 0;
+#line 12 "codegen/size_dyn.kl"
+    goto bb1;
+    bb1:
+#line 12 "codegen/size_dyn.kl"
+    kl_t10.e[kl_t11] = kl_fill_2;
+#line 12 "codegen/size_dyn.kl"
+    kl_t11 = kl_t11 + 1;
+#line 12 "codegen/size_dyn.kl"
+    kl_t12 = kl_t11 < 64;
+#line 12 "codegen/size_dyn.kl"
+    if ( kl_t12 ) goto bb1; else goto bb2;
+    bb2:
+#line 12 "codegen/size_dyn.kl"
+    ( *kl_this_1 ).kl_cells = kl_t10;
+    return;
+#line 13 "codegen/size_dyn.kl"
+}
+
+#line 31 "codegen/size_dyn.kl"
+uint64_t kl_7codegen_6offset__I3f64_VD__VD__VD_E__SQ7codegen4GridI3f64_VD__VD__VD_E_L3u64( struct kl_7codegen_Grid__I3f64_VD__VD__VD_E* kl_this_1, uint64_t* kl_index_2_data, uint64_t kl_index_2_size )
+{
+    uint64_t kl_t0;
+#line 31 "codegen/size_dyn.kl"
+    struct kl__run__L3u64__ref kl_index_2 = { kl_index_2_data, kl_index_2_size };
+    uint64_t kl_t3;
+    uint64_t kl_t4;
+    uint64_t kl_t5;
+    uint64_t kl_at_6;
+    uint64_t kl_stride_7;
+    uint64_t kl_k_8;
+    bool kl_t9;
+    uint64_t kl_t10;
+    uint64_t* kl_t11;
+    bool kl_t12;
+    uint64_t kl_t13;
+    bool kl_t14;
+    uint64_t* kl_t15;
+    bool kl_t16;
+    uint64_t kl_t17;
+    bool kl_t18;
+    bool kl_t19;
+    uint64_t kl_t20;
+    uint64_t kl_t21;
+    bool kl_t22;
+    struct kl__A3_3u64 kl_t23;
+    uint64_t kl_t24;
+    uint64_t kl_t25;
+    uint64_t kl_t26;
+    bool kl_t27;
+    bool kl_t28;
+    ( void ) kl_t3;
+    ( void ) kl_t4;
+    ( void ) kl_t5;
+    ( void ) kl_t24;
+    ( void ) kl_t25;
+    ( void ) kl_t26;
+#line 31 "codegen/size_dyn.kl"
+    kl_t3 = 0;
+#line 31 "codegen/size_dyn.kl"
+    kl_t4 = 1;
+#line 31 "codegen/size_dyn.kl"
+    kl_t5 = 2;
+#line 33 "codegen/size_dyn.kl"
+    kl_at_6 = 0;
+    kl_stride_7 = 1;
+    kl_k_8 = 3;
+#line 35 "codegen/size_dyn.kl"
+    goto bb1;
+    bb1:
+#line 35 "codegen/size_dyn.kl"
+    kl_t9 = kl_k_8 > 0;
+#line 35 "codegen/size_dyn.kl"
+    if ( kl_t9 ) goto bb2; else goto bb3;
+    bb2:
+    kl_t10 = ( kl_index_2 ).size;
+#line 37 "codegen/size_dyn.kl"
+    kl_t11 = ( kl_index_2 ).data;
+#line 37 "codegen/size_dyn.kl"
+    kl_t12 = __builtin_sub_overflow( kl_k_8, 1, &( uint64_t ) { 0 } );
+#line 37 "codegen/size_dyn.kl"
+    if ( kl_t12 ) goto bb4; else goto bb5;
+    bb3:
+#line 40 "codegen/size_dyn.kl"
+    kl_t0 = kl_at_6;
+#line 40 "codegen/size_dyn.kl"
+    return kl_t0;
+    bb4:
+#line 37 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 37, "arithmetic overflow: k - 1" );
+    bb5:
+#line 37 "codegen/size_dyn.kl"
+    kl_t13 = kl_k_8 - 1;
+#line 37 "codegen/size_dyn.kl"
+    kl_t14 = kl_t13 < kl_t10;
+#line 37 "codegen/size_dyn.kl"
+    if ( kl_t14 ) goto bb7; else goto bb6;
+    bb6:
+#line 37 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 37, "out of bounds: index[k - 1]" );
+    bb7:
+#line 37 "codegen/size_dyn.kl"
+    kl_t15 = kl_t11 + kl_t13;
+#line 37 "codegen/size_dyn.kl"
+    kl_t16 = __builtin_mul_overflow( ( *kl_t15 ), kl_stride_7, &( uint64_t ) { 0 } );
+#line 37 "codegen/size_dyn.kl"
+    if ( kl_t16 ) goto bb8; else goto bb9;
+    bb8:
+#line 37 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 37, "arithmetic overflow: index[k - 1] * stride" );
+    bb9:
+#line 37 "codegen/size_dyn.kl"
+    kl_t17 = ( *kl_t15 ) * kl_stride_7;
+#line 37 "codegen/size_dyn.kl"
+    kl_t18 = __builtin_add_overflow( kl_at_6, kl_t17, &( uint64_t ) { 0 } );
+#line 37 "codegen/size_dyn.kl"
+    if ( kl_t18 ) goto bb10; else goto bb11;
+    bb10:
+#line 37 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 37, "arithmetic overflow: at += index[k - 1] * stride;" );
+    bb11:
+#line 37 "codegen/size_dyn.kl"
+    kl_at_6 = kl_at_6 + kl_t17;
+    kl_t19 = __builtin_sub_overflow( kl_k_8, 1, &( uint64_t ) { 0 } );
+#line 38 "codegen/size_dyn.kl"
+    if ( kl_t19 ) goto bb12; else goto bb13;
+    bb12:
+#line 38 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 38, "arithmetic overflow: k - 1" );
+    bb13:
+#line 38 "codegen/size_dyn.kl"
+    kl_t20 = kl_k_8 - 1;
+#line 38 "codegen/size_dyn.kl"
+    kl_t21 = kl_t20;
+#line 38 "codegen/size_dyn.kl"
+    kl_t22 = kl_t21 < 3;
+#line 38 "codegen/size_dyn.kl"
+    if ( kl_t22 ) goto bb14; else goto bb15;
+    bb14:
+#line 38 "codegen/size_dyn.kl"
+    kl_t24 = 0;
+#line 38 "codegen/size_dyn.kl"
+    kl_t23.e[kl_t24] = ( *kl_this_1 ).kl_dyn.e[kl_t3];
+#line 38 "codegen/size_dyn.kl"
+    kl_t25 = 1;
+#line 38 "codegen/size_dyn.kl"
+    kl_t23.e[kl_t25] = ( *kl_this_1 ).kl_dyn.e[kl_t4];
+#line 38 "codegen/size_dyn.kl"
+    kl_t26 = 2;
+#line 38 "codegen/size_dyn.kl"
+    kl_t23.e[kl_t26] = ( *kl_this_1 ).kl_dyn.e[kl_t5];
+#line 38 "codegen/size_dyn.kl"
+    kl_t27 = __builtin_mul_overflow( kl_stride_7, kl_t23.e[kl_t21], &( uint64_t ) { 0 } );
+#line 38 "codegen/size_dyn.kl"
+    if ( kl_t27 ) goto bb16; else goto bb17;
+    bb15:
+#line 38 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 38, "out of bounds: S[k - 1]" );
+    bb16:
+#line 38 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 38, "arithmetic overflow: stride *= S[k - 1];" );
+    bb17:
+#line 38 "codegen/size_dyn.kl"
+    kl_stride_7 = kl_stride_7 * kl_t23.e[kl_t21];
+#line 35 "codegen/size_dyn.kl"
+    goto bb18;
+    bb18:
+#line 35 "codegen/size_dyn.kl"
+    kl_t28 = __builtin_sub_overflow( kl_k_8, 1, &( uint64_t ) { 0 } );
+#line 35 "codegen/size_dyn.kl"
+    if ( kl_t28 ) goto bb19; else goto bb20;
+    bb19:
+#line 35 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 35, "arithmetic overflow: k -= 1" );
+    bb20:
+#line 35 "codegen/size_dyn.kl"
+    kl_k_8 = kl_k_8 - 1;
+#line 35 "codegen/size_dyn.kl"
+    goto bb1;
+#line 41 "codegen/size_dyn.kl"
+}
+
+#line 15 "codegen/size_dyn.kl"
+uint64_t kl_7codegen_5count__I3f64_VD__VD__VD_E__SQ7codegen4GridI3f64_VD__VD__VD_E( uint64_t kl_t1, uint64_t kl_t2, uint64_t kl_t3 )
+{
+    uint64_t kl_t0;
+    uint64_t kl_p_4;
+    uint64_t kl_i_5;
+    bool kl_t6;
+    uint64_t kl_t7;
+    bool kl_t8;
+    struct kl__A3_3u64 kl_t9;
+    uint64_t kl_t10;
+    uint64_t kl_t11;
+    uint64_t kl_t12;
+    bool kl_t13;
+    bool kl_t14;
+    ( void ) kl_t10;
+    ( void ) kl_t11;
+    ( void ) kl_t12;
+#line 17 "codegen/size_dyn.kl"
+    kl_p_4 = 1;
+    kl_i_5 = 0;
+#line 18 "codegen/size_dyn.kl"
+    goto bb1;
+    bb1:
+#line 18 "codegen/size_dyn.kl"
+    kl_t6 = kl_i_5 < 3;
+#line 18 "codegen/size_dyn.kl"
+    if ( kl_t6 ) goto bb2; else goto bb3;
+    bb2:
+    kl_t7 = kl_i_5;
+#line 20 "codegen/size_dyn.kl"
+    kl_t8 = kl_t7 < 3;
+#line 20 "codegen/size_dyn.kl"
+    if ( kl_t8 ) goto bb4; else goto bb5;
+    bb3:
+    kl_t0 = kl_p_4;
+#line 22 "codegen/size_dyn.kl"
+    return kl_t0;
+    bb4:
+#line 20 "codegen/size_dyn.kl"
+    kl_t10 = 0;
+#line 20 "codegen/size_dyn.kl"
+    kl_t9.e[kl_t10] = kl_t1;
+#line 20 "codegen/size_dyn.kl"
+    kl_t11 = 1;
+#line 20 "codegen/size_dyn.kl"
+    kl_t9.e[kl_t11] = kl_t2;
+#line 20 "codegen/size_dyn.kl"
+    kl_t12 = 2;
+#line 20 "codegen/size_dyn.kl"
+    kl_t9.e[kl_t12] = kl_t3;
+#line 20 "codegen/size_dyn.kl"
+    kl_t13 = __builtin_mul_overflow( kl_p_4, kl_t9.e[kl_t7], &( uint64_t ) { 0 } );
+#line 20 "codegen/size_dyn.kl"
+    if ( kl_t13 ) goto bb6; else goto bb7;
+    bb5:
+#line 20 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 20, "out of bounds: S[i]" );
+    bb6:
+#line 20 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 20, "arithmetic overflow: p *= S[i];" );
+    bb7:
+#line 20 "codegen/size_dyn.kl"
+    kl_p_4 = kl_p_4 * kl_t9.e[kl_t7];
+#line 18 "codegen/size_dyn.kl"
+    goto bb8;
+    bb8:
+#line 18 "codegen/size_dyn.kl"
+    kl_t14 = __builtin_add_overflow( kl_i_5, 1, &( uint64_t ) { 0 } );
+#line 18 "codegen/size_dyn.kl"
+    if ( kl_t14 ) goto bb9; else goto bb10;
+    bb9:
+#line 18 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 18, "arithmetic overflow: i += 1" );
+    bb10:
+#line 18 "codegen/size_dyn.kl"
+    kl_i_5 = kl_i_5 + 1;
+#line 18 "codegen/size_dyn.kl"
+    goto bb1;
+#line 23 "codegen/size_dyn.kl"
+}
+
+#line 80 "codegen/size_dyn.kl"
+uint64_t kl_7codegen_7leading__IVD__VD__VD_E__( uint64_t kl_t1, uint64_t kl_t2, uint64_t kl_t3 )
+{
+    uint64_t kl_t0;
+    uint64_t kl_t4;
+    bool kl_t5;
+    struct kl__A3_3u64 kl_t6;
+    uint64_t kl_t7;
+    uint64_t kl_t8;
+    uint64_t kl_t9;
+    bool kl_t10;
+    uint64_t kl_t11;
+    bool kl_t12;
+    uint64_t kl_t13;
+    ( void ) kl_t7;
+    ( void ) kl_t8;
+    ( void ) kl_t9;
+#line 82 "codegen/size_dyn.kl"
+    kl_t4 = 0;
+#line 82 "codegen/size_dyn.kl"
+    kl_t5 = kl_t4 < 3;
+#line 82 "codegen/size_dyn.kl"
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+#line 82 "codegen/size_dyn.kl"
+    kl_t7 = 0;
+#line 82 "codegen/size_dyn.kl"
+    kl_t6.e[kl_t7] = kl_t1;
+#line 82 "codegen/size_dyn.kl"
+    kl_t8 = 1;
+#line 82 "codegen/size_dyn.kl"
+    kl_t6.e[kl_t8] = kl_t2;
+#line 82 "codegen/size_dyn.kl"
+    kl_t9 = 2;
+#line 82 "codegen/size_dyn.kl"
+    kl_t6.e[kl_t9] = kl_t3;
+#line 82 "codegen/size_dyn.kl"
+    kl_t10 = __builtin_mul_overflow( kl_t6.e[kl_t4], 100, &( uint64_t ) { 0 } );
+#line 82 "codegen/size_dyn.kl"
+    if ( kl_t10 ) goto bb3; else goto bb4;
+    bb2:
+#line 82 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 82, "out of bounds: S[0]" );
+    bb3:
+#line 82 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 82, "arithmetic overflow: S[0] * 100" );
+    bb4:
+#line 82 "codegen/size_dyn.kl"
+    kl_t11 = kl_t6.e[kl_t4] * 100;
+#line 82 "codegen/size_dyn.kl"
+    kl_t12 = __builtin_add_overflow( kl_t11, 3, &( uint64_t ) { 0 } );
+#line 82 "codegen/size_dyn.kl"
+    if ( kl_t12 ) goto bb5; else goto bb6;
+    bb5:
+#line 82 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 82, "arithmetic overflow: S[0] * 100 + S.size" );
+    bb6:
+#line 82 "codegen/size_dyn.kl"
+    kl_t13 = kl_t11 + 3;
+#line 82 "codegen/size_dyn.kl"
+    kl_t0 = kl_t13;
+#line 82 "codegen/size_dyn.kl"
+    return kl_t0;
+}
+
+#line 25 "codegen/size_dyn.kl"
+uint64_t kl_7codegen_6extent__I3f64_VD__VD__VD_E__SQ7codegen4GridI3f64_VD__VD__VD_E_3u64( struct kl_7codegen_Grid__I3f64_VD__VD__VD_E* kl_this_1, uint64_t kl_axis_2 )
+{
+    uint64_t kl_t0;
+    uint64_t kl_t3;
+    uint64_t kl_t4;
+    uint64_t kl_t5;
+    uint64_t kl_t6;
+    bool kl_t7;
+    struct kl__A3_3u64 kl_t8;
+    uint64_t kl_t9;
+    uint64_t kl_t10;
+    uint64_t kl_t11;
+    ( void ) kl_t3;
+    ( void ) kl_t4;
+    ( void ) kl_t5;
+    ( void ) kl_t9;
+    ( void ) kl_t10;
+    ( void ) kl_t11;
+#line 25 "codegen/size_dyn.kl"
+    kl_t3 = 0;
+#line 25 "codegen/size_dyn.kl"
+    kl_t4 = 1;
+#line 25 "codegen/size_dyn.kl"
+    kl_t5 = 2;
+#line 27 "codegen/size_dyn.kl"
+    kl_t6 = kl_axis_2;
+#line 27 "codegen/size_dyn.kl"
+    kl_t7 = kl_t6 < 3;
+#line 27 "codegen/size_dyn.kl"
+    if ( kl_t7 ) goto bb1; else goto bb2;
+    bb1:
+#line 27 "codegen/size_dyn.kl"
+    kl_t9 = 0;
+#line 27 "codegen/size_dyn.kl"
+    kl_t8.e[kl_t9] = ( *kl_this_1 ).kl_dyn.e[kl_t3];
+#line 27 "codegen/size_dyn.kl"
+    kl_t10 = 1;
+#line 27 "codegen/size_dyn.kl"
+    kl_t8.e[kl_t10] = ( *kl_this_1 ).kl_dyn.e[kl_t4];
+#line 27 "codegen/size_dyn.kl"
+    kl_t11 = 2;
+#line 27 "codegen/size_dyn.kl"
+    kl_t8.e[kl_t11] = ( *kl_this_1 ).kl_dyn.e[kl_t5];
+#line 27 "codegen/size_dyn.kl"
+    kl_t0 = kl_t8.e[kl_t6];
+#line 27 "codegen/size_dyn.kl"
+    return kl_t0;
+    bb2:
+#line 27 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 27, "out of bounds: S[axis]" );
+}
+
+#line 10 "codegen/size_dyn.kl"
+void kl_7codegen_4Grid__I3i32_V2__V3_E__RQ7codegen4GridI3i32_V2__V3_E_3i32__ctor( struct kl_7codegen_Grid__I3i32_V2__V3_E* kl_this_1, int32_t kl_fill_2 )
+{
+    struct kl__A64_3i32 kl_t3;
+    uint64_t kl_t4;
+    bool kl_t5;
+#line 12 "codegen/size_dyn.kl"
+    kl_t4 = 0;
+#line 12 "codegen/size_dyn.kl"
+    goto bb1;
+    bb1:
+#line 12 "codegen/size_dyn.kl"
+    kl_t3.e[kl_t4] = kl_fill_2;
+#line 12 "codegen/size_dyn.kl"
+    kl_t4 = kl_t4 + 1;
+#line 12 "codegen/size_dyn.kl"
+    kl_t5 = kl_t4 < 64;
+#line 12 "codegen/size_dyn.kl"
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb2:
+#line 12 "codegen/size_dyn.kl"
+    ( *kl_this_1 ).kl_cells = kl_t3;
+    return;
+#line 13 "codegen/size_dyn.kl"
+}
+
+#line 15 "codegen/size_dyn.kl"
+uint64_t kl_7codegen_5count__I3i32_V2__V3_E__SQ7codegen4GridI3i32_V2__V3_E( void )
+{
+    uint64_t kl_t0;
+    uint64_t kl_p_1;
+    uint64_t kl_i_2;
+    bool kl_t3;
+    uint64_t kl_t4;
+    bool kl_t5;
+    struct kl__A2_3u64 kl_t6;
+    uint64_t kl_t7;
+    uint64_t kl_t8;
+    bool kl_t9;
+    bool kl_t10;
+    ( void ) kl_t7;
+    ( void ) kl_t8;
+#line 17 "codegen/size_dyn.kl"
+    kl_p_1 = 1;
+    kl_i_2 = 0;
+#line 18 "codegen/size_dyn.kl"
+    goto bb1;
+    bb1:
+#line 18 "codegen/size_dyn.kl"
+    kl_t3 = kl_i_2 < 2;
+#line 18 "codegen/size_dyn.kl"
+    if ( kl_t3 ) goto bb2; else goto bb3;
+    bb2:
+    kl_t4 = kl_i_2;
+#line 20 "codegen/size_dyn.kl"
+    kl_t5 = kl_t4 < 2;
+#line 20 "codegen/size_dyn.kl"
+    if ( kl_t5 ) goto bb4; else goto bb5;
+    bb3:
+    kl_t0 = kl_p_1;
+#line 22 "codegen/size_dyn.kl"
+    return kl_t0;
+    bb4:
+#line 20 "codegen/size_dyn.kl"
+    kl_t7 = 0;
+#line 20 "codegen/size_dyn.kl"
+    kl_t6.e[kl_t7] = 2;
+#line 20 "codegen/size_dyn.kl"
+    kl_t8 = 1;
+#line 20 "codegen/size_dyn.kl"
+    kl_t6.e[kl_t8] = 3;
+#line 20 "codegen/size_dyn.kl"
+    kl_t9 = __builtin_mul_overflow( kl_p_1, kl_t6.e[kl_t4], &( uint64_t ) { 0 } );
+#line 20 "codegen/size_dyn.kl"
+    if ( kl_t9 ) goto bb6; else goto bb7;
+    bb5:
+#line 20 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 20, "out of bounds: S[i]" );
+    bb6:
+#line 20 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 20, "arithmetic overflow: p *= S[i];" );
+    bb7:
+#line 20 "codegen/size_dyn.kl"
+    kl_p_1 = kl_p_1 * kl_t6.e[kl_t4];
+#line 18 "codegen/size_dyn.kl"
+    goto bb8;
+    bb8:
+#line 18 "codegen/size_dyn.kl"
+    kl_t10 = __builtin_add_overflow( kl_i_2, 1, &( uint64_t ) { 0 } );
+#line 18 "codegen/size_dyn.kl"
+    if ( kl_t10 ) goto bb9; else goto bb10;
+    bb9:
+#line 18 "codegen/size_dyn.kl"
+    kl_rt_panic( "codegen/size_dyn.kl", 18, "arithmetic overflow: i += 1" );
+    bb10:
+#line 18 "codegen/size_dyn.kl"
+    kl_i_2 = kl_i_2 + 1;
+#line 18 "codegen/size_dyn.kl"
+    goto bb1;
+#line 23 "codegen/size_dyn.kl"
+}
+
+int main( void )
+{
+    int32_t kl_t0;
+#line 97 "codegen/size_dyn.kl"
+    kl_t0 = kl_7codegen_4main__(  );
+#line 97 "codegen/size_dyn.kl"
+    return kl_t0;
+#line 97 "codegen/size_dyn.kl"
+}
+

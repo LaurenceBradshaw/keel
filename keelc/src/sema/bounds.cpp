@@ -262,6 +262,12 @@ Default_kind default_of( const Ast& ast_, const Type_table& table_, Type_id type
 
 Default_kind Bounds::default_of( Type_id type ) const
 {
+    // D90: a written `dyn` has no value to make one with.
+    if( table_.is_struct( type ) &&
+        std::ranges::find( table_.get( type ).arguments, table_.dyn() ) != table_.get( type ).arguments.end() )
+    {
+        return Default_kind::None;
+    }
     return sema::default_of( ast_, table_, type );
 }
 
@@ -1133,6 +1139,24 @@ void Bounds::declare_type_parameters( Node_id declaration, Node_id list )
     {
         types_.record( type_param, declare_type_parameter( ast_, interner_, table_, type_param ) );
         owner_of_.emplace( type_param.v, declaration );
+
+        if( !ast_.takes_dyn( type_param ) )
+        {
+            continue;
+        }
+        const Node_kind owner = ast_.kind( declaration );
+        if( !table_.is_size_parameter( types_.type_of( type_param ) ) )
+        {
+            reporter_.error_at( ast_.name_span( type_param ), "only a size parameter is marked `(dyn)`" );
+        }
+        else if( owner != Node_kind::Struct_decl && owner != Node_kind::Class_decl )
+        {
+            reporter_.error_at(
+                ast_.name_span( type_param ),
+                is_function_like( owner ) ? "a function's size parameters take `dyn` unmarked"
+                                          : "only a struct's or a class's size parameters are marked `(dyn)`"
+            );
+        }
     }
 
     for( const Node_id where_clause : ast_.where_clauses( list ) )

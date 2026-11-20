@@ -1,0 +1,64 @@
+// `(dyn)` marks a type's size parameter; a `dyn` reaches a callee only through `N n`, `S... n`,
+// an argument holding it, or the receiver.
+struct Line<u64 N>
+{
+    u64 n;
+};
+
+struct Wide<T(dyn), u64 N(dyn)>
+{
+    u64 n;
+};
+
+u64 marked<u64 N(dyn)>()
+{
+    return N;
+}
+
+class Grid<T, u64... S(dyn)> where T : copyable
+{
+    T first;
+
+    public Grid( T fill )
+    {
+        first = fill;
+    }
+
+    public static u64 rank()
+    {
+        return S.size;
+    }
+};
+
+struct Held<u64 N(dyn)>
+{
+    u64 n;
+};
+
+u64 lead<u64... S>()
+{
+    return S.size;
+}
+
+u64 one<u64 N>( N... n )
+{
+    return N;
+}
+
+u64 each<u64... S>( S n )
+{
+    return S.size;
+}
+
+u64 lined( const ref Line<dyn> _ )
+{
+    return 0;
+}
+
+i32 main()
+{
+    Grid<i32, dyn, 3> g = Grid<i32, dyn, 3>( 0 );
+    Held<dyn> h = Held<dyn> { 1 };
+    u64 a = lead<dyn, 2>() + Grid<i32, dyn>::rank();
+    return cast<i32>( a );
+}

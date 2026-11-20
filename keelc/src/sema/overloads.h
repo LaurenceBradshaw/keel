@@ -52,6 +52,7 @@ struct Argument_shape
     bool                                  negative    = false;
     Keyword                               marker      = Keyword::Count;
     bool                                  recorded    = false; // whether infer() has already run over it
+    bool                                  known       = false; // Typed: a `const` integer, its value in `magnitude`
     std::vector<Argument_shape>           elements {};         // Array: each element's shape
     bool                                  fill   = false;      // Array: `[x, ..]`, any count, `elements` its one value
     bool                                  lambda = false;      // Anything: a lambda, its parameters below
@@ -189,6 +190,7 @@ public:
     // reason callees_ is: resolving a type argument to a type is this pass's rule, and lowering
     // repeating it is how the two would drift. `from` is the function the call is written in.
     void record_instance( Node_id from, Node_id call, Node_id callable, std::vector<Type_id> resolved );
+    void refuse_unsourced_dyn( Node_id call, Node_id callable, std::span<const Type_id> resolved );
     void record_method_instantiation(
         Node_id from, Node_id id, Node_id method, Type_id receiver, std::span<const Type_id> own = {}
     );
@@ -277,6 +279,9 @@ private:
     bool takes( Node_id candidate, std::size_t count ) const;
     bool fits( Node_id call, Node_id candidate, u32 implicit_params ) const;
     bool deduce_shape( Type_id pattern, const Argument_shape& shape, Bindings& into ); // an array literal's count too
+    void deduce_given_sizes(
+        Node_id callable, std::span<const Slot> params, std::span<const Argument_shape> shapes, Bindings& into
+    );
 
     // The signature as a call site would have to write it, and a list of them - both read four
     // collaborators, which is what keeps them members rather than file-local free functions.

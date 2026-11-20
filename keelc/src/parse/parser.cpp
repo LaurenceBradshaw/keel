@@ -227,6 +227,7 @@ private:
     std::vector<Symbol_id> classes_;
     Node_id                block_type_;     // while in an `implements ... for` block, the type its methods receive
     Span                   aggregate_name_; // the aggregate or interface whose members are being parsed
+    Symbol_id              dyn_name_;       // the `dyn` of a `(dyn)` mark, which names the sizes it stores
     const Source_manager&  sm_;
     Ast&                   ast_;
     Diagnostics&           diags_;
@@ -1782,6 +1783,13 @@ Node_id Parser::parse_aggregate_decl()
         members.push_back( made );
     }
 
+    // Somewhere for the run-time sizes, last, which only an instance at a `dyn` lays out.
+    const std::vector<Node_id> declared = ast_.type_parameters( type_params );
+    if( std::ranges::any_of( declared, [&]( Node_id p ) { return ast_.takes_dyn( p ); } ) )
+    {
+        members.push_back( ast_.add( Node_kind::Sizes_decl, name_span, dyn_name_.v, {} ) );
+    }
+
     // insert type_params as child 0, and implements as child 1
     members.insert( members.begin(), { type_params, implements } );
 
@@ -3078,8 +3086,30 @@ Node_id Parser::parse_type_param( bool& pack )
         return error_node( Span::merge( at, cursor_.previous().span ) );
     }
 
+    // `u64 N(dyn)`: may be bound to a run-time size. Sema says where it may be written.
+    bool takes_dyn = false;
+    if( cursor_.check( Token_kind::L_paren ) )
+    {
+        cursor_.advance();
+        const Span mark = cursor_.peek().span;
+        if( cursor_.check( Token_kind::Identifier ) && sm_.text( mark ) == "dyn" )
+        {
+            dyn_name_ = expect_name();
+            takes_dyn = true;
+        }
+        else
+        {
+            recovery_.error_at( mark, "a size parameter's mark is written `(dyn)`" );
+        }
+        recovery_.expect( Token_kind::R_paren );
+    }
+
     const Node_id node = ast_.add( Node_kind::Type_param_decl, at, name.v, leading );
     ast_.set_name_span( node, name_span );
+    if( takes_dyn )
+    {
+        ast_.set_takes_dyn( node );
+    }
     return node;
 }
 

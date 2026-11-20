@@ -149,6 +149,7 @@ bool Overloads::deduce_for_candidate(
     }
 
     const std::vector<Node_id> parameters = ast_.type_parameters( ast_.type_param_list( callable ) );
+    deduce_given_sizes( callable, params, shapes, bindings );
     deduce_through_bounds( parameters, bindings );
     default_literals( parameters, params, shapes, bindings );
 
@@ -174,6 +175,51 @@ bool Overloads::deduce_for_candidate(
     }
 
     return true;
+}
+
+// `N n` binds `N` to its argument's value where that is known, else to `dyn`; `S... n` binds `S`
+// to one size per argument.
+void Overloads::deduce_given_sizes(
+    Node_id callable, std::span<const Slot> params, std::span<const Argument_shape> shapes, Bindings& into
+)
+{
+    std::unordered_map<u32, std::vector<Type_id>> packs;
+    std::vector<u32>                              order;
+    for( std::size_t i = 0; i < params.size() && i < shapes.size(); ++i )
+    {
+        const Type_id size = given_size( ast_, resolution_, types_.recorded(), table_, params[i].param );
+        if( !size.is_valid() )
+        {
+            continue;
+        }
+        const Argument_shape& shape = shapes[i];
+        const bool    known = ( shape.kind == Argument_kind::Integer && shape.valued && !shape.negative ) || shape.known;
+        const Type_id value = known ? table_.size( shape.magnitude ) : table_.dyn();
+        if( !table_.is_pack_parameter( size ) )
+        {
+            into.emplace( size.v, value );
+            continue;
+        }
+        if( !packs.contains( size.v ) )
+        {
+            order.push_back( size.v );
+        }
+        packs[size.v].push_back( value );
+    }
+    // A variadic given nothing still binds its pack, at rank 0.
+    for( const Node_id param : ast_.params( callable ) )
+    {
+        const Type_id size = given_size( ast_, resolution_, types_.recorded(), table_, param );
+        if( size.is_valid() && table_.is_pack_parameter( size ) && !packs.contains( size.v ) )
+        {
+            order.push_back( size.v );
+            packs[size.v];
+        }
+    }
+    for( const u32 pack : order )
+    {
+        into.emplace( pack, table_.pack( packs[pack] ) );
+    }
 }
 
 bool Overloads::bind_own_parameters( Node_id call, Node_id method, std::span<const Argument_shape> shapes, Bindings& bindings )
@@ -621,6 +667,7 @@ std::optional<Deduction> Overloads::deduce_type_arguments(
         }
     }
 
+    deduce_given_sizes( callable, params, shapes, bindings );
     const std::vector<Bound_gap> gaps = deduce_through_bounds( parameters, bindings );
 
     // Whatever the arguments left open. `T make<T>()` has no argument to read at all, which is the
@@ -2331,6 +2378,79 @@ Node_id Overloads::next_visible( Node_id use, Node_id candidate ) const
     return Node_id {};
 }
 
+// D90: a `dyn` written at a call reaches the callee only through a parameter `N n`, an argument
+// holding it, or the receiver; a call that gives it none of them has no value to pass.
+void Overloads::refuse_unsourced_dyn( Node_id call, Node_id callable, std::span<const Type_id> resolved )
+{
+    const Node_kind      kind      = ast_.kind( callable );
+    const Node_id        aggregate = is_function_like( kind ) ? ast_.enclosing_aggregate( callable ) : Node_id {};
+    const bool           member    = aggregate.is_valid() && is_aggregate( ast_.kind( aggregate ) );
+    std::vector<Node_id> declared =
+        member ? ast_.type_parameters( ast_.type_param_list( aggregate ) ) : std::vector<Node_id> {};
+    const std::size_t          of_type = declared.size();
+    const std::vector<Node_id> own     = ast_.type_parameters(
+        kind == Node_kind::Method_decl     ? ast_.own_type_param_list( callable )
+        : kind == Node_kind::Function_decl ? ast_.type_param_list( callable )
+                                           : Node_id {}
+    );
+    declared.insert( declared.end(), own.begin(), own.end() );
+
+    std::vector<Type_id> parameters;
+    for( const Node_id each : declared )
+    {
+        parameters.push_back( types_.type_of( each ) );
+    }
+    const Bindings bound = table_.bind( parameters, resolved );
+
+    const auto held_by_argument = [&]( Type_id parameter )
+    {
+        return std::ranges::any_of(
+            ast_.explicit_params( callable ),
+            [&]( Node_id param )
+            {
+                if( given_size( ast_, resolution_, types_.recorded(), table_, param ) == parameter )
+                {
+                    return true;
+                }
+                Type_id open = types_.type_of( param );
+                open         = open.is_valid() && table_.is_pointer( open ) ? table_.get( open ).element : open;
+                return open.is_valid() && table_.is_struct( open ) &&
+                       ast_.sizes_member( table_.get( open ).declaration ).is_valid() &&
+                       std::ranges::find( table_.get( open ).arguments, parameter ) != table_.get( open ).arguments.end();
+            }
+        );
+    };
+
+    for( std::size_t i = 0; i < declared.size(); ++i )
+    {
+        const Type_id parameter = parameters[i];
+        const auto    found     = bound.find( parameter.v );
+        if( !table_.is_size_parameter( parameter ) || found == bound.end() )
+        {
+            continue;
+        }
+        const Type_id value         = found->second;
+        const bool    dyn           = table_.is_pack_parameter( parameter )
+                                          ? table_.is_pack( value ) && std::ranges::find( table_.get( value ).arguments, table_.dyn() ) !=
+                                                              table_.get( value ).arguments.end()
+                                          : value == table_.dyn();
+        const bool    from_receiver = i < of_type && ast_.has_receiver( callable ) && kind != Node_kind::Constructor_decl;
+        if( !dyn || from_receiver || held_by_argument( parameter ) )
+        {
+            continue;
+        }
+        const std::string_view name = interner_.text( ast_.name( declared[i] ) );
+        reporter_.error_at(
+            ast_.span( call ),
+            fmt::format( "nothing here gives `{}` its run-time value", name ),
+            table_.is_pack_parameter( parameter )
+                ? fmt::format( "a `dyn` size comes in through a parameter `{}... n`, or an argument holding it", name )
+                : fmt::format( "a `dyn` size comes in through a parameter `{} n`, or an argument holding it", name )
+        );
+        return;
+    }
+}
+
 // The edge, then the instance. The edge only matters from inside a generic: a call in `main` is
 // already an instance rather than a step towards one.
 void Overloads::record_instance( Node_id from, Node_id call, Node_id callable, std::vector<Type_id> resolved )
@@ -2342,6 +2462,7 @@ void Overloads::record_instance( Node_id from, Node_id call, Node_id callable, s
         parameters.push_back( types_.type_of( parameter ) );
     }
     resolved = table_.flattened( resolved, !table_.keeps_packs( parameters ) );
+    refuse_unsourced_dyn( call, callable, resolved );
     generic_recursion_.record_call( from, callable, resolved, ast_.span( call ) );
 
     instantiation_of_.emplace(

@@ -159,9 +159,10 @@ void Generic_recursion::record_size_roots( Node_id to, std::span<const Type_id> 
         record_uses( Node_id {}, argument, at, found );
     }
 
-    // A constant size, or a pack of them kept whole for a callee of several packs.
-    const auto constant = [&]( Type_id argument ) { return table_.is_size( argument ) && table_.get( argument ).width == 0; };
-    const auto written  = [&]( Type_id argument )
+    // A constant size or `dyn`, or a pack of them kept whole for a callee of several packs.
+    const auto constant = [&]( Type_id argument )
+    { return table_.is_size( argument ) && ( table_.get( argument ).width == 0 || table_.is_dyn( argument ) ); };
+    const auto written = [&]( Type_id argument )
     {
         return constant( argument ) ||
                ( table_.is_pack( argument ) && std::ranges::all_of( table_.get( argument ).arguments, constant ) );

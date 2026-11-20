@@ -211,6 +211,9 @@ enum class Node_kind : u16
     Ptr_init_expr,
     // `dyn`, a size argument known at run time; no children.
     Dyn_size,
+    // The run-time sizes of a type with a `(dyn)` parameter, its last member; no children. Laid
+    // out only at an instance with a `dyn` size, as a `u64` per one.
+    Sizes_decl,
 
     Count
 };

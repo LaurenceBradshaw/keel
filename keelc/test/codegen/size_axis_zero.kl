@@ -1,0 +1,30 @@
+// A size argument may be 0: axis 0 passed through a size parameter.
+import t::console;
+
+struct Pair<u64... S>
+{
+    u64 rank = S.size;
+
+    static u64 without<u64 A>()
+    {
+        u64 n = 1;
+        for( u64 k = 0; k < S.size; k += 1 )
+        {
+            n *= k == A ? 1 : S[k];
+        }
+        return n;
+    }
+};
+
+u64 lead<u64 A>( const ref u64[2] a )
+{
+    return a[A];
+}
+
+i32 main()
+{
+    u64[2] a = [ 7, 9 ];
+    t::print( lead<0>( a ) * 10 + lead<1>( a ) );
+    t::print( Pair<2, 3, 5>::without<0>() );
+    return 0;
+}

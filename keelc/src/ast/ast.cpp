@@ -66,6 +66,11 @@ void Ast::set_variadic( Node_id param )
     variadic_.insert( param.v );
 }
 
+void Ast::set_takes_dyn( Node_id param )
+{
+    takes_dyn_.insert( param.v );
+}
+
 void Ast::set_intrinsic( Node_id decl )
 {
     intrinsic_.insert( decl.v );
@@ -161,6 +166,17 @@ bool Ast::is_located( Node_id decl ) const
 bool Ast::is_variadic( Node_id param ) const
 {
     return variadic_.contains( param.v );
+}
+
+bool Ast::takes_dyn( Node_id param ) const
+{
+    return takes_dyn_.contains( param.v );
+}
+
+Node_id Ast::sizes_member( Node_id aggregate ) const
+{
+    const std::span<const Node_id> all = members( aggregate );
+    return !all.empty() && kind( all.back() ) == Node_kind::Sizes_decl ? all.back() : Node_id {};
 }
 
 bool Ast::takes_variadic( Node_id fn ) const
