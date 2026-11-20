@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kl::stats</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+</head>
+<body>
+<header><nav><a href="index.html"><img src="logo.svg" alt="">The Keel standard library</a></nav></header>
+<main>
+<h1><span class="kind">module</span> <a class="package" href="index.html">kl</a>::stats</h1>
+<section class="entry">
+<h2><span class="kind">class</span> <span class="type">regression</span></h2>
+<div class="group" id="regression">
+<pre class="signature"><a class="anchor" href="#regression" aria-label="Link to regression">#</a><code><span class="kw">class</span> <span class="type">regression</span></code></pre>
+<div class="doc">
+<p>A least-squares fit of <code>y</code> on the columns of a design <code>x</code>, as statsmodels' <code>OLS</code> and <code>WLS</code>:
+<code>regression::ols( x, y )</code> or <code>regression::wls( x, y, w )</code>, then the coefficients, residuals,
+scale, leverage, Cook's distance and covariances, and from a covariance the standard errors,
+p-values and intervals.</p>
+<p>The p-values and intervals take the coefficients as normal, as statsmodels does for a robust
+covariance such as <code>cluster_cov</code>. For <code>cov()</code> statsmodels uses Student's t with <code>df_resid()</code>
+degrees of freedom instead, which kl does not have, so there they differ for a small sample.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="regression.wls">
+<pre class="signature"><a class="anchor" href="#regression.wls" aria-label="Link to wls">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="optional.html#optional">optional</a>&lt;<a class="type" href="#regression">regression</a>&gt; <span class="fn">wls</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#f64">f64</a>&gt; x, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#f64">f64</a>&gt; y, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#f64">f64</a>&gt; w )</code></pre>
+<div class="doc">
+<p>The fit of rank 1 <code>y</code> on rank 2 <code>x</code>, n by k with n &gt;= k, each row weighted by the matching
+one of rank 1 <code>w</code>, by <code>kl::lstsq</code> on the rows scaled by the square roots of the weights;
+<code>none</code> when <code>x</code> lacks full column rank.</p>
+<h4>Panics</h4>
+<p>If <code>x</code> has more columns than rows, or <code>y</code> or <code>w</code> is not one element per row of <code>x</code>.</p>
+</div>
+</div>
+<div class="group" id="regression.ols">
+<pre class="signature"><a class="anchor" href="#regression.ols" aria-label="Link to ols">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="optional.html#optional">optional</a>&lt;<a class="type" href="#regression">regression</a>&gt; <span class="fn">ols</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#f64">f64</a>&gt; x, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#f64">f64</a>&gt; y )</code></pre>
+<div class="doc">
+<p><code>wls</code> with every weight 1.</p>
+</div>
+</div>
+<div class="group" id="regression.coef">
+<pre class="signature"><a class="anchor" href="#regression.coef" aria-label="Link to coef">#</a><code><span class="kw">public</span> <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#f64">f64</a>&gt; <span class="fn">coef</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The coefficients, one per column of the design.</p>
+</div>
+</div>
+<div class="group" id="regression.resid">
+<pre class="signature"><a class="anchor" href="#regression.resid" aria-label="Link to resid">#</a><code><span class="kw">public</span> <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#f64">f64</a>&gt; <span class="fn">resid</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p><code>y</code> less the fitted values, unweighted.</p>
+</div>
+</div>
+<div class="group" id="regression.wresid">
+<pre class="signature"><a class="anchor" href="#regression.wresid" aria-label="Link to wresid">#</a><code><span class="kw">public</span> <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#f64">f64</a>&gt; <span class="fn">wresid</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The residuals scaled by the square roots of the weights.</p>
+</div>
+</div>
+<div class="group" id="regression.scale">
+<pre class="signature"><a class="anchor" href="#regression.scale" aria-label="Link to scale">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#f64">f64</a> <span class="fn">scale</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The residual variance: the sum of the squared <code>wresid()</code> over <code>df_resid()</code>.</p>
+</div>
+</div>
+<div class="group" id="regression.df_resid">
+<pre class="signature"><a class="anchor" href="#regression.df_resid" aria-label="Link to df_resid">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">df_resid</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The rows less the columns of the design.</p>
+</div>
+</div>
+<div class="group" id="regression.leverage">
+<pre class="signature"><a class="anchor" href="#regression.leverage" aria-label="Link to leverage">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#f64">f64</a>&gt; <span class="fn">leverage</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each row's leverage: the diagonal of the projection onto the weighted design's columns.</p>
+</div>
+</div>
+<div class="group" id="regression.cooks_distance">
+<pre class="signature"><a class="anchor" href="#regression.cooks_distance" aria-label="Link to cooks_distance">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#f64">f64</a>&gt; <span class="fn">cooks_distance</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each row's Cook's distance over the weighted design, as statsmodels' <code>cooks_distance</code>.</p>
+</div>
+</div>
+<div class="group" id="regression.cov">
+<pre class="signature"><a class="anchor" href="#regression.cov" aria-label="Link to cov">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#f64">f64</a>&gt; <span class="fn">cov</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The coefficients' covariance, k by k, <code>scale() (X^T X)^-1</code> over the weighted design <code>X</code>.</p>
+</div>
+</div>
+<div class="group" id="regression.cluster_cov">
+<pre class="signature"><a class="anchor" href="#regression.cluster_cov" aria-label="Link to cluster_cov">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#f64">f64</a>&gt; <span class="fn">cluster_cov</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="prim" href="prelude.html#u64">u64</a>[] groups ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The cluster-robust covariance, k by k, as statsmodels' <code>cov_type=&quot;cluster&quot;</code>: rows with the
+same label in <code>groups</code> are one cluster, and the sandwich takes statsmodels' correction,
+G / ( G - 1 ) * ( n - 1 ) / ( n - k ) for G clusters.</p>
+<h4>Panics</h4>
+<p>If <code>groups</code> is not one label per row.</p>
+</div>
+</div>
+<div class="group" id="regression.std_errors">
+<pre class="signature"><a class="anchor" href="#regression.std_errors" aria-label="Link to std_errors">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#f64">f64</a>&gt; <span class="fn">std_errors</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#f64">f64</a>&gt; cov ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The standard errors from covariance <code>cov</code>, the square roots of its diagonal.</p>
+</div>
+</div>
+<div class="group" id="regression.p_values">
+<pre class="signature"><a class="anchor" href="#regression.p_values" aria-label="Link to p_values">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#f64">f64</a>&gt; <span class="fn">p_values</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#f64">f64</a>&gt; cov ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each coefficient's two-sided p-value against 0 under covariance <code>cov</code>, from the normal.</p>
+</div>
+</div>
+<div class="group" id="regression.conf_int">
+<pre class="signature"><a class="anchor" href="#regression.conf_int" aria-label="Link to conf_int">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#f64">f64</a>&gt; <span class="fn">conf_int</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#f64">f64</a>&gt; cov, <a class="prim" href="prelude.html#f64">f64</a> alpha = 0.05 ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The <code>1 - alpha</code> interval of each coefficient under covariance <code>cov</code>, from the normal, k by
+2: each row its low and high ends, as statsmodels' <code>conf_int( alpha )</code>.</p>
+</div>
+</div>
+</section>
+</main>
+<footer>Copyright 2026 Laurence Bradshaw. Licensed under Apache-2.0 WITH LLVM-exception.</footer>
+</body>
+</html>

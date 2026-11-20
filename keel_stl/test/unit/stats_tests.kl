@@ -1,0 +1,76 @@
+// `kl::stats`: weighted and ordinary least squares against statsmodels' fits, leverage, Cook's
+// distance, the plain and cluster-robust covariances, p-values and intervals.
+import kl::ndarray;
+import kl::optional;
+import kl::stats;
+import kl::test::context;
+
+// A line plus a dummy over twelve rows, weighted, in four clusters.
+private kl::ndarray<f64> design()
+{
+    kl::ndarray<f64> x = kl::ndarray<f64>::ones( 12, 3 );
+    for( u64 i : 0..12 )
+    {
+        x[i, 1] = 0.5 * cast<f64>( i + 1 );
+        x[i, 2] = cast<f64>( i % 2 );
+    }
+    return x;
+}
+
+private kl::ndarray<f64> outcome()
+{
+    return kl::ndarray<f64>( [ 1.1, 2.9, 2.2, 4.8, 3.1, 6.2, 4.4, 7.1, 5.0, 8.3, 6.1, 9.9 ] );
+}
+
+private bool near( const ref kl::ndarray<f64> a, const ref kl::ndarray<f64> b )
+{
+    return a.approx_equal( b, 1e-10, 0.0 );
+}
+
+// statsmodels' WLS: coefficients, residuals, scale, leverage, Cook's distance and covariance.
+private void weighted_fit( ref kl::test::context c )
+{
+    kl::ndarray<f64> w   = kl::ndarray<f64>( [ 1.0, 0.5, 2.0, 1.5, 1.0, 0.25, 0.75, 1.0, 2.0, 0.5, 1.0, 1.25 ] );
+    kl::regression   fit = kl::unwrap( kl::regression::wls( design(), outcome(), w ) );
+    c.check( near( fit.coef(), kl::ndarray<f64>( [ 0.2861661712151611, 1.114906472349514, 2.4094252047091134 ] ) ) );
+    c.check( near( fit.resid(), kl::ndarray<f64>( [ 0.25638059261008206, -0.9104978482737884, 0.24147412026056814, -0.12540432062330265, 0.02656764791105415, 0.15968920702718403, 0.21166117556154074, -0.05521726532233018, -0.3032452967879733, 0.02987626232815721, -0.31815176913748733, 0.5149697899786414 ] ) ) );
+    c.check( near( fit.wresid(), kl::ndarray<f64>( [ 0.25638059261008206, -0.6438192027701564, 0.34149597583460745, -0.15358829853373646, 0.02656764791105415, 0.07984460351359202, 0.18330395503117192, -0.05521726532233018, -0.42885361144340806, 0.021125707688748108, -0.31815176913748733, 0.5757537283755187 ] ) ) );
+    c.check( kl::ndarray<f64>( [ fit.scale() ] ).approx_equal( kl::ndarray<f64>( [ 0.14236088306032868 ] ), 1e-12, 0.0 ) );
+    c.check_eq( fit.df_resid(), 9 );
+    c.check( near( fit.leverage(), kl::ndarray<f64>( [ 0.2932357454845947, 0.19345145469570002, 0.3752696365138821, 0.40868846653287705, 0.13526362670501507, 0.0528111954153744, 0.10209162812161277, 0.2032603213101383, 0.3804209012566939, 0.12425279831725353, 0.2975284661036048, 0.43372575954325465 ] ) ) );
+    c.check( near( fit.cooks_distance(), kl::ndarray<f64>( [ 0.09034957688860884, 0.28862031696329904, 0.2625532815640039, 0.06456007295106013, 0.0002989564032058953, 0.0008786827388006683, 0.009962259067215928, 0.002285901831706483, 0.4267534771239629, 0.00016930089982006462, 0.1428985493983705, 1.0498401884196848 ] ) ) );
+    c.check( near( fit.cov(), kl::ndarray<f64>( [ 0.05210370736404913, -0.011305636713991428, -0.010838133357980388, -0.011305636713991428, 0.003788916087932258, -0.002523907006961325, -0.010838133357980388, -0.002523907006961325, 0.04852257054545496 ], 3, 3 ) ) );
+}
+
+// statsmodels' cov_type="cluster": the covariance, standard errors, normal p-values and intervals.
+private void clustered_errors( ref kl::test::context c )
+{
+    kl::ndarray<f64> w   = kl::ndarray<f64>( [ 1.0, 0.5, 2.0, 1.5, 1.0, 0.25, 0.75, 1.0, 2.0, 0.5, 1.0, 1.25 ] );
+    kl::regression   fit = kl::unwrap( kl::regression::wls( design(), outcome(), w ) );
+    kl::ndarray<f64> cov = fit.cluster_cov( [ 7, 7, 7, 3, 3, 3, 9, 9, 9, 4, 4, 4 ] );
+    c.check( near( cov, kl::ndarray<f64>( [ 0.03543306393506877, -0.004430056371771671, -0.05575810576235739, -0.0044300563717716715, 0.001576896210283755, 0.003500822250193213, -0.0557581057623574, 0.003500822250193213, 0.10527686519540122 ], 3, 3 ) ) );
+    c.check( near( fit.std_errors( cov ), kl::ndarray<f64>( [ 0.18823672313092568, 0.03971015248376358, 0.324463965942909 ] ) ) );
+    c.check( near( fit.p_values( cov ), kl::ndarray<f64>( [ 0.12844909903700027, 1.9181604773858534e-173, 1.1204628709745174e-13 ] ) ) );
+    c.check( near( fit.conf_int( cov ), kl::ndarray<f64>( [ -0.08277102668929098, 0.6551033691196131, 1.0370760036607436, 1.1927369410382842, 1.773487517179981, 3.045362892238246 ], 3, 2 ) ) );
+    c.check( near( fit.conf_int( cov, 0.1 ), kl::ndarray<f64>( [ -0.02345568555220212, 0.5957880279825243, 1.0495890840097994, 1.1802238606892284, 1.8757294735128607, 2.943120935905366 ], 3, 2 ) ) );
+    c.expect_panic( "the shapes differ", fn[]() { _ = kl::unwrap( kl::regression::ols( design(), outcome() ) ).cluster_cov( [ 1, 2 ] ); } );
+}
+
+// statsmodels' OLS and its OLSInfluence Cook's distance; a column of zeros leaves no fit, and
+// mismatched shapes panic.
+private void ordinary_fit( ref kl::test::context c )
+{
+    kl::regression fit = kl::unwrap( kl::regression::ols( design(), outcome() ) );
+    c.check( near( fit.coef(), kl::ndarray<f64>( [ 0.1742857142857157, 1.1585714285714275, 2.3040476190476173 ] ) ) );
+    c.check( kl::ndarray<f64>( [ fit.scale() ] ).approx_equal( kl::ndarray<f64>( [ 0.15647354497354513 ] ), 1e-12, 0.0 ) );
+    c.check( near( fit.cooks_distance(), kl::ndarray<f64>( [ 0.20588141019147171, 0.9315634795334794, 0.06892992792905585, 1.7024031907378817e-05, 0.00046522459502025456, 0.03281354008034456, 0.01580850332668061, 8.637820658410771e-05, 0.12514035749221888, 0.0006904400309025863, 0.3418957417623235, 0.37933712432689026 ] ) ) );
+
+    kl::ndarray<f64> blank = design();
+    for( u64 i : 0..12 )
+    {
+        blank[i, 2] = 0.0;
+    }
+    c.check( kl::is_none( kl::regression::ols( blank, outcome() ) ) );
+    c.expect_panic( "the shapes differ", fn[]() { _ = kl::regression::ols( design(), kl::ndarray<f64>::ones( 3 ) ); } );
+    c.expect_panic( "the shapes differ", fn[]() { _ = kl::regression::wls( design(), outcome(), kl::ndarray<f64>::ones( 2 ) ); } );
+}
