@@ -125,7 +125,7 @@ void Size_suffixes::collect( Node_id id, Node_id owner, Node_kind parent )
     }
 
     if( owner.is_valid() && id.v < types_.size() && types_[id.v].is_valid() && table_.is_size( types_[id.v] ) &&
-        table_.get( types_[id.v] ).width != 0 )
+        table_.get( types_[id.v] ).width != 0 && !table_.is_dyn( types_[id.v] ) )
     {
         suffixes_[owner.v].push_back(
             Suffix { .node = id, .extent = types_[id.v], .argument = parent == Node_kind::Type_arg_list }
@@ -406,7 +406,9 @@ Span Size_suffixes::blame( const Instance& instance, const Bindings& bindings, T
 std::string Size_suffixes::spelled( Type_id size ) const
 {
     const std::string name( table_.name( size ) );
-    return table_.get( size ).kind == Type_kind::Size && table_.get( size ).width != 0 ? fmt::format( "({})", name ) : name;
+    return table_.get( size ).kind == Type_kind::Size && table_.get( size ).width != 0 && !table_.is_dyn( size )
+               ? fmt::format( "({})", name )
+               : name;
 }
 
 // `Ring<1>`. A method that shares its aggregate's parameters is named by the aggregate.
@@ -501,7 +503,7 @@ void Size_suffixes::parameters_of( Type_id size, std::vector<Type_id>& into ) co
         return;
     }
 
-    if( described.kind == Type_kind::Size && described.width != 0 )
+    if( described.kind == Type_kind::Size && described.width != 0 && !table_.is_dyn( size ) )
     {
         parameters_of( described.arguments[0], into );
         parameters_of( described.arguments[1], into );

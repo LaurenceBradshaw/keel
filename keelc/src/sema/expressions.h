@@ -267,6 +267,7 @@ private:
     Type_id indirect_call( Node_id id, Node_id declaration, Type_id signature );
 
     Type_id     infer_field( Node_id id );
+    Type_id     infer_pack_read( Node_id id );
     Type_id     infer_string_literal( Node_id id );
     bool        is_prelude_str( Type_id type ) const;
     std::string text_hint( Node_id id, Type_id expected, Type_id actual ) const;

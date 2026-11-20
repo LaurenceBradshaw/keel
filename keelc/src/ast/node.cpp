@@ -166,6 +166,8 @@ std::string_view node_kind_name( Node_kind kind )
         return "Type_param_list";
     case Node_kind::Type_param_decl:
         return "Type_param_decl";
+    case Node_kind::Dyn_size:
+        return "Dyn_size";
     case Node_kind::Where_clause:
         return "Where_clause";
     case Node_kind::Bound_name:

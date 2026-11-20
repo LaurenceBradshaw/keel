@@ -59,6 +59,7 @@ public:
 
     // A call's written arguments, before a candidate is chosen: `parameters` are any one candidate's.
     std::vector<Type_id> resolve_written( std::span<const Node_id> parameters, Node_id type_args );
+    bool                 ends_in_pack( std::span<const Node_id> parameters ) const;
 
     // The instance a path's qualifier names, `Box<i32>` in `Box<i32>::of`; an error once reported.
     Type_id qualifier_type( Node_id path, Node_id declaration );
@@ -86,6 +87,7 @@ private:
     // The long cases of resolve().
     Type_id resolve_named( Node_id annotation );
     Type_id resolve_size_argument( Node_id parameter, Node_id argument );
+    Type_id resolve_spread( Node_id parameter, Node_id argument );
     Type_id resolve_generic( Node_id annotation );
     Type_id resolve_function_type( Node_id annotation );
     Type_id resolve_field_type( Node_id annotation );

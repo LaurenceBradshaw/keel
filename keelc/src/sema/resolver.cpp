@@ -1657,6 +1657,13 @@ void Resolver::refuse_leading_name( Node_id param )
     const Node_id          decl = lookup( name, leading[0] );
     const std::string_view text = interner_.text( name );
 
+    // A pack holds sizes only.
+    if( ast_.is_variadic( param ) && text != "u64" )
+    {
+        reporter_.error_at( ast_.name_span( leading[0] ), "a pack holds `u64` sizes", "write `u64... S`" );
+        return;
+    }
+
     if( is_builtin_type_name( text ) )
     {
         if( text != "u64" )

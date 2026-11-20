@@ -1,0 +1,33 @@
+// Each misuse of a size pack, one error apiece: a second pack or one not last, a pack of anything
+// but `u64`, the dots misplaced, a pack on a method, `S` unspread, a spread into one argument or of
+// a non-pack, `S` as a value, a pack read other than `S.size` or `S[i]`, and `dyn` as a type.
+struct Two<u64... A, u64... B> { u64 x; };
+struct Middle<u64... S, T> { u64 x; };
+struct Typed<i32... S> { u64 x; };
+struct Bound<comparable... S> { u64 x; };
+struct Trailing<u64 S...> { u64 x; };
+struct Bare<S...> { u64 x; };
+
+class Holder<T, u64... S> where T : copyable
+{
+    T x;
+
+    public u64 own<u64... R>() const { return 0; }
+};
+
+struct Fixed<u64 N> { u64 x; };
+struct Box<T> where T : copyable { T x; };
+
+u64 bare<u64... S>( const ref Holder<f64, S> _ ) { return 0; }
+u64 into_fixed<u64... S>( const ref Fixed<S...> _ ) { return 0; }
+u64 into_type<u64... S>( const ref Box<S...> _ ) { return 0; }
+u64 not_pack<u64 N>( const ref Holder<f64, N...> _ ) { return 0; }
+u64 value<u64... S>() { return S; }
+u64 member<u64... S>() { return S.rank; }
+u64 slice<u64... S>() { return S[0, 1]; }
+u64 typed_index<u64... S>() { return S[1.0]; }
+
+void dyn_type( const ref Box<dyn> _ ) { }
+void too_few( const ref Holder<> _ ) { }
+
+i32 main() { return 0; }

@@ -186,6 +186,7 @@ private:
 
     // At `<` after a function's name: its type parameters, as parse_type_params reads them.
     bool scan_type_params();
+    void skip_ellipsis(); // `...`, when next
 
     // Any `where` clauses, as parse_where_clause reads them.
     bool scan_where_clauses();

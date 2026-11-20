@@ -86,8 +86,9 @@ private:
     Node_id parse_param_list( Node_id leading = Node_id {} );
     // The parameters alone: the list node is built later, once the `where` clauses that belong
     // beside them have been parsed too.
-    std::vector<Node_id> parse_type_params();
-    Node_id              parse_type_param();
+    std::vector<Node_id> parse_type_params( bool packs = true ); // `packs`: a pack may be declared
+    Node_id              parse_type_param( bool& pack );
+    bool                 match_ellipsis();
 
     // One `where T : A & B`. Several are separated by `, where` - the comma is for the reader, and
     // `where` is what the parser keys on.
@@ -595,6 +596,10 @@ Node_id Parser::generic_self( Node_id named, Node_id type_params, Span span )
     for( const Node_id type_param : ast_.type_parameters( type_params ) )
     {
         arguments.push_back( ast_.add( Node_kind::Named_type, span, ast_.aux( type_param ), {} ) );
+        if( ast_.is_variadic( type_param ) )
+        {
+            ast_.set_variadic( arguments.back() ); // `S...`
+        }
     }
 
     const Node_id list = ast_.add( Node_kind::Type_arg_list, span, 0, arguments );
@@ -1119,7 +1124,7 @@ Node_id Parser::parse_method_decl( Symbol_id enclosing, Node_id type_params, boo
     // The method's own type parameters, collected as parse_function_decl collects a function's.
     const Span           generic_start = cursor_.peek().span;
     const bool           generic       = cursor_.check( Token_kind::Less );
-    std::vector<Node_id> generics      = generic ? parse_type_params() : std::vector<Node_id> {};
+    std::vector<Node_id> generics      = generic ? parse_type_params( false ) : std::vector<Node_id> {};
     Span                 generic_span  = Span::merge( generic_start, cursor_.previous().span );
 
     // The trailing `const` comes after the parameter list, but the receiver it binds is built
@@ -1368,12 +1373,13 @@ void Parser::refuse_gap_after_default( std::span<const Node_id> params )
     }
 }
 
-std::vector<Node_id> Parser::parse_type_params()
+std::vector<Node_id> Parser::parse_type_params( bool packs )
 {
     recovery_.expect( Token_kind::Less );
     const Span start = cursor_.peek().span;
 
     std::vector<Node_id> params;
+    std::vector<Node_id> written_packs;
 
     // `<>` declares a generic with nothing to instantiate over. Reported rather than treated as an
     // absent list, which would make `T id<>( T a )` a function whose return type names nothing.
@@ -1385,13 +1391,60 @@ std::vector<Node_id> Parser::parse_type_params()
     {
         do
         {
-            params.push_back( parse_type_param() );
+            bool pack = false;
+            params.push_back( parse_type_param( pack ) );
+            if( pack )
+            {
+                written_packs.push_back( params.back() );
+            }
         } while( cursor_.match( Token_kind::Comma ) );
 
         recovery_.expect_generic_close( Hint_place::Type_parameters );
     }
 
+    // A refused pack stays a plain size parameter, so its uses say nothing more.
+    if( written_packs.empty() )
+    {
+        return params;
+    }
+
+    const Node_id pack = written_packs[0];
+    if( !packs )
+    {
+        recovery_.error_at(
+            ast_.name_span( pack ), "only a type or a free function declares a pack", "declare it on the type"
+        );
+    }
+    else if( written_packs.size() > 1 )
+    {
+        recovery_.error_at( ast_.name_span( written_packs[1] ), "a generic takes one pack" );
+    }
+    else if( pack != params.back() )
+    {
+        recovery_.error_at(
+            ast_.name_span( pack ),
+            "a pack is the last type parameter",
+            fmt::format( "move `{}` to the end", sm_.text( ast_.name_span( pack ) ) )
+        );
+    }
+    else
+    {
+        ast_.set_variadic( pack );
+    }
+
     return params;
+}
+
+bool Parser::match_ellipsis()
+{
+    if( !cursor_.check( Token_kind::Dot_dot ) || cursor_.peek( 1 ).kind != Token_kind::Dot )
+    {
+        return false;
+    }
+
+    cursor_.advance();
+    cursor_.advance();
+    return true;
 }
 
 // D40: `&` joins bounds. `,` and `|` are the plausible wrong guesses, named here so they do not
@@ -1896,7 +1949,7 @@ Node_id Parser::parse_implements_decl()
     // `implements<A, B>`: the block's own parameters, which the interface and the type may name.
     const Span           generic_start = cursor_.peek().span;
     const bool           generic       = cursor_.check( Token_kind::Less );
-    std::vector<Node_id> generics      = generic ? parse_type_params() : std::vector<Node_id> {};
+    std::vector<Node_id> generics      = generic ? parse_type_params( false ) : std::vector<Node_id> {};
     Span                 generic_span  = Span::merge( generic_start, cursor_.previous().span );
 
     const Node_id interface   = parse_type();
@@ -2499,7 +2552,22 @@ Node_id Parser::parse_type_argument()
         return inner;
     }
 
-    return parse_type();
+    // `dyn`, a size known at run time: a name only here, so a program's own `dyn` still works.
+    const Token_kind after = cursor_.peek( 1 ).kind;
+    if( cursor_.check( Token_kind::Identifier ) && sm_.text( cursor_.peek().span ) == "dyn" &&
+        ( after == Token_kind::Comma || after == Token_kind::Greater || after == Token_kind::Greater_greater ) )
+    {
+        return ast_.add( Node_kind::Dyn_size, cursor_.advance().span, 0, {} );
+    }
+
+    // `S...`: a pack's sizes, spread.
+    const Node_id type = parse_type();
+    if( match_ellipsis() )
+    {
+        ast_.set_variadic( type );
+        ast_.set_span( type, Span::merge( ast_.span( type ), cursor_.previous().span ) );
+    }
+    return type;
 }
 
 // `A | B`: an error union (§6.7), of every term written.
@@ -2959,11 +3027,14 @@ Node_id Parser::parse_param()
     return node;
 }
 
-Node_id Parser::parse_type_param()
+Node_id Parser::parse_type_param( bool& pack )
 {
     const Span at        = cursor_.peek().span;
     Symbol_id  name      = expect_name();
     Span       name_span = cursor_.previous().span;
+
+    // `u64... S`: a pack of sizes.
+    pack = name.is_valid() && match_ellipsis();
 
     // `<comparable T>` or `<i32 N>`: the second name is the parameter's, and the first is kept for
     // the resolver, which knows whether it is a bound or a type and says which.
@@ -2976,6 +3047,14 @@ Node_id Parser::parse_type_param()
 
         name      = expect_name();
         name_span = cursor_.previous().span;
+    }
+
+    // `<S...>` or `<u64 S...>`: the dots go between the sizes' type and the name.
+    const Span dots = cursor_.peek().span;
+    if( ( pack && leading.empty() ) || ( name.is_valid() && match_ellipsis() ) )
+    {
+        recovery_.error_at( pack ? name_span : dots, "a pack is written `u64... S`" );
+        pack = false;
     }
 
     // A nameless type parameter is not one: every later pass reads its name.
@@ -15000,6 +15079,49 @@ TEST_CASE( "parser_parses_a_size_argument", "[parse][size_params]" )
     {
         REQUIRE( index_outline( "a < 4 > b" ).starts_with( "Binary_expr" ) );
         REQUIRE( index_outline( "a < 1 + 2 > ( b )" ).starts_with( "Binary_expr" ) );
+    }
+}
+
+TEST_CASE( "parser_parses_a_size_pack", "[parse][size_params][packs]" )
+{
+    SECTION( "the last type parameter, flagged" )
+    {
+        const Parsed p( "struct Grid<T, u64... S> { T x; };" );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const std::vector<Node_id> params =
+            p.ast().type_parameters( p.ast().type_param_list( find_first( p.ast(), p.root(), Node_kind::Struct_decl ) ) );
+        REQUIRE( params.size() == 2 );
+        REQUIRE_FALSE( p.ast().is_variadic( params[0] ) );
+        REQUIRE( p.ast().is_variadic( params[1] ) );
+        REQUIRE( p.text( p.ast().name_span( params[1] ) ) == "S" );
+    }
+
+    SECTION( "`dyn` and a spread in type arguments" )
+    {
+        REQUIRE( declared_type( "Grid<f64, dyn, S...> g;" ) == "Generic_type(Grid,Type_arg_list(f64,dyn,S...))" );
+        REQUIRE( index_outline( "f<dyn>( x )" ) == "Call_expr(f,Arg_list(x),Type_arg_list(dyn))" );
+        REQUIRE( first_named( Parsed( "Grid<dyn> g;" ), "Dyn_size" ).is_valid() );
+
+        const Parsed p( "Grid<f64, S...> g;" );
+        REQUIRE( p.ast().is_variadic( first_named( p, "Named_type" ) ) == false );
+        const Node_id spread = p.child( find_first( p.ast(), p.root(), Node_kind::Type_arg_list ), 1 );
+        REQUIRE( p.ast().is_variadic( spread ) );
+        REQUIRE( p.text( spread ) == "S..." );
+    }
+
+    SECTION( "`dyn` is a name anywhere else" )
+    {
+        REQUIRE( index_outline( "dyn + 1" ) == "Binary_expr(dyn,1)" );
+        REQUIRE( index_outline( "a < dyn > b" ).starts_with( "Binary_expr" ) );
+    }
+
+    SECTION( "on a method, refused and left a plain size" )
+    {
+        const Parsed p( "class C { u64 x; public void f<u64... S>() { } };" );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "only a type or a free function declares a pack" ) != std::string::npos );
+        REQUIRE_FALSE( p.ast().is_variadic( find_first( p.ast(), p.root(), Node_kind::Type_param_decl ) ) );
     }
 }
 

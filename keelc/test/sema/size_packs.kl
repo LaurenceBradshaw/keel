@@ -1,0 +1,38 @@
+// A pack of sizes, `u64... S`: declared on a class and a function, spread with `S...`, given at
+// rank 0, 1 and 3, `dyn` as a size, and read in a body as `S.size` and `S[i]`. `dyn` stays a name
+// everywhere else.
+class Grid<T, u64... S> where T : copyable
+{
+    T first;
+
+    public u64 rank() const
+    {
+        return S.size;
+    }
+
+    public u64 extent( u64 i ) const
+    {
+        return S[i];
+    }
+};
+
+struct Line<u64 N>
+{
+    u64 n;
+};
+
+u64 leading<u64... S>( const ref Grid<f64, S...> _ )
+{
+    return S.size + S[0];
+}
+
+u64 shapes( const ref Grid<i32> _, const ref Grid<f64, 4> _, const ref Grid<f64, dyn, 3, 2> _, const ref Line<dyn> _ )
+{
+    return 0;
+}
+
+i32 main()
+{
+    u64 dyn = 3;
+    return cast<i32>( dyn );
+}

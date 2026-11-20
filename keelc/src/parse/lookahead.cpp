@@ -466,6 +466,19 @@ bool Lookahead::looks_like_type_arguments( u32 at )
             depth -= 2;
             break;
 
+        // `S...`, a pack spread: whole after its name.
+        case Token_kind::Dot_dot:
+        {
+            const Token_kind after = cursor_.peek( 2 ).kind;
+            if( cursor_.previous().kind != Token_kind::Identifier || cursor_.peek( 1 ).kind != Token_kind::Dot ||
+                ( after != Token_kind::Comma && after != Token_kind::Greater && after != Token_kind::Greater_greater ) )
+            {
+                return false;
+            }
+            cursor_.advance(); // `..`
+            break;             // the `.` below
+        }
+
         // A type argument holds no call or operator, and a literal only as a size: meeting one means a comparison.
         case Token_kind::Colon_colon:
         case Token_kind::Identifier:
@@ -855,7 +868,9 @@ bool Lookahead::scan_type_argument()
 {
     if( !cursor_.check( Token_kind::L_paren ) )
     {
-        return cursor_.match( Token_kind::Int_literal ) || scan_type();
+        const bool scanned = cursor_.match( Token_kind::Int_literal ) || scan_type();
+        skip_ellipsis(); // `S...`
+        return scanned;
     }
 
     u32 parens = 0;
@@ -1165,6 +1180,15 @@ bool Lookahead::scan_type_and_name()
     return true;
 }
 
+void Lookahead::skip_ellipsis()
+{
+    if( cursor_.check( Token_kind::Dot_dot ) && cursor_.peek( 1 ).kind == Token_kind::Dot )
+    {
+        cursor_.advance();
+        cursor_.advance();
+    }
+}
+
 bool Lookahead::scan_type_params()
 {
     cursor_.advance(); // the `<`
@@ -1181,7 +1205,9 @@ bool Lookahead::scan_type_params()
             return false;
         }
 
+        skip_ellipsis();                         // `u64... S`
         cursor_.match( Token_kind::Identifier ); // terse bound the parser reports
+        skip_ellipsis();                         // `u64 S...`, which the parser reports
     } while( cursor_.match( Token_kind::Comma ) );
 
     if( !cursor_.match_generic_close() )
@@ -2077,6 +2103,21 @@ TEST_CASE( "lookahead_answers_the_parsers_lookahead", "[scan]" )
 }
 
 // A statement keyword where a body's name goes starts its statement once what it needs follows.
+TEST_CASE( "lookahead_reads_a_size_pack", "[scan][packs]" )
+{
+    auto declaration    = []( std::string_view source ) { return Scanned( source ).lookahead().looks_like_declaration( 0 ); };
+    auto type_arguments = []( std::string_view source )
+    {
+        const Scanned s( source );
+        return s.lookahead().looks_like_type_arguments( s.at( "<" ) );
+    };
+
+    CHECK( type_arguments( "f<S...>( x )" ) );
+    CHECK( type_arguments( "Grid<f64, dyn, S...>::make()" ) );
+    CHECK( declaration( "Grid<f64, S...> g = x;" ) );
+    CHECK_FALSE( type_arguments( "a < b...c > ( d )" ) );
+}
+
 TEST_CASE( "lookahead_ends_a_statement_head_at_a_statement_keyword", "[scan]" )
 {
     auto declaration = []( std::string_view source ) { return Scanned( source ).lookahead().looks_like_declaration( 0 ); };

@@ -1,0 +1,103 @@
+error: a generic takes one pack
+ --> sema/errors_size_packs.kl:4:29
+  |
+4 | struct Two<u64... A, u64... B> { u64 x; };
+  |                             ^
+
+error: a pack is the last type parameter
+ --> sema/errors_size_packs.kl:5:22
+  |
+5 | struct Middle<u64... S, T> { u64 x; };
+  |                      ^ move `S` to the end
+
+error: a pack holds `u64` sizes
+ --> sema/errors_size_packs.kl:6:14
+  |
+6 | struct Typed<i32... S> { u64 x; };
+  |              ^^^ write `u64... S`
+
+error: a pack holds `u64` sizes
+ --> sema/errors_size_packs.kl:7:14
+  |
+7 | struct Bound<comparable... S> { u64 x; };
+  |              ^^^^^^^^^^ write `u64... S`
+
+error: a pack is written `u64... S`
+ --> sema/errors_size_packs.kl:8:22
+  |
+8 | struct Trailing<u64 S...> { u64 x; };
+  |                      ^^
+
+error: a pack is written `u64... S`
+ --> sema/errors_size_packs.kl:9:13
+  |
+9 | struct Bare<S...> { u64 x; };
+  |             ^
+
+error: only a type or a free function declares a pack
+  --> sema/errors_size_packs.kl:15:27
+   |
+15 |     public u64 own<u64... R>() const { return 0; }
+   |                           ^ declare it on the type
+
+error: `S` is a pack of sizes
+  --> sema/errors_size_packs.kl:21:43
+   |
+21 | u64 bare<u64... S>( const ref Holder<f64, S> _ ) { return 0; }
+   |                                           ^ spread it: `S...`
+
+error: `N` takes one size, so a pack is not spread into it
+  --> sema/errors_size_packs.kl:22:43
+   |
+22 | u64 into_fixed<u64... S>( const ref Fixed<S...> _ ) { return 0; }
+   |                                           ^^^^
+
+error: `T` takes a type, so a pack is not spread into it
+  --> sema/errors_size_packs.kl:23:40
+   |
+23 | u64 into_type<u64... S>( const ref Box<S...> _ ) { return 0; }
+   |                                        ^^^^
+
+error: only a pack is spread with `...`
+  --> sema/errors_size_packs.kl:24:44
+   |
+24 | u64 not_pack<u64 N>( const ref Holder<f64, N...> _ ) { return 0; }
+   |                                            ^^^^
+
+error: `S` is a pack of sizes, not a value
+  --> sema/errors_size_packs.kl:25:32
+   |
+25 | u64 value<u64... S>() { return S; }
+   |                                ^ read `S.size` or `S[i]`
+
+error: a pack has no field `rank`
+  --> sema/errors_size_packs.kl:26:33
+   |
+26 | u64 member<u64... S>() { return S.rank; }
+   |                                 ^^^^^^ it has `size`, and `[i]` reads a size
+
+error: a pack is read one size at a time
+  --> sema/errors_size_packs.kl:27:32
+   |
+27 | u64 slice<u64... S>() { return S[0, 1]; }
+   |                                ^^^^^^^ write `S[i]`
+
+error: expected `u64`, but got a floating-point literal
+  --> sema/errors_size_packs.kl:28:40
+   |
+28 | u64 typed_index<u64... S>() { return S[1.0]; }
+   |                                        ^^^ an integer has no `.`; write `1`
+
+error: `T` takes a type, but this is a size
+  --> sema/errors_size_packs.kl:30:30
+   |
+30 | void dyn_type( const ref Box<dyn> _ ) { }
+   |                              ^^^
+
+error: `Holder` takes at least 1 type argument, but 0 were given
+  --> sema/errors_size_packs.kl:31:31
+   |
+31 | void too_few( const ref Holder<> _ ) { }
+   |                               ^^ `Holder` declares `T` and `S`
+
+17 errors generated

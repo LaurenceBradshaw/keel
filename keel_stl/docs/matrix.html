@@ -118,7 +118,7 @@ product, and <code>v.matmul( m )</code> reads <code>v</code> as a row.</p>
 </div>
 </div>
 <div class="group" id="vec.concatenated">
-<pre class="signature"><a class="anchor" href="#vec.concatenated" aria-label="Link to concatenated">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, ?&gt; <span class="fn">concatenated</span>&lt;<a class="prim" href="prelude.html#u64">u64</a> M&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, M&gt; b ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#vec.concatenated" aria-label="Link to concatenated">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, (N + M)&gt; <span class="fn">concatenated</span>&lt;<a class="prim" href="prelude.html#u64">u64</a> M&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, M&gt; b ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>This vector's elements, then <code>b</code>'s.</p>
 </div>
@@ -672,7 +672,7 @@ matrix product, and <code>m.matmul( v )</code> reads <code>v</code> as a column.
 </div>
 </div>
 <div class="group" id="mat.flattened">
-<pre class="signature"><a class="anchor" href="#mat.flattened" aria-label="Link to flattened">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, ?&gt; <span class="fn">flattened</span>() <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#mat.flattened" aria-label="Link to flattened">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, (R * C)&gt; <span class="fn">flattened</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>The elements row after row, as a vector.</p>
 </div>
@@ -1069,7 +1069,7 @@ nothing, and an infinity only to itself.</p>
 </div>
 </div>
 <div class="group" id="mat.cumsum">
-<pre class="signature"><a class="anchor" href="#mat.cumsum" aria-label="Link to cumsum">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, ?&gt; <span class="fn">cumsum</span>() <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#mat.cumsum" aria-label="Link to cumsum">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, (R * C)&gt; <span class="fn">cumsum</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>The running totals of the elements, row after row, as a vector.</p>
 </div>
@@ -1079,7 +1079,7 @@ nothing, and an infinity only to itself.</p>
 </div>
 </div>
 <div class="group" id="mat.cumprod">
-<pre class="signature"><a class="anchor" href="#mat.cumprod" aria-label="Link to cumprod">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, ?&gt; <span class="fn">cumprod</span>() <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#mat.cumprod" aria-label="Link to cumprod">#</a><code><span class="kw">public</span> <a class="type" href="#vec">vec</a>&lt;T, (R * C)&gt; <span class="fn">cumprod</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>The running products of the elements, row after row, as a vector.</p>
 </div>
@@ -1169,7 +1169,7 @@ integer needs a rounding: <code>truncated</code>, <code>rounded</code>, <code>fl
 <section class="entry">
 <h2><span class="kind">function</span> <span class="fn">cross</span></h2>
 <div class="group" id="cross">
-<pre class="signature"><a class="anchor" href="#cross" aria-label="Link to cross">#</a><code><a class="type" href="#vec">vec</a>&lt;T, ?&gt; <span class="fn">cross</span>&lt;T&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, ?&gt; a, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, ?&gt; b ) <span class="kw">where</span> T : numeric</code></pre>
+<pre class="signature"><a class="anchor" href="#cross" aria-label="Link to cross">#</a><code><a class="type" href="#vec">vec</a>&lt;T, 3&gt; <span class="fn">cross</span>&lt;T&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, 3&gt; a, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, 3&gt; b ) <span class="kw">where</span> T : numeric</code></pre>
 <div class="doc">
 <p>The cross product <code>a</code> x <code>b</code>: <code>kl::cross( a, b )</code>.</p>
 </div>

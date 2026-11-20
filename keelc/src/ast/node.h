@@ -30,7 +30,8 @@ enum class Node_kind : u16
     Constructor_decl,
     // aux: the name (`this` for a receiver, invalid in a Function_type); children: the type.
     Param_decl,
-    // aux: the name; children: the package Name_expr, when written.
+    // aux: the name; children: the package Name_expr, when written. Variadic when a type argument
+    // `S...` expands a pack.
     Named_type,
     // children: the pointee.
     Pointer_type,
@@ -179,7 +180,7 @@ enum class Node_kind : u16
     // function-like declaration keeps four children and the resolver declares the parameters
     // before anything names one.
     Type_param_list,
-    // aux: the name. Its bounds are in a Where_clause beside it.
+    // aux: the name. Its bounds are in a Where_clause beside it. Variadic for a pack, `u64... S`.
     Type_param_decl,
     // aux: the parameter it constrains; children: the Bound_names.
     Where_clause,
@@ -208,6 +209,8 @@ enum class Node_kind : u16
     Capture_decl,
     // `ptr_init( p, v )`; children: the pointer, then the value.
     Ptr_init_expr,
+    // `dyn`, a size argument known at run time; no children.
+    Dyn_size,
 
     Count
 };

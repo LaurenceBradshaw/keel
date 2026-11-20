@@ -201,6 +201,7 @@ Type_id Annotations::resolve( Node_id annotation, bool outermost )
     case Node_kind::Union_type:
         return resolve_union( annotation );
     case Node_kind::Int_literal:
+    case Node_kind::Dyn_size:
         // A size argument where a type is wanted: `Box<4>`.
         reporter_.error_at( ast_.span( annotation ), "a size is given where a type is wanted" );
         return table_.builtin( Type_kind::Error );
@@ -647,16 +648,19 @@ bool Annotations::resolve_type_arguments(
 )
 {
     const std::span<const Node_id> given = ast_.children( type_args );
+    const bool                     pack  = ends_in_pack( parameters );
+    const std::size_t              fixed = pack ? parameters.size() - 1 : parameters.size();
 
-    if( parameters.size() != given.size() )
+    if( pack ? given.size() < fixed : given.size() != fixed )
     {
         reporter_.error_at(
             ast_.span( type_args ),
             fmt::format(
-                "`{}` takes {} type argument{}, but {} {} given",
+                "`{}` takes {}{} type argument{}, but {} {} given",
                 name,
-                parameters.size(),
-                parameters.size() == 1 ? "" : "s",
+                pack ? "at least " : "",
+                fixed,
+                fixed == 1 ? "" : "s",
                 given.size(),
                 given.size() == 1 ? "was" : "were"
             ),
@@ -676,12 +680,16 @@ bool Annotations::resolve_type_arguments(
     }
 
     Bindings bindings;
-    for( std::size_t i = 0; i < parameters.size(); ++i )
+    for( std::size_t i = 0; i < fixed; ++i )
     {
         bindings.emplace( types_.type_of( parameters[i] ).v, resolved[i] );
     }
+    if( pack )
+    {
+        bindings.emplace( types_.type_of( parameters.back() ).v, table_.pack( std::span( resolved ).subspan( fixed ) ) );
+    }
 
-    for( std::size_t i = 0; i < parameters.size(); ++i )
+    for( std::size_t i = 0; i < fixed; ++i )
     {
         if( table_.is_size_parameter( types_.type_of( parameters[i] ) ) )
         {
@@ -698,24 +706,32 @@ bool Annotations::resolve_type_arguments(
 std::vector<Type_id> Annotations::resolve_written( std::span<const Node_id> parameters, Node_id type_args )
 {
     const std::span<const Node_id> given = ast_.children( type_args );
+    const bool                     pack  = ends_in_pack( parameters );
     std::vector<Type_id>           resolved;
     resolved.reserve( given.size() );
 
     // Not outermost: a type argument binds nothing, so `const` on one applies to nothing.
     for( std::size_t i = 0; i < given.size(); ++i )
     {
-        const Node_id argument = given[i];
-        Type_id       type     = Type_id {};
-        if( i >= parameters.size() )
+        const Node_id argument  = given[i];
+        const Node_id parameter = pack && i + 1 >= parameters.size() ? parameters.back()
+                                  : i < parameters.size()            ? parameters[i]
+                                                                     : Node_id {};
+        Type_id       type      = Type_id {};
+        if( ast_.is_variadic( argument ) )
+        {
+            type = resolve_spread( parameter, argument );
+        }
+        else if( !parameter.is_valid() )
         {
             type = resolve( argument, false );
         }
-        else if( table_.is_size_parameter( types_.type_of( parameters[i] ) ) )
+        else if( table_.is_size_parameter( types_.type_of( parameter ) ) )
         {
-            type = resolve_size_argument( parameters[i], argument );
+            type = resolve_size_argument( parameter, argument );
         }
         else if( ast_.kind( argument ) == Node_kind::Int_literal || ast_.kind( argument ) == Node_kind::Binary_expr ||
-                 ast_.kind( argument ) == Node_kind::Name_expr )
+                 ast_.kind( argument ) == Node_kind::Name_expr || ast_.kind( argument ) == Node_kind::Dyn_size )
         {
             const Folded folded = constant_folder_.fold_integer( argument );
             reporter_.error_at(
@@ -723,10 +739,10 @@ std::vector<Type_id> Annotations::resolve_written( std::span<const Node_id> para
                 folded.constant
                     ? fmt::format(
                           "`{}` takes a type, but `{}` is a size",
-                          interner_.text( ast_.name( parameters[i] ) ),
+                          interner_.text( ast_.name( parameter ) ),
                           folded.value.magnitude
                       )
-                    : fmt::format( "`{}` takes a type, but this is a size", interner_.text( ast_.name( parameters[i] ) ) )
+                    : fmt::format( "`{}` takes a type, but this is a size", interner_.text( ast_.name( parameter ) ) )
             );
             type = table_.builtin( Type_kind::Error );
         }
@@ -740,11 +756,56 @@ std::vector<Type_id> Annotations::resolve_written( std::span<const Node_id> para
     return resolved;
 }
 
-// A size parameter's argument: a literal, a `const`, or a size parameter passed on.
+bool Annotations::ends_in_pack( std::span<const Node_id> parameters ) const
+{
+    return !parameters.empty() && table_.is_pack_parameter( types_.type_of( parameters.back() ) );
+}
+
+// `S...`: a pack passed on, into a pack.
+Type_id Annotations::resolve_spread( Node_id parameter, Node_id argument )
+{
+    const Node_id named = constant_folder_.size_parameter_named( argument );
+    if( !named.is_valid() || !table_.is_pack_parameter( types_.type_of( named ) ) )
+    {
+        reporter_.error_at( ast_.span( argument ), "only a pack is spread with `...`" );
+        return table_.builtin( Type_kind::Error );
+    }
+
+    if( !parameter.is_valid() || !table_.is_pack_parameter( types_.type_of( parameter ) ) )
+    {
+        reporter_.error_at(
+            ast_.span( argument ),
+            parameter.is_valid() ? fmt::format(
+                                       "`{}` takes {}, so a pack is not spread into it",
+                                       interner_.text( ast_.name( parameter ) ),
+                                       table_.is_size_parameter( types_.type_of( parameter ) ) ? "one size" : "a type"
+                                   )
+                                 : std::string( "a pack is spread only into a pack" )
+        );
+        return table_.builtin( Type_kind::Error );
+    }
+
+    return types_.record( argument, types_.type_of( named ) );
+}
+
+// A size parameter's argument: a literal, a `const`, `dyn`, or a size parameter passed on.
 Type_id Annotations::resolve_size_argument( Node_id parameter, Node_id argument )
 {
+    if( ast_.kind( argument ) == Node_kind::Dyn_size )
+    {
+        return types_.record( argument, table_.dyn() );
+    }
+
     if( const Node_id forwarded = constant_folder_.size_parameter_named( argument ); forwarded.is_valid() )
     {
+        if( table_.is_pack_parameter( types_.type_of( forwarded ) ) )
+        {
+            const std::string_view pack = interner_.text( ast_.name( forwarded ) );
+            reporter_.error_at(
+                ast_.span( argument ), fmt::format( "`{}` is a pack of sizes", pack ), fmt::format( "spread it: `{}...`", pack )
+            );
+            return table_.builtin( Type_kind::Error );
+        }
         return types_.record( argument, types_.type_of( forwarded ) );
     }
 

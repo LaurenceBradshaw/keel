@@ -86,7 +86,7 @@ bool could_meet( const Type_table& table, Type_id a, Type_id b )
 
     if( left.kind == Type_kind::Size )
     {
-        return left.width != 0 || right.width != 0; // a computed extent may come to any count
+        return left.width != 0 || right.width != 0; // a computed or run-time extent may come to any count
     }
 
     if( left.kind == Type_kind::Array )

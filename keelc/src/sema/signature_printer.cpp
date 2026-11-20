@@ -200,8 +200,9 @@ std::string Signature_printer::type( Node_id annotation ) const
         if( declared.is_valid() && ast_.kind( declared ) == Node_kind::Type_param_decl )
         {
             const Type_id argument = bound( declared );
-            return argument.is_valid() ? std::string( types_.table().name( argument ) )
-                                       : std::string( text( ast_.name( declared ) ) );
+            return argument.is_valid()
+                       ? std::string( types_.table().name( argument ) )
+                       : fmt::format( "{}{}", text( ast_.name( declared ) ), ast_.is_variadic( annotation ) ? "..." : "" );
         }
 
         const Node_id package = ast_.package( annotation );
@@ -274,6 +275,12 @@ std::string Signature_printer::type( Node_id annotation ) const
         }
         return members;
     }
+    // A size argument, by its recorded size.
+    case Node_kind::Int_literal:
+    case Node_kind::Dyn_size:
+    case Node_kind::Binary_expr:
+    case Node_kind::Name_expr:
+        return types_.type_of( annotation ).is_valid() ? size_side( annotation ) : "?";
     default:
         return "?";
     }
@@ -394,7 +401,8 @@ std::string Signature_printer::size_side( Node_id side ) const
     }
 
     const std::string name( types_.table().name( size ) );
-    return types_.table().get( size ).kind == Type_kind::Size && types_.table().get( size ).width != 0
+    return types_.table().get( size ).kind == Type_kind::Size && types_.table().get( size ).width != 0 &&
+                   !types_.table().is_dyn( size )
                ? fmt::format( "({})", name )
                : name;
 }
@@ -410,7 +418,10 @@ std::string Signature_printer::type_parameter( Node_id param ) const
     const Type_id parameter = types_.type_of( param );
     return parameter.is_valid() && types_.table().is_size_parameter( parameter )
                ? fmt::format(
-                     "{} {}", types_.table().name( types_.table().get( parameter ).element ), text( ast_.name( param ) )
+                     "{}{} {}",
+                     types_.table().name( types_.table().get( parameter ).element ),
+                     types_.table().is_pack_parameter( parameter ) ? "..." : "",
+                     text( ast_.name( param ) )
                  )
                : std::string( text( ast_.name( param ) ) );
 }
@@ -668,6 +679,18 @@ TEST_CASE( "signatures_print_a_size_parameter_with_its_type", "[sema][signature]
 
     REQUIRE( printed( Node_kind::Struct_decl, "Grid" ) == "struct Grid<T, u64 N> where T : copyable" );
     REQUIRE( printed( Node_kind::Function_decl, "f" ) == "void f<u64 N, T>( T x )" );
+}
+
+TEST_CASE( "signatures_print_a_size_pack_and_dyn", "[sema][signature][size][packs]" )
+{
+    const Printed printed( "class Grid<T, u64... S> where T : copyable { T x; };\n"
+                           "void f<u64... S>( const ref Grid<f64, S...> g, const ref Grid<i32, dyn, 3> h ) { }\n" );
+
+    REQUIRE( printed( Node_kind::Class_decl, "Grid" ) == "class Grid<T, u64... S> where T : copyable" );
+    REQUIRE(
+        printed( Node_kind::Function_decl, "f" ) ==
+        "void f<u64... S>( const ref Grid<f64, S...> g, const ref Grid<i32, dyn, 3> h )"
+    );
 }
 
 TEST_CASE( "signatures_print_a_used_size_parameter_by_name", "[sema][signature][size]" )

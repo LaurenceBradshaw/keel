@@ -124,7 +124,13 @@ Type_id declare_type_parameter( const Ast& ast, const Interner& interner, Type_t
     const std::span<const Node_id> leading = ast.children( type_param );
     const Type_id value_type = leading.empty() ? Type_id {} : table.from_spelling( interner.text( ast.name( leading[0] ) ) );
 
-    return value_type.is_valid() ? table.size_parameter( type_param, name, value_type ) : table.parameter( type_param, name );
+    if( !value_type.is_valid() )
+    {
+        return table.parameter( type_param, name );
+    }
+
+    return ast.is_variadic( type_param ) ? table.size_pack_parameter( type_param, name, value_type )
+                                         : table.size_parameter( type_param, name, value_type );
 }
 
 std::optional<Bound> bound_for_name( std::string_view spelling )

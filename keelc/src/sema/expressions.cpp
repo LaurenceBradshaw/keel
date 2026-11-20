@@ -255,6 +255,18 @@ Type_id Expressions::infer_name( Node_id id )
         return types_.poison( id );
     }
 
+    // A pack is read through `S.size` and `S[i]`.
+    if( decl_kind == Node_kind::Type_param_decl && table_.is_pack_parameter( types_.type_of( decl ) ) )
+    {
+        const std::string_view pack = interner_.text( ast_.name( id ) );
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format( "`{}` is a pack of sizes, not a value", pack ),
+            fmt::format( "read `{}.size` or `{}[i]`", pack, pack )
+        );
+        return types_.poison( id );
+    }
+
     // A size parameter reads as its value, known per instance.
     if( decl_kind == Node_kind::Type_param_decl && table_.is_size_parameter( types_.type_of( decl ) ) )
     {
@@ -3824,6 +3836,11 @@ Type_id Expressions::infer_ptr_init( Node_id id )
 
 Type_id Expressions::infer_index( Node_id id )
 {
+    if( const Type_id read = infer_pack_read( id ); read.is_valid() )
+    {
+        return read;
+    }
+
     if( ast_.indices( id ).size() > 1 )
     {
         return infer_multi_index( id );
@@ -4227,8 +4244,49 @@ Type_id Expressions::infer_path( Node_id id )
     return types_.poison( id );
 }
 
+// `S.size` or `S[i]`, each a `u64`; invalid when `id` reads no pack.
+Type_id Expressions::infer_pack_read( Node_id id )
+{
+    const Node_id base = ast_.object( id );
+    const Node_id pack = ast_.kind( base ) == Node_kind::Name_expr ? constant_folder_.size_parameter_named( base ) : Node_id {};
+    if( !pack.is_valid() || !table_.is_pack_parameter( types_.type_of( pack ) ) )
+    {
+        return Type_id {};
+    }
+
+    const Type_id u64 = table_.integer( 64, false );
+    types_.record( base, types_.type_of( pack ) );
+
+    if( ast_.kind( id ) == Node_kind::Index_expr )
+    {
+        if( ast_.indices( id ).size() != 1 || ast_.kind( ast_.index( id ) ) == Node_kind::Range_expr )
+        {
+            reporter_.error_at( ast_.span( id ), "a pack is read one size at a time", "write `S[i]`" );
+            return types_.poison( id );
+        }
+        check( ast_.index( id ), u64 );
+        return types_.record( id, u64 );
+    }
+
+    if( interner_.text( ast_.name( id ) ) != "size" )
+    {
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format( "a pack has no field `{}`", interner_.text( ast_.name( id ) ) ),
+            "it has `size`, and `[i]` reads a size"
+        );
+        return types_.poison( id );
+    }
+    return types_.record( id, u64 );
+}
+
 Type_id Expressions::infer_field( Node_id id )
 {
+    if( const Type_id read = infer_pack_read( id ); read.is_valid() )
+    {
+        return read;
+    }
+
     const Node_id base      = ast_.object( id );
     const Type_id base_type = infer( base );
     warn_needless_deref( id );
