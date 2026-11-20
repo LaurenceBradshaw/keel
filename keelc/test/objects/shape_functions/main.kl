@@ -1,0 +1,17 @@
+// shaped.klo holds generics over `product`, `reversed`, `broadcast` and `dropped`; each instance is
+// made here from the loaded form.
+import shaped;
+
+i32 main()
+{
+    Grid<2, 3> g = Grid<2, 3> { [ 7, .. ] };
+    Grid<3, 2> f = flipped( g );
+    if( f.cells.size() != 6 || f.cells[5] != 7 ) { return 1; }
+
+    Grid<3> row     = Grid<3> { [ 1, .. ] };
+    Grid<2, 3> both = joined( g, row );
+    if( both.cells[4] != 8 ) { return 2; }
+
+    if( dropped_count<1, 4, 5, 6>() != 24 ) { return 3; }
+    return 0;
+}

@@ -1,0 +1,21 @@
+// Generics over shape functions, loaded from shaped.klo by main.kl.
+struct Grid<u64... S>
+{
+    i64[product( S )] cells;
+};
+
+Grid<reversed( S )...> flipped<u64... S>( const ref Grid<S...> g )
+{
+    return Grid<reversed( S )...> { [ g.cells[0], .. ] };
+}
+
+Grid<broadcast( S, U )...> joined<u64... S, u64... U>( const ref Grid<S...> a, const ref Grid<U...> b )
+{
+    return Grid<broadcast( S, U )...> { [ a.cells[0] + b.cells[0], .. ] };
+}
+
+u64 dropped_count<u64 A, u64... S>()
+{
+    i64[product( dropped<A>( S ) )] a = [ 0, .. ];
+    return a.size();
+}

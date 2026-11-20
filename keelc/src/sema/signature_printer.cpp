@@ -281,6 +281,10 @@ std::string Signature_printer::type( Node_id annotation ) const
     case Node_kind::Binary_expr:
     case Node_kind::Name_expr:
         return types_.type_of( annotation ).is_valid() ? size_side( annotation ) : "?";
+    case Node_kind::Call_expr: // a shape function, `reversed(S)...`
+        return types_.type_of( annotation ).is_valid()
+                   ? size_side( annotation ) + ( ast_.is_variadic( annotation ) ? "..." : "" )
+                   : "?";
     default:
         return "?";
     }
@@ -401,8 +405,7 @@ std::string Signature_printer::size_side( Node_id side ) const
     }
 
     const std::string name( types_.table().name( size ) );
-    return types_.table().get( size ).kind == Type_kind::Size && types_.table().get( size ).width != 0 &&
-                   !types_.table().is_dyn( size )
+    return types_.table().get( size ).kind == Type_kind::Size && is_arithmetic( Size_op( types_.table().get( size ).width ) )
                ? fmt::format( "({})", name )
                : name;
 }

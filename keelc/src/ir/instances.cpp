@@ -193,7 +193,7 @@ std::optional<Instantiation> Instance_queue::next()
 
         Instantiation reached { .declaration = edge.to, .arguments = {} };
 
-        reached.arguments = types_.table().spliced( edge.arguments, bindings );
+        reached.arguments = reached_arguments( ast_, types_, edge, bindings );
 
         queue( pending_, types_, std::move( reached ) );
     }
@@ -287,21 +287,42 @@ void Instance_queue::queue_default_calls( Type_id composite )
             continue;
         }
 
-        Instantiation reached { .declaration = edge.to, .arguments = types_.table().spliced( edge.arguments, bindings ) };
+        Instantiation reached { .declaration = edge.to, .arguments = reached_arguments( ast_, types_, edge, bindings ) };
 
         queue( pending_, types_, std::move( reached ) );
     }
 }
 
-// Positional, which is what D39's spelling guarantees: the nth type argument binds the nth parameter.
-Bindings bindings_for( const Ast& ast, Types& types, const Instantiation& instance )
+namespace
+{
+
+std::vector<Type_id> type_parameters( const Ast& ast, const Types& types, Node_id declaration )
 {
     std::vector<Type_id> parameters;
-    for( const Node_id parameter : ast.type_parameters( ast.type_param_list( instance.declaration ) ) )
+    for( const Node_id parameter : ast.type_parameters( ast.type_param_list( declaration ) ) )
     {
         parameters.push_back( types.type_of( parameter ) );
     }
-    return types.table().bind( parameters, instance.arguments );
+    return parameters;
+}
+
+} // namespace
+
+// Positional, which is what D39's spelling guarantees: the nth type argument binds the nth parameter.
+Bindings bindings_for( const Ast& ast, Types& types, const Instantiation& instance )
+{
+    return types.table().bind( type_parameters( ast, types, instance.declaration ), instance.arguments );
+}
+
+std::vector<Type_id> reached_arguments( const Ast& ast, Types& types, const Generic_call& edge, const Bindings& bindings )
+{
+    return reached_arguments( ast, types, edge.to, edge.arguments, bindings );
+}
+
+std::vector<Type_id>
+reached_arguments( const Ast& ast, Types& types, Node_id to, std::span<const Type_id> arguments, const Bindings& bindings )
+{
+    return types.table().spliced( arguments, bindings, !types.table().keeps_packs( type_parameters( ast, types, to ) ) );
 }
 
 } // namespace keel

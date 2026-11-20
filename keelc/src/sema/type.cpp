@@ -249,7 +249,7 @@ std::optional<u64> apply( Size_op op, u64 lhs, u64 rhs )
 // How tightly a size binds when it is an operand: a sum 1, a product 2, a leaf 3.
 int precedence( const Type& described )
 {
-    if( described.kind != Type_kind::Size || described.width == 0 || Size_op( described.width ) == Size_op::Dynamic )
+    if( described.kind != Type_kind::Size || !is_arithmetic( Size_op( described.width ) ) )
     {
         return 3;
     }
@@ -307,6 +307,301 @@ Type_id Type_table::size_op( Size_op op, Type_id lhs, Type_id rhs )
     return id;
 }
 
+// An operand's sizes once it is a pack whose every argument is one size.
+std::optional<std::span<const Type_id>> Type_table::known_sizes( Type_id operand ) const
+{
+    const Type& described = get( operand );
+    if( described.kind != Type_kind::Pack || described.width != 0 ||
+        std::ranges::any_of(
+            described.arguments, [&]( Type_id size ) { return is_pack_parameter( size ) || is_shape( size ); }
+        ) )
+    {
+        return std::nullopt;
+    }
+    return described.arguments;
+}
+
+Type_id Type_table::shape_op( Size_op op, std::span<const Type_id> given )
+{
+    // A pack of one spread, `pack(S)`, is that spread, so a substituted open form names the same.
+    std::vector<Type_id> operands;
+    for( const Type_id operand : given )
+    {
+        if( !operand.is_valid() || is_error( operand ) )
+        {
+            return error_;
+        }
+        const Type& described = get( operand );
+        const bool  spread    = described.kind == Type_kind::Pack && described.width == 0 && described.arguments.size() == 1 &&
+                            ( is_pack_parameter( described.arguments[0] ) || is_shape( described.arguments[0] ) );
+        operands.push_back( spread ? described.arguments[0] : operand );
+    }
+
+    const bool                                    axis  = op == Size_op::Dropped || op == Size_op::Inserted;
+    const std::optional<std::span<const Type_id>> sizes = known_sizes( operands.back() );
+    const Type&                                   at    = get( operands[0] );
+    const bool fixed = !axis || ( at.kind == Type_kind::Size && ( at.width == 0 || operands[0] == dyn_ ) );
+
+    if( sizes && fixed )
+    {
+        std::vector<Type_id> result( sizes->begin(), sizes->end() );
+        switch( op )
+        {
+        case Size_op::Product:
+        {
+            Type_id product = size( 1 );
+            for( const Type_id each : result )
+            {
+                product = size_op( Size_op::Multiply, product, each );
+            }
+            return product;
+        }
+        case Size_op::Reversed:
+            std::ranges::reverse( result );
+            return pack( result );
+        case Size_op::Dropped:
+        case Size_op::Inserted:
+        {
+            const u64 rank = op == Size_op::Dropped ? result.size() : result.size() + 1;
+            if( operands[0] == dyn_ ) // an axis known at run time leaves every size unknown
+            {
+                return rank == 0 ? error_ : pack( std::vector<Type_id>( op == Size_op::Dropped ? rank - 1 : rank, dyn_ ) );
+            }
+            if( at.count >= rank )
+            {
+                return error_;
+            }
+            if( op == Size_op::Dropped )
+            {
+                result.erase( result.begin() + std::ptrdiff_t( at.count ) );
+            }
+            else
+            {
+                result.insert( result.begin() + std::ptrdiff_t( at.count ), size( 1 ) );
+            }
+            return pack( result );
+        }
+        case Size_op::Broadcast:
+        {
+            const std::optional<std::span<const Type_id>> left = known_sizes( operands[0] );
+            if( !left )
+            {
+                break;
+            }
+            // Right-aligned: a 1 or `dyn` takes the other size, two others must be one.
+            const std::span<const Type_id> right = *sizes;
+            std::vector<Type_id>           both( std::max( left->size(), right.size() ) );
+            bool                           open = false;
+            for( std::size_t i = 0; i < both.size(); ++i )
+            {
+                const Type_id a        = i < left->size() ? ( *left )[left->size() - 1 - i] : size( 1 );
+                const Type_id b        = i < right.size() ? right[right.size() - 1 - i] : size( 1 );
+                const auto    constant = [&]( Type_id side )
+                { return get( side ).kind == Type_kind::Size && get( side ).width == 0; };
+                const auto    one    = [&]( Type_id side ) { return constant( side ) && get( side ).count == 1; };
+                const Type_id paired = one( a )                          ? b
+                                       : a == b || one( b ) || b == dyn_ ? a
+                                       : a == dyn_                       ? b
+                                       : constant( a ) && constant( b )  ? error_
+                                                                         : Type_id {};
+                if( paired == error_ )
+                {
+                    return error_;
+                }
+                open                      = open || !paired.is_valid();
+                both[both.size() - 1 - i] = paired;
+            }
+            if( !open )
+            {
+                return pack( both );
+            }
+            break;
+        }
+        default:
+            assert( false );
+        }
+    }
+
+    const std::tuple key { u8( op ), operands[0].v, operands.size() > 1 ? operands[1].v : 0u };
+    if( const auto it = size_ops_.find( key ); it != size_ops_.end() )
+    {
+        return it->second;
+    }
+
+    static constexpr std::string_view names[] = { "product", "broadcast", "dropped", "inserted", "reversed" };
+    const std::string_view            called  = names[u8( op ) - u8( Size_op::Product )];
+    const std::string spelling = axis ? fmt::format( "{}<{}>({})", called, name( operands[0] ), name( operands[1] ) )
+                                 : op == Size_op::Broadcast
+                                     ? fmt::format( "{}({}, {})", called, name( operands[0] ), name( operands[1] ) )
+                                     : fmt::format( "{}({})", called, name( operands[0] ) );
+
+    const std::vector<Type_id>& stored = arguments_.emplace_back( operands );
+    const Type_kind             kind   = op == Size_op::Product ? Type_kind::Size : Type_kind::Pack;
+    const Type_id               id     = add( { .kind = kind, .width = u8( op ), .arguments = stored }, spelling );
+    size_ops_.emplace( key, id );
+    return id;
+}
+
+std::string_view shape_failure( Size_op op )
+{
+    switch( op )
+    {
+    case Size_op::Broadcast:
+        return "pairs two sizes that differ, neither of them 1";
+    case Size_op::Dropped:
+        return "drops an axis its sizes do not have";
+    case Size_op::Inserted:
+        return "inserts an axis past the end of its sizes";
+    default:
+        return "overflows a `u64`";
+    }
+}
+
+Type_id Type_table::failing_shape( Type_id type, const Bindings& bindings )
+{
+    if( !type.is_valid() )
+    {
+        return Type_id {};
+    }
+    const Type& described = get( type );
+    if( described.kind == Type_kind::Parameter )
+    {
+        return Type_id {};
+    }
+    for( const Type_id inner : described.arguments )
+    {
+        if( const Type_id found = failing_shape( inner, bindings ); found.is_valid() )
+        {
+            return found;
+        }
+    }
+    if( described.element.is_valid() && described.kind != Type_kind::Enum )
+    {
+        if( const Type_id found = failing_shape( described.element, bindings ); found.is_valid() )
+        {
+            return found;
+        }
+    }
+    const bool shape =
+        described.width != 0 &&
+        ( described.kind == Type_kind::Pack ||
+          ( described.kind == Type_kind::Size && !is_arithmetic( Size_op( described.width ) ) && type != dyn_ ) );
+    return shape && is_error( substitute( type, bindings ) ) ? type : Type_id {};
+}
+
+// What a parameter is bound to, or invalid while it is open: unbound, or bound to itself or to
+// the pack of its own spread.
+Type_id Type_table::bound_value( Type_id parameter, const Bindings& bindings ) const
+{
+    const auto bound = bindings.find( parameter.v );
+    if( bound == bindings.end() || bound->second == parameter )
+    {
+        return Type_id {};
+    }
+    const Type& described = get( bound->second );
+    const bool  itself =
+        described.kind == Type_kind::Pack && described.arguments.size() == 1 && described.arguments[0] == parameter;
+    return itself ? Type_id {} : bound->second;
+}
+
+std::optional<std::vector<u64>> Type_table::evaluate_pack( Type_id pack, const Bindings& bindings ) const
+{
+    const Type& described = get( pack );
+
+    if( described.kind == Type_kind::Parameter )
+    {
+        const Type_id bound = bound_value( pack, bindings );
+        return bound.is_valid() ? evaluate_pack( bound, bindings ) : std::nullopt;
+    }
+
+    if( described.kind != Type_kind::Pack )
+    {
+        return std::nullopt;
+    }
+
+    std::vector<u64> values;
+
+    if( described.width == 0 )
+    {
+        for( const Type_id each : described.arguments )
+        {
+            if( is_pack_parameter( each ) || is_shape( each ) )
+            {
+                const std::optional<std::vector<u64>> spread = evaluate_pack( each, bindings );
+                if( !spread )
+                {
+                    return std::nullopt;
+                }
+                values.insert( values.end(), spread->begin(), spread->end() );
+                continue;
+            }
+            const std::optional<u64> value = evaluate( each, bindings );
+            if( !value )
+            {
+                return std::nullopt;
+            }
+            values.push_back( *value );
+        }
+        return values;
+    }
+
+    const Size_op op = Size_op( described.width );
+
+    if( op == Size_op::Broadcast )
+    {
+        const std::optional<std::vector<u64>> left  = evaluate_pack( described.arguments[0], bindings );
+        const std::optional<std::vector<u64>> right = evaluate_pack( described.arguments[1], bindings );
+        if( !left || !right )
+        {
+            return std::nullopt;
+        }
+        values.resize( std::max( left->size(), right->size() ) );
+        for( std::size_t i = 0; i < values.size(); ++i )
+        {
+            const u64 a = i < left->size() ? ( *left )[left->size() - 1 - i] : 1;
+            const u64 b = i < right->size() ? ( *right )[right->size() - 1 - i] : 1;
+            if( a != b && a != 1 && b != 1 )
+            {
+                return std::nullopt;
+            }
+            values[values.size() - 1 - i] = a == 1 ? b : a;
+        }
+        return values;
+    }
+
+    const bool                            axis    = op == Size_op::Dropped || op == Size_op::Inserted;
+    const std::optional<std::vector<u64>> operand = evaluate_pack( described.arguments.back(), bindings );
+    const std::optional<u64>              at = axis ? evaluate( described.arguments[0], bindings ) : std::optional<u64>( 0 );
+    if( !operand || !at )
+    {
+        return std::nullopt;
+    }
+    values = *operand;
+
+    switch( op )
+    {
+    case Size_op::Reversed:
+        std::ranges::reverse( values );
+        return values;
+    case Size_op::Dropped:
+        if( *at >= values.size() )
+        {
+            return std::nullopt;
+        }
+        values.erase( values.begin() + std::ptrdiff_t( *at ) );
+        return values;
+    case Size_op::Inserted:
+        if( *at > values.size() )
+        {
+            return std::nullopt;
+        }
+        values.insert( values.begin() + std::ptrdiff_t( *at ), 1 );
+        return values;
+    default:
+        return std::nullopt;
+    }
+}
+
 std::optional<u64> Type_table::evaluate( Type_id size, const Bindings& bindings ) const
 {
     const Type& described = get( size );
@@ -330,6 +625,17 @@ std::optional<u64> Type_table::evaluate( Type_id size, const Bindings& bindings 
     if( size == dyn_ )
     {
         return std::nullopt;
+    }
+
+    if( Size_op( described.width ) == Size_op::Product )
+    {
+        const std::optional<std::vector<u64>> sizes = evaluate_pack( described.arguments[0], bindings );
+        std::optional<u64>                    product( 1 );
+        for( std::size_t i = 0; sizes && product && i < sizes->size(); ++i )
+        {
+            product = apply( Size_op::Multiply, *product, ( *sizes )[i] );
+        }
+        return sizes ? product : std::nullopt;
     }
 
     const std::optional<u64> lhs = evaluate( described.arguments[0], bindings );
@@ -612,6 +918,11 @@ Type_id Type_table::substitute( Type_id type, const Bindings& bindings )
             return type;
         }
 
+        if( !is_arithmetic( Size_op( described.width ) ) )
+        {
+            return shape_op( Size_op( described.width ), std::array { substitute( described.arguments[0], bindings ) } );
+        }
+
         return size_op(
             Size_op( described.width ),
             substitute( described.arguments[0], bindings ),
@@ -678,6 +989,15 @@ Type_id Type_table::substitute( Type_id type, const Bindings& bindings )
     }
     case Type_kind::Pack:
     {
+        if( described.width != 0 )
+        {
+            std::vector<Type_id> operands;
+            for( const Type_id operand : described.arguments )
+            {
+                operands.push_back( substitute( operand, bindings ) );
+            }
+            return shape_op( Size_op( described.width ), operands );
+        }
         return pack( spliced( described.arguments, bindings ) );
     }
     default:
@@ -687,19 +1007,20 @@ Type_id Type_table::substitute( Type_id type, const Bindings& bindings )
     return type;
 }
 
-std::vector<Type_id> Type_table::flattened( std::span<const Type_id> arguments ) const
+std::vector<Type_id> Type_table::flattened( std::span<const Type_id> arguments, bool spread ) const
 {
     std::vector<Type_id> result;
     for( const Type_id argument : arguments )
     {
-        const std::span<const Type_id> each =
-            argument.is_valid() && is_pack( argument ) ? get( argument ).arguments : std::span<const Type_id>( &argument, 1 );
+        const std::span<const Type_id> each = spread && argument.is_valid() && is_pack( argument )
+                                                  ? get( argument ).arguments
+                                                  : std::span<const Type_id>( &argument, 1 );
         result.insert( result.end(), each.begin(), each.end() );
     }
     return result;
 }
 
-std::vector<Type_id> Type_table::spliced( std::span<const Type_id> arguments, const Bindings& bindings )
+std::vector<Type_id> Type_table::spliced( std::span<const Type_id> arguments, const Bindings& bindings, bool spread )
 {
     std::vector<Type_id> result;
     result.reserve( arguments.size() );
@@ -708,7 +1029,7 @@ std::vector<Type_id> Type_table::spliced( std::span<const Type_id> arguments, co
     {
         const Type_id substituted = substitute( argument, bindings );
 
-        if( substituted.is_valid() && is_pack( substituted ) )
+        if( spread && substituted.is_valid() && is_pack( substituted ) )
         {
             const std::span<const Type_id> sizes = get( substituted ).arguments;
             result.insert( result.end(), sizes.begin(), sizes.end() );
@@ -794,9 +1115,28 @@ namespace
 
 // `match` over each pair of `pattern`'s and `actual`'s arguments, a trailing pack in `pattern`
 // paired with the interned Pack of what the others leave. False when the counts cannot agree.
+// A shape function in `pattern` takes a count known only once substituted, so the arguments from it
+// on match as `past_shape` says.
 template <typename Match>
-bool match_arguments( const Type_table& table, std::span<const Type_id> pattern, std::span<const Type_id> actual, Match match )
+bool match_arguments(
+    const Type_table& table, std::span<const Type_id> pattern, std::span<const Type_id> actual, Match match, bool past_shape
+)
 {
+    const auto shape =
+        std::ranges::find_if( pattern, [&]( Type_id each ) { return each.is_valid() && table.is_shape( each ); } );
+    if( shape != pattern.end() )
+    {
+        const std::size_t before = std::size_t( shape - pattern.begin() );
+        for( std::size_t i = 0; i < before; ++i )
+        {
+            if( i >= actual.size() || !match( pattern[i], actual[i] ) )
+            {
+                return false;
+            }
+        }
+        return past_shape;
+    }
+
     const bool        packed = table.ends_in_pack( pattern );
     const std::size_t fixed  = packed ? pattern.size() - 1 : pattern.size();
 
@@ -846,7 +1186,8 @@ bool Type_table::deduce( Type_id pattern, Type_id actual, Bindings& into ) const
         {
             if( a.kind != Type_kind::Pack ||
                 !std::ranges::all_of(
-                    a.arguments, [&]( Type_id size ) { return is_size( size ) || is_size_parameter( size ); }
+                    a.arguments,
+                    [&]( Type_id size ) { return is_size( size ) || is_size_parameter( size ) || is_shape( size ); }
                 ) )
             {
                 return false;
@@ -902,8 +1243,12 @@ bool Type_table::deduce( Type_id pattern, Type_id actual, Bindings& into ) const
 
         [[fallthrough]];
     case Type_kind::Pack:
+        if( p.kind == Type_kind::Pack && p.width != 0 )
+        {
+            return true; // as a computed extent
+        }
         return match_arguments(
-            *this, p.arguments, a.arguments, [&]( Type_id lhs, Type_id rhs ) { return deduce( lhs, rhs, into ); }
+            *this, p.arguments, a.arguments, [&]( Type_id lhs, Type_id rhs ) { return deduce( lhs, rhs, into ); }, true
         );
     case Type_kind::Function:
     {
@@ -1056,8 +1401,16 @@ bool unify( const Type_table& table, Type_id a, Type_id b, Bindings& bound )
             return true;
         }
 
+        if( x.kind == Type_kind::Pack && ( x.width != 0 || y.width != 0 ) )
+        {
+            return true; // a shape function may give any pack
+        }
+        if( std::ranges::any_of( actual, [&]( Type_id each ) { return each.is_valid() && table.is_shape( each ); } ) )
+        {
+            return true;
+        }
         return match_arguments(
-            table, pattern, actual, [&]( Type_id lhs, Type_id rhs ) { return unify( table, lhs, rhs, bound ); }
+            table, pattern, actual, [&]( Type_id lhs, Type_id rhs ) { return unify( table, lhs, rhs, bound ); }, true
         );
     }
     default:
@@ -1521,7 +1874,12 @@ bool Type_table::is_pack_parameter( Type_id id ) const
 
 bool Type_table::is_pack( Type_id id ) const
 {
-    return get( id ).kind == Type_kind::Pack;
+    return get( id ).kind == Type_kind::Pack && get( id ).width == 0;
+}
+
+bool Type_table::is_shape( Type_id id ) const
+{
+    return get( id ).kind == Type_kind::Pack && get( id ).width != 0;
 }
 
 bool Type_table::is_dyn( Type_id id ) const
@@ -1874,8 +2232,16 @@ bool Type_table::substitutes_to( Type_id pattern, const Bindings& bindings, Type
 
         [[fallthrough]];
     case Type_kind::Pack:
+        if( p.width != 0 || a.width != 0 )
+        {
+            return false;
+        }
         return match_arguments(
-            *this, p.arguments, a.arguments, [&]( Type_id lhs, Type_id rhs ) { return substitutes_to( lhs, bindings, rhs ); }
+            *this,
+            p.arguments,
+            a.arguments,
+            [&]( Type_id lhs, Type_id rhs ) { return substitutes_to( lhs, bindings, rhs ); },
+            false
         );
     default:
         return false;
@@ -1889,8 +2255,8 @@ bool Type_table::reaches_dyn( Type_id size, const Bindings& bindings ) const
 
     if( described.kind == Type_kind::Parameter )
     {
-        const auto bound = bindings.find( size.v );
-        return bound != bindings.end() && bound->second != size && reaches_dyn( bound->second, bindings );
+        const Type_id bound = bound_value( size, bindings );
+        return bound.is_valid() && reaches_dyn( bound, bindings );
     }
 
     if( size == dyn_ )
@@ -1898,22 +2264,27 @@ bool Type_table::reaches_dyn( Type_id size, const Bindings& bindings ) const
         return true;
     }
 
-    return described.kind == Type_kind::Size && described.width != 0 &&
-           ( reaches_dyn( described.arguments[0], bindings ) || reaches_dyn( described.arguments[1], bindings ) );
+    return ( described.kind == Type_kind::Size || described.kind == Type_kind::Pack ) &&
+           std::ranges::any_of( described.arguments, [&]( Type_id operand ) { return reaches_dyn( operand, bindings ); } );
 }
 
 // The open form is the first instance interned: the signature pass makes each before any is written.
 Bindings Type_table::instance_bindings( Type_id instance ) const
 {
     Bindings result;
-    if( !( is_interface( instance ) || is_struct( instance ) || is_enum( instance ) || is_closure( instance ) ) ||
-        get( instance ).arguments.empty() )
+    if( !( is_interface( instance ) || is_struct( instance ) || is_enum( instance ) || is_closure( instance ) ) )
     {
         return result;
     }
 
-    const auto&   instances = is_interface( instance ) ? interfaces_ : is_closure( instance ) ? closures_ : composites_;
-    const Type_id open      = instances.at( get( instance ).declaration.v ).front().type;
+    // An empty pack's instance, `Grid<>`, has no arguments, as a non-generic has none.
+    const auto& instances = is_interface( instance ) ? interfaces_ : is_closure( instance ) ? closures_ : composites_;
+    const auto  found     = instances.find( get( instance ).declaration.v );
+    if( found == instances.end() || found->second.empty() )
+    {
+        return result;
+    }
+    const Type_id                  open       = found->second.front().type;
     const std::span<const Type_id> parameters = get( open ).arguments;
 
     const std::span<const Type_id> arguments = get( instance ).arguments;
@@ -1932,8 +2303,23 @@ Bindings Type_table::instance_bindings( Type_id instance ) const
     return result;
 }
 
+bool Type_table::keeps_packs( std::span<const Type_id> parameters ) const
+{
+    return std::ranges::count_if( parameters, [&]( Type_id p ) { return p.is_valid() && is_pack_parameter( p ); } ) > 1;
+}
+
 Bindings Type_table::bind( std::span<const Type_id> parameters, std::span<const Type_id> arguments )
 {
+    if( keeps_packs( parameters ) )
+    {
+        Bindings result;
+        for( std::size_t i = 0; i < parameters.size() && i < arguments.size(); ++i )
+        {
+            result.emplace( parameters[i].v, arguments[i] );
+        }
+        return result;
+    }
+
     Bindings          result;
     const std::size_t fixed =
         parameters.size() -
@@ -2086,9 +2472,9 @@ Type_id Type_table::composite(
     {
         spelling += i == 0 ? "<" : ", ";
         const Type& argument = get( owned[i] );
-        const bool  computed = argument.kind == Type_kind::Size && argument.width != 0 && owned[i] != dyn_;
+        const bool  computed = argument.kind == Type_kind::Size && is_arithmetic( Size_op( argument.width ) );
         spelling += computed ? fmt::format( "({})", this->name( owned[i] ) ) : std::string( this->name( owned[i] ) );
-        spelling += argument.pack ? "..." : "";
+        spelling += argument.pack || is_shape( owned[i] ) ? "..." : "";
     }
 
     if( !owned.empty() )
@@ -3971,6 +4357,81 @@ TEST_CASE( "type_table_binds_flat_arguments_to_a_pack", "[sema][type][size][pack
         const Type_id pack = table.pack( std::array { two, three } );
         REQUIRE( table.flattened( std::array { f64, pack } ) == std::vector { f64, two, three } );
         REQUIRE( table.spliced( std::array { n, s }, { { n.v, three }, { s.v, pack } } ) == std::vector { three, two, three } );
+    }
+}
+
+TEST_CASE( "type_table_computes_shape_functions", "[sema][type][size][pack][shape]" )
+{
+    Type_table table;
+
+    const Type_id u64   = table.integer( 64, false );
+    const Type_id s     = table.size_pack_parameter( Node_id { 1 }, "S", u64 );
+    const Type_id u     = table.size_pack_parameter( Node_id { 2 }, "U", u64 );
+    const Type_id a     = table.size_parameter( Node_id { 3 }, "A", u64 );
+    const Type_id n     = table.size_parameter( Node_id { 4 }, "N", u64 );
+    const Type_id one   = table.size( 1 );
+    const Type_id two   = table.size( 2 );
+    const Type_id three = table.size( 3 );
+    const Type_id dyn   = table.dyn();
+    const auto    pack  = [&]( std::initializer_list<Type_id> sizes ) { return table.pack( std::vector<Type_id>( sizes ) ); };
+
+    SECTION( "open over a pack parameter, one id per spelling, computed once bound" )
+    {
+        const Type_id reversed = table.shape_op( Size_op::Reversed, std::array { s } );
+        REQUIRE( table.is_shape( reversed ) );
+        REQUIRE( table.name( reversed ) == "reversed(S)" );
+        REQUIRE( table.shape_op( Size_op::Reversed, std::array { s } ) == reversed );
+        REQUIRE( table.shape_op( Size_op::Reversed, std::array { pack( { s } ) } ) == reversed );
+        REQUIRE( table.substitute( reversed, { { s.v, pack( { two, three } ) } } ) == pack( { three, two } ) );
+
+        const Type_id product = table.shape_op( Size_op::Product, std::array { s } );
+        REQUIRE( table.is_size( product ) );
+        REQUIRE( table.evaluate( product, { { s.v, pack( { two, three } ) } } ) == 6 );
+        REQUIRE( table.substitute( product, { { s.v, pack( {} ) } } ) == one );
+        REQUIRE( table.substitute( product, { { s.v, pack( { two, n } ) } } ) == table.size_op( Size_op::Multiply, two, n ) );
+    }
+
+    SECTION( "an axis past the rank fails" )
+    {
+        const Type_id dropped  = table.shape_op( Size_op::Dropped, std::array { a, s } );
+        const Type_id inserted = table.shape_op( Size_op::Inserted, std::array { a, s } );
+        REQUIRE( table.name( dropped ) == "dropped<A>(S)" );
+        REQUIRE(
+            table.substitute( dropped, { { a.v, table.size( 0 ) }, { s.v, pack( { two, three } ) } } ) == pack( { three } )
+        );
+        REQUIRE( table.is_error( table.substitute( dropped, { { a.v, two }, { s.v, pack( { two, three } ) } } ) ) );
+        REQUIRE(
+            table.substitute( inserted, { { a.v, two }, { s.v, pack( { two, three } ) } } ) == pack( { two, three, one } )
+        );
+        REQUIRE( table.is_error( table.substitute( inserted, { { a.v, three }, { s.v, pack( { two, three } ) } } ) ) );
+        REQUIRE_FALSE( table.evaluate_pack( dropped, { { a.v, two }, { s.v, pack( { two, three } ) } } ) );
+    }
+
+    SECTION( "broadcast is right-aligned, a 1 or `dyn` taking the other size" )
+    {
+        const Type_id both = table.shape_op( Size_op::Broadcast, std::array { s, u } );
+        const auto    at   = [&]( Type_id left, Type_id right )
+        { return table.substitute( both, { { s.v, left }, { u.v, right } } ); };
+        REQUIRE( at( pack( { two, three } ), pack( { three } ) ) == pack( { two, three } ) );
+        REQUIRE( at( pack( { two, one } ), pack( { three } ) ) == pack( { two, three } ) );
+        REQUIRE( at( pack( { dyn, three } ), pack( { two, one } ) ) == pack( { two, three } ) );
+        REQUIRE( at( pack( { one } ), pack( { dyn } ) ) == pack( { dyn } ) );
+        REQUIRE( table.is_error( at( pack( { two, three } ), pack( { two } ) ) ) );
+        REQUIRE( table.is_shape( at( pack( { n } ), pack( { three } ) ) ) ); // open until `N` is known
+        REQUIRE(
+            table.evaluate_pack( both, { { s.v, pack( { two, one } ) }, { u.v, pack( { three } ) } } ) ==
+            std::vector<keel::u64> { 2, 3 }
+        );
+    }
+
+    SECTION( "several packs bind one argument apiece" )
+    {
+        REQUIRE( table.keeps_packs( std::array { s, u } ) );
+        REQUIRE(
+            table.bind( std::array { s, u }, std::array { pack( { two } ), pack( { three, two } ) } ) ==
+            Bindings { { s.v, pack( { two } ) }, { u.v, pack( { three, two } ) } }
+        );
+        REQUIRE( table.flattened( std::array { pack( { two } ) }, false ) == std::vector { pack( { two } ) } );
     }
 }
 

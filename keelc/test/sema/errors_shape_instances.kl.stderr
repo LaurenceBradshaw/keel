@@ -1,0 +1,31 @@
+error: `last<4, 5>` drops an axis its sizes do not have
+  --> sema/errors_shape_instances.kl:38:14
+   |
+38 |     _ = last<4, 5>();
+   |              ^ `dropped<2>(S)` at sema/errors_shape_instances.kl:7:9 fails when `S` is 4, 5
+
+error: `after<4, 5>` inserts an axis past the end of its sizes
+  --> sema/errors_shape_instances.kl:39:15
+   |
+39 |     _ = after<4, 5>();
+   |               ^ `inserted<3>(S)` at sema/errors_shape_instances.kl:13:9 fails when `S` is 4, 5
+
+error: `pair<2, 3, 4>` pairs two sizes that differ, neither of them 1
+  --> sema/errors_shape_instances.kl:40:9
+   |
+40 |     _ = pair( a, b );
+   |         ^^^^^^^^^^^^ `broadcast(S, U)` at sema/errors_shape_instances.kl:19:9 fails when `S` is 2, 3 and `U` is 4
+
+error: `sum<2, 3, 4>` pairs two sizes that differ, neither of them 1
+  --> sema/errors_shape_instances.kl:41:9
+   |
+41 |     _ = sum( a, b );
+   |         ^^^^^^^^^^^ `broadcast(S, U)` at sema/errors_shape_instances.kl:23:5 fails when `S` is 2, 3 and `U` is 4
+
+error: `huge<4294967296, 4294967296>` makes an array whose size overflows a `u64`
+  --> sema/errors_shape_instances.kl:42:14
+   |
+42 |     _ = huge<4294967296, 4294967296>();
+   |              ^^^^^^^^^^ `product(S)` at sema/errors_shape_instances.kl:30:8 overflows a `u64` when `S` is 4294967296, 4294967296
+
+5 errors generated

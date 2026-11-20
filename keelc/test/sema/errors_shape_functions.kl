@@ -1,0 +1,23 @@
+// Each misuse of a shape function, one error apiece: a name that is none, a wrong form, an operand
+// that is no pack, an axis that is no size, a pack where one size goes, a size spread, a size into
+// a type, packs before a fixed parameter, and a written list for two packs.
+struct Box<u64... S> { u64 x; };
+struct Holder<T> { u64 x; };
+
+u64 unknown<u64... S>( const ref Box<sum( S )...> _ ) { return 0; }
+u64 no_axis<u64... S>( const ref Box<dropped( S )...> _ ) { return 0; }
+u64 two_operands<u64... S>( const ref Box<product( S, S )> _ ) { return 0; }
+u64 not_pack<u64 N>( const ref Box<reversed( N )...> _ ) { return 0; }
+u64 literal<u64... S>( const ref Box<reversed( 3 )...> _ ) { return 0; }
+u64 typed_axis<T, u64... S>( const ref Box<inserted<T>( S )...> _ ) { return 0; }
+u64 pack_as_size<u64... S>() { i32[reversed( S )] a = [ 0, .. ]; return 0; }
+u64 size_spread<u64... S>( const ref Box<product( S )...> _ ) { return 0; }
+u64 size_as_type<u64... S>( const ref Holder<product( S )> _ ) { return 0; }
+u64 packs_first<u64... S, T>() { return 0; }
+u64 two<u64... S, u64... U>( const ref Box<S...> _, const ref Box<U...> _ ) { return 0; }
+
+i32 main()
+{
+    Box<2> b = Box<2> { 1 };
+    return cast<i32>( two<2, 2>( b, b ) );
+}

@@ -875,6 +875,12 @@ Type_id Expressions::infer_call( Node_id id )
 
     overloads_.check_argument_markers( site, callable, *bindings );
 
+    // `broadcast(S, U)` over sizes that do not broadcast: no type here, reported at the instance.
+    if( table_.failing_shape( result, *bindings ).is_valid() )
+    {
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
     // Substituted here rather than where `result` is set: the aggregate path overwrites it with
     // the type being constructed, so doing it earlier would substitute the wrong thing or twice.
     return types_.record( id, table_.substitute( result, *bindings ) );

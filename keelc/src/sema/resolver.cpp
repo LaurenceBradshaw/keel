@@ -135,6 +135,7 @@ private:
     const Symbol_id self_; // the name `self` takes in a type, interned only when some file writes it
 
     bool    refused_block_ = false; // in a block Signatures refuses, whose bodies are not resolved
+    u32     in_type_       = 0;     // inside type arguments or an array's size, where a call is a shape function
     bool    naming_label_  = false; // a `case` label's bare name, left unreported if undeclared
     bool    in_default_    = false; // a field's default (D77), where `this` is left to the checker
     Node_id defaulting_    = {};    // the function whose parameter defaults are being visited (D79)
@@ -511,6 +512,28 @@ void Resolver::visit( Node_id id )
         }
 
         visit( ast_.type_arg_list( id ) );
+        return;
+    case Node_kind::Type_arg_list:
+    case Node_kind::Array_type:
+        ++in_type_;
+        for( const Node_id child : ast_.children( id ) )
+        {
+            visit( child );
+        }
+        --in_type_;
+        return;
+    case Node_kind::Call_expr:
+        // `product( S )`: the annotations name the function, and refuse any other.
+        if( in_type_ != 0 && ast_.kind( ast_.callee( id ) ) == Node_kind::Name_expr )
+        {
+            visit( ast_.arg_list( id ) );
+            visit( ast_.type_arg_list( id ) );
+            return;
+        }
+        for( const Node_id child : ast_.children( id ) )
+        {
+            visit( child );
+        }
         return;
     default:
         for( const Node_id child : ast_.children( id ) )

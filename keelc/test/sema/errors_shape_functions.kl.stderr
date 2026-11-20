@@ -1,0 +1,67 @@
+error: a size calls only a shape function
+ --> sema/errors_shape_functions.kl:7:38
+  |
+7 | u64 unknown<u64... S>( const ref Box<sum( S )...> _ ) { return 0; }
+  |                                      ^^^ `product`, `broadcast`, `dropped`, `inserted` or `reversed`
+
+error: `dropped` is written `dropped<A>(S)`
+ --> sema/errors_shape_functions.kl:8:38
+  |
+8 | u64 no_axis<u64... S>( const ref Box<dropped( S )...> _ ) { return 0; }
+  |                                      ^^^^^^^^^^^^^^^
+
+error: `product` is written `product(S)`
+ --> sema/errors_shape_functions.kl:9:43
+  |
+9 | u64 two_operands<u64... S>( const ref Box<product( S, S )> _ ) { return 0; }
+  |                                           ^^^^^^^^^^^^^^^
+
+error: `reversed` takes a pack of sizes
+  --> sema/errors_shape_functions.kl:10:46
+   |
+10 | u64 not_pack<u64 N>( const ref Box<reversed( N )...> _ ) { return 0; }
+   |                                              ^ name a pack parameter, or another shape function's pack
+
+error: `reversed` takes a pack of sizes
+  --> sema/errors_shape_functions.kl:11:48
+   |
+11 | u64 literal<u64... S>( const ref Box<reversed( 3 )...> _ ) { return 0; }
+   |                                                ^ name a pack parameter, or another shape function's pack
+
+error: `inserted`'s axis is a size
+  --> sema/errors_shape_functions.kl:12:53
+   |
+12 | u64 typed_axis<T, u64... S>( const ref Box<inserted<T>( S )...> _ ) { return 0; }
+   |                                                     ^ write a literal, a `const` or a size parameter
+
+error: `reversed(S)` is a pack of sizes, which an array's size cannot read
+  --> sema/errors_shape_functions.kl:13:36
+   |
+13 | u64 pack_as_size<u64... S>() { i32[reversed( S )] a = [ 0, .. ]; return 0; }
+   |                                    ^^^^^^^^^^^^^ spread it into a pack: `reversed(S)...`
+
+error: only a pack is spread with `...`
+  --> sema/errors_shape_functions.kl:14:42
+   |
+14 | u64 size_spread<u64... S>( const ref Box<product( S )...> _ ) { return 0; }
+   |                                          ^^^^^^^^^^^^^^^
+
+error: `T` takes a type, but this is a size
+  --> sema/errors_shape_functions.kl:15:46
+   |
+15 | u64 size_as_type<u64... S>( const ref Holder<product( S )> _ ) { return 0; }
+   |                                              ^^^^^^^^^^^^
+
+error: a pack is the last type parameter
+  --> sema/errors_shape_functions.kl:16:24
+   |
+16 | u64 packs_first<u64... S, T>() { return 0; }
+   |                        ^ move `S` to the end
+
+error: `two` takes 2 packs, which one written list cannot tell apart
+  --> sema/errors_shape_functions.kl:22:26
+   |
+22 |     return cast<i32>( two<2, 2>( b, b ) );
+   |                          ^^^^^^ leave the type arguments to be deduced from the arguments
+
+11 errors generated

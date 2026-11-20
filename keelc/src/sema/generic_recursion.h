@@ -58,9 +58,10 @@ private:
     // A generic on the current walk, and the growing edge that entered it.
     enum class Growth : u8
     {
-        Type, // a type built from the last
-        Size, // a size computed from the last
-        Pack, // a pack made longer than the last
+        Type,  // a type built from the last
+        Size,  // a size computed from the last
+        Pack,  // a pack made longer than the last
+        Shape, // a pack a shape function computed from the last
     };
 
     struct Step

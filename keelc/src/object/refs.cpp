@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "object/refs.h"
+#include <array>
 #include <bit>
 #include <cassert>
 #include "parse/module_graph.h"
@@ -191,8 +192,10 @@ u32 Ref_writer::type_index( Type_id id )
         }
         else if( !table_.is_dyn( id ) )
         {
-            type( entry, described.arguments[0] );
-            type( entry, described.arguments[1] );
+            for( const Type_id operand : described.arguments ) // two, or product(S)'s one
+            {
+                type( entry, operand );
+            }
         }
         break;
     case Type_kind::Closure:
@@ -244,8 +247,10 @@ u32 Ref_writer::type_index( Type_id id )
         type( entry, described.arguments[0] );
         type( entry, described.element );
         break;
-    case Type_kind::Union:
     case Type_kind::Pack:
+        entry.put_u8( described.width ); // 0, or the shape function
+        [[fallthrough]];
+    case Type_kind::Union:
         entry.put_u32( narrow_cast<u32>( described.arguments.size() ) );
         for( const Type_id member : described.arguments )
         {
@@ -481,6 +486,17 @@ void Ref_reader::read_types()
                 break;
             }
 
+            if( op == u8( Size_op::Product ) )
+            {
+                const Type_id pack = type();
+                id = failed() || !pack.is_valid() ? Type_id {} : table_.shape_op( Size_op::Product, std::array { pack } );
+                if( !id.is_valid() )
+                {
+                    fail();
+                }
+                break;
+            }
+
             const Type_id lhs = type();
             const Type_id rhs = type();
             if( failed() || op > u8( Size_op::Remainder ) || !lhs.is_valid() || !rhs.is_valid() )
@@ -585,11 +601,14 @@ void Ref_reader::read_types()
         }
         case Type_kind::Pack:
         {
+            const u8                   op    = in_.get_u8();
             const std::vector<Type_id> sizes = list();
-            if( !failed() )
+            if( failed() || ( op != 0 && ( op <= u8( Size_op::Product ) || op > u8( Size_op::Reversed ) ) ) )
             {
-                id = table_.pack( sizes );
+                fail();
+                break;
             }
+            id = op == 0 ? table_.pack( sizes ) : table_.shape_op( Size_op( op ), sizes );
             break;
         }
         default:

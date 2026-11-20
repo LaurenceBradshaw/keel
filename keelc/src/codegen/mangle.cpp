@@ -119,6 +119,18 @@ void encode_type( std::string& out, Type_id id, const Type_table& types )
         return;
     }
 
+    // A pack held whole, by a function of several: `2, 3` is `WV2_V3_E`; `W` starts no other encoding.
+    if( types.is_pack( id ) )
+    {
+        out += 'W';
+        for( const Type_id size : types.get( id ).arguments )
+        {
+            encode_type( out, size, types );
+        }
+        out += 'E';
+        return;
+    }
+
     // `L` because `S` is the receiver's prefix.
     if( types.is_run( id ) )
     {

@@ -651,6 +651,19 @@ bool Annotations::resolve_type_arguments(
     const bool                     pack  = ends_in_pack( parameters );
     const std::size_t              fixed = pack ? parameters.size() - 1 : parameters.size();
 
+    const auto packs = std::ranges::count_if(
+        parameters, [&]( Node_id parameter ) { return table_.is_pack_parameter( types_.type_of( parameter ) ); }
+    );
+    if( packs > 1 )
+    {
+        reporter_.error_at(
+            ast_.span( type_args ),
+            fmt::format( "`{}` takes {} packs, which one written list cannot tell apart", name, packs ),
+            "leave the type arguments to be deduced from the arguments"
+        );
+        return false;
+    }
+
     if( pack ? given.size() < fixed : given.size() != fixed )
     {
         reporter_.error_at(
@@ -731,7 +744,8 @@ std::vector<Type_id> Annotations::resolve_written( std::span<const Node_id> para
             type = resolve_size_argument( parameter, argument );
         }
         else if( ast_.kind( argument ) == Node_kind::Int_literal || ast_.kind( argument ) == Node_kind::Binary_expr ||
-                 ast_.kind( argument ) == Node_kind::Name_expr || ast_.kind( argument ) == Node_kind::Dyn_size )
+                 ast_.kind( argument ) == Node_kind::Name_expr || ast_.kind( argument ) == Node_kind::Dyn_size ||
+                 ast_.kind( argument ) == Node_kind::Call_expr )
         {
             const Folded folded = constant_folder_.fold_integer( argument );
             reporter_.error_at(
@@ -761,11 +775,19 @@ bool Annotations::ends_in_pack( std::span<const Node_id> parameters ) const
     return !parameters.empty() && table_.is_pack_parameter( types_.type_of( parameters.back() ) );
 }
 
-// `S...`: a pack passed on, into a pack.
+// `S...` or `reversed( S )...`: a pack passed on, into a pack.
 Type_id Annotations::resolve_spread( Node_id parameter, Node_id argument )
 {
-    const Node_id named = constant_folder_.size_parameter_named( argument );
-    if( !named.is_valid() || !table_.is_pack_parameter( types_.type_of( named ) ) )
+    const bool    call   = ast_.kind( argument ) == Node_kind::Call_expr;
+    const Node_id named  = call ? Node_id {} : constant_folder_.size_parameter_named( argument );
+    const Type_id spread = call               ? shape_call( argument )
+                           : named.is_valid() ? types_.type_of( named )
+                                              : table_.builtin( Type_kind::Error );
+    if( call && table_.is_error( spread ) )
+    {
+        return spread;
+    }
+    if( !table_.is_pack_parameter( spread ) && !table_.is_shape( spread ) && !table_.is_pack( spread ) )
     {
         reporter_.error_at( ast_.span( argument ), "only a pack is spread with `...`" );
         return table_.builtin( Type_kind::Error );
@@ -785,7 +807,7 @@ Type_id Annotations::resolve_spread( Node_id parameter, Node_id argument )
         return table_.builtin( Type_kind::Error );
     }
 
-    return types_.record( argument, types_.type_of( named ) );
+    return types_.record( argument, spread );
 }
 
 // A size parameter's argument: a literal, a `const`, `dyn`, or a size parameter passed on.
@@ -807,6 +829,12 @@ Type_id Annotations::resolve_size_argument( Node_id parameter, Node_id argument 
             return table_.builtin( Type_kind::Error );
         }
         return types_.record( argument, types_.type_of( forwarded ) );
+    }
+
+    if( ast_.kind( argument ) == Node_kind::Call_expr )
+    {
+        const Type_id extent = size_tree( argument, Node_id {}, "a size argument" );
+        return table_.is_error( extent ) ? extent : types_.record( argument, extent );
     }
 
     // `(R * C)`: built per instance when it reads a parameter, else folded below as a `const` is.
@@ -1157,6 +1185,136 @@ Node_id Annotations::size_parameter_read( Node_id size ) const
     return Node_id {};
 }
 
+Node_id Annotations::bare_pack_read( Node_id size ) const
+{
+    if( !size.is_valid() || ast_.kind( size ) == Node_kind::Call_expr )
+    {
+        return Node_id {};
+    }
+
+    if( ast_.kind( size ) == Node_kind::Name_expr )
+    {
+        const Node_id named = constant_folder_.size_parameter_named( size );
+        return named.is_valid() && table_.is_pack_parameter( types_.type_of( named ) ) ? named : Node_id {};
+    }
+
+    for( const Node_id child : ast_.children( size ) )
+    {
+        if( const Node_id found = bare_pack_read( child ); found.is_valid() )
+        {
+            return found;
+        }
+    }
+
+    return Node_id {};
+}
+
+namespace
+{
+
+struct Shape_function
+{
+    std::string_view name;
+    Size_op          op;
+    std::string_view form;
+};
+
+constexpr Shape_function k_shape_functions[] = {
+    { "product", Size_op::Product, "product(S)" },
+    { "broadcast", Size_op::Broadcast, "broadcast(S, U)" },
+    { "dropped", Size_op::Dropped, "dropped<A>(S)" },
+    { "inserted", Size_op::Inserted, "inserted<A>(S)" },
+    { "reversed", Size_op::Reversed, "reversed(S)" },
+};
+
+} // namespace
+
+// `dropped<A>( S )`: its axis a size, each operand a pack or another shape function's pack.
+Type_id Annotations::shape_call( Node_id call )
+{
+    const Type_id error  = table_.builtin( Type_kind::Error );
+    const Node_id callee = ast_.callee( call );
+
+    const Shape_function* found = nullptr;
+    if( ast_.kind( callee ) == Node_kind::Name_expr )
+    {
+        for( const Shape_function& each : k_shape_functions )
+        {
+            found = interner_.text( ast_.name( callee ) ) == each.name ? &each : found;
+        }
+    }
+    if( !found )
+    {
+        reporter_.error_at(
+            ast_.span( callee ),
+            "a size calls only a shape function",
+            "`product`, `broadcast`, `dropped`, `inserted` or `reversed`"
+        );
+        return error;
+    }
+
+    const bool                     axis   = found->op == Size_op::Dropped || found->op == Size_op::Inserted;
+    const std::span<const Node_id> packs  = ast_.arguments( call );
+    const std::span<const Node_id> axes   = ast_.type_args( call );
+    const std::size_t              wanted = found->op == Size_op::Broadcast ? 2 : 1;
+    if( packs.size() != wanted || axes.size() != ( axis ? 1u : 0u ) )
+    {
+        reporter_.error_at( ast_.span( call ), fmt::format( "`{}` is written `{}`", found->name, found->form ) );
+        return error;
+    }
+
+    std::vector<Type_id> operands;
+
+    if( axis )
+    {
+        const Node_id at    = axes[0];
+        const Node_id named = constant_folder_.size_parameter_named( at );
+        if( named.is_valid() && !table_.is_pack_parameter( types_.type_of( named ) ) )
+        {
+            operands.push_back( types_.type_of( named ) );
+        }
+        else
+        {
+            const Folded folded = constant_folder_.fold_integer( at );
+            if( !folded.constant || folded.overflowed || folded.value.negative )
+            {
+                reporter_.error_at(
+                    ast_.span( at ),
+                    fmt::format( "`{}`'s axis is a size", found->name ),
+                    "write a literal, a `const` or a size parameter"
+                );
+                return error;
+            }
+            operands.push_back( table_.size( folded.value.magnitude ) );
+        }
+    }
+
+    for( const Node_id pack : packs )
+    {
+        const Node_id named =
+            ast_.kind( pack ) == Node_kind::Name_expr ? constant_folder_.size_parameter_named( pack ) : Node_id {};
+        const Type_id operand = ast_.kind( pack ) == Node_kind::Call_expr ? shape_call( pack )
+                                : named.is_valid()                        ? types_.type_of( named )
+                                                                          : Type_id {};
+        if( operand.is_valid() && table_.is_error( operand ) )
+        {
+            return error;
+        }
+        if( !operand.is_valid() || !( table_.is_pack_parameter( operand ) || table_.is_shape( operand ) ) )
+        {
+            reporter_.error_at(
+                ast_.span( pack ),
+                fmt::format( "`{}` takes a pack of sizes", found->name ),
+                "name a pack parameter, or another shape function's pack"
+            );
+            return error;
+        }
+        operands.push_back( operand );
+    }
+
+    return table_.shape_op( found->op, operands );
+}
+
 Type_id Annotations::resolve_size_side( Node_id side )
 {
     if( ast_.kind( side ) == Node_kind::Error )
@@ -1187,6 +1345,22 @@ Type_id Annotations::resolve_size_side( Node_id side )
 // Folded when it reads no parameter; otherwise built as a size, to be computed per instance.
 Type_id Annotations::size_tree( Node_id size, Node_id parameter, std::string_view what )
 {
+    if( ast_.kind( size ) == Node_kind::Call_expr )
+    {
+        const Type_id result = shape_call( size );
+        if( !table_.is_error( result ) && !table_.is_size( result ) )
+        {
+            const std::string written( table_.name( result ) );
+            reporter_.error_at(
+                ast_.span( size ),
+                fmt::format( "`{}` is a pack of sizes, which {} cannot read", written, what ),
+                fmt::format( "spread it into a pack: `{}...`", written )
+            );
+            return table_.builtin( Type_kind::Error );
+        }
+        return result;
+    }
+
     if( !size_parameter_read( size ).is_valid() )
     {
         const Folded folded = constant_folder_.fold_integer( size );
@@ -1205,8 +1379,7 @@ Type_id Annotations::size_tree( Node_id size, Node_id parameter, std::string_vie
         return table_.builtin( Type_kind::Error );
     }
 
-    const Node_id read = ast_.kind( size ) == Node_kind::Name_expr ? resolution_.declaration_of( size ) : parameter;
-    if( table_.is_pack_parameter( types_.type_of( read ) ) )
+    if( const Node_id read = bare_pack_read( size ); read.is_valid() )
     {
         reporter_.error_at(
             ast_.span( size ),
@@ -1218,7 +1391,7 @@ Type_id Annotations::size_tree( Node_id size, Node_id parameter, std::string_vie
 
     if( ast_.kind( size ) == Node_kind::Name_expr )
     {
-        return types_.type_of( read );
+        return types_.type_of( resolution_.declaration_of( size ) );
     }
 
     if( ast_.kind( size ) == Node_kind::Binary_expr )

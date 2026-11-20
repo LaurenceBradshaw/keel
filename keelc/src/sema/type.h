@@ -64,7 +64,22 @@ enum class Size_op : u8
     Divide,
     Remainder,
     Dynamic, // `dyn`, a size known only at run time; no operands
+    // Shape functions over a pack. Product is a Size; the rest a Pack whose `arguments` are the
+    // operands, the axis first, until substitute() computes them.
+    Product,   // product(S)
+    Broadcast, // broadcast(S, U)
+    Dropped,   // dropped<A>(S)
+    Inserted,  // inserted<A>(S)
+    Reversed,  // reversed(S)
 };
+
+inline bool is_arithmetic( Size_op op )
+{
+    return op >= Size_op::Add && op <= Size_op::Remainder;
+}
+
+// What a shape function does wrong when it has no value: "drops an axis its sizes do not have".
+std::string_view shape_failure( Size_op op );
 
 enum class Param_mode : u8
 {
@@ -140,6 +155,10 @@ public:
     Type_id interned_pack( std::span<const Type_id> sizes ) const;
     // Two constants fold; an overflow or a division by 0 is the Error type.
     Type_id size_op( Size_op op, Type_id lhs, Type_id rhs );
+    // A shape function: computed when its operands are, else kept open; error when it fails.
+    Type_id shape_op( Size_op op, std::span<const Type_id> operands );
+    // The innermost shape function in `type` that fails under `bindings`, or invalid.
+    Type_id failing_shape( Type_id type, const Bindings& bindings );
     Type_id function( Type_id return_type, std::span<const Parameter> parameters, Param_mode return_mode = Param_mode::Value );
     Type_id field( Type_id aggregate, Type_id member ); // `field( C ) -> T`: C in arguments, T in element
     Type_id enumeration( Node_id declaration, std::span<const Type_id> arguments, std::string_view name, Type_id underlying );
@@ -226,7 +245,8 @@ public:
     bool is_size( Type_id id ) const;
     bool is_size_parameter( Type_id id ) const; // a pack parameter is one too
     bool is_pack_parameter( Type_id id ) const;
-    bool is_pack( Type_id id ) const;
+    bool is_pack( Type_id id ) const;  // a pack of sizes; not a shape function's open result
+    bool is_shape( Type_id id ) const; // a shape function giving a pack, still open
     bool is_dyn( Type_id id ) const;
     // Whether `arguments` end in a pack parameter, which takes the arguments the others leave.
     bool ends_in_pack( std::span<const Type_id> arguments ) const;
@@ -296,9 +316,11 @@ public:
     // class, enum or closure. Empty for anything else or a non-generic.
     Bindings instance_bindings( Type_id instance ) const;
     // `parameters` against flat `arguments` by position; a pack parameter takes what the fixed ones leave.
+    // A function of several packs keeps each whole, one argument apiece, as `keeps_packs` says.
     Bindings             bind( std::span<const Type_id> parameters, std::span<const Type_id> arguments );
-    std::vector<Type_id> spliced( std::span<const Type_id> arguments, const Bindings& bindings ); // each pack spread
-    std::vector<Type_id> flattened( std::span<const Type_id> arguments ) const; // each `Pack` spread, nothing substituted
+    bool                 keeps_packs( std::span<const Type_id> parameters ) const; // more than one pack
+    std::vector<Type_id> spliced( std::span<const Type_id> arguments, const Bindings& bindings, bool spread = true );
+    std::vector<Type_id> flattened( std::span<const Type_id> arguments, bool spread = true ) const; // nothing substituted
 
     // A copy of the resolver's, for the conformance model and the emitter, which see only this table.
     void                 set_prelude( const Prelude_items& items );
@@ -309,12 +331,16 @@ public:
     Type_id declared( Node_id declaration ) const;
     // A size's value once `bindings` are read through, or none while it is open or fails.
     std::optional<u64> evaluate( Type_id size, const Bindings& bindings ) const;
+    // A pack's sizes, as evaluate() gives one.
+    std::optional<std::vector<u64>> evaluate_pack( Type_id pack, const Bindings& bindings ) const;
 
 private:
-    Type_id     add( const Type& type, std::string_view name );
-    std::string const_spelling( Type_id element, bool const_element ) const;
-    static u8   width_index( u8 width );
-    bool        reaches_dyn( Type_id size, const Bindings& bindings ) const;
+    Type_id                                 add( const Type& type, std::string_view name );
+    std::string                             const_spelling( Type_id element, bool const_element ) const;
+    static u8                               width_index( u8 width );
+    bool                                    reaches_dyn( Type_id size, const Bindings& bindings ) const;
+    Type_id                                 bound_value( Type_id parameter, const Bindings& bindings ) const;
+    std::optional<std::span<const Type_id>> known_sizes( Type_id operand ) const;
     // Interns the tail of `arguments` that the pack of its declaration's open form `open` takes.
     void intern_tail( std::span<const Type_id> open, std::span<const Type_id> arguments );
 

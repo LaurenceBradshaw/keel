@@ -97,6 +97,8 @@ private:
     std::optional<u64> array_size( Node_id size ); // empty when not known at compile time
     Type_id            size_tree( Node_id size, Node_id parameter, std::string_view what ); // a size over `parameter`
     Node_id            size_parameter_read( Node_id size ) const; // the first size parameter `size` reads
+    Node_id            bare_pack_read( Node_id size ) const;      // a pack read outside a shape function
+    Type_id            shape_call( Node_id call );                // `product( S )`: a Size or a pack
 
     Span const_keyword( Node_id const_type ) const;
 

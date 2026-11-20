@@ -4,12 +4,19 @@
 #include "parse/lookahead.h"
 #include <algorithm>
 #include <cassert>
+#include "common/source_manager.h"
 
 namespace keel
 {
 
-Lookahead::Lookahead( std::span<const Token> tokens )
-    : cursor_( tokens )
+bool is_shape_function( std::string_view name )
+{
+    return name == "product" || name == "broadcast" || name == "dropped" || name == "inserted" || name == "reversed";
+}
+
+Lookahead::Lookahead( std::span<const Token> tokens, const Source_manager* sm )
+    : cursor_( tokens ),
+      sm_( sm )
 {
 }
 
@@ -446,6 +453,7 @@ bool Lookahead::looks_like_type_arguments( u32 at )
     cursor_.advance(); // the `<`
 
     u32 depth = 1;
+    u32 named = 0; // the depth of an argument that began with a name, which a shape call's `(` may follow
 
     while( depth > 0 && !cursor_.at_end() )
     {
@@ -469,8 +477,10 @@ bool Lookahead::looks_like_type_arguments( u32 at )
         // `S...`, a pack spread: whole after its name.
         case Token_kind::Dot_dot:
         {
-            const Token_kind after = cursor_.peek( 2 ).kind;
-            if( cursor_.previous().kind != Token_kind::Identifier || cursor_.peek( 1 ).kind != Token_kind::Dot ||
+            const Token_kind after  = cursor_.peek( 2 ).kind;
+            const Token_kind spread = cursor_.previous().kind;
+            if( ( spread != Token_kind::Identifier && spread != Token_kind::R_paren ) ||
+                cursor_.peek( 1 ).kind != Token_kind::Dot ||
                 ( after != Token_kind::Comma && after != Token_kind::Greater && after != Token_kind::Greater_greater ) )
             {
                 return false;
@@ -480,10 +490,18 @@ bool Lookahead::looks_like_type_arguments( u32 at )
         }
 
         // A type argument holds no call or operator, and a literal only as a size: meeting one means a comparison.
-        case Token_kind::Colon_colon:
         case Token_kind::Identifier:
-        case Token_kind::Star:
+            if( named == 0 && sm_ && is_shape_function( sm_->text( cursor_.peek().span ) ) &&
+                ( cursor_.previous().kind == Token_kind::Less || cursor_.previous().kind == Token_kind::Comma ) )
+            {
+                named = depth;
+            }
+            break;
         case Token_kind::Comma:
+            named = named == depth ? 0 : named;
+            break;
+        case Token_kind::Colon_colon:
+        case Token_kind::Star:
         case Token_kind::Pipe:
             break;
 
@@ -504,11 +522,14 @@ bool Lookahead::looks_like_type_arguments( u32 at )
         // A computed size, `bitset<(R * C)>`, only as a whole argument; a `>` inside does not close.
         case Token_kind::L_paren:
         {
+            // Or a shape function's, `product( S )` or `dropped<A>( S )`.
             const Token_kind before = cursor_.previous().kind;
-            if( before != Token_kind::Less && before != Token_kind::Comma )
+            const bool       call   = named == depth && ( before == Token_kind::Identifier || before == Token_kind::Greater );
+            if( before != Token_kind::Less && before != Token_kind::Comma && !call )
             {
                 return false;
             }
+            named = 0;
 
             u32 parens = 0;
             do
@@ -525,7 +546,8 @@ bool Lookahead::looks_like_type_arguments( u32 at )
             } while( parens > 0 );
 
             const Token_kind after = cursor_.peek().kind;
-            if( after != Token_kind::Comma && after != Token_kind::Greater && after != Token_kind::Greater_greater )
+            if( after != Token_kind::Comma && after != Token_kind::Greater && after != Token_kind::Greater_greater &&
+                !( call && after == Token_kind::Dot_dot ) )
             {
                 return false;
             }
@@ -869,6 +891,10 @@ bool Lookahead::scan_type_argument()
     if( !cursor_.check( Token_kind::L_paren ) )
     {
         const bool scanned = cursor_.match( Token_kind::Int_literal ) || scan_type();
+        if( scanned && cursor_.check( Token_kind::L_paren ) && !skip_parens() ) // a shape function, `product( S )`
+        {
+            return false;
+        }
         skip_ellipsis(); // `S...`
         return scanned;
     }
@@ -1493,7 +1519,7 @@ public:
 
     Lookahead lookahead() const
     {
-        return Lookahead( tokens_ );
+        return Lookahead( tokens_, &sm_ );
     }
 
     // Index of the nth token spelled `text`.
@@ -2081,6 +2107,15 @@ TEST_CASE( "lookahead_answers_the_parsers_lookahead", "[scan]" )
         CHECK_FALSE( type_arguments( "a < (b) > c" ) );
         CHECK_FALSE( type_arguments( "a < (b) + 1 > ( c )" ) );
         CHECK_FALSE( type_arguments( "a < b(c) > ( d )" ) );
+    }
+
+    SECTION( "a shape function is a whole argument, by its name" )
+    {
+        CHECK( type_arguments( "f<product( S )>( x )" ) );
+        CHECK( type_arguments( "Grid<T, dropped<A>( S )...>::make()" ) );
+        CHECK( type_arguments( "f<broadcast( reversed( S ), U )...>()" ) );
+        CHECK_FALSE( type_arguments( "a < sum( S ) > ( d )" ) );
+        CHECK_FALSE( type_arguments( "a < product( S ) + 1 > ( d )" ) );
     }
 
     SECTION( "a comparison is not type arguments" )

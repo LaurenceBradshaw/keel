@@ -78,6 +78,8 @@ private:
     bool                    report_condition( const Instance& instance, Span origin, const Bindings& bindings );
     Span                    blame( const Instance& instance, const Bindings& bindings, Type_id size, Span origin ) const;
     std::string             spelled( Type_id size ) const;
+    std::string             value_of( Type_id parameter, const Bindings& bindings ) const;
+    bool                    computes( Type_id size, const Bindings& bindings ) const;
     std::string             name_of( const Instance& instance ) const;
     Span                    written( Span origin, std::span<const u64> values, std::span<const Source> sources ) const;
     Type_id                 failing( Type_id size, const Bindings& bindings ) const;

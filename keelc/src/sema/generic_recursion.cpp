@@ -159,7 +159,13 @@ void Generic_recursion::record_size_roots( Node_id to, std::span<const Type_id> 
         record_uses( Node_id {}, argument, at, found );
     }
 
-    const auto written = [&]( Type_id argument ) { return table_.is_size( argument ) && table_.get( argument ).width == 0; };
+    // A constant size, or a pack of them kept whole for a callee of several packs.
+    const auto constant = [&]( Type_id argument ) { return table_.is_size( argument ) && table_.get( argument ).width == 0; };
+    const auto written  = [&]( Type_id argument )
+    {
+        return constant( argument ) ||
+               ( table_.is_pack( argument ) && std::ranges::all_of( table_.get( argument ).arguments, constant ) );
+    };
 
     for( Generic_call& call : found )
     {
@@ -260,7 +266,7 @@ bool Generic_recursion::expands_forever( Node_id generic, std::vector<Step>& pat
             if( !grows && wraps_a_parameter( argument ) )
             {
                 grows = edge.at;
-                by    = table_.is_size( argument ) ? Growth::Size : Growth::Type;
+                by    = table_.is_size( argument ) ? Growth::Size : table_.is_shape( argument ) ? Growth::Shape : Growth::Type;
             }
         }
 
@@ -334,6 +340,20 @@ bool Generic_recursion::expands_forever( Node_id generic, std::vector<Step>& pat
                 fmt::format( "`{}` is instantiated with a longer pack each time round", name_of( edge.to ) ),
                 fmt::format(
                     "{}, and each round adds sizes to the last pack - so no set of instances ever finishes; "
+                    "forward the pack itself",
+                    cycle
+                )
+            );
+            return true;
+        }
+
+        if( grown_by == Growth::Shape )
+        {
+            reporter_.error_at(
+                *grown_at,
+                fmt::format( "`{}` is instantiated with a different pack each time round", name_of( edge.to ) ),
+                fmt::format(
+                    "{}, and each round computes the pack from the last - so no set of instances ever finishes; "
                     "forward the pack itself",
                     cycle
                 )

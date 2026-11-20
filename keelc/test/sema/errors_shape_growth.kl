@@ -1,0 +1,21 @@
+// A pack a shape function computes from the last round's is refused as D42 refuses a computed size,
+// even where it would repeat (`reversed`); forwarding the pack is fine.
+u64 grow<u64... S>( u64 n )
+{
+    return n == 0 ? S.size : grow<inserted<0>( S )...>( n - 1 );
+}
+
+u64 flip<u64... S>( u64 n )
+{
+    return n == 0 ? S.size : flip<reversed( S )...>( n - 1 );
+}
+
+u64 same<u64... S>( u64 n )
+{
+    return n == 0 ? S.size : same<S...>( n - 1 );
+}
+
+i32 main()
+{
+    return cast<i32>( grow<1>( 2 ) + flip<1, 2>( 2 ) + same<3>( 2 ) );
+}

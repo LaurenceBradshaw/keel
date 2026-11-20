@@ -1,0 +1,13 @@
+error: `grow` is instantiated with a different pack each time round
+ --> sema/errors_shape_growth.kl:5:30
+  |
+5 |     return n == 0 ? S.size : grow<inserted<0>( S )...>( n - 1 );
+  |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `grow` to `grow`, and each round computes the pack from the last - so no set of instances ever finishes; forward the pack itself
+
+error: `flip` is instantiated with a different pack each time round
+  --> sema/errors_shape_growth.kl:10:30
+   |
+10 |     return n == 0 ? S.size : flip<reversed( S )...>( n - 1 );
+   |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `flip` to `flip`, and each round computes the pack from the last - so no set of instances ever finishes; forward the pack itself
+
+2 errors generated

@@ -1,0 +1,189 @@
+// Shape functions at constant sizes: `product( S )` sizes the storage, `reversed`, `dropped<A>` and
+// `inserted<A>` give a result's sizes, and `broadcast` pairs two grids' sizes, rank 0 among them.
+import t::console;
+
+class Grid<u64... S>
+{
+    i64[product( S )] cells;
+
+    public Grid( i64 fill )
+    {
+        cells = [ fill, .. ];
+    }
+
+    public static u64 count()
+    {
+        u64 n = 1;
+        for( u64 k = 0; k < S.size; k += 1 )
+        {
+            n *= S[k];
+        }
+        return n;
+    }
+
+    // Row-major: the last axis is contiguous.
+    public static u64 digit( u64 flat, u64 axis )
+    {
+        u64 stride = 1;
+        for( u64 k = S.size; k > axis + 1; k -= 1 )
+        {
+            stride *= S[k - 1];
+        }
+        return flat / stride % S[axis];
+    }
+
+    public i64 at( u64 flat ) const
+    {
+        return cells[flat];
+    }
+
+    public void put( u64 flat, i64 value )
+    {
+        cells[flat] = value;
+    }
+
+    public Grid<dropped<A>( S )...> summed<u64 A>() const
+    {
+        Grid<dropped<A>( S )...> result = Grid<dropped<A>( S )...>( 0 );
+        sum_into( this, ref result, A );
+        return result;
+    }
+
+    public Grid<inserted<A>( S )...> expanded<u64 A>() const
+    {
+        Grid<inserted<A>( S )...> result = Grid<inserted<A>( S )...>( 0 );
+        for( u64 i = 0; i < count(); i += 1 )
+        {
+            result.put( i, cells[i] );
+        }
+        return result;
+    }
+
+    public i64 get( u64... index ) const
+    {
+        u64 flat = 0;
+        for( u64 k = 0; k < S.size; k += 1 )
+        {
+            flat = flat * S[k] + index[k];
+        }
+        return cells[flat];
+    }
+};
+
+// Axis k of the source is axis `S.size - 1 - k` of the result.
+Grid<reversed( S )...> transposed<u64... S>( const ref Grid<S...> g )
+{
+    Grid<reversed( S )...> result = Grid<reversed( S )...>( 0 );
+    for( u64 i = 0; i < Grid<S...>::count(); i += 1 )
+    {
+        u64 to = 0;
+        for( u64 k = S.size; k > 0; k -= 1 )
+        {
+            to = to * S[k - 1] + Grid<S...>::digit( i, k - 1 );
+        }
+        result.put( to, g.at( i ) );
+    }
+    return result;
+}
+
+// Each cell of `g` added into `into`'s, the axis `axis` left out of its index.
+void sum_into<u64... S, u64... R>( const ref Grid<S...> g, ref Grid<R...> into, u64 axis )
+{
+    for( u64 i = 0; i < Grid<S...>::count(); i += 1 )
+    {
+        u64 to = 0;
+        for( u64 k = 0; k < S.size; k += 1 )
+        {
+            to = k == axis ? to : to * S[k] + Grid<S...>::digit( i, k );
+        }
+        into.put( to, into.at( to ) + g.at( i ) );
+    }
+}
+
+Grid<dropped<0>( S )...> column_sums<u64... S>( const ref Grid<S...> g )
+{
+    Grid<dropped<0>( S )...> result = Grid<dropped<0>( S )...>( 0 );
+    sum_into( g, ref result, 0 );
+    return result;
+}
+
+// A 1 inserted leaves the order of the cells as it was.
+Grid<inserted<0>( S )...> leading<u64... S>( const ref Grid<S...> g )
+{
+    Grid<inserted<0>( S )...> result = Grid<inserted<0>( S )...>( 0 );
+    for( u64 i = 0; i < Grid<S...>::count(); i += 1 )
+    {
+        result.put( i, g.at( i ) );
+    }
+    return result;
+}
+
+// A cell of the result reads each operand at its own sizes, right-aligned, an axis of 1 at 0.
+Grid<broadcast( S, U )...> added<u64... S, u64... U>( const ref Grid<S...> a, const ref Grid<U...> b )
+{
+    Grid<broadcast( S, U )...> result = Grid<broadcast( S, U )...>( 0 );
+    const u64                  n   = S.size > U.size ? S.size : U.size;
+    for( u64 i = 0; i < Grid<broadcast( S, U )...>::count(); i += 1 )
+    {
+        u64 left  = 0;
+        u64 right = 0;
+        for( u64 j = 0; j < n; j += 1 )
+        {
+            const u64 d = Grid<broadcast( S, U )...>::digit( i, j );
+            if( j + S.size >= n )
+            {
+                left = left * S[j + S.size - n] + ( S[j + S.size - n] == 1 ? 0 : d );
+            }
+            if( j + U.size >= n )
+            {
+                right = right * U[j + U.size - n] + ( U[j + U.size - n] == 1 ? 0 : d );
+            }
+        }
+        result.put( i, a.at( left ) + b.at( right ) );
+    }
+    return result;
+}
+
+i32 main()
+{
+    Grid<2, 3> g = Grid<2, 3>( 0 );
+    for( u64 i = 0; i < 6; i += 1 )
+    {
+        g.put( i, cast<i64>( i ) );
+    }
+    t::print( Grid<2, 3>::count() );
+
+    Grid<3, 2> t = transposed( g );
+    t::print( t.get( 2, 1 ) * 10 + t.get( 1, 0 ) );
+
+    Grid<3> columns = column_sums( g );
+    Grid<2> rows    = g.summed<1>();
+    t::print( columns.get( 0 ) * 100 + columns.get( 1 ) * 10 + columns.get( 2 ) );
+    t::print( rows.get( 0 ) * 100 + rows.get( 1 ) );
+
+    Grid<1, 2, 3> first  = leading( g );
+    Grid<2, 1, 3> middle = g.expanded<1>();
+    Grid<2, 3, 1> last   = g.expanded<2>();
+    t::print( first.get( 0, 1, 1 ) * 100 + middle.get( 1, 0, 2 ) * 10 + last.get( 1, 1, 0 ) );
+
+    Grid<3> row = Grid<3>( 0 );
+    row.put( 0, 10 );
+    row.put( 1, 20 );
+    row.put( 2, 30 );
+    Grid<2, 1> column = Grid<2, 1>( 100 );
+    column.put( 1, 200 );
+
+    Grid<2, 3> shifted = added( g, row );
+    Grid<2, 3> outer   = added( column, row );
+    t::print( shifted.get( 1, 2 ) * 100 + shifted.get( 0, 0 ) );
+    t::print( outer.get( 1, 2 ) * 1000 + outer.get( 0, 1 ) );
+
+    Grid<4, 2, 3> stacked = added( Grid<4, 1, 1>( 1 ), g );
+    t::print( Grid<4, 2, 3>::count() * 100 + cast<u64>( stacked.get( 3, 1, 2 ) ) );
+
+    // Rank 0: one cell, the whole sum.
+    t::print( column_sums( row ).get() );
+    t::print( transposed( column_sums( row ) ).get() );
+    t::print( leading( column_sums( row ) ).get( 0 ) );
+    return 0;
+}

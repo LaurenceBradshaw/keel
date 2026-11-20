@@ -5,6 +5,7 @@
 
 #include <optional>
 #include <span>
+#include <string_view>
 #include "common/interner.h"
 #include "common/types.h"
 #include "lex/token.h"
@@ -12,6 +13,11 @@
 
 namespace keel
 {
+
+class Source_manager;
+
+// `product`, `broadcast`, `dropped`, `inserted` or `reversed`: a call in type arguments.
+bool is_shape_function( std::string_view name );
 
 enum class Member_kind : u8
 {
@@ -114,7 +120,8 @@ struct Declaration_chunk
 class Lookahead
 {
 public:
-    explicit Lookahead( std::span<const Token> tokens );
+    // Without `sm`, no name is a shape function.
+    explicit Lookahead( std::span<const Token> tokens, const Source_manager* sm = nullptr );
 
     // The member head starting at `at`. `enclosing` is the class's name.
     Head_scan member_head( u32 at, Symbol_id enclosing );
@@ -205,11 +212,12 @@ private:
 
     void skip_operator_token();
 
-    Token_cursor cursor_;
-    Scan_failure failure_;
-    Scan_site    site_        = Scan_site::File;
-    Member_site  member_site_ = Member_site::Aggregate;
-    bool         directed_    = false; // directives came first, so `@intrinsic`'s `;` may end the head
+    Token_cursor          cursor_;
+    const Source_manager* sm_ = nullptr;
+    Scan_failure          failure_;
+    Scan_site             site_        = Scan_site::File;
+    Member_site           member_site_ = Member_site::Aggregate;
+    bool                  directed_    = false; // directives came first, so `@intrinsic`'s `;` may end the head
 };
 
 } // namespace keel

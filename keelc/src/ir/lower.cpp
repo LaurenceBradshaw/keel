@@ -700,8 +700,12 @@ Type_id Lowering::binding_type_under( Node_id decl, const Bindings& bindings )
 std::vector<Type_id> Lowering::type_arguments_for_call( Node_id call )
 {
     const std::optional<std::size_t> instance = types_.instantiation_of( call );
-    return instance ? types_.table().spliced( types_.instantiations()[*instance].arguments, bindings_ )
-                    : std::vector<Type_id> {};
+    if( !instance )
+    {
+        return {};
+    }
+    const Instantiation& chosen = types_.instantiations()[*instance];
+    return reached_arguments( ast_, types_, chosen.declaration, chosen.arguments, bindings_ );
 }
 
 Bindings Lowering::bindings_for_call( Node_id call )
@@ -717,7 +721,9 @@ Bindings Lowering::bindings_for_call( Node_id call )
 
     // The recorded arguments are what the call wrote, `T` inside a generic, so substitute through
     // this instance's bindings: `g<T>( a )` in `f<i32>` is `g<i32>`.
-    return bindings_for( ast_, types_, { chosen.declaration, types_.table().spliced( chosen.arguments, bindings_ ) } );
+    return bindings_for(
+        ast_, types_, { chosen.declaration, reached_arguments( ast_, types_, chosen.declaration, chosen.arguments, bindings_ ) }
+    );
 }
 
 Lowering::Instance_target Lowering::at_instance( Type_id held ) const
@@ -2117,7 +2123,7 @@ std::optional<Operand> Lowering::lower_pack_read( Node_id id )
 
     if( sizes.empty() )
     {
-        return constant( literal_pool_.add_integer( 0 ), word ); // unreachable: the test always fails
+        return constant( literal_pool_.add_integer( 1 ), word ); // unreachable: the test always fails; 1 divides
     }
 
     const Type_id  array = table.array_of( word, sizes.size() );

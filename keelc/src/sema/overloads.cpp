@@ -110,7 +110,7 @@ Bindings Overloads::type_bindings( Node_id callable, std::span<const Type_id> ar
     {
         parameters.push_back( types_.type_of( parameter ) );
     }
-    return table_.bind( parameters, table_.flattened( arguments ) );
+    return table_.bind( parameters, table_.flattened( arguments, !table_.keeps_packs( parameters ) ) );
 }
 
 // The bindings the arguments alone justify, or none at all. Silent, because selection *probes*: a
@@ -532,6 +532,15 @@ bool Overloads::fits( Node_id call, Node_id candidate, u32 implicit_params ) con
     // decide below.
     const std::vector<Node_id> parameters = ast_.type_parameters( ast_.type_param_list( candidate ) );
     const bool                 pack = !parameters.empty() && table_.is_pack_parameter( types_.type_of( parameters.back() ) );
+    std::vector<Type_id>       types;
+    for( const Node_id parameter : parameters )
+    {
+        types.push_back( types_.type_of( parameter ) );
+    }
+    if( written != 0 && table_.keeps_packs( types ) )
+    {
+        return false; // several packs cannot be told apart in one written list
+    }
     return takes( candidate, arguments.size() ) &&
            ( written == 0 || parameters.size() == written || ( pack && written + 1 >= parameters.size() ) );
 }
@@ -2326,7 +2335,13 @@ Node_id Overloads::next_visible( Node_id use, Node_id candidate ) const
 // already an instance rather than a step towards one.
 void Overloads::record_instance( Node_id from, Node_id call, Node_id callable, std::vector<Type_id> resolved )
 {
-    resolved = table_.flattened( resolved ); // flat, as an aggregate's arguments are
+    // Flat, as an aggregate's arguments are, unless several packs need keeping apart.
+    std::vector<Type_id> parameters;
+    for( const Node_id parameter : ast_.type_parameters( ast_.type_param_list( callable ) ) )
+    {
+        parameters.push_back( types_.type_of( parameter ) );
+    }
+    resolved = table_.flattened( resolved, !table_.keeps_packs( parameters ) );
     generic_recursion_.record_call( from, callable, resolved, ast_.span( call ) );
 
     instantiation_of_.emplace(
@@ -2367,7 +2382,8 @@ void Overloads::record_method_instantiation(
 
     arguments.insert( arguments.end(), own.begin(), own.end() );
 
-    if( arguments.empty() )
+    // A rank 0 receiver, `Grid<>`, still names an instance with no arguments.
+    if( arguments.empty() && ast_.type_parameters( ast_.type_param_list( method ) ).empty() )
     {
         return;
     }

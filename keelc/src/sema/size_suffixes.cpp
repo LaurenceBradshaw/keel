@@ -3,6 +3,7 @@
 
 #include "sema/size_suffixes.h"
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 #include <algorithm>
 #include <set>
 
@@ -20,7 +21,15 @@ bool is_constant_size( const Type_table& table, Type_id id )
 // Whether the edge writes a size of its own, which makes it the origin of what it reaches.
 bool writes( const Type_table& table, const Generic_call& edge )
 {
-    return std::ranges::any_of( edge.arguments, [&]( Type_id argument ) { return is_constant_size( table, argument ); } );
+    const auto constant = [&]( Type_id argument ) { return is_constant_size( table, argument ); };
+    return std::ranges::any_of(
+        edge.arguments,
+        [&]( Type_id argument )
+        {
+            return constant( argument ) ||
+                   ( table.is_pack( argument ) && std::ranges::all_of( table.get( argument ).arguments, constant ) );
+        }
+    );
 }
 
 } // namespace
@@ -124,8 +133,9 @@ void Size_suffixes::collect( Node_id id, Node_id owner, Node_kind parent )
         owner = ast_.enclosing_aggregate( id );
     }
 
-    if( owner.is_valid() && id.v < types_.size() && types_[id.v].is_valid() && table_.is_size( types_[id.v] ) &&
-        table_.get( types_[id.v] ).width != 0 && !table_.is_dyn( types_[id.v] ) )
+    if( owner.is_valid() && id.v < types_.size() && types_[id.v].is_valid() &&
+        ( ( table_.is_size( types_[id.v] ) && table_.get( types_[id.v] ).width != 0 && !table_.is_dyn( types_[id.v] ) ) ||
+          table_.is_shape( types_[id.v] ) ) )
     {
         suffixes_[owner.v].push_back(
             Suffix { .node = id, .extent = types_[id.v], .argument = parent == Node_kind::Type_arg_list }
@@ -179,27 +189,55 @@ Size_suffixes::reach( const Generic_call& edge, const Bindings& bindings, const 
                                             ? ast_.type_parameters( ast_.type_param_list( caller->declaration ) )
                                             : std::vector<Node_id> {};
 
-    // A pack passed on is its sizes under the caller's bindings.
+    // A pack passed on, or a shape function's, is its sizes under the caller's bindings: spread,
+    // or whole for a callee of several packs.
+    std::vector<Type_id> callee;
+    for( const Node_id parameter : ast_.type_parameters( ast_.type_param_list( edge.to ) ) )
+    {
+        callee.push_back( parameter.v < types_.size() ? types_[parameter.v] : Type_id {} );
+    }
+    const bool whole = table_.keeps_packs( callee );
+
     std::vector<Type_id> arguments;
     for( const Type_id argument : edge.arguments )
     {
-        if( !table_.is_pack_parameter( argument ) )
+        if( !table_.is_pack_parameter( argument ) && !table_.is_shape( argument ) && !table_.is_pack( argument ) )
         {
             arguments.push_back( argument );
             continue;
         }
-        const auto bound = bindings.find( argument.v );
-        if( bound == bindings.end() )
+        const std::optional<std::vector<u64>> sizes = table_.evaluate_pack( argument, bindings );
+        if( !sizes )
         {
             return std::nullopt;
         }
-        const std::span<const Type_id> sizes = table_.get( bound->second ).arguments;
-        arguments.insert( arguments.end(), sizes.begin(), sizes.end() );
+        std::vector<Type_id> each;
+        for( const u64 size : *sizes )
+        {
+            each.push_back( table_.size( size ) );
+        }
+        if( whole )
+        {
+            arguments.push_back( table_.pack( each ) );
+        }
+        else
+        {
+            arguments.insert( arguments.end(), each.begin(), each.end() );
+        }
     }
 
     for( std::size_t i = 0; i < arguments.size(); ++i )
     {
         const Type_id argument = arguments[i];
+
+        if( table_.is_pack( argument ) )
+        {
+            instance.sizes.push_back( argument );
+            instance.sources.emplace_back();
+            instance.types.emplace_back();
+            sized = true;
+            continue;
+        }
 
         if( !table_.is_size( argument ) && !table_.is_size_parameter( argument ) )
         {
@@ -289,8 +327,9 @@ bool Size_suffixes::report( const Instance& instance, Span origin )
             continue; // a method's own size, bound per call rather than per instance
         }
 
-        const std::optional<u64> value = table_.evaluate( suffix.extent, bindings );
-        if( value && *value != 0 )
+        const bool               shape = table_.is_shape( suffix.extent );
+        const std::optional<u64> value = shape ? std::nullopt : table_.evaluate( suffix.extent, bindings );
+        if( shape ? computes( suffix.extent, bindings ) : value && *value != 0 )
         {
             continue;
         }
@@ -300,7 +339,7 @@ bool Size_suffixes::report( const Instance& instance, Span origin )
         for( const Type_id parameter : read )
         {
             when += fmt::format(
-                "{}`{}` is {}", when.empty() ? "" : " and ", table_.name( parameter ), *table_.evaluate( parameter, bindings )
+                "{}`{}` is {}", when.empty() ? "" : " and ", table_.name( parameter ), value_of( parameter, bindings )
             );
         }
 
@@ -309,19 +348,34 @@ bool Size_suffixes::report( const Instance& instance, Span origin )
         const Size_op op      = Size_op( table_.get( step ).width );
         const bool    divides = !value && ( op == Size_op::Divide || op == Size_op::Remainder );
 
+        const Span blamed = blame( instance, bindings, divides ? table_.get( step ).arguments[1] : step, origin );
+
+        // A shape function that fails names what it does, whatever holds it.
+        if( !value && ( op == Size_op::Broadcast || op == Size_op::Dropped || op == Size_op::Inserted ) )
+        {
+            reporter_.error_at(
+                blamed,
+                fmt::format( "`{}` {}", name_of( instance ), shape_failure( op ) ),
+                fmt::format(
+                    "`{}` at {} fails when {}", table_.name( step ), reporter_.position( ast_.span( suffix.node ) ), when
+                )
+            );
+            return true;
+        }
+
         const std::string reason = value                     ? "is 0"
                                    : divides                 ? "divides by 0"
                                    : op == Size_op::Subtract ? "is below 0"
                                                              : "overflows a `u64`";
 
         reporter_.error_at(
-            blame( instance, bindings, divides ? table_.get( step ).arguments[1] : step, origin ),
+            blamed,
             fmt::format(
                 "`{}` makes {}",
                 name_of( instance ),
-                suffix.argument ? ( value ? "a size argument of 0" : "a size argument that " + reason )
-                : value         ? "an array of 0 elements"
-                                : "an array whose size " + reason
+                suffix.argument || shape ? ( value ? "a size argument of 0" : "a size argument that " + reason )
+                : value                  ? "an array of 0 elements"
+                                         : "an array whose size " + reason
             ),
             fmt::format(
                 "`{}` at {} {} when {}",
@@ -378,7 +432,7 @@ bool Size_suffixes::report_condition( const Instance& instance, Span origin, con
         for( const Type_id parameter : read )
         {
             when += fmt::format(
-                "{}`{}` is {}", when.empty() ? "" : " and ", table_.name( parameter ), *table_.evaluate( parameter, bindings )
+                "{}`{}` is {}", when.empty() ? "" : " and ", table_.name( parameter ), value_of( parameter, bindings )
             );
         }
 
@@ -413,7 +467,15 @@ Span Size_suffixes::blame( const Instance& instance, const Bindings& bindings, T
     std::vector<Source> sources;
     for( const Type_id parameter : blamed )
     {
-        values.push_back( *table_.evaluate( parameter, bindings ) );
+        if( table_.is_pack_parameter( parameter ) )
+        {
+            const std::optional<std::vector<u64>> sizes = table_.evaluate_pack( parameter, bindings );
+            values.insert( values.end(), sizes->begin(), sizes->end() );
+        }
+        else
+        {
+            values.push_back( *table_.evaluate( parameter, bindings ) );
+        }
 
         for( std::size_t p = 0; p < parameters.size() && p < instance.sources.size(); ++p )
         {
@@ -431,9 +493,29 @@ Span Size_suffixes::blame( const Instance& instance, const Bindings& bindings, T
 std::string Size_suffixes::spelled( Type_id size ) const
 {
     const std::string name( table_.name( size ) );
-    return table_.get( size ).kind == Type_kind::Size && table_.get( size ).width != 0 && !table_.is_dyn( size )
+    return table_.get( size ).kind == Type_kind::Size && is_arithmetic( Size_op( table_.get( size ).width ) )
                ? fmt::format( "({})", name )
                : name;
+}
+
+// `2`, or a pack's `2, 3`.
+std::string Size_suffixes::value_of( Type_id parameter, const Bindings& bindings ) const
+{
+    if( !table_.is_pack_parameter( parameter ) )
+    {
+        return fmt::format( "{}", *table_.evaluate( parameter, bindings ) );
+    }
+    const std::optional<std::vector<u64>> sizes = table_.evaluate_pack( parameter, bindings );
+    return sizes->empty() ? "empty" : fmt::format( "{}", fmt::join( *sizes, ", " ) );
+}
+
+// Whether a size, or a pack, has a value.
+bool Size_suffixes::computes( Type_id size, const Bindings& bindings ) const
+{
+    const Type& described = table_.get( size );
+    return described.kind == Type_kind::Pack || table_.is_pack_parameter( size )
+               ? table_.evaluate_pack( size, bindings ).has_value()
+               : table_.evaluate( size, bindings ).has_value();
 }
 
 // `Ring<1>`. A method that shares its aggregate's parameters is named by the aggregate.
@@ -503,9 +585,14 @@ Span Size_suffixes::written( Span origin, std::span<const u64> values, std::span
 // The innermost step of a computed size that has no value.
 Type_id Size_suffixes::failing( Type_id size, const Bindings& bindings ) const
 {
-    for( const Type_id operand : table_.get( size ).arguments )
+    const Type& described = table_.get( size );
+    if( described.kind == Type_kind::Size && described.width == 0 )
     {
-        if( !table_.evaluate( operand, bindings ) )
+        return size;
+    }
+    for( const Type_id operand : described.arguments )
+    {
+        if( !computes( operand, bindings ) )
         {
             return failing( operand, bindings );
         }
@@ -528,10 +615,12 @@ void Size_suffixes::parameters_of( Type_id size, std::vector<Type_id>& into ) co
         return;
     }
 
-    if( described.kind == Type_kind::Size && described.width != 0 && !table_.is_dyn( size ) )
+    if( ( described.kind == Type_kind::Size && described.width != 0 ) || described.kind == Type_kind::Pack )
     {
-        parameters_of( described.arguments[0], into );
-        parameters_of( described.arguments[1], into );
+        for( const Type_id operand : described.arguments )
+        {
+            parameters_of( operand, into );
+        }
     }
 }
 

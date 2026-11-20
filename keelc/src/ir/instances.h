@@ -62,5 +62,9 @@ Thunk thunk_for( const Ast& ast, Types& types, Type_id implementer, Type_id inte
 
 // The instance's type arguments bound to its declaration's parameters, positionally.
 Bindings bindings_for( const Ast& ast, Types& types, const Instantiation& instance );
+// An edge's or a recorded call's arguments under `bindings`: flat, or each pack whole for a callee of several.
+std::vector<Type_id> reached_arguments( const Ast& ast, Types& types, const Generic_call& edge, const Bindings& bindings );
+std::vector<Type_id>
+reached_arguments( const Ast& ast, Types& types, Node_id to, std::span<const Type_id> arguments, const Bindings& bindings );
 
 } // namespace keel

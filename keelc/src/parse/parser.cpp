@@ -86,7 +86,8 @@ private:
     Node_id parse_param_list( Node_id leading = Node_id {} );
     // The parameters alone: the list node is built later, once the `where` clauses that belong
     // beside them have been parsed too.
-    std::vector<Node_id> parse_type_params( bool packs = true ); // `packs`: a pack may be declared
+    // `packs`: a pack may be declared; `several`: more than one, as a function may.
+    std::vector<Node_id> parse_type_params( bool packs = true, bool several = false );
     Node_id              parse_type_param( bool& pack );
     bool                 match_ellipsis();
 
@@ -399,7 +400,7 @@ bool is_assignment( Token_kind kind )
 
 Parser::Parser( std::span<const Token> tokens, const Source_manager& sm, Ast& ast, Diagnostics& diags )
     : cursor_( tokens ),
-      lookahead_( tokens ),
+      lookahead_( tokens, &sm ),
       sm_( sm ),
       ast_( ast ),
       diags_( diags ),
@@ -1047,7 +1048,7 @@ Node_id Parser::parse_function_decl( std::optional<u32> commit, bool intrinsic )
     // are collected before the node is built.
     const Span           generic_start = cursor_.peek().span;
     const bool           generic       = cursor_.check( Token_kind::Less );
-    std::vector<Node_id> generics      = generic ? parse_type_params() : std::vector<Node_id> {};
+    std::vector<Node_id> generics      = generic ? parse_type_params( true, true ) : std::vector<Node_id> {};
 
     // Captured before the parameter list is parsed: with no `where` clause the node ends at the
     // `>`, and merging with previous() later would stretch it over the parameters.
@@ -1373,7 +1374,7 @@ void Parser::refuse_gap_after_default( std::span<const Node_id> params )
     }
 }
 
-std::vector<Node_id> Parser::parse_type_params( bool packs )
+std::vector<Node_id> Parser::parse_type_params( bool packs, bool several )
 {
     recovery_.expect( Token_kind::Less );
     const Span start = cursor_.peek().span;
@@ -1408,28 +1409,36 @@ std::vector<Node_id> Parser::parse_type_params( bool packs )
         return params;
     }
 
-    const Node_id pack = written_packs[0];
+    // Packs come after every fixed parameter.
+    const auto tail      = params.end() - std::ptrdiff_t( written_packs.size() );
+    const auto misplaced = std::ranges::find_if(
+        written_packs, [&]( Node_id each ) { return std::find( tail, params.end(), each ) == params.end(); }
+    );
+
     if( !packs )
     {
         recovery_.error_at(
-            ast_.name_span( pack ), "only a type or a free function declares a pack", "declare it on the type"
+            ast_.name_span( written_packs[0] ), "only a type or a free function declares a pack", "declare it on the type"
         );
     }
-    else if( written_packs.size() > 1 )
+    else if( written_packs.size() > 1 && !several )
     {
-        recovery_.error_at( ast_.name_span( written_packs[1] ), "a generic takes one pack" );
+        recovery_.error_at( ast_.name_span( written_packs[1] ), "a type takes one pack", "only a function declares several" );
     }
-    else if( pack != params.back() )
+    else if( misplaced != written_packs.end() )
     {
         recovery_.error_at(
-            ast_.name_span( pack ),
-            "a pack is the last type parameter",
-            fmt::format( "move `{}` to the end", sm_.text( ast_.name_span( pack ) ) )
+            ast_.name_span( *misplaced ),
+            written_packs.size() > 1 ? "packs come after every other type parameter" : "a pack is the last type parameter",
+            fmt::format( "move `{}` to the end", sm_.text( ast_.name_span( *misplaced ) ) )
         );
     }
     else
     {
-        ast_.set_variadic( pack );
+        for( const Node_id each : written_packs )
+        {
+            ast_.set_variadic( each );
+        }
     }
 
     return params;
@@ -2560,8 +2569,14 @@ Node_id Parser::parse_type_argument()
         return ast_.add( Node_kind::Dyn_size, cursor_.advance().span, 0, {} );
     }
 
+    // A shape function, `product( S )` or `dropped<A>( S )`, read as a call for sema to check.
+    // Any other name called is refused there, with the five named.
+    const bool shape_call = cursor_.check( Token_kind::Identifier ) &&
+                            ( after == Token_kind::L_paren ||
+                              ( after == Token_kind::Less && is_shape_function( sm_.text( cursor_.peek().span ) ) ) );
+
     // `S...`: a pack's sizes, spread.
-    const Node_id type = parse_type();
+    const Node_id type = shape_call ? parse_postfix( parse_prefix(), Expression_use::Value ) : parse_type();
     if( match_ellipsis() )
     {
         ast_.set_variadic( type );
@@ -15108,6 +15123,20 @@ TEST_CASE( "parser_parses_a_size_pack", "[parse][size_params][packs]" )
         const Node_id spread = p.child( find_first( p.ast(), p.root(), Node_kind::Type_arg_list ), 1 );
         REQUIRE( p.ast().is_variadic( spread ) );
         REQUIRE( p.text( spread ) == "S..." );
+    }
+
+    SECTION( "a shape function in type arguments is a call" )
+    {
+        REQUIRE(
+            declared_type( "Grid<product( S ), dropped<1>( S )...> g;" ) ==
+            "Generic_type(Grid,Type_arg_list(Call_expr(product,Arg_list(S),<none>),Call_expr(dropped,Arg_list(S),Type_arg_list("
+            "1))))"
+        );
+        const Parsed p( "Grid<reversed( S )...> g;" );
+        REQUIRE( p.ast().is_variadic( first_named( p, "Call_expr" ) ) );
+        REQUIRE( index_outline( "f<reversed( S )...>( x )" )
+                     .starts_with( "Call_expr(f,Arg_list(x),Type_arg_list(Call_expr(reversed" ) );
+        REQUIRE( index_outline( "a < sum( S ) > ( d )" ).starts_with( "Binary_expr" ) );
     }
 
     SECTION( "`dyn` is a name anywhere else" )

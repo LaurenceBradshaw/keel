@@ -1,0 +1,44 @@
+// A shape function that fails at an instance: an axis dropped or inserted past the rank, sizes that
+// do not broadcast (inside a generic and at a deduced call), and a product that overflows.
+struct Box<u64... S> { i32 x; };
+
+u64 last<u64... S>()
+{
+    Box<dropped<2>( S )...> b = Box<dropped<2>( S )...> { 1 };
+    return 0;
+}
+
+u64 after<u64... S>()
+{
+    Box<inserted<3>( S )...> b = Box<inserted<3>( S )...> { 1 };
+    return 0;
+}
+
+u64 pair<u64... S, u64... U>( const ref Box<S...> _, const ref Box<U...> _ )
+{
+    u64[product( broadcast( S, U ) )] a = [ 0, .. ];
+    return a[0];
+}
+
+Box<broadcast( S, U )...> sum<u64... S, u64... U>( const ref Box<S...> a, const ref Box<U...> b )
+{
+    return Box<broadcast( S, U )...> { a.x + b.x };
+}
+
+u64 huge<u64... S>()
+{
+    u8[product( S )] a = [ 0, .. ];
+    return 0;
+}
+
+i32 main()
+{
+    Box<2, 3> a = Box<2, 3> { 1 };
+    Box<4> b    = Box<4> { 1 };
+    _ = last<4, 5>();
+    _ = after<4, 5>();
+    _ = pair( a, b );
+    _ = sum( a, b );
+    _ = huge<4294967296, 4294967296>();
+    return 0;
+}

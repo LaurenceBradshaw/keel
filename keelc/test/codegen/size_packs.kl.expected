@@ -2080,7 +2080,7 @@ uint64_t kl_7codegen_6offset__I3i32_V1_E__SQ7codegen4GridI3i32_V1_E_L3u64( struc
     if ( kl_t19 ) goto bb14; else goto bb15;
     bb14:
 #line 32 "codegen/size_packs.kl"
-    kl_t20 = __builtin_mul_overflow( kl_stride_4, 0, &( uint64_t ) { 0 } );
+    kl_t20 = __builtin_mul_overflow( kl_stride_4, 1, &( uint64_t ) { 0 } );
 #line 32 "codegen/size_packs.kl"
     if ( kl_t20 ) goto bb16; else goto bb17;
     bb15:
@@ -2091,7 +2091,7 @@ uint64_t kl_7codegen_6offset__I3i32_V1_E__SQ7codegen4GridI3i32_V1_E_L3u64( struc
     kl_rt_panic( "codegen/size_packs.kl", 32, "arithmetic overflow: stride *= S[k - 1];" );
     bb17:
 #line 32 "codegen/size_packs.kl"
-    kl_stride_4 = kl_stride_4 * 0;
+    kl_stride_4 = kl_stride_4 * 1;
 #line 29 "codegen/size_packs.kl"
     goto bb18;
     bb18:
@@ -2143,7 +2143,7 @@ uint64_t kl_7codegen_7product__( void )
     return kl_t0;
     bb4:
 #line 53 "codegen/size_packs.kl"
-    kl_t6 = __builtin_mul_overflow( kl_p_1, 0, &( uint64_t ) { 0 } );
+    kl_t6 = __builtin_mul_overflow( kl_p_1, 1, &( uint64_t ) { 0 } );
 #line 53 "codegen/size_packs.kl"
     if ( kl_t6 ) goto bb6; else goto bb7;
     bb5:
@@ -2154,7 +2154,7 @@ uint64_t kl_7codegen_7product__( void )
     kl_rt_panic( "codegen/size_packs.kl", 53, "arithmetic overflow: p *= S[i];" );
     bb7:
 #line 53 "codegen/size_packs.kl"
-    kl_p_1 = kl_p_1 * 0;
+    kl_p_1 = kl_p_1 * 1;
 #line 51 "codegen/size_packs.kl"
     goto bb8;
     bb8:
