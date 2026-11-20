@@ -52,8 +52,137 @@ one is NaN, as numpy's <code>median</code>. Selects on a copy, so <code>items</c
 <dt><a href="algorithm.html#dedup"><code>dedup</code></a> <span class="kind">function</span></dt>
 <dd>Drops each element <code>same</code> calls equal to the one kept before it, so sorted <code>items</code> keep one
 of each run.</dd>
-<dt><a href="algorithm.html#array"><code>array</code></a> <span class="kind">function</span></dt>
+<dt><a href="algorithm.html#generated"><code>generated</code></a> <span class="kind">function</span></dt>
 <dd>An array whose element at each index is <code>make( index )</code>, made in index order.</dd>
+</dl>
+</section>
+<section class="module">
+<h3><a href="array.html">array</a></h3>
+<dl class="summaries">
+<dt><a href="array.html#array"><code>array</code></a> <span class="kind">class</span></dt>
+<dd>Numbers in the shape <code>S</code>, held row-major: the last index moves fastest.</dd>
+<dt><a href="array.html#array_mask"><code>array_mask</code></a> <span class="kind">class</span></dt>
+<dd>One bit per element of an <code>array</code> in the shape <code>S</code>, held row-major: what its comparisons
+answer.</dd>
+</dl>
+<h4 class="divider">Making arrays</h4>
+<dl class="summaries">
+<dt><a href="array.html#zeros"><code>zeros</code></a> <span class="kind">function</span></dt>
+<dd>Every element 0, in the sizes <code>n</code>: <code>array&lt;f64, dyn, 3&gt; a = kl::zeros( rows, 3 );</code>. A size whose
+value is known is a constant, any other <code>dyn</code>.</dd>
+<dt><a href="array.html#ones"><code>ones</code></a> <span class="kind">function</span></dt>
+<dd>Every element 1, in the sizes <code>n</code>.</dd>
+<dt><a href="array.html#filled"><code>filled</code></a> <span class="kind">function</span></dt>
+<dd>Every element <code>x</code>, in the sizes <code>n</code>: <code>kl::filled( 0.5, rows, 3 )</code>.</dd>
+<dt><a href="array.html#shaped"><code>shaped</code></a> <span class="kind">function</span></dt>
+<dd><code>elements</code> row after row, in the sizes <code>n</code>: <code>kl::shaped( e, 2, 3 )</code>. Panics unless there are
+as many as the sizes hold.</dd>
+<dt><a href="array.html#of"><code>of</code></a> <span class="kind">function</span></dt>
+<dd>The elements of a literal, as rank 1: <code>kl::of( [1.0, 2.0, 3.0] )</code>.</dd>
+<dt><a href="array.html#arange"><code>arange</code></a> <span class="kind">function</span></dt>
+<dd><code>from</code>, <code>from + step</code>, ... while short of <code>to</code>, as rank 1: <code>kl::arange( 0, 5 )</code> is <code>[0, 1, 2,
+3, 4]</code>. A negative <code>step</code> counts down. Each element is <code>from + i * step</code>, so floats do not
+drift. Panics when <code>step</code> is 0.</dd>
+<dt><a href="array.html#linspace"><code>linspace</code></a> <span class="kind">function</span></dt>
+<dd><code>n</code> evenly spaced from <code>a</code> to <code>b</code>, both included, as rank 1. One element is <code>a</code>.</dd>
+<dt><a href="array.html#eye"><code>eye</code></a> <span class="kind">function</span></dt>
+<dd>The <code>n</code> by <code>n</code> identity: <code>array&lt;f64, 3, 3&gt; i = kl::eye( 3, 3 );</code>, or <code>kl::eye&lt;f64&gt;</code>'s square
+form <code>kl::identity( n )</code> where the type is not written.</dd>
+<dt><a href="array.html#diag"><code>diag</code></a> <span class="kind">function</span></dt>
+<dd>The square matrix with <code>v</code> on its diagonal: <code>kl::diag( v )</code>.</dd>
+<dt><a href="array.html#diagonal"><code>diagonal</code></a> <span class="kind">function</span></dt>
+<dd>The diagonal of a square matrix: <code>kl::diagonal( m )</code>.</dd>
+<dt><a href="array.html#concatenated"><code>concatenated</code></a> <span class="kind">function</span></dt>
+<dd><code>a</code> then <code>b</code>, along the first axis: <code>kl::concatenated( a, b )</code>.</dd>
+<dt><a href="array.html#stacked"><code>stacked</code></a> <span class="kind">function</span></dt>
+<dd><code>a</code> and <code>b</code> as the two entries of a new first axis: <code>kl::stacked( a, b )</code>.</dd>
+</dl>
+<h4 class="divider">Products</h4>
+<dl class="summaries">
+<dt><a href="array.html#matmul"><code>matmul</code></a> <span class="kind">function</span></dt>
+<dd>The matrix product: <code>kl::matmul( a, b )</code>.</dd>
+<dt><a href="array.html#outer"><code>outer</code></a> <span class="kind">function</span></dt>
+<dd>Each element of <code>a</code> times each of <code>b</code>: an <code>N</code> by <code>M</code> matrix.</dd>
+<dt><a href="array.html#cross"><code>cross</code></a> <span class="kind">function</span></dt>
+<dd>The cross product <code>a</code> x <code>b</code>: <code>kl::cross( a, b )</code>.</dd>
+</dl>
+<h4 class="divider">Linear algebra</h4>
+<dl class="summaries">
+<dt><a href="array.html#determinant"><code>determinant</code></a> <span class="kind">function</span></dt>
+<dd>The determinant of a square matrix, through LU with partial pivoting: <code>kl::determinant( m )</code>.
+0 when a pivot is exactly zero.</dd>
+<dt><a href="array.html#inverse"><code>inverse</code></a> <span class="kind">function</span></dt>
+<dd>The inverse of a square matrix, <code>none</code> when a pivot is exactly zero: <code>kl::inverse( m )</code>. A
+nearly singular matrix gives large elements.</dd>
+<dt><a href="array.html#solve"><code>solve</code></a> <span class="kind">function</span></dt>
+<dd>The <code>x</code> with <code>kl::matmul( a, x ) == b</code>, <code>none</code> when a pivot of <code>a</code> is exactly zero:
+<code>kl::solve( a, b )</code>.</dd>
+<dt><a href="array.html#qr"><code>qr</code></a> <span class="kind">function</span></dt>
+<dd>The thin QR factors of <code>a</code>, <code>first</code> with orthonormal columns and <code>second</code> upper triangular,
+their product <code>a</code>, by Householder reflections as numpy's <code>qr</code>: <code>kl::qr( a )</code>.</dd>
+<dt><a href="array.html#lstsq"><code>lstsq</code></a> <span class="kind">function</span></dt>
+<dd>The <code>x</code> making <code>kl::matmul( a, x ) - b</code> shortest, through QR, <code>none</code> when a diagonal of R is
+exactly zero: <code>kl::lstsq( a, b )</code>. numpy's <code>lstsq</code> answers the shortest such <code>x</code> there instead.</dd>
+<dt><a href="array.html#hat_diagonal"><code>hat_diagonal</code></a> <span class="kind">function</span></dt>
+<dd>The diagonal of the projection onto <code>a</code>'s columns, <code>a (a^T a)^-1 a^T</code>, through QR: each row's
+leverage when <code>a</code> has full column rank. <code>kl::hat_diagonal( a )</code>.</dd>
+</dl>
+<h4 class="divider">Element-wise choices</h4>
+<dl class="summaries">
+<dt><a href="array.html#minimum"><code>minimum</code></a> <span class="kind">function</span></dt>
+<dd>The smallest of each set of matching elements, as <code>kl::min</code>: <code>kl::minimum( a, b, c )</code>.</dd>
+<dt><a href="array.html#maximum"><code>maximum</code></a> <span class="kind">function</span></dt>
+<dd>The largest of each set of matching elements, as <code>kl::max</code>.</dd>
+<dt><a href="array.html#select"><code>select</code></a> <span class="kind">function</span></dt>
+<dd><code>a</code>'s element where <code>m</code> is set, and <code>b</code>'s where it is clear.</dd>
+<dt><a href="array.html#is_nan"><code>is_nan</code></a> <span class="kind">function</span></dt>
+<dd>Where each element is a NaN, as <code>kl::is_nan</code>.</dd>
+<dt><a href="array.html#is_inf"><code>is_inf</code></a> <span class="kind">function</span></dt>
+<dd>Where each element is an infinity, as <code>kl::is_inf</code>.</dd>
+<dt><a href="array.html#sqrt"><code>sqrt</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::sqrt</code> of each element.</dd>
+<dt><a href="array.html#exp"><code>exp</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::exp</code> of each element.</dd>
+<dt><a href="array.html#expm1"><code>expm1</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::expm1</code> of each element.</dd>
+<dt><a href="array.html#log"><code>log</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::log</code> of each element.</dd>
+<dt><a href="array.html#log1p"><code>log1p</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::log1p</code> of each element.</dd>
+<dt><a href="array.html#log2"><code>log2</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::log2</code> of each element.</dd>
+<dt><a href="array.html#log10"><code>log10</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::log10</code> of each element.</dd>
+<dt><a href="array.html#sin"><code>sin</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::sin</code> of each element.</dd>
+<dt><a href="array.html#cos"><code>cos</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::cos</code> of each element.</dd>
+<dt><a href="array.html#tan"><code>tan</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::tan</code> of each element.</dd>
+<dt><a href="array.html#asin"><code>asin</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::asin</code> of each element.</dd>
+<dt><a href="array.html#acos"><code>acos</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::acos</code> of each element.</dd>
+<dt><a href="array.html#atan"><code>atan</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::atan</code> of each element.</dd>
+<dt><a href="array.html#sinh"><code>sinh</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::sinh</code> of each element.</dd>
+<dt><a href="array.html#cosh"><code>cosh</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::cosh</code> of each element.</dd>
+<dt><a href="array.html#tanh"><code>tanh</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::tanh</code> of each element.</dd>
+<dt><a href="array.html#floor"><code>floor</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::floor</code> of each element.</dd>
+<dt><a href="array.html#ceil"><code>ceil</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::ceil</code> of each element.</dd>
+<dt><a href="array.html#trunc"><code>trunc</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::trunc</code> of each element.</dd>
+<dt><a href="array.html#round"><code>round</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::round</code> of each element.</dd>
+<dt><a href="array.html#pow"><code>pow</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::pow</code> of each element and the matching one of <code>b</code>, the two broadcast.</dd>
+<dt><a href="array.html#atan2"><code>atan2</code></a> <span class="kind">function</span></dt>
+<dd><code>kl::atan2</code> of each element of <code>y</code> and the matching one of <code>x</code>, the two broadcast.</dd>
 </dl>
 </section>
 <section class="module">

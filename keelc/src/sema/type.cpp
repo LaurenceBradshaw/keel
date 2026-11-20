@@ -216,9 +216,13 @@ Type_id Type_table::interned_pack( std::span<const Type_id> sizes ) const
 
 void Type_table::intern_tail( std::span<const Type_id> open, std::span<const Type_id> arguments )
 {
+    // Every suffix from the pack's start on, as a pattern with more fixed sizes reads a shorter one.
     if( ends_in_pack( open ) && arguments.size() >= open.size() - 1 )
     {
-        pack( arguments.subspan( open.size() - 1 ) );
+        for( std::size_t from = open.size() - 1; from <= arguments.size(); ++from )
+        {
+            pack( arguments.subspan( from ) );
+        }
     }
 }
 
@@ -981,7 +985,11 @@ Type_id Type_table::substitute( Type_id type, const Bindings& bindings )
             return type;
         }
 
-        const std::vector<Type_id> substituted = spliced( described.arguments, bindings );
+        // A closure in a generic of several packs keeps each whole, as that generic's instance does.
+        const auto open = closures_.find( described.declaration.v );
+        const bool whole =
+            open != closures_.end() && !open->second.empty() && keeps_packs( get( open->second.front().type ).arguments );
+        const std::vector<Type_id> substituted = spliced( described.arguments, bindings, !whole );
 
         return closure(
             described.declaration, substitute( described.element, bindings ), substituted, name( type ), described.count
@@ -2288,16 +2296,27 @@ Bindings Type_table::instance_bindings( Type_id instance ) const
     const std::span<const Type_id> parameters = get( open ).arguments;
 
     const std::span<const Type_id> arguments = get( instance ).arguments;
+    const bool                     whole     = keeps_packs( parameters );
 
-    for( std::size_t i = 0; i < parameters.size(); ++i )
+    // A pack takes what the fixed parameters leave, as bind() gives it: a method's own may follow.
+    const std::size_t packs =
+        std::size_t( std::ranges::count_if( parameters, [&]( Type_id p ) { return is_pack_parameter( p ); } ) );
+    const std::size_t fixed = parameters.size() - packs;
+    const std::size_t taken = !whole && packs == 1 && arguments.size() > fixed ? arguments.size() - fixed : 0;
+    std::size_t       at    = 0;
+    for( const Type_id parameter : parameters )
     {
-        if( is_pack_parameter( parameters[i] ) )
+        if( is_pack_parameter( parameter ) && !whole )
         {
-            result.emplace( parameters[i].v, interned_pack( arguments.subspan( i ) ) );
-            break;
+            result.emplace( parameter.v, interned_pack( arguments.subspan( std::min( at, arguments.size() ), taken ) ) );
+            at += taken;
+            continue;
         }
-
-        result.emplace( parameters[i].v, arguments[i] );
+        if( at < arguments.size() )
+        {
+            result.emplace( parameter.v, arguments[at] );
+        }
+        ++at;
     }
 
     return result;

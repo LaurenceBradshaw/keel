@@ -32,7 +32,7 @@ error: `inserted`'s axis is a size
   --> sema/errors_shape_functions.kl:12:53
    |
 12 | u64 typed_axis<T, u64... S>( const ref Box<inserted<T>( S )...> _ ) { return 0; }
-   |                                                     ^ write a literal, a `const` or a size parameter
+   |                                                     ^ write a literal, a `const`, a size parameter or `dyn`
 
 error: `reversed(S)` is a pack of sizes, which an array's size cannot read
   --> sema/errors_shape_functions.kl:13:36

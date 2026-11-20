@@ -307,17 +307,26 @@ void Overloads::default_literals(
         bool                               floating = bounds_.has_bound( open, Bound::Floating );
         std::vector<const Argument_shape*> integers;
 
+        // A literal for `T`, or the elements of an array literal for `T[N]`, `T[C][R]`, ...
+        const auto leaves = [&]( const auto& self, Type_id type, const Argument_shape& shape ) -> void
+        {
+            if( type == open && ( shape.kind == Argument_kind::Integer || shape.kind == Argument_kind::Floating ) )
+            {
+                reached  = true;
+                floating = floating || shape.kind == Argument_kind::Floating;
+                integers.push_back( &shape );
+            }
+            else if( shape.kind == Argument_kind::Array && ( table_.is_array( type ) || table_.is_run( type ) ) )
+            {
+                for( const Argument_shape& element : shape.elements )
+                {
+                    self( self, table_.get( type ).element, element );
+                }
+            }
+        };
         for( std::size_t i = 0; i < params.size() && i < shapes.size(); ++i )
         {
-            if( params[i].type != open ||
-                ( shapes[i].kind != Argument_kind::Integer && shapes[i].kind != Argument_kind::Floating ) )
-            {
-                continue;
-            }
-
-            reached  = true;
-            floating = floating || shapes[i].kind == Argument_kind::Floating;
-            integers.push_back( &shapes[i] );
+            leaves( leaves, params[i].type, shapes[i] );
         }
 
         if( !reached )
@@ -2498,6 +2507,31 @@ void Overloads::check_size_sources( Node_id call, Node_id callable, std::span<co
                  : std::vector<Type_id> { found->second };
         const std::string_view size = interner_.text( ast_.name( declared[i] ) );
 
+        // `S... n` gives one value per size of `S`, once its rank is known.
+        const bool ranked = pack && !table_.is_shape( found->second ) &&
+                            std::ranges::none_of( each, [&]( Type_id e ) { return table_.is_pack_parameter( e ); } );
+        for( std::size_t p = 0; ranked && ast_.kind( call ) == Node_kind::Call_expr && p < params.size(); ++p )
+        {
+            const std::size_t given = arguments.size() > p ? arguments.size() - p : 0;
+            if( given_size( ast_, resolution_, types_.recorded(), table_, params[p] ) == parameter && given != each.size() )
+            {
+                reporter_.error_at(
+                    ast_.span( call ),
+                    fmt::format(
+                        "`{}` takes {} size{} for `{}`, but {} {} given",
+                        interner_.text( ast_.name( params[p] ) ),
+                        each.size(),
+                        each.size() == 1 ? "" : "s",
+                        size,
+                        given,
+                        given == 1 ? "was" : "were"
+                    ),
+                    fmt::format( "`{}` is `{}`", size, table_.name( found->second ) )
+                );
+                return;
+            }
+        }
+
         for( u32 e = 0; e < each.size(); ++e )
         {
             const std::string        spelled = pack ? fmt::format( "{}[{}]", size, e ) : std::string( size );
@@ -2638,7 +2672,23 @@ void Overloads::record_method_instantiation(
 
     std::vector<Type_id> arguments;
 
-    if( receiver.is_valid() && table_.is_struct( receiver ) )
+    std::vector<Type_id> parameters;
+    for( const Node_id parameter : ast_.type_parameters( ast_.type_param_list( method ) ) )
+    {
+        parameters.push_back( types_.type_of( parameter ) );
+    }
+
+    if( receiver.is_valid() && table_.is_struct( receiver ) && table_.keeps_packs( parameters ) )
+    {
+        // A method's own pack beside its type's: the type's arguments one per parameter too.
+        const Bindings bound = table_.instance_bindings( receiver );
+        for( std::size_t i = 0; i + own.size() < parameters.size(); ++i )
+        {
+            const auto found = bound.find( parameters[i].v );
+            arguments.push_back( found != bound.end() ? found->second : parameters[i] );
+        }
+    }
+    else if( receiver.is_valid() && table_.is_struct( receiver ) )
     {
         const std::span<const Type_id> from_receiver = table_.get( receiver ).arguments;
         arguments.assign( from_receiver.begin(), from_receiver.end() );

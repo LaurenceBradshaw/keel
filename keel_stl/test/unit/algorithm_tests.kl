@@ -251,7 +251,7 @@ private void dedup_keeps_the_first_of_each_run( ref kl::test::context c )
 private void array_builds_each_element_from_its_index( ref kl::test::context c )
 {
     {
-        owned[3] made = kl::array( fn[]( i ) { return owned( i * 10 ); } );
+        owned[3] made = kl::generated( fn[]( i ) { return owned( i * 10 ); } );
         c.check_eq( live, 3 );
         c.check_eq( made[0].value(), 0 );
         c.check_eq( made[1].value(), 10 );
@@ -260,7 +260,7 @@ private void array_builds_each_element_from_its_index( ref kl::test::context c )
     c.check_eq( live, 0 );
 
     u64 base = 5;
-    u64[3] offset = kl::array( fn[ base ]( i ) { return base + i; } );
+    u64[3] offset = kl::generated( fn[ base ]( i ) { return base + i; } );
     c.check_eq( offset[0], 5 );
     c.check_eq( offset[2], 7 );
 }

@@ -2,7 +2,7 @@ error: a type takes one pack
  --> sema/errors_size_packs.kl:4:29
   |
 4 | struct Two<u64... A, u64... B> { u64 x; };
-  |                             ^ only a function declares several
+  |                             ^ only a free function declares several
 
 error: a pack is the last type parameter
  --> sema/errors_size_packs.kl:5:22
@@ -33,12 +33,6 @@ error: a pack is written `u64... S`
   |
 9 | struct Bare<S...> { u64 x; };
   |             ^
-
-error: only a type or a free function declares a pack
-  --> sema/errors_size_packs.kl:15:27
-   |
-15 |     public u64 own<u64... R>() const { return 0; }
-   |                           ^ declare it on the type
 
 error: `S` is a pack of sizes
   --> sema/errors_size_packs.kl:21:43
@@ -100,4 +94,4 @@ error: `Holder` takes at least 1 type argument, but 0 were given
 31 | void too_few( const ref Holder<> _ ) { }
    |                               ^^ `Holder` declares `T` and `S`
 
-17 errors generated
+16 errors generated

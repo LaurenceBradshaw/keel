@@ -1,37 +1,25 @@
 error: an operator cannot have type parameters of its own
- --> sema/errors_generic_operator_uses.kl:7:26
+ --> sema/errors_generic_operator_uses.kl:8:26
   |
-7 |     static v<T> operator*<U>( U s, v<T> r ) where U : numeric
-  |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ it is called without any, so nothing could say what they are
+8 |     static v<T> operator*<U>( U s, v<T> r ) where U : numeric
+  |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ only a method taking one operand has them, deduced from that operand
 
 error: an operator cannot have type parameters of its own
-  --> sema/errors_generic_operator_uses.kl:12:20
+  --> sema/errors_generic_operator_uses.kl:17:19
    |
-12 |     void operator+=<U>( U s ) where U : numeric
-   |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ it is called without any, so nothing could say what they are
+17 |     v<T> operator-<U>() const
+   |                   ^^^ only a method taking one operand has them, deduced from that operand
 
-error: an operator cannot have type parameters of its own
-  --> sema/errors_generic_operator_uses.kl:16:19
+error: `U` is not in the operand's type
+  --> sema/errors_generic_operator_uses.kl:22:20
    |
-16 |     v<T> operator-<U>() const
-   |                   ^^^ it is called without any, so nothing could say what they are
-
-error: an operator cannot have type parameters of its own
-  --> sema/errors_generic_operator_uses.kl:21:19
-   |
-21 |     v<T> operator/<U>( v<T> o ) const
-   |                   ^^^ it is called without any, so nothing could say what they are
-
-error: an operator cannot have type parameters of its own
-  --> sema/errors_generic_operator_uses.kl:31:19
-   |
-31 |     v<T> operator%<U>( U o ) const where U : numeric
-   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ it is called without any, so nothing could say what they are
+22 |     v<T> operator/<U>( v<T> o ) const
+   |                    ^ an operator's own type parameters are deduced from its operand
 
 error: an interface's method cannot have type parameters
-  --> sema/errors_generic_operator_uses.kl:39:20
+  --> sema/errors_generic_operator_uses.kl:40:20
    |
-39 |     void operator*=<U>( U s );
+40 |     void operator*=<U>( U s );
    |                    ^^^ a call through the interface reaches one compiled method, which cannot be every instance
 
-6 errors generated
+4 errors generated

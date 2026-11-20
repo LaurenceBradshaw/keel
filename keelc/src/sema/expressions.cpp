@@ -1466,8 +1466,7 @@ Type_id Expressions::
     // A generic method's own arguments are bound beside them.
     Bindings bindings = aggregates_.receiver_bindings( receiver, method, interface );
 
-    const std::optional<std::vector<Type_id>> own_arguments =
-        method_type_arguments( site, method, bindings, shaped, expectation );
+    std::optional<std::vector<Type_id>> own_arguments = method_type_arguments( site, method, bindings, shaped, expectation );
 
     if( !own_arguments )
     {
@@ -1475,6 +1474,25 @@ Type_id Expressions::
     }
 
     const std::vector<Node_id> own = ast_.type_parameters( ast_.own_type_param_list( method ) );
+
+    // One per parameter: a written list spreads a pack's sizes, which its pack takes together.
+    if( !own.empty() && table_.is_pack_parameter( types_.type_of( own.back() ) ) &&
+        std::ranges::all_of( *own_arguments, []( Type_id each ) { return each.is_valid(); } ) )
+    {
+        std::vector<Type_id> parameters;
+        for( const Node_id each : own )
+        {
+            parameters.push_back( types_.type_of( each ) );
+        }
+        const Bindings       bound = table_.bind( parameters, table_.flattened( *own_arguments ) );
+        std::vector<Type_id> each_one;
+        for( const Type_id parameter : parameters )
+        {
+            const auto found = bound.find( parameter.v );
+            each_one.push_back( found != bound.end() ? found->second : parameter );
+        }
+        own_arguments = std::move( each_one );
+    }
 
     for( std::size_t i = 0; i < own.size() && i < own_arguments->size(); ++i )
     {
@@ -2580,17 +2598,36 @@ Type_id Expressions::infer_unary( Node_id id )
 
 // What an operator's signature is read under: the receiver's arguments, `self`, and through a bound,
 // its instance's.
-Bindings Expressions::operator_bindings( Node_id id, Type_id object_type, Node_id method ) const
+Bindings Expressions::operator_bindings( Node_id id, Type_id object_type, Node_id method, Type_id operand ) const
 {
     Bindings bindings = aggregates_.receiver_bindings( object_type, method, callees_.through_of( id ) );
 
-    // An operator's own type parameters were refused at its declaration; nothing binds them.
+    // An operator's own type parameters come from its operand; one it leaves open is an error.
+    Bindings deduced;
+    if( operand.is_valid() && ast_.params( method ).size() == 2 )
+    {
+        table_.deduce( types_.type_of( ast_.params( method )[1] ), operand, deduced );
+    }
     for( const Node_id own : ast_.type_parameters( ast_.own_type_param_list( method ) ) )
     {
-        bindings.insert_or_assign( types_.type_of( own ).v, table_.builtin( Type_kind::Error ) );
+        const auto found = deduced.find( types_.type_of( own ).v );
+        bindings.insert_or_assign(
+            types_.type_of( own ).v, found != deduced.end() ? found->second : table_.builtin( Type_kind::Error )
+        );
     }
 
     return bindings;
+}
+
+// An operator's own type arguments, in declaration order, as `bindings` holds them.
+std::vector<Type_id> Expressions::own_operator_arguments( Node_id method, const Bindings& bindings ) const
+{
+    std::vector<Type_id> own;
+    for( const Node_id parameter : ast_.type_parameters( ast_.own_type_param_list( method ) ) )
+    {
+        own.push_back( bindings.at( types_.type_of( parameter ).v ) );
+    }
+    return own;
 }
 
 // `a op b` on an aggregate, an interface, a parameter whose bound requires `op`, or an enum whose own
@@ -2844,17 +2881,10 @@ Node_id Expressions::choose_operator(
 
     for( Node_id c = method; c.is_valid(); c = overloads_.next_overload( c ) )
     {
-        if( ast_.params( c ).size() == 2 && !ast_.is_static_method( c ) && ast_.is_visible_from( c, current_type() ) &&
-            !ast_.own_type_param_list( c ).is_valid() )
+        if( ast_.params( c ).size() == 2 && !ast_.is_static_method( c ) && ast_.is_visible_from( c, current_type() ) )
         {
             candidates.push_back( c );
         }
-    }
-
-    // A refused generic operator leads the chain: answer for the first of the others.
-    if( ast_.own_type_param_list( method ).is_valid() && !candidates.empty() )
-    {
-        method = candidates.front();
     }
 
     reflected = reflected && any_reflected( ast_.name( method ) );
@@ -2872,9 +2902,10 @@ Node_id Expressions::choose_operator(
     const std::array<Argument_shape, 2> shapes = operand_shapes( object_type, argument, argument_typed );
 
     std::vector<Bindings> bindings;
+    const Type_id         operand = shapes[1].kind == Argument_kind::Typed ? shapes[1].type : Type_id {};
     for( const Node_id c : candidates )
     {
-        bindings.push_back( operator_bindings( id, object_type, c ) );
+        bindings.push_back( operator_bindings( id, object_type, c, operand ) );
     }
 
     // The right operand's statics compete with the left's methods.
@@ -2938,8 +2969,16 @@ Type_id Expressions::call_chosen_operator(
     Node_id id, Type_id object_type, Node_id method, Node_id argument, bool argument_typed, bool comparison
 )
 {
-    const Bindings                 bindings = operator_bindings( id, object_type, method );
-    const std::span<const Node_id> params   = ast_.params( method );
+    // Own type parameters are read from the operand, so it is typed first.
+    if( ast_.own_type_param_list( method ).is_valid() && !argument_typed )
+    {
+        infer( argument );
+        argument_typed = true;
+    }
+
+    const Bindings bindings =
+        operator_bindings( id, object_type, method, argument_typed ? types_.type_of( argument ) : Type_id {} );
+    const std::span<const Node_id> params = ast_.params( method );
 
     const Type_id parameter = table_.substitute( types_.type_of( params[1] ), bindings );
 
@@ -2949,7 +2988,9 @@ Type_id Expressions::call_chosen_operator(
     }
 
     callees_.record( id, method );
-    overloads_.record_method_instantiation( home_function(), id, method, object_type );
+    overloads_.record_method_instantiation(
+        home_function(), id, method, object_type, own_operator_arguments( method, bindings )
+    );
 
     // `<` tests the variant `<=>` answers, so a comparison's result is not the method's.
     if( comparison )
@@ -3032,12 +3073,20 @@ bool Expressions::check_compound_operator( Node_id id, Node_id value, Type_id ta
         return true;
     }
 
-    const Bindings bindings = operator_bindings( id, target_type, method );
+    if( ast_.own_type_param_list( method ).is_valid() && !value_typed )
+    {
+        infer( value );
+        value_typed = true;
+    }
+
+    const Bindings bindings = operator_bindings( id, target_type, method, value_typed ? types_.type_of( value ) : Type_id {} );
     const Type_id  param    = table_.substitute( types_.type_of( ast_.params( method )[1] ), bindings );
 
     check_operand( value, param, value_typed );
     callees_.record( id, method );
-    overloads_.record_method_instantiation( home_function(), id, method, target_type );
+    overloads_.record_method_instantiation(
+        home_function(), id, method, target_type, own_operator_arguments( method, bindings )
+    );
 
     const Type_id returned = table_.substitute( types_.type_of( method ), bindings );
 

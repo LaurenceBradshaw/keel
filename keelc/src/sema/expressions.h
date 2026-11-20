@@ -226,10 +226,11 @@ private:
     // These two infer their operands and hand the types to `Operators`, which holds the rules.
     // Address-of and dereference stay in infer_unary: neither is in the rule table, and the first
     // is a question about places rather than types.
-    Type_id  infer_binary( Node_id id );
-    Type_id  infer_unary( Node_id id );
-    Bindings operator_bindings( Node_id id, Type_id object_type, Node_id method ) const;
-    Type_id  infer_operator_call( Node_id id, Node_id object, Node_id argument, Symbol_id name, bool argument_typed = false );
+    Type_id              infer_binary( Node_id id );
+    Type_id              infer_unary( Node_id id );
+    Bindings             operator_bindings( Node_id id, Type_id object_type, Node_id method, Type_id operand = {} ) const;
+    std::vector<Type_id> own_operator_arguments( Node_id method, const Bindings& bindings ) const;
+    Type_id infer_operator_call( Node_id id, Node_id object, Node_id argument, Symbol_id name, bool argument_typed = false );
     std::array<Argument_shape, 2> operand_shapes( Type_id left, Node_id argument, bool& argument_typed );
     Node_id                       choose_operator(
                               Node_id id,

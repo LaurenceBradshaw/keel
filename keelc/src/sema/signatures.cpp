@@ -1482,8 +1482,20 @@ void Signatures::check_operators()
 
             seen = member;
 
-            // An operator call writes no type arguments, and its operands are its only arguments.
-            if( ast_.own_type_param_list( member ).is_valid() )
+            // An operator call writes no type arguments, so its own are deduced from its one operand.
+            const Node_id              own   = ast_.own_type_param_list( member );
+            const std::vector<Node_id> owned = own.is_valid() ? ast_.type_parameters( own ) : std::vector<Node_id> {};
+            const bool operand = own.is_valid() && Interner::overloads_by_operand( op ) && !ast_.is_static_method( member ) &&
+                                 ast_.params( member ).size() == 2;
+            Bindings named;
+            if( operand )
+            {
+                const Type_id given = types_.type_of( ast_.params( member )[1] );
+                table_.deduce( given, given, named );
+            }
+            const auto undeduced =
+                std::ranges::find_if( owned, [&]( Node_id each ) { return !named.contains( types_.type_of( each ).v ); } );
+            if( own.is_valid() && ( ast_.kind( decl ) == Node_kind::Interface_decl || !operand || undeduced != owned.end() ) )
             {
                 // An interface's method was refused for the same list already.
                 if( ast_.kind( decl ) == Node_kind::Interface_decl )
@@ -1491,10 +1503,20 @@ void Signatures::check_operators()
                     continue;
                 }
 
+                if( operand )
+                {
+                    reporter_.error_at(
+                        ast_.name_span( *undeduced ),
+                        fmt::format( "`{}` is not in the operand's type", interner_.text( ast_.name( *undeduced ) ) ),
+                        "an operator's own type parameters are deduced from its operand"
+                    );
+                    continue;
+                }
+
                 reporter_.error_at(
-                    ast_.span( ast_.own_type_param_list( member ) ),
+                    ast_.span( own ),
                     "an operator cannot have type parameters of its own",
-                    "it is called without any, so nothing could say what they are"
+                    "only a method taking one operand has them, deduced from that operand"
                 );
                 continue;
             }

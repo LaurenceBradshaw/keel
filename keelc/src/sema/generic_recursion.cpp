@@ -2,9 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "sema/generic_recursion.h"
+
 #include <fmt/format.h>
 #include <algorithm>
 #include <optional>
+#include <unordered_set>
 
 namespace keel::sema
 {
@@ -216,6 +218,14 @@ bool Generic_recursion::check()
         leaving_[generic_calls_[i].from.v].push_back( i );
     }
 
+    // A growing cycle needs a growing edge inside one strongly connected component; without one
+    // the path walk below, which can take every path, has nothing to find.
+    if( !any_growing_cycle() )
+    {
+        generic_calls_.resize( exported );
+        return expanding_.empty();
+    }
+
     std::vector<Step> path;
 
     for( const Generic_call& edge : generic_calls_ )
@@ -233,6 +243,99 @@ bool Generic_recursion::check()
 
     generic_calls_.resize( exported );
     return expanding_.empty();
+}
+
+// Tarjan's components over leaving_, then whether an edge that grows joins two generics of one.
+bool Generic_recursion::any_growing_cycle() const
+{
+    std::unordered_map<u32, u32> index;
+    std::unordered_map<u32, u32> low;
+    std::unordered_map<u32, u32> component;
+    std::vector<u32>             stack;
+    std::unordered_set<u32>      on_stack;
+    u32                          next       = 0;
+    u32                          components = 0;
+
+    // Iterative, as a generic graph can be deep: each frame is a node and how far its edges are walked.
+    struct Frame
+    {
+        u32         node;
+        std::size_t edge;
+    };
+    const auto edges_of = [&]( u32 node ) -> const std::vector<std::size_t>*
+    {
+        const auto found = leaving_.find( node );
+        return found == leaving_.end() ? nullptr : &found->second;
+    };
+
+    for( const Generic_call& start : generic_calls_ )
+    {
+        if( index.contains( start.from.v ) )
+        {
+            continue;
+        }
+        std::vector<Frame> frames { { start.from.v, 0 } };
+        index[start.from.v] = low[start.from.v] = next++;
+        stack.push_back( start.from.v );
+        on_stack.insert( start.from.v );
+
+        while( !frames.empty() )
+        {
+            Frame&                          frame = frames.back();
+            const std::vector<std::size_t>* out   = edges_of( frame.node );
+            if( out && frame.edge < out->size() )
+            {
+                const u32 to = generic_calls_[( *out )[frame.edge++]].to.v;
+                if( !index.contains( to ) )
+                {
+                    index[to] = low[to] = next++;
+                    stack.push_back( to );
+                    on_stack.insert( to );
+                    frames.push_back( { to, 0 } );
+                }
+                else if( on_stack.contains( to ) )
+                {
+                    low[frame.node] = std::min( low[frame.node], index[to] );
+                }
+                continue;
+            }
+
+            const u32 node = frame.node;
+            frames.pop_back();
+            if( !frames.empty() )
+            {
+                low[frames.back().node] = std::min( low[frames.back().node], low[node] );
+            }
+            if( low[node] == index[node] )
+            {
+                u32 member = 0;
+                do
+                {
+                    member = stack.back();
+                    stack.pop_back();
+                    on_stack.erase( member );
+                    component[member] = components;
+                } while( member != node );
+                ++components;
+            }
+        }
+    }
+
+    for( const Generic_call& edge : generic_calls_ )
+    {
+        const auto from = component.find( edge.from.v );
+        const auto to   = component.find( edge.to.v );
+        if( from == component.end() || to == component.end() || from->second != to->second )
+        {
+            continue;
+        }
+        if( lengthens_a_pack( edge ) ||
+            std::ranges::any_of( edge.arguments, [&]( Type_id argument ) { return wraps_a_parameter( argument ); } ) )
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 // Depth-first from one generic, each step carrying the growing edge that entered it. Only growth
@@ -408,7 +511,42 @@ bool Generic_recursion::wraps_a_parameter( Type_id argument ) const
         return false;
     }
 
-    return table_.mentions_parameter( argument );
+    const std::optional<int> added = keeps_rank( argument );
+    return table_.mentions_parameter( argument ) && !( added && *added <= 0 );
+}
+
+// How many sizes a shape over packs adds to its operand's, where it can make only finitely many
+// packs: no arithmetic on a size, and so no new values. A product is one size, and finite too.
+std::optional<int> Generic_recursion::keeps_rank( Type_id argument ) const
+{
+    if( table_.is_pack_parameter( argument ) )
+    {
+        return 0;
+    }
+    const Type& described = table_.get( argument );
+    const bool  product   = described.kind == Type_kind::Size && Size_op( described.width ) == Size_op::Product;
+    if( !product && !table_.is_shape( argument ) )
+    {
+        return std::nullopt;
+    }
+    const std::optional<int> inner = keeps_rank( described.arguments.back() );
+    if( !inner )
+    {
+        return std::nullopt;
+    }
+    switch( Size_op( described.width ) )
+    {
+    case Size_op::Product:
+        return 0;
+    case Size_op::Reversed:
+        return inner;
+    case Size_op::Dropped:
+        return *inner - 1;
+    case Size_op::Inserted:
+        return *inner + 1;
+    default:
+        return std::nullopt; // broadcast pairs two packs
+    }
 }
 
 // `f<S..., 1>`: a pack spread among more arguments than the callee has parameters, so the

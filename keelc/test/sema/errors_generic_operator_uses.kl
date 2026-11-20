@@ -1,5 +1,6 @@
-// An operator with type parameters of its own is refused once, where it is declared. Using it
-// reports nothing more, and a sibling without its own parameters answers the operator.
+// An operator's own type parameters are refused once, where it is declared, unless its one
+// operand's type deduces them. Using a refused one reports nothing more, and a sibling without its
+// own parameters answers the operator.
 struct v<T> where T : numeric
 {
     T x;

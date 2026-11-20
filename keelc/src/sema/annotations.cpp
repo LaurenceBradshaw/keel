@@ -1311,6 +1311,10 @@ Type_id Annotations::shape_call( Node_id call )
         {
             operands.push_back( types_.type_of( named ) );
         }
+        else if( ast_.kind( at ) == Node_kind::Dyn_size ) // an axis known at run time: every size `dyn`
+        {
+            operands.push_back( table_.dyn() );
+        }
         else
         {
             const Folded folded = constant_folder_.fold_integer( at );
@@ -1319,7 +1323,7 @@ Type_id Annotations::shape_call( Node_id call )
                 reporter_.error_at(
                     ast_.span( at ),
                     fmt::format( "`{}`'s axis is a size", found->name ),
-                    "write a literal, a `const` or a size parameter"
+                    "write a literal, a `const`, a size parameter or `dyn`"
                 );
                 return error;
             }

@@ -1,0 +1,1927 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// Numbers in a shape whose sizes are each a constant or known at run time (D90).
+
+import kl::_core::bits as kernel;
+import kl::_core::compare as kernel;
+import kl::_core::elementwise as kernel;
+import kl::_core::exponential as kernel;
+import kl::_core::linear as kernel;
+import kl::_core::reduce as kernel;
+import algorithm;
+import iterable;
+import list;
+import mask;
+import math;
+import optional;
+import pair;
+
+/// Numbers in the shape `S`, held row-major: the last index moves fastest.
+///
+/// Each size is a constant, `array<f64, 4, 4>`, or known only when the program runs,
+/// `array<f64, dyn, 3>`. A small array of constant sizes is held inline, any other on the heap;
+/// the same code works with either. `kl::zeros( rows, 3 )` makes one from sizes, and a call checks
+/// at run time what the types cannot.
+///
+/// The operators work element by element, with a scalar on either side. Two arrays broadcast:
+/// their shapes line up from the right, and a size of 1 or a missing one stretches to the other's.
+/// A compound assignment keeps the left side's shape. An array owns its elements, so `copy()` is
+/// the way to a second one. `for( T x : a )` walks the elements in row-major order.
+class array<T, u64... S(dyn)> implements iterable<T> where T : numeric
+{
+    buffer<T, (product( S ))> e_;
+
+    /// Every element `fill`, in the type's sizes: `array<f64, 2, 3>( 0.0 )`. A `dyn` size comes
+    /// from the caller, so this is how a generic body makes one; elsewhere `kl::filled( x, ... )`.
+    public array( T fill )
+    {
+        e_ = buffer<T, (product( S ))>( count(), fill );
+    }
+
+    /// Every element 0.
+    public static array<T, S...> zeros()
+    {
+        return array<T, S...>( 0 );
+    }
+
+    /// Every element 1.
+    public static array<T, S...> ones()
+    {
+        return array<T, S...>( 1 );
+    }
+
+    /// Every element `x`.
+    public static array<T, S...> filled( T x )
+    {
+        return array<T, S...>( x );
+    }
+
+    /// `elements` row after row. Panics unless there are as many as the shape holds.
+    public static array<T, S...> of( const ref T[] elements )
+    {
+        array<T, S...> r = array<T, S...>( 0 );
+        r.take( elements );
+        return r;
+    }
+
+    /// A second array with the same shape and elements.
+    public array<T, S...> copy() const
+    {
+        array<T, S...> r = array<T, S...>( 0 );
+        r.take( as_run() );
+        return r;
+    }
+
+    /// --- Shape and elements ---
+
+    /// The number of elements, the product of the sizes.
+    public u64 size() const
+    {
+        return count();
+    }
+
+    /// The number of sizes.
+    public u64 rank() const
+    {
+        return S.size;
+    }
+
+    /// The size of `axis`. Panics when there is no such axis.
+    public u64 extent( u64 axis ) const
+    {
+        return S[axis];
+    }
+
+    /// The first size: a matrix's row count.
+    public u64 rows() const
+    {
+        return S[0];
+    }
+
+    /// The second size: a matrix's column count. Panics below rank 2.
+    public u64 cols() const
+    {
+        return S[1];
+    }
+
+    /// The element at `at`, one index per size. Panics on another count or an index outside its
+    /// size.
+    public ref T operator[]( u64... at ) const
+    {
+        if( at.size != S.size )
+        {
+            panic( "the index count differs from the rank" );
+        }
+
+        u64 flat = 0;
+        for( u64 k : 0..S.size )
+        {
+            if( at[k] >= S[k] )
+            {
+                panic( "index out of range" );
+            }
+            flat = flat * S[k] + at[k];
+        }
+        return e_[flat];
+    }
+
+    /// The elements row after row, as a run writable where the array is.
+    public ref T[] as_run() const
+    {
+        return e_.as_run();
+    }
+
+    /// Each element in row-major order.
+    public void operator:( const ref T item ) const
+    {
+        for( u64 i : 0..count() )
+        {
+            yield( e_[i] );
+        }
+    }
+
+    /// Each element in row-major order, writable in place.
+    public void operator:( ref T item )
+    {
+        for( u64 i : 0..count() )
+        {
+            yield( ref e_[i] );
+        }
+    }
+
+    /// The elements under the leading indices `at`, as a run writable where the array is:
+    /// `a.block( i )` of a matrix is its row `i`. Panics on more indices than sizes, or an index
+    /// outside its size.
+    public ref T[] block( u64... at ) const
+    {
+        if( at.size > S.size )
+        {
+            panic( "the index count exceeds the rank" );
+        }
+
+        u64 flat = 0;
+        for( u64 k : 0..at.size )
+        {
+            if( at[k] >= S[k] )
+            {
+                panic( "index out of range" );
+            }
+            flat = flat * S[k] + at[k];
+        }
+        u64 n = span( at.size, S.size );
+        return as_run()[flat * n..flat * n + n];
+    }
+
+    /// --- Changing the shape ---
+
+    /// These sizes, checked: `a.as_shape<4, 2>()`. Panics unless they are this array's.
+    public array<T, U...> as_shape<u64... U>() const
+    {
+        array<T, U...> r = array<T, U...>( 0 );
+        if( U.size != S.size )
+        {
+            panic( "the ranks differ" );
+        }
+        for( u64 k : 0..S.size )
+        {
+            if( U[k] != S[k] )
+            {
+                panic( "the shapes differ" );
+            }
+        }
+        r.take( as_run() );
+        return r;
+    }
+
+    /// This array with every size `dyn`.
+    public array<T, dropped<dyn>( inserted<0>( S ) )...> as_dyn() const
+    {
+        array<T, dropped<dyn>( inserted<0>( S ) )...> r = kl::zeros<T, dropped<dyn>( inserted<0>( S ) )...>( shape().as_run() );
+        r.take( as_run() );
+        return r;
+    }
+
+    /// The same elements in the sizes `n`, which must hold as many: `a.reshaped( 3, dyn_rows )`.
+    public array<T, U...> reshaped<u64... U>( U... n ) const
+    {
+        array<T, U...> r = kl::zeros<T, U...>( n );
+        r.take( as_run() );
+        return r;
+    }
+
+    /// The elements as rank 1.
+    public array<T, (product( S ))> flattened() const
+    {
+        array<T, (product( S ))> r = array<T, (product( S ))>( 0 );
+        r.take( as_run() );
+        return r;
+    }
+
+    /// A size of 1 inserted at axis `A`: `v.expanded<0>()` is a row.
+    public array<T, inserted<A>( S )...> expanded<u64 A>() const
+    {
+        array<T, inserted<A>( S )...> r = array<T, inserted<A>( S )...>( 0 );
+        r.take( as_run() );
+        return r;
+    }
+
+    /// The axes reversed: a matrix's rows as its columns.
+    public array<T, reversed( S )...> transposed() const
+    {
+        array<T, reversed( S )...> r = array<T, reversed( S )...>( 0 );
+        if( S.size == 2 )
+        {
+            kernel::transpose( ref r.as_run(), as_run(), S[0], S[1] );
+            return r;
+        }
+
+        list<u64> from = shape();
+        for( u64 i : 0..count() )
+        {
+            // Axis k of this array is axis `S.size - 1 - k` of the result.
+            u64 rest = i;
+            u64 at   = 0;
+            for( u64 k = S.size; k > 0; k -= 1 )
+            {
+                at += rest % from[k - 1] * span( 0, k - 1 );
+                rest /= from[k - 1];
+            }
+            r.as_run()[at] = as_run()[i];
+        }
+        return r;
+    }
+
+    /// --- Slices ---
+
+    /// A copy of `region`, one range per size: `a.sliced( 1..3, 0..a.cols() )`. Panics on another
+    /// count, a backwards range, or one past its size.
+    public array<T, dropped<dyn>( inserted<0>( S ) )...> sliced( range... region ) const
+    {
+        list<u64>                                     s = lengths( region );
+        array<T, dropped<dyn>( inserted<0>( S ) )...> r = kl::zeros<T, dropped<dyn>( inserted<0>( S ) )...>( s.as_run() );
+        if( r.size() != 0 )
+        {
+            kernel::gather( ref r.as_run(), as_run()[start( region )..count()], s.as_run(), strides().as_run() );
+        }
+        return r;
+    }
+
+    /// Writes `src` into `region`, whose lengths must be `src`'s sizes. Panics as `sliced` does, or
+    /// when the shapes differ.
+    public void assign<u64... U>( const ref array<T, U...> src, range... region )
+    {
+        list<u64> s = lengths( region );
+        list<u64> u = src.shape();
+        if( !kernel::equal( s.as_run(), u.as_run() ) )
+        {
+            panic( "the shapes differ" );
+        }
+        if( src.size() != 0 )
+        {
+            kernel::scatter( ref as_run()[start( region )..count()], src.as_run(), s.as_run(), strides().as_run() );
+        }
+    }
+
+    /// Sets every element of `region` to `x`. Panics as `sliced` does.
+    public void fill( T x, range... region )
+    {
+        list<u64> s = lengths( region );
+        if( kernel::prod( s.as_run() ) != 0 )
+        {
+            kernel::fill_strided( ref as_run()[start( region )..count()], x, s.as_run(), strides().as_run() );
+        }
+    }
+
+    /// The `W` block whose first element is at `at`, one index per size:
+    /// `m.window<2, 2>( 1, 1 )`. Panics when it passes the end of a size.
+    public array<T, W...> window<u64... W>( u64... at ) const
+    {
+        array<T, W...> r = array<T, W...>( 0 );
+        list<u64>      s = r.shape();
+        if( r.size() != 0 )
+        {
+            kernel::gather( ref r.as_run(), as_run()[offset_of( at, s.as_run() )..count()], s.as_run(), strides().as_run() );
+        }
+        return r;
+    }
+
+    /// Writes `w` as the block whose first element is at `at`. Panics as `window` does.
+    public void set_window<u64... W>( const ref array<T, W...> w, u64... at )
+    {
+        list<u64> s = w.shape();
+        if( w.size() != 0 )
+        {
+            kernel::scatter( ref as_run()[offset_of( at, s.as_run() )..count()], w.as_run(), s.as_run(), strides().as_run() );
+        }
+    }
+
+    /// --- Arithmetic ---
+
+    /// The element-wise sum with `o`, the two broadcast.
+    public array<T, broadcast( S, U )...> operator+<u64... U>( const ref array<T, U...> o ) const
+    {
+        return zipped( o, fn[]( T x, T y ) { return x + y; } );
+    }
+
+    /// The sum of each element and `s`.
+    public array<T, S...> operator+( T s ) const
+    {
+        return map( fn[ s ]( T x ) { return x + s; } );
+    }
+
+    /// The sum of `s` and each element of `a`.
+    public static array<T, S...> operator+( T s, const ref array<T, S...> a )
+    {
+        return a.map( fn[ s ]( T x ) { return s + x; } );
+    }
+
+    /// Each element made its sum with `o`'s, `o` broadcast to this shape.
+    public void operator+=<u64... U>( const ref array<T, U...> o )
+    {
+        combine( o, fn[]( T x, T y ) { return x + y; } );
+    }
+
+    /// Each element made its sum with `s`.
+    public void operator+=( T s )
+    {
+        kernel::map_into( ref as_run(), fn[ s ]( T x ) { return x + s; } );
+    }
+
+    /// The element-wise difference with `o`, the two broadcast.
+    public array<T, broadcast( S, U )...> operator-<u64... U>( const ref array<T, U...> o ) const
+    {
+        return zipped( o, fn[]( T x, T y ) { return x - y; } );
+    }
+
+    /// The difference of each element and `s`.
+    public array<T, S...> operator-( T s ) const
+    {
+        return map( fn[ s ]( T x ) { return x - s; } );
+    }
+
+    /// The difference of `s` and each element of `a`.
+    public static array<T, S...> operator-( T s, const ref array<T, S...> a )
+    {
+        return a.map( fn[ s ]( T x ) { return s - x; } );
+    }
+
+    /// Each element made its difference with `o`'s, `o` broadcast to this shape.
+    public void operator-=<u64... U>( const ref array<T, U...> o )
+    {
+        combine( o, fn[]( T x, T y ) { return x - y; } );
+    }
+
+    /// Each element made its difference with `s`.
+    public void operator-=( T s )
+    {
+        kernel::map_into( ref as_run(), fn[ s ]( T x ) { return x - s; } );
+    }
+
+    /// The element-wise product with `o`, the two broadcast.
+    public array<T, broadcast( S, U )...> operator*<u64... U>( const ref array<T, U...> o ) const
+    {
+        return zipped( o, fn[]( T x, T y ) { return x * y; } );
+    }
+
+    /// The product of each element and `s`.
+    public array<T, S...> operator*( T s ) const
+    {
+        return map( fn[ s ]( T x ) { return x * s; } );
+    }
+
+    /// The product of `s` and each element of `a`.
+    public static array<T, S...> operator*( T s, const ref array<T, S...> a )
+    {
+        return a.map( fn[ s ]( T x ) { return s * x; } );
+    }
+
+    /// Each element made its product with `o`'s, `o` broadcast to this shape.
+    public void operator*=<u64... U>( const ref array<T, U...> o )
+    {
+        combine( o, fn[]( T x, T y ) { return x * y; } );
+    }
+
+    /// Each element made its product with `s`.
+    public void operator*=( T s )
+    {
+        kernel::map_into( ref as_run(), fn[ s ]( T x ) { return x * s; } );
+    }
+
+    /// The element-wise quotient with `o`, the two broadcast.
+    public array<T, broadcast( S, U )...> operator/<u64... U>( const ref array<T, U...> o ) const
+    {
+        return zipped( o, fn[]( T x, T y ) { return x / y; } );
+    }
+
+    /// The quotient of each element and `s`.
+    public array<T, S...> operator/( T s ) const
+    {
+        return map( fn[ s ]( T x ) { return x / s; } );
+    }
+
+    /// The quotient of `s` and each element of `a`.
+    public static array<T, S...> operator/( T s, const ref array<T, S...> a )
+    {
+        return a.map( fn[ s ]( T x ) { return s / x; } );
+    }
+
+    /// Each element made its quotient with `o`'s, `o` broadcast to this shape.
+    public void operator/=<u64... U>( const ref array<T, U...> o )
+    {
+        combine( o, fn[]( T x, T y ) { return x / y; } );
+    }
+
+    /// Each element made its quotient with `s`.
+    public void operator/=( T s )
+    {
+        kernel::map_into( ref as_run(), fn[ s ]( T x ) { return x / s; } );
+    }
+
+    /// Each element negated.
+    public array<T, S...> operator-() const where T : floating
+    {
+        return map( fn[]( T x ) { return -x; } );
+    }
+
+    /// --- Integer operators ---
+
+    /// The element-wise remainder with `o`, the two broadcast.
+    public array<T, broadcast( S, U )...> operator%<u64... U>( const ref array<T, U...> o ) const where T : integral
+    {
+        return zipped( o, fn[]( T x, T y ) { return x % y; } );
+    }
+
+    /// The remainder of each element and `s`.
+    public array<T, S...> operator%( T s ) const where T : integral
+    {
+        return map( fn[ s ]( T x ) { return x % s; } );
+    }
+
+    /// The remainder of `s` and each element of `a`.
+    public static array<T, S...> operator%( T s, const ref array<T, S...> a ) where T : integral
+    {
+        return a.map( fn[ s ]( T x ) { return s % x; } );
+    }
+
+    /// Each element made its remainder with `o`'s, `o` broadcast to this shape.
+    public void operator%=<u64... U>( const ref array<T, U...> o ) where T : integral
+    {
+        combine( o, fn[]( T x, T y ) { return x % y; } );
+    }
+
+    /// Each element made its remainder with `s`.
+    public void operator%=( T s ) where T : integral
+    {
+        kernel::map_into( ref as_run(), fn[ s ]( T x ) { return x % s; } );
+    }
+
+    /// The element-wise bitwise and with `o`, the two broadcast.
+    public array<T, broadcast( S, U )...> operator&<u64... U>( const ref array<T, U...> o ) const where T : integral
+    {
+        return zipped( o, fn[]( T x, T y ) { return x & y; } );
+    }
+
+    /// The bitwise and of each element and `s`.
+    public array<T, S...> operator&( T s ) const where T : integral
+    {
+        return map( fn[ s ]( T x ) { return x & s; } );
+    }
+
+    /// The bitwise and of `s` and each element of `a`.
+    public static array<T, S...> operator&( T s, const ref array<T, S...> a ) where T : integral
+    {
+        return a.map( fn[ s ]( T x ) { return s & x; } );
+    }
+
+    /// Each element made its bitwise and with `o`'s, `o` broadcast to this shape.
+    public void operator&=<u64... U>( const ref array<T, U...> o ) where T : integral
+    {
+        combine( o, fn[]( T x, T y ) { return x & y; } );
+    }
+
+    /// Each element made its bitwise and with `s`.
+    public void operator&=( T s ) where T : integral
+    {
+        kernel::map_into( ref as_run(), fn[ s ]( T x ) { return x & s; } );
+    }
+
+    /// The element-wise bitwise or with `o`, the two broadcast.
+    public array<T, broadcast( S, U )...> operator|<u64... U>( const ref array<T, U...> o ) const where T : integral
+    {
+        return zipped( o, fn[]( T x, T y ) { return x | y; } );
+    }
+
+    /// The bitwise or of each element and `s`.
+    public array<T, S...> operator|( T s ) const where T : integral
+    {
+        return map( fn[ s ]( T x ) { return x | s; } );
+    }
+
+    /// The bitwise or of `s` and each element of `a`.
+    public static array<T, S...> operator|( T s, const ref array<T, S...> a ) where T : integral
+    {
+        return a.map( fn[ s ]( T x ) { return s | x; } );
+    }
+
+    /// Each element made its bitwise or with `o`'s, `o` broadcast to this shape.
+    public void operator|=<u64... U>( const ref array<T, U...> o ) where T : integral
+    {
+        combine( o, fn[]( T x, T y ) { return x | y; } );
+    }
+
+    /// Each element made its bitwise or with `s`.
+    public void operator|=( T s ) where T : integral
+    {
+        kernel::map_into( ref as_run(), fn[ s ]( T x ) { return x | s; } );
+    }
+
+    /// The element-wise bitwise exclusive or with `o`, the two broadcast.
+    public array<T, broadcast( S, U )...> operator^<u64... U>( const ref array<T, U...> o ) const where T : integral
+    {
+        return zipped( o, fn[]( T x, T y ) { return x ^ y; } );
+    }
+
+    /// The bitwise exclusive or of each element and `s`.
+    public array<T, S...> operator^( T s ) const where T : integral
+    {
+        return map( fn[ s ]( T x ) { return x ^ s; } );
+    }
+
+    /// The bitwise exclusive or of `s` and each element of `a`.
+    public static array<T, S...> operator^( T s, const ref array<T, S...> a ) where T : integral
+    {
+        return a.map( fn[ s ]( T x ) { return s ^ x; } );
+    }
+
+    /// Each element made its bitwise exclusive or with `o`'s, `o` broadcast to this shape.
+    public void operator^=<u64... U>( const ref array<T, U...> o ) where T : integral
+    {
+        combine( o, fn[]( T x, T y ) { return x ^ y; } );
+    }
+
+    /// Each element made its bitwise exclusive or with `s`.
+    public void operator^=( T s ) where T : integral
+    {
+        kernel::map_into( ref as_run(), fn[ s ]( T x ) { return x ^ s; } );
+    }
+
+    /// Each element's bits flipped.
+    public array<T, S...> operator~() const where T : integral
+    {
+        return map( fn[]( T x ) { return ~x; } );
+    }
+
+
+    /// --- Element-wise functions ---
+
+    /// Each element's magnitude.
+    public array<T, S...> abs() const
+    {
+        return map( fn[]( T x ) { return x < 0 ? 0 - x : x; } );
+    }
+
+    /// -1, 0 or 1 by each element's sign; a NaN stays NaN.
+    public array<T, S...> sign() const
+    {
+        return map( fn[]( T x ) { return x > 0 ? cast<T>( 1 ) : x < 0 ? 0 - cast<T>( 1 ) : x; } );
+    }
+
+    /// Each element held within `lo` and `hi`.
+    public array<T, S...> clip( T lo, T hi ) const
+    {
+        return map( fn[ lo, hi ]( T x ) { return x < lo ? lo : x > hi ? hi : x; } );
+    }
+
+    /// `f` of each element: `a.map( fn[]( f64 x ) { return x * x; } )`.
+    public array<U, S...> map<U, F>( F f ) const where F : fn( T ) -> U, where U : numeric
+    {
+        array<U, S...> r = array<U, S...>( 0 );
+        kernel::map( ref r.as_run(), as_run(), f );
+        return r;
+    }
+
+    /// `f` of each element and `o`'s, the two broadcast.
+    public array<T, broadcast( S, U )...> zipped<F, u64... U>( const ref array<T, U...> o, F f ) const where F : fn( T, T ) -> T
+    {
+        list<u64>                      s = broadcast_shape( o.shape() );
+        array<T, broadcast( S, U )...> r = kl::zeros<T, broadcast( S, U )...>( s.as_run() );
+        if( r.size() == count() && r.size() == o.size() )
+        {
+            kernel::zip( ref r.as_run(), as_run(), o.as_run(), f );
+            return r;
+        }
+        if( r.size() != 0 )
+        {
+            kernel::zip_strided( ref r.as_run(), as_run(), strides_to( s.as_run() ).as_run(), o.as_run(), o.strides_to( s.as_run() ).as_run(), s.as_run(), f );
+        }
+        return r;
+    }
+
+    /// --- Products ---
+
+    /// The sum of each element times the matching one of `o`: the inner product at rank 1.
+    public T dot( const ref array<T, S...> o ) const
+    {
+        return kernel::dot( as_run(), o.as_run() );
+    }
+
+    /// The sum of the diagonal of a matrix. Panics unless the rank is 2.
+    public T trace() const
+    {
+        needs_rank( 2, "trace takes an array of rank 2" );
+        T t = 0;
+        for( u64 i : 0..( S[0] < S[1] ? S[0] : S[1] ) )
+        {
+            t += as_run()[i * S[1] + i];
+        }
+        return t;
+    }
+
+    /// The square root of the sum of squares: the length at rank 1, the Frobenius norm at rank 2.
+    /// It overflows only when the norm does.
+    public T norm() const where T : floating
+    {
+        return cast<T>( kernel::norm( as_run() ) );
+    }
+
+    /// This array over its `norm()`; every element NaN when that is 0.
+    public array<T, S...> normalised() const where T : floating
+    {
+        T n = norm();
+        return map( fn[ n ]( T x ) { return x / n; } );
+    }
+
+    /// --- Comparing ---
+
+    /// Whether every element equals the matching one of `o`.
+    public bool operator==( const ref array<T, S...> o ) const
+    {
+        return kernel::equal( as_run(), o.as_run() );
+    }
+
+    /// Whether every `|a - b| <= atol + rtol * |b|`, `b` being `o`'s element. A NaN is close to
+    /// nothing, and an infinity only to itself.
+    public bool approx_equal( const ref array<T, S...> o, T rtol = 1e-5, T atol = 1e-8 ) const where T : floating
+    {
+        return kernel::approx_equal( as_run(), o.as_run(), rtol, atol );
+    }
+
+    /// Where each element is less than the matching one of `o`.
+    public array_mask<S...> less( const ref array<T, S...> o ) const
+    {
+        return compared( o, fn[]( T x, T y ) { return x < y; } );
+    }
+
+    /// Where each element is less than `s`.
+    public array_mask<S...> less( T s ) const
+    {
+        return marked( fn[ s ]( T x ) { return x < s; } );
+    }
+
+    /// Where each element is greater than the matching one of `o`.
+    public array_mask<S...> greater( const ref array<T, S...> o ) const
+    {
+        return compared( o, fn[]( T x, T y ) { return x > y; } );
+    }
+
+    /// Where each element is greater than `s`.
+    public array_mask<S...> greater( T s ) const
+    {
+        return marked( fn[ s ]( T x ) { return x > s; } );
+    }
+
+    /// Where each element is at most the matching one of `o`.
+    public array_mask<S...> less_equal( const ref array<T, S...> o ) const
+    {
+        return compared( o, fn[]( T x, T y ) { return x <= y; } );
+    }
+
+    /// Where each element is at most `s`.
+    public array_mask<S...> less_equal( T s ) const
+    {
+        return marked( fn[ s ]( T x ) { return x <= s; } );
+    }
+
+    /// Where each element is at least the matching one of `o`.
+    public array_mask<S...> greater_equal( const ref array<T, S...> o ) const
+    {
+        return compared( o, fn[]( T x, T y ) { return x >= y; } );
+    }
+
+    /// Where each element is at least `s`.
+    public array_mask<S...> greater_equal( T s ) const
+    {
+        return marked( fn[ s ]( T x ) { return x >= s; } );
+    }
+
+    /// Where each element equals the matching one of `o`.
+    public array_mask<S...> equal_each( const ref array<T, S...> o ) const
+    {
+        return compared( o, fn[]( T x, T y ) { return x == y; } );
+    }
+
+    /// Where each element equals `s`.
+    public array_mask<S...> equal_each( T s ) const
+    {
+        return marked( fn[ s ]( T x ) { return x == s; } );
+    }
+
+    /// Where each element differs from the matching one of `o`.
+    public array_mask<S...> differs( const ref array<T, S...> o ) const
+    {
+        return compared( o, fn[]( T x, T y ) { return x != y; } );
+    }
+
+    /// Where each element differs from `s`.
+    public array_mask<S...> differs( T s ) const
+    {
+        return marked( fn[ s ]( T x ) { return x != s; } );
+    }
+
+    /// The elements `m` sets, row-major, as rank 1.
+    public array<T, dyn> selected( const ref array_mask<S...> m ) const
+    {
+        array<T, dyn> r = kl::zeros<T, dyn>( m.count() );
+        u64           n = 0;
+        for( u64 i : 0..count() )
+        {
+            if( m.test( i ) )
+            {
+                r.as_run()[n] = as_run()[i];
+                n += 1;
+            }
+        }
+        return r;
+    }
+
+    /// --- Sorting and searching ---
+    ///
+    /// These read the elements flat, in row-major order. A NaN orders after every number.
+
+    /// The elements from least to greatest, in this shape.
+    public array<T, S...> sorted() const
+    {
+        list<T> e = list<T>::of( as_run() );
+        kl::sort( ref e, fn[]( x, y ) { return kernel::before( x, y ); } );
+        array<T, S...> r = array<T, S...>( 0 );
+        r.take( e.as_run() );
+        return r;
+    }
+
+    /// The flat indices that would sort the elements, equal ones in index order.
+    public array<u64, S...> argsort() const
+    {
+        list<u64> e = list<u64>::with_capacity( count() );
+        for( u64 i : 0..count() )
+        {
+            e.push( i );
+        }
+        kl::sort( ref e, fn[ this ]( i, j ) { return kernel::before( as_run()[i], as_run()[j] ) || ( !kernel::before( as_run()[j], as_run()[i] ) && i < j ); } );
+        array<u64, S...> r = array<u64, S...>( 0 );
+        kernel::zip_into( ref r.as_run(), e.as_run(), fn[]( u64 _, u64 y ) { return y; } );
+        return r;
+    }
+
+    /// One of each distinct element, from least to greatest; the NaNs count as one.
+    public array<T, dyn> unique() const
+    {
+        list<T> e = list<T>::of( as_run() );
+        kl::sort( ref e, fn[]( x, y ) { return kernel::before( x, y ); } );
+
+        list<T> u = list<T>::with_capacity( e.size() );
+        for( T x : e.as_run() )
+        {
+            T last = u.size() == 0 ? x : u[u.size() - 1];
+            if( u.size() == 0 || !( x == last || ( x != x && last != last ) ) )
+            {
+                u.push( x );
+            }
+        }
+        array<T, dyn> r = kl::zeros<T, dyn>( u.size() );
+        r.take( u.as_run() );
+        return r;
+    }
+
+    /// The flat indices of the elements that are not 0, in order; a NaN is not 0.
+    public array<u64, dyn> nonzero() const
+    {
+        list<u64> e = list<u64>();
+        for( u64 i : 0..count() )
+        {
+            if( as_run()[i] != 0 )
+            {
+                e.push( i );
+            }
+        }
+        array<u64, dyn> r = kl::zeros<u64, dyn>( e.size() );
+        r.take( e.as_run() );
+        return r;
+    }
+
+    /// --- Reducing ---
+    ///
+    /// Each reduction has three forms: over every element, `a.sum()`; along an axis named by a
+    /// constant, `a.sum<1>()`, which keeps the other sizes; and along an axis known at run time,
+    /// `a.sum( axis )`, whose sizes are all `dyn`.
+
+    /// The total of every element, added in index order; 0 when there are none.
+    public T sum() const
+    {
+        return kernel::sum( as_run() );
+    }
+
+    /// The totals along axis `A`, dropped from the shape: a 2 by 3 array's `sum<0>()` has 3.
+    public array<T, dropped<A>( S )...> sum<u64 A>() const
+    {
+        array<T, dropped<A>( S )...> r = array<T, dropped<A>( S )...>( 0 );
+        fold_into( ref r.as_run(), A, fn[]( T x, T y ) { return x + y; } );
+        return r;
+    }
+
+    /// The totals along `axis`. Panics when there is no such axis.
+    public array<T, dropped<dyn>( S )...> sum( u64 axis ) const
+    {
+        array<T, dropped<dyn>( S )...> r = without( axis, 0 );
+        fold_into( ref r.as_run(), axis, fn[]( T x, T y ) { return x + y; } );
+        return r;
+    }
+
+    /// The product of every element, in index order; 1 when there are none.
+    public T prod() const
+    {
+        return kernel::prod( as_run() );
+    }
+
+    /// The products along axis `A`.
+    public array<T, dropped<A>( S )...> prod<u64 A>() const
+    {
+        array<T, dropped<A>( S )...> r = array<T, dropped<A>( S )...>( 1 );
+        fold_into( ref r.as_run(), A, fn[]( T x, T y ) { return x * y; } );
+        return r;
+    }
+
+    /// The products along `axis`.
+    public array<T, dropped<dyn>( S )...> prod( u64 axis ) const
+    {
+        array<T, dropped<dyn>( S )...> r = without( axis, 1 );
+        fold_into( ref r.as_run(), axis, fn[]( T x, T y ) { return x * y; } );
+        return r;
+    }
+
+    /// The smallest element, as `kl::min`. Panics when there are none.
+    public T min() const
+    {
+        return kernel::fold( as_run(), fn[]( T x, T y ) { return kl::min( x, y ); } );
+    }
+
+    /// The smallest along axis `A`. Panics when the axis is empty.
+    public array<T, dropped<A>( S )...> min<u64 A>() const
+    {
+        array<T, dropped<A>( S )...> r = array<T, dropped<A>( S )...>( 0 );
+        fold_into( ref r.as_run(), A, fn[]( T x, T y ) { return kl::min( x, y ); } );
+        return r;
+    }
+
+    /// The smallest along `axis`.
+    public array<T, dropped<dyn>( S )...> min( u64 axis ) const
+    {
+        array<T, dropped<dyn>( S )...> r = without( axis, 0 );
+        fold_into( ref r.as_run(), axis, fn[]( T x, T y ) { return kl::min( x, y ); } );
+        return r;
+    }
+
+    /// The largest element, as `kl::max`. Panics when there are none.
+    public T max() const
+    {
+        return kernel::fold( as_run(), fn[]( T x, T y ) { return kl::max( x, y ); } );
+    }
+
+    /// The largest along axis `A`. Panics when the axis is empty.
+    public array<T, dropped<A>( S )...> max<u64 A>() const
+    {
+        array<T, dropped<A>( S )...> r = array<T, dropped<A>( S )...>( 0 );
+        fold_into( ref r.as_run(), A, fn[]( T x, T y ) { return kl::max( x, y ); } );
+        return r;
+    }
+
+    /// The largest along `axis`.
+    public array<T, dropped<dyn>( S )...> max( u64 axis ) const
+    {
+        array<T, dropped<dyn>( S )...> r = without( axis, 0 );
+        fold_into( ref r.as_run(), axis, fn[]( T x, T y ) { return kl::max( x, y ); } );
+        return r;
+    }
+
+    /// The flat index of the first smallest element, or of the first NaN. Panics when there are
+    /// none.
+    public u64 argmin() const
+    {
+        return kernel::arg_best( as_run(), fn[]( T x, T m ) { return m == m && ( x < m || x != x ); } );
+    }
+
+    /// The index along axis `A` of each first smallest, or first NaN.
+    public array<u64, dropped<A>( S )...> argmin<u64 A>() const
+    {
+        array<u64, dropped<A>( S )...> r = array<u64, dropped<A>( S )...>( 0 );
+        best_into( ref r.as_run(), A, fn[]( T x, T m ) { return m == m && ( x < m || x != x ); } );
+        return r;
+    }
+
+    /// The index along `axis` of each first smallest, or first NaN.
+    public array<u64, dropped<dyn>( S )...> argmin( u64 axis ) const
+    {
+        array<u64, dropped<dyn>( S )...> r = kl::zeros<u64, dropped<dyn>( S )...>( dropped_shape( axis ).as_run() );
+        best_into( ref r.as_run(), axis, fn[]( T x, T m ) { return m == m && ( x < m || x != x ); } );
+        return r;
+    }
+
+    /// The flat index of the first largest element, or of the first NaN. Panics when there are
+    /// none.
+    public u64 argmax() const
+    {
+        return kernel::arg_best( as_run(), fn[]( T x, T m ) { return m == m && ( x > m || x != x ); } );
+    }
+
+    /// The index along axis `A` of each first largest, or first NaN.
+    public array<u64, dropped<A>( S )...> argmax<u64 A>() const
+    {
+        array<u64, dropped<A>( S )...> r = array<u64, dropped<A>( S )...>( 0 );
+        best_into( ref r.as_run(), A, fn[]( T x, T m ) { return m == m && ( x > m || x != x ); } );
+        return r;
+    }
+
+    /// The index along `axis` of each first largest, or first NaN.
+    public array<u64, dropped<dyn>( S )...> argmax( u64 axis ) const
+    {
+        array<u64, dropped<dyn>( S )...> r = kl::zeros<u64, dropped<dyn>( S )...>( dropped_shape( axis ).as_run() );
+        best_into( ref r.as_run(), axis, fn[]( T x, T m ) { return m == m && ( x > m || x != x ); } );
+        return r;
+    }
+
+    /// The running totals of the elements, flat.
+    public array<T, (product( S ))> cumsum() const
+    {
+        array<T, (product( S ))> r = flattened();
+        kernel::scan_axis( ref r.as_run(), 1, count(), 1, fn[]( T x, T y ) { return x + y; } );
+        return r;
+    }
+
+    /// The running totals along `axis`, in the same shape.
+    public array<T, S...> cumsum( u64 axis ) const
+    {
+        return scanned( axis, fn[]( T x, T y ) { return x + y; } );
+    }
+
+    /// The running products of the elements, flat.
+    public array<T, (product( S ))> cumprod() const
+    {
+        array<T, (product( S ))> r = flattened();
+        kernel::scan_axis( ref r.as_run(), 1, count(), 1, fn[]( T x, T y ) { return x * y; } );
+        return r;
+    }
+
+    /// The running products along `axis`, in the same shape.
+    public array<T, S...> cumprod( u64 axis ) const
+    {
+        return scanned( axis, fn[]( T x, T y ) { return x * y; } );
+    }
+
+    /// The mean of the elements; a NaN when there are none.
+    public T mean() const where T : floating
+    {
+        return sum() / cast<T>( count() );
+    }
+
+    /// The means along axis `A`.
+    public array<T, dropped<A>( S )...> mean<u64 A>() const where T : floating
+    {
+        array<T, dropped<A>( S )...> r = sum<A>();
+        r /= cast<T>( S[A] );
+        return r;
+    }
+
+    /// The means along `axis`.
+    public array<T, dropped<dyn>( S )...> mean( u64 axis ) const where T : floating
+    {
+        array<T, dropped<dyn>( S )...> r = sum( axis );
+        r /= cast<T>( S[axis] );
+        return r;
+    }
+
+    /// The mean square distance of the elements from their mean; a NaN when there are none.
+    public T var() const where T : floating
+    {
+        return kernel::variance( as_run() );
+    }
+
+    /// The variances along axis `A`.
+    public array<T, dropped<A>( S )...> var<u64 A>() const where T : floating
+    {
+        array<T, dropped<A>( S )...> r = array<T, dropped<A>( S )...>( 0 );
+        kernel::variance_axis( ref r.as_run(), as_run(), span( 0, A ), S[A], span( A + 1, S.size ) );
+        return r;
+    }
+
+    /// The variances along `axis`.
+    public array<T, dropped<dyn>( S )...> var( u64 axis ) const where T : floating
+    {
+        array<T, dropped<dyn>( S )...> r = without( axis, 0 );
+        kernel::variance_axis( ref r.as_run(), as_run(), span( 0, axis ), S[axis], span( axis + 1, S.size ) );
+        return r;
+    }
+
+    /// The standard deviation, the square root of `var()`.
+    public T std() const where T : floating
+    {
+        return cast<T>( kl::sqrt( cast<f64>( var() ) ) );
+    }
+
+    /// The standard deviations along axis `A`.
+    public array<T, dropped<A>( S )...> std<u64 A>() const where T : floating
+    {
+        array<T, dropped<A>( S )...> r = var<A>();
+        kernel::map_into( ref r.as_run(), fn[]( T x ) { return cast<T>( kl::sqrt( cast<f64>( x ) ) ); } );
+        return r;
+    }
+
+    /// The standard deviations along `axis`.
+    public array<T, dropped<dyn>( S )...> std( u64 axis ) const where T : floating
+    {
+        array<T, dropped<dyn>( S )...> r = var( axis );
+        kernel::map_into( ref r.as_run(), fn[]( T x ) { return cast<T>( kl::sqrt( cast<f64>( x ) ) ); } );
+        return r;
+    }
+
+    /// --- Converting ---
+
+    /// Each element converted by `cast`, which panics on a value `U` cannot hold. A float to an
+    /// integer needs a rounding: `truncated`, `rounded`, `floored` or `ceiled`.
+    public array<U, S...> to<U>() const where T : converts_to<U>, where U : numeric
+    {
+        return map( fn[]( T x ) { return cast<U>( x ); } );
+    }
+
+    /// Each element toward zero, as a `U`. Panics on an infinity, a NaN, or a value `U` cannot hold.
+    public array<U, S...> truncated<U>() const where T : floating, where U : integral
+    {
+        return map( fn[]( T x ) { return kl::truncated<U>( cast<f64>( x ) ); } );
+    }
+
+    /// Each element to the nearest, a half away from zero, as a `U`. Panics as `truncated` does.
+    public array<U, S...> rounded<U>() const where T : floating, where U : integral
+    {
+        return map( fn[]( T x ) { return kl::rounded<U>( cast<f64>( x ) ); } );
+    }
+
+    /// Each element down, as a `U`. Panics as `truncated` does.
+    public array<U, S...> floored<U>() const where T : floating, where U : integral
+    {
+        return map( fn[]( T x ) { return kl::floored<U>( cast<f64>( x ) ); } );
+    }
+
+    /// Each element up, as a `U`. Panics as `truncated` does.
+    public array<U, S...> ceiled<U>() const where T : floating, where U : integral
+    {
+        return map( fn[]( T x ) { return kl::ceiled<U>( cast<f64>( x ) ); } );
+    }
+
+    /// The sizes, in order.
+    public list<u64> shape() const
+    {
+        list<u64> s = list<u64>::with_capacity( S.size );
+        for( u64 k : 0..S.size )
+        {
+            s.push( S[k] );
+        }
+        return s;
+    }
+
+    /// --- Internals ---
+
+    private static u64 count()
+    {
+        u64 n = 1;
+        for( u64 k : 0..S.size )
+        {
+            n *= S[k];
+        }
+        return n;
+    }
+
+    // Copies `elements` in. Panics unless there are as many as the shape holds.
+    private void take( const ref T[] elements )
+    {
+        if( elements.size != count() )
+        {
+            panic( "the shape does not fit the elements" );
+        }
+        kernel::zip_into( ref as_run(), elements, fn[]( T _, T y ) { return y; } );
+    }
+
+    private void needs_rank( u64 rank, str message ) const
+    {
+        if( S.size != rank )
+        {
+            panic( message );
+        }
+    }
+
+    // The number of elements in sizes `from` up to `to`.
+    private static u64 span( u64 from, u64 to )
+    {
+        u64 n = 1;
+        for( u64 k : from..to )
+        {
+            n *= S[k];
+        }
+        return n;
+    }
+
+    // The sizes without `axis`. Panics when there is no such axis.
+    private static list<u64> dropped_shape( u64 axis )
+    {
+        if( axis >= S.size )
+        {
+            panic( "axis out of range" );
+        }
+        list<u64> s = list<u64>::with_capacity( S.size - 1 );
+        for( u64 k : 0..S.size )
+        {
+            if( k != axis )
+            {
+                s.push( S[k] );
+            }
+        }
+        return s;
+    }
+
+    // Every element `x`, in the sizes without `axis`.
+    private static array<T, dropped<dyn>( S )...> without( u64 axis, T x )
+    {
+        array<T, dropped<dyn>( S )...> r = kl::zeros<T, dropped<dyn>( S )...>( dropped_shape( axis ).as_run() );
+        kernel::fill( ref r.as_run(), x );
+        return r;
+    }
+
+    private void fold_into<F>( ref T[] dest, u64 axis, F op ) const where F : fn( T, T ) -> T
+    {
+        _ = dropped_shape( axis );
+        if( S[axis] != 0 )
+        {
+            kernel::fold_axis( ref dest, as_run(), span( 0, axis ), S[axis], span( axis + 1, S.size ), op );
+        }
+    }
+
+    private void best_into<F>( ref u64[] dest, u64 axis, F better ) const where F : fn( T, T ) -> bool
+    {
+        _ = dropped_shape( axis );
+        kernel::arg_best_axis( ref dest, as_run(), span( 0, axis ), S[axis], span( axis + 1, S.size ), better );
+    }
+
+    private array<T, S...> scanned<F>( u64 axis, F op ) const where F : fn( T, T ) -> T
+    {
+        _ = dropped_shape( axis );
+        array<T, S...> r = copy();
+        kernel::scan_axis( ref r.as_run(), span( 0, axis ), S[axis], span( axis + 1, S.size ), op );
+        return r;
+    }
+
+    // The step between neighbours along each size.
+    private list<u64> strides() const
+    {
+        list<u64> r = list<u64>::filled( S.size, 0 );
+        u64       step = 1;
+        for( u64 k = S.size; k > 0; k -= 1 )
+        {
+            r[k - 1] = step;
+            step *= S[k - 1];
+        }
+        return r;
+    }
+
+    // The lengths of `region`. Panics on another count, a backwards range, or one past its size.
+    private list<u64> lengths( const ref range[] region ) const
+    {
+        if( region.size != S.size )
+        {
+            panic( "the range count differs from the rank" );
+        }
+
+        list<u64> s = list<u64>::with_capacity( region.size );
+        for( u64 k : 0..region.size )
+        {
+            if( region[k].from > region[k].to )
+            {
+                panic( "the range is backwards" );
+            }
+            if( region[k].to > S[k] )
+            {
+                panic( "the range is past its size" );
+            }
+            s.push( region[k].to - region[k].from );
+        }
+        return s;
+    }
+
+    // Where `region`'s first element is, counted row-major.
+    private u64 start( const ref range[] region ) const
+    {
+        u64 flat = 0;
+        for( u64 k : 0..region.size )
+        {
+            flat = flat * S[k] + region[k].from;
+        }
+        return flat;
+    }
+
+    // Where a block of sizes `s` at `at` starts. Panics on another count or one passing an end.
+    private u64 offset_of( const ref u64[] at, const ref u64[] s ) const
+    {
+        if( at.size != S.size || s.size != S.size )
+        {
+            panic( "the index count differs from the rank" );
+        }
+
+        u64 flat = 0;
+        for( u64 k : 0..S.size )
+        {
+            if( s[k] > S[k] || at[k] > S[k] - s[k] )
+            {
+                panic( "the window passes the end" );
+            }
+            flat = flat * S[k] + at[k];
+        }
+        return flat;
+    }
+
+    // This shape and `o`'s lined up from the right. Panics unless each pair is equal or has a 1.
+    private list<u64> broadcast_shape( const ref list<u64> o ) const
+    {
+        u64       n = S.size > o.size() ? S.size : o.size();
+        list<u64> s = list<u64>::with_capacity( n );
+        for( u64 k : 0..n )
+        {
+            u64 a = k + S.size < n ? 1 : S[k + S.size - n];
+            u64 b = k + o.size() < n ? 1 : o[k + o.size() - n];
+            if( a != b && a != 1 && b != 1 )
+            {
+                panic( "the shapes do not broadcast" );
+            }
+            s.push( a == 1 ? b : a );
+        }
+        return s;
+    }
+
+    // This array's strides when read in `shape`, 0 along each stretched size. Panics unless this
+    // shape stretches to `shape`.
+    private list<u64> strides_to( const ref u64[] shape ) const
+    {
+        if( S.size > shape.size )
+        {
+            panic( "the shapes do not broadcast" );
+        }
+
+        list<u64> own = strides();
+        list<u64> r   = list<u64>::with_capacity( shape.size );
+        u64       pad = shape.size - S.size;
+        for( u64 k : 0..shape.size )
+        {
+            if( k < pad || S[k - pad] == 1 )
+            {
+                r.push( 0 );
+            }
+            else if( S[k - pad] == shape[k] )
+            {
+                r.push( own[k - pad] );
+            }
+            else
+            {
+                panic( "the shapes do not broadcast" );
+            }
+        }
+        return r;
+    }
+
+    // `op` over each element and `o`'s, `o` stretched to this shape. Panics unless it stretches.
+    private void combine<F, u64... U>( const ref array<T, U...> o, F op ) where F : fn( T, T ) -> T
+    {
+        if( o.size() == count() && U.size == S.size )
+        {
+            kernel::zip_into( ref as_run(), o.as_run(), op );
+            return;
+        }
+        list<u64> s = shape();
+        kernel::zip_strided_into( ref as_run(), o.as_run(), s.as_run(), o.strides_to( s.as_run() ).as_run(), op );
+    }
+
+    private array_mask<S...> compared<F>( const ref array<T, S...> o, F p ) const where F : fn( T, T ) -> bool
+    {
+        array_mask<S...> r = array_mask<S...>();
+        for( u64 i : 0..count() )
+        {
+            r.assign( i, p( as_run()[i], o.as_run()[i] ) );
+        }
+        return r;
+    }
+
+    private array_mask<S...> marked<F>( F p ) const where F : fn( T ) -> bool
+    {
+        array_mask<S...> r = array_mask<S...>();
+        for( u64 i : 0..count() )
+        {
+            r.assign( i, p( as_run()[i] ) );
+        }
+        return r;
+    }
+};
+
+/// One bit per element of an `array` in the shape `S`, held row-major: what its comparisons
+/// answer.
+///
+/// `&`, `|`, `^` and `~` combine masks bit by bit. `kl::select( m, a, b )` picks between two
+/// arrays by one, and `a.selected( m )` keeps the elements of `a` it sets.
+class array_mask<u64... S(dyn)>
+{
+    buffer<u64, (( product( S ) + 63 ) / 64)> words_;
+
+    /// Every bit clear, in the type's sizes.
+    public array_mask()
+    {
+        words_ = buffer<u64, (( product( S ) + 63 ) / 64)>( ( bits() + 63 ) / 64, 0 );
+    }
+
+    /// A second mask with the same bits.
+    public array_mask<S...> copy() const
+    {
+        array_mask<S...> r = array_mask<S...>();
+        kernel::zip_into( ref r.words_.as_run(), words_.as_run(), fn[]( u64 _, u64 y ) { return y; } );
+        return r;
+    }
+
+    /// The number of bits.
+    public u64 size() const
+    {
+        return bits();
+    }
+
+    /// The bit at `index`, one per size. Panics on another count or an index outside its size.
+    public bool at( u64... index ) const
+    {
+        if( index.size != S.size )
+        {
+            panic( "the index count differs from the rank" );
+        }
+
+        u64 flat = 0;
+        for( u64 k : 0..S.size )
+        {
+            if( index[k] >= S[k] )
+            {
+                panic( "index out of range" );
+            }
+            flat = flat * S[k] + index[k];
+        }
+        return kernel::test( words_.as_run(), flat );
+    }
+
+    /// The bit at `i`, counted row-major. Panics when `i` is not less than `size()`.
+    public bool test( u64 i ) const
+    {
+        if( i >= bits() )
+        {
+            panic( "index out of range" );
+        }
+        return kernel::test( words_.as_run(), i );
+    }
+
+    /// Sets the bit at `i`, counted row-major, if `on`, and clears it otherwise. Panics when `i`
+    /// is not less than `size()`.
+    public void assign( u64 i, bool on )
+    {
+        if( i >= bits() )
+        {
+            panic( "index out of range" );
+        }
+        kernel::assign( ref words_.as_run(), i, on );
+    }
+
+    /// The number of bits set.
+    public u64 count() const
+    {
+        return kernel::count( words_.as_run(), bits() );
+    }
+
+    /// Whether any bit is set.
+    public bool any() const
+    {
+        return kernel::any( words_.as_run(), bits() );
+    }
+
+    /// Whether every bit is set; true when there are none.
+    public bool all() const
+    {
+        return kernel::all( words_.as_run(), bits() );
+    }
+
+    /// Whether the same bits are set.
+    public bool operator==( const ref array_mask<S...> o ) const
+    {
+        return kernel::equal( words_.as_run(), o.words_.as_run(), bits() );
+    }
+
+    /// The bits set in both.
+    public array_mask<S...> operator&( const ref array_mask<S...> o ) const
+    {
+        array_mask<S...> r = copy();
+        kernel::zip_into( ref r.words_.as_run(), o.words_.as_run(), fn[]( u64 x, u64 y ) { return x & y; } );
+        return r;
+    }
+
+    /// The bits set in either.
+    public array_mask<S...> operator|( const ref array_mask<S...> o ) const
+    {
+        array_mask<S...> r = copy();
+        kernel::zip_into( ref r.words_.as_run(), o.words_.as_run(), fn[]( u64 x, u64 y ) { return x | y; } );
+        return r;
+    }
+
+    /// The bits set in exactly one.
+    public array_mask<S...> operator^( const ref array_mask<S...> o ) const
+    {
+        array_mask<S...> r = copy();
+        kernel::zip_into( ref r.words_.as_run(), o.words_.as_run(), fn[]( u64 x, u64 y ) { return x ^ y; } );
+        return r;
+    }
+
+    /// Every bit flipped.
+    public array_mask<S...> operator~() const
+    {
+        array_mask<S...> r = copy();
+        kernel::map_into( ref r.words_.as_run(), fn[]( u64 x ) { return ~x; } );
+        return r;
+    }
+
+    private static u64 bits()
+    {
+        u64 n = 1;
+        for( u64 k : 0..S.size )
+        {
+            n *= S[k];
+        }
+        return n;
+    }
+};
+/// --- Making arrays ---
+
+/// Every element 0, in the sizes `n`: `array<f64, dyn, 3> a = kl::zeros( rows, 3 );`. A size whose
+/// value is known is a constant, any other `dyn`.
+array<T, S...> zeros<T, u64... S>( S... n ) where T : numeric
+{
+    return array<T, S...>( 0 );
+}
+
+/// Every element 1, in the sizes `n`.
+array<T, S...> ones<T, u64... S>( S... n ) where T : numeric
+{
+    return array<T, S...>( 1 );
+}
+
+/// Every element `x`, in the sizes `n`: `kl::filled( 0.5, rows, 3 )`.
+array<T, S...> filled<T, u64... S>( T x, S... n ) where T : numeric
+{
+    return array<T, S...>( x );
+}
+
+/// `elements` row after row, in the sizes `n`: `kl::shaped( e, 2, 3 )`. Panics unless there are
+/// as many as the sizes hold.
+array<T, S...> shaped<T, u64... S>( const ref T[] elements, S... n ) where T : numeric
+{
+    return array<T, S...>::of( elements );
+}
+
+/// The elements of a literal, as rank 1: `kl::of( [1.0, 2.0, 3.0] )`.
+array<T, N> of<T, u64 N>( T[N] elements ) where T : numeric
+{
+    return array<T, N>::of( elements );
+}
+
+/// The rows of a nested literal: `kl::of( [[1.0, 2.0], [3.0, 4.0]] )` is 2 by 2.
+array<T, R, C> of<T, u64 R, u64 C>( T[C][R] rows ) where T : numeric
+{
+    array<T, R, C> r = array<T, R, C>( 0 );
+    for( u64 i : 0..R )
+    {
+        copy_into( ref r.block( i ), rows[i] );
+    }
+    return r;
+}
+
+/// `from`, `from + step`, ... while short of `to`, as rank 1: `kl::arange( 0, 5 )` is `[0, 1, 2,
+/// 3, 4]`. A negative `step` counts down. Each element is `from + i * step`, so floats do not
+/// drift. Panics when `step` is 0.
+array<T, dyn> arange<T>( T from, T to, T step = 1 ) where T : numeric
+{
+    if( step == 0 )
+    {
+        panic( "the step is 0" );
+    }
+
+    list<T> e = list<T>();
+    T       x = from;
+    while( step > 0 ? x < to : x > to )
+    {
+        e.push( x );
+        x = from + cast<T>( e.size() ) * step;
+    }
+    return kl::shaped( e.as_run(), e.size() );
+}
+
+/// `n` evenly spaced from `a` to `b`, both included, as rank 1. One element is `a`.
+array<T, N> linspace<T, u64 N>( T a, T b, N n ) where T : floating
+{
+    array<T, N> r = array<T, N>( 0 );
+    for( u64 i : 0..N )
+    {
+        r[i] = i == 0 ? a : i + 1 == N ? b : a + ( b - a ) * cast<T>( i ) / cast<T>( N - 1 );
+    }
+    return r;
+}
+
+/// The `n` by `n` identity: `array<f64, 3, 3> i = kl::eye( 3, 3 );`, or `kl::eye<f64>`'s square
+/// form `kl::identity( n )` where the type is not written.
+array<T, R, C> eye<T, u64 R, u64 C>( R rows, C cols ) where T : numeric
+{
+    array<T, R, C> r = array<T, R, C>( 0 );
+    kernel::eye( ref r.as_run(), R, C );
+    return r;
+}
+
+/// The square matrix with `v` on its diagonal: `kl::diag( v )`.
+array<T, N, N> diag<T, u64 N>( const ref array<T, N> v ) where T : numeric
+{
+    array<T, N, N> r = array<T, N, N>( 0 );
+    for( u64 i : 0..N )
+    {
+        r[i, i] = v[i];
+    }
+    return r;
+}
+
+/// The diagonal of a square matrix: `kl::diagonal( m )`.
+array<T, N> diagonal<T, u64 N>( const ref array<T, N, N> m ) where T : numeric
+{
+    array<T, N> r = array<T, N>( 0 );
+    for( u64 i : 0..N )
+    {
+        r[i] = m[i, i];
+    }
+    return r;
+}
+
+/// `a` then `b`, along the first axis: `kl::concatenated( a, b )`.
+array<T, (A + B), S...> concatenated<T, u64 A, u64 B, u64... S>( const ref array<T, A, S...> a, const ref array<T, B, S...> b ) where T : numeric
+{
+    array<T, (A + B), S...> r = array<T, (A + B), S...>( 0 );
+    copy_into( ref r.as_run()[0..a.size()], a.as_run() );
+    copy_into( ref r.as_run()[a.size()..r.size()], b.as_run() );
+    return r;
+}
+
+/// `a` and `b` as the two entries of a new first axis: `kl::stacked( a, b )`.
+array<T, 2, S...> stacked<T, u64... S>( const ref array<T, S...> a, const ref array<T, S...> b ) where T : numeric
+{
+    array<T, 2, S...> r = array<T, 2, S...>( 0 );
+    copy_into( ref r.block( 0 ), a.as_run() );
+    copy_into( ref r.block( 1 ), b.as_run() );
+    return r;
+}
+
+/// --- Products ---
+
+/// The matrix product: `kl::matmul( a, b )`.
+array<T, R, N> matmul<T, u64 R, u64 K, u64 N>( const ref array<T, R, K> a, const ref array<T, K, N> b ) where T : numeric
+{
+    array<T, R, N> r = array<T, R, N>( 0 );
+    kernel::matmul( ref r.as_run(), a.as_run(), b.as_run(), R, K, N );
+    return r;
+}
+
+/// A matrix times a column.
+array<T, R> matmul<T, u64 R, u64 K>( const ref array<T, R, K> a, const ref array<T, K> v ) where T : numeric
+{
+    array<T, R> r = array<T, R>( 0 );
+    kernel::matmul( ref r.as_run(), a.as_run(), v.as_run(), R, K, 1 );
+    return r;
+}
+
+/// A row times a matrix.
+array<T, N> matmul<T, u64 K, u64 N>( const ref array<T, K> v, const ref array<T, K, N> b ) where T : numeric
+{
+    array<T, N> r = array<T, N>( 0 );
+    kernel::matmul( ref r.as_run(), v.as_run(), b.as_run(), 1, K, N );
+    return r;
+}
+
+/// Each element of `a` times each of `b`: an `N` by `M` matrix.
+array<T, N, M> outer<T, u64 N, u64 M>( const ref array<T, N> a, const ref array<T, M> b ) where T : numeric
+{
+    array<T, N, M> r = array<T, N, M>( 0 );
+    kernel::outer( ref r.as_run(), a.as_run(), b.as_run() );
+    return r;
+}
+
+/// The cross product `a` x `b`: `kl::cross( a, b )`.
+array<T, 3> cross<T>( const ref array<T, 3> a, const ref array<T, 3> b ) where T : numeric
+{
+    array<T, 3> r = array<T, 3>( 0 );
+    kernel::cross( ref r.as_run(), a.as_run(), b.as_run() );
+    return r;
+}
+
+/// --- Linear algebra ---
+
+/// The determinant of a square matrix, through LU with partial pivoting: `kl::determinant( m )`.
+/// 0 when a pivot is exactly zero.
+T determinant<T, u64 N>( const ref array<T, N, N> m ) where T : floating
+{
+    array<T, N, N> f    = m.copy();
+    array<u64, N>  perm = array<u64, N>( 0 );
+    T              sign = kernel::lu( ref f.as_run(), ref perm.as_run(), N );
+    return kernel::lu_determinant( f.as_run(), N, sign );
+}
+
+/// The inverse of a square matrix, `none` when a pivot is exactly zero: `kl::inverse( m )`. A
+/// nearly singular matrix gives large elements.
+optional<array<T, N, N>> inverse<T, u64 N>( const ref array<T, N, N> m ) where T : floating
+{
+    array<T, N, N> f    = m.copy();
+    array<u64, N>  perm = array<u64, N>( 0 );
+    if( kernel::lu( ref f.as_run(), ref perm.as_run(), N ) == 0 )
+    {
+        return optional::none;
+    }
+
+    array<T, N, N> i = array<T, N, N>( 0 );
+    kernel::identity( ref i.as_run(), N );
+    array<T, N, N> r = array<T, N, N>( 0 );
+    kernel::lu_solve( ref r.as_run(), f.as_run(), perm.as_run(), i.as_run(), N, N );
+    return optional::some( move r );
+}
+
+/// The `x` with `kl::matmul( a, x ) == b`, `none` when a pivot of `a` is exactly zero:
+/// `kl::solve( a, b )`.
+optional<array<T, N>> solve<T, u64 N>( const ref array<T, N, N> a, const ref array<T, N> b ) where T : floating
+{
+    array<T, N, N> f    = a.copy();
+    array<u64, N>  perm = array<u64, N>( 0 );
+    if( kernel::lu( ref f.as_run(), ref perm.as_run(), N ) == 0 )
+    {
+        return optional::none;
+    }
+
+    array<T, N> r = array<T, N>( 0 );
+    kernel::lu_solve( ref r.as_run(), f.as_run(), perm.as_run(), b.as_run(), N, 1 );
+    return optional::some( move r );
+}
+
+/// The thin QR factors of `a`, `first` with orthonormal columns and `second` upper triangular,
+/// their product `a`, by Householder reflections as numpy's `qr`: `kl::qr( a )`.
+pair<array<T, R, C>, array<T, C, C>> qr<T, u64 R, u64 C>( const ref array<T, R, C> a ) where T : floating, where R >= C
+{
+    array<T, R, C> f   = a.copy();
+    array<T, C>    tau = array<T, C>( 0 );
+    _                  = kernel::householder_qr( ref f.as_run(), ref tau.as_run(), R, C );
+    array<T, R, C> q   = array<T, R, C>( 0 );
+    array<T, C, C> r   = array<T, C, C>( 0 );
+    kernel::qr_q( ref q.as_run(), f.as_run(), tau.as_run(), R, C );
+    kernel::qr_r( ref r.as_run(), f.as_run(), R, C );
+    return pair<array<T, R, C>, array<T, C, C>>( move q, move r );
+}
+
+/// The `x` making `kl::matmul( a, x ) - b` shortest, through QR, `none` when a diagonal of R is
+/// exactly zero: `kl::lstsq( a, b )`. numpy's `lstsq` answers the shortest such `x` there instead.
+optional<array<T, C>> lstsq<T, u64 R, u64 C>( const ref array<T, R, C> a, const ref array<T, R> b ) where T : floating, where R >= C
+{
+    array<T, R, C> f   = a.copy();
+    array<T, C>    tau = array<T, C>( 0 );
+    if( !kernel::householder_qr( ref f.as_run(), ref tau.as_run(), R, C ) )
+    {
+        return optional::none;
+    }
+
+    array<T, R> w = b.copy();
+    array<T, C> x = array<T, C>( 0 );
+    kernel::qr_solve( ref x.as_run(), ref w.as_run(), f.as_run(), tau.as_run(), R, C, 1 );
+    return optional::some( move x );
+}
+
+/// The diagonal of the projection onto `a`'s columns, `a (a^T a)^-1 a^T`, through QR: each row's
+/// leverage when `a` has full column rank. `kl::hat_diagonal( a )`.
+array<T, R> hat_diagonal<T, u64 R, u64 C>( const ref array<T, R, C> a ) where T : floating, where R >= C
+{
+    pair<array<T, R, C>, array<T, C, C>> f = kl::qr( a );
+    array<T, R>                          h = array<T, R>( 0 );
+    kernel::row_squares( ref h.as_run(), f.first.as_run(), R, C );
+    return h;
+}
+
+/// --- Element-wise choices ---
+
+/// The smallest of each set of matching elements, as `kl::min`: `kl::minimum( a, b, c )`.
+array<T, S...> minimum<T, u64... S>( const ref array<T, S...> first, const ref array<T, S...> second ) where T : numeric
+{
+    array<T, S...> r = first.copy();
+    kernel::zip_into( ref r.as_run(), second.as_run(), fn[]( T x, T y ) { return kl::min( x, y ); } );
+    return r;
+}
+
+/// The largest of each set of matching elements, as `kl::max`.
+array<T, S...> maximum<T, u64... S>( const ref array<T, S...> first, const ref array<T, S...> second ) where T : numeric
+{
+    array<T, S...> r = first.copy();
+    kernel::zip_into( ref r.as_run(), second.as_run(), fn[]( T x, T y ) { return kl::max( x, y ); } );
+    return r;
+}
+
+/// `a`'s element where `m` is set, and `b`'s where it is clear.
+array<T, S...> select<T, u64... S>( const ref array_mask<S...> m, const ref array<T, S...> a, const ref array<T, S...> b ) where T : numeric
+{
+    array<T, S...> r = b.copy();
+    for( u64 i : 0..r.size() )
+    {
+        if( m.test( i ) )
+        {
+            r.as_run()[i] = a.as_run()[i];
+        }
+    }
+    return r;
+}
+
+/// Where each element is a NaN, as `kl::is_nan`.
+array_mask<S...> is_nan<T, u64... S>( const ref array<T, S...> a ) where T : floating
+{
+    array_mask<S...> r = array_mask<S...>();
+    for( u64 i : 0..a.size() )
+    {
+        r.assign( i, kl::is_nan( cast<f64>( a.as_run()[i] ) ) );
+    }
+    return r;
+}
+
+/// Where each element is an infinity, as `kl::is_inf`.
+array_mask<S...> is_inf<T, u64... S>( const ref array<T, S...> a ) where T : floating
+{
+    array_mask<S...> r = array_mask<S...>();
+    for( u64 i : 0..a.size() )
+    {
+        r.assign( i, kl::is_inf( cast<f64>( a.as_run()[i] ) ) );
+    }
+    return r;
+}
+
+// `src` into `dest`, of one size.
+private void copy_into<T>( ref T[] dest, const ref T[] src ) where T : copyable
+{
+    kernel::zip_into( ref dest, src, fn[]( T _, T y ) { return y; } );
+}
+// The scalar maths of `kl::math` over each element, for float elements: `kl::exp( a )`.
+
+/// `kl::sqrt` of each element.
+array<T, S...> sqrt<T, u64... S>( const ref array<T, S...> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::sqrt( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::exp` of each element.
+array<T, S...> exp<T, u64... S>( const ref array<T, S...> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::exp( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::expm1` of each element.
+array<T, S...> expm1<T, u64... S>( const ref array<T, S...> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::expm1( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::log` of each element.
+array<T, S...> log<T, u64... S>( const ref array<T, S...> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::log( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::log1p` of each element.
+array<T, S...> log1p<T, u64... S>( const ref array<T, S...> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::log1p( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::log2` of each element.
+array<T, S...> log2<T, u64... S>( const ref array<T, S...> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::log2( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::log10` of each element.
+array<T, S...> log10<T, u64... S>( const ref array<T, S...> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::log10( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::sin` of each element.
+array<T, S...> sin<T, u64... S>( const ref array<T, S...> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::sin( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::cos` of each element.
+array<T, S...> cos<T, u64... S>( const ref array<T, S...> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::cos( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::tan` of each element.
+array<T, S...> tan<T, u64... S>( const ref array<T, S...> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::tan( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::asin` of each element.
+array<T, S...> asin<T, u64... S>( const ref array<T, S...> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::asin( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::acos` of each element.
+array<T, S...> acos<T, u64... S>( const ref array<T, S...> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::acos( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::atan` of each element.
+array<T, S...> atan<T, u64... S>( const ref array<T, S...> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::atan( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::sinh` of each element.
+array<T, S...> sinh<T, u64... S>( const ref array<T, S...> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::sinh( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::cosh` of each element.
+array<T, S...> cosh<T, u64... S>( const ref array<T, S...> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::cosh( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::tanh` of each element.
+array<T, S...> tanh<T, u64... S>( const ref array<T, S...> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::tanh( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::floor` of each element.
+array<T, S...> floor<T, u64... S>( const ref array<T, S...> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::floor( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::ceil` of each element.
+array<T, S...> ceil<T, u64... S>( const ref array<T, S...> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::ceil( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::trunc` of each element.
+array<T, S...> trunc<T, u64... S>( const ref array<T, S...> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::trunc( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::round` of each element.
+array<T, S...> round<T, u64... S>( const ref array<T, S...> a ) where T : floating
+{
+    return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::round( cast<f64>( x ) ) ); } );
+}
+
+/// `kl::pow` of each element and the matching one of `b`, the two broadcast.
+array<T, broadcast( S, U )...> pow<T, u64... S, u64... U>( const ref array<T, S...> a, const ref array<T, U...> b ) where T : floating
+{
+    return a.zipped( b, fn[]( T x, T y ) { return kernel::narrowed<T>( kl::pow( cast<f64>( x ), cast<f64>( y ) ) ); } );
+}
+
+/// `kl::pow` of each element and `s`: `kl::pow( a, 2.0 )`.
+array<T, S...> pow<T, u64... S>( const ref array<T, S...> a, T s ) where T : floating
+{
+    return a.map( fn[ s ]( T x ) { return kernel::narrowed<T>( kl::pow( cast<f64>( x ), cast<f64>( s ) ) ); } );
+}
+
+/// `kl::atan2` of each element of `y` and the matching one of `x`, the two broadcast.
+array<T, broadcast( S, U )...> atan2<T, u64... S, u64... U>( const ref array<T, S...> y, const ref array<T, U...> x ) where T : floating
+{
+    return y.zipped( x, fn[]( T b, T a ) { return kernel::narrowed<T>( kl::atan2( cast<f64>( b ), cast<f64>( a ) ) ); } );
+}
+

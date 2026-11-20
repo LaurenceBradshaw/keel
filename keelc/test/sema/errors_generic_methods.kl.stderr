@@ -2,7 +2,7 @@ error: an operator cannot have type parameters of its own
   --> sema/errors_generic_methods.kl:22:20
    |
 22 |     bool operator==<U>( const ref Box<T> other ) const { return true; }
-   |                    ^^^ it is called without any, so nothing could say what they are
+   |                    ^^^ only a method taking one operand has them, deduced from that operand
 
 error: `T` is already declared in this scope
   --> sema/errors_generic_methods.kl:25:12

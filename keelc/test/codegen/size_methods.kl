@@ -1,0 +1,126 @@
+// Shapes through methods: an operator whose own pack its operand deduces, a method's own pack
+// written out, results whose `dyn` sizes are computed when the program runs (`broadcast`,
+// `dropped<A>`, `product`), a run-time axis whose sizes are handed over as a run, element types
+// read from array literals, and a method returning its type at a shape of the same rank.
+import t::console;
+
+class Grid<u64... S(dyn)>
+{
+    i64[64] cells;
+
+    public Grid( i64 fill )
+    {
+        cells = [ fill, .. ];
+    }
+
+    public static u64 count()
+    {
+        u64 n = 1;
+        for( u64 k : 0..S.size )
+        {
+            n *= S[k];
+        }
+        return n;
+    }
+
+    public u64 extent( u64 axis ) const
+    {
+        return S[axis];
+    }
+
+    // Right-aligned, a size of 1 stretching to the other's.
+    public Grid<broadcast( S, U )...> operator+<u64... U>( const ref Grid<U...> o ) const
+    {
+        Grid<broadcast( S, U )...> r = Grid<broadcast( S, U )...>( 0 );
+        for( u64 i : 0..Grid<broadcast( S, U )...>::count() )
+        {
+            r.cells[i] = cells[i % count()] + o.cells[i % Grid<U...>::count()];
+        }
+        return r;
+    }
+
+    public Grid<U...> as_shape<u64... U>() const
+    {
+        Grid<U...> r = Grid<U...>( 0 );
+        r.cells      = cells;
+        return r;
+    }
+
+    public Grid<dropped<A>( S )...> summed<u64 A>() const
+    {
+        return Grid<dropped<A>( S )...>( cells[0] );
+    }
+
+    public Grid<(product( S ))> flat() const
+    {
+        return Grid<(product( S ))>( cells[0] );
+    }
+
+    // Every size `dyn`: the same rank, so its instances repeat.
+    public Grid<dropped<dyn>( inserted<0>( S ) )...> loosened() const
+    {
+        u64[8] sizes = [ 0, .. ];
+        for( u64 k : 0..S.size )
+        {
+            sizes[k] = S[k];
+        }
+        return sized<dropped<dyn>( inserted<0>( S ) )...>( sizes[0..S.size] );
+    }
+
+    // An axis known at run time; its sizes are given as a run.
+    public Grid<dropped<dyn>( S )...> without( u64 axis ) const
+    {
+        u64[8] sizes = [ 0, .. ];
+        u64    j     = 0;
+        for( u64 k : 0..S.size )
+        {
+            if( k != axis )
+            {
+                sizes[j] = S[k];
+                j += 1;
+            }
+        }
+        return sized<dropped<dyn>( S )...>( sizes[0..j] );
+    }
+};
+
+Grid<S...> sized<u64... S>( S... n )
+{
+    return Grid<S...>( 0 );
+}
+
+u64 rank_of<T, u64 N>( T[N] _ ) where T : numeric
+{
+    return 1;
+}
+
+u64 rank_of<T, u64 R, u64 C>( T[C][R] _ ) where T : numeric
+{
+    return 2;
+}
+
+i32 main()
+{
+    u64           rows = 4;
+    Grid<dyn, 3>  a    = sized( rows, 3 );
+    Grid<1, 3>    b    = sized( 1, 3 );
+    Grid<dyn, 3>  c    = a + b;
+    Grid<dyn, dyn> d    = sized( rows, 1 ) + sized( 1, rows - 1 );
+    t::print( c.extent( 0 ) * 10 + c.extent( 1 ) );
+    t::print( d.extent( 0 ) * 10 + d.extent( 1 ) );
+
+    Grid<4, 3> e = a.as_shape<4, 3>();
+    t::print( Grid<4, 3>::count() + e.extent( 1 ) );
+
+    Grid<3>   f = a.summed<0>();
+    Grid<dyn> g = a.summed<1>();
+    Grid<dyn> h = a.flat();
+    t::print( f.extent( 0 ) * 100 + g.extent( 0 ) * 10 + h.extent( 0 ) / 4 );
+
+    Grid<dyn, dyn> l = b.loosened();
+    Grid<dyn>      w = a.without( 1 );
+    t::print( l.extent( 1 ) * 10 + w.extent( 0 ) );
+
+    t::print( rank_of( [ 1, 2, 3 ] ) * 10 + rank_of( [ [ 1.5 ], [ 2.5 ] ] ) );
+    return 0;
+}

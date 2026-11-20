@@ -304,8 +304,8 @@ private u64 advance( ref u64 next )
 
 /// An array whose element at each index is `make( index )`, made in index order.
 ///
-/// `T` and `N` come from the type the result is given to: `buf[4] bufs = kl::array( fn[]( i ) { return buf( i ); } );`.
-T[N] array<T, u64 N, F>( F make ) where F : fn( u64 ) -> T
+/// `T` and `N` come from the type the result is given to: `buf[4] bufs = kl::generated( fn[]( i ) { return buf( i ); } );`.
+T[N] generated<T, u64 N, F>( F make ) where F : fn( u64 ) -> T
 {
     u64 next = 0;
     T[N] made = [ make( advance( ref next ) ), .. ];

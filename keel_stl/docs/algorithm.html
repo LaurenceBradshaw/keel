@@ -26,7 +26,7 @@
 <li><a href="#remove_if"><code>remove_if</code></a> <span class="kind">function</span></li>
 <li><a href="#remove"><code>remove</code></a> <span class="kind">function</span></li>
 <li><a href="#dedup"><code>dedup</code></a> <span class="kind">function</span></li>
-<li><a href="#array"><code>array</code></a> <span class="kind">function</span></li>
+<li><a href="#generated"><code>generated</code></a> <span class="kind">function</span></li>
 </ul>
 <section class="entry">
 <h2><span class="kind">function</span> <span class="fn">sort</span></h2>
@@ -179,12 +179,12 @@ of each run.</p>
 </div>
 </section>
 <section class="entry">
-<h2><span class="kind">function</span> <span class="fn">array</span></h2>
-<div class="group" id="array">
-<pre class="signature"><a class="anchor" href="#array" aria-label="Link to array">#</a><code>T[N] <span class="fn">array</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N, F&gt;( F make ) <span class="kw">where</span> F : <span class="kw">fn</span>( <a class="prim" href="prelude.html#u64">u64</a> ) -&gt; T</code></pre>
+<h2><span class="kind">function</span> <span class="fn">generated</span></h2>
+<div class="group" id="generated">
+<pre class="signature"><a class="anchor" href="#generated" aria-label="Link to generated">#</a><code>T[N] <span class="fn">generated</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N, F&gt;( F make ) <span class="kw">where</span> F : <span class="kw">fn</span>( <a class="prim" href="prelude.html#u64">u64</a> ) -&gt; T</code></pre>
 <div class="doc">
 <p>An array whose element at each index is <code>make( index )</code>, made in index order.</p>
-<p><code>T</code> and <code>N</code> come from the type the result is given to: <code>buf[4] bufs = kl::array( fn[]( i ) { return buf( i ); } );</code>.</p>
+<p><code>T</code> and <code>N</code> come from the type the result is given to: <code>buf[4] bufs = kl::generated( fn[]( i ) { return buf( i ); } );</code>.</p>
 </div>
 </div>
 </section>

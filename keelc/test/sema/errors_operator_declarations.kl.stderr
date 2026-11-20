@@ -94,12 +94,6 @@ error: a `static` `operator*` takes two parameters, the left operand and the rig
 126 |     static static_operator operator*( i32 by ) { return static_operator { by }; }
     |                                     ^^^^^^^^^^
 
-error: an operator cannot have type parameters of its own
-   --> sema/errors_operator_declarations.kl:133:31
-    |
-133 |     generic_operator operator+<U>( U by ) const { return generic_operator { x }; }
-    |                               ^^^ it is called without any, so nothing could say what they are
-
 error: `operator+` must return a value
    --> sema/errors_operator_declarations.kl:138:5
     |
@@ -112,4 +106,4 @@ error: `operator-=` must return `void`
 139 |     self operator-=( i32 by );
     |     ^^^^ `a -= b` is a statement and changes `a` in place
 
-19 errors generated
+18 errors generated

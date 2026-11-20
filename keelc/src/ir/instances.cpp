@@ -34,7 +34,13 @@ bool is_closed( const Types& types, const Instantiation& candidate )
 
 void queue( std::vector<Instantiation>& pending, const Types& types, Instantiation candidate )
 {
-    if( is_closed( types, candidate ) && !already_queued( pending, candidate ) )
+    // A probe of an overload that did not apply can intern a type over the error type; a program
+    // that reached lowering never needs one.
+    const bool erroneous = std::ranges::any_of(
+        candidate.arguments,
+        [&]( Type_id argument ) { return argument.is_valid() && types.table().references_error( argument ); }
+    );
+    if( !erroneous && is_closed( types, candidate ) && !already_queued( pending, candidate ) )
     {
         pending.push_back( std::move( candidate ) );
     }

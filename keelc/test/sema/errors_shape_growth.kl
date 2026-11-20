@@ -1,5 +1,6 @@
-// A pack a shape function computes from the last round's is refused as D42 refuses a computed size,
-// even where it would repeat (`reversed`); forwarding the pack is fine.
+// A pack a shape function computes from the last round's is refused as D42 refuses a computed size
+// when it can lengthen (`inserted`); one that keeps the rank (`reversed`) makes no new size, so it
+// repeats, and forwarding the pack is fine.
 u64 grow<u64... S>( u64 n )
 {
     return n == 0 ? S.size : grow<inserted<0>( S )...>( n - 1 );

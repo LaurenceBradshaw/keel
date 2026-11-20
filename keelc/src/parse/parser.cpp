@@ -87,7 +87,7 @@ private:
     // The parameters alone: the list node is built later, once the `where` clauses that belong
     // beside them have been parsed too.
     // `packs`: a pack may be declared; `several`: more than one, as a function may.
-    std::vector<Node_id> parse_type_params( bool packs = true, bool several = false );
+    std::vector<Node_id> parse_type_params( bool packs = true, bool several = false, bool method = false );
     Node_id              parse_type_param( bool& pack );
     bool                 match_ellipsis();
 
@@ -1126,7 +1126,7 @@ Node_id Parser::parse_method_decl( Symbol_id enclosing, Node_id type_params, boo
     // The method's own type parameters, collected as parse_function_decl collects a function's.
     const Span           generic_start = cursor_.peek().span;
     const bool           generic       = cursor_.check( Token_kind::Less );
-    std::vector<Node_id> generics      = generic ? parse_type_params( false ) : std::vector<Node_id> {};
+    std::vector<Node_id> generics      = generic ? parse_type_params( true, false, true ) : std::vector<Node_id> {};
     Span                 generic_span  = Span::merge( generic_start, cursor_.previous().span );
 
     // The trailing `const` comes after the parameter list, but the receiver it binds is built
@@ -1375,7 +1375,7 @@ void Parser::refuse_gap_after_default( std::span<const Node_id> params )
     }
 }
 
-std::vector<Node_id> Parser::parse_type_params( bool packs, bool several )
+std::vector<Node_id> Parser::parse_type_params( bool packs, bool several, bool method )
 {
     recovery_.expect( Token_kind::Less );
     const Span start = cursor_.peek().span;
@@ -1419,12 +1419,16 @@ std::vector<Node_id> Parser::parse_type_params( bool packs, bool several )
     if( !packs )
     {
         recovery_.error_at(
-            ast_.name_span( written_packs[0] ), "only a type or a free function declares a pack", "declare it on the type"
+            ast_.name_span( written_packs[0] ), "an `implements` block declares no pack", "declare it on the type"
         );
     }
     else if( written_packs.size() > 1 && !several )
     {
-        recovery_.error_at( ast_.name_span( written_packs[1] ), "a type takes one pack", "only a function declares several" );
+        recovery_.error_at(
+            ast_.name_span( written_packs[1] ),
+            fmt::format( "a {} takes one pack", method ? "method" : "type" ),
+            "only a free function declares several"
+        );
     }
     else if( misplaced != written_packs.end() )
     {
@@ -15175,12 +15179,13 @@ TEST_CASE( "parser_parses_a_size_pack", "[parse][size_params][packs]" )
         REQUIRE( index_outline( "a < dyn > b" ).starts_with( "Binary_expr" ) );
     }
 
-    SECTION( "on a method, refused and left a plain size" )
+    SECTION( "on a method, one" )
     {
-        const Parsed p( "class C { u64 x; public void f<u64... S>() { } };" );
-        REQUIRE( p.error_count() == 1 );
-        REQUIRE( p.errors().find( "only a type or a free function declares a pack" ) != std::string::npos );
-        REQUIRE_FALSE( p.ast().is_variadic( find_first( p.ast(), p.root(), Node_kind::Type_param_decl ) ) );
+        const Parsed one( "class C { u64 x; public void f<u64... S>() { } };" );
+        REQUIRE( one.error_count() == 0 );
+        REQUIRE( one.ast().is_variadic( find_first( one.ast(), one.root(), Node_kind::Type_param_decl ) ) );
+        const Parsed two( "class C { u64 x; public void f<u64... S, u64... U>() { } };" );
+        REQUIRE( two.errors().find( "a method takes one pack" ) != std::string::npos );
     }
 }
 

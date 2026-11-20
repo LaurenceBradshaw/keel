@@ -877,6 +877,16 @@ Operand Lowering::open_size( Type_id open, std::optional<u32> element, Span span
         return temporary( binary( ops[described.width - u8( Size_op::Add )], lhs, rhs, word ), word, span );
     }
 
+    if( described.kind == Type_kind::Size && Size_op( described.width ) == Size_op::Product )
+    {
+        Operand product = constant( literal_pool_.add_integer( 1 ), word );
+        for( const Operand each : open_sizes( described.arguments[0], span ) )
+        {
+            product = temporary( binary( Token_kind::Star, product, each, word ), word, span );
+        }
+        return product;
+    }
+
     // `dyn` itself has no value; sema refuses a call that would need one.
     return constant( literal_pool_.add_integer( 0 ), word );
 }
@@ -912,8 +922,73 @@ std::vector<Operand> Lowering::open_sizes( Type_id open, Span span )
         return values;
     }
 
-    // A shape function: its sizes once computed.
-    for( const Type_id each : table.get( table.substitute( open, bindings_ ) ).arguments )
+    // A shape function: its sizes once computed, a `dyn` one from its operands' values.
+    const Type_id                  computed = table.substitute( open, bindings_ );
+    const std::span<const Type_id> sizes    = table.get( computed ).arguments;
+    if( std::ranges::none_of( sizes, [&]( Type_id each ) { return each == table.dyn(); } ) )
+    {
+        for( const Type_id each : sizes )
+        {
+            values.push_back( open_size( each, std::nullopt, span ) );
+        }
+        return values;
+    }
+
+    const Type_id        word    = table.integer( 64, false );
+    const Operand        one     = constant( literal_pool_.add_integer( 1 ), word );
+    std::vector<Operand> operand = open_sizes( described.arguments.back(), span );
+    switch( Size_op( described.width ) )
+    {
+    case Size_op::Reversed:
+        std::ranges::reverse( operand );
+        return operand;
+    case Size_op::Dropped:
+    case Size_op::Inserted:
+    {
+        // A run-time axis has no value here; sema leaves such a result to a given `S... n`.
+        const std::optional<u64> axis = table.evaluate( table.substitute( described.arguments[0], bindings_ ), {} );
+        if( !axis || *axis > operand.size() )
+        {
+            break;
+        }
+        if( Size_op( described.width ) == Size_op::Dropped && *axis < operand.size() )
+        {
+            operand.erase( operand.begin() + std::ptrdiff_t( *axis ) );
+        }
+        else if( Size_op( described.width ) == Size_op::Inserted )
+        {
+            operand.insert( operand.begin() + std::ptrdiff_t( *axis ), one );
+        }
+        return operand;
+    }
+    case Size_op::Broadcast:
+    {
+        // Right-aligned: a 1 takes the other's size. Whether two others agree is the body's to check.
+        const std::vector<Operand> left = open_sizes( described.arguments[0], span );
+        const Type_id              flag = table.builtin( Type_kind::Bool );
+        values.resize( sizes.size() );
+        for( std::size_t i = 0; i < sizes.size(); ++i )
+        {
+            const std::size_t at = sizes.size() - 1 - i;
+            if( sizes[at] != table.dyn() )
+            {
+                values[at] = open_size( sizes[at], std::nullopt, span );
+                continue;
+            }
+            const bool    has_left  = i < left.size();
+            const bool    has_right = i < operand.size();
+            const Operand a         = has_left ? left[left.size() - 1 - i] : one;
+            const Operand b         = has_right ? operand[operand.size() - 1 - i] : one;
+            const Operand unit      = temporary( binary( Token_kind::Equal_equal, a, one, flag ), flag, span );
+            values[at]              = temporary( select( unit, b, a ), word, span );
+        }
+        return values;
+    }
+    default:
+        break;
+    }
+
+    for( const Type_id each : sizes )
     {
         values.push_back( open_size( each, std::nullopt, span ) );
     }
