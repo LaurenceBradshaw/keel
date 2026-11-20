@@ -1334,24 +1334,7 @@ class series
     /// The middle value present, or the mean of the two middle ones, NaN when there are none.
     public f64 median() const
     {
-        list<f64> v = present_values();
-        u64 n = v.size();
-        if( n == 0 )
-        {
-            return nan();
-        }
-        u64 mid = n / 2;
-        kl::nth_element( ref v, mid, fn[]( a, b ) { return a < b; } );
-        if( n % 2 == 1 )
-        {
-            return v[mid];
-        }
-        f64 low = v[0];
-        for( u64 i : 1..mid )
-        {
-            low = v[i] > low ? v[i] : low;
-        }
-        return ( low + v[mid] ) / 2.0;
+        return kl::median( present_values() );
     }
 
     /// --- Windows ---

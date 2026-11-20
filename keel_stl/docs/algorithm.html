@@ -14,6 +14,8 @@
 <ul class="contents">
 <li><a href="#sort"><code>sort</code></a> <span class="kind">function</span></li>
 <li><a href="#nth_element"><code>nth_element</code></a> <span class="kind">function</span></li>
+<li><a href="#sum"><code>sum</code></a> <span class="kind">function</span></li>
+<li><a href="#median"><code>median</code></a> <span class="kind">function</span></li>
 <li><a href="#stable_sort"><code>stable_sort</code></a> <span class="kind">function</span></li>
 <li><a href="#index_if"><code>index_if</code></a> <span class="kind">function</span></li>
 <li><a href="#index_of"><code>index_of</code></a> <span class="kind">function</span></li>
@@ -49,6 +51,25 @@ all equal, but equal elements may change order.</p>
 <p>Puts at <code>k</code> the element <code>sort( ref items, less )</code> would, with none after it <code>less</code> than it
 and none before it that it is <code>less</code> than, as C++'s <code>nth_element</code>: O(n) on average and in place.
 Does nothing when <code>k</code> is not less than <code>items.size()</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">sum</span></h2>
+<div class="group" id="sum">
+<pre class="signature"><a class="anchor" href="#sum" aria-label="Link to sum">#</a><code>T <span class="fn">sum</span>&lt;C, T&gt;( <span class="kw">const</span> <span class="kw">ref</span> C items ) <span class="kw">where</span> C : <a class="type" href="prelude.html#fixed_memory">fixed_memory</a>&lt;T&gt;, <span class="kw">where</span> T : numeric</code></pre>
+<div class="doc">
+<p>The total of <code>items</code>, 0 when there are none; added pairwise, as <code>ndarray::sum</code> and numpy do.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">median</span></h2>
+<div class="group" id="median">
+<pre class="signature"><a class="anchor" href="#median" aria-label="Link to median">#</a><code>T <span class="fn">median</span>&lt;C, T&gt;( <span class="kw">const</span> <span class="kw">ref</span> C items ) <span class="kw">where</span> C : <a class="type" href="prelude.html#fixed_memory">fixed_memory</a>&lt;T&gt;, <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The middle value of <code>items</code>, or the mean of the two middle ones; NaN when there are none or
+one is NaN, as numpy's <code>median</code>. Selects on a copy, so <code>items</code> keeps its order.</p>
 </div>
 </div>
 </section>

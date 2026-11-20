@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 import kl::_core::pdqsort as kernel;
+import kl::_core::reduce as reduce;
+import list;
 import optional;
 
 /// Orders `items` so no element is `less` than the one before it.
@@ -19,6 +21,45 @@ void sort<C, T, F>( ref C items, F less ) where C : fixed_memory<T>, where F : f
 void nth_element<C, T, F>( ref C items, u64 k, F less ) where C : fixed_memory<T>, where F : fn( const ref T, const ref T ) -> bool
 {
     kernel::select_nth( ref items, k, less );
+}
+
+/// The total of `items`, 0 when there are none; added pairwise, as `ndarray::sum` and numpy do.
+T sum<C, T>( const ref C items ) where C : fixed_memory<T>, where T : numeric
+{
+    return reduce::pairwise( 0, items.size(), fn[items]( u64 i ) -> T { return items[i]; } );
+}
+
+/// The middle value of `items`, or the mean of the two middle ones; NaN when there are none or
+/// one is NaN, as numpy's `median`. Selects on a copy, so `items` keeps its order.
+T median<C, T>( const ref C items ) where C : fixed_memory<T>, where T : floating
+{
+    u64 n = items.size();
+    T zero = 0;
+    list<T> v = list<T>::with_capacity( n );
+    for( u64 i : 0..n )
+    {
+        if( items[i] != items[i] )
+        {
+            return zero / zero;
+        }
+        v.push( items[i] );
+    }
+    if( n == 0 )
+    {
+        return zero / zero;
+    }
+    u64 mid = n / 2;
+    nth_element( ref v, mid, fn[]( a, b ) { return a < b; } );
+    if( n % 2 == 1 )
+    {
+        return v[mid];
+    }
+    T low = v[0];
+    for( u64 i : 1..mid )
+    {
+        low = v[i] > low ? v[i] : low;
+    }
+    return ( low + v[mid] ) / cast<T>( 2 );
 }
 
 /// Orders `items` from least to greatest, as `sort( ref items, less )` with `<`.

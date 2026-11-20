@@ -2,6 +2,7 @@
 // `owned` checks that removing and deduplicating destroy each dropped element once.
 import kl::algorithm;
 import kl::list;
+import kl::math;
 import kl::optional;
 import kl::ring;
 import kl::string;
@@ -336,4 +337,38 @@ private void nth_element_puts_each_rank_in_place( ref kl::test::context c )
             }
         }
     }
+}
+
+// A sum over a list matches ndarray's pairwise order; arrays and ints sum too.
+private void sum_adds_lists_and_arrays( ref kl::test::context c )
+{
+    kl::list<f64> values = kl::list<f64>();
+    for( u64 i : 0..1000 )
+    {
+        values.push( 0.1 * cast<f64>( i % 13 ) );
+    }
+    c.check_eq( kl::sum( values ), 599.4 );
+    i32[4] small = [ 3, -1, 4, 1 ];
+    c.check_eq( kl::sum( small ), 7 );
+    c.check_eq( kl::sum( kl::list<i64>() ), 0 );
+}
+
+// Odd and even counts, repeats, and the NaN cases; the input keeps its order.
+private void median_picks_the_middle( ref kl::test::context c )
+{
+    f64[5] odd = [ 5.0, 1.0, 4.0, 2.0, 3.0 ];
+    c.check_eq( kl::median( odd ), 3.0 );
+    c.check_eq( odd[0], 5.0 );
+    kl::list<f64> even = kl::list<f64>();
+    for( u64 i : 0..10 )
+    {
+        even.push( cast<f64>( ( i * 7 ) % 10 ) );
+    }
+    c.check_eq( kl::median( even ), 4.5 );
+    f32[4] repeats = [ 2.0, 2.0, 1.0, 2.0 ];
+    c.check_eq( kl::median( repeats ), 2.0 );
+    c.check( kl::is_nan( kl::median( kl::list<f64>() ) ) );
+    f64 zero = 0.0;
+    f64[3] holed = [ 1.0, zero / zero, 3.0 ];
+    c.check( kl::is_nan( kl::median( holed ) ) );
 }

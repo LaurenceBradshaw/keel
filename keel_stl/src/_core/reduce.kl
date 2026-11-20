@@ -225,7 +225,7 @@ T variance<T>( const ref T[] a ) where T : floating
 
 // `at( k )` summed for `k` in `begin..end`, pairwise as numpy adds: a run of up to 128 in eight running
 // totals joined as a tree, a longer one as its halves' totals, split at a multiple of 8.
-private T pairwise<T, F>( u64 begin, u64 end, F at ) where T : numeric, where F : fn( u64 ) -> T
+T pairwise<T, F>( u64 begin, u64 end, F at ) where T : numeric, where F : fn( u64 ) -> T
 {
     u64 n = end - begin;
     if( n > 128 )
