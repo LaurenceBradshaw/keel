@@ -189,7 +189,7 @@ u32 Ref_writer::type_index( Type_id id )
         {
             entry.put_u64( described.count );
         }
-        else
+        else if( !table_.is_dyn( id ) )
         {
             type( entry, described.arguments[0] );
             type( entry, described.arguments[1] );
@@ -228,6 +228,7 @@ u32 Ref_writer::type_index( Type_id id )
     case Type_kind::Parameter:
         node( entry, described.declaration );
         type( entry, described.element ); // a size parameter's value type
+        entry.put_u8( described.pack );
         break;
     case Type_kind::Function:
         type( entry, described.element );
@@ -244,6 +245,7 @@ u32 Ref_writer::type_index( Type_id id )
         type( entry, described.element );
         break;
     case Type_kind::Union:
+    case Type_kind::Pack:
         entry.put_u32( narrow_cast<u32>( described.arguments.size() ) );
         for( const Type_id member : described.arguments )
         {
@@ -473,6 +475,12 @@ void Ref_reader::read_types()
                 break;
             }
 
+            if( op == u8( Size_op::Dynamic ) )
+            {
+                id = table_.dyn();
+                break;
+            }
+
             const Type_id lhs = type();
             const Type_id rhs = type();
             if( failed() || op > u8( Size_op::Remainder ) || !lhs.is_valid() || !rhs.is_valid() )
@@ -522,8 +530,10 @@ void Ref_reader::read_types()
         {
             const Node_id decl       = declaration();
             const Type_id value_type = type();
-            if( failed() )
+            const bool    pack       = in_.get_u8() != 0;
+            if( failed() || ( pack && !value_type.is_valid() ) )
             {
+                fail();
                 break;
             }
 
@@ -531,6 +541,7 @@ void Ref_reader::read_types()
                                               ? std::string_view {}
                                               : interner_.text( program_.ast.name( decl ) );
             id                          = program_.ast.kind( decl ) == Node_kind::Interface_decl ? table_.self_of( decl )
+                                          : pack                  ? table_.size_pack_parameter( decl, name, value_type )
                                           : value_type.is_valid() ? table_.size_parameter( decl, name, value_type )
                                                                   : table_.parameter( decl, name );
             break;
@@ -569,6 +580,15 @@ void Ref_reader::read_types()
             if( !failed() )
             {
                 id = table_.error_union( members );
+            }
+            break;
+        }
+        case Type_kind::Pack:
+        {
+            const std::vector<Type_id> sizes = list();
+            if( !failed() )
+            {
+                id = table_.pack( sizes );
             }
             break;
         }

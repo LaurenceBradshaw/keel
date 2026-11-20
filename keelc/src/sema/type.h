@@ -51,6 +51,7 @@ enum class Type_kind : u8
     Size,      // a `u64` extent: `count` is a constant's value, `width` a Size_op over `arguments`
     Closure,   // a lambda's own type: `declaration` the Lambda_expr, `element` its `fn` signature,
                // `arguments` the enclosing generic's parameters
+    Pack,      // what a size pack `u64... S` binds: `arguments` the sizes, spliced into a type's arguments
 };
 
 // Size_op::Constant is 0, so a constant size's `width` is 0.
@@ -62,6 +63,7 @@ enum class Size_op : u8
     Multiply,
     Divide,
     Remainder,
+    Dynamic, // `dyn`, a size known only at run time; no operands
 };
 
 enum class Param_mode : u8
@@ -106,6 +108,7 @@ struct Type
     bool       const_element = false; // Pointer and Many_pointer: the element is read-only through it.
     u64        count         = 0;     // Array: the number of elements, or 0 while its extent is not a constant
     bool       raw           = false; // Array: `T[?N]`, slots no drop or conversion treats as live
+    bool       pack          = false; // Parameter: a size pack, `u64... S`
 };
 
 bool is_builtin_type_name( std::string_view spelling );
@@ -129,6 +132,12 @@ public:
     Type_id array_of( Type_id element, u64 count, bool raw = false );
     Type_id array_of( Type_id element, Type_id extent, bool raw = false ); // the extent, a Size, is `arguments[0]`
     Type_id size( u64 value );
+    Type_id dyn() const; // the one run-time size
+    // Interned by its sizes. A pack parameter inside it is not spliced here: substitute() does that.
+    Type_id pack( std::span<const Type_id> sizes );
+    // The pack of `sizes` if one is interned, else invalid. Every aggregate instance ending in a
+    // pack interns its tail, so deduction against an instance finds it without interning.
+    Type_id interned_pack( std::span<const Type_id> sizes ) const;
     // Two constants fold; an overflow or a division by 0 is the Error type.
     Type_id size_op( Size_op op, Type_id lhs, Type_id rhs );
     Type_id function( Type_id return_type, std::span<const Parameter> parameters, Param_mode return_mode = Param_mode::Value );
@@ -151,6 +160,8 @@ public:
     Type_id parameter( Node_id declaration, std::string_view name );
     // `u64 N`: a parameter whose `element` is its declared value type.
     Type_id size_parameter( Node_id declaration, std::string_view name, Type_id value_type );
+    // `u64... S`: a size parameter binding a Pack.
+    Type_id size_pack_parameter( Node_id declaration, std::string_view name, Type_id value_type );
 
     // One per instance of an Interface_decl. Kept apart from the composites, since no C struct is emitted for one.
     Type_id interface( Node_id declaration, std::span<const Type_id> arguments, std::string_view name );
@@ -213,7 +224,12 @@ public:
     bool is_live_array( Type_id id ) const;  // `T[N]`, every element live
     bool needs_no_value( Type_id id ) const; // `T[?N]`, or a `T[N]` of them: declaring it is its initialisation
     bool is_size( Type_id id ) const;
-    bool is_size_parameter( Type_id id ) const;
+    bool is_size_parameter( Type_id id ) const; // a pack parameter is one too
+    bool is_pack_parameter( Type_id id ) const;
+    bool is_pack( Type_id id ) const;
+    bool is_dyn( Type_id id ) const;
+    // Whether `arguments` end in a pack parameter, which takes the arguments the others leave.
+    bool ends_in_pack( std::span<const Type_id> arguments ) const;
     bool points_to_const( Type_id id ) const;
     bool is_parameter( Type_id id ) const; // a `T`, before an instantiation substitutes it away
     bool is_function( Type_id id ) const;
@@ -291,9 +307,13 @@ public:
     std::optional<u64> evaluate( Type_id size, const Bindings& bindings ) const;
 
 private:
-    Type_id     add( const Type& type, std::string_view name );
-    std::string const_spelling( Type_id element, bool const_element ) const;
-    static u8   width_index( u8 width );
+    Type_id              add( const Type& type, std::string_view name );
+    std::string          const_spelling( Type_id element, bool const_element ) const;
+    static u8            width_index( u8 width );
+    std::vector<Type_id> spliced( std::span<const Type_id> arguments, const Bindings& bindings ); // each pack spread
+    bool                 reaches_dyn( Type_id size, const Bindings& bindings ) const;
+    // Interns the tail of `arguments` that the pack of its declaration's open form `open` takes.
+    void intern_tail( std::span<const Type_id> open, std::span<const Type_id> arguments );
 
     Type_id composite(
         Type_kind kind, Node_id declaration, std::span<const Type_id> arguments, std::string_view name, Type_id element
@@ -301,8 +321,8 @@ private:
 
     std::deque<Type> types_; // types_[0] reserved so Type_id{} is invalid
 
-    Type_id error_, void_, bool_, never_; // what the constructor made
-    Type_id integers_[4][2];              // [width index][0 = signed, 1 = unsigned]
+    Type_id error_, void_, bool_, never_, dyn_; // what the constructor made
+    Type_id integers_[4][2];                    // [width index][0 = signed, 1 = unsigned]
     Type_id floats_[2];
 
     std::unordered_map<u32, Type_id>              pointers_;      // element.v * 2 + const -> pointer id
@@ -311,6 +331,7 @@ private:
     std::map<std::tuple<u32, u32, bool>, Type_id> arrays_;        // (element.v, extent.v, raw) -> array id
     std::unordered_map<u64, Type_id>              sizes_;         // value -> constant size
     std::map<std::tuple<u8, u32, u32>, Type_id>   size_ops_;      // (op, lhs.v, rhs.v) -> computed size
+    std::map<std::vector<u32>, Type_id>           packs_;         // the sizes' ids -> pack
     // Struct_decl node -> every instantiation of it. A list scanned linearly rather than a map
     // keyed on the arguments: a program has a handful of instantiations per generic, and hashing a
     // vector of Type_ids to avoid a handful of comparisons is not a trade worth making - the same

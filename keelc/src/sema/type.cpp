@@ -24,6 +24,7 @@ Type_table::Type_table()
     void_  = add( { Type_kind::Void, 0, false, Type_id {} }, "void" );
     bool_  = add( { Type_kind::Bool, 1, false, Type_id {} }, "bool" );
     never_ = add( { Type_kind::Never, 0, false, Type_id {} }, "never" );
+    dyn_   = add( { .kind = Type_kind::Size, .width = u8( Size_op::Dynamic ) }, "dyn" );
 
     for( u8 i = 0; i < 4; ++i )
     {
@@ -170,6 +171,57 @@ Type_id Type_table::size( u64 value )
     return id;
 }
 
+Type_id Type_table::dyn() const
+{
+    return dyn_;
+}
+
+Type_id Type_table::pack( std::span<const Type_id> sizes )
+{
+    std::vector<u32> key;
+    for( const Type_id size : sizes )
+    {
+        key.push_back( size.v );
+    }
+
+    if( const auto it = packs_.find( key ); it != packs_.end() )
+    {
+        return it->second;
+    }
+
+    std::string spelling;
+    for( const Type_id size : sizes )
+    {
+        spelling += spelling.empty() ? "" : ", ";
+        spelling += name( size );
+    }
+
+    const std::vector<Type_id>& stored = arguments_.emplace_back( sizes.begin(), sizes.end() );
+    const Type_id               id     = add( { .kind = Type_kind::Pack, .arguments = stored }, spelling );
+    packs_.emplace( std::move( key ), id );
+    return id;
+}
+
+Type_id Type_table::interned_pack( std::span<const Type_id> sizes ) const
+{
+    std::vector<u32> key;
+    for( const Type_id size : sizes )
+    {
+        key.push_back( size.v );
+    }
+
+    const auto it = packs_.find( key );
+    return it == packs_.end() ? Type_id {} : it->second;
+}
+
+void Type_table::intern_tail( std::span<const Type_id> open, std::span<const Type_id> arguments )
+{
+    if( ends_in_pack( open ) && arguments.size() >= open.size() - 1 )
+    {
+        pack( arguments.subspan( open.size() - 1 ) );
+    }
+}
+
 namespace
 {
 
@@ -197,7 +249,7 @@ std::optional<u64> apply( Size_op op, u64 lhs, u64 rhs )
 // How tightly a size binds when it is an operand: a sum 1, a product 2, a leaf 3.
 int precedence( const Type& described )
 {
-    if( described.kind != Type_kind::Size || described.width == 0 )
+    if( described.kind != Type_kind::Size || described.width == 0 || Size_op( described.width ) == Size_op::Dynamic )
     {
         return 3;
     }
@@ -213,6 +265,11 @@ Type_id Type_table::size_op( Size_op op, Type_id lhs, Type_id rhs )
     if( is_error( lhs ) || is_error( rhs ) )
     {
         return error_;
+    }
+
+    if( lhs == dyn_ || rhs == dyn_ )
+    {
+        return dyn_;
     }
 
     const Type& l = get( lhs );
@@ -268,6 +325,11 @@ std::optional<u64> Type_table::evaluate( Type_id size, const Bindings& bindings 
     if( described.width == 0 )
     {
         return described.count;
+    }
+
+    if( size == dyn_ )
+    {
+        return std::nullopt;
     }
 
     const std::optional<u64> lhs = evaluate( described.arguments[0], bindings );
@@ -401,6 +463,7 @@ Type_id Type_table::closure(
 
     const Type_id id = add( described, name );
     instances.push_back( Instance { owned, id } );
+    intern_tail( get( instances.front().type ).arguments, owned );
     return id;
 }
 
@@ -424,6 +487,13 @@ Type_id Type_table::size_parameter( Node_id declaration, std::string_view name, 
 {
     const Type_id id     = parameter( declaration, name );
     types_[id.v].element = value_type;
+    return id;
+}
+
+Type_id Type_table::size_pack_parameter( Node_id declaration, std::string_view name, Type_id value_type )
+{
+    const Type_id id  = size_parameter( declaration, name, value_type );
+    types_[id.v].pack = true;
     return id;
 }
 
@@ -462,6 +532,7 @@ bool Type_table::mentions_parameter( Type_id id ) const
     case Type_kind::Interface:
     case Type_kind::Closure:
     case Type_kind::Size:
+    case Type_kind::Pack:
         for( Type_id arg : described.arguments )
         {
             if( mentions_parameter( arg ) )
@@ -536,7 +607,7 @@ Type_id Type_table::substitute( Type_id type, const Bindings& bindings )
     }
     case Type_kind::Size:
     {
-        if( described.width == 0 )
+        if( described.width == 0 || type == dyn_ )
         {
             return type;
         }
@@ -558,14 +629,7 @@ Type_id Type_table::substitute( Type_id type, const Bindings& bindings )
             return type;
         }
 
-        std::vector<Type_id> substituted;
-
-        substituted.reserve( described.arguments.size() );
-
-        for( const Type_id argument : described.arguments )
-        {
-            substituted.push_back( substitute( argument, bindings ) );
-        }
+        const std::vector<Type_id> substituted = spliced( described.arguments, bindings );
 
         if( described.kind == Type_kind::Enum )
         {
@@ -606,21 +670,44 @@ Type_id Type_table::substitute( Type_id type, const Bindings& bindings )
             return type;
         }
 
-        std::vector<Type_id> substituted;
-        for( const Type_id argument : described.arguments )
-        {
-            substituted.push_back( substitute( argument, bindings ) );
-        }
+        const std::vector<Type_id> substituted = spliced( described.arguments, bindings );
 
         return closure(
             described.declaration, substitute( described.element, bindings ), substituted, name( type ), described.count
         );
+    }
+    case Type_kind::Pack:
+    {
+        return pack( spliced( described.arguments, bindings ) );
     }
     default:
         return type;
     }
 
     return type;
+}
+
+std::vector<Type_id> Type_table::spliced( std::span<const Type_id> arguments, const Bindings& bindings )
+{
+    std::vector<Type_id> result;
+    result.reserve( arguments.size() );
+
+    for( const Type_id argument : arguments )
+    {
+        const Type_id substituted = substitute( argument, bindings );
+
+        if( substituted.is_valid() && is_pack( substituted ) )
+        {
+            const std::span<const Type_id> sizes = get( substituted ).arguments;
+            result.insert( result.end(), sizes.begin(), sizes.end() );
+        }
+        else
+        {
+            result.push_back( substituted );
+        }
+    }
+
+    return result;
 }
 
 Type_id Type_table::error_union( std::span<const Type_id> members )
@@ -690,6 +777,41 @@ Type_id Type_table::error_union( std::span<const Type_id> members )
     return id;
 }
 
+namespace
+{
+
+// `match` over each pair of `pattern`'s and `actual`'s arguments, a trailing pack in `pattern`
+// paired with the interned Pack of what the others leave. False when the counts cannot agree.
+template <typename Match>
+bool match_arguments( const Type_table& table, std::span<const Type_id> pattern, std::span<const Type_id> actual, Match match )
+{
+    const bool        packed = table.ends_in_pack( pattern );
+    const std::size_t fixed  = packed ? pattern.size() - 1 : pattern.size();
+
+    if( packed ? actual.size() < fixed : actual.size() != fixed )
+    {
+        return false;
+    }
+
+    for( std::size_t i = 0; i < fixed; ++i )
+    {
+        if( !match( pattern[i], actual[i] ) )
+        {
+            return false;
+        }
+    }
+
+    if( !packed )
+    {
+        return true;
+    }
+
+    const Type_id rest = table.interned_pack( actual.subspan( fixed ) );
+    return rest.is_valid() && match( pattern.back(), rest );
+}
+
+} // namespace
+
 bool Type_table::deduce( Type_id pattern, Type_id actual, Bindings& into ) const
 {
     if( !pattern.is_valid() || !actual.is_valid() )
@@ -707,8 +829,19 @@ bool Type_table::deduce( Type_id pattern, Type_id actual, Bindings& into ) const
 
     if( p.kind == Type_kind::Parameter )
     {
-        // A size binds only a size, and a type never does.
-        if( is_size_parameter( pattern ) != ( a.kind == Type_kind::Size || is_size_parameter( actual ) ) )
+        // A pack binds a pack of sizes; a size binds only a size, and a type never does.
+        if( p.pack )
+        {
+            if( a.kind != Type_kind::Pack ||
+                !std::ranges::all_of(
+                    a.arguments, [&]( Type_id size ) { return is_size( size ) || is_size_parameter( size ); }
+                ) )
+            {
+                return false;
+            }
+        }
+        else if( is_size_parameter( pattern ) != ( a.kind == Type_kind::Size || is_size_parameter( actual ) ) ||
+                 is_pack_parameter( actual ) )
         {
             return false;
         }
@@ -750,20 +883,16 @@ bool Type_table::deduce( Type_id pattern, Type_id actual, Bindings& into ) const
     case Type_kind::Closure:
         // Two aggregates of one shape are still two types: `Box<T>` deduces nothing from a
         // `Wrap<i32>`, and without this it would deduce `T = i32` from an unrelated declaration.
-        if( p.declaration != a.declaration || p.arguments.size() != a.arguments.size() )
+        if( p.declaration != a.declaration )
         {
             return false;
         }
 
-        for( std::size_t i = 0; i < p.arguments.size(); ++i )
-        {
-            if( !deduce( p.arguments[i], a.arguments[i], into ) )
-            {
-                return false;
-            }
-        }
-
-        return true;
+        [[fallthrough]];
+    case Type_kind::Pack:
+        return match_arguments(
+            *this, p.arguments, a.arguments, [&]( Type_id lhs, Type_id rhs ) { return deduce( lhs, rhs, into ); }
+        );
     case Type_kind::Function:
     {
         // a mode is part of the signature, and substitution would never turn one into the other.
@@ -891,20 +1020,34 @@ bool unify( const Type_table& table, Type_id a, Type_id b, Bindings& bound )
     case Type_kind::Enum:
     case Type_kind::Interface:
     case Type_kind::Closure:
-        if( x.declaration != y.declaration || x.arguments.size() != y.arguments.size() )
+        if( x.declaration != y.declaration )
         {
             return false;
         }
 
-        for( std::size_t i = 0; i < x.arguments.size(); ++i )
+        [[fallthrough]];
+    case Type_kind::Pack:
+    {
+        // The side ending in a pack is the pattern. With both, or with a tail no instance
+        // interned, the answer is that they may be one, which errs towards an overlap.
+        const bool                     swap    = table.ends_in_pack( y.arguments );
+        const std::span<const Type_id> pattern = swap ? y.arguments : x.arguments;
+        const std::span<const Type_id> actual  = swap ? x.arguments : y.arguments;
+        if( swap && table.ends_in_pack( x.arguments ) && x.arguments.size() != y.arguments.size() )
         {
-            if( !unify( table, x.arguments[i], y.arguments[i], bound ) )
-            {
-                return false;
-            }
+            return true;
         }
 
-        return true;
+        if( table.ends_in_pack( pattern ) && actual.size() >= pattern.size() - 1 &&
+            !table.interned_pack( actual.subspan( pattern.size() - 1 ) ).is_valid() )
+        {
+            return true;
+        }
+
+        return match_arguments(
+            table, pattern, actual, [&]( Type_id lhs, Type_id rhs ) { return unify( table, lhs, rhs, bound ); }
+        );
+    }
     default:
         return false; // distinct leaves
     }
@@ -1359,6 +1502,26 @@ bool Type_table::is_size_parameter( Type_id id ) const
     return is_parameter( id ) && get( id ).element.is_valid();
 }
 
+bool Type_table::is_pack_parameter( Type_id id ) const
+{
+    return is_parameter( id ) && get( id ).pack;
+}
+
+bool Type_table::is_pack( Type_id id ) const
+{
+    return get( id ).kind == Type_kind::Pack;
+}
+
+bool Type_table::is_dyn( Type_id id ) const
+{
+    return id == dyn_;
+}
+
+bool Type_table::ends_in_pack( std::span<const Type_id> arguments ) const
+{
+    return !arguments.empty() && arguments.back().is_valid() && is_pack_parameter( arguments.back() );
+}
+
 bool Type_table::is_run( Type_id id ) const
 {
     assert( id.is_valid() );
@@ -1687,28 +1850,44 @@ bool Type_table::substitutes_to( Type_id pattern, const Bindings& bindings, Type
         return p.raw == a.raw && substitutes_to( p.arguments[0], bindings, a.arguments[0] ) &&
                substitutes_to( p.element, bindings, a.element );
     case Type_kind::Size:
-        return a.width == 0 && evaluate( pattern, bindings ) == a.count;
+        return actual == dyn_ ? reaches_dyn( pattern, bindings ) : a.width == 0 && evaluate( pattern, bindings ) == a.count;
     case Type_kind::Struct:
     case Type_kind::Enum:
     case Type_kind::Interface:
     case Type_kind::Closure:
-        if( p.declaration != a.declaration || p.arguments.size() != a.arguments.size() )
+        if( p.declaration != a.declaration )
         {
             return false;
         }
 
-        for( std::size_t i = 0; i < p.arguments.size(); ++i )
-        {
-            if( !substitutes_to( p.arguments[i], bindings, a.arguments[i] ) )
-            {
-                return false;
-            }
-        }
-
-        return true;
+        [[fallthrough]];
+    case Type_kind::Pack:
+        return match_arguments(
+            *this, p.arguments, a.arguments, [&]( Type_id lhs, Type_id rhs ) { return substitutes_to( lhs, bindings, rhs ); }
+        );
     default:
         return false;
     }
+}
+
+// Whether a computed size is `dyn` once `bindings` are read through: one of its operands is.
+bool Type_table::reaches_dyn( Type_id size, const Bindings& bindings ) const
+{
+    const Type& described = get( size );
+
+    if( described.kind == Type_kind::Parameter )
+    {
+        const auto bound = bindings.find( size.v );
+        return bound != bindings.end() && bound->second != size && reaches_dyn( bound->second, bindings );
+    }
+
+    if( size == dyn_ )
+    {
+        return true;
+    }
+
+    return described.kind == Type_kind::Size && described.width != 0 &&
+           ( reaches_dyn( described.arguments[0], bindings ) || reaches_dyn( described.arguments[1], bindings ) );
 }
 
 // The open form is the first instance interned: the signature pass makes each before any is written.
@@ -1725,9 +1904,17 @@ Bindings Type_table::instance_bindings( Type_id instance ) const
     const Type_id open      = instances.at( get( instance ).declaration.v ).front().type;
     const std::span<const Type_id> parameters = get( open ).arguments;
 
+    const std::span<const Type_id> arguments = get( instance ).arguments;
+
     for( std::size_t i = 0; i < parameters.size(); ++i )
     {
-        result.emplace( parameters[i].v, get( instance ).arguments[i] );
+        if( is_pack_parameter( parameters[i] ) )
+        {
+            result.emplace( parameters[i].v, interned_pack( arguments.subspan( i ) ) );
+            break;
+        }
+
+        result.emplace( parameters[i].v, arguments[i] );
     }
 
     return result;
@@ -1861,8 +2048,9 @@ Type_id Type_table::composite(
     {
         spelling += i == 0 ? "<" : ", ";
         const Type& argument = get( owned[i] );
-        const bool  computed = argument.kind == Type_kind::Size && argument.width != 0;
+        const bool  computed = argument.kind == Type_kind::Size && argument.width != 0 && owned[i] != dyn_;
         spelling += computed ? fmt::format( "({})", this->name( owned[i] ) ) : std::string( this->name( owned[i] ) );
+        spelling += argument.pack ? "..." : "";
     }
 
     if( !owned.empty() )
@@ -1873,6 +2061,7 @@ Type_id Type_table::composite(
     const Type_id id = add( Type { kind, 0, false, element, declaration, owned }, spelling );
 
     instances.push_back( Instance { .arguments = owned, .type = id } );
+    intern_tail( get( instances.front().type ).arguments, owned );
 
     return id;
 }
@@ -3596,6 +3785,113 @@ TEST_CASE( "type_table_interns_a_size", "[sema][type][size]" )
 
         REQUIRE( table.unifies( pattern, table.array_of( i32, 3 ), t, i32 ) );
         REQUIRE_FALSE( table.unifies( table.array_of( i32, 3 ), table.array_of( i32, 4 ), t, t ) );
+    }
+}
+
+TEST_CASE( "type_table_interns_dyn_and_size_packs", "[sema][type][size][pack]" )
+{
+    Type_table table;
+
+    const Type_id u64  = table.integer( 64, false );
+    const Type_id f64  = table.floating( 64 );
+    const Type_id n    = table.size_parameter( Node_id { 1 }, "N", u64 );
+    const Type_id t    = table.parameter( Node_id { 2 }, "T" );
+    const Type_id s    = table.size_pack_parameter( Node_id { 3 }, "S", u64 );
+    const Type_id four = table.size( 4 );
+    const Type_id two  = table.size( 2 );
+    const Type_id dyn  = table.dyn();
+    const Node_id grid = Node_id { 10 };
+    const Type_id open = table.structure( grid, std::array { t, s }, "grid" );
+    const auto    at   = [&]( auto... sizes ) { return table.structure( grid, std::array { f64, sizes... }, "grid" ); };
+
+    SECTION( "dyn absorbs arithmetic and has no value" )
+    {
+        REQUIRE( table.is_dyn( dyn ) );
+        REQUIRE( table.name( dyn ) == "dyn" );
+        REQUIRE( table.size_op( Size_op::Multiply, dyn, four ) == dyn );
+        REQUIRE( table.size_op( Size_op::Add, n, dyn ) == dyn );
+        REQUIRE_FALSE( table.evaluate( dyn, {} ) );
+        REQUIRE( table.substitute( dyn, {} ) == dyn );
+        REQUIRE( table.substitute( table.size_op( Size_op::Add, n, four ), { { n.v, dyn } } ) == dyn );
+        REQUIRE( table.name( at( dyn, four ) ) == "grid<f64, dyn, 4>" );
+    }
+
+    SECTION( "a pack parameter is a size parameter and names its type with an expansion" )
+    {
+        REQUIRE( table.is_pack_parameter( s ) );
+        REQUIRE( table.is_size_parameter( s ) );
+        REQUIRE_FALSE( table.is_pack_parameter( n ) );
+        REQUIRE( table.name( open ) == "grid<T, S...>" );
+        REQUIRE( table.pack( std::array { four, two } ) == table.pack( std::array { four, two } ) );
+        REQUIRE( table.pack( std::array { four, two } ) != table.pack( std::array { two, four } ) );
+        REQUIRE( table.name( table.pack( std::array { four, dyn } ) ) == "4, dyn" );
+    }
+
+    SECTION( "a bound pack splices into a type's arguments" )
+    {
+        const Bindings bindings { { t.v, f64 }, { s.v, table.pack( std::array { four, two } ) } };
+        REQUIRE( table.substitute( open, bindings ) == at( four, two ) );
+        REQUIRE( table.substitute( open, { { t.v, f64 }, { s.v, table.pack( std::span<const Type_id> {} ) } } ) == at() );
+        REQUIRE( table.substitutes_to( open, bindings, at( four, two ) ) );
+        REQUIRE_FALSE( table.substitutes_to( open, bindings, at( four ) ) );
+    }
+
+    SECTION( "a pack deduces whatever the fixed arguments leave, at any rank" )
+    {
+        for( const Type_id actual : { at(), at( four ), at( four, dyn, two ) } )
+        {
+            Bindings bindings;
+            REQUIRE( table.deduce( open, actual, bindings ) );
+            REQUIRE( bindings.at( t.v ) == f64 );
+            REQUIRE( table.substitute( open, bindings ) == actual );
+            REQUIRE( table.instance_bindings( actual ) == bindings );
+        }
+    }
+
+    SECTION( "fixed sizes before a pack bind first" )
+    {
+        const Node_id rows     = Node_id { 11 };
+        const Type_id peeled   = table.structure( rows, std::array { t, n, s }, "rows" );
+        const Type_id three_d  = table.structure( rows, std::array { f64, four, two, dyn }, "rows" );
+        const Type_id rank_one = table.structure( rows, std::array { f64, four }, "rows" );
+
+        Bindings bindings;
+        REQUIRE( table.deduce( peeled, three_d, bindings ) );
+        REQUIRE( bindings.at( n.v ) == four );
+        REQUIRE( bindings.at( s.v ) == table.pack( std::array { two, dyn } ) );
+
+        Bindings empty;
+        REQUIRE( table.deduce( peeled, rank_one, empty ) );
+        REQUIRE( table.get( empty.at( s.v ) ).arguments.empty() );
+
+        Bindings none;
+        REQUIRE_FALSE( table.deduce( peeled, table.structure( rows, std::array { f64 }, "rows" ), none ) );
+    }
+
+    SECTION( "a pack binds only sizes, and a size never binds a pack" )
+    {
+        Bindings bindings;
+        REQUIRE_FALSE( table.deduce( open, table.structure( grid, std::array { f64, f64 }, "grid" ), bindings ) );
+        REQUIRE_FALSE( table.deduce( n, s, bindings ) );
+        REQUIRE_FALSE( table.deduce( s, four, bindings ) );
+    }
+
+    SECTION( "a forwarded pack deduces as itself" )
+    {
+        const Type_id other = table.size_pack_parameter( Node_id { 4 }, "U", u64 );
+        const Type_id u     = table.parameter( Node_id { 5 }, "V" );
+        const Type_id outer = table.structure( grid, std::array { u, other }, "grid" );
+
+        Bindings bindings;
+        REQUIRE( table.deduce( open, outer, bindings ) );
+        REQUIRE( table.substitute( open, bindings ) == outer );
+        REQUIRE( table.substitute( outer, { { u.v, f64 }, { other.v, table.pack( std::array { dyn } ) } } ) == at( dyn ) );
+    }
+
+    SECTION( "two packed forms unify when one binding makes them one" )
+    {
+        REQUIRE( table.unifies( open, at( four, two ), t, f64 ) );
+        REQUIRE_FALSE( table.unifies( open, at( four ), t, u64 ) );
     }
 }
 
