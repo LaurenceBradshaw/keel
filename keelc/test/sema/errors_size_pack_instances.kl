@@ -1,0 +1,23 @@
+// A suffix or a condition fails at the instance a pack reaches, named with every size of its pack.
+struct Cut<u64 N, u64... S>
+{
+    i32[N - 1] x;
+};
+
+u64 make<u64... S>()
+{
+    Cut<1, S...> c = Cut<1, S...> { [ 0, .. ] };
+    return 0;
+}
+
+u64 wide<u64 A, u64... S>( const ref Cut<A, S...> _ ) where A >= 3
+{
+    return A;
+}
+
+i32 main()
+{
+    Cut<2, 9, 8> two = Cut<2, 9, 8> { [ 0, .. ] };
+    _ = wide( two );
+    return cast<i32>( make<5, 6>() );
+}

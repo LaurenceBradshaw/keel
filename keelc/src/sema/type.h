@@ -295,6 +295,10 @@ public:
     // The open form's parameters, each bound to this instance's argument, for an interface, struct,
     // class, enum or closure. Empty for anything else or a non-generic.
     Bindings instance_bindings( Type_id instance ) const;
+    // `parameters` against flat `arguments` by position; a pack parameter takes what the fixed ones leave.
+    Bindings             bind( std::span<const Type_id> parameters, std::span<const Type_id> arguments );
+    std::vector<Type_id> spliced( std::span<const Type_id> arguments, const Bindings& bindings ); // each pack spread
+    std::vector<Type_id> flattened( std::span<const Type_id> arguments ) const; // each `Pack` spread, nothing substituted
 
     // A copy of the resolver's, for the conformance model and the emitter, which see only this table.
     void                 set_prelude( const Prelude_items& items );
@@ -307,11 +311,10 @@ public:
     std::optional<u64> evaluate( Type_id size, const Bindings& bindings ) const;
 
 private:
-    Type_id              add( const Type& type, std::string_view name );
-    std::string          const_spelling( Type_id element, bool const_element ) const;
-    static u8            width_index( u8 width );
-    std::vector<Type_id> spliced( std::span<const Type_id> arguments, const Bindings& bindings ); // each pack spread
-    bool                 reaches_dyn( Type_id size, const Bindings& bindings ) const;
+    Type_id     add( const Type& type, std::string_view name );
+    std::string const_spelling( Type_id element, bool const_element ) const;
+    static u8   width_index( u8 width );
+    bool        reaches_dyn( Type_id size, const Bindings& bindings ) const;
     // Interns the tail of `arguments` that the pack of its declaration's open form `open` takes.
     void intern_tail( std::span<const Type_id> open, std::span<const Type_id> arguments );
 

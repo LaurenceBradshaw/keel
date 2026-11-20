@@ -253,22 +253,28 @@ bool Generic_recursion::expands_forever( Node_id generic, std::vector<Step>& pat
         // The span of the *growing* call, kept rather than a flag: the edge that closes the cycle
         // is usually an innocent-looking forward, and pointing at it would name the wrong line.
         std::optional<Span> grows;
-        bool                by_size = false;
+        Growth              by = Growth::Type;
 
         for( const Type_id argument : edge.arguments )
         {
             if( !grows && wraps_a_parameter( argument ) )
             {
-                grows   = edge.at;
-                by_size = table_.is_size( argument );
+                grows = edge.at;
+                by    = table_.is_size( argument ) ? Growth::Size : Growth::Type;
             }
+        }
+
+        if( !grows && lengthens_a_pack( edge ) )
+        {
+            grows = edge.at;
+            by    = Growth::Pack;
         }
 
         const auto closing = std::ranges::find_if( path, [&]( const Step& step ) { return step.generic == edge.to; } );
 
         if( closing == path.end() )
         {
-            path.push_back( Step { .generic = edge.to, .grown_at = grows, .by_size = by_size } );
+            path.push_back( Step { .generic = edge.to, .grown_at = grows, .by = by } );
 
             const bool reported = expands_forever( edge.to, path );
 
@@ -284,18 +290,18 @@ bool Generic_recursion::expands_forever( Node_id generic, std::vector<Step>& pat
 
         // The edge into `closing` is outside the cycle; every later one is on it.
         std::optional<Span> grown_at;
-        bool                grown_by_size = false;
+        Growth              grown_by = Growth::Type;
 
         for( auto step = std::next( closing ); step != path.end() && !grown_at; ++step )
         {
-            grown_at      = step->grown_at;
-            grown_by_size = step->by_size;
+            grown_at = step->grown_at;
+            grown_by = step->by;
         }
 
         if( !grown_at )
         {
-            grown_at      = grows;
-            grown_by_size = by_size;
+            grown_at = grows;
+            grown_by = by;
         }
 
         if( !grown_at )
@@ -321,7 +327,21 @@ bool Generic_recursion::expands_forever( Node_id generic, std::vector<Step>& pat
 
         cycle += fmt::format( "`{}`", name_of( edge.to ) );
 
-        if( grown_by_size )
+        if( grown_by == Growth::Pack )
+        {
+            reporter_.error_at(
+                *grown_at,
+                fmt::format( "`{}` is instantiated with a longer pack each time round", name_of( edge.to ) ),
+                fmt::format(
+                    "{}, and each round adds sizes to the last pack - so no set of instances ever finishes; "
+                    "forward the pack itself",
+                    cycle
+                )
+            );
+            return true;
+        }
+
+        if( grown_by == Growth::Size )
         {
             reporter_.error_at(
                 *grown_at,
@@ -368,6 +388,15 @@ bool Generic_recursion::wraps_a_parameter( Type_id argument ) const
     }
 
     return table_.mentions_parameter( argument );
+}
+
+// `f<S..., 1>`: a pack spread among more arguments than the callee has parameters, so the
+// callee's pack holds it and more.
+bool Generic_recursion::lengthens_a_pack( const Generic_call& edge ) const
+{
+    const std::size_t parameters = ast_.type_parameters( ast_.type_param_list( edge.to ) ).size();
+    return edge.arguments.size() > parameters &&
+           std::ranges::any_of( edge.arguments, [&]( Type_id argument ) { return table_.is_pack_parameter( argument ); } );
 }
 
 std::vector<Instantiation> Generic_recursion::take_instantiations()

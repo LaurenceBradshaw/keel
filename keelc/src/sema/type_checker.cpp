@@ -527,9 +527,18 @@ Bindings aggregate_bindings( const Ast& ast, const Type_table& table, Type_id ag
 
     Bindings bindings;
 
-    for( std::size_t i = 0; i < parameters.size() && i < arguments.size(); ++i )
+    for( std::size_t i = 0; i < parameters.size() && i <= arguments.size(); ++i )
     {
-        bindings.emplace( recorded[parameters[i].v].v, arguments[i] );
+        const Type_id parameter = recorded[parameters[i].v];
+        if( table.is_pack_parameter( parameter ) )
+        {
+            bindings.emplace( parameter.v, table.interned_pack( arguments.subspan( i ) ) );
+            break;
+        }
+        if( i < arguments.size() )
+        {
+            bindings.emplace( parameter.v, arguments[i] );
+        }
     }
 
     return bindings;

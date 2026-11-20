@@ -179,9 +179,27 @@ Size_suffixes::reach( const Generic_call& edge, const Bindings& bindings, const 
                                             ? ast_.type_parameters( ast_.type_param_list( caller->declaration ) )
                                             : std::vector<Node_id> {};
 
-    for( std::size_t i = 0; i < edge.arguments.size(); ++i )
+    // A pack passed on is its sizes under the caller's bindings.
+    std::vector<Type_id> arguments;
+    for( const Type_id argument : edge.arguments )
     {
-        const Type_id argument = edge.arguments[i];
+        if( !table_.is_pack_parameter( argument ) )
+        {
+            arguments.push_back( argument );
+            continue;
+        }
+        const auto bound = bindings.find( argument.v );
+        if( bound == bindings.end() )
+        {
+            return std::nullopt;
+        }
+        const std::span<const Type_id> sizes = table_.get( bound->second ).arguments;
+        arguments.insert( arguments.end(), sizes.begin(), sizes.end() );
+    }
+
+    for( std::size_t i = 0; i < arguments.size(); ++i )
+    {
+        const Type_id argument = arguments[i];
 
         if( !table_.is_size( argument ) && !table_.is_size_parameter( argument ) )
         {
@@ -200,11 +218,12 @@ Size_suffixes::reach( const Generic_call& edge, const Bindings& bindings, const 
         std::optional<Source> source;
         if( is_constant_size( table_, argument ) )
         {
-            const auto earlier =
-                std::ranges::count( edge.arguments.begin(), edge.arguments.begin() + std::ptrdiff_t( i ), argument );
-            source = Source { .value = *value, .occurrence = u32( earlier ) };
+            const auto earlier = std::ranges::count( arguments.begin(), arguments.begin() + std::ptrdiff_t( i ), argument );
+            source             = Source { .value = *value, .occurrence = u32( earlier ) };
         }
-        for( std::size_t p = 0; p < passed.size() && p < caller->sources.size(); ++p )
+        for( std::size_t p = 0;
+             p < passed.size() && p < caller->sources.size() && !table_.is_pack_parameter( types_[passed[p].v] );
+             ++p )
         {
             if( passed[p].v < types_.size() && types_[passed[p].v] == argument )
             {
@@ -223,18 +242,24 @@ Size_suffixes::reach( const Generic_call& edge, const Bindings& bindings, const 
 
 Bindings Size_suffixes::bindings_of( const Instance& instance ) const
 {
-    const std::vector<Node_id> parameters = ast_.type_parameters( ast_.type_param_list( instance.declaration ) );
-
-    Bindings bindings;
-
-    for( std::size_t i = 0; i < parameters.size() && i < instance.sizes.size(); ++i )
+    std::vector<Type_id> parameters;
+    for( const Node_id parameter : ast_.type_parameters( ast_.type_param_list( instance.declaration ) ) )
     {
-        if( instance.sizes[i].is_valid() && parameters[i].v < types_.size() && types_[parameters[i].v].is_valid() )
-        {
-            bindings.emplace( types_[parameters[i].v].v, instance.sizes[i] );
-        }
+        parameters.push_back( parameter.v < types_.size() ? types_[parameter.v] : Type_id {} );
+    }
+    if( std::ranges::any_of( parameters, []( Type_id parameter ) { return !parameter.is_valid(); } ) )
+    {
+        return {};
     }
 
+    // Only the sizes are bound: a type argument stays its parameter.
+    std::vector<Type_id> arguments;
+    for( std::size_t i = 0; i < instance.sizes.size(); ++i )
+    {
+        arguments.push_back( instance.sizes[i].is_valid() ? instance.sizes[i] : table_.builtin( Type_kind::Void ) );
+    }
+    Bindings bindings = table_.bind( parameters, arguments );
+    std::erase_if( bindings, [&]( const auto& each ) { return !table_.is_size_parameter( Type_id { each.first } ); } );
     return bindings;
 }
 
@@ -422,12 +447,12 @@ std::string Size_suffixes::name_of( const Instance& instance ) const
 
     std::string arguments;
 
-    for( std::size_t i = 0; i < parameters.size() && i < instance.sizes.size(); ++i )
+    for( std::size_t i = 0; i < instance.sizes.size(); ++i )
     {
         arguments += i == 0 ? "" : ", ";
         const Type_id written = instance.sizes[i].is_valid() ? instance.sizes[i] : instance.types[i];
-        arguments += written.is_valid() ? std::string( table_.name( written ) )
-                                        : std::string( interner_.text( ast_.name( parameters[i] ) ) );
+        arguments += written.is_valid() || i >= parameters.size() ? std::string( table_.name( written ) )
+                                                                  : std::string( interner_.text( ast_.name( parameters[i] ) ) );
     }
 
     return fmt::format( "{}<{}>", interner_.text( ast_.name( named ) ), arguments );

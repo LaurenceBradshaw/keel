@@ -1,0 +1,101 @@
+// A size pack at constant sizes: one instance per pack, `S.size` and `S[i]` as constants, the pack
+// deduced from an argument, written, and forwarded with `S...`. `N` is the element count.
+import t::console;
+
+class Grid<T, u64 N, u64... S> where T : copyable
+{
+    T[N] cells;
+
+    public Grid( T fill )
+    {
+        cells = [ fill, .. ];
+    }
+
+    public static u64 rank()
+    {
+        return S.size;
+    }
+
+    public u64 extent( u64 axis ) const
+    {
+        return S[axis];
+    }
+
+    // Row-major: the last axis is contiguous.
+    public u64 offset( u64... index ) const
+    {
+        u64 at     = 0;
+        u64 stride = 1;
+        for( u64 k = S.size; k > 0; k -= 1 )
+        {
+            at += index[k - 1] * stride;
+            stride *= S[k - 1];
+        }
+        return at;
+    }
+
+    public T get( u64... index ) const
+    {
+        return cells[offset( index )];
+    }
+
+    public void set( T value, u64... index )
+    {
+        cells[offset( index )] = value;
+    }
+};
+
+u64 product<u64... S>()
+{
+    u64 p = 1;
+    for( u64 i = 0; i < S.size; i += 1 )
+    {
+        p *= S[i];
+    }
+    return p;
+}
+
+// `S` deduced from the argument, then forwarded.
+u64 cells<T, u64 N, u64... S>( const ref Grid<T, N, S...> _ ) where T : copyable
+{
+    return product<S...>();
+}
+
+u64 pick<u64... S>( i32 _ )
+{
+    return S.size;
+}
+
+u64 pick<u64... S>( bool _ )
+{
+    return S.size + 100;
+}
+
+i32 main()
+{
+    Grid<i32, 6, 2, 3> g = Grid<i32, 6, 2, 3>( 0 );
+    g.set( 7, 1, 2 );
+    g.set( 5, 0, 1 );
+    t::print( Grid<i32, 6, 2, 3>::rank() );
+    t::print( g.extent( 0 ) * 10 + g.extent( 1 ) );
+    t::print( g.offset( 1, 2 ) );
+    t::print( g.get( 1, 2 ) + g.get( 0, 1 ) );
+    t::print( cells( g ) );
+
+    Grid<f64, 24, 2, 3, 4> cube = Grid<f64, 24, 2, 3, 4>( 0.5 );
+    cube.set( 2.5, 1, 2, 3 );
+    t::print( cube.offset( 1, 2, 3 ) );
+    t::print( cube.get( 1, 2, 3 ) + cube.get( 0, 0, 0 ) );
+    t::print( cells( cube ) );
+
+    Grid<i32, 1> scalar = Grid<i32, 1>( 9 );
+    t::print( Grid<i32, 1>::rank() );
+    t::print( scalar.get() );
+    t::print( cells( scalar ) );
+
+    t::print( product<2, 3, 4>() + product<5>() );
+    t::print( pick<4, 5, 6>( 1 ) + pick<7>( true ) );
+
+    u64 axis = 2;
+    return cast<i32>( g.extent( axis ) ); // past the rank: out of bounds
+}

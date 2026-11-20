@@ -1,0 +1,13 @@
+error: `Cut<1, 5, 6>` makes an array of 0 elements
+ --> sema/errors_size_pack_instances.kl:9:9
+  |
+9 |     Cut<1, S...> c = Cut<1, S...> { [ 0, .. ] };
+  |         ^ `N - 1` at sema/errors_size_pack_instances.kl:4:9 is 0 when `N` is 1
+
+error: `wide<2, 9, 8>` needs `A >= 3`
+  --> sema/errors_size_pack_instances.kl:21:9
+   |
+21 |     _ = wide( two );
+   |         ^^^^^^^^^^^ the condition at sema/errors_size_pack_instances.kl:13:55 fails when `A` is 2
+
+2 errors generated

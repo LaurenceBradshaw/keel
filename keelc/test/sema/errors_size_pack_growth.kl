@@ -1,0 +1,31 @@
+// A pack that grows round a cycle never finishes, and a pack is no one size.
+u64 grow<u64... S>( u64 n )
+{
+    return n == 0 ? S.size : grow<S..., 1>( n - 1 );
+}
+
+struct Chain<u64... S>
+{
+    Chain<S..., 1>* next;
+};
+
+struct Flat<u64... S>
+{
+    i32[S] cells;
+};
+
+u64 ranked<u64... S>() where S >= 2
+{
+    return 0;
+}
+
+// Forwarding a pack is ordinary recursion.
+u64 same<u64... S>( u64 n )
+{
+    return n == 0 ? S.size : same<S...>( n - 1 );
+}
+
+i32 main()
+{
+    return cast<i32>( same<1, 2>( 3 ) );
+}

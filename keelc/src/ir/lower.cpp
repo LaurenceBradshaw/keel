@@ -180,7 +180,9 @@ private:
     Operand lower_array_rearrange( Node_id id, Node_id object, Type_id array );
     Operand lower_raw_method( Node_id id, Node_id object, Type_id array );
     Operand lower_array_literal( Node_id id );
-    Operand lower_array_fill( Node_id id );
+    // `S.size` or `S[i]` over the instance's pack; invalid when `id` reads no pack.
+    std::optional<Operand> lower_pack_read( Node_id id );
+    Operand                lower_array_fill( Node_id id );
     // `@functions_of( T )`: each listed function's `<module>.<name>` and address, in a `T[N]`.
     Operand lower_functions_of( Node_id id );
     Operand lower_string_literal( Node_id id );
@@ -697,17 +699,9 @@ Type_id Lowering::binding_type_under( Node_id decl, const Bindings& bindings )
 // call inside a generic wrote `T`.
 std::vector<Type_id> Lowering::type_arguments_for_call( Node_id call )
 {
-    std::vector<Type_id> type_arguments;
-
-    if( const std::optional<std::size_t> instance = types_.instantiation_of( call ) )
-    {
-        for( const Type_id argument : types_.instantiations()[*instance].arguments )
-        {
-            type_arguments.push_back( types_.table().substitute( argument, bindings_ ) );
-        }
-    }
-
-    return type_arguments;
+    const std::optional<std::size_t> instance = types_.instantiation_of( call );
+    return instance ? types_.table().spliced( types_.instantiations()[*instance].arguments, bindings_ )
+                    : std::vector<Type_id> {};
 }
 
 Bindings Lowering::bindings_for_call( Node_id call )
@@ -719,19 +713,11 @@ Bindings Lowering::bindings_for_call( Node_id call )
         return {};
     }
 
-    const Instantiation&       chosen     = types_.instantiations()[*instance];
-    const std::vector<Node_id> parameters = ast_.type_parameters( ast_.type_param_list( chosen.declaration ) );
+    const Instantiation& chosen = types_.instantiations()[*instance];
 
-    Bindings bindings;
-
-    for( std::size_t i = 0; i < parameters.size() && i < chosen.arguments.size(); ++i )
-    {
-        // The recorded arguments are what the call wrote, `T` inside a generic, so substitute through
-        // this instance's bindings: `g<T>( a )` in `f<i32>` is `g<i32>`.
-        bindings.emplace( types_.type_of( parameters[i] ).v, types_.table().substitute( chosen.arguments[i], bindings_ ) );
-    }
-
-    return bindings;
+    // The recorded arguments are what the call wrote, `T` inside a generic, so substitute through
+    // this instance's bindings: `g<T>( a )` in `f<i32>` is `g<i32>`.
+    return bindings_for( ast_, types_, { chosen.declaration, types_.table().spliced( chosen.arguments, bindings_ ) } );
 }
 
 Lowering::Instance_target Lowering::at_instance( Type_id held ) const
@@ -2081,6 +2067,68 @@ Operand Lowering::lower_array_literal( Node_id id )
     drops_.own_temporary( temp );
 
     return copy( builder_.place( temp ), type );
+}
+
+std::optional<Operand> Lowering::lower_pack_read( Node_id id )
+{
+    const Node_id object = ast_.object( id );
+    if( ast_.kind( object ) != Node_kind::Name_expr || !types_.table().is_pack_parameter( types_.type_of( object ) ) )
+    {
+        return std::nullopt;
+    }
+
+    Type_table&                    table   = types_.table();
+    const Type_id                  word    = table.integer( 64, false );
+    const Span                     span    = ast_.span( id );
+    const std::span<const Type_id> sizes   = table.get( table.substitute( types_.type_of( object ), bindings_ ) ).arguments;
+    const auto                     size_at = [&]( u64 k )
+    {
+        assert( table.get( sizes[k] ).width == 0 && "a constant instance binds every size" );
+        return constant( literal_pool_.add_integer( table.get( sizes[k] ).count ), word );
+    };
+
+    if( ast_.kind( id ) == Node_kind::Field_expr )
+    {
+        return constant( literal_pool_.add_integer( sizes.size() ), word );
+    }
+
+    const std::optional<Constant_value> folded = types_.constant_of( ast_.index( id ) );
+    if( folded && folded->magnitude < sizes.size() )
+    {
+        return size_at( folded->magnitude );
+    }
+
+    const Operand  index   = converted( lower_expression( ast_.index( id ) ), word, span );
+    const Type_id  boolean = table.builtin( Type_kind::Bool );
+    const Block_id pass    = builder_.add_block();
+    const Block_id fail    = builder_.add_block();
+    const Operand  rank    = constant( literal_pool_.add_integer( sizes.size() ), word );
+    const Local_id at      = builder_.into_temp( use( index ), word, span );
+
+    builder_.terminate_branch(
+        temporary( binary( Token_kind::Less, copy( builder_.place( at ), word ), rank, boolean ), boolean, span ),
+        pass,
+        fail,
+        span
+    );
+    builder_.switch_to( fail );
+    builder_.terminate_panic( span, Failure::Bounds );
+    builder_.switch_to( pass );
+
+    if( sizes.empty() )
+    {
+        return constant( literal_pool_.add_integer( 0 ), word ); // unreachable: the test always fails
+    }
+
+    const Type_id  array = table.array_of( word, sizes.size() );
+    const Local_id temp  = builder_.add_local( array, span );
+    builder_.storage_live( temp, span );
+    for( u64 k = 0; k < sizes.size(); ++k )
+    {
+        const Local_id slot = builder_.into_temp( use( constant( literal_pool_.add_integer( k ), word ) ), word, span );
+        builder_.assign( builder_.index( builder_.place( temp ), slot ), use( size_at( k ) ), span );
+    }
+    return copy( builder_.index( builder_.place( temp ), at ), word );
 }
 
 // D60: a loop over the elements, evaluating the value once per turn and dropping what that built
@@ -3736,6 +3784,10 @@ Operand Lowering::lower_unspanned( Node_id id )
     case Node_kind::Unary_expr:
         return lower_unary( id );
     case Node_kind::Index_expr:
+        if( const std::optional<Operand> read = lower_pack_read( id ) )
+        {
+            return *read;
+        }
         return copy( lower_place( id ), type_of( id ) );
     case Node_kind::Call_expr:
         return lower_call( id );
@@ -3817,6 +3869,10 @@ Operand Lowering::lower_unspanned( Node_id id )
     // Reading a place is a copy of it - no temporary, because a place is already readable. That is
     // the whole of what lower_place buys in value position.
     case Node_kind::Field_expr:
+        if( const std::optional<Operand> read = lower_pack_read( id ) )
+        {
+            return *read;
+        }
         return copy( lower_place( id ), type_of( id ) );
     case Node_kind::Marker_expr:
     {
@@ -3903,6 +3959,11 @@ Place Lowering::lower_place( Node_id id )
     }
     case Node_kind::Field_expr:
     {
+        if( const std::optional<Operand> read = lower_pack_read( id ) )
+        {
+            return builder_.place( builder_.into_temp( use( *read ), read->type, ast_.span( id ) ) );
+        }
+
         // The field's declaration, found on the object's struct type - same lookup as the emitter does.
         const Node_id   object      = ast_.object( id );
         const Type_id   object_type = type_of( object );
@@ -3960,6 +4021,11 @@ Place Lowering::lower_place( Node_id id )
     }
     case Node_kind::Index_expr:
     {
+        if( const std::optional<Operand> read = lower_pack_read( id ) )
+        {
+            return builder_.place( builder_.into_temp( use( *read ), read->type, ast_.span( id ) ) );
+        }
+
         // A `ref` result is already the element's place; a pointer is one deref short of it.
         // Through a bound: an array's is the compiler's `fixed_memory`, anything else its implementer's.
         if( const Node_id method = types_.callee_of( id ); method.is_valid() && ast_.is_requirement( method ) )

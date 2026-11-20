@@ -687,6 +687,18 @@ Type_id Type_table::substitute( Type_id type, const Bindings& bindings )
     return type;
 }
 
+std::vector<Type_id> Type_table::flattened( std::span<const Type_id> arguments ) const
+{
+    std::vector<Type_id> result;
+    for( const Type_id argument : arguments )
+    {
+        const std::span<const Type_id> each =
+            argument.is_valid() && is_pack( argument ) ? get( argument ).arguments : std::span<const Type_id>( &argument, 1 );
+        result.insert( result.end(), each.begin(), each.end() );
+    }
+    return result;
+}
+
 std::vector<Type_id> Type_table::spliced( std::span<const Type_id> arguments, const Bindings& bindings )
 {
     std::vector<Type_id> result;
@@ -1915,6 +1927,32 @@ Bindings Type_table::instance_bindings( Type_id instance ) const
         }
 
         result.emplace( parameters[i].v, arguments[i] );
+    }
+
+    return result;
+}
+
+Bindings Type_table::bind( std::span<const Type_id> parameters, std::span<const Type_id> arguments )
+{
+    Bindings          result;
+    const std::size_t fixed =
+        parameters.size() -
+        static_cast<std::size_t>( std::ranges::count_if( parameters, [&]( Type_id p ) { return is_pack_parameter( p ); } ) );
+    const std::size_t taken = arguments.size() > fixed ? arguments.size() - fixed : 0;
+    std::size_t       at    = 0;
+
+    for( const Type_id parameter : parameters )
+    {
+        if( is_pack_parameter( parameter ) )
+        {
+            const std::size_t from = std::min( at, arguments.size() );
+            result.emplace( parameter.v, pack( arguments.subspan( from, std::min( taken, arguments.size() - from ) ) ) );
+            at += taken;
+        }
+        else if( at < arguments.size() )
+        {
+            result.emplace( parameter.v, arguments[at++] );
+        }
     }
 
     return result;
@@ -3892,6 +3930,47 @@ TEST_CASE( "type_table_interns_dyn_and_size_packs", "[sema][type][size][pack]" )
     {
         REQUIRE( table.unifies( open, at( four, two ), t, f64 ) );
         REQUIRE_FALSE( table.unifies( open, at( four ), t, u64 ) );
+    }
+}
+
+TEST_CASE( "type_table_binds_flat_arguments_to_a_pack", "[sema][type][size][pack]" )
+{
+    Type_table table;
+
+    const Type_id u64   = table.integer( 64, false );
+    const Type_id f64   = table.floating( 64 );
+    const Type_id n     = table.size_parameter( Node_id { 1 }, "N", u64 );
+    const Type_id t     = table.parameter( Node_id { 2 }, "T" );
+    const Type_id s     = table.size_pack_parameter( Node_id { 3 }, "S", u64 );
+    const Type_id u     = table.parameter( Node_id { 4 }, "U" );
+    const Type_id two   = table.size( 2 );
+    const Type_id three = table.size( 3 );
+
+    SECTION( "a pack takes what the fixed parameters leave, none or more" )
+    {
+        REQUIRE(
+            table.bind( std::array { t, n, s }, std::array { f64, two, three, two } ) ==
+            Bindings { { t.v, f64 }, { n.v, two }, { s.v, table.pack( std::array { three, two } ) } }
+        );
+        REQUIRE(
+            table.bind( std::array { t, n, s }, std::array { f64, two } ) ==
+            Bindings { { t.v, f64 }, { n.v, two }, { s.v, table.pack( std::span<const Type_id> {} ) } }
+        );
+    }
+
+    SECTION( "a method's own parameters follow its type's pack" )
+    {
+        REQUIRE(
+            table.bind( std::array { s, u }, std::array { two, three, f64 } ) ==
+            Bindings { { s.v, table.pack( std::array { two, three } ) }, { u.v, f64 } }
+        );
+    }
+
+    SECTION( "a bound pack among arguments is spread" )
+    {
+        const Type_id pack = table.pack( std::array { two, three } );
+        REQUIRE( table.flattened( std::array { f64, pack } ) == std::vector { f64, two, three } );
+        REQUIRE( table.spliced( std::array { n, s }, { { n.v, three }, { s.v, pack } } ) == std::vector { three, two, three } );
     }
 }
 

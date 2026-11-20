@@ -103,18 +103,14 @@ bool could_meet( const Type_table& table, Type_id a, Type_id b )
 // that is the only correspondence there is - `f<T>` and `f<U>` name theirs differently.
 Bindings Overloads::type_bindings( Node_id callable, std::span<const Type_id> arguments ) const
 {
-    const std::vector<Node_id> parameters = ast_.type_parameters( ast_.type_param_list( callable ) );
-
-    Bindings bindings;
-
-    for( std::size_t i = 0; i < parameters.size() && i < arguments.size(); ++i )
+    // Annotations::resolve has already reported an unknown type. Binding the error type keeps
+    // every later substitution total, and check() absorbs it at each argument.
+    std::vector<Type_id> parameters;
+    for( const Node_id parameter : ast_.type_parameters( ast_.type_param_list( callable ) ) )
     {
-        // Annotations::resolve has already reported an unknown type. Binding the error type keeps
-        // every later substitution total, and check() absorbs it at each argument.
-        bindings.emplace( types_.type_of( parameters[i] ).v, arguments[i] );
+        parameters.push_back( types_.type_of( parameter ) );
     }
-
-    return bindings;
+    return table_.bind( parameters, table_.flattened( arguments ) );
 }
 
 // The bindings the arguments alone justify, or none at all. Silent, because selection *probes*: a
@@ -531,10 +527,13 @@ bool Overloads::fits( Node_id call, Node_id candidate, u32 implicit_params ) con
     const std::size_t              written   = ast_.type_args( call ).size();
 
     // A call that wrote type arguments means them, so a candidate has to take exactly that many
-    // - which keeps a non-generic out of `f<i32>( x )`. A call that wrote none says nothing
-    // about genericity, so both kinds stay and the types decide below.
+    // - which keeps a non-generic out of `f<i32>( x )` - or, ending in a pack, the fixed ones and
+    // more. A call that wrote none says nothing about genericity, so both kinds stay and the types
+    // decide below.
+    const std::vector<Node_id> parameters = ast_.type_parameters( ast_.type_param_list( candidate ) );
+    const bool                 pack = !parameters.empty() && table_.is_pack_parameter( types_.type_of( parameters.back() ) );
     return takes( candidate, arguments.size() ) &&
-           ( written == 0 || ast_.type_parameters( ast_.type_param_list( candidate ) ).size() == written );
+           ( written == 0 || parameters.size() == written || ( pack && written + 1 >= parameters.size() ) );
 }
 
 // §12: inferred where possible, written where not. Two sources, and they are not equal - the
@@ -2327,6 +2326,7 @@ Node_id Overloads::next_visible( Node_id use, Node_id candidate ) const
 // already an instance rather than a step towards one.
 void Overloads::record_instance( Node_id from, Node_id call, Node_id callable, std::vector<Type_id> resolved )
 {
+    resolved = table_.flattened( resolved ); // flat, as an aggregate's arguments are
     generic_recursion_.record_call( from, callable, resolved, ast_.span( call ) );
 
     instantiation_of_.emplace(

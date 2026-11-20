@@ -14,22 +14,6 @@
 namespace keel
 {
 
-namespace
-{
-// The declaration's type parameters against this instance's arguments.
-Bindings instance_bindings( const Described& declaration, std::span<const Type_id> type_arguments )
-{
-    Bindings bindings;
-
-    for( std::size_t i = 0; i < declaration.type_parameters.size() && i < type_arguments.size(); ++i )
-    {
-        bindings.emplace( declaration.type_parameters[i].v, type_arguments[i] );
-    }
-
-    return bindings;
-}
-} // namespace
-
 std::string Spelling::type( Type_id type ) const
 {
     const Type& described = types.table().get( type );
@@ -311,7 +295,7 @@ std::string Spelling::function( Node_id declaration, std::span<const Type_id> ty
     // The parameters are written in the declaration's own `T`, so without this an instance's symbol
     // would name a type parameter rather than the type it was instantiated at.
     std::vector<Mangled_parameter> params   = described.parameters;
-    const Bindings                 bindings = instance_bindings( described, type_arguments );
+    const Bindings                 bindings = types.table().bind( described.type_parameters, type_arguments );
 
     for( Mangled_parameter& param : params )
     {
@@ -332,14 +316,16 @@ std::string Spelling::function( Node_id declaration, std::span<const Type_id> ty
         // sitting on parameter 0, and it is the whole of what M7 asked of this scheme. The tag takes
         // only the aggregate's arguments; a generic method's own follow them. A block's static
         // method is tagged with the type the block is for.
-        const Type_id enclosing = described.receiver ? params.front().type
-                                  : described.implementer.is_valid()
-                                      ? described.implementer
-                                      : types.table().structure(
-                                            described.aggregate,
-                                            std::span( type_arguments ).first( described.aggregate_arity ),
-                                            described.aggregate_name
-                                        );
+        const Type_id enclosing =
+            described.receiver ? params.front().type
+            : described.implementer.is_valid()
+                ? described.implementer
+                : types.table().structure(
+                      described.aggregate,
+                      std::span( type_arguments )
+                          .first( type_arguments.size() - ( described.type_parameters.size() - described.aggregate_arity ) ),
+                      described.aggregate_name
+                  );
 
         return mangle_function(
             owner( declaration ),

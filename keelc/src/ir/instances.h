@@ -61,6 +61,6 @@ struct Thunk
 Thunk thunk_for( const Ast& ast, Types& types, Type_id implementer, Type_id interface, Node_id requirement, Node_id method );
 
 // The instance's type arguments bound to its declaration's parameters, positionally.
-Bindings bindings_for( const Ast& ast, const Types& types, const Instantiation& instance );
+Bindings bindings_for( const Ast& ast, Types& types, const Instantiation& instance );
 
 } // namespace keel

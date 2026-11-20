@@ -1,0 +1,25 @@
+error: `grow` is instantiated with a longer pack each time round
+ --> sema/errors_size_pack_growth.kl:4:30
+  |
+4 |     return n == 0 ? S.size : grow<S..., 1>( n - 1 );
+  |                              ^^^^^^^^^^^^^^^^^^^^^^ `grow` to `grow`, and each round adds sizes to the last pack - so no set of instances ever finishes; forward the pack itself
+
+error: `Chain` is instantiated with a longer pack each time round
+ --> sema/errors_size_pack_growth.kl:9:5
+  |
+9 |     Chain<S..., 1>* next;
+  |     ^^^^^^^^^^^^^^^^^^^^^ `Chain` to `Chain`, and each round adds sizes to the last pack - so no set of instances ever finishes; forward the pack itself
+
+error: `S` is a pack of sizes, which an array's size cannot read
+  --> sema/errors_size_pack_growth.kl:14:9
+   |
+14 |     i32[S] cells;
+   |         ^ read `S.size` or `S[i]` in a body
+
+error: `S` is a pack of sizes, which a size in a comparison cannot read
+  --> sema/errors_size_pack_growth.kl:17:30
+   |
+17 | u64 ranked<u64... S>() where S >= 2
+   |                              ^ read `S.size` or `S[i]` in a body
+
+4 errors generated

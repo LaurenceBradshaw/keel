@@ -56,17 +56,25 @@ public:
 
 private:
     // A generic on the current walk, and the growing edge that entered it.
+    enum class Growth : u8
+    {
+        Type, // a type built from the last
+        Size, // a size computed from the last
+        Pack, // a pack made longer than the last
+    };
+
     struct Step
     {
         Node_id             generic;
         std::optional<Span> grown_at;
-        bool                by_size = false; // the growth is a size computed from the last
+        Growth              by = Growth::Type;
     };
 
     void record_uses( Node_id from, Type_id type, Span at, std::vector<Generic_call>& into );
     void record_size_roots( Node_id to, std::span<const Type_id> arguments, Span at );
     bool expands_forever( Node_id generic, std::vector<Step>& path );
     bool wraps_a_parameter( Type_id argument ) const;
+    bool lengthens_a_pack( const Generic_call& edge ) const;
 
     const Ast&        ast_;
     const Interner&   interner_;

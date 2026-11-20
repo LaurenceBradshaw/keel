@@ -1205,9 +1205,20 @@ Type_id Annotations::size_tree( Node_id size, Node_id parameter, std::string_vie
         return table_.builtin( Type_kind::Error );
     }
 
+    const Node_id read = ast_.kind( size ) == Node_kind::Name_expr ? resolution_.declaration_of( size ) : parameter;
+    if( table_.is_pack_parameter( types_.type_of( read ) ) )
+    {
+        reporter_.error_at(
+            ast_.span( size ),
+            fmt::format( "`{}` is a pack of sizes, which {} cannot read", interner_.text( ast_.name( read ) ), what ),
+            fmt::format( "read `{0}.size` or `{0}[i]` in a body", interner_.text( ast_.name( read ) ) )
+        );
+        return table_.builtin( Type_kind::Error );
+    }
+
     if( ast_.kind( size ) == Node_kind::Name_expr )
     {
-        return types_.type_of( resolution_.declaration_of( size ) );
+        return types_.type_of( read );
     }
 
     if( ast_.kind( size ) == Node_kind::Binary_expr )

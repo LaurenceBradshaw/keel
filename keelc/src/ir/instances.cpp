@@ -193,10 +193,7 @@ std::optional<Instantiation> Instance_queue::next()
 
         Instantiation reached { .declaration = edge.to, .arguments = {} };
 
-        for( const Type_id argument : edge.arguments )
-        {
-            reached.arguments.push_back( types_.table().substitute( argument, bindings ) );
-        }
+        reached.arguments = types_.table().spliced( edge.arguments, bindings );
 
         queue( pending_, types_, std::move( reached ) );
     }
@@ -290,30 +287,21 @@ void Instance_queue::queue_default_calls( Type_id composite )
             continue;
         }
 
-        Instantiation reached { .declaration = edge.to, .arguments = {} };
-
-        for( const Type_id argument : edge.arguments )
-        {
-            reached.arguments.push_back( types_.table().substitute( argument, bindings ) );
-        }
+        Instantiation reached { .declaration = edge.to, .arguments = types_.table().spliced( edge.arguments, bindings ) };
 
         queue( pending_, types_, std::move( reached ) );
     }
 }
 
 // Positional, which is what D39's spelling guarantees: the nth type argument binds the nth parameter.
-Bindings bindings_for( const Ast& ast, const Types& types, const Instantiation& instance )
+Bindings bindings_for( const Ast& ast, Types& types, const Instantiation& instance )
 {
-    const std::vector<Node_id> parameters = ast.type_parameters( ast.type_param_list( instance.declaration ) );
-
-    Bindings bindings;
-
-    for( std::size_t i = 0; i < parameters.size() && i < instance.arguments.size(); ++i )
+    std::vector<Type_id> parameters;
+    for( const Node_id parameter : ast.type_parameters( ast.type_param_list( instance.declaration ) ) )
     {
-        bindings.emplace( types.type_of( parameters[i] ).v, instance.arguments[i] );
+        parameters.push_back( types.type_of( parameter ) );
     }
-
-    return bindings;
+    return types.table().bind( parameters, instance.arguments );
 }
 
 } // namespace keel

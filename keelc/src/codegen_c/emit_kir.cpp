@@ -1750,6 +1750,23 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
             return fmt::format( "( {} ) {} << {}", spelling_.type( rvalue.a.type ), operand( rvalue.a ), operand( rvalue.b ) );
         }
 
+        // An unsigned `x < 0` (a pack of rank 0 makes them) is a constant, which -Wtype-limits refuses.
+        const auto zero = [&]( const Operand& side )
+        {
+            return side.kind == Operand_kind::Constant && types_.table().is_integer( side.type ) &&
+                   !types_.table().get( side.type ).is_signed && literal_pool_.integer( side.constant ) == 0;
+        };
+        const bool never =
+            ( rvalue.op == Token_kind::Less && zero( rvalue.b ) ) || ( rvalue.op == Token_kind::Greater && zero( rvalue.a ) );
+        const bool always = ( rvalue.op == Token_kind::Greater_equal && zero( rvalue.b ) ) ||
+                            ( rvalue.op == Token_kind::Less_equal && zero( rvalue.a ) );
+        if( never || always )
+        {
+            return fmt::format(
+                "( ( void ) {}, {} )", operand( zero( rvalue.b ) ? rvalue.a : rvalue.b ), always ? "true" : "false"
+            );
+        }
+
         // Every element of a `void[*]` sits at its start, so an offset into one is the run itself;
         // the offset is still named, or C calls it set but unused.
         if( rvalue.op == Token_kind::Plus && types_.table().is_many_pointer( rvalue.a.type ) &&
