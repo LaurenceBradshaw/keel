@@ -16,10 +16,9 @@ import kl::time;
 
 private kl::dataframe fruit()
 {
-    f64 zero = 0.0;
     kl::dataframe df = kl::dataframe();
     df.insert( "n", kl::series( [ 3, 1, 2, 1, 5 ] ) );
-    df.insert( "x", kl::series( [ 2.5, zero / zero, -1.0, 4.0, 0.5 ] ) );
+    df.insert( "x", kl::series( [ 2.5, kl::nan(), -1.0, 4.0, 0.5 ] ) );
     df.insert( "s", kl::series( [ "pear", "fig", "apple", "fig", "kiwi" ] ) );
     df.insert( "b", kl::series( [ true, false, true, true, false ] ) );
     return df;
@@ -535,11 +534,10 @@ private void rolling_by_time( ref kl::test::context c )
 
 private kl::dataframe keyed()
 {
-    f64 zero = 0.0;
     kl::dataframe df = kl::dataframe();
     df.insert( "k", kl::series( [ "a", "b", "a", "b", "a", "c", "b" ] ) );
     df.insert( "j", kl::series( [ 1, 1, 2, 1, 1, 2, 1 ] ) );
-    df.insert( "x", kl::series( [ 3.0, 1.0, zero / zero, 1.0, 3.0, 2.5, -0.5 ] ) );
+    df.insert( "x", kl::series( [ 3.0, 1.0, kl::nan(), 1.0, 3.0, 2.5, -0.5 ] ) );
     df.insert( "b", kl::series( [ true, false, true, false, true, true, false ] ) );
     return df;
 }

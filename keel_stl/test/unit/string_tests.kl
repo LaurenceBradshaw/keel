@@ -345,9 +345,9 @@ private void scientific_rounds_the_exact_value( ref kl::test::context c )
 
 private void fixed_and_scientific_write_specials_as_from( ref kl::test::context c )
 {
-    c.check_eq( kl::string::fixed( kl::from_bits( 0x7ff8000000000000 ), 2 ), "nan" );
-    c.check_eq( kl::string::fixed( kl::from_bits( 0x7ff0000000000000 ), 2 ), "inf" );
-    c.check_eq( kl::string::scientific( kl::from_bits( 0xfff0000000000000 ), 2 ), "-inf" );
+    c.check_eq( kl::string::fixed( kl::nan(), 2 ), "nan" );
+    c.check_eq( kl::string::fixed( kl::inf(), 2 ), "inf" );
+    c.check_eq( kl::string::scientific( kl::ninf(), 2 ), "-inf" );
     c.check_eq( kl::string::fixed( -0.0, 1 ), "-0.0" );
 }
 

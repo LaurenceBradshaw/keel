@@ -97,7 +97,7 @@ private void equality( ref kl::test::context c )
     i32[2] short_ = [ 1, 2 ];
     c.check( !kernel::equal( a, short_ ) );
 
-    f64 infinity = kl::from_bits( 0x7ff0000000000000 );
+    f64 infinity = kl::inf();
     f64 nan = infinity - infinity;
     f64[3] x = [ 1.0, 1000.0, infinity ];
     f64[3] y = [ 1.0 + 1e-10, 1000.0 + 1e-6, infinity ];

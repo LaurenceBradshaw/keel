@@ -1952,9 +1952,10 @@ major), no longer blocked now that D81 has settled lambdas.
   mutable.
 - **A `ctz` intrinsic.** `hash_control::lowest` finds a group's first match in five word
   operations; one instruction would do. It would be an `@intrinsic` (D85) with its own rvalue kind.
-- **Float limits beyond `max` and `min`**: `f64::epsilon`, `f64::infinity` and `f64::nan` (and the
-  smallest positive normal) are left out until something needs them; they would join `max` and
-  `min` as constants of the float types.
+- **Float limits beyond `max` and `min`**: `f64::epsilon` and the smallest positive normal are
+  left out until something needs them; they would join `max` and `min` as constants of the float
+  types. The infinities and NaN are `kl::inf()`, `kl::ninf()` and `kl::nan()`, `f64` only: a generic
+  `T : floating` (`kl::median`) still makes its NaN as `0 / 0`, and `f32` forms wait for a caller.
 - **`kl_rt_hash_key` is not thread-safe**: its key is drawn once, unguarded, and counted up. It
   wants an atomic, or a key per thread, when threads arrive.
 
@@ -1973,6 +1974,11 @@ major), no longer blocked now that D81 has settled lambdas.
 
 ### Compiler structure
 
+- **Least squares, weighted or not, is a linear map once the design matrix and the weights are
+  fixed**: `kl::lstsq( a, b )` with `a` constant is `x = R^-1 Q^T b`, so an `@real_arithmetic` caller
+  (D86) solving against a fixed design could become one circuit in `b`. The pass would first have to
+  run the factorisation of the constant `a`, its square roots included, while compiling, which it
+  does not do today; worth a look once a program solves against a fixed design.
 - **`queue_conformances` instantiates every method a generic implementer's conformances name**, for
   each closed instance a program names, whether anything calls it or not, because a vtable or a call
   through a bound reaches them without a recorded call site (`ir/instances.cpp`). Since `kl::list`

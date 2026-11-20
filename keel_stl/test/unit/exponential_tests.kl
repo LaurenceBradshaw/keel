@@ -1,5 +1,5 @@
-// `kl::math`'s exponentials, logarithms, powers, hyperbolic functions, `atan2` and float roundings:
-// each against C's, and at its special values.
+// `kl::math`'s exponentials, logarithms, powers, hyperbolic and error functions, the normal
+// distribution, `atan2` and float roundings: each against C's, and at its special values.
 import kl::math;
 import kl::test::context;
 
@@ -13,6 +13,8 @@ extern f64 log10( f64 x );
 extern f64 sinh( f64 x );
 extern f64 cosh( f64 x );
 extern f64 tanh( f64 x );
+extern f64 erf( f64 x );
+extern f64 erfc( f64 x );
 extern f64 pow( f64 x, f64 y );
 extern f64 atan2( f64 y, f64 x );
 extern f64 floor( f64 x );
@@ -183,8 +185,8 @@ private void pow_and_atan2_match_libm( ref kl::test::context c )
 // Signed zeros, infinities, NaN and subnormals, in every pair for the two-argument ones.
 private void exponential_special_values( ref kl::test::context c )
 {
-    f64 infinity = kl::from_bits( 0x7ff0000000000000 );
-    f64 nan = kl::from_bits( 0x7ff8000000000000 );
+    f64 infinity = kl::inf();
+    f64 nan = kl::nan();
     f64[13] inputs = [ 0.0, -0.0, infinity, -infinity, nan, kl::from_bits( 1 ), -kl::from_bits( 1 ), 1.0, -1.0, 2.0, -2.0, 0.5, -3.0 ];
     u64 missed = 0;
     for( u64 i = 0; i < 13; i++ )
@@ -256,9 +258,82 @@ private void roundings_match_libm( ref kl::test::context c )
     {
         missed += rounding_miss( edges[i] ) + rounding_miss( -edges[i] );
     }
-    missed += rounding_miss( kl::from_bits( 0x7ff0000000000000 ) ) + rounding_miss( -0.0 );
+    missed += rounding_miss( kl::inf() ) + rounding_miss( -0.0 );
     c.check_eq( missed, 0 );
-    c.check( kl::is_nan( kl::round( kl::from_bits( 0x7ff8000000000000 ) ) ) );
+    c.check( kl::is_nan( kl::round( kl::nan() ) ) );
     c.check_eq( kl::floor( cast<f32>( -2.5 ) ), cast<f32>( -3.0 ) );
     c.check_eq( kl::round( cast<f32>( 2.5 ) ), cast<f32>( 3.0 ) );
+}
+
+private u64 erf_miss( f64 x )
+{
+    unsafe
+    {
+        return apart( kl::erf( x ), erf( x ), 2 ) + apart( kl::erfc( x ), erfc( x ), 3 );
+    }
+}
+
+// Against C's, from the same Sun code but rounding differently: each is within 0.7 ulps of erf's
+// true value and 1.7 of erfc's, so 2 and 3 apart. Along a grid, at random, at each path's edges
+// and at the special values.
+private void error_functions_match_libm( ref kl::test::context c )
+{
+    u64 seed = 5;
+    u64 missed = 0;
+    for( i64 i = -20000; i <= 20000; i++ )
+    {
+        missed += erf_miss( cast<f64>( i ) / 640.0 );
+    }
+    for( u64 n = 0; n < 10000; n++ )
+    {
+        missed += erf_miss( random_float( ref seed, 2046 ) );
+        missed += erf_miss( random_float( ref seed, 1028 ) );
+    }
+    f64[8] edges = [ 0.84375, 1.25, 2.857142857142857, 6.0, 28.0, 0.25, 3.725290298461914e-09, 1.3877787807814457e-17 ];
+    for( u64 i = 0; i < 8; i++ )
+    {
+        for( i64 d = -64; d <= 64; d++ )
+        {
+            missed += erf_miss( kl::from_bits( wrap<u64>( wrap<i64>( kl::bits_of( edges[i] ) ) + d ) ) );
+            missed += erf_miss( -kl::from_bits( wrap<u64>( wrap<i64>( kl::bits_of( edges[i] ) ) + d ) ) );
+        }
+    }
+    f64 infinity = kl::inf();
+    f64[7] special = [ 0.0, -0.0, infinity, -infinity, kl::nan(), kl::from_bits( 1 ), -kl::from_bits( 1 ) ];
+    for( u64 i = 0; i < 7; i++ )
+    {
+        missed += erf_miss( special[i] );
+    }
+    c.check_eq( missed, 0 );
+    c.check_eq( kl::erfc( -infinity ), 2.0 );
+    c.check_eq( kl::erf( cast<f32>( 0.5 ) ), cast<f32>( 0.5204998850822449 ) );
+    c.check_eq( kl::erfc( cast<f32>( 11.0 ) ), cast<f32>( 0.0 ) );
+}
+
+// Within 4 ulps of the true cdf and 3 of the true quantile, deep in the tails too, where scipy's
+// cdf is hundreds out.
+private void normal_matches_true_values( ref kl::test::context c )
+{
+    f64[8] xs = [ 0.0, 1.0, -1.96, 0.3, -8.0, -37.5, 5.0, -1.5987 ];
+    f64[8] cdfs = [ 0.5, 0.8413447460685429, 0.024997895148220435, 0.6179114221889527, 6.220960574271784e-16, 4.605353009581955e-308, 0.9999997133484281, 0.05494363881296066 ];
+    f64[8] ps = [ 0.5, 0.975, 0.025, 0.9, 1e-10, 0.9999999999, 1e-300, 0.3 ];
+    f64[8] quantiles = [ 0.0, 1.9599639845400538, -1.9599639845400543, 1.2815515655446006, -6.361340902404057, 6.361340889697422, -37.0470962993612, -0.5244005127080408 ];
+    u64 missed = 0;
+    for( u64 i = 0; i < 8; i++ )
+    {
+        missed += apart( kl::normal_cdf( xs[i] ), cdfs[i], 4 );
+        missed += apart( kl::normal_quantile( ps[i] ), quantiles[i], 3 );
+    }
+    c.check_eq( missed, 0 );
+
+    // Each quantile's cdf is its p again, within the cdf's rounding there.
+    for( u64 i = 1; i < 1000; i++ )
+    {
+        f64 p = cast<f64>( i ) / 1000.0;
+        c.check( kl::abs( kl::normal_cdf( kl::normal_quantile( p ) ) - p ) <= 2e-16 );
+    }
+    c.check( kl::is_inf( kl::normal_quantile( 0.0 ) ) && kl::normal_quantile( 0.0 ) < 0.0 );
+    c.check( kl::is_inf( kl::normal_quantile( 1.0 ) ) && kl::normal_quantile( 1.0 ) > 0.0 );
+    c.check( kl::is_nan( kl::normal_quantile( 1.5 ) ) );
+    c.check( kl::is_nan( kl::normal_quantile( kl::nan() ) ) );
 }

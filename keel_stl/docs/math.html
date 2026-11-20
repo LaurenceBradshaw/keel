@@ -36,6 +36,9 @@
 <li><a href="#round"><code>round</code></a> <span class="kind">function</span></li>
 <li class="divider">Constants</li>
 <li><a href="#pi"><code>pi</code></a> <span class="kind">global</span></li>
+<li><a href="#inf"><code>inf</code></a> <span class="kind">function</span></li>
+<li><a href="#ninf"><code>ninf</code></a> <span class="kind">function</span></li>
+<li><a href="#nan"><code>nan</code></a> <span class="kind">function</span></li>
 <li class="divider">Exponentials and logarithms</li>
 <li><a href="#exp"><code>exp</code></a> <span class="kind">function</span></li>
 <li><a href="#expm1"><code>expm1</code></a> <span class="kind">function</span></li>
@@ -48,6 +51,11 @@
 <li><a href="#sinh"><code>sinh</code></a> <span class="kind">function</span></li>
 <li><a href="#cosh"><code>cosh</code></a> <span class="kind">function</span></li>
 <li><a href="#tanh"><code>tanh</code></a> <span class="kind">function</span></li>
+<li class="divider">The error function and the normal distribution</li>
+<li><a href="#erf"><code>erf</code></a> <span class="kind">function</span></li>
+<li><a href="#erfc"><code>erfc</code></a> <span class="kind">function</span></li>
+<li><a href="#normal_cdf"><code>normal_cdf</code></a> <span class="kind">function</span></li>
+<li><a href="#normal_quantile"><code>normal_quantile</code></a> <span class="kind">function</span></li>
 <li class="divider">Trigonometry</li>
 <li><a href="#sin"><code>sin</code></a> <span class="kind">function</span></li>
 <li><a href="#cos"><code>cos</code></a> <span class="kind">function</span></li>
@@ -286,6 +294,33 @@ overflows, as <code>0 - x</code> does.</p>
 </div>
 </div>
 </section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">inf</span></h2>
+<div class="group" id="inf">
+<pre class="signature"><a class="anchor" href="#inf" aria-label="Link to inf">#</a><code><a class="prim" href="prelude.html#f64">f64</a> <span class="fn">inf</span>()</code></pre>
+<div class="doc">
+<p>Positive infinity.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">ninf</span></h2>
+<div class="group" id="ninf">
+<pre class="signature"><a class="anchor" href="#ninf" aria-label="Link to ninf">#</a><code><a class="prim" href="prelude.html#f64">f64</a> <span class="fn">ninf</span>()</code></pre>
+<div class="doc">
+<p>Negative infinity.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">nan</span></h2>
+<div class="group" id="nan">
+<pre class="signature"><a class="anchor" href="#nan" aria-label="Link to nan">#</a><code><a class="prim" href="prelude.html#f64">f64</a> <span class="fn">nan</span>()</code></pre>
+<div class="doc">
+<p>A quiet NaN.</p>
+</div>
+</div>
+</section>
 <h2 class="divider">Exponentials and logarithms</h2>
 <section class="entry">
 <h2><span class="kind">function</span> <span class="fn">exp</span></h2>
@@ -416,6 +451,55 @@ negative <code>x</code> and a <code>y</code> that is not whole; and an odd whole
 <pre class="signature"><a class="anchor" href="#tanh" aria-label="Link to tanh">#</a><code><a class="prim" href="prelude.html#f32">f32</a> <span class="fn">tanh</span>( <a class="prim" href="prelude.html#f32">f32</a> x )</code></pre>
 <div class="doc">
 <p>The hyperbolic tangent, -1 to 1. Within 2 ulps.</p>
+</div>
+</div>
+</section>
+<h2 class="divider">The error function and the normal distribution</h2>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">erf</span></h2>
+<div class="group" id="erf">
+<pre class="signature"><a class="anchor" href="#erf" aria-label="Link to erf">#</a><code><a class="prim" href="prelude.html#f64">f64</a> <span class="fn">erf</span>( <a class="prim" href="prelude.html#f64">f64</a> x )</code></pre>
+<div class="doc">
+<p>The error function, 2/sqrt(pi) times the integral of e^(-t^2) from 0 to <code>x</code>: -1 to 1.
+Within an ulp.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#erf" aria-label="Link to erf">#</a><code><a class="prim" href="prelude.html#f32">f32</a> <span class="fn">erf</span>( <a class="prim" href="prelude.html#f32">f32</a> x )</code></pre>
+<div class="doc">
+<p>The error function, 2/sqrt(pi) times the integral of e^(-t^2) from 0 to <code>x</code>: -1 to 1.
+Within an ulp.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">erfc</span></h2>
+<div class="group" id="erfc">
+<pre class="signature"><a class="anchor" href="#erfc" aria-label="Link to erfc">#</a><code><a class="prim" href="prelude.html#f64">f64</a> <span class="fn">erfc</span>( <a class="prim" href="prelude.html#f64">f64</a> x )</code></pre>
+<div class="doc">
+<p>1 - erf( x ), 0 to 2, keeping its digits where erf( x ) is near 1: 0 above 27.23. Within 2 ulps.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#erfc" aria-label="Link to erfc">#</a><code><a class="prim" href="prelude.html#f32">f32</a> <span class="fn">erfc</span>( <a class="prim" href="prelude.html#f32">f32</a> x )</code></pre>
+<div class="doc">
+<p>1 - erf( x ), 0 to 2, keeping its digits where erf( x ) is near 1: 0 above 10.06. Within 2 ulps.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">normal_cdf</span></h2>
+<div class="group" id="normal_cdf">
+<pre class="signature"><a class="anchor" href="#normal_cdf" aria-label="Link to normal_cdf">#</a><code><a class="prim" href="prelude.html#f64">f64</a> <span class="fn">normal_cdf</span>( <a class="prim" href="prelude.html#f64">f64</a> x )</code></pre>
+<div class="doc">
+<p>The probability a standard normal value is at most <code>x</code>, as scipy's <code>norm.cdf</code>: through
+<code>erfc</code> in the tails, x^2 / 2 taken from <code>x</code>, so a small one keeps its digits. Within 4 ulps.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">normal_quantile</span></h2>
+<div class="group" id="normal_quantile">
+<pre class="signature"><a class="anchor" href="#normal_quantile" aria-label="Link to normal_quantile">#</a><code><a class="prim" href="prelude.html#f64">f64</a> <span class="fn">normal_quantile</span>( <a class="prim" href="prelude.html#f64">f64</a> p )</code></pre>
+<div class="doc">
+<p>The <code>x</code> with <code>normal_cdf( x ) == p</code>, as scipy's <code>norm.ppf</code>: an infinity at 0 and 1, NaN
+outside them. Acklam's rational fit refined by one Halley step through <code>erfc</code>, within 3 ulps.</p>
 </div>
 </div>
 </section>

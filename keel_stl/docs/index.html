@@ -248,6 +248,12 @@ overflows, as <code>0 - x</code> does.</dd>
 <dl class="summaries">
 <dt><a href="math.html#pi"><code>pi</code></a> <span class="kind">global</span></dt>
 <dd>The <code>f64</code> nearest to the ratio of a circle's circumference to its diameter.</dd>
+<dt><a href="math.html#inf"><code>inf</code></a> <span class="kind">function</span></dt>
+<dd>Positive infinity.</dd>
+<dt><a href="math.html#ninf"><code>ninf</code></a> <span class="kind">function</span></dt>
+<dd>Negative infinity.</dd>
+<dt><a href="math.html#nan"><code>nan</code></a> <span class="kind">function</span></dt>
+<dd>A quiet NaN.</dd>
 </dl>
 <h4 class="divider">Exponentials and logarithms</h4>
 <dl class="summaries">
@@ -275,6 +281,20 @@ negative <code>x</code> and a <code>y</code> that is not whole; and an odd whole
 <dd>The hyperbolic cosine. Within 2 ulps.</dd>
 <dt><a href="math.html#tanh"><code>tanh</code></a> <span class="kind">function</span></dt>
 <dd>The hyperbolic tangent, -1 to 1. Within 2 ulps.</dd>
+</dl>
+<h4 class="divider">The error function and the normal distribution</h4>
+<dl class="summaries">
+<dt><a href="math.html#erf"><code>erf</code></a> <span class="kind">function</span></dt>
+<dd>The error function, 2/sqrt(pi) times the integral of e^(-t^2) from 0 to <code>x</code>: -1 to 1.
+Within an ulp.</dd>
+<dt><a href="math.html#erfc"><code>erfc</code></a> <span class="kind">function</span></dt>
+<dd>1 - erf( x ), 0 to 2, keeping its digits where erf( x ) is near 1: 0 above 27.23. Within 2 ulps.</dd>
+<dt><a href="math.html#normal_cdf"><code>normal_cdf</code></a> <span class="kind">function</span></dt>
+<dd>The probability a standard normal value is at most <code>x</code>, as scipy's <code>norm.cdf</code>: through
+<code>erfc</code> in the tails, x^2 / 2 taken from <code>x</code>, so a small one keeps its digits. Within 4 ulps.</dd>
+<dt><a href="math.html#normal_quantile"><code>normal_quantile</code></a> <span class="kind">function</span></dt>
+<dd>The <code>x</code> with <code>normal_cdf( x ) == p</code>, as scipy's <code>norm.ppf</code>: an infinity at 0 and 1, NaN
+outside them. Acklam's rational fit refined by one Halley step through <code>erfc</code>, within 3 ulps.</dd>
 </dl>
 <h4 class="divider">Trigonometry</h4>
 <dl class="summaries">

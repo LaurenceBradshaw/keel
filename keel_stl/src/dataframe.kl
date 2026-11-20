@@ -1704,13 +1704,6 @@ private ndarray<f64> arithmetic( const ref ndarray<f64> a, const ref ndarray<f64
     }
 }
 
-// A quiet NaN.
-private f64 nan()
-{
-    f64 zero = 0.0;
-    return zero / zero;
-}
-
 // `x` to the nearest whole value, a half to the even one.
 private f64 half_even( f64 x )
 {
@@ -2434,8 +2427,7 @@ class dataframe
 
         list<u64> row_firsts = list<u64>::filled( n, u64::max );
         list<u64> column_firsts = list<u64>::filled( m, u64::max );
-        f64 zero = 0.0;
-        list<f64> cells = list<f64>::filled( n * m, zero / zero );
+        list<f64> cells = list<f64>::filled( n * m, nan() );
         const ref ndarray<f64> v = met[values].f64s();
         for( u64 i : 0..met.rows() )
         {

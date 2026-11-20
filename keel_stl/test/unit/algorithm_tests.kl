@@ -368,7 +368,6 @@ private void median_picks_the_middle( ref kl::test::context c )
     f32[4] repeats = [ 2.0, 2.0, 1.0, 2.0 ];
     c.check_eq( kl::median( repeats ), 2.0 );
     c.check( kl::is_nan( kl::median( kl::list<f64>() ) ) );
-    f64 zero = 0.0;
-    f64[3] holed = [ 1.0, zero / zero, 3.0 ];
+    f64[3] holed = [ 1.0, kl::nan(), 3.0 ];
     c.check( kl::is_nan( kl::median( holed ) ) );
 }

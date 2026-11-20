@@ -272,6 +272,24 @@ f32 round( f32 x )
 /// The `f64` nearest to the ratio of a circle's circumference to its diameter.
 const f64 pi = 3.14159265358979311600e+00;
 
+/// Positive infinity.
+f64 inf()
+{
+    return float_bits::inf();
+}
+
+/// Negative infinity.
+f64 ninf()
+{
+    return float_bits::ninf();
+}
+
+/// A quiet NaN.
+f64 nan()
+{
+    return float_bits::nan();
+}
+
 /// --- Exponentials and logarithms ---
 
 /// e to the power `x`: an infinity above 709.78, and 0 below -745.13. Within an ulp.
@@ -395,6 +413,86 @@ f64 tanh( f64 x )
 f32 tanh( f32 x )
 {
     return exponential::narrowed<f32>( exponential::tanh( cast<f64>( x ) ) );
+}
+
+/// --- The error function and the normal distribution ---
+
+/// The error function, 2/sqrt(pi) times the integral of e^(-t^2) from 0 to `x`: -1 to 1.
+/// Within an ulp.
+f64 erf( f64 x )
+{
+    return exponential::erf( x );
+}
+
+/// The error function, 2/sqrt(pi) times the integral of e^(-t^2) from 0 to `x`: -1 to 1.
+/// Within an ulp.
+f32 erf( f32 x )
+{
+    return cast<f32>( exponential::erf( cast<f64>( x ) ) );
+}
+
+/// 1 - erf( x ), 0 to 2, keeping its digits where erf( x ) is near 1: 0 above 27.23. Within 2 ulps.
+f64 erfc( f64 x )
+{
+    return exponential::erfc( x );
+}
+
+/// 1 - erf( x ), 0 to 2, keeping its digits where erf( x ) is near 1: 0 above 10.06. Within 2 ulps.
+f32 erfc( f32 x )
+{
+    return exponential::narrowed<f32>( exponential::erfc( cast<f64>( x ) ) );
+}
+
+/// The probability a standard normal value is at most `x`, as scipy's `norm.cdf`: through
+/// `erfc` in the tails, x^2 / 2 taken from `x`, so a small one keeps its digits. Within 4 ulps.
+f64 normal_cdf( f64 x )
+{
+    f64 z = x * SQRT_HALF;
+    if( z < SQRT_HALF && z > -SQRT_HALF )
+    {
+        return 0.5 + 0.5 * exponential::erf( z );
+    }
+    f64 a    = z < 0.0 ? -z : z;
+    f64 tail = a < 1.25 ? 0.5 * exponential::erfc( a ) : exponential::normal_lower_tail( z < 0.0 ? x : -x );
+    return z > 0.0 ? 1.0 - tail : tail;
+}
+
+/// The `x` with `normal_cdf( x ) == p`, as scipy's `norm.ppf`: an infinity at 0 and 1, NaN
+/// outside them. Acklam's rational fit refined by one Halley step through `erfc`, within 3 ulps.
+f64 normal_quantile( f64 p )
+{
+    if( !( p > 0.0 && p < 1.0 ) )
+    {
+        return p == 0.0 ? ninf() : p == 1.0 ? inf() : nan();
+    }
+
+    // The residual is formed where it does not cancel: from p - 1/2 in the middle, else from the
+    // nearer tail, 1 - p being exact above 1/2.
+    f64 x = 0.0;
+    f64 e = 0.0;
+    if( p >= ACKLAM_LOW && p <= 1.0 - ACKLAM_LOW )
+    {
+        f64 q = p - 0.5;
+        f64 r = q * q;
+        x = ( ( ( ( ( ACKLAM_A[0] * r + ACKLAM_A[1] ) * r + ACKLAM_A[2] ) * r + ACKLAM_A[3] ) * r + ACKLAM_A[4] ) * r + ACKLAM_A[5] ) * q
+          / ( ( ( ( ( ACKLAM_B[0] * r + ACKLAM_B[1] ) * r + ACKLAM_B[2] ) * r + ACKLAM_B[3] ) * r + ACKLAM_B[4] ) * r + 1.0 );
+        e = 0.5 * exponential::erf( x * SQRT_HALF ) - q;
+    }
+    else
+    {
+        f64 t = p < 0.5 ? p : 1.0 - p;
+        f64 q = sqrt( -2.0 * exponential::log( t ) );
+        x = ( ( ( ( ( ACKLAM_C[0] * q + ACKLAM_C[1] ) * q + ACKLAM_C[2] ) * q + ACKLAM_C[3] ) * q + ACKLAM_C[4] ) * q + ACKLAM_C[5] )
+          / ( ( ( ( ACKLAM_D[0] * q + ACKLAM_D[1] ) * q + ACKLAM_D[2] ) * q + ACKLAM_D[3] ) * q + 1.0 );
+        e = normal_cdf( x ) - t;
+        if( p > 0.5 )
+        {
+            x = -x;
+            e = -e;
+        }
+    }
+    f64 u = e * SQRT_TWO_PI * exponential::exp( x * x / 2.0 );
+    return x - u / ( 1.0 + x * u / 2.0 );
 }
 
 /// --- Trigonometry ---
@@ -813,3 +911,13 @@ private const f64[11] AT = [
     -3.65315727442169155270e-02,
     1.62858201153657823623e-02
 ];
+
+private const f64 SQRT_HALF = 7.07106781186547524401e-01;
+private const f64 SQRT_TWO_PI = 2.50662827463100050242e+00;
+
+// Peter Acklam's fit to the normal quantile, relative error under 1.15e-9 before refinement.
+private const f64 ACKLAM_LOW = 0.02425;
+private const f64[6] ACKLAM_A = [ -3.969683028665376e+01, 2.209460984245205e+02, -2.759285104469687e+02, 1.383577518672690e+02, -3.066479806614716e+01, 2.506628277459239e+00 ];
+private const f64[5] ACKLAM_B = [ -5.447609879822406e+01, 1.615858368580409e+02, -1.556989798598866e+02, 6.680131188771972e+01, -1.328068155288572e+01 ];
+private const f64[6] ACKLAM_C = [ -7.784894002430293e-03, -3.223964580411365e-01, -2.400758277161838e+00, -2.549732539343734e+00, 4.374664141464968e+00, 2.938163982698783e+00 ];
+private const f64[4] ACKLAM_D = [ 7.784695709041462e-03, 3.224671290700398e-01, 2.445134137142996e+00, 3.754408661907416e+00 ];

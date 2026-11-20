@@ -13,6 +13,9 @@ uint64_t kl_2kl5_core10float_bits_7bits_of__3f64( double );
 double kl_2kl5_core10float_bits_9from_bits__3u64( uint64_t );
 uint32_t kl_2kl5_core10float_bits_7bits_of__3f32( float );
 float kl_2kl5_core10float_bits_9from_bits__3u32( uint32_t );
+double kl_2kl5_core10float_bits_3inf__( void );
+double kl_2kl5_core10float_bits_4ninf__( void );
+double kl_2kl5_core10float_bits_3nan__( void );
 
 #line 8 "<kl>/_core/float_bits.kl"
 uint64_t kl_2kl5_core10float_bits_7bits_of__3f64( double kl_x_1 )
@@ -56,6 +59,36 @@ float kl_2kl5_core10float_bits_9from_bits__3u32( uint32_t kl_x_1 )
 #line 39 "<kl>/_core/float_bits.kl"
     return kl_t0;
 #line 41 "<kl>/_core/float_bits.kl"
+}
+
+#line 44 "<kl>/_core/float_bits.kl"
+double kl_2kl5_core10float_bits_3inf__( void )
+{
+    double kl_t0;
+#line 21 "<kl>/_core/float_bits.kl"
+    kl_t0 = ( ( union { uint64_t f; double u; } ) { .f = 9218868437227405312 } ).u;
+#line 46 "<kl>/_core/float_bits.kl"
+    return kl_t0;
+}
+
+#line 50 "<kl>/_core/float_bits.kl"
+double kl_2kl5_core10float_bits_4ninf__( void )
+{
+    double kl_t0;
+#line 21 "<kl>/_core/float_bits.kl"
+    kl_t0 = ( ( union { uint64_t f; double u; } ) { .f = 18442240474082181120ull } ).u;
+#line 52 "<kl>/_core/float_bits.kl"
+    return kl_t0;
+}
+
+#line 56 "<kl>/_core/float_bits.kl"
+double kl_2kl5_core10float_bits_3nan__( void )
+{
+    double kl_t0;
+#line 21 "<kl>/_core/float_bits.kl"
+    kl_t0 = ( ( union { uint64_t f; double u; } ) { .f = 9221120237041090560 } ).u;
+#line 58 "<kl>/_core/float_bits.kl"
+    return kl_t0;
 }
 
 // <kl>/_core/float_format.kl

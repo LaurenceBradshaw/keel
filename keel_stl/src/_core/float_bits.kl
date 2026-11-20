@@ -1,8 +1,8 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// A float's bits and back, behind `kl::bits_of` and `kl::from_bits`, for the modules `kl::math`
-// imports and those that import neither.
+// A float's bits and back, and the infinities and NaN, behind `kl::bits_of`, `kl::from_bits`,
+// `kl::inf`, `kl::ninf` and `kl::nan`, for the modules `kl::math` imports and those that import neither.
 
 /// The bits of `x`, sign first.
 u64 bits_of( f64 x )
@@ -38,4 +38,22 @@ f32 from_bits( u32 x )
     {
         return *cast<f32*>( &x );
     }
+}
+
+/// Positive infinity.
+f64 inf()
+{
+    return from_bits( 0x7ff0_0000_0000_0000 );
+}
+
+/// Negative infinity.
+f64 ninf()
+{
+    return from_bits( 0xfff0_0000_0000_0000 );
+}
+
+/// A quiet NaN.
+f64 nan()
+{
+    return from_bits( 0x7ff8_0000_0000_0000 );
 }

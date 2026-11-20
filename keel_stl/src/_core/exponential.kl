@@ -21,7 +21,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0 WITH LLVM-exception
 //
 // The rest is ported from FreeBSD's msun: lib/msun/src/e_exp.c, s_expm1.c, k_log.h, s_log1p.c,
-// e_log2.c, e_log10.c, e_pow.c, e_sinh.c, e_cosh.c and s_tanh.c. Those files carry the notices
+// e_log2.c, e_log10.c, e_pow.c, e_sinh.c, e_cosh.c, s_tanh.c and s_erf.c. Those files carry the notices
 // below, reproduced as they appear there.
 //
 // e_exp.c and e_pow.c:
@@ -45,7 +45,7 @@
 // is preserved.
 // ====================================================
 //
-// s_expm1.c, s_log1p.c and s_tanh.c:
+// s_erf.c, s_expm1.c, s_log1p.c and s_tanh.c:
 //
 // ====================================================
 // Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
@@ -56,8 +56,8 @@
 // is preserved.
 // ====================================================
 
-// The exponentials, logarithms, powers and hyperbolic functions behind `kl::math`: the hyperbolic
-// functions within 2 ulps of the true value, the rest within one.
+// The exponentials, logarithms, powers, hyperbolic functions and error functions behind `kl::math`:
+// the hyperbolic functions and erfc within 2 ulps of the true value, the rest within one.
 import float_bits;
 import trig;
 
@@ -81,7 +81,7 @@ f64 exp_scaled( f64 x, i32 s )
         }
         if( s == 0 && x > O_THRESHOLD )
         {
-            return infinity();
+            return inf();
         }
         if( x < U_THRESHOLD )
         {
@@ -146,7 +146,7 @@ f64 exp( f64 x )
             {
                 return 1.0 + x;
             }
-            return ( ix >> 63 ) != 0 ? 0.0 : infinity();
+            return ( ix >> 63 ) != 0 ? 0.0 : inf();
         }
         abstop = 0;
     }
@@ -191,7 +191,7 @@ f64 expm1( f64 x )
             }
             if( x > O_THRESHOLD )
             {
-                return infinity();
+                return inf();
             }
         }
         if( negative )
@@ -279,7 +279,7 @@ f64 log( f64 x )
     {
         if( ( ix << 1 ) == 0 )
         {
-            return -infinity();
+            return -inf();
         }
         if( ix == 0x7ff0_0000_0000_0000 )
         {
@@ -325,7 +325,7 @@ f64 log1p( f64 x )
     {
         if( negative && ax >= 0x3ff00000 )
         {
-            return x == -1.0 ? -infinity() : nan();
+            return x == -1.0 ? -inf() : nan();
         }
         if( ax < 0x3e200000 )
         {
@@ -565,17 +565,17 @@ f64 pow( f64 x, f64 y )
         {
             if( ix <= 0x3fefffff )
             {
-                return y_negative ? infinity() : 0.0;
+                return y_negative ? inf() : 0.0;
             }
-            return y_negative ? 0.0 : infinity();
+            return y_negative ? 0.0 : inf();
         }
         if( ix < 0x3fefffff )
         {
-            return y_negative ? s * infinity() : s * 0.0;
+            return y_negative ? s * inf() : s * 0.0;
         }
         if( ix > 0x3ff00000 )
         {
-            return y_negative ? s * 0.0 : s * infinity();
+            return y_negative ? s * 0.0 : s * inf();
         }
         f64 t = ax - 1.0;
         f64 w = ( t * t ) * ( 0.5 - t * ( THIRD - t * 0.25 ) );
@@ -647,7 +647,7 @@ f64 pow( f64 x, f64 y )
     {
         if( ( ( j - 0x40900000 ) | i ) != 0 || p_l + OVT > z - p_h )
         {
-            return s * infinity();
+            return s * inf();
         }
     }
     else if( ( j & 0x7fffffff ) >= 0x4090cc00 )
@@ -761,7 +761,7 @@ f64 cosh( f64 x )
     {
         return exp_scaled( a, -1 );
     }
-    return infinity();
+    return inf();
 }
 
 /// The hyperbolic tangent.
@@ -794,6 +794,99 @@ f64 tanh( f64 x )
         }
     }
     return negative ? -z : z;
+}
+
+/// The error function, 2/sqrt(pi) times the integral of e^(-t^2) from 0 to `x`.
+f64 erf( f64 x )
+{
+    u32 hx = high_word( x );
+    u32 ix = hx & 0x7fffffff;
+    bool negative = ( hx >> 31 ) != 0;
+    if( ix >= 0x7ff00000 )
+    {
+        return ( negative ? -1.0 : 1.0 ) + 1.0 / x;
+    }
+
+    if( ix < 0x3feb0000 )
+    {
+        if( ix < 0x3e300000 )
+        {
+            if( ix < 0x00800000 )
+            {
+                return ( 8.0 * x + EFX8 * x ) / 8.0;
+            }
+            return x + EFX * x;
+        }
+        return x + x * erf_small( x * x );
+    }
+    if( ix < 0x3ff40000 )
+    {
+        f64 r = erf_near_one( magnitude( x ) - 1.0 );
+        return negative ? -ERX - r : ERX + r;
+    }
+    if( ix >= 0x40180000 )
+    {
+        return negative ? -1.0 : 1.0;
+    }
+    f64 a = magnitude( x );
+    f64 r = erfc_tail( a, ix < 0x4006DB6E );
+    return negative ? r - 1.0 : 1.0 - r;
+}
+
+/// 1 - erf( x ), without the cancellation when erf( x ) is near 1.
+f64 erfc( f64 x )
+{
+    u32 hx = high_word( x );
+    u32 ix = hx & 0x7fffffff;
+    bool negative = ( hx >> 31 ) != 0;
+    if( ix >= 0x7ff00000 )
+    {
+        return ( negative ? 2.0 : 0.0 ) + 1.0 / x;
+    }
+
+    if( ix < 0x3feb0000 )
+    {
+        if( ix < 0x3c700000 )
+        {
+            return 1.0 - x;
+        }
+        f64 y = erf_small( x * x );
+        if( negative || ix < 0x3fd00000 )
+        {
+            return 1.0 - ( x + x * y );
+        }
+        return 0.5 - ( x * y + ( x - 0.5 ) );
+    }
+    if( ix < 0x3ff40000 )
+    {
+        f64 r = erf_near_one( magnitude( x ) - 1.0 );
+        return negative ? 1.0 + ( ERX + r ) : ( 1.0 - ERX ) - r;
+    }
+    if( ix < 0x403c0000 )
+    {
+        if( negative && ix >= 0x40180000 )
+        {
+            return 2.0;
+        }
+        f64 r = erfc_tail( magnitude( x ), ix < 0x4006DB6D );
+        return negative ? 2.0 - r : r;
+    }
+    return negative ? 2.0 : 0.0;
+}
+
+/// The probability a standard normal value is at most `x`, for `x` at most -1.25 sqrt(2): erfc( -x /
+/// sqrt(2) ) / 2 with x^2 / 2 taken from `x` itself, as rounding x / sqrt(2) first would cost up to
+/// 2 x^2 ulps.
+f64 normal_lower_tail( f64 x )
+{
+    f64 a = -x * SQRT_HALF;
+    u32 ia = high_word( a ) & 0x7fffffff;
+    if( ia >= 0x403c0000 )
+    {
+        return 0.0;
+    }
+    f64 h = from_words( high_word( x ), 0 );
+    return 0.5 * erfc_tail_of( a, h * h * 0.5, ( x - h ) * ( x + h ) * 0.5, ia < 0x4006DB6D );
 }
 
 /// `y` rounded to `T`, or an infinity where it is beyond `T`'s range, as arithmetic in `T` gives;
@@ -847,7 +940,7 @@ private f64 log_outside( f64 x )
 {
     if( x == 0.0 )
     {
-        return -infinity();
+        return -inf();
     }
     return x < 0.0 ? nan() : x + x;
 }
@@ -935,14 +1028,48 @@ private i32 truncated( f64 x )
     return x < 0.0 ? -n : n;
 }
 
-private f64 infinity()
+// (erf( x ) - x) / x for |x| < 0.84375, from `z` = x^2.
+private f64 erf_small( f64 z )
 {
-    return from_bits( 0x7ff0_0000_0000_0000 );
+    f64 r = PP0 + z * ( PP1 + z * ( PP2 + z * ( PP3 + z * PP4 ) ) );
+    f64 s = 1.0 + z * ( QQ1 + z * ( QQ2 + z * ( QQ3 + z * ( QQ4 + z * QQ5 ) ) ) );
+    return r / s;
 }
 
-private f64 nan()
+// erf( 1 + s ) - ERX for |1 + s| in [0.84375, 1.25).
+private f64 erf_near_one( f64 s )
 {
-    return from_bits( 0x7ff8_0000_0000_0000 );
+    f64 p = PA0 + s * ( PA1 + s * ( PA2 + s * ( PA3 + s * ( PA4 + s * ( PA5 + s * PA6 ) ) ) ) );
+    f64 q = 1.0 + s * ( QA1 + s * ( QA2 + s * ( QA3 + s * ( QA4 + s * ( QA5 + s * QA6 ) ) ) ) );
+    return p / q;
+}
+
+// erfc( x ) for x in [1.25, 28): the first fit below 1/0.35 when `near`, the second above.
+private f64 erfc_tail( f64 x, bool near )
+{
+    // x^2 as z^2 + (x - z)(x + z), `z` holding x's top 21 bits, so z^2 is exact.
+    f64 z = from_words( high_word( x ), 0 );
+    return erfc_tail_of( x, z * z, ( x - z ) * ( x + z ), near );
+}
+
+// erfc_tail with x^2 given as `high` + `low`, `high` holding few enough bits that `high + 0.5625`
+// is exact.
+private f64 erfc_tail_of( f64 x, f64 high, f64 low, bool near )
+{
+    f64 s = 1.0 / ( x * x );
+    f64 r = 0.0;
+    f64 t = 0.0;
+    if( near )
+    {
+        r = RA0 + s * ( RA1 + s * ( RA2 + s * ( RA3 + s * ( RA4 + s * ( RA5 + s * ( RA6 + s * RA7 ) ) ) ) ) );
+        t = 1.0 + s * ( SA1 + s * ( SA2 + s * ( SA3 + s * ( SA4 + s * ( SA5 + s * ( SA6 + s * ( SA7 + s * SA8 ) ) ) ) ) ) );
+    }
+    else
+    {
+        r = RB0 + s * ( RB1 + s * ( RB2 + s * ( RB3 + s * ( RB4 + s * ( RB5 + s * RB6 ) ) ) ) );
+        t = 1.0 + s * ( SB1 + s * ( SB2 + s * ( SB3 + s * ( SB4 + s * ( SB5 + s * ( SB6 + s * SB7 ) ) ) ) ) );
+    }
+    return exp( -high - 0.5625 ) * exp( -low + r / t ) / x;
 }
 
 private f64 from_words( u32 high, u32 low )
@@ -1245,3 +1372,61 @@ private const u64[256] EXP_T = [
     0x3c8a_64a9_31d1_85ee, 0x3fef_d076_5b6e_4540, 0xbc8e_37ba_e43b_e3ed, 0x3fef_dbfd_ad9c_be14,
     0x3c77_893b_4d91_cd9d, 0x3fef_e7c1_819e_90d8, 0x3c53_05c1_4160_cc89, 0x3fef_f3c2_2b8f_71f1
 ];
+
+private const f64 ERX = 8.45062911510467529297e-01;
+private const f64 EFX = 1.28379167095512586316e-01;
+private const f64 EFX8 = 1.02703333676410069053e+00;
+private const f64 PP0 = 1.28379167095512558561e-01;
+private const f64 PP1 = -3.25042107247001499370e-01;
+private const f64 PP2 = -2.84817495755985104766e-02;
+private const f64 PP3 = -5.77027029648944159157e-03;
+private const f64 PP4 = -2.37630166566501626084e-05;
+private const f64 QQ1 = 3.97917223959155352819e-01;
+private const f64 QQ2 = 6.50222499887672944485e-02;
+private const f64 QQ3 = 5.08130628187576562776e-03;
+private const f64 QQ4 = 1.32494738004321644526e-04;
+private const f64 QQ5 = -3.96022827877536812320e-06;
+private const f64 PA0 = -2.36211856075265944077e-03;
+private const f64 PA1 = 4.14856118683748331666e-01;
+private const f64 PA2 = -3.72207876035701323847e-01;
+private const f64 PA3 = 3.18346619901161753674e-01;
+private const f64 PA4 = -1.10894694282396677476e-01;
+private const f64 PA5 = 3.54783043256182359371e-02;
+private const f64 PA6 = -2.16637559486879084300e-03;
+private const f64 QA1 = 1.06420880400844228286e-01;
+private const f64 QA2 = 5.40397917702171048937e-01;
+private const f64 QA3 = 7.18286544141962662868e-02;
+private const f64 QA4 = 1.26171219808761642112e-01;
+private const f64 QA5 = 1.36370839120290507362e-02;
+private const f64 QA6 = 1.19844998467991074170e-02;
+private const f64 RA0 = -9.86494403484714822705e-03;
+private const f64 RA1 = -6.93858572707181764372e-01;
+private const f64 RA2 = -1.05586262253232909814e+01;
+private const f64 RA3 = -6.23753324503260060396e+01;
+private const f64 RA4 = -1.62396669462573470355e+02;
+private const f64 RA5 = -1.84605092906711035994e+02;
+private const f64 RA6 = -8.12874355063065934246e+01;
+private const f64 RA7 = -9.81432934416914548592e+00;
+private const f64 SA1 = 1.96512716674392571292e+01;
+private const f64 SA2 = 1.37657754143519042600e+02;
+private const f64 SA3 = 4.34565877475229228821e+02;
+private const f64 SA4 = 6.45387271733267880336e+02;
+private const f64 SA5 = 4.29008140027567833386e+02;
+private const f64 SA6 = 1.08635005541779435134e+02;
+private const f64 SA7 = 6.57024977031928170135e+00;
+private const f64 SA8 = -6.04244152148580987438e-02;
+private const f64 RB0 = -9.86494292470009928597e-03;
+private const f64 RB1 = -7.99283237680523006574e-01;
+private const f64 RB2 = -1.77579549177547519889e+01;
+private const f64 RB3 = -1.60636384855821916062e+02;
+private const f64 RB4 = -6.37566443368389627722e+02;
+private const f64 RB5 = -1.02509513161107724954e+03;
+private const f64 RB6 = -4.83519191608651397019e+02;
+private const f64 SB1 = 3.03380607434824582924e+01;
+private const f64 SB2 = 3.25792512996573918826e+02;
+private const f64 SB3 = 1.53672958608443695994e+03;
+private const f64 SB4 = 3.19985821950859553908e+03;
+private const f64 SB5 = 2.55305040643316442583e+03;
+private const f64 SB6 = 4.74528541206955367215e+02;
+private const f64 SB7 = -2.24409524465858183362e+01;
+private const f64 SQRT_HALF = 7.07106781186547524401e-01;

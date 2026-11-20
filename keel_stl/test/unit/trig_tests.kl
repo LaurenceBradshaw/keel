@@ -154,8 +154,8 @@ private void inverse_trig_matches_libm( ref kl::test::context c )
 // Signed zeros, infinities, NaN, subnormals and the values that come out exact.
 private void trig_special_values( ref kl::test::context c )
 {
-    f64 infinity = kl::from_bits( 0x7ff0000000000000 );
-    f64[9] inputs = [ 0.0, -0.0, infinity, -infinity, kl::from_bits( 0x7ff8000000000000 ), kl::from_bits( 1 ), -kl::from_bits( 1 ), 2.0, -2.0 ];
+    f64 infinity = kl::inf();
+    f64[9] inputs = [ 0.0, -0.0, infinity, -infinity, kl::nan(), kl::from_bits( 1 ), -kl::from_bits( 1 ), 2.0, -2.0 ];
     u64 missed = 0;
     for( u64 which = 0; which < 6; which++ )
     {
