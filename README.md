@@ -458,7 +458,7 @@ links to `keel_stl/src`; `--package <dir>` gives another, named by its `packagei
 | `file.c` / `file.o` / `file.a` after the `.kl` | Compile or link the program's own C with it |
 | `-l <name>` / `-L <dir>` | Link a C library, or search a directory for one; may be repeated |
 | `--package <dir>` | Make a package importable, named by its `packageinfo.kl`'s `@package( name );` or the folder; may be repeated |
-| `-W<name>` / `-Wno-<name>` | Turn a warning on or off: `unused-parameter`, `unused-variable`, `void-variable`, `constant-comparison`, `needless-move`, `unreachable-code`, `unconditional-recursion`, `unused-import`, `unused-private`, `needless-deref`, `linear-map` (-O3 only), and `large-local` (off by default) |
+| `-W<name>` / `-Wno-<name>` | Turn a warning on or off: `unused-parameter`, `unused-variable`, `void-variable`, `constant-comparison`, `needless-move`, `unreachable-code`, `unconditional-recursion`, `unused-import`, `unused-private`, `needless-deref`, `linear-map` (-O3 only), `large-local` and `runtime-shape-check` (both off by default) |
 | `-Werror` / `-Werror=<name>` | Make every warning, or that one, an error |
 
 With `--backend c`, `keelc` compiles the generated C with `$CC` (default `cc`), adding `$CFLAGS` without its `-W` and

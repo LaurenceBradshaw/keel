@@ -126,6 +126,27 @@ _Noreturn void kl_rt_panic_at( const uint8_t* file, uint64_t file_size, uint32_t
     kl_rt_abort();
 }
 
+// A size check at a call: each `{}` in `text` is the next of `values`.
+_Noreturn void
+kl_rt_panic_sizes( const char* file, uint32_t line, const uint8_t* text, uint64_t size, const uint64_t* values, uint64_t count )
+{
+    fflush( stdout );
+    fprintf( stderr, "%s:%u: size check failed: ", file, (unsigned) line );
+    uint64_t next = 0;
+    for( uint64_t i = 0; i < size; ++i )
+    {
+        if( text[i] == '{' && i + 1 < size && text[i + 1] == '}' && next < count )
+        {
+            fprintf( stderr, "%llu", (unsigned long long) values[next++] );
+            ++i;
+            continue;
+        }
+        fputc( text[i], stderr );
+    }
+    fputc( '\n', stderr );
+    kl_rt_abort();
+}
+
 // Reached only if a `never` function returned, which its body check refuses.
 _Noreturn void kl_rt_unreachable( void )
 {

@@ -1,0 +1,59 @@
+// -Wruntime-shape-check warns at each call that checks sizes when it runs.
+class Grid<T, u64... S(dyn)> where T : copyable
+{
+    T[64] cells;
+
+    public Grid( T fill )
+    {
+        cells = [ fill, .. ];
+    }
+
+    public u64 width() const
+    {
+        return S[0];
+    }
+
+    public u64 plus( const ref Grid<T, S...> other ) const
+    {
+        return width() + other.width();
+    }
+};
+
+Grid<T, S...> filled<T, u64... S>( T fill, S... n ) where T : copyable
+{
+    return Grid<T, S...>( fill );
+}
+
+u64 both<T, u64... S>( const ref Grid<T, S...> a, const ref Grid<T, S...> b ) where T : copyable
+{
+    return a.plus( b );
+}
+
+struct Shape<u64 R(dyn), u64 C(dyn)>
+{
+    u64 tag;
+};
+
+Shape<R, C> shape<u64 R, u64 C>( R r, C c )
+{
+    return Shape<R, C> { 0 };
+}
+
+u64 tall<u64 R, u64 C>( const ref Shape<R, C> _ ) where R >= C
+{
+    return R * 10 + C;
+}
+
+i32 main()
+{
+    u64 rows = 4;
+    Grid<i32, dyn, 3> a = filled( 0, rows, 3 );
+    Grid<i32, dyn, 3> b = filled( 1, rows, 3 );
+    Grid<i32, 4, 3> c = filled<i32, 4, 3>( 2, rows, 3 );
+    Grid<i32, 4, 3> d = filled( 2, 4, 3 );
+    _ = both( a, b ) + a.plus( b ) + both( c, d );
+
+    Shape<dyn, 3> s = shape( rows, 3 );
+    Shape<4, 3> f = shape( 4, 3 );
+    return cast<i32>( tall( s ) + tall( f ) );
+}

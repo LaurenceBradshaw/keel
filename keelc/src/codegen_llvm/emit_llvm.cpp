@@ -1402,6 +1402,22 @@ void Llvm_emitter::panic( const Terminator& terminator )
         return load( held_type, at );
     };
 
+    if( terminator.failure == Failure::Sizes )
+    {
+        const Type_id str     = terminator.message.type;
+        llvm::Value*  message = address( terminator.message.place );
+        builder_.CreateCall(
+            runtime( "kl_rt_panic_sizes", builder_.getVoidTy(), { pointer, line, pointer, word, pointer, word }, true ),
+            { c_string( sm_.file( terminator.span.file ).path ),
+              builder_.getInt32( sm_.line_col( terminator.span.file, terminator.span.start ).line ),
+              read( message, str, "data" ),
+              read( message, str, "size" ),
+              address( terminator.at.place ),
+              builder_.getInt64( table().get( terminator.at.type ).count ) }
+        );
+        return;
+    }
+
     if( terminator.failure == Failure::Message )
     {
         const Type_id str     = terminator.message.type;

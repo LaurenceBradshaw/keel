@@ -1,0 +1,19 @@
+error: `filled` needs `S[0]` to be 4, but this is 5
+  --> sema/errors_size_given.kl:31:47
+   |
+31 |     Grid<i32, 4, 3> a = filled<i32, 4, 3>( 0, 5, 3 );
+   |                                               ^ it gives `S[0]` through `n`
+
+error: `filled` needs `S[1]` to be 3, but this is 2
+  --> sema/errors_size_given.kl:32:53
+   |
+32 |     Grid<i32, 4, 3> b = filled<i32, 4, 3>( 0, four, (four - 2) );
+   |                                                     ^^^^^^^^^^ it gives `S[1]` through `n`
+
+error: `line` needs `N` to be 2, but this is 3
+  --> sema/errors_size_given.kl:33:29
+   |
+33 |     Line<2> l = line<2>( 1, 3 );
+   |                             ^ it gives `N` through `n`
+
+3 errors generated

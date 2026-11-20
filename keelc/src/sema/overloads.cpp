@@ -2451,6 +2451,148 @@ void Overloads::refuse_unsourced_dyn( Node_id call, Node_id callable, std::span<
     }
 }
 
+void Overloads::check_size_sources( Node_id call, Node_id callable, std::span<const Type_id> resolved )
+{
+    const Node_kind      kind      = ast_.kind( callable );
+    const Node_id        aggregate = is_function_like( kind ) ? ast_.enclosing_aggregate( callable ) : Node_id {};
+    const bool           member    = aggregate.is_valid() && is_aggregate( ast_.kind( aggregate ) );
+    std::vector<Node_id> declared =
+        member ? ast_.type_parameters( ast_.type_param_list( aggregate ) ) : std::vector<Node_id> {};
+    const std::size_t          of_type = declared.size();
+    const std::vector<Node_id> own     = ast_.type_parameters(
+        kind == Node_kind::Method_decl     ? ast_.own_type_param_list( callable )
+        : kind == Node_kind::Function_decl ? ast_.type_param_list( callable )
+                                           : Node_id {}
+    );
+    declared.insert( declared.end(), own.begin(), own.end() );
+
+    std::vector<Type_id> parameters;
+    for( const Node_id each : declared )
+    {
+        parameters.push_back( types_.type_of( each ) );
+    }
+    const Bindings bound = table_.bind( parameters, resolved );
+
+    const std::string_view name = interner_.text( ast_.name( kind == Node_kind::Constructor_decl ? aggregate : callable ) );
+    const std::span<const Node_id> params = ast_.explicit_params( callable );
+    const std::span<const Node_id> arguments =
+        ast_.kind( call ) == Node_kind::Call_expr ? ast_.arguments( call ) : std::span<const Node_id> {};
+    const bool  from_receiver = ast_.has_receiver( callable ) && kind != Node_kind::Constructor_decl;
+    std::string reason;
+
+    for( std::size_t i = 0; i < declared.size(); ++i )
+    {
+        const Type_id parameter = parameters[i];
+        const auto    found     = bound.find( parameter.v );
+        if( !table_.is_size_parameter( parameter ) || found == bound.end() )
+        {
+            continue;
+        }
+        const bool                 pack = table_.is_pack_parameter( parameter );
+        const std::vector<Type_id> each =
+            pack ? ( table_.is_pack( found->second )
+                         ? std::vector<Type_id>(
+                               table_.get( found->second ).arguments.begin(), table_.get( found->second ).arguments.end()
+                           )
+                         : std::vector<Type_id> {} )
+                 : std::vector<Type_id> { found->second };
+        const std::string_view size = interner_.text( ast_.name( declared[i] ) );
+
+        for( u32 e = 0; e < each.size(); ++e )
+        {
+            const std::string        spelled = pack ? fmt::format( "{}[{}]", size, e ) : std::string( size );
+            const bool               dyn     = each[e] == table_.dyn();
+            std::vector<std::string> sources;
+            if( dyn && i < of_type && from_receiver )
+            {
+                sources.push_back( "this" );
+            }
+
+            for( std::size_t p = 0; p < params.size(); ++p )
+            {
+                const Node_id     param = params[p];
+                const std::string named =
+                    ast_.name( param ).is_valid() ? std::string( interner_.text( ast_.name( param ) ) ) : "_";
+                if( given_size( ast_, resolution_, types_.recorded(), table_, param ) == parameter )
+                {
+                    const std::size_t at = p + ( pack ? e : 0 );
+                    const Folded value   = at < arguments.size() ? constant_folder_.fold_integer( arguments[at] ) : Folded {};
+                    const bool   known   = value.constant && !value.value.negative;
+                    if( dyn || !known )
+                    {
+                        if( !dyn )
+                        {
+                            reason = fmt::format( "`{}` gives `{}`, which must be {}", named, spelled, table_.name( each[e] ) );
+                        }
+                        sources.push_back( named );
+                        continue;
+                    }
+                    const std::optional<u64> constant = table_.evaluate( each[e], {} );
+                    if( constant && *constant != value.value.magnitude )
+                    {
+                        reporter_.error_at(
+                            ast_.span( arguments[at] ),
+                            fmt::format(
+                                "`{}` needs `{}` to be {}, but this is {}", name, spelled, *constant, value.value.magnitude
+                            ),
+                            fmt::format( "it gives `{}` through `{}`", spelled, named )
+                        );
+                        return;
+                    }
+                    continue;
+                }
+                Type_id open = types_.type_of( param );
+                open         = open.is_valid() && table_.is_pointer( open ) ? table_.get( open ).element : open;
+                if( dyn && open.is_valid() && table_.is_struct( open ) &&
+                    ast_.sizes_member( table_.get( open ).declaration ).is_valid() &&
+                    std::ranges::find( table_.get( open ).arguments, parameter ) != table_.get( open ).arguments.end() )
+                {
+                    sources.push_back( named );
+                }
+            }
+
+            if( dyn && sources.size() >= 2 && reason.empty() )
+            {
+                reason = fmt::format( "`{}` and `{}` each give `{}`", sources[0], sources[1], spelled );
+            }
+        }
+    }
+
+    const Node_id list = kind == Node_kind::Function_decl      ? ast_.type_param_list( callable )
+                         : kind == Node_kind::Constructor_decl ? ast_.type_param_list( aggregate )
+                                                               : Node_id {};
+    for( const Node_id clause : list.is_valid() ? ast_.where_clauses( list ) : std::vector<Node_id> {} )
+    {
+        if( !reason.empty() || ast_.kind( clause ) != Node_kind::Size_condition )
+        {
+            continue;
+        }
+        const Node_id comparison = ast_.child( clause, 0 );
+        const Type_id lhs        = types_.type_of( ast_.lhs( comparison ) );
+        const Type_id rhs        = types_.type_of( ast_.rhs( comparison ) );
+        if( lhs.is_valid() && rhs.is_valid() && ( table_.reaches_dyn( lhs, bound ) || table_.reaches_dyn( rhs, bound ) ) )
+        {
+            const auto side = [&]( Type_id size )
+            {
+                const std::string text( table_.name( size ) );
+                return table_.get( size ).kind == Type_kind::Size && is_arithmetic( Size_op( table_.get( size ).width ) )
+                           ? fmt::format( "({})", text )
+                           : text;
+            };
+            reason = fmt::format(
+                "`{} {} {}` reads a `dyn` size", side( lhs ), token_kind_spelling( ast_.op( comparison ) ), side( rhs )
+            );
+        }
+    }
+
+    if( !reason.empty() )
+    {
+        reporter_.warn_at(
+            Warning::Runtime_shape_check, ast_.span( call ), fmt::format( "`{}` checks its sizes when it runs", name ), reason
+        );
+    }
+}
+
 // The edge, then the instance. The edge only matters from inside a generic: a call in `main` is
 // already an instance rather than a step towards one.
 void Overloads::record_instance( Node_id from, Node_id call, Node_id callable, std::vector<Type_id> resolved )
@@ -2463,6 +2605,7 @@ void Overloads::record_instance( Node_id from, Node_id call, Node_id callable, s
     }
     resolved = table_.flattened( resolved, !table_.keeps_packs( parameters ) );
     refuse_unsourced_dyn( call, callable, resolved );
+    check_size_sources( call, callable, resolved );
     generic_recursion_.record_call( from, callable, resolved, ast_.span( call ) );
 
     instantiation_of_.emplace(

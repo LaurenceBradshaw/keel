@@ -341,6 +341,8 @@ struct Printer
                 return "out_of_bounds";
             case Failure::Overflow:
                 return "overflow";
+            case Failure::Sizes:
+                return fmt::format( "sizes_failed {} with {}", operand( terminator.message ), operand( terminator.at ) );
             }
 
         case Terminator_kind::Unreachable:

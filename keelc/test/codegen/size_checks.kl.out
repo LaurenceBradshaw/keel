@@ -1,0 +1,9 @@
+43
+8
+51
+4
+43
+1
+43
+2
+codegen/size_checks.kl:93: size check failed: `near` needs `(R - C) <= 1`, but `R` is 2 and `C` is 4

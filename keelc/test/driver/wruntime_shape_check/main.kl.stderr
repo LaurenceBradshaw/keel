@@ -1,0 +1,23 @@
+warning: `filled` checks its sizes when it runs [-Wruntime-shape-check]
+  --> driver/wruntime_shape_check/main.kl:52:25
+   |
+52 |     Grid<i32, 4, 3> c = filled<i32, 4, 3>( 2, rows, 3 );
+   |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `n` gives `S[0]`, which must be 4
+
+warning: `both` checks its sizes when it runs [-Wruntime-shape-check]
+  --> driver/wruntime_shape_check/main.kl:54:9
+   |
+54 |     _ = both( a, b ) + a.plus( b ) + both( c, d );
+   |         ^^^^^^^^^^^^ `a` and `b` each give `S[0]`
+
+warning: `plus` checks its sizes when it runs [-Wruntime-shape-check]
+  --> driver/wruntime_shape_check/main.kl:54:24
+   |
+54 |     _ = both( a, b ) + a.plus( b ) + both( c, d );
+   |                        ^^^^^^^^^^^ `this` and `other` each give `S[0]`
+
+warning: `tall` checks its sizes when it runs [-Wruntime-shape-check]
+  --> driver/wruntime_shape_check/main.kl:58:23
+   |
+58 |     return cast<i32>( tall( s ) + tall( f ) );
+   |                       ^^^^^^^^^ `R >= C` reads a `dyn` size

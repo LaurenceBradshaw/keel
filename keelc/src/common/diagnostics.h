@@ -34,7 +34,8 @@ enum class Warning : u8
     Unused_private,
     Linear_map,
     Needless_deref,
-    Large_local // off unless -Wlarge-local
+    Large_local,        // off unless -Wlarge-local
+    Runtime_shape_check // off unless -Wruntime-shape-check
 };
 
 std::string_view warning_name( Warning which );
@@ -112,8 +113,8 @@ private:
     std::vector<Span>                silenced_;
     std::vector<u32>                 quiet_;      // File_id::v
     std::map<u32, u32>               unbalanced_; // mapping a file to the index of its brace report in items_
-    // Indexed by Warning: every one on but large-local.
-    std::array<Level, static_cast<u8>( Warning::Large_local ) + 1> levels_ {
+    // Indexed by Warning: every one on but large-local and runtime-shape-check.
+    std::array<Level, static_cast<u8>( Warning::Runtime_shape_check ) + 1> levels_ {
         Level::On,
         Level::On,
         Level::On,
@@ -125,6 +126,7 @@ private:
         Level::On,
         Level::On,
         Level::On,
+        Level::Off,
         Level::Off
     };
     bool all_errors_ = false; // a bare -Werror

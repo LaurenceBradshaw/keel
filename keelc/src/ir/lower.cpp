@@ -171,7 +171,8 @@ struct Size_source
     u64       index = 0;
 };
 
-Size_source source_of(
+// Every place an instance can read one of its run-time sizes from, in the order it prefers them.
+std::vector<Size_source> sources_of(
     const Ast&                 ast,
     Types&                     types,
     const Resolution&          resolution,
@@ -181,13 +182,16 @@ Size_source source_of(
     const Bindings&            bindings
 )
 {
-    Type_table&      table = types.table();
-    const Size_slot& slot  = slots[at];
-    const Node_kind  kind  = ast.kind( declaration );
+    Type_table&              table = types.table();
+    const Size_slot&         slot  = slots[at];
+    const Node_kind          kind  = ast.kind( declaration );
+    std::vector<Size_source> sources;
 
     if( slot.of_type && ast.has_receiver( declaration ) && kind != Node_kind::Constructor_decl )
     {
-        return { Size_from::Receiver, {}, u64( std::ranges::count_if( slots.subspan( 0, at ), &Size_slot::of_type ) ) };
+        sources.push_back(
+            { Size_from::Receiver, {}, u64( std::ranges::count_if( slots.subspan( 0, at ), &Size_slot::of_type ) ) }
+        );
     }
 
     const std::span<const Node_id> params = ast.explicit_params( declaration );
@@ -195,7 +199,7 @@ Size_source source_of(
     {
         if( given_size( ast, resolution, types.recorded(), table, param ) == slot.parameter )
         {
-            return { Size_from::Given, param, slot.element };
+            sources.push_back( { Size_from::Given, param, slot.element } );
         }
     }
 
@@ -215,17 +219,33 @@ Size_source source_of(
             {
                 position += pack ? slot.element : 0;
                 const std::span<const Type_id> held = table.get( table.substitute( open, bindings ) ).arguments;
-                return {
-                    Size_from::Argument,
-                    param,
-                    u64( std::count( held.begin(), held.begin() + std::ptrdiff_t( position ), table.dyn() ) )
-                };
+                sources.push_back(
+                    { Size_from::Argument,
+                      param,
+                      u64( std::count( held.begin(), held.begin() + std::ptrdiff_t( position ), table.dyn() ) ) }
+                );
+                break;
             }
             position += pack ? table.get( table.substitute( argument, bindings ) ).arguments.size() : 1;
         }
     }
 
-    return {};
+    return sources;
+}
+
+// The one an instance reads, else a hidden parameter.
+Size_source source_of(
+    const Ast&                 ast,
+    Types&                     types,
+    const Resolution&          resolution,
+    Node_id                    declaration,
+    std::span<const Size_slot> slots,
+    std::size_t                at,
+    const Bindings&            bindings
+)
+{
+    const std::vector<Size_source> sources = sources_of( ast, types, resolution, declaration, slots, at, bindings );
+    return sources.empty() ? Size_source {} : sources.front();
 }
 
 // How an argument travels to a parameter of an `fn` type: a borrow, or a bare owning value, by address.
@@ -592,6 +612,17 @@ private:
     std::vector<Operand> open_sizes( Type_id open, Span span );
     // The `u64`s a callee takes after its arguments, one per run-time size nothing else gives it.
     std::vector<Operand> hidden_sizes( Node_id id, Node_id callee, const Bindings& callee_bound, Span span );
+    Bindings             written_bindings( Node_id id, Node_id callee ) const;
+    // D90 (6): the run-time sizes a call hands over, checked against each other and the callee's `where`.
+    void check_sizes(
+        Node_id                  id,
+        Node_id                  callee,
+        std::span<const Operand> operands,
+        std::span<const Operand> hidden,
+        const Bindings&          callee_bound
+    );
+    // Branches on `holds`, panicking with `text`, its `{}`s the `values`, when it is false.
+    void require_sizes( Operand holds, std::string text, std::span<const Operand> values, Span span );
     // A `dyn` instance's sizes, written into `object` from `open`, its type here.
     void write_sizes( Place object, Type_id open, Span span );
     void store_sizes( Place sizes, std::span<const Operand> values, Span span );
@@ -897,25 +928,8 @@ std::vector<Operand> Lowering::hidden_sizes( Node_id id, Node_id callee, const B
         return values;
     }
 
-    // What the call wrote for each of the callee's parameters, in this function's terms.
-    Type_table&   table = types_.table();
-    Bindings      open;
-    const Node_id owner = ast_.enclosing_aggregate( callee );
-    if( const std::optional<std::size_t> instance = id.is_valid() ? types_.instantiation_of( id ) : std::nullopt )
-    {
-        open = bindings_for( ast_, types_, types_.instantiations()[*instance] );
-    }
-    const Node_id path = id.is_valid() && ast_.kind( id ) == Node_kind::Call_expr ? ast_.callee( id ) : Node_id {};
-    for( const Node_id named :
-         { id, path.is_valid() && ast_.kind( path ) == Node_kind::Path_expr ? ast_.child( path, 0 ) : Node_id {} } )
-    {
-        const Type_id held = named.is_valid() ? types_.type_of( named ) : Type_id {};
-        if( held.is_valid() && table.is_struct( held ) && table.get( held ).declaration == owner )
-        {
-            open.merge( table.instance_bindings( held ) );
-            break;
-        }
-    }
+    Type_table&    table = types_.table();
+    const Bindings open  = written_bindings( id, callee );
 
     std::unordered_map<u32, std::vector<Operand>> packs;
     for( std::size_t i = 0; i < slots.size(); ++i )
@@ -943,6 +957,347 @@ std::vector<Operand> Lowering::hidden_sizes( Node_id id, Node_id callee, const B
         values.push_back( packs.at( slot.parameter.v )[slot.element] );
     }
     return values;
+}
+
+// What a call wrote for each of the callee's parameters, in this function's terms.
+Bindings Lowering::written_bindings( Node_id id, Node_id callee ) const
+{
+    const Type_table& table = types_.table();
+    Bindings          open;
+    const Node_id     owner = ast_.enclosing_aggregate( callee );
+    if( const std::optional<std::size_t> instance = id.is_valid() ? types_.instantiation_of( id ) : std::nullopt )
+    {
+        open = bindings_for( ast_, types_, types_.instantiations()[*instance] );
+    }
+    const Node_id path = id.is_valid() && ast_.kind( id ) == Node_kind::Call_expr ? ast_.callee( id ) : Node_id {};
+    for( const Node_id named :
+         { id, path.is_valid() && ast_.kind( path ) == Node_kind::Path_expr ? ast_.child( path, 0 ) : Node_id {} } )
+    {
+        const Type_id held = named.is_valid() ? types_.type_of( named ) : Type_id {};
+        if( held.is_valid() && table.is_struct( held ) && table.get( held ).declaration == owner )
+        {
+            open.merge( table.instance_bindings( held ) );
+            break;
+        }
+    }
+
+    return open;
+}
+
+void Lowering::require_sizes( Operand holds, std::string text, std::span<const Operand> values, Span span )
+{
+    Type_table&    table = types_.table();
+    const Type_id  word  = table.integer( 64, false );
+    const Block_id pass  = builder_.add_block();
+    const Block_id fail  = builder_.add_block();
+    builder_.terminate_branch( holds, pass, fail, span );
+    builder_.switch_to( fail );
+
+    const Type_id  str     = types_.type_of( table.prelude().str );
+    const Local_id message = builder_.add_local( str, span );
+    builder_.storage_live( message, span );
+    construct_str( builder_.place( message ), str_constructor(), literal_pool_.add_string( text ), span );
+
+    const Type_id  array     = table.array_of( word, values.size() );
+    const Local_id values_at = builder_.add_local( array, span );
+    builder_.storage_live( values_at, span );
+    for( u64 k = 0; k < values.size(); ++k )
+    {
+        const Local_id index = builder_.into_temp( use( constant( literal_pool_.add_integer( k ), word ) ), word, span );
+        builder_.assign( builder_.index( builder_.place( values_at ), index ), use( values[k] ), span );
+    }
+    builder_.terminate_panic(
+        span, Failure::Sizes, copy( builder_.place( message ), str ), copy( builder_.place( values_at ), array )
+    );
+    builder_.switch_to( pass );
+}
+
+void Lowering::check_sizes(
+    Node_id id, Node_id callee, std::span<const Operand> operands, std::span<const Operand> hidden, const Bindings& callee_bound
+)
+{
+    Type_table&                    table   = types_.table();
+    const Type_id                  word    = table.integer( 64, false );
+    const Type_id                  boolean = table.builtin( Type_kind::Bool );
+    const Span                     span    = ast_.span( id );
+    const std::span<const Node_id> params  = ast_.params( callee );
+    const Node_kind                kind    = ast_.kind( callee );
+    const Node_id                  owner   = ast_.enclosing_aggregate( callee );
+    const std::string_view         name = interner_.text( ast_.name( kind == Node_kind::Constructor_decl ? owner : callee ) );
+    const Node_id                  list = kind == Node_kind::Function_decl      ? ast_.type_param_list( callee )
+                                          : kind == Node_kind::Constructor_decl ? ast_.type_param_list( owner )
+                                                                                : Node_id {};
+
+    const auto operand_of = [&]( Node_id param )
+    { return operands[std::size_t( std::ranges::find( params, param ) - params.begin() )]; };
+    const auto spelled = [&]( Type_id parameter, u32 element )
+    {
+        const std::string_view size = table.name( parameter );
+        return table.is_pack_parameter( parameter ) ? fmt::format( "{}[{}]", size, element ) : std::string( size );
+    };
+    const auto at = [&]( Place base, u64 k )
+    {
+        const Local_id index = builder_.into_temp( use( constant( literal_pool_.add_integer( k ), word ) ), word, span );
+        return builder_.index( base, index );
+    };
+    const auto sizes_of = [&]( Place object, Type_id held )
+    { return builder_.field( object, ast_.sizes_member( table.get( held ).declaration ) ); };
+    // A given `S... n`'s `element`th value, or `N n`'s.
+    const auto given = [&]( Node_id param, u32 element )
+    {
+        const Operand value = operand_of( param );
+        const bool    run =
+            table.is_run( value.type ) || ( table.is_pointer( value.type ) && table.is_run( table.get( value.type ).element ) );
+        if( !run )
+        {
+            return value;
+        }
+        const Type_id pointer = table.many_pointer_to( word );
+        const Operand data    = temporary( run_data( value, pointer ), pointer, span );
+        const Operand moved   = temporary(
+            binary( Token_kind::Plus, data, constant( literal_pool_.add_integer( element ), word ), pointer ), pointer, span
+        );
+        return copy( builder_.deref( moved.place ), word );
+    };
+    const auto read = [&]( const Size_source& source, u32 element )
+    {
+        if( source.from == Size_from::Given )
+        {
+            return given( source.param, element );
+        }
+        const Operand object     = source.from == Size_from::Receiver ? operands[0] : operand_of( source.param );
+        const bool    by_pointer = table.is_pointer( object.type );
+        const Type_id held       = by_pointer ? table.get( object.type ).element : object.type;
+        const Place   base       = by_pointer ? builder_.deref( object.place ) : object.place;
+        return copy( at( sizes_of( base, held ), source.index ), word );
+    };
+    const auto label = [&]( const Size_source& source )
+    {
+        return source.from == Size_from::Receiver     ? std::string( "this" )
+               : ast_.name( source.param ).is_valid() ? std::string( interner_.text( ast_.name( source.param ) ) )
+                                                      : std::string( "_" );
+    };
+
+    // Each size's value here, by parameter and element, for the `where` clauses.
+    std::map<std::pair<u32, u32>, Operand> values;
+
+    // Two sources of one `dyn` must agree. Only where the call wrote `dyn`: the caller's own size
+    // reaches each source the same, so it already agrees.
+    // The `where` clauses with a run-time side.
+    std::vector<Node_id> clauses;
+    for( const Node_id clause : list.is_valid() ? ast_.where_clauses( list ) : std::vector<Node_id> {} )
+    {
+        if( ast_.kind( clause ) != Node_kind::Size_condition )
+        {
+            continue;
+        }
+        const Node_id comparison = ast_.child( clause, 0 );
+        const Type_id lhs        = types_.type_of( ast_.lhs( comparison ) );
+        const Type_id rhs        = types_.type_of( ast_.rhs( comparison ) );
+        if( lhs.is_valid() && rhs.is_valid() &&
+            ( table.reaches_dyn( lhs, callee_bound ) || table.reaches_dyn( rhs, callee_bound ) ) )
+        {
+            clauses.push_back( comparison );
+        }
+    }
+
+    const std::vector<Size_slot> slots = dyn_slots( ast_, types_, callee, callee_bound );
+    const Bindings               open  = slots.empty() ? Bindings {} : written_bindings( id, callee );
+    std::size_t                  next  = 0;
+    for( std::size_t i = 0; i < slots.size(); ++i )
+    {
+        const Size_slot&               slot    = slots[i];
+        const std::vector<Size_source> sources = sources_of( ast_, types_, resolution_, callee, slots, i, callee_bound );
+        if( sources.empty() )
+        {
+            values.emplace( std::pair( slot.parameter.v, slot.element ), hidden[next++] );
+            continue;
+        }
+        const auto found = open.find( slot.parameter.v );
+        const bool written =
+            found != open.end() &&
+            ( table.is_pack_parameter( slot.parameter )
+                  ? table.is_pack( found->second ) && slot.element < table.get( found->second ).arguments.size() &&
+                        table.get( found->second ).arguments[slot.element] == table.dyn()
+                  : found->second == table.dyn() );
+        if( ( !written || sources.size() < 2 ) && clauses.empty() )
+        {
+            continue;
+        }
+        const Operand first = read( sources[0], slot.element );
+        values.emplace( std::pair( slot.parameter.v, slot.element ), first );
+
+        for( std::size_t k = 1; written && k < sources.size(); ++k )
+        {
+            const Operand other = read( sources[k], slot.element );
+            require_sizes(
+                temporary( binary( Token_kind::Equal_equal, first, other, boolean ), boolean, span ),
+                fmt::format(
+                    "`{}` needs one `{}`, but it is {{}} for `{}` and {{}} for `{}`",
+                    name,
+                    spelled( slot.parameter, slot.element ),
+                    label( sources[0] ),
+                    label( sources[k] )
+                ),
+                std::array { first, other },
+                span
+            );
+        }
+    }
+
+    // A value given for a constant size must be that size. A literal sema already compared.
+    const std::span<const Node_id> explicit_params = ast_.explicit_params( callee );
+    const std::span<const Node_id> written_args =
+        ast_.kind( id ) == Node_kind::Call_expr ? ast_.arguments( id ) : std::span<const Node_id> {};
+    for( std::size_t p = 0; p < explicit_params.size(); ++p )
+    {
+        const Node_id param     = explicit_params[p];
+        const Type_id parameter = given_size( ast_, resolution_, types_.recorded(), table, param );
+        if( !parameter.is_valid() )
+        {
+            continue;
+        }
+        const Type_id              bound = table.substitute( parameter, callee_bound );
+        const std::vector<Type_id> each =
+            table.is_pack_parameter( parameter )
+                ? std::vector<Type_id>( table.get( bound ).arguments.begin(), table.get( bound ).arguments.end() )
+                : std::vector<Type_id> { bound };
+        for( u32 e = 0; e < each.size(); ++e )
+        {
+            const std::optional<u64> size = table.evaluate( each[e], {} );
+            if( !size )
+            {
+                continue;
+            }
+            values.emplace( std::pair( parameter.v, e ), constant( literal_pool_.add_integer( *size ), word ) );
+            const std::size_t written_at = p + ( table.is_pack_parameter( parameter ) ? e : 0 );
+            if( written_at < written_args.size() && ast_.kind( written_args[written_at] ) == Node_kind::Int_literal )
+            {
+                continue;
+            }
+            const Operand value = given( param, e );
+            if( value.kind == Operand_kind::Constant )
+            {
+                continue;
+            }
+            require_sizes(
+                temporary(
+                    binary( Token_kind::Equal_equal, value, constant( literal_pool_.add_integer( *size ), word ), boolean ),
+                    boolean,
+                    span
+                ),
+                fmt::format(
+                    "`{}` needs `{}` to be {}, but `{}{}` is {{}}",
+                    name,
+                    spelled( parameter, e ),
+                    *size,
+                    ast_.name( param ).is_valid() ? interner_.text( ast_.name( param ) ) : "_",
+                    table.is_pack_parameter( parameter ) ? fmt::format( "[{}]", e ) : ""
+                ),
+                std::array { value },
+                span
+            );
+        }
+    }
+
+    // Each holds, its sides computable.
+    for( const Node_id comparison : clauses )
+    {
+        const Type_id lhs = types_.type_of( ast_.lhs( comparison ) );
+        const Type_id rhs = types_.type_of( ast_.rhs( comparison ) );
+
+        // The sizes it reads, each shown with its value.
+        std::vector<Type_id> reads;
+        const auto           collect = [&]( auto& self, Type_id size ) -> void
+        {
+            if( table.is_size_parameter( size ) )
+            {
+                if( std::ranges::find( reads, size ) == reads.end() )
+                {
+                    reads.push_back( size );
+                }
+                return;
+            }
+            if( table.get( size ).kind == Type_kind::Size && is_arithmetic( Size_op( table.get( size ).width ) ) )
+            {
+                self( self, table.get( size ).arguments[0] );
+                self( self, table.get( size ).arguments[1] );
+            }
+        };
+        collect( collect, lhs );
+        collect( collect, rhs );
+
+        const auto here = [&]( Type_id parameter )
+        {
+            const auto found = values.find( std::pair( parameter.v, 0u ) );
+            if( found != values.end() )
+            {
+                return found->second;
+            }
+            const std::optional<u64> known = table.evaluate( table.substitute( parameter, callee_bound ), {} );
+            return constant( literal_pool_.add_integer( known.value_or( 0 ) ), word );
+        };
+
+        std::string          when;
+        std::vector<Operand> shown;
+        for( const Type_id parameter : reads )
+        {
+            when += fmt::format( "{}`{}` is {{}}", when.empty() ? "" : " and ", table.name( parameter ) );
+            shown.push_back( here( parameter ) );
+        }
+        const auto spelled_side = [&]( Type_id size )
+        {
+            const std::string text( table.name( size ) );
+            return table.get( size ).kind == Type_kind::Size && is_arithmetic( Size_op( table.get( size ).width ) )
+                       ? fmt::format( "({})", text )
+                       : text;
+        };
+        const std::string text = fmt::format(
+            "`{}` needs `{} {} {}`, but {}",
+            name,
+            spelled_side( lhs ),
+            token_kind_spelling( ast_.op( comparison ) ),
+            spelled_side( rhs ),
+            when
+        );
+
+        // A side that cannot be computed fails, as at compile time.
+        const auto side = [&]( auto& self, Type_id size ) -> Operand
+        {
+            if( table.is_size_parameter( size ) )
+            {
+                return here( size );
+            }
+            const Type& described = table.get( size );
+            if( described.kind != Type_kind::Size || !is_arithmetic( Size_op( described.width ) ) )
+            {
+                return constant( literal_pool_.add_integer( table.evaluate( size, {} ).value_or( 0 ) ), word );
+            }
+            static constexpr Token_kind ops[] = {
+                Token_kind::Plus, Token_kind::Minus, Token_kind::Star, Token_kind::Slash, Token_kind::Percent
+            };
+            const Operand    a  = self( self, described.arguments[0] );
+            const Operand    b  = self( self, described.arguments[1] );
+            const Token_kind op = ops[described.width - u8( Size_op::Add )];
+            const Operand    fits =
+                op == Token_kind::Slash || op == Token_kind::Percent
+                       ? temporary(
+                          binary( Token_kind::Bang_equal, b, constant( literal_pool_.add_integer( 0 ), word ), boolean ),
+                          boolean,
+                          span
+                      )
+                       : temporary(
+                          unary( Token_kind::Bang, temporary( overflows( op, a, b, boolean ), boolean, span ), boolean ),
+                          boolean,
+                          span
+                      );
+            require_sizes( fits, text, shown, span );
+            return temporary( binary( op, a, b, word ), word, span );
+        };
+        const Operand left  = side( side, lhs );
+        const Operand right = side( side, rhs );
+        require_sizes( temporary( binary( ast_.op( comparison ), left, right, boolean ), boolean, span ), text, shown, span );
+    }
 }
 
 void Lowering::write_sizes( Place object, Type_id open, Span span )
@@ -2238,7 +2593,9 @@ void Lowering::lower_construction( Place target, Node_id call_expr )
     {
         operands.push_back( argument );
     }
-    std::ranges::move( hidden_sizes( call_expr, constructor, callee_bound, span ), std::back_inserter( operands ) );
+    std::vector<Operand> hidden = hidden_sizes( call_expr, constructor, callee_bound, span );
+    check_sizes( call_expr, constructor, operands, hidden, callee_bound );
+    std::ranges::move( hidden, std::back_inserter( operands ) );
 
     const Type_id type = type_of( constructor ); // void
 
@@ -3939,7 +4296,9 @@ Operand Lowering::emit_call(
     {
         all.push_back( caller_location( ast_.span( id ) ) );
     }
-    std::ranges::move( hidden_sizes( id, callee, callee_bound, ast_.span( id ) ), std::back_inserter( all ) );
+    std::vector<Operand> hidden = hidden_sizes( id, callee, callee_bound, ast_.span( id ) );
+    check_sizes( id, callee, operands, hidden, callee_bound );
+    std::ranges::move( hidden, std::back_inserter( all ) );
 
     // A void call still assigns, to a void local nothing reads, so Assign always has a destination.
     const Type_id type = given.is_valid() ? given : type_of( id );

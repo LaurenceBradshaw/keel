@@ -1,0 +1,11 @@
+// A call that checks sizes at run time warns only under -Wruntime-shape-check.
+u64 both<u64 N>( N a, N b )
+{
+    return a + b;
+}
+
+i32 main()
+{
+    u64 rows = 4;
+    return cast<i32>( both( rows, rows ) );
+}

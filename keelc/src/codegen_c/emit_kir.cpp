@@ -741,6 +741,22 @@ void Kir_emitter::emit_runtime_prototypes()
         any = true;
     }
 
+    const auto sizes = []( const Function& function )
+    {
+        return std::ranges::any_of(
+            function.blocks,
+            []( const Block& block )
+            { return block.terminator.kind == Terminator_kind::Panic && block.terminator.failure == Failure::Sizes; }
+        );
+    };
+    if( std::ranges::any_of( functions_, sizes ) )
+    {
+        write_line(
+            "_Noreturn void kl_rt_panic_sizes( const char*, uint32_t, const uint8_t*, uint64_t, const uint64_t*, uint64_t );"
+        );
+        any = true;
+    }
+
     if( ends_a_block( Terminator_kind::Panic, true, true ) )
     {
         write_line( "_Noreturn void kl_rt_panic_at( const uint8_t*, uint64_t, uint32_t, const uint8_t*, uint64_t );" );
@@ -962,6 +978,26 @@ void Kir_emitter::emit_terminator( const Terminator& terminator, const Function&
 
     case Terminator_kind::Panic:
     {
+        // The text and the values its `{}`s read, which the runtime joins.
+        if( terminator.failure == Failure::Sizes )
+        {
+            const Held_field* data = program_.field_named( terminator.message.type, "data" );
+            const Held_field* size = program_.field_named( terminator.message.type, "size" );
+            assert( data != nullptr && size != nullptr && "the prelude's `str` has these fields" );
+            const std::string message = operand( terminator.message );
+            write_line( fmt::format(
+                "kl_rt_panic_sizes( {}, {}.{}, {}.{}, {}.e, {} );",
+                location( terminator.span ),
+                message,
+                spelling_.field( data->declaration ),
+                message,
+                spelling_.field( size->declaration ),
+                place( terminator.at.place ),
+                types_.table().get( terminator.at.type ).count
+            ) );
+            return;
+        }
+
         // A `str` carries its length and no terminator, so its two fields go across.
         if( terminator.failure == Failure::Message )
         {
@@ -1570,8 +1606,8 @@ bool Kir_emitter::ends_a_block( Terminator_kind kind, bool with_message, bool lo
         {
             const Terminator& terminator = block.terminator;
 
-            if( terminator.kind == kind && ( terminator.failure == Failure::Message ) == with_message &&
-                terminator.at.type.is_valid() == located )
+            if( terminator.kind == kind && terminator.failure != Failure::Sizes &&
+                ( terminator.failure == Failure::Message ) == with_message && terminator.at.type.is_valid() == located )
             {
                 return true;
             }

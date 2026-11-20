@@ -350,6 +350,7 @@ enum class Failure : u8
     Unhashable, // span: the call
     Bounds,     // span: the index or slice
     Overflow,   // span: the operation
+    Sizes,      // span: the call; `message` its text, `at` the `u64[]` its `{}`s read
 };
 
 struct Terminator

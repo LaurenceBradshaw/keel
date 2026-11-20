@@ -28,6 +28,8 @@ std::string_view failure_prefix( Failure failure )
         return "out of bounds: ";
     case Failure::Overflow:
         return "arithmetic overflow: ";
+    case Failure::Sizes:
+        return "size check failed: ";
     }
     return "";
 }

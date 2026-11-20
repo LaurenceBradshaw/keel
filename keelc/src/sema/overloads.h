@@ -9,6 +9,7 @@
 #include "common/interner.h"
 #include "sema/annotations.h"
 #include "sema/bounds.h"
+#include "sema/constant_folder.h"
 #include "sema/generic_recursion.h"
 #include "sema/places.h"
 #include "sema/reporter.h"
@@ -108,16 +109,17 @@ class Overloads
 {
 public:
     Overloads(
-        const Ast&         ast,
-        const Interner&    interner,
-        const Resolution&  resolution,
-        Types_builder&     types,
-        const Aggregates&  aggregates,
-        Bounds&            bounds,
-        const Places&      places,
-        Annotations&       annotations,
-        Generic_recursion& generic_recursion,
-        Reporter&          reporter
+        const Ast&             ast,
+        const Interner&        interner,
+        const Resolution&      resolution,
+        Types_builder&         types,
+        const Aggregates&      aggregates,
+        Bounds&                bounds,
+        const Places&          places,
+        Annotations&           annotations,
+        const Constant_folder& constant_folder,
+        Generic_recursion&     generic_recursion,
+        Reporter&              reporter
     )
         : ast_( ast ),
           interner_( interner ),
@@ -128,6 +130,7 @@ public:
           bounds_( bounds ),
           places_( places ),
           annotations_( annotations ),
+          constant_folder_( constant_folder ),
           generic_recursion_( generic_recursion ),
           reporter_( reporter )
     {
@@ -191,6 +194,8 @@ public:
     // repeating it is how the two would drift. `from` is the function the call is written in.
     void record_instance( Node_id from, Node_id call, Node_id callable, std::vector<Type_id> resolved );
     void refuse_unsourced_dyn( Node_id call, Node_id callable, std::span<const Type_id> resolved );
+    // D90 (6): a given size that contradicts a constant is refused; a check left to run time warns.
+    void check_size_sources( Node_id call, Node_id callable, std::span<const Type_id> resolved );
     void record_method_instantiation(
         Node_id from, Node_id id, Node_id method, Type_id receiver, std::span<const Type_id> own = {}
     );
@@ -311,17 +316,18 @@ private:
 
     void refuse( Node_id second, std::string message, std::string help );
 
-    const Ast&           ast_;
-    const Interner&      interner_;
-    const Resolution&    resolution_;
-    const Types_builder& types_;
-    Type_table&          table_;
-    const Aggregates&    aggregates_;
-    Bounds&              bounds_;
-    const Places&        places_;
-    Annotations&         annotations_;
-    Generic_recursion&   generic_recursion_;
-    Reporter&            reporter_;
+    const Ast&             ast_;
+    const Interner&        interner_;
+    const Resolution&      resolution_;
+    const Types_builder&   types_;
+    Type_table&            table_;
+    const Aggregates&      aggregates_;
+    Bounds&                bounds_;
+    const Places&          places_;
+    Annotations&           annotations_;
+    const Constant_folder& constant_folder_;
+    Generic_recursion&     generic_recursion_;
+    Reporter&              reporter_;
 
     std::unordered_map<u32, u32> instantiation_of_;
     std::unordered_set<u32>      refused_;

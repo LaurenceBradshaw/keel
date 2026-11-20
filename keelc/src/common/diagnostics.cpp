@@ -140,13 +140,15 @@ std::string_view warning_name( Warning which )
         return "needless-deref";
     case Warning::Large_local:
         return "large-local";
+    case Warning::Runtime_shape_check:
+        return "runtime-shape-check";
     }
     return "";
 }
 
 std::optional<Warning> warning_named( std::string_view name )
 {
-    for( u8 i = 0; i <= static_cast<u8>( Warning::Large_local ); ++i )
+    for( u8 i = 0; i <= static_cast<u8>( Warning::Runtime_shape_check ); ++i )
     {
         if( warning_name( static_cast<Warning>( i ) ) == name )
         {

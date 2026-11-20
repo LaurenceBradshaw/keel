@@ -296,7 +296,12 @@ void check_terminators( const Function& func, std::vector<std::string>& errors )
             break;
 
         case Terminator_kind::Panic:
-            if( terminator.failure == Failure::Message )
+            if( terminator.failure == Failure::Sizes )
+            {
+                check_operand( func, terminator.message, where( "message" ), errors );
+                check_operand( func, terminator.at, where( "values" ), errors );
+            }
+            else if( terminator.failure == Failure::Message )
             {
                 check_operand( func, terminator.message, where( "message" ), errors );
 

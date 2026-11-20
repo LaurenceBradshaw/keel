@@ -1,0 +1,95 @@
+// Run-time size checks at a call: two sources of one `dyn` size compared, a given value against a
+// constant size, and `where` clauses with a `dyn` side, each computed; the last call fails one.
+import t::console;
+
+class Grid<T, u64... S(dyn)> where T : copyable
+{
+    T[64] cells;
+
+    public Grid( T fill )
+    {
+        cells = [ fill, .. ];
+    }
+
+    public u64 extent( u64 axis ) const
+    {
+        return S[axis];
+    }
+
+    public u64 plus( const ref Grid<T, S...> other ) const
+    {
+        return extent( 0 ) + other.extent( 0 );
+    }
+};
+
+Grid<T, S...> filled<T, u64... S>( T fill, S... n ) where T : copyable
+{
+    return Grid<T, S...>( fill );
+}
+
+u64 both<T, u64... S>( const ref Grid<T, S...> a, const ref Grid<T, S...> b ) where T : copyable
+{
+    return a.extent( 0 ) * 10 + b.extent( 1 );
+}
+
+// Its own `S` reaches both arguments, so its calls check nothing.
+u64 twice<T, u64... S>( const ref Grid<T, S...> a, const ref Grid<T, S...> b ) where T : copyable
+{
+    return both( a, b ) + a.plus( b );
+}
+
+struct Shape<u64 R(dyn), u64 C(dyn)>
+{
+    u64 tag;
+};
+
+Shape<R, C> shape<u64 R, u64 C>( R r, C c )
+{
+    return Shape<R, C> { 0 };
+}
+
+u64 tall<u64 R, u64 C>( const ref Shape<R, C> _ ) where R >= C
+{
+    return R * 10 + C;
+}
+
+u64 near<u64 R, u64 C>( const ref Shape<R, C> _ ) where (R - C) <= 1
+{
+    return R - C;
+}
+
+u64 halves<u64 R, u64 C>( const ref Shape<R, C> _ ) where (R / C) >= 2
+{
+    return R / C;
+}
+
+// Checked in the instance, where `R` and `C` are run-time.
+u64 via<u64 R, u64 C>( const ref Shape<R, C> s )
+{
+    return tall( s );
+}
+
+i32 main()
+{
+    u64 rows = 4;
+    Grid<i32, dyn, 3> a = filled( 0, rows, 3 );
+    Grid<i32, dyn, 3> b = filled( 1, rows, 3 );
+    t::print( both( a, b ) );
+    t::print( a.plus( b ) );
+    t::print( twice( a, b ) );
+
+    Grid<i32, 4, 3> fixed = filled<i32, 4, 3>( 2, rows, 3 );
+    t::print( fixed.extent( 0 ) );
+
+    Shape<dyn, 3> s = shape( rows, 3 );
+    t::print( tall( s ) );
+    t::print( near( s ) );
+    t::print( via( s ) );
+
+    Shape<dyn, dyn> z = shape( rows, rows - 2 );
+    t::print( halves( z ) );
+
+    Shape<dyn, dyn> w = shape( rows - 2, rows );
+    t::print( near( w ) ); // 2 - 4 cannot be computed
+    return 0;
+}

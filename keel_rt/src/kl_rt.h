@@ -26,6 +26,9 @@ void           kl_rt_free( void* ptr );
 _Noreturn void kl_rt_panic( const char* file, uint32_t line, const char* message );
 _Noreturn void kl_rt_panic_message( const char* file, uint32_t line, const uint8_t* data, uint64_t size );
 _Noreturn void kl_rt_panic_at( const uint8_t* file, uint64_t file_size, uint32_t line, const uint8_t* data, uint64_t size );
+_Noreturn void kl_rt_panic_sizes(
+    const char* file, uint32_t line, const uint8_t* text, uint64_t size, const uint64_t* values, uint64_t count
+);
 _Noreturn void kl_rt_unreachable( void );
 _Noreturn void kl_rt_exit( int32_t code );
 void           kl_rt_write( int32_t, const uint8_t*, uint64_t );
