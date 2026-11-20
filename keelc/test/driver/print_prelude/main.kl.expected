@@ -489,6 +489,62 @@ class box<T>
     private T* p_;
 };
 
+/// `N` elements of `T`, owned: held inline when `N` is a constant and `T` a number of which `N` fill
+/// at most 4096 bytes, and on the heap otherwise. Dropping it drops the elements and frees what
+/// it allocated.
+///
+/// `buffer<f64, dyn>` takes its count at run time.
+class buffer<T, u64 N(dyn)> where T : copyable
+{
+    // The heap form. At an inline instance `items_` is a `T[N]` and the compiler gives each body.
+
+    /// `n` copies of `fill`.
+    public buffer( N n, T fill )
+    {
+        unsafe
+        {
+            items_ = alloc<T>( n );
+            for( u64 i : 0..n )
+            {
+                items_[i] = fill;
+            }
+        }
+    }
+
+    ~buffer()
+    {
+        unsafe
+        {
+            destroy( items_, N );
+            free( items_ );
+        }
+    }
+
+    /// The elements, where they live.
+    public ref T[] as_run() const
+    {
+        unsafe
+        {
+            return items_[0..N];
+        }
+    }
+
+    /// The element at `index`, which panics outside `N`.
+    public ref T operator[]( u64 index ) const
+    {
+        if( index >= N )
+        {
+            panic( "index out of range" );
+        }
+        unsafe
+        {
+            return items_[index];
+        }
+    }
+
+    private T[*] items_;
+};
+
 /// --- Call sites ---
 
 /// Where a call was written, as `@caller()` gives it inside an `@located` function.

@@ -1,0 +1,41 @@
+// A generic body whose own `where` clauses do not show a callee's size condition: no clause, a
+// weaker one, a different one, a type named in the body, and a method of a generic type. Each is
+// reported once, at the call, and not again at its instances.
+u64 tall<u64 R, u64 C>() where R >= C
+{
+    return R - C;
+}
+
+u64 two_or_more<u64 N>() where N >= 2
+{
+    return N;
+}
+
+struct Window<u64 N> where N >= 2
+{
+    u64[N] slots;
+};
+
+u64 none<u64 N>() { return two_or_more<N>(); }
+u64 weaker<u64 N>() where N > 0 { return two_or_more<N>(); }
+u64 different<u64 R, u64 C>() where R != C { return tall<R, C>(); }
+u64 computed<u64 N>() where N >= 2 { return two_or_more<(N - 1)>(); }
+
+u64 named<u64 N>()
+{
+    Window<N> w = Window<N> { [ 0, .. ] };
+    return w.slots[0];
+}
+
+struct Pane<u64 N>
+{
+    u64[N] slots;
+
+    u64 first() const { return two_or_more<N>() + slots[0]; }
+};
+
+i32 main()
+{
+    Pane<3> p = Pane<3> { [ 0, .. ] };
+    return cast<i32>( none<1>() + weaker<1>() + different<1, 2>() + computed<2>() + named<1>() + p.first() );
+}

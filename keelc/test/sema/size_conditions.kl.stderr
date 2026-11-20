@@ -1,0 +1,7 @@
+error: `tall` needs `(N * 2) <= 64`
+  --> sema/size_conditions.kl:12:12
+   |
+12 |     return tall( a, b );
+   |            ^^^^^^^^^^^^ nothing in `forwards`'s `where` clauses shows it; add `where (N * 2) <= 64`
+
+1 error generated

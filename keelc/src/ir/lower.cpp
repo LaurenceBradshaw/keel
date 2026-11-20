@@ -535,6 +535,7 @@ private:
 
     void lower_destroy( Node_id id );
     void lower_ptr_init( Node_id id );
+    void lower_inline_buffer( Span span );
 
     // Runs a construct with `target`'s address as its receiver. Not an expression: a constructor
     // returns nothing and writes through the pointer it is handed.
@@ -1366,6 +1367,11 @@ Function Lowering::run()
         // Its address was taken: the body is the operation on its parameter.
         const Operand x = copy( builder_.place( Local_id { 1 } ), builder_.type_of( Local_id { 1 } ) );
         builder_.assign( builder_.place( k_return_slot ), sqrt_of( x ), span );
+    }
+    else if( receiver_.is_valid() &&
+             types_.table().is_inline_buffer( types_.table().get( builder_.type_of( receiver_ ) ).element ) )
+    {
+        lower_inline_buffer( span );
     }
     else
     {
@@ -2553,6 +2559,85 @@ void Lowering::lower_destroy( Node_id id )
     builder_.terminate_goto( header, span );
 
     builder_.switch_to( exit );
+}
+
+// An inline buffer's members, its `items_` a `T[N]` of numbers, which nothing allocates or drops.
+void Lowering::lower_inline_buffer( Span span )
+{
+    Type_table&                    table     = types_.table();
+    const Type_id                  instance  = table.get( builder_.type_of( receiver_ ) ).element;
+    const std::span<const Type_id> arguments = table.get( instance ).arguments;
+    const Type_id                  element   = arguments[0];
+    const Type_id                  u64       = table.integer( 64, false );
+    const Type_id                  boolean   = table.builtin( Type_kind::Bool );
+    const Operand                  count     = constant( literal_pool_.add_integer( table.get( arguments[1] ).count ), u64 );
+    const Place                    items     = builder_.field(
+        builder_.deref( builder_.place( receiver_ ) ), ast_.contained_fields( table.get( instance ).declaration ).front()
+    );
+    const std::span<const Node_id> params = ast_.explicit_params( declaration_ );
+
+    if( ast_.kind( declaration_ ) == Node_kind::Destructor_decl )
+    {
+        return;
+    }
+
+    if( ast_.kind( declaration_ ) == Node_kind::Constructor_decl )
+    {
+        // Filled whole, then assigned, so the field is never part-written; at least one slot, so slot
+        // 0 is written before the first test, as an array fill's is.
+        const Type_id  array  = table.array_of( element, table.get( arguments[1] ).count );
+        const Local_id filled = builder_.add_local( array, span );
+        const Local_id fill   = locals_.at( params.back().v );
+        builder_.storage_live( filled, span );
+        const Local_id index = builder_.into_temp( use( constant( literal_pool_.add_integer( 0 ), u64 ) ), u64, span );
+
+        const Block_id body = builder_.add_block();
+        const Block_id exit = builder_.add_block();
+
+        builder_.terminate_goto( body, span );
+        builder_.switch_to( body );
+        builder_.assign(
+            builder_.index( builder_.place( filled ), index ), use( copy( builder_.place( fill ), element ) ), span
+        );
+        builder_.assign(
+            builder_.place( index ),
+            binary(
+                Token_kind::Plus, copy( builder_.place( index ), u64 ), constant( literal_pool_.add_integer( 1 ), u64 ), u64
+            ),
+            span
+        );
+        builder_.terminate_branch(
+            temporary( binary( Token_kind::Less, copy( builder_.place( index ), u64 ), count, boolean ), boolean, span ),
+            body,
+            exit,
+            span
+        );
+        builder_.switch_to( exit );
+        builder_.assign( items, use( copy( builder_.place( filled ), array ) ), span );
+        return;
+    }
+
+    const Type_id returned = builder_.type_of( k_return_slot );
+
+    // `as_run()`: the run of every slot.
+    if( params.empty() )
+    {
+        const Type_id  data_type = table.many_pointer_to( element );
+        const Local_id zero      = builder_.into_temp( use( constant( literal_pool_.add_integer( 0 ), u64 ) ), u64, span );
+        const Operand  data =
+            temporary( address_of( builder_.index( items, zero ), data_type, Address_purpose::Borrow, span ), data_type, span );
+        builder_.assign( builder_.place( k_return_slot ), run_of( data, count, returned ), span );
+        return;
+    }
+
+    // `operator[]`: the body's own check, then the slot.
+    lower_statement( ast_.children( ast_.body( declaration_ ) ).front() );
+    const Local_id index = locals_.at( params.front().v );
+    builder_.assign(
+        builder_.place( k_return_slot ),
+        address_of( builder_.index( items, index ), returned, Address_purpose::Borrow, span ),
+        span
+    );
 }
 
 void Lowering::lower_construction( Place target, Node_id call_expr )

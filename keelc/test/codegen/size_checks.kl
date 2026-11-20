@@ -63,8 +63,8 @@ u64 halves<u64 R, u64 C>( const ref Shape<R, C> _ ) where (R / C) >= 2
     return R / C;
 }
 
-// Checked in the instance, where `R` and `C` are run-time.
-u64 via<u64 R, u64 C>( const ref Shape<R, C> s )
+// Shown by its own clause, which its caller checks at run time.
+u64 via<u64 R, u64 C>( const ref Shape<R, C> s ) where R >= C
 {
     return tall( s );
 }

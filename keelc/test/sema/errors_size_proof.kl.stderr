@@ -1,0 +1,37 @@
+error: `two_or_more` needs `N >= 2`
+  --> sema/errors_size_proof.kl:19:28
+   |
+19 | u64 none<u64 N>() { return two_or_more<N>(); }
+   |                            ^^^^^^^^^^^^^^^^ nothing in `none`'s `where` clauses shows it; add `where N >= 2`
+
+error: `two_or_more` needs `N >= 2`
+  --> sema/errors_size_proof.kl:20:42
+   |
+20 | u64 weaker<u64 N>() where N > 0 { return two_or_more<N>(); }
+   |                                          ^^^^^^^^^^^^^^^^ nothing in `weaker`'s `where` clauses shows it; add `where N >= 2`
+
+error: `tall` needs `R >= C`
+  --> sema/errors_size_proof.kl:21:53
+   |
+21 | u64 different<u64 R, u64 C>() where R != C { return tall<R, C>(); }
+   |                                                     ^^^^^^^^^^^^ nothing in `different`'s `where` clauses shows it; add `where R >= C`
+
+error: `two_or_more` needs `(N - 1) >= 2`
+  --> sema/errors_size_proof.kl:22:45
+   |
+22 | u64 computed<u64 N>() where N >= 2 { return two_or_more<(N - 1)>(); }
+   |                                             ^^^^^^^^^^^^^^^^^^^^^^ nothing in `computed`'s `where` clauses shows it; add `where (N - 1) >= 2`
+
+error: `Window` needs `N >= 2`
+  --> sema/errors_size_proof.kl:26:5
+   |
+26 |     Window<N> w = Window<N> { [ 0, .. ] };
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ nothing in `named`'s `where` clauses shows it; add `where N >= 2`
+
+error: `two_or_more` needs `N >= 2`
+  --> sema/errors_size_proof.kl:34:32
+   |
+34 |     u64 first() const { return two_or_more<N>() + slots[0]; }
+   |                                ^^^^^^^^^^^^^^^^ nothing in `Pane`'s `where` clauses shows it; add `where N >= 2`
+
+6 errors generated

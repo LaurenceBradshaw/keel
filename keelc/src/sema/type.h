@@ -326,6 +326,7 @@ public:
     void                 set_prelude( const Prelude_items& items );
     const Prelude_items& prelude() const;
     bool                 is_box( Type_id type ) const;
+    bool                 is_inline_buffer( Type_id type ) const;          // a prelude `buffer` laid out as `T[N]`
     bool                 is_prelude_interface( Type_id interface ) const; // equatable, comparable or hashable
     // A non-generic declaration's one type, or invalid when it has none yet.
     Type_id declared( Node_id declaration ) const;

@@ -1,3 +1,9 @@
+error: `carried` needs `(N - 3) == 0`
+  --> sema/errors_size_conditions.kl:15:29
+   |
+15 | u64 outer<u64 N>() { return carried<N>(); }
+   |                             ^^^^^^^^^^^^ nothing in `outer`'s `where` clauses shows it; add `where (N - 3) == 0`
+
 error: `Window<1>` needs `N > 1`
   --> sema/errors_size_conditions.kl:24:12
    |
@@ -16,16 +22,4 @@ error: `tall<1, 3>` needs `R >= C`
 33 |     u64 y = tall( c, b );
    |             ^^^^^^^^^^^^ the condition at sema/errors_size_conditions.kl:5:66 fails when `R` is 1 and `C` is 3
 
-error: `carried<4>` needs `(N - 3) == 0`
-  --> sema/errors_size_conditions.kl:34:19
-   |
-34 |     u64 z = outer<4>() + outer<1>();
-   |                   ^ the condition at sema/errors_size_conditions.kl:10:22 fails when `N` is 4
-
-error: `carried<1>` needs `(N - 3) == 0`
-  --> sema/errors_size_conditions.kl:34:32
-   |
-34 |     u64 z = outer<4>() + outer<1>();
-   |                                ^ the condition at sema/errors_size_conditions.kl:10:22 cannot be computed when `N` is 1
-
-5 errors generated
+4 errors generated

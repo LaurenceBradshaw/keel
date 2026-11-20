@@ -2359,6 +2359,23 @@ bool Type_table::is_box( Type_id type ) const
     return type.is_valid() && prelude_.box.is_valid() && get( type ).declaration == prelude_.box;
 }
 
+// `N` a constant above 0 and `T` a number of which `N` fill at most 4096 bytes.
+bool Type_table::is_inline_buffer( Type_id type ) const
+{
+    if( !type.is_valid() || !prelude_.buffer.is_valid() || !is_struct( type ) || get( type ).declaration != prelude_.buffer )
+    {
+        return false;
+    }
+    const std::span<const Type_id> arguments = get( type ).arguments;
+    if( arguments.size() != 2 || !( is_integer( arguments[0] ) || is_float( arguments[0] ) ) || get( arguments[0] ).width < 8 )
+    {
+        return false;
+    }
+    const Type& count = get( arguments[1] );
+    return count.kind == Type_kind::Size && count.width == 0 && count.count > 0 &&
+           count.count <= 4096 / ( get( arguments[0] ).width / 8 );
+}
+
 bool Type_table::is_prelude_interface( Type_id interface ) const
 {
     if( !interface.is_valid() || !is_interface( interface ) )

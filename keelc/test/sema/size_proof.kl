@@ -1,0 +1,52 @@
+// A generic body shows its callee's size conditions from its own `where` clauses: the same clause,
+// either way round, a stronger one, bounds against a constant, or constants alone.
+u64 tall<u64 R, u64 C>() where R >= C
+{
+    return R - C;
+}
+
+u64 two_or_more<u64 N>() where N >= 2
+{
+    return N;
+}
+
+u64 not_three<u64 N>() where N != 3
+{
+    return N;
+}
+
+u64 at_most_seven<u64 N>() where N <= 7
+{
+    return N;
+}
+
+u64 same<u64 R, u64 C>() where R >= C { return tall<R, C>(); }
+u64 flipped<u64 R, u64 C>() where C <= R { return tall<R, C>(); }
+u64 stronger<u64 R, u64 C>() where R > C { return tall<R, C>(); }
+u64 equal<u64 R, u64 C>() where R == C { return tall<R, C>() + tall<C, R>(); }
+u64 itself<u64 N>() { return tall<N, N>(); }
+u64 above_one<u64 N>() where N > 1 { return two_or_more<N>(); }
+u64 below<u64 N>() where N < 8 { return at_most_seven<N>(); }
+u64 four<u64 N>() where N == 4 { return two_or_more<N>() + not_three<N>() + at_most_seven<N>(); }
+u64 written<u64 N>() { return tall<3, 2>() + N; }
+
+struct Window<u64 N> where N >= 2
+{
+    u64[N] slots;
+};
+
+struct Pane<u64 N> where 2 <= N
+{
+    Window<N> inner;
+
+    u64 first() const { return two_or_more<N>() + inner.slots[0]; }
+};
+
+i32 main()
+{
+    Pane<3> p = Pane<3> { Window<3> { [ 0, .. ] } };
+    return cast<i32>(
+        same<2, 1>() + flipped<2, 1>() + stronger<2, 1>() + equal<2, 2>() + itself<5>() + above_one<2>() + below<7>() +
+        four<4>() + written<1>() + p.first()
+    );
+}

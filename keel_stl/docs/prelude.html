@@ -53,6 +53,7 @@ functions.</p>
 <li><a href="#dynamic_memory"><code>dynamic_memory</code></a> <span class="kind">interface</span></li>
 <li class="divider">Ownership</li>
 <li><a href="#box"><code>box</code></a> <span class="kind">class</span></li>
+<li><a href="#buffer"><code>buffer</code></a> <span class="kind">class</span></li>
 <li class="divider">Call sites</li>
 <li><a href="#location"><code>location</code></a> <span class="kind">struct</span></li>
 <li class="divider">Ranges</li>
@@ -615,6 +616,41 @@ interface as its type argument.</p>
 <pre class="signature"><a class="anchor" href="#box.take" aria-label="Link to take">#</a><code><span class="kw">public</span> <span class="kw">static</span> T <span class="fn">take</span>( <span class="kw">move</span> <a class="type" href="#box">box</a>&lt;T&gt; b )</code></pre>
 <div class="doc">
 <p>Ends the box and hands back its value.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">class</span> <span class="type">buffer</span></h2>
+<div class="group" id="buffer">
+<pre class="signature"><a class="anchor" href="#buffer" aria-label="Link to buffer">#</a><code><span class="kw">class</span> <span class="type">buffer</span>&lt;T, <a class="prim" href="#u64">u64</a> N(dyn)&gt; <span class="kw">where</span> T : copyable</code></pre>
+<div class="doc">
+<p><code>N</code> elements of <code>T</code>, owned: held inline when <code>N</code> is a constant and <code>T</code> a number of which <code>N</code> fill
+at most 4096 bytes, and on the heap otherwise. Dropping it drops the elements and frees what
+it allocated.</p>
+<p><code>buffer&lt;f64, dyn&gt;</code> takes its count at run time.</p>
+</div>
+</div>
+<h3>Constructors</h3>
+<div class="group" id="buffer.buffer">
+<pre class="signature"><a class="anchor" href="#buffer.buffer" aria-label="Link to buffer">#</a><code><span class="kw">public</span> <span class="type">buffer</span>( N n, T fill )</code></pre>
+<div class="doc">
+<p><code>n</code> copies of <code>fill</code>.</p>
+</div>
+</div>
+<div class="group" id="buffer.~buffer">
+<pre class="signature"><a class="anchor" href="#buffer.~buffer" aria-label="Link to ~buffer">#</a><code><span class="type">~buffer</span>()</code></pre>
+</div>
+<h3>Methods</h3>
+<div class="group" id="buffer.as_run">
+<pre class="signature"><a class="anchor" href="#buffer.as_run" aria-label="Link to as_run">#</a><code><span class="kw">public</span> <span class="kw">ref</span> T[] <span class="fn">as_run</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The elements, where they live.</p>
+</div>
+</div>
+<div class="group" id="buffer.operator[]">
+<pre class="signature"><a class="anchor" href="#buffer.operator[]" aria-label="Link to operator[]">#</a><code><span class="kw">public</span> <span class="kw">ref</span> T <span class="fn">operator[]</span>( <a class="prim" href="#u64">u64</a> index ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The element at <code>index</code>, which panics outside <code>N</code>.</p>
 </div>
 </div>
 </section>

@@ -438,11 +438,16 @@ std::vector<Generic_call> Generic_recursion::take_generic_calls()
 namespace keel
 {
 
-// The program's edges only: the prelude's `box<T>` has its own, from its constructor to `box<T>`.
+// The program's edges only: the prelude's `box<T>` and `buffer<T, N>` have their own.
 std::size_t program_edges( const Typed& p )
 {
+    const Prelude_items& prelude = p.types().table().prelude();
     return static_cast<std::size_t>( std::ranges::count_if(
-        p.types().generic_calls(), [&]( const Generic_call& call ) { return call.to != p.types().table().prelude().box; }
+        p.types().generic_calls(),
+        [&]( const Generic_call& call ) {
+            return call.to != prelude.box && call.from != prelude.buffer &&
+                   p.ast().enclosing_aggregate( call.from ) != prelude.buffer;
+        }
     ) );
 }
 

@@ -84,6 +84,8 @@ private:
     void                    collect_conditions( Node_id declaration );
     bool                    report( const Instance& instance, Span origin );
     bool                    report_condition( const Instance& instance, Span origin, const Bindings& bindings );
+    bool                    prove( const Generic_call& edge );
+    bool                    shows( Token_kind op, Type_id lhs, Type_id rhs, Node_id from ) const;
     Span                    blame( const Instance& instance, const Bindings& bindings, Type_id size, Span origin ) const;
     std::string             spelled( Type_id size ) const;
     bool                    runtime( Type_id size, const Bindings& bindings ) const;

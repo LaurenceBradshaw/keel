@@ -5,6 +5,7 @@
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 #include <algorithm>
+#include <limits>
 #include <set>
 
 namespace keel::sema
@@ -45,12 +46,19 @@ void Size_suffixes::check(
         return;
     }
 
+    // D78 (8): a call a body cannot show is reported once, and its instances are not walked.
+    std::set<const Generic_call*>                             unproven;
     std::unordered_map<u32, std::vector<const Generic_call*>> out_of;
 
     for( const auto edges : { calls, implied } )
     {
         for( const Generic_call& edge : edges )
         {
+            if( !prove( edge ) )
+            {
+                unproven.insert( &edge );
+                continue;
+            }
             out_of[edge.from.v].push_back( &edge );
         }
     }
@@ -63,6 +71,10 @@ void Size_suffixes::check(
     {
         for( const Generic_call& edge : edges )
         {
+            if( unproven.contains( &edge ) )
+            {
+                continue;
+            }
             if( std::optional<Instance> instance = reach( edge, {}, nullptr ) )
             {
                 starts.emplace_back( std::move( *instance ), edge.at );
@@ -548,6 +560,196 @@ bool Size_suffixes::report_condition( const Instance& instance, Span origin, con
     }
 
     return false;
+}
+
+namespace
+{
+
+Token_kind mirrored( Token_kind op )
+{
+    return op == Token_kind::Less            ? Token_kind::Greater
+           : op == Token_kind::Greater       ? Token_kind::Less
+           : op == Token_kind::Less_equal    ? Token_kind::Greater_equal
+           : op == Token_kind::Greater_equal ? Token_kind::Less_equal
+                                             : op;
+}
+
+bool implies( Token_kind have, Token_kind want )
+{
+    return have == want ||
+           ( have == Token_kind::Greater && ( want == Token_kind::Greater_equal || want == Token_kind::Bang_equal ) ) ||
+           ( have == Token_kind::Less && ( want == Token_kind::Less_equal || want == Token_kind::Bang_equal ) ) ||
+           ( have == Token_kind::Equal_equal && ( want == Token_kind::Greater_equal || want == Token_kind::Less_equal ) );
+}
+
+} // namespace
+
+// D78 (8): the callee's conditions under the edge's arguments, each shown by the caller's own clauses
+// or left to the instance walk when it reads no parameter.
+bool Size_suffixes::prove( const Generic_call& edge )
+{
+    const auto needs = conditions_.find( edge.to.v );
+    if( needs == conditions_.end() )
+    {
+        return true;
+    }
+
+    std::vector<Type_id> parameters;
+    for( const Node_id parameter : ast_.type_parameters( ast_.type_param_list( edge.to ) ) )
+    {
+        if( parameter.v >= types_.size() || !types_[parameter.v].is_valid() )
+        {
+            return true;
+        }
+        parameters.push_back( types_[parameter.v] );
+    }
+    const Bindings bindings = table_.bind( parameters, edge.arguments );
+
+    for( const Condition& condition : needs->second )
+    {
+        std::vector<Type_id> read;
+        parameters_of( condition.lhs, read );
+        parameters_of( condition.rhs, read );
+        if( !std::ranges::all_of( read, [&]( Type_id parameter ) { return bindings.contains( parameter.v ); } ) )
+        {
+            continue;
+        }
+
+        const Type_id lhs = table_.substitute( condition.lhs, bindings );
+        const Type_id rhs = table_.substitute( condition.rhs, bindings );
+
+        std::vector<Type_id> open;
+        parameters_of( lhs, open );
+        parameters_of( rhs, open );
+        if( open.empty() || runtime( lhs, {} ) || runtime( rhs, {} ) || shows( condition.op, lhs, rhs, edge.from ) )
+        {
+            continue;
+        }
+
+        const Node_id aggregate = ast_.enclosing_aggregate( edge.to );
+        const Node_id callee    = aggregate.is_valid() && !ast_.own_type_param_list( edge.to ).is_valid() ? aggregate : edge.to;
+        const Node_id home =
+            ast_.enclosing_aggregate( edge.from ).is_valid() ? ast_.enclosing_aggregate( edge.from ) : edge.from;
+        const std::string needed =
+            fmt::format( "{} {} {}", spelled( lhs ), token_kind_spelling( condition.op ), spelled( rhs ) );
+
+        reporter_.error_at(
+            edge.at,
+            fmt::format( "`{}` needs `{}`", interner_.text( ast_.name( callee ) ), needed ),
+            fmt::format(
+                "nothing in `{}`'s `where` clauses shows it; add `where {}`", interner_.text( ast_.name( home ) ), needed
+            )
+        );
+        return false;
+    }
+
+    return true;
+}
+
+// Whether the clauses of `from`, and of its aggregate, show `lhs op rhs`: the same clause either
+// way round, a stronger comparison, or bounds on one side against a constant.
+bool Size_suffixes::shows( Token_kind op, Type_id lhs, Type_id rhs, Node_id from ) const
+{
+    const auto constant = [&]( Type_id size ) { return table_.evaluate( size, {} ); };
+
+    if( constant( lhs ) && !constant( rhs ) )
+    {
+        std::swap( lhs, rhs );
+        op = mirrored( op );
+    }
+    if( lhs == rhs )
+    {
+        return op == Token_kind::Greater_equal || op == Token_kind::Less_equal || op == Token_kind::Equal_equal;
+    }
+
+    std::vector<Condition> facts;
+    for( const Node_id owner : { from, ast_.enclosing_aggregate( from ) } )
+    {
+        if( const auto found = conditions_.find( owner.v ); owner.is_valid() && found != conditions_.end() )
+        {
+            for( Condition fact : found->second )
+            {
+                if( constant( fact.lhs ) && !constant( fact.rhs ) )
+                {
+                    std::swap( fact.lhs, fact.rhs );
+                    fact.op = mirrored( fact.op );
+                }
+                facts.push_back( fact );
+            }
+        }
+    }
+
+    const std::optional<u64> k = constant( rhs );
+    if( !k )
+    {
+        return std::ranges::any_of(
+            facts,
+            [&]( const Condition& fact )
+            {
+                return ( fact.lhs == lhs && fact.rhs == rhs && implies( fact.op, op ) ) ||
+                       ( fact.lhs == rhs && fact.rhs == lhs && implies( mirrored( fact.op ), op ) );
+            }
+        );
+    }
+
+    // `lhs` lies in [lo, hi] and is not any of `excluded`.
+    u64  lo       = 0;
+    u64  hi       = std::numeric_limits<u64>::max();
+    bool excluded = false;
+    for( const Condition& fact : facts )
+    {
+        const std::optional<u64> c = fact.lhs == lhs ? constant( fact.rhs ) : std::nullopt;
+        if( !c )
+        {
+            continue;
+        }
+        switch( fact.op )
+        {
+        case Token_kind::Greater:
+            if( *c == std::numeric_limits<u64>::max() )
+            {
+                return true; // never holds, so the body never runs
+            }
+            lo = std::max( lo, *c + 1 );
+            break;
+        case Token_kind::Greater_equal:
+            lo = std::max( lo, *c );
+            break;
+        case Token_kind::Less:
+            if( *c == 0 )
+            {
+                return true; // never holds, so the body never runs
+            }
+            hi = std::min( hi, *c - 1 );
+            break;
+        case Token_kind::Less_equal:
+            hi = std::min( hi, *c );
+            break;
+        case Token_kind::Equal_equal:
+            lo = std::max( lo, *c );
+            hi = std::min( hi, *c );
+            break;
+        default:
+            excluded = excluded || *c == *k;
+            break;
+        }
+    }
+
+    switch( op )
+    {
+    case Token_kind::Greater:
+        return lo > *k;
+    case Token_kind::Greater_equal:
+        return lo >= *k;
+    case Token_kind::Less:
+        return hi < *k;
+    case Token_kind::Less_equal:
+        return hi <= *k;
+    case Token_kind::Equal_equal:
+        return lo == *k && hi == *k;
+    default:
+        return excluded || *k < lo || *k > hi;
+    }
 }
 
 // The size the caller wrote for the first parameter `size` reads.

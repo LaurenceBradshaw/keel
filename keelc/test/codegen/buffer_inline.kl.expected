@@ -1,0 +1,1053 @@
+// ../test_lib/console.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl_7prelude_str;
+
+struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
+
+struct kl_7prelude_textual__vtable;
+struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
+
+typedef struct kl__run__L2u8__ref ( *kl__fn__FMP4voidEPL2u8 )( void* );
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
+};
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
+
+struct kl_7prelude_textual__vtable
+{
+    void ( *drop )( void* );
+    struct kl__run__L2u8__ref ( *kl__7as_text__ )( void* );
+};
+
+void kl_rt_write( int32_t, uint8_t*, uint64_t );
+void kl_rt_write_i64( int32_t, int64_t );
+void kl_rt_write_u64( int32_t, uint64_t );
+void kl_rt_write_f64( int32_t, double );
+
+void kl_1t7console_10write_text__3i32_7textual( int32_t, struct kl_7prelude_textual__ref );
+void kl_1t7console_5print__7textual_7textual( struct kl_7prelude_textual__ref, struct kl_7prelude_textual__ref );
+void kl_1t7console_5print__3i64_7textual( int64_t, struct kl_7prelude_textual__ref );
+void kl_1t7console_5print__3u64_7textual( uint64_t, struct kl_7prelude_textual__ref );
+void kl_1t7console_5print__3f64_7textual( double, struct kl_7prelude_textual__ref );
+void kl_1t7console_5print__4bool_7textual( bool, struct kl_7prelude_textual__ref );
+void kl_1t7console_6eprint__7textual_7textual( struct kl_7prelude_textual__ref, struct kl_7prelude_textual__ref );
+void kl_1t7console_6eprint__3i64_7textual( int64_t, struct kl_7prelude_textual__ref );
+void kl_1t7console_6eprint__3u64_7textual( uint64_t, struct kl_7prelude_textual__ref );
+void kl_1t7console_6eprint__3f64_7textual( double, struct kl_7prelude_textual__ref );
+void kl_1t7console_6eprint__4bool_7textual( bool, struct kl_7prelude_textual__ref );
+void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
+void kl_7prelude_str__drop( void* );
+struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__( void* );
+
+static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
+
+#line 12 "../test_lib/console.kl"
+void kl_1t7console_10write_text__3i32_7textual( int32_t kl_stream_1, struct kl_7prelude_textual__ref kl_text_2 )
+{
+    struct kl__run__L2u8__ref kl_r_3;
+    struct kl_7prelude_textual__ref kl_t4;
+    struct kl__run__L2u8__ref kl_t5;
+    uint8_t* kl_t6;
+    uint64_t kl_t7;
+    kl__fn__FMP4voidEPL2u8 kl_t9;
+    void* kl_t10;
+#line 14 "../test_lib/console.kl"
+    kl_t4 = kl_text_2;
+#line 14 "../test_lib/console.kl"
+    kl_t9 = ( kl_t4 ).vtable->kl__7as_text__;
+#line 14 "../test_lib/console.kl"
+    kl_t10 = ( kl_t4 ).self;
+#line 14 "../test_lib/console.kl"
+    kl_t5 = kl_t9( kl_t10 );
+#line 14 "../test_lib/console.kl"
+    kl_r_3 = kl_t5;
+#line 17 "../test_lib/console.kl"
+    kl_t6 = ( kl_r_3 ).data;
+#line 17 "../test_lib/console.kl"
+    kl_t7 = ( kl_r_3 ).size;
+#line 17 "../test_lib/console.kl"
+    kl_rt_write( kl_stream_1, kl_t6, kl_t7 );
+#line 19 "../test_lib/console.kl"
+    return;
+#line 19 "../test_lib/console.kl"
+}
+
+#line 24 "../test_lib/console.kl"
+void kl_1t7console_5print__7textual_7textual( struct kl_7prelude_textual__ref kl_text_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_textual__ref kl_t3;
+    struct kl_7prelude_textual__ref kl_t5;
+#line 26 "../test_lib/console.kl"
+    kl_t3 = kl_text_1;
+#line 26 "../test_lib/console.kl"
+    kl_1t7console_10write_text__3i32_7textual( 1, kl_t3 );
+    kl_t5 = kl_end_2;
+#line 27 "../test_lib/console.kl"
+    kl_1t7console_10write_text__3i32_7textual( 1, kl_t5 );
+    return;
+#line 28 "../test_lib/console.kl"
+}
+
+#line 31 "../test_lib/console.kl"
+void kl_1t7console_5print__3i64_7textual( int64_t kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_textual__ref kl_t4;
+#line 35 "../test_lib/console.kl"
+    kl_rt_write_i64( 1, kl_value_1 );
+#line 37 "../test_lib/console.kl"
+    kl_t4 = kl_end_2;
+#line 37 "../test_lib/console.kl"
+    kl_1t7console_10write_text__3i32_7textual( 1, kl_t4 );
+    return;
+#line 38 "../test_lib/console.kl"
+}
+
+#line 41 "../test_lib/console.kl"
+void kl_1t7console_5print__3u64_7textual( uint64_t kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_textual__ref kl_t4;
+#line 45 "../test_lib/console.kl"
+    kl_rt_write_u64( 1, kl_value_1 );
+#line 47 "../test_lib/console.kl"
+    kl_t4 = kl_end_2;
+#line 47 "../test_lib/console.kl"
+    kl_1t7console_10write_text__3i32_7textual( 1, kl_t4 );
+    return;
+#line 48 "../test_lib/console.kl"
+}
+
+#line 53 "../test_lib/console.kl"
+void kl_1t7console_5print__3f64_7textual( double kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_textual__ref kl_t4;
+#line 57 "../test_lib/console.kl"
+    kl_rt_write_f64( 1, kl_value_1 );
+#line 59 "../test_lib/console.kl"
+    kl_t4 = kl_end_2;
+#line 59 "../test_lib/console.kl"
+    kl_1t7console_10write_text__3i32_7textual( 1, kl_t4 );
+    return;
+#line 60 "../test_lib/console.kl"
+}
+
+#line 63 "../test_lib/console.kl"
+void kl_1t7console_5print__4bool_7textual( bool kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_str kl_t3;
+    struct kl_7prelude_str kl_t4;
+    struct kl_7prelude_str* kl_t5;
+    uint8_t* kl_t6;
+    struct kl_7prelude_str kl_t8;
+    struct kl_7prelude_str* kl_t9;
+    uint8_t* kl_t10;
+    struct kl_7prelude_str* kl_t12;
+    struct kl_7prelude_textual__ref kl_t13;
+    struct kl_7prelude_textual__ref kl_t14;
+#line 65 "../test_lib/console.kl"
+    if ( kl_value_1 ) goto bb1; else goto bb2;
+    bb1:
+#line 65 "../test_lib/console.kl"
+    kl_t5 = &kl_t4;
+#line 65 "../test_lib/console.kl"
+    kl_t6 = ( uint8_t* ) "true";
+#line 65 "../test_lib/console.kl"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 4 );
+#line 65 "../test_lib/console.kl"
+    kl_t3 = kl_t4;
+#line 65 "../test_lib/console.kl"
+    goto bb3;
+    bb2:
+#line 65 "../test_lib/console.kl"
+    kl_t9 = &kl_t8;
+#line 65 "../test_lib/console.kl"
+    kl_t10 = ( uint8_t* ) "false";
+#line 65 "../test_lib/console.kl"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t9, kl_t10, 5 );
+#line 65 "../test_lib/console.kl"
+    kl_t3 = kl_t8;
+#line 65 "../test_lib/console.kl"
+    goto bb3;
+    bb3:
+#line 65 "../test_lib/console.kl"
+    kl_t12 = &kl_t3;
+#line 65 "../test_lib/console.kl"
+    kl_t13 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t12, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 65 "../test_lib/console.kl"
+    kl_t14 = kl_end_2;
+#line 65 "../test_lib/console.kl"
+    kl_1t7console_5print__7textual_7textual( kl_t13, kl_t14 );
+    return;
+#line 66 "../test_lib/console.kl"
+}
+
+#line 71 "../test_lib/console.kl"
+void kl_1t7console_6eprint__7textual_7textual( struct kl_7prelude_textual__ref kl_text_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_textual__ref kl_t3;
+    struct kl_7prelude_textual__ref kl_t5;
+#line 73 "../test_lib/console.kl"
+    kl_t3 = kl_text_1;
+#line 73 "../test_lib/console.kl"
+    kl_1t7console_10write_text__3i32_7textual( 2, kl_t3 );
+    kl_t5 = kl_end_2;
+#line 74 "../test_lib/console.kl"
+    kl_1t7console_10write_text__3i32_7textual( 2, kl_t5 );
+    return;
+#line 75 "../test_lib/console.kl"
+}
+
+#line 78 "../test_lib/console.kl"
+void kl_1t7console_6eprint__3i64_7textual( int64_t kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_textual__ref kl_t4;
+#line 82 "../test_lib/console.kl"
+    kl_rt_write_i64( 2, kl_value_1 );
+#line 84 "../test_lib/console.kl"
+    kl_t4 = kl_end_2;
+#line 84 "../test_lib/console.kl"
+    kl_1t7console_10write_text__3i32_7textual( 2, kl_t4 );
+    return;
+#line 85 "../test_lib/console.kl"
+}
+
+#line 88 "../test_lib/console.kl"
+void kl_1t7console_6eprint__3u64_7textual( uint64_t kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_textual__ref kl_t4;
+#line 92 "../test_lib/console.kl"
+    kl_rt_write_u64( 2, kl_value_1 );
+#line 94 "../test_lib/console.kl"
+    kl_t4 = kl_end_2;
+#line 94 "../test_lib/console.kl"
+    kl_1t7console_10write_text__3i32_7textual( 2, kl_t4 );
+    return;
+#line 95 "../test_lib/console.kl"
+}
+
+#line 100 "../test_lib/console.kl"
+void kl_1t7console_6eprint__3f64_7textual( double kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_textual__ref kl_t4;
+#line 104 "../test_lib/console.kl"
+    kl_rt_write_f64( 2, kl_value_1 );
+#line 106 "../test_lib/console.kl"
+    kl_t4 = kl_end_2;
+#line 106 "../test_lib/console.kl"
+    kl_1t7console_10write_text__3i32_7textual( 2, kl_t4 );
+    return;
+#line 107 "../test_lib/console.kl"
+}
+
+#line 110 "../test_lib/console.kl"
+void kl_1t7console_6eprint__4bool_7textual( bool kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_str kl_t3;
+    struct kl_7prelude_str kl_t4;
+    struct kl_7prelude_str* kl_t5;
+    uint8_t* kl_t6;
+    struct kl_7prelude_str kl_t8;
+    struct kl_7prelude_str* kl_t9;
+    uint8_t* kl_t10;
+    struct kl_7prelude_str* kl_t12;
+    struct kl_7prelude_textual__ref kl_t13;
+    struct kl_7prelude_textual__ref kl_t14;
+#line 112 "../test_lib/console.kl"
+    if ( kl_value_1 ) goto bb1; else goto bb2;
+    bb1:
+#line 112 "../test_lib/console.kl"
+    kl_t5 = &kl_t4;
+#line 112 "../test_lib/console.kl"
+    kl_t6 = ( uint8_t* ) "true";
+#line 112 "../test_lib/console.kl"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 4 );
+#line 112 "../test_lib/console.kl"
+    kl_t3 = kl_t4;
+#line 112 "../test_lib/console.kl"
+    goto bb3;
+    bb2:
+#line 112 "../test_lib/console.kl"
+    kl_t9 = &kl_t8;
+#line 112 "../test_lib/console.kl"
+    kl_t10 = ( uint8_t* ) "false";
+#line 112 "../test_lib/console.kl"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t9, kl_t10, 5 );
+#line 112 "../test_lib/console.kl"
+    kl_t3 = kl_t8;
+#line 112 "../test_lib/console.kl"
+    goto bb3;
+    bb3:
+#line 112 "../test_lib/console.kl"
+    kl_t12 = &kl_t3;
+#line 112 "../test_lib/console.kl"
+    kl_t13 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t12, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 112 "../test_lib/console.kl"
+    kl_t14 = kl_end_2;
+#line 112 "../test_lib/console.kl"
+    kl_1t7console_6eprint__7textual_7textual( kl_t13, kl_t14 );
+    return;
+#line 113 "../test_lib/console.kl"
+}
+
+// codegen/buffer_inline.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__A4_3i32;
+struct kl_7prelude_buffer__I3i32_V4_E;
+struct kl_7codegen_Holder;
+struct kl_7prelude_str;
+struct kl__A512_3f64;
+struct kl_7prelude_buffer__I3f64_V512_E;
+struct kl__A4096_2u8;
+struct kl_7prelude_buffer__I2u8_V4096_E;
+
+struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
+struct kl__run__L3f64__ref { double* data; uint64_t size; };
+struct kl__run__L3i32__ref { int32_t* data; uint64_t size; };
+
+struct kl_7prelude_textual__vtable;
+struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
+
+struct kl__A4_3i32
+{
+    int32_t e[4];
+};
+_Static_assert( sizeof( struct kl__A4_3i32 ) == 16 && _Alignof( struct kl__A4_3i32 ) == 4, "layout" );
+
+struct kl_7prelude_buffer__I3i32_V4_E
+{
+    struct kl__A4_3i32 kl_items_;
+};
+_Static_assert( sizeof( struct kl_7prelude_buffer__I3i32_V4_E ) == 16 && _Alignof( struct kl_7prelude_buffer__I3i32_V4_E ) == 4 && offsetof( struct kl_7prelude_buffer__I3i32_V4_E, kl_items_ ) == 0, "layout" );
+
+struct kl_7codegen_Holder
+{
+    struct kl_7prelude_buffer__I3i32_V4_E kl_held;
+};
+_Static_assert( sizeof( struct kl_7codegen_Holder ) == 16 && _Alignof( struct kl_7codegen_Holder ) == 4 && offsetof( struct kl_7codegen_Holder, kl_held ) == 0, "layout" );
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
+};
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
+
+struct kl__A512_3f64
+{
+    double e[512];
+};
+_Static_assert( sizeof( struct kl__A512_3f64 ) == 4096 && _Alignof( struct kl__A512_3f64 ) == 8, "layout" );
+
+struct kl_7prelude_buffer__I3f64_V512_E
+{
+    struct kl__A512_3f64 kl_items_;
+};
+_Static_assert( sizeof( struct kl_7prelude_buffer__I3f64_V512_E ) == 4096 && _Alignof( struct kl_7prelude_buffer__I3f64_V512_E ) == 8 && offsetof( struct kl_7prelude_buffer__I3f64_V512_E, kl_items_ ) == 0, "layout" );
+
+struct kl__A4096_2u8
+{
+    uint8_t e[4096];
+};
+_Static_assert( sizeof( struct kl__A4096_2u8 ) == 4096 && _Alignof( struct kl__A4096_2u8 ) == 1, "layout" );
+
+struct kl_7prelude_buffer__I2u8_V4096_E
+{
+    struct kl__A4096_2u8 kl_items_;
+};
+_Static_assert( sizeof( struct kl_7prelude_buffer__I2u8_V4096_E ) == 4096 && _Alignof( struct kl_7prelude_buffer__I2u8_V4096_E ) == 1 && offsetof( struct kl_7prelude_buffer__I2u8_V4096_E, kl_items_ ) == 0, "layout" );
+
+struct kl_7prelude_textual__vtable
+{
+    void ( *drop )( void* );
+    struct kl__run__L2u8__ref ( *kl__7as_text__ )( void* );
+};
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+_Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
+
+void kl_7codegen_6Holder__RQ7codegen6Holder__ctor( struct kl_7codegen_Holder* );
+int32_t kl_7codegen_4main__( void );
+void kl_7prelude_6buffer__I3i32_V4_E__RQ7prelude6bufferI3i32_V4_E_3u64_3i32__ctor( struct kl_7prelude_buffer__I3i32_V4_E*, uint64_t, int32_t );
+int32_t* kl_7prelude_14operator_index__I3i32_V4_E__SQ7prelude6bufferI3i32_V4_E_3u64( struct kl_7prelude_buffer__I3i32_V4_E*, uint64_t );
+struct kl__run__L3i32__ref kl_7prelude_6as_run__I3i32_V4_E__SQ7prelude6bufferI3i32_V4_E( struct kl_7prelude_buffer__I3i32_V4_E* );
+void kl_7prelude_6buffer__I3f64_V512_E__RQ7prelude6bufferI3f64_V512_E_3u64_3f64__ctor( struct kl_7prelude_buffer__I3f64_V512_E*, uint64_t, double );
+double* kl_7prelude_14operator_index__I3f64_V512_E__SQ7prelude6bufferI3f64_V512_E_3u64( struct kl_7prelude_buffer__I3f64_V512_E*, uint64_t );
+double kl_7codegen_5total__IV512_E__MQ7prelude6bufferI3f64_V512_E( struct kl_7prelude_buffer__I3f64_V512_E );
+void kl_7prelude_6buffer__I2u8_V4096_E__RQ7prelude6bufferI2u8_V4096_E_3u64_2u8__ctor( struct kl_7prelude_buffer__I2u8_V4096_E*, uint64_t, uint8_t );
+uint8_t* kl_7prelude_14operator_index__I2u8_V4096_E__SQ7prelude6bufferI2u8_V4096_E_3u64( struct kl_7prelude_buffer__I2u8_V4096_E*, uint64_t );
+struct kl__run__L2u8__ref kl_7prelude_6as_run__I2u8_V4096_E__SQ7prelude6bufferI2u8_V4096_E( struct kl_7prelude_buffer__I2u8_V4096_E* );
+void kl_7prelude_6buffer__I3i32_V4_E__dtor( struct kl_7prelude_buffer__I3i32_V4_E* );
+void kl_7prelude_6buffer__I3f64_V512_E__dtor( struct kl_7prelude_buffer__I3f64_V512_E* );
+void kl_7prelude_6buffer__I2u8_V4096_E__dtor( struct kl_7prelude_buffer__I2u8_V4096_E* );
+struct kl__run__L3f64__ref kl_7prelude_6as_run__I3f64_V512_E__SQ7prelude6bufferI3f64_V512_E( struct kl_7prelude_buffer__I3f64_V512_E* );
+void kl_1t7console_5print__3i64_7textual( int64_t, struct kl_7prelude_textual__ref );
+void kl_1t7console_5print__3u64_7textual( uint64_t, struct kl_7prelude_textual__ref );
+void kl_1t7console_5print__3f64_7textual( double, struct kl_7prelude_textual__ref );
+void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
+void kl_7prelude_str__drop( void* );
+struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__( void* );
+
+static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
+
+#line 17 "codegen/buffer_inline.kl"
+void kl_7codegen_6Holder__RQ7codegen6Holder__ctor( struct kl_7codegen_Holder* kl_this_1 )
+{
+    struct kl_7prelude_buffer__I3i32_V4_E kl_t2;
+    struct kl_7prelude_buffer__I3i32_V4_E* kl_t3;
+    bool kl_t5;
+#line 19 "codegen/buffer_inline.kl"
+    kl_t5 = false;
+#line 19 "codegen/buffer_inline.kl"
+    kl_t5 = false;
+#line 19 "codegen/buffer_inline.kl"
+    kl_t3 = &kl_t2;
+#line 19 "codegen/buffer_inline.kl"
+    kl_t5 = true;
+#line 19 "codegen/buffer_inline.kl"
+    kl_7prelude_6buffer__I3i32_V4_E__RQ7prelude6bufferI3i32_V4_E_3u64_3i32__ctor( kl_t3, 4, 3 );
+#line 19 "codegen/buffer_inline.kl"
+    ( *kl_this_1 ).kl_held = kl_t2;
+#line 19 "codegen/buffer_inline.kl"
+    kl_t5 = false;
+#line 19 "codegen/buffer_inline.kl"
+    if ( kl_t5 ) kl_7prelude_6buffer__I3i32_V4_E__dtor( &kl_t2 );
+#line 19 "codegen/buffer_inline.kl"
+    kl_t5 = false;
+    return;
+#line 20 "codegen/buffer_inline.kl"
+}
+
+#line 25 "codegen/buffer_inline.kl"
+int32_t kl_7codegen_4main__( void )
+{
+    int32_t kl_t0;
+    struct kl_7prelude_buffer__I3i32_V4_E kl_small_1;
+    struct kl_7prelude_buffer__I3i32_V4_E* kl_t2;
+    struct kl_7prelude_buffer__I3i32_V4_E* kl_t4;
+    int32_t* kl_t5;
+    struct kl_7prelude_buffer__I3i32_V4_E* kl_t6;
+    int32_t* kl_t7;
+    struct kl_7prelude_buffer__I3i32_V4_E* kl_t8;
+    int32_t* kl_t9;
+    bool kl_t10;
+    int32_t kl_t11;
+    int32_t kl_sum_12;
+    struct kl_7prelude_buffer__I3i32_V4_E* kl_t13;
+    struct kl__run__L3i32__ref kl_t14;
+    struct kl__run__L3i32__ref kl_t15;
+    uint64_t kl_t16;
+    uint64_t kl_t17;
+    uint64_t kl_t18;
+    bool kl_t19;
+    int32_t* kl_t20;
+    int32_t* kl_t21;
+    int32_t kl_x_22;
+    bool kl_t23;
+    int64_t kl_t24;
+    struct kl_7prelude_str kl_t25;
+    struct kl_7prelude_str* kl_t26;
+    uint8_t* kl_t27;
+    struct kl_7prelude_str* kl_t29;
+    struct kl_7prelude_textual__ref kl_t30;
+    struct kl_7prelude_buffer__I3f64_V512_E kl_edge_32;
+    struct kl_7prelude_buffer__I3f64_V512_E* kl_t33;
+    struct kl_7prelude_buffer__I3f64_V512_E* kl_t35;
+    double* kl_t36;
+    double kl_t37;
+    struct kl_7prelude_str kl_t38;
+    struct kl_7prelude_str* kl_t39;
+    uint8_t* kl_t40;
+    struct kl_7prelude_str* kl_t42;
+    struct kl_7prelude_textual__ref kl_t43;
+    struct kl_7prelude_buffer__I2u8_V4096_E kl_bytes_45;
+    struct kl_7prelude_buffer__I2u8_V4096_E* kl_t46;
+    struct kl_7prelude_buffer__I2u8_V4096_E* kl_t48;
+    uint8_t* kl_t49;
+    struct kl_7prelude_buffer__I2u8_V4096_E* kl_t50;
+    struct kl__run__L2u8__ref kl_t51;
+    uint64_t kl_t52;
+    struct kl_7prelude_buffer__I2u8_V4096_E* kl_t53;
+    uint8_t* kl_t54;
+    uint64_t kl_t55;
+    bool kl_t56;
+    uint64_t kl_t57;
+    struct kl_7prelude_buffer__I2u8_V4096_E* kl_t58;
+    uint8_t* kl_t59;
+    uint64_t kl_t60;
+    bool kl_t61;
+    uint64_t kl_t62;
+    struct kl_7prelude_str kl_t63;
+    struct kl_7prelude_str* kl_t64;
+    uint8_t* kl_t65;
+    struct kl_7prelude_str* kl_t67;
+    struct kl_7prelude_textual__ref kl_t68;
+    struct kl_7codegen_Holder kl_h_70;
+    struct kl_7codegen_Holder* kl_t71;
+    struct kl_7prelude_buffer__I3i32_V4_E* kl_t73;
+    int32_t* kl_t74;
+    struct kl_7prelude_buffer__I3i32_V4_E* kl_t75;
+    int32_t* kl_t76;
+    struct kl_7prelude_buffer__I3i32_V4_E* kl_t77;
+    int32_t* kl_t78;
+    bool kl_t79;
+    int32_t kl_t80;
+    int64_t kl_t81;
+    struct kl_7prelude_str kl_t82;
+    struct kl_7prelude_str* kl_t83;
+    uint8_t* kl_t84;
+    struct kl_7prelude_str* kl_t86;
+    struct kl_7prelude_textual__ref kl_t87;
+    bool kl_t89;
+#line 27 "codegen/buffer_inline.kl"
+    kl_t89 = false;
+#line 27 "codegen/buffer_inline.kl"
+    kl_t2 = &kl_small_1;
+#line 27 "codegen/buffer_inline.kl"
+    kl_7prelude_6buffer__I3i32_V4_E__RQ7prelude6bufferI3i32_V4_E_3u64_3i32__ctor( kl_t2, 4, -2 );
+    kl_t4 = &kl_small_1;
+#line 28 "codegen/buffer_inline.kl"
+    kl_t5 = kl_7prelude_14operator_index__I3i32_V4_E__SQ7prelude6bufferI3i32_V4_E_3u64( kl_t4, 1 );
+#line 28 "codegen/buffer_inline.kl"
+    ( *kl_t5 ) = 5;
+    kl_t6 = &kl_small_1;
+#line 29 "codegen/buffer_inline.kl"
+    kl_t7 = kl_7prelude_14operator_index__I3i32_V4_E__SQ7prelude6bufferI3i32_V4_E_3u64( kl_t6, 3 );
+#line 29 "codegen/buffer_inline.kl"
+    kl_t8 = &kl_small_1;
+#line 29 "codegen/buffer_inline.kl"
+    kl_t9 = kl_7prelude_14operator_index__I3i32_V4_E__SQ7prelude6bufferI3i32_V4_E_3u64( kl_t8, 1 );
+#line 29 "codegen/buffer_inline.kl"
+    kl_t10 = __builtin_mul_overflow( ( *kl_t9 ), 2, &( int32_t ) { 0 } );
+#line 29 "codegen/buffer_inline.kl"
+    if ( kl_t10 ) goto bb1; else goto bb2;
+    bb1:
+#line 29 "codegen/buffer_inline.kl"
+    kl_rt_panic( "codegen/buffer_inline.kl", 29, "arithmetic overflow: small[1] * 2" );
+    bb2:
+#line 29 "codegen/buffer_inline.kl"
+    kl_t11 = ( *kl_t9 ) * 2;
+#line 29 "codegen/buffer_inline.kl"
+    ( *kl_t7 ) = kl_t11;
+    kl_sum_12 = 0;
+    kl_t13 = &kl_small_1;
+#line 31 "codegen/buffer_inline.kl"
+    kl_t14 = kl_7prelude_6as_run__I3i32_V4_E__SQ7prelude6bufferI3i32_V4_E( kl_t13 );
+#line 31 "codegen/buffer_inline.kl"
+    kl_t15 = kl_t14;
+#line 31 "codegen/buffer_inline.kl"
+    kl_t18 = ( kl_t15 ).size;
+#line 31 "codegen/buffer_inline.kl"
+    kl_t16 = 0;
+#line 31 "codegen/buffer_inline.kl"
+    kl_t17 = kl_t18;
+#line 31 "codegen/buffer_inline.kl"
+    goto bb3;
+    bb3:
+#line 31 "codegen/buffer_inline.kl"
+    kl_t19 = kl_t16 < kl_t17;
+#line 31 "codegen/buffer_inline.kl"
+    if ( kl_t19 ) goto bb4; else goto bb5;
+    bb4:
+#line 31 "codegen/buffer_inline.kl"
+    kl_t20 = ( kl_t15 ).data;
+#line 31 "codegen/buffer_inline.kl"
+    kl_t21 = kl_t20 + kl_t16;
+#line 31 "codegen/buffer_inline.kl"
+    kl_x_22 = ( *kl_t21 );
+#line 33 "codegen/buffer_inline.kl"
+    kl_t23 = __builtin_add_overflow( kl_sum_12, kl_x_22, &( int32_t ) { 0 } );
+#line 33 "codegen/buffer_inline.kl"
+    if ( kl_t23 ) goto bb6; else goto bb7;
+    bb5:
+    kl_t24 = ( int64_t ) kl_sum_12;
+#line 31 "../test_lib/console.kl"
+    kl_t26 = &kl_t25;
+#line 31 "../test_lib/console.kl"
+    kl_t27 = ( uint8_t* ) "\012";
+#line 31 "../test_lib/console.kl"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t26, kl_t27, 1 );
+#line 31 "../test_lib/console.kl"
+    kl_t29 = &kl_t25;
+#line 31 "../test_lib/console.kl"
+    kl_t30 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t29, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 35 "codegen/buffer_inline.kl"
+    kl_1t7console_5print__3i64_7textual( kl_t24, kl_t30 );
+#line 37 "codegen/buffer_inline.kl"
+    kl_t89 = false;
+#line 37 "codegen/buffer_inline.kl"
+    kl_t33 = &kl_edge_32;
+#line 37 "codegen/buffer_inline.kl"
+    kl_t89 = true;
+#line 37 "codegen/buffer_inline.kl"
+    kl_7prelude_6buffer__I3f64_V512_E__RQ7prelude6bufferI3f64_V512_E_3u64_3f64__ctor( kl_t33, 512, 0.5 );
+    kl_t35 = &kl_edge_32;
+#line 38 "codegen/buffer_inline.kl"
+    kl_t36 = kl_7prelude_14operator_index__I3f64_V512_E__SQ7prelude6bufferI3f64_V512_E_3u64( kl_t35, 511 );
+#line 38 "codegen/buffer_inline.kl"
+    ( *kl_t36 ) = 100.0;
+    kl_t37 = kl_7codegen_5total__IV512_E__MQ7prelude6bufferI3f64_V512_E( kl_edge_32 );
+#line 39 "codegen/buffer_inline.kl"
+    kl_t89 = false;
+#line 53 "../test_lib/console.kl"
+    kl_t39 = &kl_t38;
+#line 53 "../test_lib/console.kl"
+    kl_t40 = ( uint8_t* ) "\012";
+#line 53 "../test_lib/console.kl"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t39, kl_t40, 1 );
+#line 53 "../test_lib/console.kl"
+    kl_t42 = &kl_t38;
+#line 53 "../test_lib/console.kl"
+    kl_t43 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t42, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 39 "codegen/buffer_inline.kl"
+    kl_1t7console_5print__3f64_7textual( kl_t37, kl_t43 );
+#line 41 "codegen/buffer_inline.kl"
+    kl_t46 = &kl_bytes_45;
+#line 41 "codegen/buffer_inline.kl"
+    kl_7prelude_6buffer__I2u8_V4096_E__RQ7prelude6bufferI2u8_V4096_E_3u64_2u8__ctor( kl_t46, 4096, 1 );
+    kl_t48 = &kl_bytes_45;
+#line 42 "codegen/buffer_inline.kl"
+    kl_t49 = kl_7prelude_14operator_index__I2u8_V4096_E__SQ7prelude6bufferI2u8_V4096_E_3u64( kl_t48, 0 );
+#line 42 "codegen/buffer_inline.kl"
+    ( *kl_t49 ) = 9;
+    kl_t50 = &kl_bytes_45;
+#line 43 "codegen/buffer_inline.kl"
+    kl_t51 = kl_7prelude_6as_run__I2u8_V4096_E__SQ7prelude6bufferI2u8_V4096_E( kl_t50 );
+#line 43 "codegen/buffer_inline.kl"
+    kl_t52 = ( kl_t51 ).size;
+#line 43 "codegen/buffer_inline.kl"
+    kl_t53 = &kl_bytes_45;
+#line 43 "codegen/buffer_inline.kl"
+    kl_t54 = kl_7prelude_14operator_index__I2u8_V4096_E__SQ7prelude6bufferI2u8_V4096_E_3u64( kl_t53, 0 );
+#line 43 "codegen/buffer_inline.kl"
+    kl_t55 = ( uint64_t ) ( *kl_t54 );
+#line 43 "codegen/buffer_inline.kl"
+    kl_t56 = __builtin_add_overflow( kl_t52, kl_t55, &( uint64_t ) { 0 } );
+#line 43 "codegen/buffer_inline.kl"
+    if ( kl_t56 ) goto bb9; else goto bb10;
+    bb6:
+#line 33 "codegen/buffer_inline.kl"
+    kl_rt_panic( "codegen/buffer_inline.kl", 33, "arithmetic overflow: sum += x;" );
+    bb7:
+#line 33 "codegen/buffer_inline.kl"
+    kl_sum_12 = kl_sum_12 + kl_x_22;
+#line 31 "codegen/buffer_inline.kl"
+    goto bb8;
+    bb8:
+#line 31 "codegen/buffer_inline.kl"
+    kl_t16 = kl_t16 + 1;
+#line 31 "codegen/buffer_inline.kl"
+    goto bb3;
+    bb9:
+#line 43 "codegen/buffer_inline.kl"
+    kl_rt_panic( "codegen/buffer_inline.kl", 43, "arithmetic overflow: bytes.as_run().size + cast<u64>( bytes[0] )" );
+    bb10:
+#line 43 "codegen/buffer_inline.kl"
+    kl_t57 = kl_t52 + kl_t55;
+#line 43 "codegen/buffer_inline.kl"
+    kl_t58 = &kl_bytes_45;
+#line 43 "codegen/buffer_inline.kl"
+    kl_t59 = kl_7prelude_14operator_index__I2u8_V4096_E__SQ7prelude6bufferI2u8_V4096_E_3u64( kl_t58, 4095 );
+#line 43 "codegen/buffer_inline.kl"
+    kl_t60 = ( uint64_t ) ( *kl_t59 );
+#line 43 "codegen/buffer_inline.kl"
+    kl_t61 = __builtin_add_overflow( kl_t57, kl_t60, &( uint64_t ) { 0 } );
+#line 43 "codegen/buffer_inline.kl"
+    if ( kl_t61 ) goto bb11; else goto bb12;
+    bb11:
+#line 43 "codegen/buffer_inline.kl"
+    kl_rt_panic( "codegen/buffer_inline.kl", 43, "arithmetic overflow: bytes.as_run().size + cast<u64>( bytes[0] ) + cast<u64>( bytes[4095] )" );
+    bb12:
+#line 43 "codegen/buffer_inline.kl"
+    kl_t62 = kl_t57 + kl_t60;
+#line 41 "../test_lib/console.kl"
+    kl_t64 = &kl_t63;
+#line 41 "../test_lib/console.kl"
+    kl_t65 = ( uint8_t* ) "\012";
+#line 41 "../test_lib/console.kl"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t64, kl_t65, 1 );
+#line 41 "../test_lib/console.kl"
+    kl_t67 = &kl_t63;
+#line 41 "../test_lib/console.kl"
+    kl_t68 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t67, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 43 "codegen/buffer_inline.kl"
+    kl_1t7console_5print__3u64_7textual( kl_t62, kl_t68 );
+#line 45 "codegen/buffer_inline.kl"
+    kl_t71 = &kl_h_70;
+#line 45 "codegen/buffer_inline.kl"
+    kl_7codegen_6Holder__RQ7codegen6Holder__ctor( kl_t71 );
+    kl_t73 = &kl_h_70.kl_held;
+#line 46 "codegen/buffer_inline.kl"
+    kl_t74 = kl_7prelude_14operator_index__I3i32_V4_E__SQ7prelude6bufferI3i32_V4_E_3u64( kl_t73, 2 );
+#line 46 "codegen/buffer_inline.kl"
+    ( *kl_t74 ) = 30;
+    kl_t75 = &kl_h_70.kl_held;
+#line 47 "codegen/buffer_inline.kl"
+    kl_t76 = kl_7prelude_14operator_index__I3i32_V4_E__SQ7prelude6bufferI3i32_V4_E_3u64( kl_t75, 0 );
+#line 47 "codegen/buffer_inline.kl"
+    kl_t77 = &kl_h_70.kl_held;
+#line 47 "codegen/buffer_inline.kl"
+    kl_t78 = kl_7prelude_14operator_index__I3i32_V4_E__SQ7prelude6bufferI3i32_V4_E_3u64( kl_t77, 2 );
+#line 47 "codegen/buffer_inline.kl"
+    kl_t79 = __builtin_add_overflow( ( *kl_t76 ), ( *kl_t78 ), &( int32_t ) { 0 } );
+#line 47 "codegen/buffer_inline.kl"
+    if ( kl_t79 ) goto bb13; else goto bb14;
+    bb13:
+#line 47 "codegen/buffer_inline.kl"
+    kl_rt_panic( "codegen/buffer_inline.kl", 47, "arithmetic overflow: h.held[0] + h.held[2]" );
+    bb14:
+#line 47 "codegen/buffer_inline.kl"
+    kl_t80 = ( *kl_t76 ) + ( *kl_t78 );
+#line 47 "codegen/buffer_inline.kl"
+    kl_t81 = ( int64_t ) kl_t80;
+#line 31 "../test_lib/console.kl"
+    kl_t83 = &kl_t82;
+#line 31 "../test_lib/console.kl"
+    kl_t84 = ( uint8_t* ) "\012";
+#line 31 "../test_lib/console.kl"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t83, kl_t84, 1 );
+#line 31 "../test_lib/console.kl"
+    kl_t86 = &kl_t82;
+#line 31 "../test_lib/console.kl"
+    kl_t87 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t86, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 47 "codegen/buffer_inline.kl"
+    kl_1t7console_5print__3i64_7textual( kl_t81, kl_t87 );
+    kl_t0 = 0;
+#line 48 "codegen/buffer_inline.kl"
+    kl_7prelude_6buffer__I3i32_V4_E__dtor( &kl_h_70.kl_held );
+#line 48 "codegen/buffer_inline.kl"
+    kl_7prelude_6buffer__I2u8_V4096_E__dtor( &kl_bytes_45 );
+#line 48 "codegen/buffer_inline.kl"
+    if ( kl_t89 ) kl_7prelude_6buffer__I3f64_V512_E__dtor( &kl_edge_32 );
+#line 48 "codegen/buffer_inline.kl"
+    kl_t89 = false;
+#line 48 "codegen/buffer_inline.kl"
+    kl_7prelude_6buffer__I3i32_V4_E__dtor( &kl_small_1 );
+#line 48 "codegen/buffer_inline.kl"
+    return kl_t0;
+}
+
+#line 502 "<prelude>"
+void kl_7prelude_6buffer__I3i32_V4_E__RQ7prelude6bufferI3i32_V4_E_3u64_3i32__ctor( struct kl_7prelude_buffer__I3i32_V4_E* kl_this_1, uint64_t kl_n_2, int32_t kl_fill_3 )
+{
+    struct kl__A4_3i32 kl_t4;
+    uint64_t kl_t5;
+    bool kl_t6;
+    ( void ) kl_n_2;
+#line 512 "<prelude>"
+    kl_t5 = 0;
+#line 512 "<prelude>"
+    goto bb1;
+    bb1:
+#line 512 "<prelude>"
+    kl_t4.e[kl_t5] = kl_fill_3;
+#line 512 "<prelude>"
+    kl_t5 = kl_t5 + 1;
+#line 512 "<prelude>"
+    kl_t6 = kl_t5 < 4;
+#line 512 "<prelude>"
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb2:
+#line 512 "<prelude>"
+    ( *kl_this_1 ).kl_items_ = kl_t4;
+#line 512 "<prelude>"
+    return;
+#line 512 "<prelude>"
+}
+
+#line 533 "<prelude>"
+int32_t* kl_7prelude_14operator_index__I3i32_V4_E__SQ7prelude6bufferI3i32_V4_E_3u64( struct kl_7prelude_buffer__I3i32_V4_E* kl_this_1, uint64_t kl_index_2 )
+{
+    int32_t* kl_t0;
+    bool kl_t3;
+    struct kl_7prelude_str kl_t4;
+    struct kl_7prelude_str* kl_t5;
+    uint8_t* kl_t6;
+#line 535 "<prelude>"
+    kl_t3 = kl_index_2 >= 4;
+#line 535 "<prelude>"
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t5 = &kl_t4;
+#line 537 "<prelude>"
+    kl_t6 = ( uint8_t* ) "index out of range";
+#line 537 "<prelude>"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 18 );
+#line 537 "<prelude>"
+    kl_rt_panic_message( "<prelude>", 537, kl_t4.kl_data, kl_t4.kl_size );
+    bb2:
+#line 543 "<prelude>"
+    kl_t0 = &( *kl_this_1 ).kl_items_.e[kl_index_2];
+#line 543 "<prelude>"
+    return kl_t0;
+#line 543 "<prelude>"
+}
+
+#line 524 "<prelude>"
+struct kl__run__L3i32__ref kl_7prelude_6as_run__I3i32_V4_E__SQ7prelude6bufferI3i32_V4_E( struct kl_7prelude_buffer__I3i32_V4_E* kl_this_1 )
+{
+    struct kl__run__L3i32__ref kl_t0;
+    uint64_t kl_t2;
+    int32_t* kl_t3;
+    ( void ) kl_t2;
+    kl_t2 = 0;
+#line 530 "<prelude>"
+    kl_t3 = &( *kl_this_1 ).kl_items_.e[kl_t2];
+#line 530 "<prelude>"
+    kl_t0 = ( struct kl__run__L3i32__ref ) { ( int32_t* ) kl_t3, 4 };
+#line 530 "<prelude>"
+    return kl_t0;
+#line 530 "<prelude>"
+}
+
+#line 502 "<prelude>"
+void kl_7prelude_6buffer__I3f64_V512_E__RQ7prelude6bufferI3f64_V512_E_3u64_3f64__ctor( struct kl_7prelude_buffer__I3f64_V512_E* kl_this_1, uint64_t kl_n_2, double kl_fill_3 )
+{
+    struct kl__A512_3f64 kl_t4;
+    uint64_t kl_t5;
+    bool kl_t6;
+    ( void ) kl_n_2;
+#line 512 "<prelude>"
+    kl_t5 = 0;
+#line 512 "<prelude>"
+    goto bb1;
+    bb1:
+#line 512 "<prelude>"
+    kl_t4.e[kl_t5] = kl_fill_3;
+#line 512 "<prelude>"
+    kl_t5 = kl_t5 + 1;
+#line 512 "<prelude>"
+    kl_t6 = kl_t5 < 512;
+#line 512 "<prelude>"
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb2:
+#line 512 "<prelude>"
+    ( *kl_this_1 ).kl_items_ = kl_t4;
+#line 512 "<prelude>"
+    return;
+#line 512 "<prelude>"
+}
+
+#line 533 "<prelude>"
+double* kl_7prelude_14operator_index__I3f64_V512_E__SQ7prelude6bufferI3f64_V512_E_3u64( struct kl_7prelude_buffer__I3f64_V512_E* kl_this_1, uint64_t kl_index_2 )
+{
+    double* kl_t0;
+    bool kl_t3;
+    struct kl_7prelude_str kl_t4;
+    struct kl_7prelude_str* kl_t5;
+    uint8_t* kl_t6;
+#line 535 "<prelude>"
+    kl_t3 = kl_index_2 >= 512;
+#line 535 "<prelude>"
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t5 = &kl_t4;
+#line 537 "<prelude>"
+    kl_t6 = ( uint8_t* ) "index out of range";
+#line 537 "<prelude>"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 18 );
+#line 537 "<prelude>"
+    kl_rt_panic_message( "<prelude>", 537, kl_t4.kl_data, kl_t4.kl_size );
+    bb2:
+#line 543 "<prelude>"
+    kl_t0 = &( *kl_this_1 ).kl_items_.e[kl_index_2];
+#line 543 "<prelude>"
+    return kl_t0;
+#line 543 "<prelude>"
+}
+
+#line 5 "codegen/buffer_inline.kl"
+double kl_7codegen_5total__IV512_E__MQ7prelude6bufferI3f64_V512_E( struct kl_7prelude_buffer__I3f64_V512_E kl_b_1 )
+{
+    double kl_t0;
+    double kl_sum_2;
+    struct kl_7prelude_buffer__I3f64_V512_E* kl_t3;
+    struct kl__run__L3f64__ref kl_t4;
+    struct kl__run__L3f64__ref kl_t5;
+    uint64_t kl_t6;
+    uint64_t kl_t7;
+    uint64_t kl_t8;
+    bool kl_t9;
+    double* kl_t10;
+    double* kl_t11;
+    double kl_x_12;
+#line 7 "codegen/buffer_inline.kl"
+    kl_sum_2 = 0.0;
+    kl_t3 = &kl_b_1;
+#line 8 "codegen/buffer_inline.kl"
+    kl_t4 = kl_7prelude_6as_run__I3f64_V512_E__SQ7prelude6bufferI3f64_V512_E( kl_t3 );
+#line 8 "codegen/buffer_inline.kl"
+    kl_t5 = kl_t4;
+#line 8 "codegen/buffer_inline.kl"
+    kl_t8 = ( kl_t5 ).size;
+#line 8 "codegen/buffer_inline.kl"
+    kl_t6 = 0;
+#line 8 "codegen/buffer_inline.kl"
+    kl_t7 = kl_t8;
+#line 8 "codegen/buffer_inline.kl"
+    goto bb1;
+    bb1:
+#line 8 "codegen/buffer_inline.kl"
+    kl_t9 = kl_t6 < kl_t7;
+#line 8 "codegen/buffer_inline.kl"
+    if ( kl_t9 ) goto bb2; else goto bb3;
+    bb2:
+#line 8 "codegen/buffer_inline.kl"
+    kl_t10 = ( kl_t5 ).data;
+#line 8 "codegen/buffer_inline.kl"
+    kl_t11 = kl_t10 + kl_t6;
+#line 8 "codegen/buffer_inline.kl"
+    kl_x_12 = ( *kl_t11 );
+#line 10 "codegen/buffer_inline.kl"
+    kl_sum_2 = kl_sum_2 + kl_x_12;
+#line 8 "codegen/buffer_inline.kl"
+    goto bb4;
+    bb3:
+#line 12 "codegen/buffer_inline.kl"
+    kl_t0 = kl_sum_2;
+#line 12 "codegen/buffer_inline.kl"
+    kl_7prelude_6buffer__I3f64_V512_E__dtor( &kl_b_1 );
+#line 12 "codegen/buffer_inline.kl"
+    return kl_t0;
+    bb4:
+#line 8 "codegen/buffer_inline.kl"
+    kl_t6 = kl_t6 + 1;
+#line 8 "codegen/buffer_inline.kl"
+    goto bb1;
+#line 13 "codegen/buffer_inline.kl"
+}
+
+#line 502 "<prelude>"
+void kl_7prelude_6buffer__I2u8_V4096_E__RQ7prelude6bufferI2u8_V4096_E_3u64_2u8__ctor( struct kl_7prelude_buffer__I2u8_V4096_E* kl_this_1, uint64_t kl_n_2, uint8_t kl_fill_3 )
+{
+    struct kl__A4096_2u8 kl_t4;
+    uint64_t kl_t5;
+    bool kl_t6;
+    ( void ) kl_n_2;
+#line 512 "<prelude>"
+    kl_t5 = 0;
+#line 512 "<prelude>"
+    goto bb1;
+    bb1:
+#line 512 "<prelude>"
+    kl_t4.e[kl_t5] = kl_fill_3;
+#line 512 "<prelude>"
+    kl_t5 = kl_t5 + 1;
+#line 512 "<prelude>"
+    kl_t6 = kl_t5 < 4096;
+#line 512 "<prelude>"
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb2:
+#line 512 "<prelude>"
+    ( *kl_this_1 ).kl_items_ = kl_t4;
+#line 512 "<prelude>"
+    return;
+#line 512 "<prelude>"
+}
+
+#line 533 "<prelude>"
+uint8_t* kl_7prelude_14operator_index__I2u8_V4096_E__SQ7prelude6bufferI2u8_V4096_E_3u64( struct kl_7prelude_buffer__I2u8_V4096_E* kl_this_1, uint64_t kl_index_2 )
+{
+    uint8_t* kl_t0;
+    bool kl_t3;
+    struct kl_7prelude_str kl_t4;
+    struct kl_7prelude_str* kl_t5;
+    uint8_t* kl_t6;
+#line 535 "<prelude>"
+    kl_t3 = kl_index_2 >= 4096;
+#line 535 "<prelude>"
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t5 = &kl_t4;
+#line 537 "<prelude>"
+    kl_t6 = ( uint8_t* ) "index out of range";
+#line 537 "<prelude>"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 18 );
+#line 537 "<prelude>"
+    kl_rt_panic_message( "<prelude>", 537, kl_t4.kl_data, kl_t4.kl_size );
+    bb2:
+#line 543 "<prelude>"
+    kl_t0 = &( *kl_this_1 ).kl_items_.e[kl_index_2];
+#line 543 "<prelude>"
+    return kl_t0;
+#line 543 "<prelude>"
+}
+
+#line 524 "<prelude>"
+struct kl__run__L2u8__ref kl_7prelude_6as_run__I2u8_V4096_E__SQ7prelude6bufferI2u8_V4096_E( struct kl_7prelude_buffer__I2u8_V4096_E* kl_this_1 )
+{
+    struct kl__run__L2u8__ref kl_t0;
+    uint64_t kl_t2;
+    uint8_t* kl_t3;
+    ( void ) kl_t2;
+    kl_t2 = 0;
+#line 530 "<prelude>"
+    kl_t3 = &( *kl_this_1 ).kl_items_.e[kl_t2];
+#line 530 "<prelude>"
+    kl_t0 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t3, 4096 };
+#line 530 "<prelude>"
+    return kl_t0;
+#line 530 "<prelude>"
+}
+
+#line 514 "<prelude>"
+void kl_7prelude_6buffer__I3i32_V4_E__dtor( struct kl_7prelude_buffer__I3i32_V4_E* kl_this_1 )
+{
+    ( void ) kl_this_1;
+#line 521 "<prelude>"
+    return;
+#line 521 "<prelude>"
+}
+
+#line 514 "<prelude>"
+void kl_7prelude_6buffer__I3f64_V512_E__dtor( struct kl_7prelude_buffer__I3f64_V512_E* kl_this_1 )
+{
+    ( void ) kl_this_1;
+#line 521 "<prelude>"
+    return;
+#line 521 "<prelude>"
+}
+
+#line 514 "<prelude>"
+void kl_7prelude_6buffer__I2u8_V4096_E__dtor( struct kl_7prelude_buffer__I2u8_V4096_E* kl_this_1 )
+{
+    ( void ) kl_this_1;
+#line 521 "<prelude>"
+    return;
+#line 521 "<prelude>"
+}
+
+#line 524 "<prelude>"
+struct kl__run__L3f64__ref kl_7prelude_6as_run__I3f64_V512_E__SQ7prelude6bufferI3f64_V512_E( struct kl_7prelude_buffer__I3f64_V512_E* kl_this_1 )
+{
+    struct kl__run__L3f64__ref kl_t0;
+    uint64_t kl_t2;
+    double* kl_t3;
+    ( void ) kl_t2;
+    kl_t2 = 0;
+#line 530 "<prelude>"
+    kl_t3 = &( *kl_this_1 ).kl_items_.e[kl_t2];
+#line 530 "<prelude>"
+    kl_t0 = ( struct kl__run__L3f64__ref ) { ( double* ) kl_t3, 512 };
+#line 530 "<prelude>"
+    return kl_t0;
+#line 530 "<prelude>"
+}
+
+int main( void )
+{
+    int32_t kl_t0;
+#line 25 "codegen/buffer_inline.kl"
+    kl_t0 = kl_7codegen_4main__(  );
+#line 25 "codegen/buffer_inline.kl"
+    return kl_t0;
+#line 25 "codegen/buffer_inline.kl"
+}
+

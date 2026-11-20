@@ -1227,9 +1227,14 @@ Node_id Resolver::lookup( Symbol_id name, Node_id use )
         return decl;
     }
 
-    // Only a named package can be written as a qualifier, so the program's own is never offered.
+    // Only a named package can be written as a qualifier, so the program's own is never offered;
+    // the prelude sees no package, so a built-in bound it names is never a program's name.
     for( const auto& [package, scope] : packages_ )
     {
+        if( own == modules_.prelude_package() )
+        {
+            break;
+        }
         if( package == own || !package.is_valid() )
         {
             continue;
@@ -1614,6 +1619,7 @@ Prelude_items Resolver::prelude_items() const
     items.joined_text    = named( "joined_text", an_aggregate );
     items.result         = named( "result", any );
     items.box            = named( "box", an_aggregate );
+    items.buffer         = named( "buffer", an_aggregate );
     items.from           = named( "from", an_interface );
     items.ordering       = named( "ordering", an_enum );
     items.location       = named( "location", an_aggregate );
@@ -3683,7 +3689,7 @@ TEST_CASE( "resolver_looks_in_the_prelude_after_the_file's_own_package", "[sema]
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "`main` is in the package `" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`main` is not declared" ) != std::string::npos );
     }
 }
 

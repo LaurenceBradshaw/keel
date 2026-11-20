@@ -1,5 +1,6 @@
 // `where` comparisons over sizes that hold at every instance: a literal side, computed sides, a
-// type's condition, and a generic forwarding its own size.
+// type's condition, and a generic forwarding its own size. `forwards` shows `N >= 2` but not
+// `(N * 2) <= 64`, so its body is refused although every instance holds.
 u64 tall<u64 R, u64 C>( const ref u64[R] _, const ref u64[C] _ ) where R >= C, where (R * C) <= 64
 {
     return R - C;

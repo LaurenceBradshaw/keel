@@ -573,6 +573,12 @@ Type_id field_type( const Ast& ast, Type_table& table, Type_id aggregate, Node_i
         return table.array_of( table.integer( 64, false ), dyn_count( table, aggregate ) );
     }
 
+    if( table.is_inline_buffer( aggregate ) )
+    {
+        const std::span<const Type_id> arguments = table.get( aggregate ).arguments;
+        return table.array_of( arguments[0], table.get( arguments[1] ).count );
+    }
+
     if( table.is_closure( aggregate ) )
     {
         const Type_id held = table.substitute( recorded[field.v], table.instance_bindings( aggregate ) );

@@ -1,0 +1,49 @@
+// A prelude `buffer` of numbers whose bytes fit 4096 is held inline: filled, written through `[]`,
+// read through `as_run()`, moved into a call and held as a field. 512 `f64`s are exactly 4096.
+import t::console;
+
+f64 total<u64 N>( move buffer<f64, N> b )
+{
+    f64 sum = 0.0;
+    for( f64 x : b.as_run() )
+    {
+        sum += x;
+    }
+    return sum;
+}
+
+class Holder
+{
+    public Holder()
+    {
+        held = buffer<i32, 4>( 4, 3 );
+    }
+
+    public buffer<i32, 4> held;
+};
+
+i32 main()
+{
+    buffer<i32, 4> small = buffer<i32, 4>( 4, -2 );
+    small[1] = 5;
+    small[3] = small[1] * 2;
+    i32 sum = 0;
+    for( i32 x : small.as_run() )
+    {
+        sum += x;
+    }
+    t::print( sum );
+
+    buffer<f64, 512> edge = buffer<f64, 512>( 512, 0.5 );
+    edge[511] = 100.0;
+    t::print( total( move edge ) );
+
+    buffer<u8, 4096> bytes = buffer<u8, 4096>( 4096, 1 );
+    bytes[0] = 9;
+    t::print( bytes.as_run().size + cast<u64>( bytes[0] ) + cast<u64>( bytes[4095] ) );
+
+    Holder h = Holder();
+    h.held[2] = 30;
+    t::print( h.held[0] + h.held[2] );
+    return 0;
+}
