@@ -15,6 +15,7 @@ import iterable;
 import mask;
 import math;
 import optional;
+import pair;
 
 /// `N` numbers held inline: a vector of rank 1, neither a row nor a column.
 ///
@@ -1643,6 +1644,47 @@ optional<vec<T, N>> solve<T, u64 N>( const ref mat<T, N, N> a, const ref vec<T, 
     vec<T, N> r = vec<T, N>::zeros();
     kernel::lu_solve( ref r.as_run(), f.as_run(), perm, b.as_run(), N, 1 );
     return optional::some( r );
+}
+
+/// The thin QR factors of `a`, `first` with orthonormal columns and `second` upper triangular,
+/// their product `a`, by Householder reflections as numpy's `qr`: `kl::qr( a )`.
+pair<mat<T, R, C>, mat<T, C, C>> qr<T, u64 R, u64 C>( const ref mat<T, R, C> a ) where T : floating, where R >= C
+{
+    mat<T, R, C> f   = a;
+    T[C]         tau = [0, ..];
+    _                = kernel::householder_qr( ref f.as_run(), ref tau, R, C );
+    mat<T, R, C> q   = mat<T, R, C>::zeros();
+    mat<T, C, C> r   = mat<T, C, C>::zeros();
+    kernel::qr_q( ref q.as_run(), f.as_run(), tau, R, C );
+    kernel::qr_r( ref r.as_run(), f.as_run(), R, C );
+    return pair<mat<T, R, C>, mat<T, C, C>>( q, r );
+}
+
+/// The `x` making `a.matmul( x ) - b` shortest, through QR, `none` when a diagonal of R is
+/// exactly zero: `kl::lstsq( a, b )`. numpy's `lstsq` answers the shortest such `x` there instead.
+optional<vec<T, C>> lstsq<T, u64 R, u64 C>( const ref mat<T, R, C> a, const ref vec<T, R> b ) where T : floating, where R >= C
+{
+    mat<T, R, C> f   = a;
+    T[C]         tau = [0, ..];
+    if( !kernel::householder_qr( ref f.as_run(), ref tau, R, C ) )
+    {
+        return optional::none;
+    }
+
+    vec<T, R> w = b;
+    vec<T, C> x = vec<T, C>::zeros();
+    kernel::qr_solve( ref x.as_run(), ref w.as_run(), f.as_run(), tau, R, C, 1 );
+    return optional::some( x );
+}
+
+/// The diagonal of the projection onto `a`'s columns, `a (a^T a)^-1 a^T`, through QR: each row's
+/// leverage when `a` has full column rank. `kl::hat_diagonal( a )`.
+vec<T, R> hat_diagonal<T, u64 R, u64 C>( const ref mat<T, R, C> a ) where T : floating, where R >= C
+{
+    mat<T, R, C> q = kl::qr( a ).first;
+    vec<T, R>    h = vec<T, R>::zeros();
+    kernel::row_squares( ref h.as_run(), q.as_run(), R, C );
+    return h;
 }
 
 /// The smallest of each set of matching elements, as `kl::min`: `kl::minimum( a, b, c )`.

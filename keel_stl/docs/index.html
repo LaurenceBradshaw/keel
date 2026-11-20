@@ -319,6 +319,15 @@ nearly singular matrix gives large elements.</dd>
 <dt><a href="matrix.html#solve"><code>solve</code></a> <span class="kind">function</span></dt>
 <dd>The <code>x</code> with <code>a.matmul( x ) == b</code>, <code>none</code> when a pivot of <code>a</code> is exactly zero:
 <code>kl::solve( a, b )</code>.</dd>
+<dt><a href="matrix.html#qr"><code>qr</code></a> <span class="kind">function</span></dt>
+<dd>The thin QR factors of <code>a</code>, <code>first</code> with orthonormal columns and <code>second</code> upper triangular,
+their product <code>a</code>, by Householder reflections as numpy's <code>qr</code>: <code>kl::qr( a )</code>.</dd>
+<dt><a href="matrix.html#lstsq"><code>lstsq</code></a> <span class="kind">function</span></dt>
+<dd>The <code>x</code> making <code>a.matmul( x ) - b</code> shortest, through QR, <code>none</code> when a diagonal of R is
+exactly zero: <code>kl::lstsq( a, b )</code>. numpy's <code>lstsq</code> answers the shortest such <code>x</code> there instead.</dd>
+<dt><a href="matrix.html#hat_diagonal"><code>hat_diagonal</code></a> <span class="kind">function</span></dt>
+<dd>The diagonal of the projection onto <code>a</code>'s columns, <code>a (a^T a)^-1 a^T</code>, through QR: each row's
+leverage when <code>a</code> has full column rank. <code>kl::hat_diagonal( a )</code>.</dd>
 <dt><a href="matrix.html#minimum"><code>minimum</code></a> <span class="kind">function</span></dt>
 <dd>The smallest of each set of matching elements, as <code>kl::min</code>: <code>kl::minimum( a, b, c )</code>.</dd>
 <dt><a href="matrix.html#maximum"><code>maximum</code></a> <span class="kind">function</span></dt>
@@ -391,6 +400,18 @@ nearly singular matrix gives large elements.</dd>
 <dt><a href="ndarray.html#solve"><code>solve</code></a> <span class="kind">function</span></dt>
 <dd>The <code>x</code> with <code>a.matmul( x ) == b</code>, for a square rank 2 <code>a</code> and a <code>b</code> of rank 1 or 2 whose first
 dimension is <code>a</code>'s, <code>none</code> when a pivot of <code>a</code> is exactly zero: <code>kl::solve( a, b )</code>.</dd>
+<dt><a href="ndarray.html#qr"><code>qr</code></a> <span class="kind">function</span></dt>
+<dd>The thin QR factors of rank 2 <code>a</code>, m by n with m &gt;= n: <code>first</code>, m by n with orthonormal
+columns, and <code>second</code>, n by n upper triangular, their product <code>a</code>, by Householder reflections
+as numpy's <code>qr</code>: <code>kl::qr( a )</code>.</dd>
+<dt><a href="ndarray.html#lstsq"><code>lstsq</code></a> <span class="kind">function</span></dt>
+<dd>The <code>x</code> making <code>a.matmul( x ) - b</code> shortest, through QR, for rank 2 <code>a</code>, m by n with m &gt;= n,
+and <code>b</code> of rank 1 or 2 whose first dimension is m; <code>none</code> when a diagonal of R is exactly zero:
+<code>kl::lstsq( a, b )</code>. numpy's <code>lstsq</code> answers the shortest such <code>x</code> there instead.</dd>
+<dt><a href="ndarray.html#hat_diagonal"><code>hat_diagonal</code></a> <span class="kind">function</span></dt>
+<dd>The diagonal of the projection onto the columns of rank 2 <code>a</code>, m by n with m &gt;= n,
+<code>a (a^T a)^-1 a^T</code>, through QR: each row's leverage when <code>a</code> has full column rank.
+<code>kl::hat_diagonal( a )</code>.</dd>
 <dt><a href="ndarray.html#diag"><code>diag</code></a> <span class="kind">function</span></dt>
 <dd>The square matrix with <code>v</code>, of rank 1, on its diagonal: <code>kl::diag( v )</code>.</dd>
 <dt><a href="ndarray.html#minimum"><code>minimum</code></a> <span class="kind">function</span></dt>

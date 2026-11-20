@@ -4,6 +4,7 @@
 // answer, fixed-size slices, linear algebra, and sorting.
 import kl::mask;
 import kl::optional;
+import kl::pair;
 import kl::math;
 import kl::matrix;
 import kl::test::context;
@@ -332,4 +333,19 @@ private void sorting( ref kl::test::context c )
     f32 nan = kl::from_bits( 0x7FC00000 );
     kl::vec<f32, 3> f = kl::vec<f32, 3>( [ nan, 2.0, 1.0 ] ).sorted();
     c.check( f[0] == 1.0 && f[1] == 2.0 && kl::is_nan( f[2] ) );
+}
+
+// numpy's factors, solution and leverages for a line through four points; a zero column has no
+// solution.
+private void least_squares( ref kl::test::context c )
+{
+    kl::mat<f64, 4, 2> a = kl::mat<f64, 4, 2>( [ 1.0, 1.0, 1.0, 2.0, 1.0, 3.0, 1.0, 4.0 ] );
+    kl::pair<kl::mat<f64, 4, 2>, kl::mat<f64, 2, 2>> f = kl::qr( a );
+    c.check( f.first.approx_equal( kl::mat<f64, 4, 2>( [ -0.5, 0.6708203932499369, -0.5, 0.22360679774997896, -0.5, -0.22360679774997896, -0.5, -0.6708203932499369 ] ) ) );
+    c.check( f.second.approx_equal( kl::mat<f64, 2, 2>( [ -2.0, -5.0, 0.0, -2.23606797749979 ] ) ) );
+    c.check( f.first.matmul( f.second ).approx_equal( a ) );
+    c.check( kl::unwrap( kl::lstsq( a, kl::vec<f64, 4>( [ 6.0, 5.0, 7.0, 10.0 ] ) ) ).approx_equal( kl::vec<f64, 2>( [ 3.5, 1.4 ] ) ) );
+    c.check( kl::hat_diagonal( a ).approx_equal( kl::vec<f64, 4>( [ 0.7, 0.3, 0.3, 0.7 ] ) ) );
+    c.check( kl::unwrap( kl::lstsq( kl::mat<f32, 2, 2>( [ 2.0, 1.0, 1.0, 3.0 ] ), kl::vec<f32, 2>( [ 3.0, 4.0 ] ) ) ).approx_equal( kl::vec<f32, 2>( [ 1.0, 1.0 ] ) ) );
+    c.check( kl::is_none( kl::lstsq( kl::mat<f64, 3, 2>( [ 1.0, 0.0, 2.0, 0.0, 3.0, 0.0 ] ), kl::vec<f64, 3>::ones() ) ) );
 }

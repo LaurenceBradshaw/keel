@@ -21,6 +21,9 @@
 <li><a href="#determinant"><code>determinant</code></a> <span class="kind">function</span></li>
 <li><a href="#inverse"><code>inverse</code></a> <span class="kind">function</span></li>
 <li><a href="#solve"><code>solve</code></a> <span class="kind">function</span></li>
+<li><a href="#qr"><code>qr</code></a> <span class="kind">function</span></li>
+<li><a href="#lstsq"><code>lstsq</code></a> <span class="kind">function</span></li>
+<li><a href="#hat_diagonal"><code>hat_diagonal</code></a> <span class="kind">function</span></li>
 <li><a href="#minimum"><code>minimum</code></a> <span class="kind">function</span></li>
 <li><a href="#maximum"><code>maximum</code></a> <span class="kind">function</span></li>
 <li><a href="#select"><code>select</code></a> <span class="kind">function</span></li>
@@ -1199,6 +1202,36 @@ nearly singular matrix gives large elements.</p>
 <div class="doc">
 <p>The <code>x</code> with <code>a.matmul( x ) == b</code>, <code>none</code> when a pivot of <code>a</code> is exactly zero:
 <code>kl::solve( a, b )</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">qr</span></h2>
+<div class="group" id="qr">
+<pre class="signature"><a class="anchor" href="#qr" aria-label="Link to qr">#</a><code><a class="type" href="pair.html#pair">pair</a>&lt;<a class="type" href="#mat">mat</a>&lt;T, R, C&gt;, <a class="type" href="#mat">mat</a>&lt;T, C, C&gt;&gt; <span class="fn">qr</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> R, <a class="prim" href="prelude.html#u64">u64</a> C&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; a ) <span class="kw">where</span> T : floating, <span class="kw">where</span> R &gt;= C</code></pre>
+<div class="doc">
+<p>The thin QR factors of <code>a</code>, <code>first</code> with orthonormal columns and <code>second</code> upper triangular,
+their product <code>a</code>, by Householder reflections as numpy's <code>qr</code>: <code>kl::qr( a )</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">lstsq</span></h2>
+<div class="group" id="lstsq">
+<pre class="signature"><a class="anchor" href="#lstsq" aria-label="Link to lstsq">#</a><code><a class="type" href="optional.html#optional">optional</a>&lt;<a class="type" href="#vec">vec</a>&lt;T, C&gt;&gt; <span class="fn">lstsq</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> R, <a class="prim" href="prelude.html#u64">u64</a> C&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; a, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#vec">vec</a>&lt;T, R&gt; b ) <span class="kw">where</span> T : floating, <span class="kw">where</span> R &gt;= C</code></pre>
+<div class="doc">
+<p>The <code>x</code> making <code>a.matmul( x ) - b</code> shortest, through QR, <code>none</code> when a diagonal of R is
+exactly zero: <code>kl::lstsq( a, b )</code>. numpy's <code>lstsq</code> answers the shortest such <code>x</code> there instead.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">hat_diagonal</span></h2>
+<div class="group" id="hat_diagonal">
+<pre class="signature"><a class="anchor" href="#hat_diagonal" aria-label="Link to hat_diagonal">#</a><code><a class="type" href="#vec">vec</a>&lt;T, R&gt; <span class="fn">hat_diagonal</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> R, <a class="prim" href="prelude.html#u64">u64</a> C&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#mat">mat</a>&lt;T, R, C&gt; a ) <span class="kw">where</span> T : floating, <span class="kw">where</span> R &gt;= C</code></pre>
+<div class="doc">
+<p>The diagonal of the projection onto <code>a</code>'s columns, <code>a (a^T a)^-1 a^T</code>, through QR: each row's
+leverage when <code>a</code> has full column rank. <code>kl::hat_diagonal( a )</code>.</p>
 </div>
 </div>
 </section>

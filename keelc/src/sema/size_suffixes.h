@@ -51,6 +51,7 @@ private:
         Node_id                            declaration;
         std::vector<Type_id>               sizes;
         std::vector<std::optional<Source>> sources; // parallel to `sizes`
+        std::vector<Type_id>               types;   // parallel; the type argument where `sizes` has none
     };
 
     struct Suffix

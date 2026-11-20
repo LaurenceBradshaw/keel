@@ -1,0 +1,13 @@
+// A failed comparison names the instance with its type arguments as well as its sizes.
+T first<T, u64 R, u64 C>( const ref T[R] a, const ref T[C] _ ) where T : copyable, where R >= C
+{
+    return a[0];
+}
+
+i32 main()
+{
+    f64[2] a = [ 1.0, 2.0 ];
+    f64[3] b = [ 1.0, 2.0, 3.0 ];
+    f64 x = first( a, b );
+    return 0;
+}

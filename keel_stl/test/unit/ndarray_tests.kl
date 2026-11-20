@@ -6,6 +6,7 @@ import kl::mask;
 import kl::math;
 import kl::ndarray;
 import kl::optional;
+import kl::pair;
 import kl::test::context;
 
 private void building( ref kl::test::context c )
@@ -503,4 +504,20 @@ private void sorting( ref kl::test::context c )
 
     c.expect_panic( "sorted takes an array of rank 1", fn[]() { _ = kl::ndarray<i32>::zeros( 2, 2 ).sorted(); } );
     c.expect_panic( "nonzero takes an array of rank 1", fn[]() { _ = kl::ndarray<i32>::zeros( 2, 2 ).nonzero(); } );
+}
+
+// numpy's factors, solutions and leverages for a line through four points; a wide matrix panics.
+private void least_squares( ref kl::test::context c )
+{
+    kl::ndarray<f64> a = kl::ndarray<f64>( [ 1.0, 1.0, 1.0, 2.0, 1.0, 3.0, 1.0, 4.0 ], 4, 2 );
+    kl::pair<kl::ndarray<f64>, kl::ndarray<f64>> f = kl::qr( a );
+    c.check( f.first.approx_equal( kl::ndarray<f64>( [ -0.5, 0.6708203932499369, -0.5, 0.22360679774997896, -0.5, -0.22360679774997896, -0.5, -0.6708203932499369 ], 4, 2 ) ) );
+    c.check( f.second.approx_equal( kl::ndarray<f64>( [ -2.0, -5.0, 0.0, -2.23606797749979 ], 2, 2 ) ) );
+    c.check( kl::unwrap( kl::lstsq( a, kl::ndarray<f64>( [ 6.0, 5.0, 7.0, 10.0 ] ) ) ).approx_equal( kl::ndarray<f64>( [ 3.5, 1.4 ] ) ) );
+    kl::ndarray<f64> b = kl::ndarray<f64>( [ 6.0, 1.0, 5.0, 0.0, 7.0, 2.0, 10.0, 1.0 ], 4, 2 );
+    c.check( kl::unwrap( kl::lstsq( a, b ) ).approx_equal( kl::ndarray<f64>( [ 3.5, 0.5, 1.4, 0.2 ], 2, 2 ) ) );
+    c.check( kl::hat_diagonal( a ).approx_equal( kl::ndarray<f64>( [ 0.7, 0.3, 0.3, 0.7 ] ) ) );
+    c.check( kl::is_none( kl::lstsq( kl::ndarray<f64>( [ 1.0, 0.0, 2.0, 0.0, 3.0, 0.0 ], 3, 2 ), kl::ndarray<f64>::ones( 3 ) ) ) );
+    c.expect_panic( "the matrix has more columns than rows", fn[]() { _ = kl::qr( kl::ndarray<f64>::zeros( 2, 3 ) ); } );
+    c.expect_panic( "the shapes differ", fn[]() { _ = kl::lstsq( kl::ndarray<f64>::identity( 2 ), kl::ndarray<f64>::zeros( 3 ) ); } );
 }

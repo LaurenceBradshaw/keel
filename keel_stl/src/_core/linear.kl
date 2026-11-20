@@ -216,6 +216,204 @@ T lu_determinant<T>( const ref T[] factors, u64 n, T sign ) where T : floating
     return d;
 }
 
+/// Factors `a`, `m` by `n` with `m >= n`, in place by Householder reflections, as LAPACK's
+/// `geqrf`: R on and above the diagonal, and below it each reflection's vector, whose first
+/// element is an implied 1; `tau` holds their scales. Answers false when a diagonal of R is
+/// exactly zero, `a` then lacking full column rank.
+///
+/// ### Panics
+///
+/// If `m < n` or a size is not its shape's.
+bool householder_qr<T>( ref T[] a, ref T[] tau, u64 m, u64 n ) where T : floating
+{
+    if( m < n || a.size != m * n || tau.size != n )
+    {
+        panic( "the shapes differ" );
+    }
+
+    bool full = true;
+    for( u64 j : 0..n )
+    {
+        // LAPACK's `larfg`: H = I - tau v v^T takes a[j.., j] to (beta, 0, ..., 0).
+        T alpha = a[j * n + j];
+        T scale = 0;
+        for( u64 i : j + 1..m )
+        {
+            scale = magnitude( a[i * n + j] ) > scale ? magnitude( a[i * n + j] ) : scale;
+        }
+        tau[j] = 0;
+        if( scale == 0 )
+        {
+            full = full && alpha != 0;
+            continue;
+        }
+
+        scale    = magnitude( alpha ) > scale ? magnitude( alpha ) : scale;
+        T square = ( alpha / scale ) * ( alpha / scale );
+        for( u64 i : j + 1..m )
+        {
+            square += ( a[i * n + j] / scale ) * ( a[i * n + j] / scale );
+        }
+        T length = scale * cast<T>( sqrt_f64( cast<f64>( square ) ) );
+        T beta   = alpha >= 0 ? -length : length;
+        tau[j]   = ( beta - alpha ) / beta;
+        T shrink = 1 / ( alpha - beta );
+        for( u64 i : j + 1..m )
+        {
+            a[i * n + j] *= shrink;
+        }
+        a[j * n + j] = beta;
+
+        for( u64 c : j + 1..n )
+        {
+            T w = a[j * n + c];
+            for( u64 i : j + 1..m )
+            {
+                w += a[i * n + j] * a[i * n + c];
+            }
+            w *= tau[j];
+            a[j * n + c] -= w;
+            for( u64 i : j + 1..m )
+            {
+                a[i * n + c] -= w * a[i * n + j];
+            }
+        }
+    }
+    return full;
+}
+
+/// `q`, `m` by `n`, = the thin Q of `householder_qr`'s `factors` and `tau`, as LAPACK's `orgqr`.
+///
+/// ### Panics
+///
+/// If a size is not its shape's.
+void qr_q<T>( ref T[] q, const ref T[] factors, const ref T[] tau, u64 m, u64 n ) where T : floating
+{
+    if( q.size != m * n || factors.size != m * n || tau.size != n )
+    {
+        panic( "the shapes differ" );
+    }
+
+    for( u64 i : 0..m * n )
+    {
+        q[i] = 0;
+    }
+    for( u64 j : 0..n )
+    {
+        q[j * n + j] = 1;
+    }
+    // H_0 H_1 ... H_(n-1) I, applied last first; columns before `j` are still I's there.
+    for( u64 back : 0..n )
+    {
+        u64 j = n - 1 - back;
+        for( u64 c : j..n )
+        {
+            T w = q[j * n + c];
+            for( u64 i : j + 1..m )
+            {
+                w += factors[i * n + j] * q[i * n + c];
+            }
+            w *= tau[j];
+            q[j * n + c] -= w;
+            for( u64 i : j + 1..m )
+            {
+                q[i * n + c] -= w * factors[i * n + j];
+            }
+        }
+    }
+}
+
+/// `r`, `n` by `n`, = the upper triangle of `householder_qr`'s `factors`, `m` by `n`.
+///
+/// ### Panics
+///
+/// If a size is not its shape's.
+void qr_r<T>( ref T[] r, const ref T[] factors, u64 m, u64 n ) where T : floating
+{
+    if( r.size != n * n || factors.size != m * n )
+    {
+        panic( "the shapes differ" );
+    }
+
+    for( u64 i : 0..n )
+    {
+        for( u64 j : 0..n )
+        {
+            r[i * n + j] = j >= i ? factors[i * n + j] : 0;
+        }
+    }
+}
+
+/// `dest`, `n` by `k`, = the least-squares `x` of `A x = b` from `householder_qr`'s `factors` of
+/// `A` and its `tau`, for `b` `m` by `k`, which is overwritten by Q^T b. R must have no zero
+/// on its diagonal.
+///
+/// ### Panics
+///
+/// If a size is not its shape's.
+void qr_solve<T>( ref T[] dest, ref T[] b, const ref T[] factors, const ref T[] tau, u64 m, u64 n, u64 k ) where T : floating
+{
+    if( dest.size != n * k || b.size != m * k || factors.size != m * n || tau.size != n )
+    {
+        panic( "the shapes differ" );
+    }
+
+    for( u64 j : 0..n )
+    {
+        for( u64 c : 0..k )
+        {
+            T w = b[j * k + c];
+            for( u64 i : j + 1..m )
+            {
+                w += factors[i * n + j] * b[i * k + c];
+            }
+            w *= tau[j];
+            b[j * k + c] -= w;
+            for( u64 i : j + 1..m )
+            {
+                b[i * k + c] -= w * factors[i * n + j];
+            }
+        }
+    }
+    for( u64 back : 0..n )
+    {
+        u64 i = n - 1 - back;
+        for( u64 c : 0..k )
+        {
+            T x = b[i * k + c];
+            for( u64 j : i + 1..n )
+            {
+                x -= factors[i * n + j] * dest[j * k + c];
+            }
+            dest[i * k + c] = x / factors[i * n + i];
+        }
+    }
+}
+
+/// `dest[i]`, of `m`, = the squared length of row `i` of `q`, `m` by `n`: for a thin Q, the
+/// diagonal of the projection Q Q^T onto its columns.
+///
+/// ### Panics
+///
+/// If a size is not its shape's.
+void row_squares<T>( ref T[] dest, const ref T[] q, u64 m, u64 n ) where T : floating
+{
+    if( dest.size != m || q.size != m * n )
+    {
+        panic( "the shapes differ" );
+    }
+
+    for( u64 i : 0..m )
+    {
+        T total = 0;
+        for( u64 j : 0..n )
+        {
+            total += q[i * n + j] * q[i * n + j];
+        }
+        dest[i] = total;
+    }
+}
+
 /// The square root of the sum of squares, scaled as LAPACK's `nrm2` is so that no square
 /// overflows or underflows: a NaN answers NaN, else an infinity infinity.
 f64 norm<T>( const ref T[] a ) where T : floating

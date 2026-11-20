@@ -12,6 +12,7 @@ import list;
 import mask;
 import math;
 import optional;
+import pair;
 
 /// Numbers of any rank with a shape set at run time, held row-major: the last index moves fastest.
 ///
@@ -1521,6 +1522,71 @@ optional<ndarray<T>> solve<T>( const ref ndarray<T> a, const ref ndarray<T> b ) 
     ndarray<T> r = ndarray<T>::zeros( b.shape() );
     kernel::lu_solve( ref r.as_run(), f.as_run(), perm.as_run(), b.as_run(), n, k );
     return optional::some( move r );
+}
+
+/// The thin QR factors of rank 2 `a`, m by n with m >= n: `first`, m by n with orthonormal
+/// columns, and `second`, n by n upper triangular, their product `a`, by Householder reflections
+/// as numpy's `qr`: `kl::qr( a )`.
+pair<ndarray<T>, ndarray<T>> qr<T>( const ref ndarray<T> a ) where T : floating
+{
+    u64        m   = tall( a );
+    u64        n   = a.shape()[1];
+    ndarray<T> f   = a.copy();
+    ndarray<T> tau = ndarray<T>::zeros( n );
+    _              = kernel::householder_qr( ref f.as_run(), ref tau.as_run(), m, n );
+    ndarray<T> q   = ndarray<T>::zeros( m, n );
+    ndarray<T> r   = ndarray<T>::zeros( n, n );
+    kernel::qr_q( ref q.as_run(), f.as_run(), tau.as_run(), m, n );
+    kernel::qr_r( ref r.as_run(), f.as_run(), m, n );
+    return pair<ndarray<T>, ndarray<T>>( move q, move r );
+}
+
+/// The `x` making `a.matmul( x ) - b` shortest, through QR, for rank 2 `a`, m by n with m >= n,
+/// and `b` of rank 1 or 2 whose first dimension is m; `none` when a diagonal of R is exactly zero:
+/// `kl::lstsq( a, b )`. numpy's `lstsq` answers the shortest such `x` there instead.
+optional<ndarray<T>> lstsq<T>( const ref ndarray<T> a, const ref ndarray<T> b ) where T : floating
+{
+    u64 m = tall( a );
+    u64 n = a.shape()[1];
+    if( b.rank() < 1 || b.rank() > 2 || b.shape()[0] != m )
+    {
+        panic( "the shapes differ" );
+    }
+
+    ndarray<T> f   = a.copy();
+    ndarray<T> tau = ndarray<T>::zeros( n );
+    if( !kernel::householder_qr( ref f.as_run(), ref tau.as_run(), m, n ) )
+    {
+        return optional::none;
+    }
+
+    u64        k = b.size() / m;
+    ndarray<T> w = b.copy();
+    ndarray<T> x = b.rank() == 1 ? ndarray<T>::zeros( n ) : ndarray<T>::zeros( n, k );
+    kernel::qr_solve( ref x.as_run(), ref w.as_run(), f.as_run(), tau.as_run(), m, n, k );
+    return optional::some( move x );
+}
+
+/// The diagonal of the projection onto the columns of rank 2 `a`, m by n with m >= n,
+/// `a (a^T a)^-1 a^T`, through QR: each row's leverage when `a` has full column rank.
+/// `kl::hat_diagonal( a )`.
+ndarray<T> hat_diagonal<T>( const ref ndarray<T> a ) where T : floating
+{
+    u64        m = tall( a );
+    ndarray<T> q = move kl::qr( a ).first;
+    ndarray<T> h = ndarray<T>::zeros( m );
+    kernel::row_squares( ref h.as_run(), q.as_run(), m, a.shape()[1] );
+    return h;
+}
+
+// The rows of rank 2 `a` with no more columns than rows. Panics on any other.
+private u64 tall<T>( const ref ndarray<T> a ) where T : numeric
+{
+    if( a.rank() != 2 || a.shape()[0] < a.shape()[1] )
+    {
+        panic( "the matrix has more columns than rows" );
+    }
+    return a.shape()[0];
 }
 
 // The size of square rank 2 `a`. Panics on any other.

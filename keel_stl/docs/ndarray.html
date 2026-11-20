@@ -17,6 +17,9 @@
 <li><a href="#determinant"><code>determinant</code></a> <span class="kind">function</span></li>
 <li><a href="#inverse"><code>inverse</code></a> <span class="kind">function</span></li>
 <li><a href="#solve"><code>solve</code></a> <span class="kind">function</span></li>
+<li><a href="#qr"><code>qr</code></a> <span class="kind">function</span></li>
+<li><a href="#lstsq"><code>lstsq</code></a> <span class="kind">function</span></li>
+<li><a href="#hat_diagonal"><code>hat_diagonal</code></a> <span class="kind">function</span></li>
 <li><a href="#diag"><code>diag</code></a> <span class="kind">function</span></li>
 <li><a href="#minimum"><code>minimum</code></a> <span class="kind">function</span></li>
 <li><a href="#maximum"><code>maximum</code></a> <span class="kind">function</span></li>
@@ -862,6 +865,39 @@ integer needs a rounding: <code>truncated</code>, <code>rounded</code>, <code>fl
 <div class="doc">
 <p>The <code>x</code> with <code>a.matmul( x ) == b</code>, for a square rank 2 <code>a</code> and a <code>b</code> of rank 1 or 2 whose first
 dimension is <code>a</code>'s, <code>none</code> when a pivot of <code>a</code> is exactly zero: <code>kl::solve( a, b )</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">qr</span></h2>
+<div class="group" id="qr">
+<pre class="signature"><a class="anchor" href="#qr" aria-label="Link to qr">#</a><code><a class="type" href="pair.html#pair">pair</a>&lt;<a class="type" href="#ndarray">ndarray</a>&lt;T&gt;, <a class="type" href="#ndarray">ndarray</a>&lt;T&gt;&gt; <span class="fn">qr</span>&lt;T&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The thin QR factors of rank 2 <code>a</code>, m by n with m &gt;= n: <code>first</code>, m by n with orthonormal
+columns, and <code>second</code>, n by n upper triangular, their product <code>a</code>, by Householder reflections
+as numpy's <code>qr</code>: <code>kl::qr( a )</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">lstsq</span></h2>
+<div class="group" id="lstsq">
+<pre class="signature"><a class="anchor" href="#lstsq" aria-label="Link to lstsq">#</a><code><a class="type" href="optional.html#optional">optional</a>&lt;<a class="type" href="#ndarray">ndarray</a>&lt;T&gt;&gt; <span class="fn">lstsq</span>&lt;T&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; a, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; b ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The <code>x</code> making <code>a.matmul( x ) - b</code> shortest, through QR, for rank 2 <code>a</code>, m by n with m &gt;= n,
+and <code>b</code> of rank 1 or 2 whose first dimension is m; <code>none</code> when a diagonal of R is exactly zero:
+<code>kl::lstsq( a, b )</code>. numpy's <code>lstsq</code> answers the shortest such <code>x</code> there instead.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">hat_diagonal</span></h2>
+<div class="group" id="hat_diagonal">
+<pre class="signature"><a class="anchor" href="#hat_diagonal" aria-label="Link to hat_diagonal">#</a><code><a class="type" href="#ndarray">ndarray</a>&lt;T&gt; <span class="fn">hat_diagonal</span>&lt;T&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T&gt; a ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The diagonal of the projection onto the columns of rank 2 <code>a</code>, m by n with m &gt;= n,
+<code>a (a^T a)^-1 a^T</code>, through QR: each row's leverage when <code>a</code> has full column rank.
+<code>kl::hat_diagonal( a )</code>.</p>
 </div>
 </div>
 </section>

@@ -171,7 +171,7 @@ void Size_suffixes::collect_conditions( Node_id declaration )
 std::optional<Size_suffixes::Instance>
 Size_suffixes::reach( const Generic_call& edge, const Bindings& bindings, const Instance* caller )
 {
-    Instance instance { .declaration = edge.to, .sizes = {}, .sources = {} };
+    Instance instance { .declaration = edge.to, .sizes = {}, .sources = {}, .types = {} };
     bool     sized = false;
 
     // A size passed straight through keeps the caller's source, unless this edge is a new origin.
@@ -187,6 +187,7 @@ Size_suffixes::reach( const Generic_call& edge, const Bindings& bindings, const 
         {
             instance.sizes.push_back( Type_id {} );
             instance.sources.emplace_back();
+            instance.types.push_back( argument );
             continue;
         }
 
@@ -213,6 +214,7 @@ Size_suffixes::reach( const Generic_call& edge, const Bindings& bindings, const 
 
         instance.sizes.push_back( table_.size( *value ) );
         instance.sources.push_back( source );
+        instance.types.emplace_back();
         sized = true;
     }
 
@@ -421,8 +423,9 @@ std::string Size_suffixes::name_of( const Instance& instance ) const
     for( std::size_t i = 0; i < parameters.size() && i < instance.sizes.size(); ++i )
     {
         arguments += i == 0 ? "" : ", ";
-        arguments += instance.sizes[i].is_valid() ? std::string( table_.name( instance.sizes[i] ) )
-                                                  : std::string( interner_.text( ast_.name( parameters[i] ) ) );
+        const Type_id written = instance.sizes[i].is_valid() ? instance.sizes[i] : instance.types[i];
+        arguments += written.is_valid() ? std::string( table_.name( written ) )
+                                        : std::string( interner_.text( ast_.name( parameters[i] ) ) );
     }
 
     return fmt::format( "{}<{}>", interner_.text( ast_.name( named ) ), arguments );
