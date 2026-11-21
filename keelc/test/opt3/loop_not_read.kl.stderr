@@ -1,0 +1,5 @@
+warning: `dft` is `@real_arithmetic` but computes no linear map: it does something recognition cannot follow [-Wlinear-map]
+  --> opt3/loop_not_read.kl:24:9
+   |
+24 |         for( u64 j = 0; j < 1024; j += 1 )
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ each output must be a sum of inputs scaled by constants, plus a constant

@@ -117,13 +117,14 @@ struct Read_kernel
 // As `recognise`, but each counted loop runs once with its index a symbol, an accumulator's step is
 // summed over it, an index is a polynomial in the symbols, and a `@trig_*` call at a rational multiple
 // of pi times one becomes powers of W. Nothing when the body is not one sum y[k] = sum over j, complex or real,
-// of x[j] times powers of W in j and k.
+// of x[j] times powers of W in j and k; then `ended`, when given, holds what stopped the read.
 std::optional<Read_kernel> read_kernel(
     const Function&              func,
     const std::vector<Function>& functions,
     const Purity&                purity,
     const Type_table&            types,
     const Literal_pool&          literals,
-    const Global_constants&      globals = {}
+    const Global_constants&      globals = {},
+    std::optional<Unrecognised>* ended   = nullptr
 );
 } // namespace keel

@@ -1,0 +1,44 @@
+// Past what solve reads whole (1024 points), a loop nest the loop reader cannot follow warns at the loop, not at
+// whatever stopped the whole read: here an angle's index carried by hand, `e += k`.
+
+@trig_cos
+f64 cosine( f64 x )
+{
+    return x;
+}
+
+@trig_sin
+f64 sine( f64 x )
+{
+    return x;
+}
+
+@real_arithmetic
+void dft( const ref f64[1024] re, const ref f64[1024] im, ref f64[1024] yr, ref f64[1024] yi )
+{
+    for( u64 k = 0; k < 1024; k += 1 )
+    {
+        f64 sr = 0.0;
+        f64 si = 0.0;
+        u64 e  = 0;
+        for( u64 j = 0; j < 1024; j += 1 )
+        {
+            const f64 t = -2.0 * 3.141592653589793 * cast<f64>( e % 1024 ) / 1024.0;
+            sr += re[j] * cosine( t ) - im[j] * sine( t );
+            si += re[j] * sine( t ) + im[j] * cosine( t );
+            e += k;
+        }
+        yr[k] = sr;
+        yi[k] = si;
+    }
+}
+
+i32 main()
+{
+    f64[1024] a = [ 1.0, .. ];
+    f64[1024] b = [ 0.0, .. ];
+    f64[1024] c = [ 0.0, .. ];
+    f64[1024] d = [ 0.0, .. ];
+    dft( a, b, ref c, ref d );
+    return c[0] == 1024.0 ? 0 : 1;
+}

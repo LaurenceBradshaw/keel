@@ -1,0 +1,332 @@
+// opt3/loop_not_read.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__A1024_3f64;
+
+struct kl__A1024_3f64
+{
+    double e[1024];
+};
+_Static_assert( sizeof( struct kl__A1024_3f64 ) == 8192 && _Alignof( struct kl__A1024_3f64 ) == 8, "layout" );
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+double kl_4opt3_6cosine__3f64( double );
+double kl_4opt3_4sine__3f64( double );
+void kl_4opt3_3dft__A1024_3f64_A1024_3f64_RA1024_3f64_RA1024_3f64( struct kl__A1024_3f64*, struct kl__A1024_3f64*, struct kl__A1024_3f64*, struct kl__A1024_3f64* );
+int32_t kl_4opt3_4main__( void );
+
+#line 5 "opt3/loop_not_read.kl"
+double kl_4opt3_6cosine__3f64( double kl_x_1 )
+{
+    double kl_t0;
+#line 7 "opt3/loop_not_read.kl"
+    kl_t0 = kl_x_1;
+#line 7 "opt3/loop_not_read.kl"
+    return kl_t0;
+}
+
+#line 11 "opt3/loop_not_read.kl"
+double kl_4opt3_4sine__3f64( double kl_x_1 )
+{
+    double kl_t0;
+#line 13 "opt3/loop_not_read.kl"
+    kl_t0 = kl_x_1;
+#line 13 "opt3/loop_not_read.kl"
+    return kl_t0;
+}
+
+#line 17 "opt3/loop_not_read.kl"
+void kl_4opt3_3dft__A1024_3f64_A1024_3f64_RA1024_3f64_RA1024_3f64( struct kl__A1024_3f64* kl_re_1, struct kl__A1024_3f64* kl_im_2, struct kl__A1024_3f64* kl_yr_3, struct kl__A1024_3f64* kl_yi_4 )
+{
+    uint64_t kl_k_5;
+    bool kl_t6;
+    double kl_sr_7;
+    double kl_si_8;
+    uint64_t kl_e_9;
+    uint64_t kl_j_10;
+    bool kl_t11;
+    double kl_t_12;
+    uint64_t kl_t13;
+    double kl_t14;
+    bool kl_t15;
+    uint64_t kl_t16;
+    bool kl_t17;
+    double kl_t18;
+    uint64_t kl_t19;
+    double kl_t20;
+    double kl_t21;
+    uint64_t kl_t22;
+    double kl_t23;
+    double kl_t24;
+    double kl_t25;
+    uint64_t kl_t26;
+    double kl_t27;
+    uint64_t kl_t28;
+    double kl_t29;
+    double kl_t30;
+    uint64_t kl_t31;
+    uint64_t kl_t32;
+    ( void ) kl_t19;
+    ( void ) kl_t22;
+    ( void ) kl_t26;
+    ( void ) kl_t28;
+    ( void ) kl_t31;
+    ( void ) kl_t32;
+#line 19 "opt3/loop_not_read.kl"
+    kl_k_5 = 0;
+#line 19 "opt3/loop_not_read.kl"
+    goto bb1;
+    bb1:
+    kl_sr_7 = 0.0;
+    kl_si_8 = 0.0;
+    kl_e_9 = 0;
+    kl_j_10 = 0;
+#line 24 "opt3/loop_not_read.kl"
+    goto bb3;
+    bb2:
+#line 34 "opt3/loop_not_read.kl"
+    return;
+    bb3:
+#line 26 "opt3/loop_not_read.kl"
+    kl_t13 = kl_e_9 % 1024;
+#line 26 "opt3/loop_not_read.kl"
+    kl_t14 = ( double ) kl_t13;
+#line 26 "opt3/loop_not_read.kl"
+    kl_t15 = kl_t14 < 1.8446744073709552e+19;
+#line 26 "opt3/loop_not_read.kl"
+    if ( kl_t15 ) goto bb6; else goto bb5;
+    bb4:
+#line 31 "opt3/loop_not_read.kl"
+    kl_t31 = kl_k_5;
+#line 31 "opt3/loop_not_read.kl"
+    ( *kl_yr_3 ).e[kl_t31] = kl_sr_7;
+    kl_t32 = kl_k_5;
+#line 32 "opt3/loop_not_read.kl"
+    ( *kl_yi_4 ).e[kl_t32] = kl_si_8;
+#line 19 "opt3/loop_not_read.kl"
+    kl_k_5 = kl_k_5 + 1;
+#line 19 "opt3/loop_not_read.kl"
+    kl_t6 = kl_k_5 < 1024;
+#line 19 "opt3/loop_not_read.kl"
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb5:
+#line 26 "opt3/loop_not_read.kl"
+    kl_rt_panic( "opt3/loop_not_read.kl", 26, "cast out of range: cast<f64>( e % 1024 )" );
+    bb6:
+#line 26 "opt3/loop_not_read.kl"
+    kl_t16 = ( uint64_t ) kl_t14;
+#line 26 "opt3/loop_not_read.kl"
+    kl_t17 = kl_t16 == kl_t13;
+#line 26 "opt3/loop_not_read.kl"
+    if ( kl_t17 ) goto bb7; else goto bb5;
+    bb7:
+#line 26 "opt3/loop_not_read.kl"
+    kl_t18 = -6.283185307179586 * kl_t14;
+#line 26 "opt3/loop_not_read.kl"
+    kl_t_12 = kl_t18 / 1024.0;
+    kl_t19 = kl_j_10;
+#line 27 "opt3/loop_not_read.kl"
+    kl_t20 = kl_4opt3_6cosine__3f64( kl_t_12 );
+#line 27 "opt3/loop_not_read.kl"
+    kl_t21 = ( *kl_re_1 ).e[kl_t19] * kl_t20;
+#line 27 "opt3/loop_not_read.kl"
+    kl_t22 = kl_j_10;
+#line 27 "opt3/loop_not_read.kl"
+    kl_t23 = kl_4opt3_4sine__3f64( kl_t_12 );
+#line 27 "opt3/loop_not_read.kl"
+    kl_t24 = ( *kl_im_2 ).e[kl_t22] * kl_t23;
+#line 27 "opt3/loop_not_read.kl"
+    kl_t25 = kl_t21 - kl_t24;
+#line 27 "opt3/loop_not_read.kl"
+    kl_sr_7 = kl_sr_7 + kl_t25;
+    kl_t26 = kl_j_10;
+#line 28 "opt3/loop_not_read.kl"
+    kl_t27 = ( *kl_re_1 ).e[kl_t26] * kl_t23;
+#line 28 "opt3/loop_not_read.kl"
+    kl_t28 = kl_j_10;
+#line 28 "opt3/loop_not_read.kl"
+    kl_t29 = ( *kl_im_2 ).e[kl_t28] * kl_t20;
+#line 28 "opt3/loop_not_read.kl"
+    kl_t30 = kl_t27 + kl_t29;
+#line 28 "opt3/loop_not_read.kl"
+    kl_si_8 = kl_si_8 + kl_t30;
+    kl_e_9 = kl_e_9 + kl_k_5;
+#line 24 "opt3/loop_not_read.kl"
+    kl_j_10 = kl_j_10 + 1;
+#line 24 "opt3/loop_not_read.kl"
+    kl_t11 = kl_j_10 < 1024;
+#line 24 "opt3/loop_not_read.kl"
+    if ( kl_t11 ) goto bb3; else goto bb4;
+#line 34 "opt3/loop_not_read.kl"
+}
+
+#line 36 "opt3/loop_not_read.kl"
+int32_t kl_4opt3_4main__( void )
+{
+    int32_t kl_t0;
+    struct kl__A1024_3f64 kl_a_1;
+    uint64_t kl_t2;
+    bool kl_t3;
+    struct kl__A1024_3f64 kl_b_4;
+    uint64_t kl_t5;
+    bool kl_t6;
+    struct kl__A1024_3f64 kl_c_7;
+    uint64_t kl_t8;
+    bool kl_t9;
+    struct kl__A1024_3f64 kl_d_10;
+    uint64_t kl_t11;
+    bool kl_t12;
+    struct kl__A1024_3f64* kl_t13;
+    struct kl__A1024_3f64* kl_t14;
+    struct kl__A1024_3f64* kl_t15;
+    struct kl__A1024_3f64* kl_t16;
+    uint64_t kl_t18;
+    bool kl_t19;
+    ( void ) kl_t18;
+#line 38 "opt3/loop_not_read.kl"
+    kl_t2 = 0;
+#line 38 "opt3/loop_not_read.kl"
+    goto bb1;
+    bb1:
+#line 38 "opt3/loop_not_read.kl"
+    kl_a_1.e[kl_t2] = 1.0;
+#line 38 "opt3/loop_not_read.kl"
+    kl_t2 = kl_t2 + 1;
+#line 38 "opt3/loop_not_read.kl"
+    kl_a_1.e[kl_t2] = 1.0;
+#line 38 "opt3/loop_not_read.kl"
+    kl_t2 = kl_t2 + 1;
+#line 38 "opt3/loop_not_read.kl"
+    kl_a_1.e[kl_t2] = 1.0;
+#line 38 "opt3/loop_not_read.kl"
+    kl_t2 = kl_t2 + 1;
+#line 38 "opt3/loop_not_read.kl"
+    kl_a_1.e[kl_t2] = 1.0;
+#line 38 "opt3/loop_not_read.kl"
+    kl_t2 = kl_t2 + 1;
+#line 38 "opt3/loop_not_read.kl"
+    kl_t3 = kl_t2 < 1024;
+#line 38 "opt3/loop_not_read.kl"
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb2:
+#line 39 "opt3/loop_not_read.kl"
+    kl_t5 = 0;
+#line 39 "opt3/loop_not_read.kl"
+    goto bb3;
+    bb3:
+#line 39 "opt3/loop_not_read.kl"
+    kl_b_4.e[kl_t5] = 0.0;
+#line 39 "opt3/loop_not_read.kl"
+    kl_t5 = kl_t5 + 1;
+#line 39 "opt3/loop_not_read.kl"
+    kl_b_4.e[kl_t5] = 0.0;
+#line 39 "opt3/loop_not_read.kl"
+    kl_t5 = kl_t5 + 1;
+#line 39 "opt3/loop_not_read.kl"
+    kl_b_4.e[kl_t5] = 0.0;
+#line 39 "opt3/loop_not_read.kl"
+    kl_t5 = kl_t5 + 1;
+#line 39 "opt3/loop_not_read.kl"
+    kl_b_4.e[kl_t5] = 0.0;
+#line 39 "opt3/loop_not_read.kl"
+    kl_t5 = kl_t5 + 1;
+#line 39 "opt3/loop_not_read.kl"
+    kl_t6 = kl_t5 < 1024;
+#line 39 "opt3/loop_not_read.kl"
+    if ( kl_t6 ) goto bb3; else goto bb4;
+    bb4:
+#line 40 "opt3/loop_not_read.kl"
+    kl_t8 = 0;
+#line 40 "opt3/loop_not_read.kl"
+    goto bb5;
+    bb5:
+#line 40 "opt3/loop_not_read.kl"
+    kl_c_7.e[kl_t8] = 0.0;
+#line 40 "opt3/loop_not_read.kl"
+    kl_t8 = kl_t8 + 1;
+#line 40 "opt3/loop_not_read.kl"
+    kl_c_7.e[kl_t8] = 0.0;
+#line 40 "opt3/loop_not_read.kl"
+    kl_t8 = kl_t8 + 1;
+#line 40 "opt3/loop_not_read.kl"
+    kl_c_7.e[kl_t8] = 0.0;
+#line 40 "opt3/loop_not_read.kl"
+    kl_t8 = kl_t8 + 1;
+#line 40 "opt3/loop_not_read.kl"
+    kl_c_7.e[kl_t8] = 0.0;
+#line 40 "opt3/loop_not_read.kl"
+    kl_t8 = kl_t8 + 1;
+#line 40 "opt3/loop_not_read.kl"
+    kl_t9 = kl_t8 < 1024;
+#line 40 "opt3/loop_not_read.kl"
+    if ( kl_t9 ) goto bb5; else goto bb6;
+    bb6:
+#line 41 "opt3/loop_not_read.kl"
+    kl_t11 = 0;
+#line 41 "opt3/loop_not_read.kl"
+    goto bb7;
+    bb7:
+#line 41 "opt3/loop_not_read.kl"
+    kl_d_10.e[kl_t11] = 0.0;
+#line 41 "opt3/loop_not_read.kl"
+    kl_t11 = kl_t11 + 1;
+#line 41 "opt3/loop_not_read.kl"
+    kl_d_10.e[kl_t11] = 0.0;
+#line 41 "opt3/loop_not_read.kl"
+    kl_t11 = kl_t11 + 1;
+#line 41 "opt3/loop_not_read.kl"
+    kl_d_10.e[kl_t11] = 0.0;
+#line 41 "opt3/loop_not_read.kl"
+    kl_t11 = kl_t11 + 1;
+#line 41 "opt3/loop_not_read.kl"
+    kl_d_10.e[kl_t11] = 0.0;
+#line 41 "opt3/loop_not_read.kl"
+    kl_t11 = kl_t11 + 1;
+#line 41 "opt3/loop_not_read.kl"
+    kl_t12 = kl_t11 < 1024;
+#line 41 "opt3/loop_not_read.kl"
+    if ( kl_t12 ) goto bb7; else goto bb8;
+    bb8:
+#line 42 "opt3/loop_not_read.kl"
+    kl_t13 = &kl_a_1;
+#line 42 "opt3/loop_not_read.kl"
+    kl_t14 = &kl_b_4;
+#line 42 "opt3/loop_not_read.kl"
+    kl_t15 = &kl_c_7;
+#line 42 "opt3/loop_not_read.kl"
+    kl_t16 = &kl_d_10;
+#line 42 "opt3/loop_not_read.kl"
+    kl_4opt3_3dft__A1024_3f64_A1024_3f64_RA1024_3f64_RA1024_3f64( kl_t13, kl_t14, kl_t15, kl_t16 );
+    kl_t18 = 0;
+#line 43 "opt3/loop_not_read.kl"
+    kl_t19 = kl_c_7.e[kl_t18] == 1024.0;
+#line 43 "opt3/loop_not_read.kl"
+    if ( kl_t19 ) goto bb9; else goto bb10;
+    bb9:
+#line 43 "opt3/loop_not_read.kl"
+    kl_t0 = 0;
+#line 43 "opt3/loop_not_read.kl"
+    goto bb11;
+    bb10:
+#line 43 "opt3/loop_not_read.kl"
+    kl_t0 = 1;
+#line 43 "opt3/loop_not_read.kl"
+    goto bb11;
+    bb11:
+#line 43 "opt3/loop_not_read.kl"
+    return kl_t0;
+}
+
+int main( void )
+{
+    int32_t kl_t0;
+#line 36 "opt3/loop_not_read.kl"
+    kl_t0 = kl_4opt3_4main__(  );
+#line 36 "opt3/loop_not_read.kl"
+    return kl_t0;
+#line 36 "opt3/loop_not_read.kl"
+}
+
