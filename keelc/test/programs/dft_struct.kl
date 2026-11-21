@@ -1,0 +1,92 @@
+// A DFT written with a complex struct's operators, its total carried through the temporaries they
+// lower to, is read from its loops and solved at -O3, and gives what the same loop unmarked gives.
+// The kernel writes through `ref`; a caller takes the result by value through an unmarked wrapper.
+// 512 is past what solve reads whole, so only the loop reader takes it.
+
+import kl::math;
+
+struct cplx
+{
+    f64 re;
+    f64 im;
+
+    cplx operator+( cplx o ) const
+    {
+        return cplx { re + o.re, im + o.im };
+    }
+
+    cplx operator*( cplx o ) const
+    {
+        return cplx { re * o.re - im * o.im, re * o.im + im * o.re };
+    }
+};
+
+cplx root( u64 e, u64 n )
+{
+    const f64 t = -2.0 * kl::pi * cast<f64>( e % n ) / cast<f64>( n );
+    return cplx { kl::cos( t ), kl::sin( t ) };
+}
+
+@real_arithmetic
+void solved<u64 N>( const ref cplx[N] x, ref cplx[N] y )
+{
+    for( u64 k : 0..N )
+    {
+        cplx s = cplx { 0.0, 0.0 };
+        for( u64 j : 0..N )
+        {
+            s = s + x[j] * root( j * k, N );
+        }
+        y[k] = s;
+    }
+}
+
+cplx[N] dft<u64 N>( const ref cplx[N] x )
+{
+    cplx[N] y = [ cplx { 0.0, 0.0 }, .. ];
+    solved<N>( x, ref y );
+    return y;
+}
+
+void naive<u64 N>( const ref cplx[N] x, ref cplx[N] y )
+{
+    for( u64 k : 0..N )
+    {
+        cplx s = cplx { 0.0, 0.0 };
+        for( u64 j : 0..N )
+        {
+            s = s + x[j] * root( j * k, N );
+        }
+        y[k] = s;
+    }
+}
+
+f64 gap( f64 a, f64 b )
+{
+    return a > b ? a - b : b - a;
+}
+
+bool agrees<u64 N>()
+{
+    cplx[N] x = [ cplx { 0.0, 0.0 }, .. ];
+    for( u64 i : 0..N )
+    {
+        x[i] = cplx { cast<f64>( i % 7 ) * 0.5 + 1.0, 2.0 - cast<f64>( i % 5 ) * 0.25 };
+    }
+    const cplx[N] a = dft<N>( x );
+    cplx[N]       b = [ cplx { 0.0, 0.0 }, .. ];
+    naive<N>( x, ref b );
+    for( u64 k : 0..N )
+    {
+        if( gap( a[k].re, b[k].re ) > 1e-9 || gap( a[k].im, b[k].im ) > 1e-9 )
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+i32 main()
+{
+    return agrees<8>() && agrees<512>() ? 0 : 1;
+}

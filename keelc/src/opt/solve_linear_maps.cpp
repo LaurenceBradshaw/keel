@@ -232,7 +232,8 @@ Map_outcome solve_linear_maps(
 )
 {
     // Past what solve takes whole, the loops are read as a sum rather than run.
-    if( const std::optional<Read_kernel> read = read_kernel( func, functions, purity, types, literals, globals );
+    std::optional<Unrecognised> read_ended;
+    if( const std::optional<Read_kernel> read = read_kernel( func, functions, purity, types, literals, globals, &read_ended );
         read && read->sum.n > Plan_options {}.leaf_max )
     {
         const Plan_options plan { .solve = options, .cache = cache, .calls = kernels != nullptr };
@@ -279,7 +280,9 @@ Map_outcome solve_linear_maps(
     std::variant<Recognised, Unrecognised> attempt = recognise( func, functions, purity, types, literals, globals );
     if( Unrecognised* u = std::get_if<Unrecognised>( &attempt ) )
     {
-        return { .ending = *u };
+        // A map too large to run whole fails on its size; what stopped the loop read is the reason.
+        const bool too_large = u->why == Ending::Coefficient || u->why == Ending::Budget;
+        return { .ending = too_large && read_ended ? *read_ended : *u };
     }
 
     Recognised&            map    = std::get<Recognised>( attempt );

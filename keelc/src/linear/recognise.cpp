@@ -553,7 +553,7 @@ public:
     }
 
     // Symbolic mode: the kernel the loops compute, or nothing.
-    std::optional<Read_kernel> read_sum( const Function& func )
+    std::optional<Read_kernel> read_sum( const Function& func, std::optional<Unrecognised>* ended )
     {
         if( func.returns_a_value )
         {
@@ -569,12 +569,20 @@ public:
             run_from( top, k_entry_block, k_no_loop );
             return collect_sum();
         }
-        catch( const Unrecognised& )
+        catch( const Unrecognised& u )
         {
+            if( ended )
+            {
+                *ended = Unrecognised { u.why, u.span.is_valid() ? u.span : span_ };
+            }
             return std::nullopt;
         }
         catch( const Field::Overflow& )
         {
+            if( ended )
+            {
+                *ended = Unrecognised { Ending::Coefficient, span_ };
+            }
             return std::nullopt;
         }
     }
@@ -2532,11 +2540,17 @@ private:
         run_from( fr, loop.header, l );
         multiplicity_ = outer;
 
+        std::vector<Value> ends;
+        for( const Local_id x : written )
+        {
+            ends.push_back( value_of( fr, x ) );
+        }
+        std::vector<size_t> copies; // ending as another local's turn ended, as `t` in `t = s + x; s = t;`
         for( size_t w = 0; w < written.size(); ++w )
         {
             const Local_id x = written[w];
             const Location at { root( fr, x ), {} };
-            const Value    v = value_of( fr, x );
+            const Value    v = ends[w];
             if( x == index )
             {
                 if( v.kind != Kind::Int || symbolics_[v.index].i.q != 0 ||
@@ -2561,12 +2575,21 @@ private:
             }
             else if( v.kind == Kind::Terms && symbolics_[v.index].f.carried.is_valid() )
             {
-                sym::fail();
+                copies.push_back( w );
             }
             else if( depends( v, s ) )
             {
                 write( at, Value {} );
             }
+        }
+        for( const size_t w : copies )
+        {
+            // Its carrier's total when the carrier ended its turn as this did; else unknown, so only
+            // an output reading it ends the read.
+            const auto c    = std::ranges::find( written, symbolics_[ends[w].index].f.carried );
+            const bool same = c != written.end() && ends[static_cast<size_t>( c - written.begin() )].kind == Kind::Terms &&
+                              ends[static_cast<size_t>( c - written.begin() )].index == ends[w].index;
+            write( { root( fr, written[w] ), {} }, same ? value_of( fr, *c ) : Value {} );
         }
         for( size_t i = first_store; i < stores_.size(); ++i )
         {
@@ -3037,10 +3060,11 @@ std::optional<Read_kernel> read_kernel(
     const Purity&                purity,
     const Type_table&            types,
     const Literal_pool&          literals,
-    const Global_constants&      globals
+    const Global_constants&      globals,
+    std::optional<Unrecognised>* ended
 )
 {
-    return Recogniser( functions, purity, types, literals, 4'000'000, globals ).read_sum( func );
+    return Recogniser( functions, purity, types, literals, 4'000'000, globals ).read_sum( func, ended );
 }
 
 std::variant<Recognised, Unrecognised> recognise(
@@ -3381,6 +3405,28 @@ TEST_CASE( "an inverse DFT reads as c = M - 1, without the remainder too", "[lin
     const std::optional<Read_kernel> r = read_first( dft( "2.0 * 3.141592653589793 * cast<f64>( j * k ) / 96.0" ) );
     REQUIRE( r );
     CHECK( r->sum == exponent_kernel( 96, 96, 96, 95 ) );
+}
+
+TEST_CASE( "a DFT loop summing through a copied temporary reads as its kernel", "[linear][recognise]" )
+{
+    // As `s = s + x * w` lowers for a struct: the total in a temporary, copied back, read after the loop.
+    std::string source =
+        dft( "-2.0 * 3.141592653589793 * cast<f64>( j * k % 96 ) / 96.0",
+             "tr = sr + ( re[j] * c - im[j] * s );\n ti = si + ( re[j] * s + im[j] * c );\n sr = tr;\n si = ti;" );
+    const auto declared = source.find( "f64 sr = 0.0; f64 si = 0.0;" );
+    const auto written  = source.find( "yr[k] = sr; yi[k] = si;" );
+    REQUIRE( declared != std::string::npos );
+    REQUIRE( written != std::string::npos );
+    source.replace( written, 23, "yr[k] = tr; yi[k] = ti;" );
+    source.replace( declared, 27, "f64 sr = 0.0; f64 si = 0.0; f64 tr = 0.0; f64 ti = 0.0;" );
+    const std::optional<Read_kernel> r = read_first( source );
+    REQUIRE( r );
+    CHECK( r->sum == exponent_kernel( 96, 96, 96, 1 ) );
+
+    // When the carrier ends its turn as something else, the temporary is not its total.
+    std::string other = source;
+    other.replace( other.find( "sr = tr;" ), 8, "sr = tr + re[j];" );
+    CHECK( !read_first( other ) );
 }
 
 TEST_CASE( "a loop that is not one complex kernel reads as none", "[linear][recognise]" )
