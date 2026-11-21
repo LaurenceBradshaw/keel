@@ -19,6 +19,15 @@ namespace keel
 // some targets gain from is left to the backend. Whether it changed the function.
 bool reduce_inductions( Function& func, const Type_table& types, Literal_pool& literals );
 
+// In -O2's loop phase: a loop that only does arithmetic on locals nothing after it reads, and ends because
+// `i` steps by 1 to an invariant `n` under `i < n`, goes; its preheader enters its exit. Whether any went.
+bool remove_empty_loops( Function& func, const Type_table& types, const Literal_pool& literals );
+
+// In -O2's loop phase: a one-block loop storing `(*( p + i )) = v` for each `i < n` into a fresh allocation `p` loses
+// that store when every path on reaches another such loop writing `p` over the same `n` before reading it, and
+// nothing between lets an address into it escape. Whether any went.
+bool remove_dead_fills( Function& func, const Type_table& types, const Literal_pool& literals );
+
 struct Loop;
 
 // A local whose one write in the loop is `local = local + step`, `step` invariant, at `index` in `block`.
@@ -34,7 +43,8 @@ std::vector<Induction> inductions_of( const Function& func, const Loop& loop, co
 struct Trip
 {
     u64      turns;
-    Block_id test; // the header or the latch: continues on true, leaves on false
+    Block_id test;    // the header or the latch: continues on true, leaves on false
+    Local_id counter; // the local the test reads, a constant in each unrolled copy
 };
 // How many turns a normalised loop takes, when its header or latch steps `i` by a constant and then
 // continues on `i < n`, with `i`'s entry value and `n` constants and no value the test sees wrapping.

@@ -604,14 +604,17 @@ class array<T, u64... S(dyn)> implements iterable<T> where T : numeric
     /// `f` of each element and `o`'s, the two broadcast.
     public array<T, broadcast( S, U )...> zipped<F, u64... U>( const ref array<T, U...> o, F f ) const where F : fn( T, T ) -> T
     {
-        list<u64>                      s = broadcast_shape( o.shape() );
-        array<T, broadcast( S, U )...> r = kl::zeros<T, broadcast( S, U )...>( s.as_run() );
-        if( r.size() == count() && r.size() == o.size() )
+        list<u64> s = broadcast_shape( o.shape() );
+        u64       n = kernel::prod( s.as_run() );
+        // Made on each path, so the compiler sees the plain one's zeros all overwritten.
+        if( n == count() && n == o.size() )
         {
-            kernel::zip( ref r.as_run(), as_run(), o.as_run(), f );
-            return r;
+            array<T, broadcast( S, U )...> same = kl::zeros<T, broadcast( S, U )...>( s.as_run() );
+            kernel::zip( ref same.as_run(), as_run(), o.as_run(), f );
+            return same;
         }
-        if( r.size() != 0 )
+        array<T, broadcast( S, U )...> r = kl::zeros<T, broadcast( S, U )...>( s.as_run() );
+        if( n != 0 )
         {
             kernel::zip_strided( ref r.as_run(), as_run(), strides_to( s.as_run() ).as_run(), o.as_run(), o.strides_to( s.as_run() ).as_run(), s.as_run(), f );
         }
@@ -1116,7 +1119,7 @@ class array<T, u64... S(dyn)> implements iterable<T> where T : numeric
         {
             panic( "the shape does not fit the elements" );
         }
-        kernel::zip_into( ref as_run(), elements, fn[]( T _, T y ) { return y; } );
+        copy_into( ref as_run(), elements );
     }
 
     private void needs_rank( u64 rank, str message ) const
@@ -1776,10 +1779,17 @@ array_mask<S...> is_inf<T, u64... S>( const ref array<T, S...> a ) where T : flo
     return r;
 }
 
-// `src` into `dest`, of one size.
+// `src` into `dest`, of one size; a plain copy, so no read of `dest` keeps its old elements alive.
 private void copy_into<T>( ref T[] dest, const ref T[] src ) where T : copyable
 {
-    kernel::zip_into( ref dest, src, fn[]( T _, T y ) { return y; } );
+    if( src.size != dest.size )
+    {
+        panic( "the shapes differ" );
+    }
+    for( u64 i : 0..src.size )
+    {
+        dest[i] = src[i];
+    }
 }
 // The scalar maths of `kl::math` over each element, for float elements: `kl::exp( a )`.
 

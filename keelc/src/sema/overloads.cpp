@@ -210,8 +210,8 @@ bool Overloads::deduce_for_candidate(
     return true;
 }
 
-// `N n` binds `N` to its argument's value where that is known, else to `dyn`; `S... n` binds `S`
-// to one size per argument.
+// `N n` binds `N` to its argument's value where that is known, to `M` for a size parameter `M`,
+// else to `dyn`; `S... n` binds `S` to one size per argument.
 void Overloads::deduce_given_sizes(
     Node_id callable, std::span<const Slot> params, std::span<const Argument_shape> shapes, Bindings& into
 )
@@ -227,7 +227,7 @@ void Overloads::deduce_given_sizes(
         }
         const Argument_shape& shape = shapes[i];
         const bool    known = ( shape.kind == Argument_kind::Integer && shape.valued && !shape.negative ) || shape.known;
-        const Type_id value = known ? table_.size( shape.magnitude ) : table_.dyn();
+        const Type_id value = known ? table_.size( shape.magnitude ) : shape.size.is_valid() ? shape.size : table_.dyn();
         if( !table_.is_pack_parameter( size ) )
         {
             into.emplace( size.v, value );
@@ -547,6 +547,16 @@ bool Overloads::deduce_shape( Type_id pattern, const Argument_shape& shape, Bind
     if( shape.elements.front().kind == Argument_kind::Array )
     {
         bound = deduce_shape( table_.get( pattern ).element, shape.elements.front(), into ) || bound;
+    }
+
+    // A typed element gives `E` its type, as an argument would: `[ x, y ]` with no literal among them.
+    for( const Argument_shape& element : shape.elements )
+    {
+        if( element.kind == Argument_kind::Typed && element.type.is_valid() )
+        {
+            bound = table_.deduce( table_.get( pattern ).element, element.type, into ) || bound;
+            break;
+        }
     }
 
     return bound;

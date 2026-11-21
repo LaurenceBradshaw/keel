@@ -558,6 +558,18 @@ Front_end run_front_end(
                         verified( current(), "reduce_inductions" );
                         moved = true;
                     }
+                    // Before the empty loops go, as a fill it empties is one.
+                    if( build.level >= 2 && remove_dead_fills( current(), front.types.table(), literals ) )
+                    {
+                        verified( current(), "remove_dead_fills" );
+                        moved = true;
+                    }
+                    // Once the drops a body held are inlined away, and what reduce_inductions retired has gone.
+                    if( build.level >= 2 && remove_empty_loops( current(), front.types.table(), literals ) )
+                    {
+                        verified( current(), "remove_empty_loops" );
+                        moved = true;
+                    }
                     // After the rounds, so threading has specialised each path a constant takes first.
                     if( build.level >= 2 && flatten_branches( current(), front.types.table() ) )
                     {

@@ -40,25 +40,102 @@ bool unroll(
                types.is_sized_array( func.locals[place.local].type );
     };
 
+    const std::optional<Trip> trip = trip_count( func, types, literals, loop, addressed );
+    if( !trip )
+    {
+        return false;
+    }
+
+    // A read that is a constant in each copy: the counter, an element as above, or a local a folding statement wrote.
+    std::vector<bool> folded( func.locals.size(), false );
+    const auto        constant = [&]( const Operand& operand )
+    {
+        if( operand.kind == Operand_kind::Constant )
+        {
+            return true;
+        }
+        const Place& place = operand.place;
+        return operand.has_place() && !place.is_global() && place.local.is_valid() &&
+               ( element( place ) || ( place.num_projections == 0 && ( place.local == trip->counter || folded[place.local.v] ) )
+               );
+    };
+    const auto folding = [&]( const Statement& statement )
+    {
+        const Rvalue& value = func.rvalue( statement );
+        return ( value.kind == Rvalue_kind::Use || value.kind == Rvalue_kind::Binary || value.kind == Rvalue_kind::Unary ||
+                 value.kind == Rvalue_kind::Cast ) &&
+               !any_operand( value, [&]( const Operand& o ) { return !constant( o ); } );
+    };
+    // The step and the test are the two the estimate below takes off.
+    const Operand& condition = func.blocks[trip->test].terminator.condition;
+    const auto     whole     = [&]( const Statement& statement )
+    {
+        return statement.kind == Statement_kind::Assign && statement.place.is_whole_local() &&
+               statement.place.local != trip->counter &&
+               !( condition.has_place() && statement.place.local == condition.place.local );
+    };
+
+    // A folding write goes only when every read of it folds too: `t = a[i]` keeps the copy of `i` it indexes by.
+    std::vector<bool> kept_read( func.locals.size(), false );
+    const auto        keep = [&]( const Place& place )
+    {
+        if( place.is_global() )
+        {
+            return;
+        }
+        if( place.local.is_valid() )
+        {
+            kept_read[place.local.v] = true;
+        }
+        for( u32 p = 0; p < place.num_projections; ++p )
+        {
+            if( const Projection& projection = func.projections[place.first_projection + p];
+                projection.kind == Projection_kind::Index && projection.index.is_valid() )
+            {
+                kept_read[projection.index.v] = true;
+            }
+        }
+    };
+    for( const Block_id b : loop.blocks )
+    {
+        for( const Statement& statement : func.statements_of( b ) )
+        {
+            const bool folds = statement.kind == Statement_kind::Assign && folding( statement );
+            if( whole( statement ) )
+            {
+                folded[statement.place.local.v] = folds;
+            }
+            if( folds )
+            {
+                continue;
+            }
+            if( statement.kind == Statement_kind::Assign )
+            {
+                for_each_operand( func.rvalue( statement ), [&]( const Operand& o ) { keep( o.place ); } );
+            }
+            if( statement.place.num_projections > 0 )
+            {
+                keep( statement.place );
+            }
+        }
+    }
+
     u64 size  = 0;
-    u64 moves = 0; // statements that copy into or out of such an element: copies of locals once unrolled
+    u64 moves = 0; // copies into or out of such an element, and arithmetic on constants: copies or gone once unrolled
     for( const Block_id b : loop.blocks )
     {
         for( const Statement& statement : func.statements_of( b ) )
         {
             size += statement.kind == Statement_kind::Assign || statement.kind == Statement_kind::Drop;
-            if( statement.kind == Statement_kind::Assign && func.rvalue( statement ).kind == Rvalue_kind::Use )
+            if( statement.kind != Statement_kind::Assign )
             {
-                const Operand& from = func.rvalue( statement ).a;
-                moves += element( statement.place ) || ( from.has_place() && element( from.place ) );
+                continue;
             }
+            const Rvalue& value = func.rvalue( statement );
+            moves += ( whole( statement ) && folded[statement.place.local.v] && !kept_read[statement.place.local.v] ) ||
+                     ( value.kind == Rvalue_kind::Use &&
+                       ( element( statement.place ) || ( value.a.has_place() && element( value.a.place ) ) ) );
         }
-    }
-
-    const std::optional<Trip> trip = trip_count( func, types, literals, loop, addressed );
-    if( !trip )
-    {
-        return false;
     }
     const bool full  = trip->turns <= budget && size * trip->turns <= budget;
     u64        count = full ? trip->turns : 0;
@@ -234,6 +311,19 @@ TEST_CASE( "unroll_loops_copies_a_local_array_fill_at_O2", "[opt][unroll_loops]"
         loops_left(
             "i64 f( const ref i64[4] a ) { i64 t = 0; for( u64 i = 0; i < 4; i += 1 ) { t += a[ i ]; } return t; }\n", 200, 2
         ) == 1
+    );
+}
+
+// A flat index over local arrays: each copy's reads and its check fold, so at -O2 it is copied.
+TEST_CASE( "unroll_loops_copies_an_index_over_local_arrays_at_O2", "[opt][unroll_loops]" )
+{
+    REQUIRE(
+        loops_left(
+            "u64 f( u64 a, u64 b ) { u64[2] at = [ a, b ]; u64[2] s = [ 4, 4 ]; u64 flat = 0; for( u64 k = 0; k < 2; k += 1 ) "
+            "{ if( at[ k ] >= s[ k ] ) { panic( \"out\" ); } flat = flat * s[ k ] + at[ k ]; } return flat; }\n",
+            200,
+            2
+        ) == 0
     );
 }
 

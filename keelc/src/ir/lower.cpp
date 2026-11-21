@@ -2865,18 +2865,14 @@ void Lowering::lower_construction( Place target, Node_id call_expr )
 
     const Type_id receiver_type = binding_type_under( parameters[0], callee_bound );
 
-    // The arguments first, so the `&init` lands in the call's own block, where inlining finds it.
+    // The arguments and size checks first, so the `&init` lands in the call's own block, where
+    // inlining finds it; slot 0 holds the receiver, which no size check reads.
     const std::vector<Operand> lowered = lower_call_arguments( arguments, parameters.subspan( 1 ), callee_bound );
 
     std::vector<Operand> operands;
 
     operands.reserve( arguments.size() + 1 );
-    operands.push_back( copy(
-        builder_.place(
-            builder_.into_temp( address_of( target, receiver_type, Address_purpose::Initialise ), receiver_type, span )
-        ),
-        receiver_type
-    ) );
+    operands.emplace_back();
 
     for( const Operand& argument : lowered )
     {
@@ -2885,6 +2881,12 @@ void Lowering::lower_construction( Place target, Node_id call_expr )
     std::vector<Operand> hidden = hidden_sizes( call_expr, constructor, callee_bound, span );
     check_sizes( call_expr, constructor, operands, hidden, callee_bound );
     std::ranges::move( hidden, std::back_inserter( operands ) );
+    operands[0] = copy(
+        builder_.place(
+            builder_.into_temp( address_of( target, receiver_type, Address_purpose::Initialise ), receiver_type, span )
+        ),
+        receiver_type
+    );
 
     const Type_id type = type_of( constructor ); // void
 

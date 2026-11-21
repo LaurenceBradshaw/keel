@@ -1100,9 +1100,9 @@ struct kl_7codegen_Grid__IVD__V3_E kl_7codegen_12operator_add__IWVD_V3_E_WV1_V3_
     struct kl_7codegen_Grid__IVD__V3_E kl_t0;
     uint64_t kl_t3;
     struct kl_7codegen_Grid__IVD__V3_E kl_r_4;
-    struct kl_7codegen_Grid__IVD__V3_E* kl_t5;
-    bool kl_t6;
-    uint64_t kl_t7;
+    bool kl_t5;
+    uint64_t kl_t6;
+    struct kl_7codegen_Grid__IVD__V3_E* kl_t7;
     uint64_t kl_i_9;
     uint64_t kl_t10;
     bool kl_t11;
@@ -1127,13 +1127,13 @@ struct kl_7codegen_Grid__IVD__V3_E kl_7codegen_12operator_add__IWVD_V3_E_WV1_V3_
 #line 32 "codegen/size_methods.kl"
     kl_t3 = 0;
 #line 34 "codegen/size_methods.kl"
-    kl_t5 = &kl_r_4;
+    kl_t5 = ( *kl_this_1 ).kl_dyn.e[kl_t3] == 1;
 #line 34 "codegen/size_methods.kl"
-    kl_t6 = ( *kl_this_1 ).kl_dyn.e[kl_t3] == 1;
+    kl_t6 = kl_t5 ? 1 : ( *kl_this_1 ).kl_dyn.e[kl_t3];
 #line 34 "codegen/size_methods.kl"
-    kl_t7 = kl_t6 ? 1 : ( *kl_this_1 ).kl_dyn.e[kl_t3];
+    kl_t7 = &kl_r_4;
 #line 34 "codegen/size_methods.kl"
-    kl_7codegen_4Grid__IVD__V3_E__RQ7codegen4GridIVD__V3_E_3i64__ctor( kl_t5, 0, kl_t7 );
+    kl_7codegen_4Grid__IVD__V3_E__RQ7codegen4GridIVD__V3_E_3i64__ctor( kl_t7, 0, kl_t6 );
     kl_i_9 = 0;
 #line 35 "codegen/size_methods.kl"
     kl_t11 = ( *kl_this_1 ).kl_dyn.e[kl_t3] == 1;
@@ -1285,11 +1285,11 @@ struct kl_7codegen_Grid__IVD__VD_E kl_7codegen_12operator_add__IWVD_V1_E_WV1_VD_
     uint64_t kl_t3;
     uint64_t kl_t4;
     struct kl_7codegen_Grid__IVD__VD_E kl_r_5;
-    struct kl_7codegen_Grid__IVD__VD_E* kl_t6;
-    bool kl_t7;
-    uint64_t kl_t8;
-    bool kl_t9;
-    uint64_t kl_t10;
+    bool kl_t6;
+    uint64_t kl_t7;
+    bool kl_t8;
+    uint64_t kl_t9;
+    struct kl_7codegen_Grid__IVD__VD_E* kl_t10;
     uint64_t kl_i_12;
     uint64_t kl_t13;
     bool kl_t14;
@@ -1319,17 +1319,17 @@ struct kl_7codegen_Grid__IVD__VD_E kl_7codegen_12operator_add__IWVD_V1_E_WV1_VD_
 #line 32 "codegen/size_methods.kl"
     kl_t4 = 0;
 #line 34 "codegen/size_methods.kl"
-    kl_t6 = &kl_r_5;
+    kl_t6 = 1 == 1;
 #line 34 "codegen/size_methods.kl"
-    kl_t7 = 1 == 1;
+    kl_t7 = kl_t6 ? ( *kl_o_2 ).kl_dyn.e[kl_t4] : 1;
 #line 34 "codegen/size_methods.kl"
-    kl_t8 = kl_t7 ? ( *kl_o_2 ).kl_dyn.e[kl_t4] : 1;
+    kl_t8 = ( *kl_this_1 ).kl_dyn.e[kl_t3] == 1;
 #line 34 "codegen/size_methods.kl"
-    kl_t9 = ( *kl_this_1 ).kl_dyn.e[kl_t3] == 1;
+    kl_t9 = kl_t8 ? 1 : ( *kl_this_1 ).kl_dyn.e[kl_t3];
 #line 34 "codegen/size_methods.kl"
-    kl_t10 = kl_t9 ? 1 : ( *kl_this_1 ).kl_dyn.e[kl_t3];
+    kl_t10 = &kl_r_5;
 #line 34 "codegen/size_methods.kl"
-    kl_7codegen_4Grid__IVD__VD_E__RQ7codegen4GridIVD__VD_E_3i64__ctor( kl_t6, 0, kl_t10, kl_t8 );
+    kl_7codegen_4Grid__IVD__VD_E__RQ7codegen4GridIVD__VD_E_3i64__ctor( kl_t10, 0, kl_t9, kl_t7 );
     kl_i_12 = 0;
 #line 35 "codegen/size_methods.kl"
     kl_t14 = 1 == 1;
@@ -1693,9 +1693,9 @@ struct kl_7codegen_Grid__IVD_E kl_7codegen_4flat__IVD__V3_E__SQ7codegen4GridIVD_
     uint64_t kl_t2;
     struct kl_7codegen_Grid__IVD_E kl_t3;
     uint64_t kl_t4;
-    struct kl_7codegen_Grid__IVD_E* kl_t5;
+    uint64_t kl_t5;
     uint64_t kl_t6;
-    uint64_t kl_t7;
+    struct kl_7codegen_Grid__IVD_E* kl_t7;
     ( void ) kl_t2;
     ( void ) kl_t4;
 #line 54 "codegen/size_methods.kl"
@@ -1703,13 +1703,13 @@ struct kl_7codegen_Grid__IVD_E kl_7codegen_4flat__IVD__V3_E__SQ7codegen4GridIVD_
 #line 56 "codegen/size_methods.kl"
     kl_t4 = 0;
 #line 56 "codegen/size_methods.kl"
-    kl_t5 = &kl_t3;
+    kl_t5 = 1 * ( *kl_this_1 ).kl_dyn.e[kl_t2];
 #line 56 "codegen/size_methods.kl"
-    kl_t6 = 1 * ( *kl_this_1 ).kl_dyn.e[kl_t2];
+    kl_t6 = kl_t5 * 3;
 #line 56 "codegen/size_methods.kl"
-    kl_t7 = kl_t6 * 3;
+    kl_t7 = &kl_t3;
 #line 56 "codegen/size_methods.kl"
-    kl_7codegen_4Grid__IVD_E__RQ7codegen4GridIVD_E_3i64__ctor( kl_t5, ( *kl_this_1 ).kl_cells.e[kl_t4], kl_t7 );
+    kl_7codegen_4Grid__IVD_E__RQ7codegen4GridIVD_E_3i64__ctor( kl_t7, ( *kl_this_1 ).kl_cells.e[kl_t4], kl_t6 );
 #line 56 "codegen/size_methods.kl"
     kl_t0 = kl_t3;
 #line 56 "codegen/size_methods.kl"

@@ -453,6 +453,15 @@ Argument_shape Expressions::argument_shape( Node_id argument )
             shape.known     = true;
             shape.magnitude = folded.value.magnitude;
         }
+        else if( ast_.kind( value ) == Node_kind::Name_expr )
+        {
+            const Node_id decl = resolution_.declaration_of( value );
+            if( decl.is_valid() && ast_.kind( decl ) == Node_kind::Type_param_decl &&
+                table_.is_size_parameter( types_.type_of( decl ) ) && !table_.is_pack_parameter( types_.type_of( decl ) ) )
+            {
+                shape.size = types_.type_of( decl );
+            }
+        }
     }
 
     return shape;
@@ -12702,6 +12711,33 @@ TEST_CASE( "expressions_deduce_a_size_from_an_array_literal", "[sema][size_param
     INFO( p.rendered() );
     REQUIRE( p.clean() );
     REQUIRE( p.type_name( nth_named( p, "Array_literal", 0 ) ) == "i32[3]" );
+}
+
+// No literal among the elements: the first typed one gives `T`, and the rest are checked against it.
+TEST_CASE( "expressions_deduce_an_element_type_from_typed_elements", "[sema][size_params]" )
+{
+    const Typed p( "u64 n<T, u64 N>( T[N] _ ) { return N; }\n"
+                   "i32 main() { f64 y = 1.0; u64 k = n( [ y, y, y ] ); return cast<i32>( k ); }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+    REQUIRE( p.type_name( nth_named( p, "Array_literal", 0 ) ) == "f64[3]" );
+
+    const Typed mixed( "u64 n<T, u64 N>( T[N] _ ) { return N; }\n"
+                       "i32 main() { f64 y = 1.0; u64 i = 2; return cast<i32>( n( [ y, i ] ) ); }" );
+    REQUIRE_FALSE( mixed.clean() );
+}
+
+// A size parameter given as a value binds itself, not `dyn`: `M` is a constant in every instance.
+TEST_CASE( "expressions_bind_a_size_given_a_size_parameter", "[sema][size_params]" )
+{
+    const Typed p( "struct Grid<u64 N(dyn)> { u64 x; };\n"
+                   "Grid<N> made<u64 N>( N n ) { return Grid<N> { 1 }; }\n"
+                   "Grid<M> twice<u64 M>() { Grid<M> g = made( M ); return g; }\n"
+                   "i32 main() { return cast<i32>( twice<3>().x ); }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
 }
 
 TEST_CASE( "expressions_type_what_a_located_function_reads", "[sema][directive]" )

@@ -1250,6 +1250,18 @@ TEST_CASE( "inline_calls_inlines_a_constructor", "[opt][inline]" )
     REQUIRE( p.calls() == 0 );
 }
 
+// The run-time check of `n` against 4 comes before the `&init`, which so stays in the call's block.
+TEST_CASE( "inline_calls_inlines_a_constructor_whose_size_is_checked", "[opt][inline]" )
+{
+    const Inlined p( "u64 f( u64 n ) { Grid<4> g = Grid<4>( n ); return g.get(); }\n"
+                     "class Grid<u64 N(dyn)> { public Grid( N n ) { x_ = n; } public u64 get() const { return x_; } "
+                     "private u64 x_; };\n" );
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+    REQUIRE( verify( p.first() ).empty() );
+    REQUIRE( p.calls() == 0 );
+}
+
 // The callee's `p` arrives with its fields; the inlined constructor's receiver, a pointer, brings none.
 // No rounds, so `q` is not folded away, and its slots with it.
 TEST_CASE( "inline_calls_carries_the_callees_field_table", "[opt][inline]" )

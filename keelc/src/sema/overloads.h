@@ -54,6 +54,7 @@ struct Argument_shape
     Keyword                               marker      = Keyword::Count;
     bool                                  recorded    = false; // whether infer() has already run over it
     bool                                  known       = false; // Typed: a `const` integer, its value in `magnitude`
+    Type_id                               size        = {};    // Typed: the size parameter a bare `N` names
     std::vector<Argument_shape>           elements {};         // Array: each element's shape
     bool                                  fill   = false;      // Array: `[x, ..]`, any count, `elements` its one value
     bool                                  lambda = false;      // Anything: a lambda, its parameters below
