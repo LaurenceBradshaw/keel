@@ -70,8 +70,8 @@ public:
     // A `where` bound naming an interface: records that interface's type on the name.
     void record_interface_bound( Node_id bound_name );
 
-    // One side of `where R >= C`: a size, computed per instance when it reads a parameter.
-    Type_id resolve_size_side( Node_id side );
+    // `where R >= C`, or two shapes compared axis by axis, `where S == broadcast( S, U )`.
+    void resolve_size_condition( Node_id comparison );
 
     // A type written after `implements`: an interface, or an error once reported.
     Type_id resolve_interface( Node_id annotation );
@@ -98,6 +98,7 @@ private:
     Type_id            size_tree( Node_id size, Node_id parameter, std::string_view what ); // a size over `parameter`
     Node_id            size_parameter_read( Node_id size ) const; // the first size parameter `size` reads
     Node_id            bare_pack_read( Node_id size ) const;      // a pack read outside a shape function
+    Type_id            resolve_size_side( Node_id side );         // a size, computed per instance when it reads a parameter
     Type_id            shape_call( Node_id call );                // `product( S )`: a Size or a pack
 
     Span const_keyword( Node_id const_type ) const;

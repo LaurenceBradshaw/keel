@@ -1,0 +1,8 @@
+1
+2
+2
+2
+2
+12
+11
+codegen/size_pack_conditions.kl:71: size check failed: `into` needs `S == broadcast(S, U)`, but `S` is 4, 3 and `U` is 7, 3

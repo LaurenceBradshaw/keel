@@ -271,7 +271,7 @@ when the shapes differ.</p>
 </div>
 </div>
 <div class="group" id="array.operator+=">
-<pre class="signature"><a class="anchor" href="#array.operator+=" aria-label="Link to operator+=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator+=</span>&lt;<a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, U...&gt; o )</code></pre>
+<pre class="signature"><a class="anchor" href="#array.operator+=" aria-label="Link to operator+=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator+=</span>&lt;<a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, U...&gt; o ) <span class="kw">where</span> S == broadcast(S, U)</code></pre>
 <div class="doc">
 <p>Each element made its sum with <code>o</code>'s, <code>o</code> broadcast to this shape.</p>
 </div>
@@ -299,7 +299,7 @@ when the shapes differ.</p>
 </div>
 </div>
 <div class="group" id="array.operator-=">
-<pre class="signature"><a class="anchor" href="#array.operator-=" aria-label="Link to operator-=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator-=</span>&lt;<a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, U...&gt; o )</code></pre>
+<pre class="signature"><a class="anchor" href="#array.operator-=" aria-label="Link to operator-=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator-=</span>&lt;<a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, U...&gt; o ) <span class="kw">where</span> S == broadcast(S, U)</code></pre>
 <div class="doc">
 <p>Each element made its difference with <code>o</code>'s, <code>o</code> broadcast to this shape.</p>
 </div>
@@ -323,7 +323,7 @@ when the shapes differ.</p>
 </div>
 </div>
 <div class="group" id="array.operator*=">
-<pre class="signature"><a class="anchor" href="#array.operator*=" aria-label="Link to operator*=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator*=</span>&lt;<a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, U...&gt; o )</code></pre>
+<pre class="signature"><a class="anchor" href="#array.operator*=" aria-label="Link to operator*=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator*=</span>&lt;<a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, U...&gt; o ) <span class="kw">where</span> S == broadcast(S, U)</code></pre>
 <div class="doc">
 <p>Each element made its product with <code>o</code>'s, <code>o</code> broadcast to this shape.</p>
 </div>
@@ -347,7 +347,7 @@ when the shapes differ.</p>
 </div>
 </div>
 <div class="group" id="array.operator/=">
-<pre class="signature"><a class="anchor" href="#array.operator/=" aria-label="Link to operator/=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator/=</span>&lt;<a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, U...&gt; o )</code></pre>
+<pre class="signature"><a class="anchor" href="#array.operator/=" aria-label="Link to operator/=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator/=</span>&lt;<a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, U...&gt; o ) <span class="kw">where</span> S == broadcast(S, U)</code></pre>
 <div class="doc">
 <p>Each element made its quotient with <code>o</code>'s, <code>o</code> broadcast to this shape.</p>
 </div>
@@ -372,7 +372,7 @@ when the shapes differ.</p>
 </div>
 </div>
 <div class="group" id="array.operator%=">
-<pre class="signature"><a class="anchor" href="#array.operator%=" aria-label="Link to operator%=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator%=</span>&lt;<a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, U...&gt; o ) <span class="kw">where</span> T : integral</code></pre>
+<pre class="signature"><a class="anchor" href="#array.operator%=" aria-label="Link to operator%=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator%=</span>&lt;<a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, U...&gt; o ) <span class="kw">where</span> S == broadcast(S, U), <span class="kw">where</span> T : integral</code></pre>
 <div class="doc">
 <p>Each element made its remainder with <code>o</code>'s, <code>o</code> broadcast to this shape.</p>
 </div>
@@ -396,7 +396,7 @@ when the shapes differ.</p>
 </div>
 </div>
 <div class="group" id="array.operator&amp;=">
-<pre class="signature"><a class="anchor" href="#array.operator&amp;=" aria-label="Link to operator&amp;=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator&amp;=</span>&lt;<a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, U...&gt; o ) <span class="kw">where</span> T : integral</code></pre>
+<pre class="signature"><a class="anchor" href="#array.operator&amp;=" aria-label="Link to operator&amp;=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator&amp;=</span>&lt;<a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, U...&gt; o ) <span class="kw">where</span> S == broadcast(S, U), <span class="kw">where</span> T : integral</code></pre>
 <div class="doc">
 <p>Each element made its bitwise and with <code>o</code>'s, <code>o</code> broadcast to this shape.</p>
 </div>
@@ -420,7 +420,7 @@ when the shapes differ.</p>
 </div>
 </div>
 <div class="group" id="array.operator|=">
-<pre class="signature"><a class="anchor" href="#array.operator|=" aria-label="Link to operator|=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator|=</span>&lt;<a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, U...&gt; o ) <span class="kw">where</span> T : integral</code></pre>
+<pre class="signature"><a class="anchor" href="#array.operator|=" aria-label="Link to operator|=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator|=</span>&lt;<a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, U...&gt; o ) <span class="kw">where</span> S == broadcast(S, U), <span class="kw">where</span> T : integral</code></pre>
 <div class="doc">
 <p>Each element made its bitwise or with <code>o</code>'s, <code>o</code> broadcast to this shape.</p>
 </div>
@@ -444,7 +444,7 @@ when the shapes differ.</p>
 </div>
 </div>
 <div class="group" id="array.operator^=">
-<pre class="signature"><a class="anchor" href="#array.operator^=" aria-label="Link to operator^=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator^=</span>&lt;<a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, U...&gt; o ) <span class="kw">where</span> T : integral</code></pre>
+<pre class="signature"><a class="anchor" href="#array.operator^=" aria-label="Link to operator^=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator^=</span>&lt;<a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, U...&gt; o ) <span class="kw">where</span> S == broadcast(S, U), <span class="kw">where</span> T : integral</code></pre>
 <div class="doc">
 <p>Each element made its bitwise exclusive or with <code>o</code>'s, <code>o</code> broadcast to this shape.</p>
 </div>
@@ -492,7 +492,7 @@ when the shapes differ.</p>
 </div>
 <h3>Products</h3>
 <div class="group" id="array.dot">
-<pre class="signature"><a class="anchor" href="#array.dot" aria-label="Link to dot">#</a><code><span class="kw">public</span> T <span class="fn">dot</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, S...&gt; o ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#array.dot" aria-label="Link to dot">#</a><code><span class="kw">public</span> T <span class="fn">dot</span>&lt;<a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, U...&gt; o ) <span class="kw">const</span> <span class="kw">where</span> S == U</code></pre>
 <div class="doc">
 <p>The sum of each element times the matching one of <code>o</code>: the inner product at rank 1.</p>
 </div>
@@ -524,14 +524,14 @@ It overflows only when the norm does.</p>
 </div>
 </div>
 <div class="group" id="array.approx_equal">
-<pre class="signature"><a class="anchor" href="#array.approx_equal" aria-label="Link to approx_equal">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">approx_equal</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, S...&gt; o, T rtol = 1e-5, T atol = 1e-8 ) <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<pre class="signature"><a class="anchor" href="#array.approx_equal" aria-label="Link to approx_equal">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">approx_equal</span>&lt;<a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, U...&gt; o, T rtol = 1e-5, T atol = 1e-8 ) <span class="kw">const</span> <span class="kw">where</span> S == U, <span class="kw">where</span> T : floating</code></pre>
 <div class="doc">
 <p>Whether every <code>|a - b| &lt;= atol + rtol * |b|</code>, <code>b</code> being <code>o</code>'s element. A NaN is close to
 nothing, and an infinity only to itself.</p>
 </div>
 </div>
 <div class="group" id="array.less">
-<pre class="signature"><a class="anchor" href="#array.less" aria-label="Link to less">#</a><code><span class="kw">public</span> <a class="type" href="#array_mask">array_mask</a>&lt;S...&gt; <span class="fn">less</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, S...&gt; o ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#array.less" aria-label="Link to less">#</a><code><span class="kw">public</span> <a class="type" href="#array_mask">array_mask</a>&lt;S...&gt; <span class="fn">less</span>&lt;<a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, U...&gt; o ) <span class="kw">const</span> <span class="kw">where</span> S == U</code></pre>
 <div class="doc">
 <p>Where each element is less than the matching one of <code>o</code>.</p>
 </div>
@@ -541,7 +541,7 @@ nothing, and an infinity only to itself.</p>
 </div>
 </div>
 <div class="group" id="array.greater">
-<pre class="signature"><a class="anchor" href="#array.greater" aria-label="Link to greater">#</a><code><span class="kw">public</span> <a class="type" href="#array_mask">array_mask</a>&lt;S...&gt; <span class="fn">greater</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, S...&gt; o ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#array.greater" aria-label="Link to greater">#</a><code><span class="kw">public</span> <a class="type" href="#array_mask">array_mask</a>&lt;S...&gt; <span class="fn">greater</span>&lt;<a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, U...&gt; o ) <span class="kw">const</span> <span class="kw">where</span> S == U</code></pre>
 <div class="doc">
 <p>Where each element is greater than the matching one of <code>o</code>.</p>
 </div>
@@ -551,7 +551,7 @@ nothing, and an infinity only to itself.</p>
 </div>
 </div>
 <div class="group" id="array.less_equal">
-<pre class="signature"><a class="anchor" href="#array.less_equal" aria-label="Link to less_equal">#</a><code><span class="kw">public</span> <a class="type" href="#array_mask">array_mask</a>&lt;S...&gt; <span class="fn">less_equal</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, S...&gt; o ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#array.less_equal" aria-label="Link to less_equal">#</a><code><span class="kw">public</span> <a class="type" href="#array_mask">array_mask</a>&lt;S...&gt; <span class="fn">less_equal</span>&lt;<a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, U...&gt; o ) <span class="kw">const</span> <span class="kw">where</span> S == U</code></pre>
 <div class="doc">
 <p>Where each element is at most the matching one of <code>o</code>.</p>
 </div>
@@ -561,7 +561,7 @@ nothing, and an infinity only to itself.</p>
 </div>
 </div>
 <div class="group" id="array.greater_equal">
-<pre class="signature"><a class="anchor" href="#array.greater_equal" aria-label="Link to greater_equal">#</a><code><span class="kw">public</span> <a class="type" href="#array_mask">array_mask</a>&lt;S...&gt; <span class="fn">greater_equal</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, S...&gt; o ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#array.greater_equal" aria-label="Link to greater_equal">#</a><code><span class="kw">public</span> <a class="type" href="#array_mask">array_mask</a>&lt;S...&gt; <span class="fn">greater_equal</span>&lt;<a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, U...&gt; o ) <span class="kw">const</span> <span class="kw">where</span> S == U</code></pre>
 <div class="doc">
 <p>Where each element is at least the matching one of <code>o</code>.</p>
 </div>
@@ -571,7 +571,7 @@ nothing, and an infinity only to itself.</p>
 </div>
 </div>
 <div class="group" id="array.equal_each">
-<pre class="signature"><a class="anchor" href="#array.equal_each" aria-label="Link to equal_each">#</a><code><span class="kw">public</span> <a class="type" href="#array_mask">array_mask</a>&lt;S...&gt; <span class="fn">equal_each</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, S...&gt; o ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#array.equal_each" aria-label="Link to equal_each">#</a><code><span class="kw">public</span> <a class="type" href="#array_mask">array_mask</a>&lt;S...&gt; <span class="fn">equal_each</span>&lt;<a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, U...&gt; o ) <span class="kw">const</span> <span class="kw">where</span> S == U</code></pre>
 <div class="doc">
 <p>Where each element equals the matching one of <code>o</code>.</p>
 </div>
@@ -581,7 +581,7 @@ nothing, and an infinity only to itself.</p>
 </div>
 </div>
 <div class="group" id="array.differs">
-<pre class="signature"><a class="anchor" href="#array.differs" aria-label="Link to differs">#</a><code><span class="kw">public</span> <a class="type" href="#array_mask">array_mask</a>&lt;S...&gt; <span class="fn">differs</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, S...&gt; o ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#array.differs" aria-label="Link to differs">#</a><code><span class="kw">public</span> <a class="type" href="#array_mask">array_mask</a>&lt;S...&gt; <span class="fn">differs</span>&lt;<a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, U...&gt; o ) <span class="kw">const</span> <span class="kw">where</span> S == U</code></pre>
 <div class="doc">
 <p>Where each element differs from the matching one of <code>o</code>.</p>
 </div>
@@ -591,7 +591,7 @@ nothing, and an infinity only to itself.</p>
 </div>
 </div>
 <div class="group" id="array.selected">
-<pre class="signature"><a class="anchor" href="#array.selected" aria-label="Link to selected">#</a><code><span class="kw">public</span> <a class="type" href="#array">array</a>&lt;T, dyn&gt; <span class="fn">selected</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array_mask">array_mask</a>&lt;S...&gt; m ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#array.selected" aria-label="Link to selected">#</a><code><span class="kw">public</span> <a class="type" href="#array">array</a>&lt;T, dyn&gt; <span class="fn">selected</span>&lt;<a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array_mask">array_mask</a>&lt;U...&gt; m ) <span class="kw">const</span> <span class="kw">where</span> S == U</code></pre>
 <div class="doc">
 <p>The elements <code>m</code> sets, row-major, as rank 1.</p>
 </div>
@@ -888,19 +888,19 @@ is not less than <code>size()</code>.</p>
 </div>
 </div>
 <div class="group" id="array_mask.operator&amp;">
-<pre class="signature"><a class="anchor" href="#array_mask.operator&amp;" aria-label="Link to operator&amp;">#</a><code><span class="kw">public</span> <a class="type" href="#array_mask">array_mask</a>&lt;S...&gt; <span class="fn">operator&amp;</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array_mask">array_mask</a>&lt;S...&gt; o ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#array_mask.operator&amp;" aria-label="Link to operator&amp;">#</a><code><span class="kw">public</span> <a class="type" href="#array_mask">array_mask</a>&lt;S...&gt; <span class="fn">operator&amp;</span>&lt;<a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array_mask">array_mask</a>&lt;U...&gt; o ) <span class="kw">const</span> <span class="kw">where</span> S == U</code></pre>
 <div class="doc">
 <p>The bits set in both.</p>
 </div>
 </div>
 <div class="group" id="array_mask.operator|">
-<pre class="signature"><a class="anchor" href="#array_mask.operator|" aria-label="Link to operator|">#</a><code><span class="kw">public</span> <a class="type" href="#array_mask">array_mask</a>&lt;S...&gt; <span class="fn">operator|</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array_mask">array_mask</a>&lt;S...&gt; o ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#array_mask.operator|" aria-label="Link to operator|">#</a><code><span class="kw">public</span> <a class="type" href="#array_mask">array_mask</a>&lt;S...&gt; <span class="fn">operator|</span>&lt;<a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array_mask">array_mask</a>&lt;U...&gt; o ) <span class="kw">const</span> <span class="kw">where</span> S == U</code></pre>
 <div class="doc">
 <p>The bits set in either.</p>
 </div>
 </div>
 <div class="group" id="array_mask.operator^">
-<pre class="signature"><a class="anchor" href="#array_mask.operator^" aria-label="Link to operator^">#</a><code><span class="kw">public</span> <a class="type" href="#array_mask">array_mask</a>&lt;S...&gt; <span class="fn">operator^</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array_mask">array_mask</a>&lt;S...&gt; o ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#array_mask.operator^" aria-label="Link to operator^">#</a><code><span class="kw">public</span> <a class="type" href="#array_mask">array_mask</a>&lt;S...&gt; <span class="fn">operator^</span>&lt;<a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array_mask">array_mask</a>&lt;U...&gt; o ) <span class="kw">const</span> <span class="kw">where</span> S == U</code></pre>
 <div class="doc">
 <p>The bits set in exactly one.</p>
 </div>
@@ -1015,7 +1015,7 @@ form <code>kl::identity( n )</code> where the type is not written.</p>
 <section class="entry">
 <h2><span class="kind">function</span> <span class="fn">concatenated</span></h2>
 <div class="group" id="concatenated">
-<pre class="signature"><a class="anchor" href="#concatenated" aria-label="Link to concatenated">#</a><code><a class="type" href="#array">array</a>&lt;T, (A + B), S...&gt; <span class="fn">concatenated</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> A, <a class="prim" href="prelude.html#u64">u64</a> B, <a class="prim" href="prelude.html#u64">u64</a>... S&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, A, S...&gt; a, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, B, S...&gt; b ) <span class="kw">where</span> T : numeric</code></pre>
+<pre class="signature"><a class="anchor" href="#concatenated" aria-label="Link to concatenated">#</a><code><a class="type" href="#array">array</a>&lt;T, (A + B), S...&gt; <span class="fn">concatenated</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> A, <a class="prim" href="prelude.html#u64">u64</a> B, <a class="prim" href="prelude.html#u64">u64</a>... S, <a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, A, S...&gt; a, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, B, U...&gt; b ) <span class="kw">where</span> T : numeric, <span class="kw">where</span> S == U</code></pre>
 <div class="doc">
 <p><code>a</code> then <code>b</code>, along the first axis: <code>kl::concatenated( a, b )</code>.</p>
 </div>
@@ -1024,7 +1024,7 @@ form <code>kl::identity( n )</code> where the type is not written.</p>
 <section class="entry">
 <h2><span class="kind">function</span> <span class="fn">stacked</span></h2>
 <div class="group" id="stacked">
-<pre class="signature"><a class="anchor" href="#stacked" aria-label="Link to stacked">#</a><code><a class="type" href="#array">array</a>&lt;T, 2, S...&gt; <span class="fn">stacked</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a>... S&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, S...&gt; a, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, S...&gt; b ) <span class="kw">where</span> T : numeric</code></pre>
+<pre class="signature"><a class="anchor" href="#stacked" aria-label="Link to stacked">#</a><code><a class="type" href="#array">array</a>&lt;T, 2, S...&gt; <span class="fn">stacked</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a>... S, <a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, S...&gt; a, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, U...&gt; b ) <span class="kw">where</span> T : numeric, <span class="kw">where</span> S == U</code></pre>
 <div class="doc">
 <p><code>a</code> and <code>b</code> as the two entries of a new first axis: <code>kl::stacked( a, b )</code>.</p>
 </div>
@@ -1131,25 +1131,25 @@ leverage when <code>a</code> has full column rank. <code>kl::hat_diagonal( a )</
 <section class="entry">
 <h2><span class="kind">function</span> <span class="fn">minimum</span></h2>
 <div class="group" id="minimum">
-<pre class="signature"><a class="anchor" href="#minimum" aria-label="Link to minimum">#</a><code><a class="type" href="#array">array</a>&lt;T, S...&gt; <span class="fn">minimum</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a>... S&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, S...&gt; first, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, S...&gt; second ) <span class="kw">where</span> T : numeric</code></pre>
+<pre class="signature"><a class="anchor" href="#minimum" aria-label="Link to minimum">#</a><code><a class="type" href="#array">array</a>&lt;T, broadcast(S, U)...&gt; <span class="fn">minimum</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a>... S, <a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, S...&gt; first, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, U...&gt; second ) <span class="kw">where</span> T : numeric</code></pre>
 <div class="doc">
-<p>The smallest of each set of matching elements, as <code>kl::min</code>: <code>kl::minimum( a, b, c )</code>.</p>
+<p>The smaller of each pair of matching elements, as <code>kl::min</code>, the two broadcast.</p>
 </div>
 </div>
 </section>
 <section class="entry">
 <h2><span class="kind">function</span> <span class="fn">maximum</span></h2>
 <div class="group" id="maximum">
-<pre class="signature"><a class="anchor" href="#maximum" aria-label="Link to maximum">#</a><code><a class="type" href="#array">array</a>&lt;T, S...&gt; <span class="fn">maximum</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a>... S&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, S...&gt; first, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, S...&gt; second ) <span class="kw">where</span> T : numeric</code></pre>
+<pre class="signature"><a class="anchor" href="#maximum" aria-label="Link to maximum">#</a><code><a class="type" href="#array">array</a>&lt;T, broadcast(S, U)...&gt; <span class="fn">maximum</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a>... S, <a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, S...&gt; first, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, U...&gt; second ) <span class="kw">where</span> T : numeric</code></pre>
 <div class="doc">
-<p>The largest of each set of matching elements, as <code>kl::max</code>.</p>
+<p>The larger of each pair of matching elements, as <code>kl::max</code>, the two broadcast.</p>
 </div>
 </div>
 </section>
 <section class="entry">
 <h2><span class="kind">function</span> <span class="fn">select</span></h2>
 <div class="group" id="select">
-<pre class="signature"><a class="anchor" href="#select" aria-label="Link to select">#</a><code><a class="type" href="#array">array</a>&lt;T, S...&gt; <span class="fn">select</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a>... S&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array_mask">array_mask</a>&lt;S...&gt; m, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, S...&gt; a, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, S...&gt; b ) <span class="kw">where</span> T : numeric</code></pre>
+<pre class="signature"><a class="anchor" href="#select" aria-label="Link to select">#</a><code><a class="type" href="#array">array</a>&lt;T, S...&gt; <span class="fn">select</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a>... M, <a class="prim" href="prelude.html#u64">u64</a>... S, <a class="prim" href="prelude.html#u64">u64</a>... U&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array_mask">array_mask</a>&lt;M...&gt; m, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, S...&gt; a, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#array">array</a>&lt;T, U...&gt; b ) <span class="kw">where</span> T : numeric, <span class="kw">where</span> M == S, <span class="kw">where</span> S == U</code></pre>
 <div class="doc">
 <p><code>a</code>'s element where <code>m</code> is set, and <code>b</code>'s where it is clear.</p>
 </div>

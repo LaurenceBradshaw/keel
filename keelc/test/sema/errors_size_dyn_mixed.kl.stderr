@@ -1,0 +1,13 @@
+error: `S` cannot be both `dyn, 3` and `4, 3`
+  --> sema/errors_size_dyn_mixed.kl:35:34
+   |
+35 |     _                 = both( a, b );
+   |                                  ^ an earlier argument already made it `dyn, 3`; `dyn` and a constant make different types: convert one argument, or give each its own sizes and relate them with `where`
+
+error: `N` cannot be both `dyn` and `4`
+  --> sema/errors_size_dyn_mixed.kl:37:34
+   |
+37 |     _                 = pair( c, sized( 4 ) );
+   |                                  ^^^^^^^^^^ an earlier argument already made it `dyn`; `dyn` and a constant make different types: convert one argument, or give each its own sizes and relate them with `where`
+
+2 errors generated

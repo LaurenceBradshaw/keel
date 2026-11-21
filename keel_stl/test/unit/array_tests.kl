@@ -1,6 +1,7 @@
 // `kl::array`: building at constant and `dyn` sizes, indexing, the operators and broadcasting,
 // products and linear algebra, comparing and masks, the three forms of each reduction, changing
-// the shape, slices and windows, sorting, converting, the scalar maths, and walking.
+// the shape, slices and windows, sorting, converting, the scalar maths, walking, and mixing
+// constant and `dyn` sizes.
 import kl::array;
 import kl::math;
 import kl::optional;
@@ -341,4 +342,41 @@ private void walking( ref kl::test::context c )
         x *= 2;
     }
     c.check_eq( a.sum(), 20 );
+}
+
+private void mixing( ref kl::test::context c )
+{
+    u64                    rows = 2;
+    kl::array<f64, dyn, 2> d    = kl::filled( 1.0, rows, 2 );
+    kl::array<f64, 2, 2>   k    = kl::filled( 2.0, 2, 2 );
+    c.check_eq( d.dot( k ), 8.0 );
+    c.check( d.less( k ).all() );
+    c.check( kl::stacked( d, k ).sum() == 12.0 );
+    c.check( kl::select( d.less( k ), k, d ).sum() == 8.0 );
+    c.check( kl::maximum( d, kl::of( [ 3.0, 0.0 ] ) ).equal_each( kl::of( [ [ 3.0, 1.0 ], [ 3.0, 1.0 ] ] ) ).all() );
+    k += d;
+    c.check_eq( k.sum(), 12.0 );
+    d += kl::of( [ 1.0, 2.0 ] );
+    c.check_eq( d.sum(), 10.0 );
+
+    c.expect_panic(
+        "`dot` needs `S == U`, but `S` is 3, 2 and `U` is 2, 2",
+        fn[]()
+        {
+            u64                    three = 3;
+            kl::array<f64, dyn, 2> tall  = kl::zeros( three, 2 );
+            kl::array<f64, 2, 2>   square = kl::zeros( 2, 2 );
+            _                             = tall.dot( square );
+        }
+    );
+    c.expect_panic(
+        "`operator+=` needs `S == broadcast(S, U)`, but `S` is 2, 2 and `U` is 3, 2",
+        fn[]()
+        {
+            u64                    three = 3;
+            kl::array<f64, dyn, 2> tall  = kl::zeros( three, 2 );
+            kl::array<f64, 2, 2>   square = kl::zeros( 2, 2 );
+            square += tall;
+        }
+    );
 }

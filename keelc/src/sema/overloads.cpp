@@ -56,6 +56,39 @@ bool open_lambda( std::span<const Argument_shape> shapes )
     );
 }
 
+// Whether two sizes, or two packs of the same rank, differ only where one side is `dyn`.
+bool differ_by_dyn( const Type_table& table, Type_id a, Type_id b )
+{
+    if( table.is_size( a ) && table.is_size( b ) )
+    {
+        return table.is_dyn( a ) != table.is_dyn( b );
+    }
+
+    if( !table.is_pack( a ) || !table.is_pack( b ) || table.get( a ).arguments.size() != table.get( b ).arguments.size() )
+    {
+        return false;
+    }
+
+    bool differ = false;
+
+    for( std::size_t k = 0; k < table.get( a ).arguments.size(); ++k )
+    {
+        const Type_id x = table.get( a ).arguments[k];
+        const Type_id y = table.get( b ).arguments[k];
+
+        if( x != y )
+        {
+            if( !differ_by_dyn( table, x, y ) )
+            {
+                return false;
+            }
+            differ = true;
+        }
+    }
+
+    return differ;
+}
+
 // Whether binding parameters could make `a` and `b` one type. Two kinds never meet, so `i32[R * C]`
 // and `i32[C][R]` stay apart, nor `T` and a type naming `T`, as `vec<T, N>`; past arrays it is
 // coarse, and a union may collapse to a member.
@@ -669,7 +702,14 @@ std::optional<Deduction> Overloads::deduce_type_arguments(
                     table_.name( already->second ),
                     table_.name( found->second )
                 ),
-                fmt::format( "an earlier argument already made it `{}`", table_.name( already->second ) )
+                fmt::format(
+                    "an earlier argument already made it `{}`{}",
+                    table_.name( already->second ),
+                    differ_by_dyn( table_, already->second, found->second )
+                        ? "; `dyn` and a constant make different types: convert one argument, or give each "
+                          "its own sizes and relate them with `where`"
+                        : ""
+                )
             );
 
             return std::nullopt;
@@ -2594,6 +2634,7 @@ void Overloads::check_size_sources( Node_id call, Node_id callable, std::span<co
 
     const Node_id list = kind == Node_kind::Function_decl      ? ast_.type_param_list( callable )
                          : kind == Node_kind::Constructor_decl ? ast_.type_param_list( aggregate )
+                         : kind == Node_kind::Method_decl      ? ast_.own_type_param_list( callable )
                                                                : Node_id {};
     for( const Node_id clause : list.is_valid() ? ast_.where_clauses( list ) : std::vector<Node_id> {} )
     {

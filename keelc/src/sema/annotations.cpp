@@ -1357,6 +1357,78 @@ Type_id Annotations::shape_call( Node_id call )
     return table_.shape_op( found->op, operands );
 }
 
+void Annotations::resolve_size_condition( Node_id comparison )
+{
+    const Node_id lhs = ast_.lhs( comparison );
+    const Node_id rhs = ast_.rhs( comparison );
+
+    // A pack named bare or a shape function's call, resolved here; invalid for the rest, a size.
+    const auto shape = [&]( Node_id side )
+    {
+        if( ast_.kind( side ) == Node_kind::Name_expr )
+        {
+            const Node_id named = constant_folder_.size_parameter_named( side );
+            if( named.is_valid() && table_.is_pack_parameter( types_.type_of( named ) ) )
+            {
+                return types_.record( side, types_.type_of( named ) );
+            }
+        }
+        if( ast_.kind( side ) == Node_kind::Call_expr )
+        {
+            const Type_id result = shape_call( side );
+            return table_.is_error( result ) ? result : types_.record( side, result );
+        }
+        return Type_id {};
+    };
+
+    const Type_id left     = shape( lhs );
+    const Type_id right    = shape( rhs );
+    const auto    is_shape = [&]( Type_id t ) { return t.is_valid() && !table_.is_error( t ) && !table_.is_size( t ); };
+    const Type_id error    = table_.builtin( Type_kind::Error );
+
+    if( !is_shape( left ) && !is_shape( right ) )
+    {
+        if( !left.is_valid() )
+        {
+            resolve_size_side( lhs );
+        }
+        if( !right.is_valid() )
+        {
+            resolve_size_side( rhs );
+        }
+        return;
+    }
+
+    if( is_shape( left ) != is_shape( right ) )
+    {
+        const Node_id pack = is_shape( left ) ? lhs : rhs;
+        const Node_id size = is_shape( left ) ? rhs : lhs;
+        if( !( is_shape( left ) ? right : left ).is_valid() )
+        {
+            resolve_size_side( size );
+        }
+        reporter_.error_at(
+            ast_.span( pack ),
+            fmt::format( "`{}` is a pack of sizes, and the other side one size", table_.name( types_.type_of( pack ) ) ),
+            "compare it with another pack, as `S == U`, or read one size, `S[0]`, in a body"
+        );
+        types_.record( lhs, error );
+        types_.record( rhs, error );
+        return;
+    }
+
+    if( ast_.op( comparison ) != Token_kind::Equal_equal )
+    {
+        reporter_.error_at(
+            ast_.span( comparison ),
+            fmt::format( "two packs of sizes compare only with `==`, not `{}`", token_kind_spelling( ast_.op( comparison ) ) ),
+            "`==` holds when they have the same rank and every size matches"
+        );
+        types_.record( lhs, error );
+        types_.record( rhs, error );
+    }
+}
+
 Type_id Annotations::resolve_size_side( Node_id side )
 {
     if( ast_.kind( side ) == Node_kind::Error )

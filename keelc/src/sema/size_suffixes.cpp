@@ -127,7 +127,8 @@ void Size_suffixes::collect( Node_id id, Node_id owner, Node_kind parent )
     const Node_kind kind = ast_.kind( id );
 
     // A method's list repeats its aggregate's clauses, which the aggregate's instance checks.
-    if( kind == Node_kind::Function_decl || is_aggregate( kind ) || kind == Node_kind::Enum_decl )
+    if( kind == Node_kind::Function_decl || is_aggregate( kind ) || kind == Node_kind::Enum_decl ||
+        ( kind == Node_kind::Method_decl && ast_.own_type_param_list( id ).is_valid() ) )
     {
         collect_conditions( id );
     }
@@ -197,7 +198,9 @@ void Size_suffixes::collect( Node_id id, Node_id owner, Node_kind parent )
 
 void Size_suffixes::collect_conditions( Node_id declaration )
 {
-    for( const Node_id clause : ast_.where_clauses( ast_.type_param_list( declaration ) ) )
+    const bool method = ast_.kind( declaration ) == Node_kind::Method_decl;
+    for( const Node_id clause :
+         ast_.where_clauses( method ? ast_.own_type_param_list( declaration ) : ast_.type_param_list( declaration ) ) )
     {
         if( ast_.kind( clause ) != Node_kind::Size_condition )
         {
@@ -512,26 +515,53 @@ bool Size_suffixes::report_condition( const Instance& instance, Span origin, con
             continue;
         }
 
-        // A run-time side is checked where it runs.
-        if( runtime( condition.lhs, bindings ) || runtime( condition.rhs, bindings ) )
-        {
-            continue;
-        }
+        bool computed = true;
 
-        const std::optional<u64> lhs = table_.evaluate( condition.lhs, bindings );
-        const std::optional<u64> rhs = table_.evaluate( condition.rhs, bindings );
-
-        if( lhs && rhs )
+        // Two shapes: the same rank, and each pair of constant sizes equal; a `dyn` is checked where it runs.
+        if( table_.is_pack_parameter( condition.lhs ) || table_.get( condition.lhs ).kind == Type_kind::Pack )
         {
-            const bool holds = condition.op == Token_kind::Less            ? *lhs < *rhs
-                               : condition.op == Token_kind::Less_equal    ? *lhs <= *rhs
-                               : condition.op == Token_kind::Greater       ? *lhs > *rhs
-                               : condition.op == Token_kind::Greater_equal ? *lhs >= *rhs
-                               : condition.op == Token_kind::Equal_equal   ? *lhs == *rhs
-                                                                           : *lhs != *rhs;
-            if( holds )
+            const Type_id lhs = table_.substitute( condition.lhs, bindings );
+            const Type_id rhs = table_.substitute( condition.rhs, bindings );
+            computed          = table_.is_pack( lhs ) && table_.is_pack( rhs );
+            if( computed && table_.get( lhs ).arguments.size() == table_.get( rhs ).arguments.size() &&
+                std::ranges::equal(
+                    table_.get( lhs ).arguments,
+                    table_.get( rhs ).arguments,
+                    [&]( Type_id a, Type_id b )
+                    {
+                        const std::optional<u64> x = table_.evaluate( a, {} );
+                        const std::optional<u64> y = table_.evaluate( b, {} );
+                        return !x || !y || *x == *y;
+                    }
+                ) )
             {
                 continue;
+            }
+        }
+        else
+        {
+            // A run-time side is checked where it runs.
+            if( runtime( condition.lhs, bindings ) || runtime( condition.rhs, bindings ) )
+            {
+                continue;
+            }
+
+            const std::optional<u64> lhs = table_.evaluate( condition.lhs, bindings );
+            const std::optional<u64> rhs = table_.evaluate( condition.rhs, bindings );
+            computed                     = lhs && rhs;
+
+            if( computed )
+            {
+                const bool holds = condition.op == Token_kind::Less            ? *lhs < *rhs
+                                   : condition.op == Token_kind::Less_equal    ? *lhs <= *rhs
+                                   : condition.op == Token_kind::Greater       ? *lhs > *rhs
+                                   : condition.op == Token_kind::Greater_equal ? *lhs >= *rhs
+                                   : condition.op == Token_kind::Equal_equal   ? *lhs == *rhs
+                                                                               : *lhs != *rhs;
+                if( holds )
+                {
+                    continue;
+                }
             }
         }
 
@@ -552,7 +582,7 @@ bool Size_suffixes::report_condition( const Instance& instance, Span origin, con
             fmt::format(
                 "the condition at {} {} when {}",
                 reporter_.position( ast_.span( condition.node ) ),
-                lhs && rhs ? "fails" : "cannot be computed",
+                computed ? "fails" : "cannot be computed",
                 when.empty() ? "nothing varies" : when
             )
         );
@@ -615,8 +645,17 @@ bool Size_suffixes::prove( const Generic_call& edge )
             continue;
         }
 
-        const Type_id lhs = table_.substitute( condition.lhs, bindings );
-        const Type_id rhs = table_.substitute( condition.rhs, bindings );
+        // A pack passed on whole is its own spread, `S...`; read it as `S`, as the caller's clauses do.
+        const auto unspread = [&]( Type_id size )
+        {
+            const Type& described = table_.get( size );
+            return described.kind == Type_kind::Pack && described.width == 0 && described.arguments.size() == 1 &&
+                           table_.is_pack_parameter( described.arguments[0] )
+                       ? described.arguments[0]
+                       : size;
+        };
+        const Type_id lhs = unspread( table_.substitute( condition.lhs, bindings ) );
+        const Type_id rhs = unspread( table_.substitute( condition.rhs, bindings ) );
 
         std::vector<Type_id> open;
         parameters_of( lhs, open );
@@ -843,6 +882,10 @@ std::string Size_suffixes::value_of( Type_id parameter, const Bindings& bindings
         return fmt::format( "{}", *table_.evaluate( parameter, bindings ) );
     }
     const std::optional<std::vector<u64>> sizes = table_.evaluate_pack( parameter, bindings );
+    if( !sizes )
+    {
+        return std::string( table_.name( table_.substitute( parameter, bindings ) ) ); // holds a `dyn`
+    }
     return sizes->empty() ? "empty" : fmt::format( "{}", fmt::join( *sizes, ", " ) );
 }
 

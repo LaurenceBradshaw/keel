@@ -28,10 +28,4 @@ error: a `where` clause needs type parameters
 22 | u64 plain() where 1 < 2
    |             ^^^^^^^^^^^ write them on the name, as in `T f<T>(T a) where T : copyable`
 
-error: a method cannot take a comparison of sizes
-  --> sema/errors_size_condition_forms.kl:31:28
-   |
-31 |     u64 get<u64 M>() const where M > N
-   |                            ^^^^^^^^^^^ write it on a free generic function, or on the type
-
-6 errors generated
+5 errors generated

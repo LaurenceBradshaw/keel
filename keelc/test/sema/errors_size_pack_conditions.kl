@@ -1,0 +1,37 @@
+// Two packs compared in a `where` clause: refused at an instance whose constant sizes differ or
+// whose ranks do, shown by the caller's own clause or not at all, and only `==` between two packs;
+// a method takes one beside sizes of its own.
+struct G<u64... S(dyn)>
+{
+    u64 x;
+};
+
+class H<u64... S>
+{
+    u64 x;
+
+    public H() { x = 0; }
+    public u64 plain() const where S == S { return 0; }
+    public u64 own<u64... U>( const ref H<U...> _ ) const where S == U { return 0; }
+};
+
+u64 same<u64... S, u64... U>( G<S...> _, G<U...> _ ) where S == U { return 0; }
+u64 into<u64... S, u64... U>( G<S...> _, G<U...> _ ) where S == broadcast( S, U ) { return 0; }
+u64 shown<u64... S, u64... U>( G<S...> p, G<U...> q ) where S == U { return same( p, q ); }
+u64 unshown<u64... S, u64... U>( G<S...> p, G<U...> q ) { return same( p, q ); }
+u64 itself<u64... S>( G<S...> p, G<S...> q ) { return same( p, q ); }
+u64 mixed<u64 N, u64... S>( G<S...> _ ) where S == N { return 0; }
+u64 differs<u64... S, u64... U>( G<S...> _, G<U...> _ ) where S != U { return 0; }
+
+i32 main()
+{
+    _ = same( G<4, 3> { 0 }, G<5, 3> { 0 } );
+    _ = same( G<4, 3> { 0 }, G<3> { 0 } );
+    _ = into( G<3> { 0 }, G<4, 3> { 0 } );
+    _ = into( G<4, 3> { 0 }, G<2, 3> { 0 } );
+    _ = into( G<4, 3> { 0 }, G<1, 3> { 0 } );
+    _ = shown( G<4, 3> { 0 }, G<4, 3> { 0 } );
+    _ = itself( G<4, 3> { 0 }, G<4, 3> { 0 } );
+    _ = H<2>().own( H<3>() );
+    return 0;
+}

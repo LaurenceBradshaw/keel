@@ -1,0 +1,73 @@
+// `where` clauses comparing two packs, checked when the program runs where a side holds a `dyn`:
+// on free functions, methods and an operator, through `broadcast`, and `product` of a pack against
+// one size; the last call fails, a `dyn` size that `broadcast` cannot pair.
+import t::console;
+
+class Grid<u64... S(dyn)>
+{
+    public u64 hits;
+
+    public Grid()
+    {
+        hits = 0;
+    }
+
+    public u64 rank_with<u64... U>( const ref Grid<U...> _ ) const where S == U
+    {
+        return S.size;
+    }
+
+    public void operator+=<u64... U>( const ref Grid<U...> _ ) where S == broadcast( S, U )
+    {
+        hits += 1;
+    }
+};
+
+Grid<S...> sized<u64... S>( S... n )
+{
+    return Grid<S...>();
+}
+
+u64 same<u64... S, u64... U>( const ref Grid<S...> _, const ref Grid<U...> _ ) where S == U
+{
+    return 1;
+}
+
+u64 into<u64... S, u64... U>( const ref Grid<S...> _, const ref Grid<U...> _ ) where S == broadcast( S, U )
+{
+    return 2;
+}
+
+u64 flat<u64 N, u64... S>( N n, const ref Grid<S...> _ ) where product( S ) == N
+{
+    return n;
+}
+
+// Shown by its own clause, so the call inside needs no check of its own.
+u64 relay<u64... A, u64... B>( const ref Grid<A...> p, const ref Grid<B...> q ) where A == B
+{
+    return same( p, q ) + 10;
+}
+
+i32 main()
+{
+    u64          rows = 4;
+    u64          one  = 1;
+    u64          bad  = 7;
+    Grid<dyn, 3> a    = sized( rows, 3 );
+    Grid<4, 3>   b    = sized( 4, 3 );
+    Grid<dyn, 3> c    = sized( one, 3 );
+    Grid<dyn, 3> d    = sized( bad, 3 );
+
+    t::print( same( a, b ) );
+    t::print( into( b, a ) );
+    t::print( into( b, c ) );
+    t::print( a.rank_with( b ) );
+    b += c;
+    a += b;
+    t::print( a.hits + b.hits );
+    t::print( flat( 12, a ) );
+    t::print( relay( a, b ) );
+    t::print( into( b, d ) );
+    return 0;
+}

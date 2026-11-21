@@ -6,6 +6,7 @@
 #include <cassert>
 #include <cmath>
 #include <filesystem>
+#include <functional>
 #include <iterator>
 #include <optional>
 #include <unordered_map>
@@ -1102,6 +1103,7 @@ void Lowering::check_sizes(
     const std::string_view         name = interner_.text( ast_.name( kind == Node_kind::Constructor_decl ? owner : callee ) );
     const Node_id                  list = kind == Node_kind::Function_decl      ? ast_.type_param_list( callee )
                                           : kind == Node_kind::Constructor_decl ? ast_.type_param_list( owner )
+                                          : kind == Node_kind::Method_decl      ? ast_.own_type_param_list( callee )
                                                                                 : Node_id {};
 
     const auto operand_of = [&]( Node_id param )
@@ -1294,32 +1296,47 @@ void Lowering::check_sizes(
                 }
                 return;
             }
-            if( table.get( size ).kind == Type_kind::Size && is_arithmetic( Size_op( table.get( size ).width ) ) )
+            const Type& described = table.get( size );
+            if( ( described.kind == Type_kind::Size && described.width != 0 ) || described.kind == Type_kind::Pack )
             {
-                self( self, table.get( size ).arguments[0] );
-                self( self, table.get( size ).arguments[1] );
+                for( const Type_id operand : described.arguments )
+                {
+                    self( self, operand );
+                }
             }
         };
         collect( collect, lhs );
         collect( collect, rhs );
 
-        const auto here = [&]( Type_id parameter )
+        // A size's value here; a pack's `element`th.
+        const auto here = [&]( Type_id parameter, u32 element )
         {
-            const auto found = values.find( std::pair( parameter.v, 0u ) );
+            const auto found = values.find( std::pair( parameter.v, element ) );
             if( found != values.end() )
             {
                 return found->second;
             }
-            const std::optional<u64> known = table.evaluate( table.substitute( parameter, callee_bound ), {} );
+            const Type_id            bound = table.substitute( parameter, callee_bound );
+            const std::optional<u64> known =
+                table.is_pack_parameter( parameter ) && table.is_pack( bound ) && element < table.get( bound ).arguments.size()
+                    ? table.evaluate( table.get( bound ).arguments[element], {} )
+                    : table.evaluate( bound, {} );
             return constant( literal_pool_.add_integer( known.value_or( 0 ) ), word );
         };
+        const auto rank = [&]( Type_id pack ) { return table.get( table.substitute( pack, callee_bound ) ).arguments.size(); };
 
         std::string          when;
         std::vector<Operand> shown;
         for( const Type_id parameter : reads )
         {
-            when += fmt::format( "{}`{}` is {{}}", when.empty() ? "" : " and ", table.name( parameter ) );
-            shown.push_back( here( parameter ) );
+            const std::size_t count = table.is_pack_parameter( parameter ) ? rank( parameter ) : 1;
+            std::string       each  = count == 0 ? "empty" : "";
+            for( u32 e = 0; e < count; ++e )
+            {
+                each += e == 0 ? "{}" : ", {}";
+                shown.push_back( here( parameter, e ) );
+            }
+            when += fmt::format( "{}`{}` is {}", when.empty() ? "" : " and ", table.name( parameter ), each );
         }
         const auto spelled_side = [&]( Type_id size )
         {
@@ -1336,15 +1353,38 @@ void Lowering::check_sizes(
             spelled_side( rhs ),
             when
         );
+        const auto require = [&]( Operand holds ) { require_sizes( holds, text, shown, span ); };
+        const auto test    = [&]( Token_kind op, Operand a, Operand b )
+        { return temporary( binary( op, a, b, boolean ), boolean, span ); };
+        const Operand one = constant( literal_pool_.add_integer( 1 ), word );
 
         // A side that cannot be computed fails, as at compile time.
-        const auto side = [&]( auto& self, Type_id size ) -> Operand
+        std::function<std::vector<Operand>( Type_id )> axes;
+        const auto                                     side = [&]( auto& self, Type_id size ) -> Operand
         {
             if( table.is_size_parameter( size ) )
             {
-                return here( size );
+                return here( size, 0 );
             }
             const Type& described = table.get( size );
+            if( described.kind == Type_kind::Size && Size_op( described.width ) == Size_op::Product )
+            {
+                Operand product = one;
+                for( const Operand each : axes( described.arguments[0] ) )
+                {
+                    require( temporary(
+                        unary(
+                            Token_kind::Bang,
+                            temporary( overflows( Token_kind::Star, product, each, boolean ), boolean, span ),
+                            boolean
+                        ),
+                        boolean,
+                        span
+                    ) );
+                    product = temporary( binary( Token_kind::Star, product, each, word ), word, span );
+                }
+                return product;
+            }
             if( described.kind != Type_kind::Size || !is_arithmetic( Size_op( described.width ) ) )
             {
                 return constant( literal_pool_.add_integer( table.evaluate( size, {} ).value_or( 0 ) ), word );
@@ -1355,24 +1395,113 @@ void Lowering::check_sizes(
             const Operand    a  = self( self, described.arguments[0] );
             const Operand    b  = self( self, described.arguments[1] );
             const Token_kind op = ops[described.width - u8( Size_op::Add )];
-            const Operand    fits =
+            require(
                 op == Token_kind::Slash || op == Token_kind::Percent
-                       ? temporary(
-                          binary( Token_kind::Bang_equal, b, constant( literal_pool_.add_integer( 0 ), word ), boolean ),
-                          boolean,
-                          span
-                      )
-                       : temporary(
+                    ? test( Token_kind::Bang_equal, b, constant( literal_pool_.add_integer( 0 ), word ) )
+                    : temporary(
                           unary( Token_kind::Bang, temporary( overflows( op, a, b, boolean ), boolean, span ), boolean ),
                           boolean,
                           span
-                      );
-            require_sizes( fits, text, shown, span );
+                      )
+            );
             return temporary( binary( op, a, b, word ), word, span );
         };
+
+        // A shape's sizes here, axis by axis; a broadcast also needs each pair to agree or hold a 1.
+        axes = [&]( Type_id shape ) -> std::vector<Operand>
+        {
+            std::vector<Operand> sizes;
+            if( table.is_pack_parameter( shape ) )
+            {
+                for( u32 e = 0; e < rank( shape ); ++e )
+                {
+                    sizes.push_back( here( shape, e ) );
+                }
+                return sizes;
+            }
+            const Type& described = table.get( shape );
+            if( described.width == 0 )
+            {
+                for( const Type_id each : described.arguments )
+                {
+                    if( table.is_pack_parameter( each ) || table.get( each ).kind == Type_kind::Pack )
+                    {
+                        std::ranges::move( axes( each ), std::back_inserter( sizes ) );
+                    }
+                    else
+                    {
+                        sizes.push_back( side( side, each ) );
+                    }
+                }
+                return sizes;
+            }
+            std::vector<Operand> operand = axes( described.arguments.back() );
+            switch( Size_op( described.width ) )
+            {
+            case Size_op::Reversed:
+                std::ranges::reverse( operand );
+                return operand;
+            case Size_op::Dropped:
+            case Size_op::Inserted:
+            {
+                const std::optional<u64> axis = table.evaluate( table.substitute( described.arguments[0], callee_bound ), {} );
+                const bool               dropped = Size_op( described.width ) == Size_op::Dropped;
+                if( !axis || *axis >= operand.size() + ( dropped ? 0 : 1 ) )
+                {
+                    require( constant( literal_pool_.add_integer( 0 ), boolean ) ); // sema refuses a constant axis past the end
+                    return operand;
+                }
+                if( dropped )
+                {
+                    operand.erase( operand.begin() + std::ptrdiff_t( *axis ) );
+                }
+                else
+                {
+                    operand.insert( operand.begin() + std::ptrdiff_t( *axis ), one );
+                }
+                return operand;
+            }
+            case Size_op::Broadcast:
+            {
+                const std::vector<Operand> left = axes( described.arguments[0] );
+                sizes.resize( std::max( left.size(), operand.size() ) );
+                for( std::size_t i = 0; i < sizes.size(); ++i )
+                {
+                    const Operand a      = i < left.size() ? left[left.size() - 1 - i] : one;
+                    const Operand b      = i < operand.size() ? operand[operand.size() - 1 - i] : one;
+                    const Operand unit_a = test( Token_kind::Equal_equal, a, one );
+                    const Operand unit_b = test( Token_kind::Equal_equal, b, one );
+                    const Operand same   = test( Token_kind::Equal_equal, a, b );
+                    require( temporary(
+                        select( unit_a, unit_a, temporary( select( unit_b, unit_b, same ), boolean, span ) ), boolean, span
+                    ) );
+                    sizes[sizes.size() - 1 - i] = temporary( select( unit_a, b, a ), word, span );
+                }
+                return sizes;
+            }
+            default:
+                return operand;
+            }
+        };
+
+        if( table.is_pack_parameter( lhs ) || table.get( lhs ).kind == Type_kind::Pack )
+        {
+            const std::vector<Operand> left  = axes( lhs );
+            const std::vector<Operand> right = axes( rhs );
+            if( left.size() != right.size() )
+            {
+                require( constant( literal_pool_.add_integer( 0 ), boolean ) ); // sema reports a rank that differs
+            }
+            for( std::size_t k = 0; k < left.size() && k < right.size(); ++k )
+            {
+                require( test( Token_kind::Equal_equal, left[k], right[k] ) );
+            }
+            continue;
+        }
+
         const Operand left  = side( side, lhs );
         const Operand right = side( side, rhs );
-        require_sizes( temporary( binary( ast_.op( comparison ), left, right, boolean ), boolean, span ), text, shown, span );
+        require( test( ast_.op( comparison ), left, right ) );
     }
 }
 

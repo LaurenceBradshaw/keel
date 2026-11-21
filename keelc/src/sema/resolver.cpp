@@ -515,6 +515,7 @@ void Resolver::visit( Node_id id )
         return;
     case Node_kind::Type_arg_list:
     case Node_kind::Array_type:
+    case Node_kind::Size_condition:
         ++in_type_;
         for( const Node_id child : ast_.children( id ) )
         {

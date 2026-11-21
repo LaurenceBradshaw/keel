@@ -337,7 +337,7 @@ class array<T, u64... S(dyn)> implements iterable<T> where T : numeric
     }
 
     /// Each element made its sum with `o`'s, `o` broadcast to this shape.
-    public void operator+=<u64... U>( const ref array<T, U...> o )
+    public void operator+=<u64... U>( const ref array<T, U...> o ) where S == broadcast( S, U )
     {
         combine( o, fn[]( T x, T y ) { return x + y; } );
     }
@@ -367,7 +367,7 @@ class array<T, u64... S(dyn)> implements iterable<T> where T : numeric
     }
 
     /// Each element made its difference with `o`'s, `o` broadcast to this shape.
-    public void operator-=<u64... U>( const ref array<T, U...> o )
+    public void operator-=<u64... U>( const ref array<T, U...> o ) where S == broadcast( S, U )
     {
         combine( o, fn[]( T x, T y ) { return x - y; } );
     }
@@ -397,7 +397,7 @@ class array<T, u64... S(dyn)> implements iterable<T> where T : numeric
     }
 
     /// Each element made its product with `o`'s, `o` broadcast to this shape.
-    public void operator*=<u64... U>( const ref array<T, U...> o )
+    public void operator*=<u64... U>( const ref array<T, U...> o ) where S == broadcast( S, U )
     {
         combine( o, fn[]( T x, T y ) { return x * y; } );
     }
@@ -427,7 +427,7 @@ class array<T, u64... S(dyn)> implements iterable<T> where T : numeric
     }
 
     /// Each element made its quotient with `o`'s, `o` broadcast to this shape.
-    public void operator/=<u64... U>( const ref array<T, U...> o )
+    public void operator/=<u64... U>( const ref array<T, U...> o ) where S == broadcast( S, U )
     {
         combine( o, fn[]( T x, T y ) { return x / y; } );
     }
@@ -465,7 +465,7 @@ class array<T, u64... S(dyn)> implements iterable<T> where T : numeric
     }
 
     /// Each element made its remainder with `o`'s, `o` broadcast to this shape.
-    public void operator%=<u64... U>( const ref array<T, U...> o ) where T : integral
+    public void operator%=<u64... U>( const ref array<T, U...> o ) where T : integral, where S == broadcast( S, U )
     {
         combine( o, fn[]( T x, T y ) { return x % y; } );
     }
@@ -495,7 +495,7 @@ class array<T, u64... S(dyn)> implements iterable<T> where T : numeric
     }
 
     /// Each element made its bitwise and with `o`'s, `o` broadcast to this shape.
-    public void operator&=<u64... U>( const ref array<T, U...> o ) where T : integral
+    public void operator&=<u64... U>( const ref array<T, U...> o ) where T : integral, where S == broadcast( S, U )
     {
         combine( o, fn[]( T x, T y ) { return x & y; } );
     }
@@ -525,7 +525,7 @@ class array<T, u64... S(dyn)> implements iterable<T> where T : numeric
     }
 
     /// Each element made its bitwise or with `o`'s, `o` broadcast to this shape.
-    public void operator|=<u64... U>( const ref array<T, U...> o ) where T : integral
+    public void operator|=<u64... U>( const ref array<T, U...> o ) where T : integral, where S == broadcast( S, U )
     {
         combine( o, fn[]( T x, T y ) { return x | y; } );
     }
@@ -555,7 +555,7 @@ class array<T, u64... S(dyn)> implements iterable<T> where T : numeric
     }
 
     /// Each element made its bitwise exclusive or with `o`'s, `o` broadcast to this shape.
-    public void operator^=<u64... U>( const ref array<T, U...> o ) where T : integral
+    public void operator^=<u64... U>( const ref array<T, U...> o ) where T : integral, where S == broadcast( S, U )
     {
         combine( o, fn[]( T x, T y ) { return x ^ y; } );
     }
@@ -621,7 +621,7 @@ class array<T, u64... S(dyn)> implements iterable<T> where T : numeric
     /// --- Products ---
 
     /// The sum of each element times the matching one of `o`: the inner product at rank 1.
-    public T dot( const ref array<T, S...> o ) const
+    public T dot<u64... U>( const ref array<T, U...> o ) const where S == U
     {
         return kernel::dot( as_run(), o.as_run() );
     }
@@ -662,13 +662,13 @@ class array<T, u64... S(dyn)> implements iterable<T> where T : numeric
 
     /// Whether every `|a - b| <= atol + rtol * |b|`, `b` being `o`'s element. A NaN is close to
     /// nothing, and an infinity only to itself.
-    public bool approx_equal( const ref array<T, S...> o, T rtol = 1e-5, T atol = 1e-8 ) const where T : floating
+    public bool approx_equal<u64... U>( const ref array<T, U...> o, T rtol = 1e-5, T atol = 1e-8 ) const where T : floating, where S == U
     {
         return kernel::approx_equal( as_run(), o.as_run(), rtol, atol );
     }
 
     /// Where each element is less than the matching one of `o`.
-    public array_mask<S...> less( const ref array<T, S...> o ) const
+    public array_mask<S...> less<u64... U>( const ref array<T, U...> o ) const where S == U
     {
         return compared( o, fn[]( T x, T y ) { return x < y; } );
     }
@@ -680,7 +680,7 @@ class array<T, u64... S(dyn)> implements iterable<T> where T : numeric
     }
 
     /// Where each element is greater than the matching one of `o`.
-    public array_mask<S...> greater( const ref array<T, S...> o ) const
+    public array_mask<S...> greater<u64... U>( const ref array<T, U...> o ) const where S == U
     {
         return compared( o, fn[]( T x, T y ) { return x > y; } );
     }
@@ -692,7 +692,7 @@ class array<T, u64... S(dyn)> implements iterable<T> where T : numeric
     }
 
     /// Where each element is at most the matching one of `o`.
-    public array_mask<S...> less_equal( const ref array<T, S...> o ) const
+    public array_mask<S...> less_equal<u64... U>( const ref array<T, U...> o ) const where S == U
     {
         return compared( o, fn[]( T x, T y ) { return x <= y; } );
     }
@@ -704,7 +704,7 @@ class array<T, u64... S(dyn)> implements iterable<T> where T : numeric
     }
 
     /// Where each element is at least the matching one of `o`.
-    public array_mask<S...> greater_equal( const ref array<T, S...> o ) const
+    public array_mask<S...> greater_equal<u64... U>( const ref array<T, U...> o ) const where S == U
     {
         return compared( o, fn[]( T x, T y ) { return x >= y; } );
     }
@@ -716,7 +716,7 @@ class array<T, u64... S(dyn)> implements iterable<T> where T : numeric
     }
 
     /// Where each element equals the matching one of `o`.
-    public array_mask<S...> equal_each( const ref array<T, S...> o ) const
+    public array_mask<S...> equal_each<u64... U>( const ref array<T, U...> o ) const where S == U
     {
         return compared( o, fn[]( T x, T y ) { return x == y; } );
     }
@@ -728,7 +728,7 @@ class array<T, u64... S(dyn)> implements iterable<T> where T : numeric
     }
 
     /// Where each element differs from the matching one of `o`.
-    public array_mask<S...> differs( const ref array<T, S...> o ) const
+    public array_mask<S...> differs<u64... U>( const ref array<T, U...> o ) const where S == U
     {
         return compared( o, fn[]( T x, T y ) { return x != y; } );
     }
@@ -740,7 +740,7 @@ class array<T, u64... S(dyn)> implements iterable<T> where T : numeric
     }
 
     /// The elements `m` sets, row-major, as rank 1.
-    public array<T, dyn> selected( const ref array_mask<S...> m ) const
+    public array<T, dyn> selected<u64... U>( const ref array_mask<U...> m ) const where S == U
     {
         array<T, dyn> r = kl::zeros<T, dyn>( m.count() );
         u64           n = 0;
@@ -1315,7 +1315,7 @@ class array<T, u64... S(dyn)> implements iterable<T> where T : numeric
         kernel::zip_strided_into( ref as_run(), o.as_run(), s.as_run(), o.strides_to( s.as_run() ).as_run(), op );
     }
 
-    private array_mask<S...> compared<F>( const ref array<T, S...> o, F p ) const where F : fn( T, T ) -> bool
+    private array_mask<S...> compared<F, u64... U>( const ref array<T, U...> o, F p ) const where F : fn( T, T ) -> bool, where S == U
     {
         array_mask<S...> r = array_mask<S...>();
         for( u64 i : 0..count() )
@@ -1431,7 +1431,7 @@ class array_mask<u64... S(dyn)>
     }
 
     /// The bits set in both.
-    public array_mask<S...> operator&( const ref array_mask<S...> o ) const
+    public array_mask<S...> operator&<u64... U>( const ref array_mask<U...> o ) const where S == U
     {
         array_mask<S...> r = copy();
         kernel::zip_into( ref r.words_.as_run(), o.words_.as_run(), fn[]( u64 x, u64 y ) { return x & y; } );
@@ -1439,7 +1439,7 @@ class array_mask<u64... S(dyn)>
     }
 
     /// The bits set in either.
-    public array_mask<S...> operator|( const ref array_mask<S...> o ) const
+    public array_mask<S...> operator|<u64... U>( const ref array_mask<U...> o ) const where S == U
     {
         array_mask<S...> r = copy();
         kernel::zip_into( ref r.words_.as_run(), o.words_.as_run(), fn[]( u64 x, u64 y ) { return x | y; } );
@@ -1447,7 +1447,7 @@ class array_mask<u64... S(dyn)>
     }
 
     /// The bits set in exactly one.
-    public array_mask<S...> operator^( const ref array_mask<S...> o ) const
+    public array_mask<S...> operator^<u64... U>( const ref array_mask<U...> o ) const where S == U
     {
         array_mask<S...> r = copy();
         kernel::zip_into( ref r.words_.as_run(), o.words_.as_run(), fn[]( u64 x, u64 y ) { return x ^ y; } );
@@ -1580,7 +1580,7 @@ array<T, N> diagonal<T, u64 N>( const ref array<T, N, N> m ) where T : numeric
 }
 
 /// `a` then `b`, along the first axis: `kl::concatenated( a, b )`.
-array<T, (A + B), S...> concatenated<T, u64 A, u64 B, u64... S>( const ref array<T, A, S...> a, const ref array<T, B, S...> b ) where T : numeric
+array<T, (A + B), S...> concatenated<T, u64 A, u64 B, u64... S, u64... U>( const ref array<T, A, S...> a, const ref array<T, B, U...> b ) where T : numeric, where S == U
 {
     array<T, (A + B), S...> r = array<T, (A + B), S...>( 0 );
     copy_into( ref r.as_run()[0..a.size()], a.as_run() );
@@ -1589,7 +1589,7 @@ array<T, (A + B), S...> concatenated<T, u64 A, u64 B, u64... S>( const ref array
 }
 
 /// `a` and `b` as the two entries of a new first axis: `kl::stacked( a, b )`.
-array<T, 2, S...> stacked<T, u64... S>( const ref array<T, S...> a, const ref array<T, S...> b ) where T : numeric
+array<T, 2, S...> stacked<T, u64... S, u64... U>( const ref array<T, S...> a, const ref array<T, U...> b ) where T : numeric, where S == U
 {
     array<T, 2, S...> r = array<T, 2, S...>( 0 );
     copy_into( ref r.block( 0 ), a.as_run() );
@@ -1728,31 +1728,27 @@ array<T, R> hat_diagonal<T, u64 R, u64 C>( const ref array<T, R, C> a ) where T 
 
 /// --- Element-wise choices ---
 
-/// The smallest of each set of matching elements, as `kl::min`: `kl::minimum( a, b, c )`.
-array<T, S...> minimum<T, u64... S>( const ref array<T, S...> first, const ref array<T, S...> second ) where T : numeric
+/// The smaller of each pair of matching elements, as `kl::min`, the two broadcast.
+array<T, broadcast( S, U )...> minimum<T, u64... S, u64... U>( const ref array<T, S...> first, const ref array<T, U...> second ) where T : numeric
 {
-    array<T, S...> r = first.copy();
-    kernel::zip_into( ref r.as_run(), second.as_run(), fn[]( T x, T y ) { return kl::min( x, y ); } );
-    return r;
+    return first.zipped( second, fn[]( T x, T y ) { return kl::min( x, y ); } );
 }
 
-/// The largest of each set of matching elements, as `kl::max`.
-array<T, S...> maximum<T, u64... S>( const ref array<T, S...> first, const ref array<T, S...> second ) where T : numeric
+/// The larger of each pair of matching elements, as `kl::max`, the two broadcast.
+array<T, broadcast( S, U )...> maximum<T, u64... S, u64... U>( const ref array<T, S...> first, const ref array<T, U...> second ) where T : numeric
 {
-    array<T, S...> r = first.copy();
-    kernel::zip_into( ref r.as_run(), second.as_run(), fn[]( T x, T y ) { return kl::max( x, y ); } );
-    return r;
+    return first.zipped( second, fn[]( T x, T y ) { return kl::max( x, y ); } );
 }
 
 /// `a`'s element where `m` is set, and `b`'s where it is clear.
-array<T, S...> select<T, u64... S>( const ref array_mask<S...> m, const ref array<T, S...> a, const ref array<T, S...> b ) where T : numeric
+array<T, S...> select<T, u64... M, u64... S, u64... U>( const ref array_mask<M...> m, const ref array<T, S...> a, const ref array<T, U...> b ) where T : numeric, where M == S, where S == U
 {
-    array<T, S...> r = b.copy();
+    array<T, S...> r = a.copy();
     for( u64 i : 0..r.size() )
     {
-        if( m.test( i ) )
+        if( !m.test( i ) )
         {
-            r.as_run()[i] = a.as_run()[i];
+            r.as_run()[i] = b.as_run()[i];
         }
     }
     return r;

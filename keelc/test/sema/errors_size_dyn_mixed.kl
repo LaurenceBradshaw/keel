@@ -1,0 +1,40 @@
+// One pack bound by a `dyn` and by a constant names two types, so the call is refused; sizes that
+// only have to agree take a pack apiece and a `where`, checked when the program runs.
+class Grid<u64... S(dyn)>
+{
+    u64 x;
+
+    public Grid() { x = 0; }
+};
+
+Grid<S...> sized<u64... S>( S... n )
+{
+    return Grid<S...>();
+}
+
+u64 both<u64... S>( const ref Grid<S...> a, const ref Grid<S...> b )
+{
+    return 0;
+}
+
+u64 pair<u64 N>( const ref Grid<N> a, const ref Grid<N> b )
+{
+    return N;
+}
+
+u64 agree<u64 K, u64 J>( const ref Grid<2, K> a, const ref Grid<J, 2> b ) where K == J
+{
+    return K;
+}
+
+i32 main()
+{
+    u64          rows = 4;
+    Grid<dyn, 3> a    = sized( rows, 3 );
+    Grid<4, 3>   b    = sized( 4, 3 );
+    _                 = both( a, b );
+    Grid<dyn>    c    = sized( rows );
+    _                 = pair( c, sized( 4 ) );
+    _                 = agree( sized( 2, rows ), sized( 4, 2 ) );
+    return 0;
+}

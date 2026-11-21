@@ -16,10 +16,10 @@ error: `S` is a pack of sizes, which an array's size cannot read
 14 |     i32[S] cells;
    |         ^ read `S.size` or `S[i]` in a body
 
-error: `S` is a pack of sizes, which a size in a comparison cannot read
+error: `S` is a pack of sizes, and the other side one size
   --> sema/errors_size_pack_growth.kl:17:30
    |
 17 | u64 ranked<u64... S>() where S >= 2
-   |                              ^ read `S.size` or `S[i]` in a body
+   |                              ^ compare it with another pack, as `S == U`, or read one size, `S[0]`, in a body
 
 4 errors generated

@@ -1256,14 +1256,15 @@ bool Lookahead::scan_where_clauses()
 {
     while( cursor_.match_keyword( Keyword::Where ) )
     {
-        // `where R >= C`: a literal, a name or parentheses on each side of one comparison.
+        // `where R >= C`: a literal, a name, a shape call or parentheses on each side of one comparison.
         if( !( cursor_.check( Token_kind::Identifier ) && cursor_.peek( 1 ).kind == Token_kind::Colon ) )
         {
             // `where T {` still wants the `:`; a missing right side is the parser's to report.
             const auto side = [&]
             {
-                return cursor_.match( Token_kind::Identifier ) || cursor_.match( Token_kind::Int_literal ) ||
-                       ( cursor_.check( Token_kind::L_paren ) && skip_parens() );
+                return ( cursor_.match( Token_kind::Identifier ) && ( !cursor_.check( Token_kind::L_paren ) || skip_parens() )
+                       ) ||
+                       cursor_.match( Token_kind::Int_literal ) || ( cursor_.check( Token_kind::L_paren ) && skip_parens() );
             };
             const bool compared =
                 side() && ( cursor_.match( Token_kind::Less ) || cursor_.match( Token_kind::Less_equal ) ||

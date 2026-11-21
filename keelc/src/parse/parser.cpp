@@ -1233,14 +1233,15 @@ void Parser::parse_where_clauses(
     {
         const Node_id clause = parse_where_clause();
 
-        // A method's clause on the aggregate's parameter is a condition; a block's is refused.
-        if( ast_.kind( clause ) == Node_kind::Size_condition && ( outer.is_valid() || block_type_.is_valid() ) )
+        // A method's comparison goes with its own parameters, checked per call; a block's is refused.
+        if( ast_.kind( clause ) == Node_kind::Size_condition && ( block_type_.is_valid() || ( outer.is_valid() && !generic ) ) )
         {
             recovery_.error_at(
                 ast_.span( clause ),
                 block_type_.is_valid() ? "a block cannot take a comparison of sizes"
-                                       : "a method cannot take a comparison of sizes",
-                "write it on a free generic function, or on the type"
+                                       : "a method without type parameters of its own cannot take a comparison of sizes",
+                block_type_.is_valid() ? "write it on a free generic function, or on the type"
+                                       : "write it on the type, or on a method with sizes of its own, as `<u64... U>`"
             );
             continue;
         }
@@ -1630,9 +1631,15 @@ Node_id Parser::parse_size_condition( Span start )
     return ast_.add( Node_kind::Size_condition, Span::merge( start, ast_.span( comparison ) ), 0, { comparison } );
 }
 
-// A bare name stops at itself, so `where R >= C {` leaves the body's brace alone.
+// A bare name stops at itself, so `where R >= C {` leaves the body's brace alone; a name and `(`
+// is a shape function's call. `dropped<A>( S )` is written in parentheses, as `<` compares.
 Node_id Parser::parse_size_side()
 {
+    if( cursor_.check( Token_kind::Identifier ) && cursor_.peek( 1 ).kind == Token_kind::L_paren )
+    {
+        return parse_type_argument();
+    }
+
     if( cursor_.check( Token_kind::Identifier ) )
     {
         const Token& name = cursor_.advance();

@@ -219,9 +219,7 @@ void Signatures::resolve_clause_bounds( Node_id list )
     {
         if( ast_.kind( clause ) == Node_kind::Size_condition )
         {
-            const Node_id comparison = ast_.child( clause, 0 );
-            annotations_.resolve_size_side( ast_.lhs( comparison ) );
-            annotations_.resolve_size_side( ast_.rhs( comparison ) );
+            annotations_.resolve_size_condition( ast_.child( clause, 0 ) );
             continue;
         }
 
