@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 
+include(cmake/msvc_toolset.cmake)
+
 # C is enabled alongside C++ because keelc's own output is C: keel_rt is written in it, and the
 # golden "run" tests compile generated .c files. It also stops CMake warning that the
 # CMAKE_C_COMPILER set by the presets is unused.
@@ -46,6 +48,11 @@ if(MSVC)
         _CRT_SECURE_NO_WARNINGS
         $<$<CONFIG:Debug>:_CONTAINER_DEBUG_LEVEL=1>
     )
+    # __int128 division and conversions call compiler-rt, which clang-cl does not link by itself.
+    execute_process(
+        COMMAND "${CMAKE_CXX_COMPILER}" /clang:-print-libgcc-file-name /clang:--rtlib=compiler-rt
+        OUTPUT_VARIABLE KEEL_CLANG_BUILTINS OUTPUT_STRIP_TRAILING_WHITESPACE)
+    target_link_libraries(keel_options INTERFACE "${KEEL_CLANG_BUILTINS}")
 else()
     target_compile_options(keel_options INTERFACE
         -Wall

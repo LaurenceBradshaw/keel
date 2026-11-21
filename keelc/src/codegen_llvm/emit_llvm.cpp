@@ -2884,6 +2884,9 @@ TEST_CASE( "emit_llvm_promotes_a_run_local", "[codegen][llvm]" )
 // Its last eightbyte is an `i32`, so neither side pads it out to 16 bytes through a temporary.
 TEST_CASE( "emit_llvm_passes_a_twelve_byte_struct_without_a_padded_copy", "[codegen][llvm]" )
 {
+#ifdef _WIN32
+    SKIP( "SysV's eightbytes; Win64 returns it through sret" );
+#endif
     Compiled p(
         "struct Trio { i32 a; i32 b; i32 c; };\n"
         "Trio made( i32 v ) { return Trio { v, v + 1, v + 2 }; }\n"
@@ -2904,6 +2907,9 @@ TEST_CASE( "emit_llvm_passes_a_twelve_byte_struct_without_a_padded_copy", "[code
 // `k` and `h` share an eightbyte: read one by one, not as one `i64` over their two stores.
 TEST_CASE( "emit_llvm_returns_two_fields_of_one_eightbyte_read_field_by_field", "[codegen][llvm]" )
 {
+#ifdef _WIN32
+    SKIP( "SysV's eightbytes; Win64 returns it through sret" );
+#endif
     Compiled p(
         "struct Parts { f64 f; i32 k; u32 h; };\n"
         "Parts made( f64 v ) { return Parts { v, 1, 2 }; }\n"

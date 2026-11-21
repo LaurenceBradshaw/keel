@@ -17,6 +17,7 @@
 #include <tuple>
 #include "linear/extract.h"
 #include "linear/sum_graph.h"
+#include "linear/unit_root.h"
 
 namespace keel
 {
@@ -1093,7 +1094,7 @@ Routed Solver::dft_route( Circuit& c, const std::vector<u32>& u, const Row& f, u
     {
         for( u32 s = 0; s < n; ++s )
         {
-            fhat[k] += F_->value( f[s] ) * std::polar( 1.0, -2 * std::numbers::pi * k * s / n );
+            fhat[k] += F_->value( f[s] ) * unit_root( u64 { k } * s, n );
         }
         fhat[k] /= n;
     }
@@ -2720,7 +2721,11 @@ std::vector<Row> random_map( std::mt19937& rng, Field& field )
         case 0:
             return field.zero();
         case 1:
-            return field.rational( 1 + pick( 3 ), 1 + pick( 2 ) );
+        {
+            // Drawn in order: Windows evaluates arguments right to left.
+            const u32 p = 1 + pick( 3 );
+            return field.rational( p, 1 + pick( 2 ) );
+        }
         default:
             return field.root( pick( field.n() ) );
         }

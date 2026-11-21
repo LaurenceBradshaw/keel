@@ -1057,10 +1057,10 @@ bool version_range_checks( Function& func, const Scope& scope, Literal_pool& lit
     {
         widest = std::max( widest, check.c );
     }
-    Operand holds = both(
-        temporary( boolean, binary( Token_kind::Less_equal, a, *n, boolean ) ),
-        temporary( boolean, binary( Token_kind::Less_equal, *n, number( ~u64( 0 ) - *step - widest ), boolean ) )
-    );
+    // In order, as Windows evaluates arguments right to left.
+    const Operand from = temporary( boolean, binary( Token_kind::Less_equal, a, *n, boolean ) );
+    Operand       holds =
+        both( from, temporary( boolean, binary( Token_kind::Less_equal, *n, number( ~u64( 0 ) - *step - widest ), boolean ) ) );
     const u64              inclusive = tested.op == Token_kind::Less_equal;
     std::optional<Operand> last_turn;
     for( const Check& check : checks )

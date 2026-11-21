@@ -71,6 +71,7 @@
                 "CMAKE_C_COMPILER": "C:/Program Files/LLVM/bin/clang-cl.exe",
                 "CMAKE_CXX_COMPILER": "C:/Program Files/LLVM/bin/clang-cl.exe",
                 "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreaded",
+                "KEEL_MSVC_TOOLSET": "14.42",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
             }
         },

@@ -26,8 +26,8 @@ out="$( "$lldb" -b -o "b debugging.kl:16" -o "b debugging.kl:39" -o "b -F kl::pr
 
 status=0
 for expected in \
-    'frame #0: 0x[0-9a-f]* debugging.exe`manhattan(p=Point @ 0x[0-9a-f]*) at debugging.kl:16' \
-    'frame #1: 0x[0-9a-f]* debugging.exe`main at debugging.kl:24' \
+    'frame #0: 0x[0-9a-f]* debugging.exe`examples::manhattan(p=Point @ 0x[0-9a-f]*) at debugging.kl:16' \
+    'frame #1: 0x[0-9a-f]* debugging.exe`examples::main at debugging.kl:24' \
     '^  x = 3$' \
     '^  y = -4$' \
     '(kl::string) name = (data_ = "keel.*, size_ = 4, cap_ = 4)' \
@@ -46,7 +46,7 @@ fi
 # Over `manhattan( p )`: the next statement, with its result in `d`.
 over="$( "$lldb" -b -o "b debugging.kl:24" -o run -o next -o "frame variable d" \
     build/examples/debugging.exe 2>&1 )"
-{ grep -q 'debugging.exe`main at debugging.kl:25' <<< "$over" && grep -q '(int) d = 7' <<< "$over"; } ||
+{ grep -q 'debugging.exe`examples::main at debugging.kl:25' <<< "$over" && grep -q '(int) d = 7' <<< "$over"; } ||
     { echo "step over manhattan( p ) missing line 25 or d"; status=1; }
 
 [ "$status" -eq 0 ] && echo "pass" || echo "$out"

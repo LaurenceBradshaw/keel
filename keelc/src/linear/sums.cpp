@@ -14,6 +14,7 @@
 #include <utility>
 #include "linear/circuit_cache.h"
 #include "linear/field.h"
+#include "linear/unit_root.h"
 
 namespace keel
 {
@@ -57,7 +58,7 @@ u64 exponent_at( const Exponent& e, u64 M, u64 j, u64 k )
 
 std::complex<f64> root( u64 e, u64 M )
 {
-    return std::polar( 1.0, -2 * std::numbers::pi * static_cast<f64>( e % M ) / static_cast<f64>( M ) );
+    return unit_root( e, M );
 }
 
 f64 value( Rational c )

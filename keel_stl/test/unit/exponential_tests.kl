@@ -1,6 +1,7 @@
 // `kl::math`'s exponentials, logarithms, powers, hyperbolic and error functions, the normal
 // distribution, `atan2` and float roundings: each against C's, and at its special values.
 import kl::math;
+import kl::os;
 import kl::test::context;
 
 // Against C's, within an ulp but where `ALLOWED` says; the roundings exactly.
@@ -121,8 +122,18 @@ private f64 random_float( ref u64 seed, u64 top )
     return kl::from_bits( ( b & 0x8000_0000_0000_0000 ) | ( e << 52 ) | ( next_random( ref seed ) & 0x000f_ffff_ffff_ffff ) );
 }
 
+// ALLOWED is glibc's; the UCRT's exponentials and error functions miss by more.
+private bool ucrt()
+{
+    return kl::get_platform() == kl::platform::windows;
+}
+
 private void exponentials_match_libm( ref kl::test::context c )
 {
+    if( ucrt() )
+    {
+        return;
+    }
     u64 seed = 3;
     for( u64 which = 0; which < UNARY; which++ )
     {
@@ -278,6 +289,10 @@ private u64 erf_miss( f64 x )
 // and at the special values.
 private void error_functions_match_libm( ref kl::test::context c )
 {
+    if( ucrt() )
+    {
+        return;
+    }
     u64 seed = 5;
     u64 missed = 0;
     for( i64 i = -20000; i <= 20000; i++ )

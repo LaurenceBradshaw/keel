@@ -264,11 +264,11 @@ void kl_4opt3_3dft__A8_3f64_A8_3f64_RA8_3f64_RA8_3f64( struct kl__A8_3f64* kl_re
 #line 20 "opt3/dft8_plus_constant.kl"
     kl_t71 = kl_t68 - kl_t67;
 #line 20 "opt3/dft8_plus_constant.kl"
-    kl_t72 = kl_t71 * 0.7071067811865475;
+    kl_t72 = kl_t71 * 0.7071067811865476;
 #line 20 "opt3/dft8_plus_constant.kl"
     kl_t73 = kl_t68 + kl_t67;
 #line 20 "opt3/dft8_plus_constant.kl"
-    kl_t74 = kl_t73 * 0.7071067811865475;
+    kl_t74 = kl_t73 * 0.7071067811865476;
 #line 20 "opt3/dft8_plus_constant.kl"
     kl_t75 = kl_t63 + kl_t74;
 #line 20 "opt3/dft8_plus_constant.kl"
@@ -276,11 +276,11 @@ void kl_4opt3_3dft__A8_3f64_A8_3f64_RA8_3f64_RA8_3f64( struct kl__A8_3f64* kl_re
 #line 20 "opt3/dft8_plus_constant.kl"
     kl_t77 = kl_t70 - kl_t69;
 #line 20 "opt3/dft8_plus_constant.kl"
-    kl_t78 = kl_t77 * 0.7071067811865475;
+    kl_t78 = kl_t77 * 0.7071067811865476;
 #line 20 "opt3/dft8_plus_constant.kl"
     kl_t79 = kl_t70 + kl_t69;
 #line 20 "opt3/dft8_plus_constant.kl"
-    kl_t80 = kl_t79 * 0.7071067811865475;
+    kl_t80 = kl_t79 * 0.7071067811865476;
 #line 20 "opt3/dft8_plus_constant.kl"
     kl_t81 = kl_t65 + kl_t78;
 #line 20 "opt3/dft8_plus_constant.kl"

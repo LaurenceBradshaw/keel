@@ -350,7 +350,7 @@ bool reduce_one(
     return false;
 }
 
-struct Range
+struct alignas( 16 ) Range
 {
     Wide low;
     Wide high;
@@ -381,9 +381,10 @@ Wide number( u64 bits, const Type_table& types, Type_id type )
     return t.is_signed ? Wide( as_signed( bits, t.width ) ) : Wide( truncate( bits, t.width ) );
 }
 
+// alignas: under the MSVC STL's pack(8), std::optional<Counted> would be 8-aligned while Wide reads use movaps.
 // `at`'s `t = i < n`, after `i`'s step there, with the entry value, step and `n` constants, the step
 // positive, and no value the test sees wrapping.
-struct Counted
+struct alignas( 16 ) Counted
 {
     u32   test; // in `at`
     Range range;

@@ -6,6 +6,7 @@
 #include <cassert>
 #include <numbers>
 #include <numeric>
+#include "linear/unit_root.h"
 
 namespace keel
 {
@@ -190,8 +191,7 @@ Element Field::intern( std::vector<i64> numerator, i64 denominator )
         {
             if( numerator[k] != 0 )
             {
-                value += static_cast<f64>( numerator[k] ) / static_cast<f64>( denominator ) *
-                         std::polar( 1.0, -2 * std::numbers::pi * k / n_ );
+                value += static_cast<f64>( numerator[k] ) / static_cast<f64>( denominator ) * unit_root( k, n_ );
             }
         }
         entries_.push_back( { std::move( numerator ), denominator, value } );
