@@ -625,7 +625,7 @@ interface as its type argument.</p>
 <pre class="signature"><a class="anchor" href="#buffer" aria-label="Link to buffer">#</a><code><span class="kw">class</span> <span class="type">buffer</span>&lt;T, <a class="prim" href="#u64">u64</a> N(dyn)&gt; <span class="kw">where</span> T : copyable</code></pre>
 <div class="doc">
 <p><code>N</code> elements of <code>T</code>, owned: held inline when <code>N</code> is a constant and <code>T</code> a number of which <code>N</code> fill
-at most 4096 bytes, and on the heap otherwise. Dropping it drops the elements and frees what
+at most 2048 bytes, and on the heap otherwise. Dropping it drops the elements and frees what
 it allocated.</p>
 <p><code>buffer&lt;f64, dyn&gt;</code> takes its count at run time.</p>
 </div>

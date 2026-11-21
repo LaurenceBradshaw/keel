@@ -203,15 +203,15 @@ time plus or less a duration is a time; <code>year()</code> and its siblings rea
 </div>
 <h3>Constructors</h3>
 <div class="group" id="series.series">
-<pre class="signature"><a class="anchor" href="#series.series" aria-label="Link to series">#</a><code><span class="kw">public</span> <span class="type">series</span>( <span class="kw">move</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#f64">f64</a>&gt; values )</code></pre>
+<pre class="signature"><a class="anchor" href="#series.series" aria-label="Link to series">#</a><code><span class="kw">public</span> <span class="type">series</span>( <span class="kw">move</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#f64">f64</a>, dyn&gt; values )</code></pre>
 <div class="doc">
 <p><code>values</code> as <code>f64s</code>.</p>
 </div>
-<pre class="signature"><a class="anchor" href="#series.series" aria-label="Link to series">#</a><code><span class="kw">public</span> <span class="type">series</span>( <span class="kw">move</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#i64">i64</a>&gt; values )</code></pre>
+<pre class="signature"><a class="anchor" href="#series.series" aria-label="Link to series">#</a><code><span class="kw">public</span> <span class="type">series</span>( <span class="kw">move</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#i64">i64</a>, dyn&gt; values )</code></pre>
 <div class="doc">
 <p><code>values</code> as <code>i64s</code>.</p>
 </div>
-<pre class="signature"><a class="anchor" href="#series.series" aria-label="Link to series">#</a><code><span class="kw">public</span> <span class="type">series</span>( <span class="kw">move</span> <a class="type" href="mask.html#mask">mask</a> values )</code></pre>
+<pre class="signature"><a class="anchor" href="#series.series" aria-label="Link to series">#</a><code><span class="kw">public</span> <span class="type">series</span>( <span class="kw">move</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; values )</code></pre>
 <div class="doc">
 <p>The bits of <code>values</code>, of rank 1, as <code>bools</code>.</p>
 </div>
@@ -287,19 +287,19 @@ time plus or less a duration is a time; <code>year()</code> and its siblings rea
 </div>
 </div>
 <div class="group" id="series.f64s">
-<pre class="signature"><a class="anchor" href="#series.f64s" aria-label="Link to f64s">#</a><code><span class="kw">public</span> <span class="kw">ref</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#f64">f64</a>&gt; <span class="fn">f64s</span>() <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.f64s" aria-label="Link to f64s">#</a><code><span class="kw">public</span> <span class="kw">ref</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#f64">f64</a>, dyn&gt; <span class="fn">f64s</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>The values of an <code>f64s</code> series; panics on another dtype.</p>
 </div>
 </div>
 <div class="group" id="series.i64s">
-<pre class="signature"><a class="anchor" href="#series.i64s" aria-label="Link to i64s">#</a><code><span class="kw">public</span> <span class="kw">ref</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#i64">i64</a>&gt; <span class="fn">i64s</span>() <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.i64s" aria-label="Link to i64s">#</a><code><span class="kw">public</span> <span class="kw">ref</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#i64">i64</a>, dyn&gt; <span class="fn">i64s</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>The values of an <code>i64s</code> series, missing ones unspecified; panics on another dtype.</p>
 </div>
 </div>
 <div class="group" id="series.bools">
-<pre class="signature"><a class="anchor" href="#series.bools" aria-label="Link to bools">#</a><code><span class="kw">public</span> <span class="kw">ref</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">bools</span>() <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.bools" aria-label="Link to bools">#</a><code><span class="kw">public</span> <span class="kw">ref</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; <span class="fn">bools</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>The values of a <code>bools</code> series, missing ones unspecified; panics on another dtype.</p>
 </div>
@@ -311,14 +311,14 @@ time plus or less a duration is a time; <code>year()</code> and its siblings rea
 </div>
 </div>
 <div class="group" id="series.times">
-<pre class="signature"><a class="anchor" href="#series.times" aria-label="Link to times">#</a><code><span class="kw">public</span> <span class="kw">ref</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#i64">i64</a>&gt; <span class="fn">times</span>() <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.times" aria-label="Link to times">#</a><code><span class="kw">public</span> <span class="kw">ref</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#i64">i64</a>, dyn&gt; <span class="fn">times</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>The values of a <code>times</code> series as nanoseconds since 1970, missing ones unspecified; panics on
 another dtype.</p>
 </div>
 </div>
 <div class="group" id="series.durations">
-<pre class="signature"><a class="anchor" href="#series.durations" aria-label="Link to durations">#</a><code><span class="kw">public</span> <span class="kw">ref</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#i64">i64</a>&gt; <span class="fn">durations</span>() <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.durations" aria-label="Link to durations">#</a><code><span class="kw">public</span> <span class="kw">ref</span> <a class="type" href="ndarray.html#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#i64">i64</a>, dyn&gt; <span class="fn">durations</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>The values of a <code>durations</code> series as nanoseconds, missing ones unspecified; panics on
 another dtype.</p>
@@ -351,7 +351,7 @@ another dtype.</p>
 </div>
 <h3>Missing values</h3>
 <div class="group" id="series.isna">
-<pre class="signature"><a class="anchor" href="#series.isna" aria-label="Link to isna">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">isna</span>() <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.isna" aria-label="Link to isna">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; <span class="fn">isna</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Where a value is missing.</p>
 </div>
@@ -421,42 +421,42 @@ pandas' <code>map( dict )</code>, <code>s.to_strings( fn[]( f64 x ) { return kl:
 </div>
 </div>
 <div class="group" id="series.contains">
-<pre class="signature"><a class="anchor" href="#series.contains" aria-label="Link to contains">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">contains</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> needle, <a class="prim" href="prelude.html#bool">bool</a> ignore_case = false ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.contains" aria-label="Link to contains">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; <span class="fn">contains</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> needle, <a class="prim" href="prelude.html#bool">bool</a> ignore_case = false ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Where each text holds <code>needle</code>, ASCII letters matched in either case when <code>ignore_case</code>,
 clear where missing: pandas' <code>str.contains( needle, case=False, regex=False )</code>.</p>
 </div>
 </div>
 <div class="group" id="series.starts_with">
-<pre class="signature"><a class="anchor" href="#series.starts_with" aria-label="Link to starts_with">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">starts_with</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> prefix ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.starts_with" aria-label="Link to starts_with">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; <span class="fn">starts_with</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> prefix ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Where each text starts with <code>prefix</code>, clear where missing: pandas' <code>str.startswith</code>.</p>
 </div>
 </div>
 <div class="group" id="series.isin">
-<pre class="signature"><a class="anchor" href="#series.isin" aria-label="Link to isin">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">isin</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> values ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.isin" aria-label="Link to isin">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; <span class="fn">isin</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> values ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Where each value is one of <code>values</code>', clear where missing: pandas' <code>isin</code>. Numbers of either
 dtype compare as <code>f64</code>; panics on any other mix of dtypes.</p>
 </div>
 </div>
 <div class="group" id="series.between">
-<pre class="signature"><a class="anchor" href="#series.between" aria-label="Link to between">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">between</span>( <a class="prim" href="prelude.html#f64">f64</a> lo, <a class="prim" href="prelude.html#f64">f64</a> hi ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.between" aria-label="Link to between">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; <span class="fn">between</span>( <a class="prim" href="prelude.html#f64">f64</a> lo, <a class="prim" href="prelude.html#f64">f64</a> hi ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Where each value is at least <code>lo</code> and at most <code>hi</code>, clear where missing: pandas' <code>between</code>.</p>
 </div>
 </div>
 <div class="group" id="series.kept">
-<pre class="signature"><a class="anchor" href="#series.kept" aria-label="Link to kept">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">kept</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="mask.html#mask">mask</a> m, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> other ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.kept" aria-label="Link to kept">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">kept</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; m, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> other ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Each value where <code>m</code> holds, else <code>other</code>'s at that row: pandas' <code>where( m, other )</code>. Numbers
 of either dtype give <code>f64s</code>; panics on any other mix of dtypes.</p>
 </div>
-<pre class="signature"><a class="anchor" href="#series.kept" aria-label="Link to kept">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">kept</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="mask.html#mask">mask</a> m, <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.kept" aria-label="Link to kept">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">kept</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; m, <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Each value where <code>m</code> holds, else <code>x</code>.</p>
 </div>
-<pre class="signature"><a class="anchor" href="#series.kept" aria-label="Link to kept">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">kept</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="mask.html#mask">mask</a> m ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.kept" aria-label="Link to kept">#</a><code><span class="kw">public</span> <a class="type" href="#series">series</a> <span class="fn">kept</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; m ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Each value where <code>m</code> holds, else a gap: pandas' <code>where( m )</code>.</p>
 </div>
@@ -550,93 +550,93 @@ scales, rounds and scales back; any other dtype is copied.</p>
 </div>
 <h3>Comparing</h3>
 <div class="group" id="series.less">
-<pre class="signature"><a class="anchor" href="#series.less" aria-label="Link to less">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">less</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> o ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.less" aria-label="Link to less">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; <span class="fn">less</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> o ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Where each value is less than <code>o</code>'s.</p>
 </div>
-<pre class="signature"><a class="anchor" href="#series.less" aria-label="Link to less">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">less</span>( <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.less" aria-label="Link to less">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; <span class="fn">less</span>( <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Where each value is less than <code>x</code>.</p>
 </div>
-<pre class="signature"><a class="anchor" href="#series.less" aria-label="Link to less">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">less</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="time.html#timestamp">timestamp</a> t ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.less" aria-label="Link to less">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; <span class="fn">less</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="time.html#timestamp">timestamp</a> t ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Where each time is before <code>t</code>.</p>
 </div>
 </div>
 <div class="group" id="series.greater">
-<pre class="signature"><a class="anchor" href="#series.greater" aria-label="Link to greater">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">greater</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> o ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.greater" aria-label="Link to greater">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; <span class="fn">greater</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> o ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Where each value is greater than <code>o</code>'s.</p>
 </div>
-<pre class="signature"><a class="anchor" href="#series.greater" aria-label="Link to greater">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">greater</span>( <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.greater" aria-label="Link to greater">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; <span class="fn">greater</span>( <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Where each value is greater than <code>x</code>.</p>
 </div>
-<pre class="signature"><a class="anchor" href="#series.greater" aria-label="Link to greater">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">greater</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="time.html#timestamp">timestamp</a> t ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.greater" aria-label="Link to greater">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; <span class="fn">greater</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="time.html#timestamp">timestamp</a> t ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Where each time is after <code>t</code>.</p>
 </div>
 </div>
 <div class="group" id="series.less_equal">
-<pre class="signature"><a class="anchor" href="#series.less_equal" aria-label="Link to less_equal">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">less_equal</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> o ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.less_equal" aria-label="Link to less_equal">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; <span class="fn">less_equal</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> o ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Where each value is at most <code>o</code>'s.</p>
 </div>
-<pre class="signature"><a class="anchor" href="#series.less_equal" aria-label="Link to less_equal">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">less_equal</span>( <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.less_equal" aria-label="Link to less_equal">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; <span class="fn">less_equal</span>( <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Where each value is at most <code>x</code>.</p>
 </div>
-<pre class="signature"><a class="anchor" href="#series.less_equal" aria-label="Link to less_equal">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">less_equal</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="time.html#timestamp">timestamp</a> t ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.less_equal" aria-label="Link to less_equal">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; <span class="fn">less_equal</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="time.html#timestamp">timestamp</a> t ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Where each time is at or before <code>t</code>.</p>
 </div>
 </div>
 <div class="group" id="series.greater_equal">
-<pre class="signature"><a class="anchor" href="#series.greater_equal" aria-label="Link to greater_equal">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">greater_equal</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> o ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.greater_equal" aria-label="Link to greater_equal">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; <span class="fn">greater_equal</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> o ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Where each value is at least <code>o</code>'s.</p>
 </div>
-<pre class="signature"><a class="anchor" href="#series.greater_equal" aria-label="Link to greater_equal">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">greater_equal</span>( <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.greater_equal" aria-label="Link to greater_equal">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; <span class="fn">greater_equal</span>( <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Where each value is at least <code>x</code>.</p>
 </div>
-<pre class="signature"><a class="anchor" href="#series.greater_equal" aria-label="Link to greater_equal">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">greater_equal</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="time.html#timestamp">timestamp</a> t ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.greater_equal" aria-label="Link to greater_equal">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; <span class="fn">greater_equal</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="time.html#timestamp">timestamp</a> t ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Where each time is at or after <code>t</code>.</p>
 </div>
 </div>
 <div class="group" id="series.equal_each">
-<pre class="signature"><a class="anchor" href="#series.equal_each" aria-label="Link to equal_each">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">equal_each</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> o ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.equal_each" aria-label="Link to equal_each">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; <span class="fn">equal_each</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> o ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Where each value equals <code>o</code>'s.</p>
 </div>
-<pre class="signature"><a class="anchor" href="#series.equal_each" aria-label="Link to equal_each">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">equal_each</span>( <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.equal_each" aria-label="Link to equal_each">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; <span class="fn">equal_each</span>( <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Where each value equals <code>x</code>.</p>
 </div>
-<pre class="signature"><a class="anchor" href="#series.equal_each" aria-label="Link to equal_each">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">equal_each</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> x ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.equal_each" aria-label="Link to equal_each">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; <span class="fn">equal_each</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> x ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Where each value equals the text <code>x</code>.</p>
 </div>
-<pre class="signature"><a class="anchor" href="#series.equal_each" aria-label="Link to equal_each">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">equal_each</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="time.html#timestamp">timestamp</a> t ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.equal_each" aria-label="Link to equal_each">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; <span class="fn">equal_each</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="time.html#timestamp">timestamp</a> t ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Where each time is <code>t</code>.</p>
 </div>
 </div>
 <div class="group" id="series.differs">
-<pre class="signature"><a class="anchor" href="#series.differs" aria-label="Link to differs">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">differs</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> o ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.differs" aria-label="Link to differs">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; <span class="fn">differs</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#series">series</a> o ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Where each value differs from <code>o</code>'s, a missing one included.</p>
 </div>
-<pre class="signature"><a class="anchor" href="#series.differs" aria-label="Link to differs">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">differs</span>( <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.differs" aria-label="Link to differs">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; <span class="fn">differs</span>( <a class="prim" href="prelude.html#f64">f64</a> x ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Where each value differs from <code>x</code>, a missing one included.</p>
 </div>
-<pre class="signature"><a class="anchor" href="#series.differs" aria-label="Link to differs">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">differs</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> x ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.differs" aria-label="Link to differs">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; <span class="fn">differs</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> x ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Where each value differs from the text <code>x</code>, a missing one included.</p>
 </div>
-<pre class="signature"><a class="anchor" href="#series.differs" aria-label="Link to differs">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">differs</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="time.html#timestamp">timestamp</a> t ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#series.differs" aria-label="Link to differs">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; <span class="fn">differs</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="time.html#timestamp">timestamp</a> t ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Where each time is not <code>t</code>, a missing one included.</p>
 </div>
@@ -797,11 +797,11 @@ needs every row present. Panics when <code>window</code> is 0 or the series hold
 <section class="entry">
 <h2><span class="kind">function</span> <span class="fn">choose</span></h2>
 <div class="group" id="choose">
-<pre class="signature"><a class="anchor" href="#choose" aria-label="Link to choose">#</a><code><a class="type" href="#series">series</a> <span class="fn">choose</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="mask.html#mask">mask</a> m, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> yes, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> no )</code></pre>
+<pre class="signature"><a class="anchor" href="#choose" aria-label="Link to choose">#</a><code><a class="type" href="#series">series</a> <span class="fn">choose</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; m, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> yes, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> no )</code></pre>
 <div class="doc">
 <p><code>yes</code> where <code>m</code> holds and <code>no</code> elsewhere, as <code>strings</code>: numpy's <code>where( m, yes, no )</code>.</p>
 </div>
-<pre class="signature"><a class="anchor" href="#choose" aria-label="Link to choose">#</a><code><a class="type" href="#series">series</a> <span class="fn">choose</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="mask.html#mask">mask</a> m, <a class="prim" href="prelude.html#f64">f64</a> yes, <a class="prim" href="prelude.html#f64">f64</a> no )</code></pre>
+<pre class="signature"><a class="anchor" href="#choose" aria-label="Link to choose">#</a><code><a class="type" href="#series">series</a> <span class="fn">choose</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; m, <a class="prim" href="prelude.html#f64">f64</a> yes, <a class="prim" href="prelude.html#f64">f64</a> no )</code></pre>
 <div class="doc">
 <p><code>yes</code> where <code>m</code> holds and <code>no</code> elsewhere, as <code>f64s</code>: <code>choose( m, 1.0, 0.0 )</code> is numpy's
 <code>m.astype( float )</code>.</p>
@@ -941,7 +941,7 @@ pandas' <code>df[name] = s</code>; panics when <code>s</code>'s size is not the 
 </div>
 </div>
 <div class="group" id="dataframe.filtered">
-<pre class="signature"><a class="anchor" href="#dataframe.filtered" aria-label="Link to filtered">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">filtered</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="mask.html#mask">mask</a> m ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#dataframe.filtered" aria-label="Link to filtered">#</a><code><span class="kw">public</span> <a class="type" href="#dataframe">dataframe</a> <span class="fn">filtered</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; m ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>The rows <code>m</code> sets, <code>m</code> holding one bit per row: <code>df.filtered( df[&quot;a&quot;].greater( 3.0 ) )</code>.</p>
 </div>
@@ -965,7 +965,7 @@ pandas' <code>df[name] = s</code>; panics when <code>s</code>'s size is not the 
 </div>
 </div>
 <div class="group" id="dataframe.duplicated">
-<pre class="signature"><a class="anchor" href="#dataframe.duplicated" aria-label="Link to duplicated">#</a><code><span class="kw">public</span> <a class="type" href="mask.html#mask">mask</a> <span class="fn">duplicated</span>( <a class="type" href="prelude.html#str">str</a>... names ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#dataframe.duplicated" aria-label="Link to duplicated">#</a><code><span class="kw">public</span> <a class="type" href="ndarray.html#mask">mask</a>&lt;dyn&gt; <span class="fn">duplicated</span>( <a class="type" href="prelude.html#str">str</a>... names ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Where a row repeats an earlier one in the columns <code>names</code>, or in every column when no name
 is given, a gap equal to a gap: pandas' <code>duplicated( keep=&quot;first&quot; )</code>.</p>

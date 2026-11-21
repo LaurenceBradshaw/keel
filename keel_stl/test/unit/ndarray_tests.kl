@@ -1,8 +1,8 @@
-// `kl::ndarray`: building in a shape, indexing at any rank, the element-wise operators with a
-// scalar either side, the integer operators and element-wise functions, the products, comparing,
-// reducing, converting, reshaping and walking, the scalar maths over each element, the masks
-// the comparisons answer, slices, broadcasting, linear algebra, and sorting.
-import kl::mask;
+// `kl::ndarray`: building at constant and `dyn` sizes, indexing, the operators and broadcasting,
+// products and linear algebra, comparing and masks, the three forms of each reduction, changing
+// the shape, slices and windows, sorting, converting, the scalar maths, walking, mixing constant
+// and `dyn` sizes, the integer operators, norms that neither overflow nor underflow, and masks at
+// the word edges.
 import kl::math;
 import kl::ndarray;
 import kl::optional;
@@ -11,513 +11,537 @@ import kl::test::context;
 
 private void building( ref kl::test::context c )
 {
-    kl::ndarray<i32> v = kl::ndarray<i32>( [ 1, 2, 3 ] );
-    c.check_eq( v.rank(), 1 );
-    c.check_eq( v.size(), 3 );
-    c.check_eq( v.shape()[0], 3 );
+    kl::ndarray<i32, 2, 3> a = kl::zeros( 2, 3 );
+    c.check_eq( a.size(), 6 );
+    c.check_eq( a.rank(), 2 );
+    c.check_eq( a.rows(), 2 );
+    c.check_eq( a.cols(), 3 );
+    c.check_eq( a.sum(), 0 );
 
-    kl::ndarray<f64> m = kl::ndarray<f64>( [ 1.0, 2.0, 3.0, 4.0, 5.0, 6.0 ], 2, 3 );
-    c.check_eq( m.rank(), 2 );
-    c.check_eq( m.shape()[1], 3 );
-    c.check_eq( m[1, 0], 4.0 );
-    c.check( m.reshaped( 6 ) == kl::ndarray<f64>( [ 1.0, 2.0, 3.0, 4.0, 5.0, 6.0 ] ) );
-    c.check( !( m.reshaped( 3, 2 ) == m ) );
+    // A value the program reads is `dyn`; the rest stay constants.
+    u64                    rows = 4;
+    kl::ndarray<f64, dyn, 3> d    = kl::filled( 0.5, rows, 3 );
+    c.check_eq( d.size(), 12 );
+    c.check_eq( d.extent( 0 ), 4 );
+    c.check_eq( d.sum(), 6.0 );
 
-    kl::ndarray<i32> z = kl::ndarray<i32>::zeros( 2, 3, 4 );
-    c.check_eq( z.rank(), 3 );
-    c.check_eq( z.size(), 24 );
-    c.check_eq( z.sum(), 0 );
-    c.check_eq( kl::ndarray<i32>::filled( 2, 2, 2 ).sum(), 8 );
+    kl::ndarray<i32, 2, 2> m = kl::of( [ [ 1, 2 ], [ 3, 4 ] ] );
+    c.check( m == kl::ndarray<i32, 2, 2>::of( [ 1, 2, 3, 4 ] ) );
+    c.check( kl::of( [ 1, 2, 3 ] ) == kl::shaped( [ 1, 2, 3 ], 3 ) );
+    c.check( kl::ndarray<i32, 2>::ones() == kl::of( [ 1, 1 ] ) );
 
-    // No shape is rank 0, holding one element.
-    kl::ndarray<i32> s = kl::ndarray<i32>::filled( 7 );
-    c.check_eq( s.rank(), 0 );
-    c.check_eq( s.size(), 1 );
+    kl::ndarray<i32, 3, 3> eye = kl::eye( 3, 3 );
+    c.check_eq( eye.trace(), 3 );
+    c.check( kl::arange( 0, 5 ).as_shape<5>() == kl::of( [ 0, 1, 2, 3, 4 ] ) );
+    kl::ndarray<f64, 3> l = kl::linspace( 0.0, 1.0, 3 );
+    c.check( l == kl::of( [ 0.0, 0.5, 1.0 ] ) );
 
-    c.check( kl::ndarray<i32>::identity( 2 ) == kl::ndarray<i32>( [ 1, 0, 0, 1 ], 2, 2 ) );
+    // Past the inline limit, or `dyn`, the elements are on the heap; nothing else changes.
+    kl::ndarray<f64, 600> big = kl::zeros( 600 );
+    big[599]                = 2.0;
+    kl::ndarray<f64, 600> moved = move big;
+    c.check_eq( moved.sum(), 2.0 );
 
-    kl::ndarray<i32> d = v.copy();
-    d[0] = 9;
-    c.check_eq( v[0], 1 );
-
-    c.expect_panic( "the shape does not fit the elements", fn[]() { _ = kl::ndarray<i32>( [ 1, 2, 3 ], 2, 2 ); } );
-    c.expect_panic( "the shape does not fit the elements", fn[]() { _ = kl::ndarray<i32>::zeros( 4 ).reshaped( 3 ); } );
+    c.expect_panic( "the shape does not fit the elements", fn[]() { _ = kl::shaped( [ 1, 2, 3 ], 2, 2 ); } );
 }
 
-private void writing( ref kl::test::context c )
+private void indexing( ref kl::test::context c )
 {
-    kl::ndarray<i32> z = kl::ndarray<i32>::zeros( 2, 3, 4 );
-    z[1, 2, 3] = 5;
-    z[0, 0, 1] += 2;
-    c.check_eq( z.as_run()[23], 5 );
-    c.check_eq( z.as_run()[1], 2 );
+    kl::ndarray<i32, 2, 3> a = kl::zeros( 2, 3 );
+    a[1, 2]               = 5;
+    a[0, 1] += 2;
+    a.as_run()[0] = 1;
+    c.check( a == kl::of( [ [ 1, 2, 0 ], [ 0, 0, 5 ] ] ) );
+    c.check_eq( a.block( 1 ).size, 3 );
+    c.check_eq( a.block( 1 )[2], 5 );
 
     c.expect_panic(
         "index out of range",
         fn[]()
         {
-            kl::ndarray<i32> m = kl::ndarray<i32>::zeros( 2, 2 );
-            m[0, 2] = 1;
+            kl::ndarray<i32, 2, 2> m = kl::zeros( 2, 2 );
+            m[0, 2]                = 1;
         }
     );
     c.expect_panic(
         "the index count differs from the rank",
         fn[]()
         {
-            kl::ndarray<i32> m = kl::ndarray<i32>::zeros( 2, 2 );
-            m[0] = 1;
+            kl::ndarray<i32, 2, 2> m = kl::zeros( 2, 2 );
+            m[0]                   = 1;
         }
     );
 }
 
 private void arithmetic( ref kl::test::context c )
 {
-    kl::ndarray<i32> a = kl::ndarray<i32>( [ 1, 2, 3 ] );
-    kl::ndarray<i32> b = kl::ndarray<i32>( [ 10, 20, 30 ] );
-    c.check( a + b == kl::ndarray<i32>( [ 11, 22, 33 ] ) );
-    c.check( b - a == kl::ndarray<i32>( [ 9, 18, 27 ] ) );
-    c.check( a * b == kl::ndarray<i32>( [ 10, 40, 90 ] ) );
-    c.check( b / a == kl::ndarray<i32>( [ 10, 10, 10 ] ) );
-
-    c.check( a * 2 == kl::ndarray<i32>( [ 2, 4, 6 ] ) );
+    kl::ndarray<i32, 3> a = kl::of( [ 1, 2, 3 ] );
+    kl::ndarray<i32, 3> b = kl::of( [ 10, 20, 30 ] );
+    c.check( a + b == kl::of( [ 11, 22, 33 ] ) );
+    c.check( b - a == kl::of( [ 9, 18, 27 ] ) );
+    c.check( a * b == kl::of( [ 10, 40, 90 ] ) );
+    c.check( b / a == kl::of( [ 10, 10, 10 ] ) );
+    c.check( a * 2 == kl::of( [ 2, 4, 6 ] ) );
     c.check( 2 * a == a * 2 );
-    c.check( 10 - a == kl::ndarray<i32>( [ 9, 8, 7 ] ) );
-    c.check( 60 / b == kl::ndarray<i32>( [ 6, 3, 2 ] ) );
+    c.check( 10 - a == kl::of( [ 9, 8, 7 ] ) );
+    c.check( b % 7 == kl::of( [ 3, 6, 2 ] ) );
+    c.check( ( a & 1 ) == kl::of( [ 1, 0, 1 ] ) );
 
-    kl::ndarray<i32> s = a.copy();
+    kl::ndarray<i32, 3> s = a.copy();
     s += b;
     s -= a;
     s *= 2;
     s /= b;
-    c.check( s == kl::ndarray<i32>( [ 2, 2, 2 ] ) );
+    c.check( s == kl::of( [ 2, 2, 2 ] ) );
 
-    kl::ndarray<f64> m = kl::ndarray<f64>( [ 1.0, -2.0, 3.0, -4.0 ], 2, 2 );
+    kl::ndarray<f64, 2, 2> m = kl::of( [ [ 1.0, -2.0 ], [ 3.0, -4.0 ] ] );
     c.check( -m == m * -1.0 );
-    m /= 2.0;
-    c.check_eq( m[1, 1], -2.0 );
 
-    // Equal sizes are not enough: the shapes must broadcast.
+    // A row broadcast down a matrix, and a column across one.
+    kl::ndarray<i32, 2, 3> g   = kl::of( [ [ 1, 2, 3 ], [ 4, 5, 6 ] ] );
+    kl::ndarray<i32, 2, 3> row = g + a;
+    c.check( row == kl::of( [ [ 2, 4, 6 ], [ 5, 7, 9 ] ] ) );
+    kl::ndarray<i32, 2, 1> col = kl::of( [ [ 10 ], [ 20 ] ] );
+    c.check( g + col == kl::of( [ [ 11, 12, 13 ], [ 24, 25, 26 ] ] ) );
+    g += a;
+    c.check( g == row );
+
+    // At run-time sizes the same rule is checked when it runs.
+    u64                    n = 3;
+    kl::ndarray<i32, dyn>    v = kl::filled( 1, n );
+    kl::ndarray<i32, 2, dyn> w = kl::filled( 2, 2, n );
+    kl::ndarray<i32, 2, dyn> x = w + v;
+    c.check_eq( x.sum(), 18 );
     c.expect_panic(
         "the shapes do not broadcast",
         fn[]()
         {
-            _ = kl::ndarray<i32>::zeros( 2, 3 ) + kl::ndarray<i32>::zeros( 3, 2 );
+            u64                 k = 2;
+            kl::ndarray<i32, dyn> p = kl::zeros( k );
+            kl::ndarray<i32, 3>   q = kl::zeros( 3 );
+            _                     = p + q;
         }
     );
 }
 
 private void products( ref kl::test::context c )
 {
-    kl::ndarray<i32> a = kl::ndarray<i32>( [ 1, 2, 3, 4, 5, 6 ], 2, 3 );
-    kl::ndarray<i32> b = kl::ndarray<i32>( [ 7, 8, 9, 10, 11, 12 ], 3, 2 );
-    c.check( a.matmul( b ) == kl::ndarray<i32>( [ 58, 64, 139, 154 ], 2, 2 ) );
-    c.check( a.transposed() == kl::ndarray<i32>( [ 1, 4, 2, 5, 3, 6 ], 3, 2 ) );
-    c.check( a.matmul( kl::ndarray<i32>::identity( 3 ) ) == a );
+    kl::ndarray<i32, 2, 3> a = kl::of( [ [ 1, 2, 3 ], [ 4, 5, 6 ] ] );
+    kl::ndarray<i32, 3, 2> b = kl::of( [ [ 7, 8 ], [ 9, 10 ], [ 11, 12 ] ] );
+    c.check( kl::matmul( a, b ) == kl::of( [ [ 58, 64 ], [ 139, 154 ] ] ) );
+    c.check( a.transposed() == kl::of( [ [ 1, 4 ], [ 2, 5 ], [ 3, 6 ] ] ) );
 
-    // A rank 1 array is a column on the right and a row on the left.
-    kl::ndarray<i32> ones = kl::ndarray<i32>::filled( 1, 3 );
-    c.check( a.matmul( ones ) == kl::ndarray<i32>( [ 6, 15 ] ) );
-    c.check( ones.matmul( b ) == kl::ndarray<i32>( [ 27, 30 ] ) );
-    c.check( ones.matmul( ones ) == kl::ndarray<i32>::filled( 3 ) );
+    kl::ndarray<i32, 3> ones = kl::of( [ 1, 1, 1 ] );
+    c.check( kl::matmul( a, ones ) == kl::of( [ 6, 15 ] ) );
+    c.check( kl::matmul( ones, b ) == kl::of( [ 27, 30 ] ) );
+    c.check_eq( ones.dot( ones ), 3 );
+    c.check( kl::outer( ones, kl::of( [ 1, 2 ] ) ) == kl::of( [ [ 1, 2 ], [ 1, 2 ], [ 1, 2 ] ] ) );
+    c.check( kl::cross( kl::of( [ 1, 0, 0 ] ), kl::of( [ 0, 1, 0 ] ) ) == kl::of( [ 0, 0, 1 ] ) );
 
-    kl::ndarray<i32> v = kl::ndarray<i32>( [ 1, 2, 3 ] );
-    c.check_eq( v.dot( v ), 14 );
-    c.check( v.transposed() == v );
-    c.check_eq( a.sum(), 21 );
+    // A `dyn` number of rows meets fixed columns; the inner sizes are compared when it runs.
+    u64                    rows = 2;
+    kl::ndarray<i32, dyn, 3> d    = kl::filled( 1, rows, 3 );
+    kl::ndarray<i32, dyn, 2> e    = kl::matmul( d, b );
+    c.check_eq( e.extent( 0 ), 2 );
+    c.check_eq( e[1, 1], 30 );
 
-    c.expect_panic( "the shapes differ", fn[]() { _ = kl::ndarray<i32>::zeros( 2, 3 ).matmul( kl::ndarray<i32>::zeros( 2, 3 ) ); } );
-    c.expect_panic( "matmul takes arrays of rank 1 or 2", fn[]() { _ = kl::ndarray<i32>::zeros( 1, 1, 1 ).matmul( kl::ndarray<i32>::zeros( 1 ) ); } );
-}
-
-private void comparing( ref kl::test::context c )
-{
-    kl::ndarray<f64> x = kl::ndarray<f64>( [ 1.0, 1000.0 ] );
-    kl::ndarray<f64> y = kl::ndarray<f64>( [ 1.0 + 1e-10, 1000.0 + 1e-6 ] );
-    c.check( !( x == y ) );
-    c.check( x.approx_equal( y ) );
-    c.check( !x.approx_equal( y, 0.0, 1e-9 ) );
-    c.check( !x.approx_equal( x.reshaped( 1, 2 ) ) );
-}
-
-private void converting( ref kl::test::context c )
-{
-    kl::ndarray<f64> r = kl::ndarray<f64>( [ -2.5, -0.5, 0.5, 2.7 ], 2, 2 );
-    c.check( r.truncated<i32>() == kl::ndarray<i32>( [ -2, 0, 0, 2 ], 2, 2 ) );
-    c.check( r.rounded<i32>() == kl::ndarray<i32>( [ -3, -1, 1, 3 ], 2, 2 ) );
-    c.check( r.floored<i32>() == kl::ndarray<i32>( [ -3, -1, 0, 2 ], 2, 2 ) );
-    c.check( r.ceiled<i32>() == kl::ndarray<i32>( [ -2, 0, 1, 3 ], 2, 2 ) );
-
-    kl::ndarray<i32> v = kl::ndarray<i32>( [ -1, 0, 300 ] );
-    c.check( v.to<f64>() == kl::ndarray<f64>( [ -1.0, 0.0, 300.0 ] ) );
-    c.expect_panic( "cast out of range", fn[]() { _ = kl::ndarray<i32>( [ 300 ] ).to<u8>(); } );
-}
-
-private void building_more( ref kl::test::context c )
-{
-    kl::ndarray<i32> n = kl::ndarray<i32>::of( [ [ 1, 2, 3 ], [ 4, 5, 6 ] ] );
-    c.check( n == kl::ndarray<i32>( [ 1, 2, 3, 4, 5, 6 ], 2, 3 ) );
-    c.check( kl::ndarray<i32>::of( [ [ [ 1 ], [ 2 ] ], [ [ 3 ], [ 4 ] ] ] ) == kl::ndarray<i32>( [ 1, 2, 3, 4 ], 2, 2, 1 ) );
-
-    c.check( kl::ndarray<i32>::ones( 2, 2 ).sum() == 4 );
-    c.check( kl::ndarray<i32>::zeros_like( n ) == kl::ndarray<i32>::zeros( 2, 3 ) );
-    c.check( kl::ndarray<i32>::filled_like( 3, n ) == kl::ndarray<i32>::filled( 3, 2, 3 ) );
-
-    c.check( kl::ndarray<i32>::arange( 0, 5 ) == kl::ndarray<i32>( [ 0, 1, 2, 3, 4 ] ) );
-    c.check( kl::ndarray<i32>::arange( 5, 0, -2 ) == kl::ndarray<i32>( [ 5, 3, 1 ] ) );
-    c.check_eq( kl::ndarray<i32>::arange( 3, 3 ).size(), 0 );
-    c.check( kl::ndarray<f64>::arange( 0.0, 1.0, 0.25 ) == kl::ndarray<f64>( [ 0.0, 0.25, 0.5, 0.75 ] ) );
-    c.expect_panic( "the step is 0", fn[]() { _ = kl::ndarray<i32>::arange( 0, 1, 0 ); } );
-
-    // The last element is `b` exactly, not an accumulated step.
-    kl::ndarray<f64> l = kl::ndarray<f64>::linspace( 0.0, 1.0, 11 );
-    c.check_eq( l.size(), 11 );
-    c.check_eq( l[10], 1.0 );
-    c.check( l.approx_equal( kl::ndarray<f64>::arange( 0.0, 11.0 ) / 10.0 ) );
-    c.check( kl::ndarray<f64>::linspace( 2.0, 9.0, 1 ) == kl::ndarray<f64>( [ 2.0 ] ) );
-
-    c.check( kl::ndarray<i32>::eye( 2, 3 ) == kl::ndarray<i32>( [ 1, 0, 0, 0, 1, 0 ], 2, 3 ) );
-    kl::ndarray<i32> d = kl::diag( kl::ndarray<i32>( [ 1, 2 ] ) );
-    c.check( d == kl::ndarray<i32>( [ 1, 0, 0, 2 ], 2, 2 ) );
-    c.check( n.diagonal() == kl::ndarray<i32>( [ 1, 5 ] ) );
-    c.expect_panic( "diag takes an array of rank 1", fn[]() { _ = kl::diag( kl::ndarray<i32>::zeros( 2, 2 ) ); } );
-    c.expect_panic( "diagonal takes an array of rank 2", fn[]() { _ = kl::ndarray<i32>::zeros( 2 ).diagonal(); } );
-}
-
-private void shaping( ref kl::test::context c )
-{
-    kl::ndarray<i32> a = kl::ndarray<i32>::arange( 0, 24 ).reshaped( 2, kl::ndarray<i32>::inferred, 4 );
-    c.check_eq( a.shape()[1], 3 );
-    c.check( a.flattened() == kl::ndarray<i32>::arange( 0, 24 ) );
-    c.expect_panic( "only one dimension can be inferred", fn[]() { _ = kl::ndarray<i32>::zeros( 4 ).reshaped( kl::ndarray<i32>::inferred, kl::ndarray<i32>::inferred ); } );
-    c.expect_panic( "the shape does not fit the elements", fn[]() { _ = kl::ndarray<i32>::zeros( 4 ).reshaped( 3, kl::ndarray<i32>::inferred ); } );
-
-    // Every axis reversed, so each index is read backwards.
-    kl::ndarray<i32> t = a.transposed();
-    c.check_eq( t.rank(), 3 );
-    c.check_eq( t.shape()[0], 4 );
-    c.check_eq( t[3, 2, 1], a[1, 2, 3] );
-    c.check_eq( t[1, 0, 1], a[1, 0, 1] );
-    c.check( t.transposed() == a );
-
-    kl::ndarray<i32> p = a.permuted( 1, 2, 0 );
-    c.check_eq( p.shape()[0], 3 );
-    c.check_eq( p.shape()[2], 2 );
-    c.check_eq( p[2, 1, 1], a[1, 2, 1] );
-    c.check( a.swapped_axes( 0, 2 ) == a.permuted( 2, 1, 0 ) );
-    c.expect_panic( "an axis is named twice", fn[]() { _ = kl::ndarray<i32>::zeros( 2, 2 ).permuted( 0, 0 ); } );
-    c.expect_panic( "the axis count differs from the rank", fn[]() { _ = kl::ndarray<i32>::zeros( 2, 2 ).permuted( 0 ); } );
-
-    kl::ndarray<i32> e = kl::ndarray<i32>( [ 1, 2 ] ).expanded( 0 );
-    c.check( e == kl::ndarray<i32>( [ 1, 2 ], 1, 2 ) );
-    c.check( kl::ndarray<i32>( [ 1, 2 ] ).expanded( 1 ) == kl::ndarray<i32>( [ 1, 2 ], 2, 1 ) );
-    c.check( e.squeezed() == kl::ndarray<i32>( [ 1, 2 ] ) );
-    c.check_eq( kl::ndarray<i32>::zeros( 1, 1 ).squeezed().rank(), 0 );
-    c.expect_panic( "axis out of range", fn[]() { _ = kl::ndarray<i32>::zeros( 2 ).expanded( 2 ); } );
-
-    kl::ndarray<i32> x = kl::ndarray<i32>( [ 1, 2, 3, 4 ], 2, 2 );
-    kl::ndarray<i32> y = kl::ndarray<i32>( [ 5, 6 ], 1, 2 );
-    c.check( x.concatenated( y, 0 ) == kl::ndarray<i32>( [ 1, 2, 3, 4, 5, 6 ], 3, 2 ) );
-    c.check( x.concatenated( x, 1 ) == kl::ndarray<i32>( [ 1, 2, 1, 2, 3, 4, 3, 4 ], 2, 4 ) );
-    c.check( x.stacked( x * 2, 0 ) == kl::ndarray<i32>( [ 1, 2, 3, 4, 2, 4, 6, 8 ], 2, 2, 2 ) );
-    c.check( x.stacked( x * 2, 2 ) == kl::ndarray<i32>( [ 1, 2, 2, 4, 3, 6, 4, 8 ], 2, 2, 2 ) );
-    c.expect_panic( "the shapes differ", fn[]() { _ = kl::ndarray<i32>::zeros( 2, 2 ).concatenated( kl::ndarray<i32>::zeros( 2, 3 ), 0 ); } );
-}
-
-private void walking( ref kl::test::context c )
-{
-    kl::ndarray<i32> a = kl::ndarray<i32>( [ 1, 2, 3, 4 ], 2, 2 );
-    i32              s = 0;
-    for( i32 x : a )
-    {
-        s = s * 10 + x;
-    }
-    c.check_eq( s, 1234 );
-
-    for( ref i32 x : a )
-    {
-        x *= 2;
-    }
-    c.check( a == kl::ndarray<i32>( [ 2, 4, 6, 8 ], 2, 2 ) );
-}
-
-private void integer_operators_and_functions( ref kl::test::context c )
-{
-    kl::ndarray<i64> a = kl::ndarray<i64>( [ 12, 10, -6, 7 ], 2, 2 );
-    c.check( a % 5 == kl::ndarray<i64>( [ 2, 0, -1, 2 ], 2, 2 ) );
-    c.check( 20 % kl::ndarray<i64>( [ 3, 6 ] ) == kl::ndarray<i64>( [ 2, 2 ] ) );
-    c.check( ( a & 6 ) == kl::ndarray<i64>( [ 4, 2, 2, 6 ], 2, 2 ) );
-    c.check( ( a ^ a ) == kl::ndarray<i64>::zeros( 2, 2 ) );
-    c.check( ~a == kl::ndarray<i64>( [ -13, -11, 5, -8 ], 2, 2 ) );
-    a |= kl::ndarray<i64>::ones( 2, 2 );
-    a &= 3;
-    c.check( a == kl::ndarray<i64>( [ 1, 3, 3, 3 ], 2, 2 ) );
-    c.expect_panic( "the shapes do not broadcast", fn[]() { kl::ndarray<i64> b = kl::ndarray<i64>::ones( 2, 2 ); b %= kl::ndarray<i64>::ones( 4 ); } );
-
-    kl::ndarray<f64> f = kl::ndarray<f64>( [ -1.5, 0.0, 2.0 ] );
-    c.check( f.abs() == kl::ndarray<f64>( [ 1.5, 0.0, 2.0 ] ) );
-    c.check( f.sign() == kl::ndarray<f64>( [ -1.0, 0.0, 1.0 ] ) );
-    c.check( f.clip( -1.0, 1.0 ) == kl::ndarray<f64>( [ -1.0, 0.0, 1.0 ] ) );
-    kl::ndarray<f64> g = kl::ndarray<f64>( [ 1.0, -1.0, 3.0 ] );
-    c.check( kl::minimum( f, g ) == kl::ndarray<f64>( [ -1.5, -1.0, 2.0 ] ) );
-    c.check( kl::maximum( f, g ) == kl::ndarray<f64>( [ 1.0, 0.0, 3.0 ] ) );
-    c.expect_panic( "the shapes differ", fn[]() { _ = kl::minimum( kl::ndarray<f64>::ones( 3 ), kl::ndarray<f64>::ones( 3, 1 ) ); } );
-
-    kl::ndarray<i32> n = f.map( fn[]( f64 x ) { return kl::rounded<i32>( x * 2.0 ); } );
-    c.check( n == kl::ndarray<i32>( [ -3, 0, 4 ] ) );
-    c.check_eq( n.shape()[0], 3 );
-    c.check( f.map( fn[]( f64 x ) -> i32 { return kl::rounded<i32>( x ); } ) == kl::ndarray<i32>( [ -2, 0, 2 ] ) );
-}
-
-private void reducing( ref kl::test::context c )
-{
-    kl::ndarray<i32> a = kl::ndarray<i32>( [ 1, 5, 3, 4, 2, 6 ], 2, 3 );
-    c.check( a.sum( 0 ) == kl::ndarray<i32>( [ 5, 7, 9 ] ) );
-    c.check( a.sum( 1 ) == kl::ndarray<i32>( [ 9, 12 ] ) );
-    c.check_eq( a.prod(), 720 );
-    c.check( a.prod( 1 ) == kl::ndarray<i32>( [ 15, 48 ] ) );
-    c.check_eq( a.min(), 1 );
-    c.check_eq( a.max(), 6 );
-    c.check( a.min( 0 ) == kl::ndarray<i32>( [ 1, 2, 3 ] ) );
-    c.check( a.max( 1 ) == kl::ndarray<i32>( [ 5, 6 ] ) );
-    c.check_eq( a.argmin(), 0 );
-    c.check_eq( a.argmax(), 5 );
-    c.check( a.argmax( 0 ) == kl::ndarray<u64>( [ 1, 0, 1 ] ) );
-    c.check( a.argmin( 1 ) == kl::ndarray<u64>( [ 0, 1 ] ) );
-    c.check( a.cumsum() == kl::ndarray<i32>( [ 1, 6, 9, 13, 15, 21 ] ) );
-    c.check( a.cumsum( 0 ) == kl::ndarray<i32>( [ 1, 5, 3, 5, 7, 9 ], 2, 3 ) );
-    c.check( a.cumprod( 1 ) == kl::ndarray<i32>( [ 1, 5, 15, 4, 8, 48 ], 2, 3 ) );
-
-    // The middle axis of a rank 3 array, and the first of ties.
-    kl::ndarray<i32> t = kl::ndarray<i32>::arange( 0, 8 ).reshaped( 2, 2, 2 );
-    c.check( t.sum( 1 ) == kl::ndarray<i32>( [ 2, 4, 10, 12 ], 2, 2 ) );
-    c.check_eq( kl::ndarray<i32>( [ 3, 1, 1, 3 ] ).argmin(), 1 );
-
-    // An empty axis sums to 0 and multiplies to 1; its smallest panics.
-    kl::ndarray<i32> e = kl::ndarray<i32>::zeros( 2, 0 );
-    c.check( e.sum( 1 ) == kl::ndarray<i32>::zeros( 2 ) );
-    c.check( e.prod( 1 ) == kl::ndarray<i32>::ones( 2 ) );
-    c.check( e.sum( 0 ) == kl::ndarray<i32>::zeros( 0 ) );
-    c.expect_panic( "the axis is empty", fn[]() { _ = kl::ndarray<i32>::zeros( 2, 0 ).min( 1 ); } );
-    c.expect_panic( "the array is empty", fn[]() { _ = kl::ndarray<i32>::zeros( 0 ).max(); } );
-    c.expect_panic( "axis out of range", fn[]() { _ = kl::ndarray<i32>::zeros( 2 ).sum( 1 ); } );
-
-    kl::ndarray<f64> f = kl::ndarray<f64>( [ 1.0, 2.0, 3.0, 4.0, 5.0, 9.0 ], 2, 3 );
-    c.check_eq( f.mean(), 4.0 );
-    c.check( f.mean( 0 ) == kl::ndarray<f64>( [ 2.5, 3.5, 6.0 ] ) );
-    c.check_eq( kl::ndarray<f64>( [ 1.0, 3.0 ] ).var(), 1.0 );
-    c.check( f.var( 1 ) == kl::ndarray<f64>( [ 2.0 / 3.0, 14.0 / 3.0 ] ) );
-    c.check_eq( kl::ndarray<f64>( [ 2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0 ] ).std(), 2.0 );
-    c.check( f.std( 0 ) == kl::ndarray<f64>( [ 1.5, 1.5, 3.0 ] ) );
-    c.check( kl::is_nan( kl::ndarray<f64>::zeros( 0 ).mean() ) );
-
-    // A NaN wins min and max, and argmin and argmax find the first one.
-    f64              nan = kl::from_bits( 0x7FF8000000000000 );
-    kl::ndarray<f64> n   = kl::ndarray<f64>( [ 1.0, nan, -1.0, nan ] );
-    c.check( kl::is_nan( n.min() ) );
-    c.check( kl::is_nan( n.max() ) );
-    c.check_eq( n.argmin(), 1 );
-    c.check_eq( n.argmax(), 1 );
-}
-
-private void elementwise_maths( ref kl::test::context c )
-{
-    kl::ndarray<f64> a = kl::ndarray<f64>( [ 0.0, 1.0, 4.0, 9.0 ], 2, 2 );
-    c.check( kl::sqrt( a ) == kl::ndarray<f64>( [ 0.0, 1.0, 2.0, 3.0 ], 2, 2 ) );
-    c.check( kl::log( kl::exp( a ) ) == a );
-    c.check( kl::pow( a, 0.5 ) == kl::sqrt( a ) );
-    c.check( kl::pow( a, kl::ndarray<f64>::filled( 2.0, 2, 2 ) ) == a * a );
-    c.check( kl::floor( kl::ndarray<f64>( [ -1.5, 2.5 ] ) ) == kl::ndarray<f64>( [ -2.0, 2.0 ] ) );
-    c.check( kl::round( kl::ndarray<f64>( [ -1.5, 2.5 ] ) ) == kl::ndarray<f64>( [ -2.0, 3.0 ] ) );
-    c.check_eq( kl::atan2( kl::ndarray<f64>( [ 1.0 ] ), kl::ndarray<f64>( [ -1.0 ] ) )[0], 3.0 * kl::pi / 4.0 );
-    c.check_eq( kl::sin( kl::ndarray<f64>( [ 0.5 ] ) )[0], kl::sin( 0.5 ) );
-    c.expect_panic( "the shapes differ", fn[]() { _ = kl::pow( kl::ndarray<f64>::ones( 2 ), kl::ndarray<f64>::ones( 3 ) ); } );
-
-    // An f32 array is computed as f64 and rounded, overflowing to an infinity.
-    kl::ndarray<f32> f = kl::ndarray<f32>( [ 0.0, 100.0 ] );
-    kl::ndarray<f32> e = kl::exp( f );
-    c.check_eq( e[0], cast<f32>( 1.0 ) );
-    c.check( kl::is_inf( e[1] ) );
-    c.check_eq( kl::tanh( f )[1], cast<f32>( 1.0 ) );
-}
-
-private void masks( ref kl::test::context c )
-{
-    kl::ndarray<f64> a = kl::ndarray<f64>( [ 1.0, 5.0, 3.0, 0.0 ], 2, 2 );
-    kl::ndarray<f64> b = kl::ndarray<f64>::filled( 3.0, 2, 2 );
-    c.check_eq( a.less( b ).count(), 2 );
-    c.check( a.less( b ).at( 1, 1 ) && !a.less( b ).at( 0, 1 ) );
-    c.check_eq( a.greater( 2.0 ).count(), 2 );
-    c.check_eq( a.less_equal( b ).count(), 3 );
-    c.check_eq( a.greater_equal( 3.0 ).count(), 2 );
-    c.check( a.equal_each( b ).at( 1, 0 ) && a.equal_each( b ).count() == 1 );
-    c.check( a.differs( 3.0 ) == ~a.equal_each( 3.0 ) );
-
-    kl::mask m = a.greater( 2.0 );
-    c.check( a.selected( m ) == kl::ndarray<f64>( [ 5.0, 3.0 ] ) );
-    c.check_eq( a.selected( kl::mask( 2, 2 ) ).size(), 0 );
-    c.check( kl::select( m, a, b ) == kl::ndarray<f64>( [ 3.0, 5.0, 3.0, 3.0 ], 2, 2 ) );
-    c.check( kl::select( m | a.less( 1.0 ), a, b ).sum() == 11.0 );
-
-    f64              nan = kl::from_bits( 0x7FF8000000000000 );
-    kl::ndarray<f64> f   = kl::ndarray<f64>( [ nan, 1.0, kl::exp( 1000.0 ) ] );
-    c.check( kl::is_nan( f ).at( 0 ) && kl::is_nan( f ).count() == 1 );
-    c.check( kl::is_inf( f ).at( 2 ) && kl::is_inf( f ).count() == 1 );
-    c.check( a.differs( a ).any() == false );
-    c.check( f.differs( f ).at( 0 ) );
-
-    c.expect_panic( "the shapes differ", fn[]() { _ = kl::ndarray<i32>::zeros( 2 ).less( kl::ndarray<i32>::zeros( 3 ) ); } );
-    c.expect_panic( "the shapes differ", fn[]() { _ = kl::ndarray<i32>::zeros( 2 ).selected( kl::mask( 3 ) ); } );
-}
-
-private void slices( ref kl::test::context c )
-{
-    kl::ndarray<i32> a = kl::ndarray<i32>::arange( 0, 12 ).reshaped( 3, 4 );
-    c.check( a.sliced( 1..3, 1..3 ) == kl::ndarray<i32>( [ 5, 6, 9, 10 ], 2, 2 ) );
-    c.check( a.sliced( 0..3, 3..4 ) == kl::ndarray<i32>( [ 3, 7, 11 ], 3, 1 ) );
-    c.check_eq( a.sliced( 3..3, 0..4 ).size(), 0 );
-    c.check_eq( a.sliced( 3..3, 4..4 ).size(), 0 );
-
-    kl::ndarray<i32> b = a.copy();
-    b.assign( kl::ndarray<i32>::filled( -1, 2, 1 ), 1..3, 0..1 );
-    c.check( b.sliced( 0..3, 0..1 ) == kl::ndarray<i32>( [ 0, -1, -1 ], 3, 1 ) );
-    c.check_eq( b.sum(), a.sum() - 4 - 8 - 2 );
-    b.fill( 7, 0..1, 1..4 );
-    c.check( b.sliced( 0..1, 0..4 ) == kl::ndarray<i32>( [ 0, 7, 7, 7 ], 1, 4 ) );
-
-    c.check_eq( a.row( 2 )[1], 9 );
-    a.row( 0 )[3] = 30;
-    c.check_eq( a[0, 3], 30 );
-    c.check_eq( a.block().size, 12 );
-
-    kl::ndarray<i32> t = kl::ndarray<i32>::arange( 0, 24 ).reshaped( 2, 3, 4 );
-    c.check_eq( t.block( 1 ).size, 12 );
-    c.check_eq( t.block( 1, 2 )[0], 20 );
-    c.check_eq( t.block( 1, 2, 3 ).size, 1 );
-    c.check( t.sliced( 1..2, 0..3, 2..3 ) == kl::ndarray<i32>( [ 14, 18, 22 ], 1, 3, 1 ) );
-
-    range r = 0..2;
-    c.check_eq( t.sliced( r, r, r ).sum(), 0 + 1 + 4 + 5 + 12 + 13 + 16 + 17 );
-
-    c.expect_panic( "the range count differs from the rank", fn[]() { _ = kl::ndarray<i32>::zeros( 2, 2 ).sliced( 0..1 ); } );
-    c.expect_panic( "the range is past its dimension", fn[]() { _ = kl::ndarray<i32>::zeros( 2, 2 ).sliced( 0..1, 0..3 ); } );
-    c.expect_panic( "the range is backwards", fn[]() { u64 n = 1; _ = kl::ndarray<i32>::zeros( 2 ).sliced( 2..n ); } );
-    c.expect_panic( "the shapes differ", fn[]() { kl::ndarray<i32> z = kl::ndarray<i32>::zeros( 2, 2 ); z.assign( kl::ndarray<i32>::zeros( 2 ), 0..2, 0..1 ); } );
-    c.expect_panic( "the rank is not 2", fn[]() { _ = kl::ndarray<i32>::zeros( 2 ).row( 0 ); } );
-    c.expect_panic( "the index count exceeds the rank", fn[]() { _ = kl::ndarray<i32>::zeros( 2 ).block( 0, 0 ); } );
-    c.expect_panic( "index out of range", fn[]() { _ = kl::ndarray<i32>::zeros( 2, 2 ).block( 2 ); } );
-}
-
-private void broadcasting( ref kl::test::context c )
-{
-    kl::ndarray<i32> a   = kl::ndarray<i32>::arange( 0, 6 ).reshaped( 2, 3 );
-    kl::ndarray<i32> row = kl::ndarray<i32>( [ 10, 20, 30 ] );
-    kl::ndarray<i32> col = kl::ndarray<i32>( [ 100, 200 ], 2, 1 );
-    c.check( a + row == kl::ndarray<i32>( [ 10, 21, 32, 13, 24, 35 ], 2, 3 ) );
-    c.check( row + a == a + row );
-    c.check( a * col == kl::ndarray<i32>( [ 0, 100, 200, 600, 800, 1000 ], 2, 3 ) );
-    c.check( col - row == kl::ndarray<i32>( [ 90, 80, 70, 190, 180, 170 ], 2, 3 ) );
-    c.check( a + kl::ndarray<i32>::filled( 1 ) == a + 1 );
-    c.check( a.map( col, fn[]( i32 x, i32 y ) { return kl::max( x, y / 40 ); } ) == kl::ndarray<i32>( [ 2, 2, 2, 5, 5, 5 ], 2, 3 ) );
-    c.check( ( a % kl::ndarray<i32>( [ 2 ] ) ).sum() == 3 );
-
-    // A stretch inside the shape: (2, 1, 2) and (3, 1) give (2, 3, 2).
-    kl::ndarray<i32> t = kl::ndarray<i32>( [ 1, 2, 3, 4 ], 2, 1, 2 ) + kl::ndarray<i32>( [ 0, 10, 20 ], 3, 1 );
-    c.check_eq( t.rank(), 3 );
-    c.check_eq( t.shape()[1], 3 );
-    c.check_eq( t[1, 2, 1], 24 );
-    c.check_eq( t.sum(), 3 * 10 + 4 * 30 );
-
-    kl::ndarray<i32> b = a.copy();
-    b += row;
-    c.check( b == a + row );
-    b -= col;
-    c.check_eq( b[1, 0], 3 + 10 - 200 );
-    c.check_eq( ( kl::ndarray<i32>::zeros( 0, 3 ) + row ).size(), 0 );
-
-    c.expect_panic( "the shapes do not broadcast", fn[]() { _ = kl::ndarray<i32>::zeros( 2, 3 ) + kl::ndarray<i32>::zeros( 2 ); } );
-    c.expect_panic( "the shapes do not broadcast", fn[]() { kl::ndarray<i32> r = kl::ndarray<i32>::zeros( 3 ); r += kl::ndarray<i32>::zeros( 2, 3 ); } );
-    c.expect_panic( "the shapes do not broadcast", fn[]() { kl::ndarray<i32> r = kl::ndarray<i32>::zeros( 2, 1 ); r += kl::ndarray<i32>::zeros( 2, 3 ); } );
+    // A rank 3 transpose reverses every axis.
+    kl::ndarray<i32, 2, 3, 4> t = kl::zeros( 2, 3, 4 );
+    t[1, 2, 3]                = 7;
+    kl::ndarray<i32, 4, 3, 2> r = t.transposed();
+    c.check_eq( r[3, 2, 1], 7 );
 }
 
 private void linear_algebra( ref kl::test::context c )
 {
-    kl::ndarray<f64> a = kl::ndarray<f64>( [ 2.0, 1.0, 1.0, 3.0 ], 2, 2 );
-    c.check_eq( a.trace(), 5.0 );
-    c.check_eq( kl::determinant( a ), 5.0 );
-    c.check_eq( kl::ndarray<f64>( [ 3.0, 4.0 ] ).norm(), 5.0 );
-    c.check( kl::ndarray<f64>( [ 3.0, 4.0 ] ).normalised() == kl::ndarray<f64>( [ 0.6, 0.8 ] ) );
+    kl::ndarray<f64, 2, 2> m = kl::of( [ [ 4.0, 7.0 ], [ 2.0, 6.0 ] ] );
+    c.check( kl::abs( kl::determinant( m ) - 10.0 ) < 1e-12 );
 
-    // Scaled, so no square overflows or underflows.
-    c.check( kl::abs( kl::ndarray<f64>( [ 3e200, 4e200 ] ).norm() / 5e200 - 1.0 ) < 1e-15 );
-    c.check( kl::abs( kl::ndarray<f64>( [ 3e-200, 4e-200 ] ).norm() / 5e-200 - 1.0 ) < 1e-15 );
-    c.check_eq( kl::ndarray<f64>( [ 0.0, 0.0 ] ).norm(), 0.0 );
-    f64 inf = kl::exp( 1000.0 );
-    c.check_eq( kl::ndarray<f64>( [ inf, 1.0, inf ] ).norm(), inf );
-    c.check( kl::is_nan( kl::ndarray<f64>( [ inf, kl::from_bits( 0x7FF8000000000000 ) ] ).norm() ) );
-    c.check( kl::ndarray<i32>( [ 1, 2 ] ).outer( kl::ndarray<i32>( [ 1, 10, 100 ] ) ) == kl::ndarray<i32>( [ 1, 10, 100, 2, 20, 200 ], 2, 3 ) );
-    c.check( kl::cross( kl::ndarray<i32>( [ 1, 0, 0 ] ), kl::ndarray<i32>( [ 0, 1, 0 ] ) ) == kl::ndarray<i32>( [ 0, 0, 1 ] ) );
+    kl::optional<kl::ndarray<f64, 2, 2>> inv = kl::inverse( m );
+    kl::ndarray<f64, 2, 2>           eye = kl::eye( 2, 2 );
+    c.check( kl::matmul( m, kl::unwrap( move inv ) ).approx_equal( eye ) );
 
-    // A pivot is needed: the first column's top is 0.
-    kl::ndarray<f64> p = kl::ndarray<f64>( [ 0.0, 1.0, 2.0, 1.0, 0.0, 3.0, 4.0, -3.0, 8.0 ], 3, 3 );
-    c.check_eq( kl::determinant( p ), -2.0 );
-    kl::ndarray<f64> inv = kl::unwrap( kl::inverse( p ) );
-    c.check( p.matmul( inv ).approx_equal( kl::ndarray<f64>::identity( 3 ) ) );
+    kl::ndarray<f64, 2> b = kl::of( [ 1.0, 2.0 ] );
+    kl::ndarray<f64, 2> x = kl::unwrap( kl::solve( m, b ) );
+    c.check( kl::matmul( m, x ).approx_equal( b ) );
 
-    kl::ndarray<f64> x = kl::unwrap( kl::solve( a, kl::ndarray<f64>( [ 3.0, 4.0 ] ) ) );
-    c.check( x.approx_equal( kl::ndarray<f64>( [ 1.0, 1.0 ] ) ) );
-    kl::ndarray<f64> xs = kl::unwrap( kl::solve( a, kl::ndarray<f64>( [ 3.0, 1.0, 4.0, 3.0 ], 2, 2 ) ) );
-    c.check( a.matmul( xs ).approx_equal( kl::ndarray<f64>( [ 3.0, 1.0, 4.0, 3.0 ], 2, 2 ) ) );
+    kl::ndarray<f64, 3, 2> a = kl::of( [ [ 1.0, 1.0 ], [ 1.0, 2.0 ], [ 1.0, 3.0 ] ] );
+    kl::ndarray<f64, 3>    y = kl::of( [ 1.0, 2.0, 2.0 ] );
+    kl::ndarray<f64, 2>    f = kl::unwrap( kl::lstsq( a, y ) );
+    c.check( f.approx_equal( kl::of( [ 2.0 / 3.0, 0.5 ] ) ) );
 
-    kl::ndarray<f64> singular = kl::ndarray<f64>( [ 1.0, 2.0, 2.0, 4.0 ], 2, 2 );
-    c.check_eq( kl::determinant( singular ), 0.0 );
+    kl::pair<kl::ndarray<f64, 3, 2>, kl::ndarray<f64, 2, 2>> qr = kl::qr( a );
+    c.check( kl::matmul( qr.first, qr.second ).approx_equal( a ) );
+    c.check( kl::abs( kl::hat_diagonal( a ).sum() - 2.0 ) < 1e-12 );
+
+    kl::ndarray<f64, 2, 2> singular = kl::of( [ [ 1.0, 2.0 ], [ 2.0, 4.0 ] ] );
     c.check( kl::is_none( kl::inverse( singular ) ) );
-    c.check( kl::is_none( kl::solve( singular, kl::ndarray<f64>( [ 1.0, 1.0 ] ) ) ) );
+    c.check( kl::diagonal( kl::diag( b ) ) == b );
+}
 
-    c.expect_panic( "the matrix is not square", fn[]() { _ = kl::determinant( kl::ndarray<f64>::zeros( 2, 3 ) ); } );
-    c.expect_panic( "the shapes differ", fn[]() { _ = kl::solve( kl::ndarray<f64>::identity( 2 ), kl::ndarray<f64>::zeros( 3 ) ); } );
-    c.expect_panic( "cross takes vectors of size 3", fn[]() { _ = kl::cross( kl::ndarray<i32>::zeros( 2 ), kl::ndarray<i32>::zeros( 2 ) ); } );
+private void comparing( ref kl::test::context c )
+{
+    kl::ndarray<f64, 2> x = kl::of( [ 1.0, 1000.0 ] );
+    kl::ndarray<f64, 2> y = kl::of( [ 1.0 + 1e-10, 1000.0 + 1e-6 ] );
+    c.check( !( x == y ) );
+    c.check( x.approx_equal( y ) );
+    c.check( !x.approx_equal( y, 0.0, 1e-9 ) );
+
+    kl::ndarray<i32, 4>      a = kl::of( [ 1, 5, 3, 8 ] );
+    kl::mask<4>      m = a.greater( 2 );
+    c.check_eq( m.count(), 3 );
+    c.check( m.any() && !m.all() );
+    c.check( !m.test( 0 ) && m.at( 1 ) );
+    c.check_eq( ( m & a.less( 6 ) ).count(), 2 );
+    c.check_eq( ( ~m ).count(), 1 );
+    c.check( a.selected( m ).as_shape<3>() == kl::of( [ 5, 3, 8 ] ) );
+    c.check( kl::select( m, a, kl::ndarray<i32, 4>::zeros() ) == kl::of( [ 0, 5, 3, 8 ] ) );
+    c.check_eq( a.equal_each( a ).count(), 4 );
+    c.check_eq( a.differs( 5 ).count(), 3 );
+
+    kl::ndarray<f64, 3> n = kl::of( [ 1.0, kl::nan(), kl::inf() ] );
+    c.check_eq( kl::is_nan( n ).count(), 1 );
+    c.check_eq( kl::is_inf( n ).count(), 1 );
+}
+
+private void reducing( ref kl::test::context c )
+{
+    kl::ndarray<i32, 2, 3> a = kl::of( [ [ 1, 2, 3 ], [ 4, 5, 6 ] ] );
+    c.check_eq( a.sum(), 21 );
+    c.check_eq( a.prod(), 720 );
+    c.check_eq( a.min(), 1 );
+    c.check_eq( a.max(), 6 );
+    c.check_eq( a.argmax(), 5 );
+
+    // A constant axis keeps the other size in the type; a run-time one makes it `dyn`.
+    kl::ndarray<i32, 3> columns = a.sum<0>();
+    kl::ndarray<i32, 2> rows    = a.sum<1>();
+    c.check( columns == kl::of( [ 5, 7, 9 ] ) );
+    c.check( rows == kl::of( [ 6, 15 ] ) );
+    u64                 axis = 1;
+    kl::ndarray<i32, dyn> by   = a.sum( axis );
+    c.check( by.as_shape<2>() == kl::of( [ 6, 15 ] ) );
+    c.check( a.max<0>() == kl::of( [ 4, 5, 6 ] ) );
+    c.check( a.argmin<1>() == kl::ndarray<u64, 2>::of( [ 0, 0 ] ) );
+    c.check( a.prod( 0 ).as_shape<3>() == kl::of( [ 4, 10, 18 ] ) );
+    c.check( a.cumsum() == kl::of( [ 1, 3, 6, 10, 15, 21 ] ) );
+    c.check( a.cumsum( 0 ) == kl::of( [ [ 1, 2, 3 ], [ 5, 7, 9 ] ] ) );
+
+    kl::ndarray<f64, 2, 2> f = kl::of( [ [ 1.0, 2.0 ], [ 3.0, 4.0 ] ] );
+    c.check_eq( f.mean(), 2.5 );
+    c.check_eq( f.var(), 1.25 );
+    c.check( f.mean<0>() == kl::of( [ 2.0, 3.0 ] ) );
+    c.check( f.std<1>() == kl::of( [ 0.5, 0.5 ] ) );
+
+    // At a `dyn` row count, the constant axis keeps the fixed size.
+    u64                    n = 3;
+    kl::ndarray<f64, dyn, 2> d = kl::filled( 1.0, n, 2 );
+    kl::ndarray<f64, 2>      s = d.sum<0>();
+    c.check( s == kl::of( [ 3.0, 3.0 ] ) );
+    kl::ndarray<f64, dyn> t = d.sum<1>();
+    c.check_eq( t.size(), 3 );
+
+    c.expect_panic( "axis out of range", fn[]() { _ = kl::ndarray<i32, 2>::zeros().sum( 1 ); } );
+}
+
+private void changing_the_shape( ref kl::test::context c )
+{
+    kl::ndarray<i32, 2, 3> a = kl::of( [ [ 1, 2, 3 ], [ 4, 5, 6 ] ] );
+    kl::ndarray<i32, 6>    f = a.flattened();
+    c.check( f == kl::of( [ 1, 2, 3, 4, 5, 6 ] ) );
+    kl::ndarray<i32, 3, 2> r = a.reshaped( 3, 2 );
+    c.check_eq( r[2, 1], 6 );
+    kl::ndarray<i32, 1, 2, 3> e = a.expanded<0>();
+    c.check_eq( e[0, 1, 2], 6 );
+
+    // To `dyn` and back, checked.
+    kl::ndarray<i32, dyn, dyn> d = a.as_dyn();
+    c.check_eq( d.extent( 1 ), 3 );
+    kl::ndarray<i32, 2, 3> back = d.as_shape<2, 3>();
+    c.check( back == a );
+    c.expect_panic(
+        "the shapes differ",
+        fn[]()
+        {
+            u64                 k = 4;
+            kl::ndarray<i32, dyn> v = kl::zeros( k );
+            _                     = v.as_shape<3>();
+        }
+    );
+
+    kl::ndarray<i32, 2, 2> s = kl::of( [ [ 1, 2 ], [ 3, 4 ] ] );
+    c.check( kl::concatenated( s, s ).sum() == 20 );
+    kl::ndarray<i32, 2, 2, 2> st = kl::stacked( s, s );
+    c.check_eq( st[1, 1, 0], 3 );
+}
+
+private void slices( ref kl::test::context c )
+{
+    kl::ndarray<i32, 3, 3> a = kl::of( [ [ 1, 2, 3 ], [ 4, 5, 6 ], [ 7, 8, 9 ] ] );
+    kl::ndarray<i32, dyn, dyn> s = a.sliced( 1..3, 0..2 );
+    c.check( s.as_shape<2, 2>() == kl::of( [ [ 4, 5 ], [ 7, 8 ] ] ) );
+
+    kl::ndarray<i32, 2, 2> w = a.window<2, 2>( 0, 1 );
+    c.check( w == kl::of( [ [ 2, 3 ], [ 5, 6 ] ] ) );
+    a.set_window( kl::ndarray<i32, 2, 2>::zeros(), 1, 1 );
+    c.check_eq( a.sum(), 1 + 2 + 3 + 4 + 7 );
+    a.fill( 9, 0..1, 0..3 );
+    c.check_eq( a[0, 2], 9 );
+    a.assign( kl::of( [ [ 1 ], [ 1 ] ] ), 1..3, 0..1 );
+    c.check_eq( a[2, 0], 1 );
+
+    c.expect_panic( "the window passes the end", fn[]() { _ = kl::ndarray<i32, 2, 2>::zeros().window<2, 2>( 1, 0 ); } );
+    c.expect_panic( "the range is past its size", fn[]() { _ = kl::ndarray<i32, 2>::zeros().sliced( 0..3 ); } );
 }
 
 private void sorting( ref kl::test::context c )
 {
-    f64 nan = kl::from_bits( 0x7FF8000000000000 );
-    kl::ndarray<f64> a = kl::ndarray<f64>( [ 3.0, nan, -1.0, 3.0, 0.5 ] );
-    kl::ndarray<f64> s = a.sorted();
-    c.check( s.sliced( 0..4 ) == kl::ndarray<f64>( [ -1.0, 0.5, 3.0, 3.0 ] ) );
-    c.check( kl::is_nan( s[4] ) );
-    c.check( a.argsort() == kl::ndarray<u64>( [ 2, 4, 0, 3, 1 ] ) );
-
-    kl::ndarray<f64> u = kl::ndarray<f64>( [ 2.0, nan, 1.0, 2.0, nan ] ).unique();
-    c.check_eq( u.size(), 3 );
-    c.check( u.sliced( 0..2 ) == kl::ndarray<f64>( [ 1.0, 2.0 ] ) );
-    c.check( kl::is_nan( u[2] ) );
-
-    c.check( kl::ndarray<i32>( [ 0, 5, 0, -2 ] ).nonzero() == kl::ndarray<u64>( [ 1, 3 ] ) );
-    c.check( kl::ndarray<f64>( [ 0.0, nan, -0.0 ] ).nonzero() == kl::ndarray<u64>( [ 1 ] ) );
-    c.check_eq( kl::ndarray<i32>::zeros( 0 ).sorted().size(), 0 );
-    c.check_eq( kl::ndarray<i32>::zeros( 0 ).unique().size(), 0 );
-
-    // Larger than a few elements, so the heap is several levels deep.
-    kl::ndarray<i32> big = kl::ndarray<i32>::arange( 0, 100 ).map( fn[]( i32 x ) { return ( x * 37 ) % 100; } );
-    c.check( big.sorted() == kl::ndarray<i32>::arange( 0, 100 ) );
-    c.check( big.argsort().map( fn[]( u64 i ) { return ( i * 37 ) % 100; } ) == kl::ndarray<u64>::arange( 0, 100 ) );
-
-    c.expect_panic( "sorted takes an array of rank 1", fn[]() { _ = kl::ndarray<i32>::zeros( 2, 2 ).sorted(); } );
-    c.expect_panic( "nonzero takes an array of rank 1", fn[]() { _ = kl::ndarray<i32>::zeros( 2, 2 ).nonzero(); } );
+    kl::ndarray<f64, 4> a = kl::of( [ 3.0, kl::nan(), 1.0, 3.0 ] );
+    kl::ndarray<f64, 4> s = a.sorted();
+    c.check_eq( s[0], 1.0 );
+    c.check( s[3] != s[3] );
+    c.check( a.argsort() == kl::ndarray<u64, 4>::of( [ 2, 0, 3, 1 ] ) );
+    c.check_eq( a.unique().size(), 3 );
+    c.check( kl::of( [ 0, 4, 0, 2 ] ).nonzero().as_shape<2>() == kl::ndarray<u64, 2>::of( [ 1, 3 ] ) );
 }
 
-// numpy's factors, solutions and leverages for a line through four points; a wide matrix panics.
-private void least_squares( ref kl::test::context c )
+private void converting( ref kl::test::context c )
 {
-    kl::ndarray<f64> a = kl::ndarray<f64>( [ 1.0, 1.0, 1.0, 2.0, 1.0, 3.0, 1.0, 4.0 ], 4, 2 );
-    kl::pair<kl::ndarray<f64>, kl::ndarray<f64>> f = kl::qr( a );
-    c.check( f.first.approx_equal( kl::ndarray<f64>( [ -0.5, 0.6708203932499369, -0.5, 0.22360679774997896, -0.5, -0.22360679774997896, -0.5, -0.6708203932499369 ], 4, 2 ) ) );
-    c.check( f.second.approx_equal( kl::ndarray<f64>( [ -2.0, -5.0, 0.0, -2.23606797749979 ], 2, 2 ) ) );
-    c.check( kl::unwrap( kl::lstsq( a, kl::ndarray<f64>( [ 6.0, 5.0, 7.0, 10.0 ] ) ) ).approx_equal( kl::ndarray<f64>( [ 3.5, 1.4 ] ) ) );
-    kl::ndarray<f64> b = kl::ndarray<f64>( [ 6.0, 1.0, 5.0, 0.0, 7.0, 2.0, 10.0, 1.0 ], 4, 2 );
-    c.check( kl::unwrap( kl::lstsq( a, b ) ).approx_equal( kl::ndarray<f64>( [ 3.5, 0.5, 1.4, 0.2 ], 2, 2 ) ) );
-    c.check( kl::hat_diagonal( a ).approx_equal( kl::ndarray<f64>( [ 0.7, 0.3, 0.3, 0.7 ] ) ) );
-    c.check( kl::is_none( kl::lstsq( kl::ndarray<f64>( [ 1.0, 0.0, 2.0, 0.0, 3.0, 0.0 ], 3, 2 ), kl::ndarray<f64>::ones( 3 ) ) ) );
-    c.expect_panic( "the matrix has more columns than rows", fn[]() { _ = kl::qr( kl::ndarray<f64>::zeros( 2, 3 ) ); } );
-    c.expect_panic( "the shapes differ", fn[]() { _ = kl::lstsq( kl::ndarray<f64>::identity( 2 ), kl::ndarray<f64>::zeros( 3 ) ); } );
+    kl::ndarray<f64, 3> a = kl::of( [ -1.5, 0.5, 2.5 ] );
+    c.check( a.rounded<i32>() == kl::of( [ -2, 1, 3 ] ) );
+    c.check( a.truncated<i32>() == kl::of( [ -1, 0, 2 ] ) );
+    c.check( a.floored<i64>() == kl::ndarray<i64, 3>::of( [ -2, 0, 2 ] ) );
+    c.check( kl::of( [ 1, 2 ] ).to<f64>() == kl::of( [ 1.0, 2.0 ] ) );
+    c.check( a.abs() == kl::of( [ 1.5, 0.5, 2.5 ] ) );
+    c.check( a.clip( 0.0, 1.0 ) == kl::of( [ 0.0, 0.5, 1.0 ] ) );
+    c.check( a.sign() == kl::of( [ -1.0, 1.0, 1.0 ] ) );
+    c.check( kl::of( [ 3.0, 4.0 ] ).norm() == 5.0 );
+}
+
+private void maths( ref kl::test::context c )
+{
+    kl::ndarray<f64, 2> a = kl::of( [ 1.0, 4.0 ] );
+    c.check( kl::sqrt( a ) == kl::of( [ 1.0, 2.0 ] ) );
+    c.check( kl::pow( a, 2.0 ) == kl::of( [ 1.0, 16.0 ] ) );
+    c.check( kl::pow( a, a ) == kl::of( [ 1.0, 256.0 ] ) );
+    c.check( kl::exp( kl::log( a ) ).approx_equal( a ) );
+    c.check( kl::minimum( a, kl::of( [ 2.0, 2.0 ] ) ) == kl::of( [ 1.0, 2.0 ] ) );
+    c.check( kl::maximum( a, kl::of( [ 2.0, 2.0 ] ) ) == kl::of( [ 2.0, 4.0 ] ) );
+}
+
+private void walking( ref kl::test::context c )
+{
+    kl::ndarray<i32, 2, 2> a     = kl::of( [ [ 1, 2 ], [ 3, 4 ] ] );
+    i32                  total = 0;
+    for( i32 x : a )
+    {
+        total = total * 10 + x;
+    }
+    c.check_eq( total, 1234 );
+    for( ref i32 x : a )
+    {
+        x *= 2;
+    }
+    c.check_eq( a.sum(), 20 );
+}
+
+private void mixing( ref kl::test::context c )
+{
+    u64                    rows = 2;
+    kl::ndarray<f64, dyn, 2> d    = kl::filled( 1.0, rows, 2 );
+    kl::ndarray<f64, 2, 2>   k    = kl::filled( 2.0, 2, 2 );
+    c.check_eq( d.dot( k ), 8.0 );
+    c.check( d.less( k ).all() );
+    c.check( kl::stacked( d, k ).sum() == 12.0 );
+    c.check( kl::select( d.less( k ), k, d ).sum() == 8.0 );
+    c.check( kl::maximum( d, kl::of( [ 3.0, 0.0 ] ) ).equal_each( kl::of( [ [ 3.0, 1.0 ], [ 3.0, 1.0 ] ] ) ).all() );
+    k += d;
+    c.check_eq( k.sum(), 12.0 );
+    d += kl::of( [ 1.0, 2.0 ] );
+    c.check_eq( d.sum(), 10.0 );
+
+    c.expect_panic(
+        "`dot` needs `S == U`, but `S` is 3, 2 and `U` is 2, 2",
+        fn[]()
+        {
+            u64                    three = 3;
+            kl::ndarray<f64, dyn, 2> tall  = kl::zeros( three, 2 );
+            kl::ndarray<f64, 2, 2>   square = kl::zeros( 2, 2 );
+            _                             = tall.dot( square );
+        }
+    );
+    c.expect_panic(
+        "`operator+=` needs `S == broadcast(S, U)`, but `S` is 2, 2 and `U` is 3, 2",
+        fn[]()
+        {
+            u64                    three = 3;
+            kl::ndarray<f64, dyn, 2> tall  = kl::zeros( three, 2 );
+            kl::ndarray<f64, 2, 2>   square = kl::zeros( 2, 2 );
+            square += tall;
+        }
+    );
+}
+
+private void integer_operators( ref kl::test::context c )
+{
+    kl::ndarray<i32, 3> a = kl::of( [ 6, 5, 12 ] );
+    c.check( ( a | 1 ) == kl::of( [ 7, 5, 13 ] ) );
+    c.check( ( a ^ 1 ) == kl::of( [ 7, 4, 13 ] ) );
+    c.check( ( a ^ a ) == kl::ndarray<i32, 3>::zeros() );
+    c.check( ( a & kl::of( [ 2, 4, 8 ] ) ) == kl::of( [ 2, 4, 8 ] ) );
+    c.check( ~a == kl::of( [ -7, -6, -13 ] ) );
+    c.check( 7 % a == kl::of( [ 1, 2, 7 ] ) );
+
+    kl::ndarray<i32, 3> s = a.copy();
+    s %= 4;
+    s |= 8;
+    s &= 11;
+    s ^= kl::of( [ 1, 1, 1 ] );
+    c.check( s == kl::of( [ 11, 8, 9 ] ) );
+}
+
+private void elementwise_maths( ref kl::test::context c )
+{
+    kl::ndarray<f64, 3> a = kl::of( [ -1.5, 0.5, 2.5 ] );
+    c.check( kl::floor( a ) == kl::of( [ -2.0, 0.0, 2.0 ] ) );
+    c.check( kl::ceil( a ) == kl::of( [ -1.0, 1.0, 3.0 ] ) );
+    c.check( kl::trunc( a ) == kl::of( [ -1.0, 0.0, 2.0 ] ) );
+    c.check( kl::round( a ) == kl::of( [ -2.0, 1.0, 3.0 ] ) );
+
+    kl::ndarray<f64, 2> z = kl::of( [ 0.0, 0.0 ] );
+    c.check( kl::sin( z ) == z && kl::tan( z ) == z && kl::tanh( z ) == z && kl::asin( z ) == z );
+    c.check( kl::cos( z ) == kl::of( [ 1.0, 1.0 ] ) && kl::cosh( z ) == kl::of( [ 1.0, 1.0 ] ) );
+    c.check( kl::expm1( z ) == z && kl::log1p( z ) == z && kl::atan2( z, kl::of( [ 1.0, 1.0 ] ) ) == z );
+    c.check( kl::log2( kl::of( [ 1.0, 8.0 ] ) ) == kl::of( [ 0.0, 3.0 ] ) );
+    c.check( kl::log10( kl::of( [ 1.0, 100.0 ] ) ).approx_equal( kl::of( [ 0.0, 2.0 ] ) ) );
+
+    c.check( kl::of( [ 1, 2 ] ).map( fn[]( i32 x ) { return cast<f64>( x ) / 2.0; } ) == kl::of( [ 0.5, 1.0 ] ) );
+    c.check( a.zipped( a, fn[]( f64 x, f64 y ) { return x * y + 1.0; } ) == kl::of( [ 3.25, 1.25, 7.25 ] ) );
+    c.check( kl::of( [ 1, 2 ] ).less_equal( kl::of( [ 1, 1 ] ) ).count() == 1 );
+    c.check( kl::of( [ 1, 2, 3 ] ).greater_equal( 2 ).count() == 2 );
+
+    kl::ndarray<i32, 2, 3> m = kl::of( [ [ 1, 2, 3 ], [ 4, 5, 6 ] ] );
+    c.check( m.cumprod() == kl::of( [ 1, 2, 6, 24, 120, 720 ] ) );
+    c.check( m.cumprod( 0 ) == kl::of( [ [ 1, 2, 3 ], [ 4, 10, 18 ] ] ) );
+    c.check_eq( kl::of( [ [ 1.0, 2.0 ], [ 3.0, 4.0 ] ] ).std(), kl::sqrt( 1.25 ) );
+}
+
+private void norms( ref kl::test::context c )
+{
+    c.check( kl::of( [ 3.0, 4.0 ] ).normalised() == kl::of( [ 0.6, 0.8 ] ) );
+
+    // Scaled, so no square overflows or underflows.
+    c.check( kl::abs( kl::of( [ 3e200, 4e200 ] ).norm() / 5e200 - 1.0 ) < 1e-15 );
+    c.check( kl::abs( kl::of( [ 3e-200, 4e-200 ] ).norm() / 5e-200 - 1.0 ) < 1e-15 );
+    c.check( kl::abs( kl::ndarray<f32, 2>::of( [ 3e30, 4e30 ] ).norm() / 5e30 - 1.0 ) < 1e-6 );
+    c.check_eq( kl::of( [ 0.0, 0.0 ] ).norm(), 0.0 );
+    c.check_eq( kl::of( [ kl::inf(), 1.0, kl::inf() ] ).norm(), kl::inf() );
+    c.check( kl::is_nan( kl::of( [ kl::inf(), kl::nan() ] ).norm() ) );
+}
+
+private void linear_algebra_more( ref kl::test::context c )
+{
+    // A pivot is needed: the first column's top is 0.
+    kl::ndarray<f64, 3, 3> p = kl::of( [ [ 0.0, 1.0, 2.0 ], [ 1.0, 0.0, 3.0 ], [ 4.0, -3.0, 8.0 ] ] );
+    c.check_eq( kl::determinant( p ), -2.0 );
+    kl::ndarray<f64, 3, 3> eye = kl::eye( 3, 3 );
+    c.check( kl::matmul( p, kl::unwrap( kl::inverse( p ) ) ).approx_equal( eye ) );
+
+    kl::ndarray<f64, 2, 2> a  = kl::of( [ [ 2.0, 1.0 ], [ 1.0, 3.0 ] ] );
+    kl::ndarray<f64, 2, 2> bs = kl::of( [ [ 3.0, 1.0 ], [ 4.0, 3.0 ] ] );
+    c.check( kl::matmul( a, kl::unwrap( kl::solve( a, bs ) ) ).approx_equal( bs ) );
+
+    kl::ndarray<f64, 2, 2> singular = kl::of( [ [ 1.0, 2.0 ], [ 2.0, 4.0 ] ] );
+    c.check_eq( kl::determinant( singular ), 0.0 );
+    c.check( kl::is_none( kl::solve( singular, kl::ndarray<f64, 2>::ones() ) ) );
+
+    // numpy's factors, solutions and leverages for a line through four points.
+    kl::ndarray<f64, 4, 2>                                 l = kl::of( [ [ 1.0, 1.0 ], [ 1.0, 2.0 ], [ 1.0, 3.0 ], [ 1.0, 4.0 ] ] );
+    kl::pair<kl::ndarray<f64, 4, 2>, kl::ndarray<f64, 2, 2>> f = kl::qr( l );
+    c.check( f.first.approx_equal( kl::of( [ [ -0.5, 0.6708203932499369 ], [ -0.5, 0.22360679774997896 ], [ -0.5, -0.22360679774997896 ], [ -0.5, -0.6708203932499369 ] ] ) ) );
+    c.check( f.second.approx_equal( kl::of( [ [ -2.0, -5.0 ], [ 0.0, -2.23606797749979 ] ] ) ) );
+    c.check( kl::unwrap( kl::lstsq( l, kl::of( [ 6.0, 5.0, 7.0, 10.0 ] ) ) ).approx_equal( kl::of( [ 3.5, 1.4 ] ) ) );
+    kl::ndarray<f64, 4, 2> b = kl::of( [ [ 6.0, 1.0 ], [ 5.0, 0.0 ], [ 7.0, 2.0 ], [ 10.0, 1.0 ] ] );
+    c.check( kl::unwrap( kl::lstsq( l, b ) ).approx_equal( kl::of( [ [ 3.5, 0.5 ], [ 1.4, 0.2 ] ] ) ) );
+    c.check( kl::hat_diagonal( l ).approx_equal( kl::of( [ 0.7, 0.3, 0.3, 0.7 ] ) ) );
+    kl::ndarray<f32, 2, 2> g = kl::ndarray<f32, 2, 2>::of( [ 2.0, 1.0, 1.0, 3.0 ] );
+    c.check( kl::unwrap( kl::lstsq( g, kl::ndarray<f32, 2>::of( [ 3.0, 4.0 ] ) ) ).approx_equal( kl::ndarray<f32, 2>::ones() ) );
+    kl::ndarray<f64, 3, 2> zero_column = kl::of( [ [ 1.0, 0.0 ], [ 2.0, 0.0 ], [ 3.0, 0.0 ] ] );
+    c.check( kl::is_none( kl::lstsq( zero_column, kl::ndarray<f64, 3>::ones() ) ) );
+}
+
+private void sorting_more( ref kl::test::context c )
+{
+    kl::ndarray<f64, 5> u = kl::of( [ 2.0, kl::nan(), 1.0, 2.0, kl::nan() ] );
+    kl::ndarray<f64, dyn> v = u.unique();
+    c.check_eq( v.size(), 3 );
+    c.check( v[0] == 1.0 && v[1] == 2.0 && kl::is_nan( v[2] ) );
+    c.check_eq( kl::of( [ 0.0, kl::nan(), -0.0 ] ).nonzero().size(), 1 );
+    u64 none = 0;
+    c.check_eq( kl::zeros<i32, dyn>( none ).sorted().size(), 0 );
+    c.check_eq( kl::zeros<i32, dyn>( none ).unique().size(), 0 );
+
+    // Larger than a few elements, so the heap is several levels deep.
+    kl::ndarray<i32, dyn> big = kl::arange( 0, 100 ).map( fn[]( i32 x ) { return ( x * 37 ) % 100; } );
+    c.check( big.sorted() == kl::arange( 0, 100 ) );
+    c.check( big.argsort().map( fn[]( u64 i ) { return ( i * 37 ) % 100; } ) == kl::arange<u64>( 0, 100 ) );
+}
+
+// Bits 0 and n - 1 of an n-bit mask, and every whole-mask reader.
+private void mask_edges( ref kl::test::context c, u64 n )
+{
+    kl::mask<dyn> m = kl::cleared( n );
+    c.check_eq( m.size(), n );
+    c.check_eq( m.count(), 0 );
+    c.check( !m.any() && !m.all() );
+
+    m.assign( 0, true );
+    m.assign( n - 1, true );
+    c.check( m.test( 0 ) && m.at( n - 1 ) );
+    c.check_eq( m.count(), n == 1 ? 1 : 2 );
+
+    kl::mask<dyn> f = ~kl::cleared( n );
+    c.check_eq( f.count(), n );
+    c.check( f.all() && ( f & m ) == m && ( f | m ) == f );
+    c.check_eq( ( f ^ m ).count() + m.count(), n );
+    c.check( ~~m == m );
+}
+
+// Counting, combining and comparing agree across one word, a full word and one past it, and the
+// spare bits never show.
+private void masks( ref kl::test::context c )
+{
+    mask_edges( ref c, 1 );
+    mask_edges( ref c, 64 );
+    mask_edges( ref c, 65 );
+
+    kl::mask<65> v = kl::cleared( 65 );
+    v.assign( 64, true );
+    c.check( v.at( 64 ) && v.any() && !v.all() );
+    c.check_eq( ( ~v ).count(), 64 );
+    c.check( ( v | ~v ).all() && !( v & ~v ).any() );
+
+    kl::mask<2, 3> m = kl::cleared( 2, 3 );
+    m.assign( 5, true );
+    c.check( m.at( 1, 2 ) && !m.at( 1, 1 ) );
+
+    c.expect_panic( "index out of range", fn[]() { _ = kl::mask<2, 3>().at( 2, 0 ); } );
+    c.expect_panic(
+        "index out of range",
+        fn[]()
+        {
+            u64                 six = 6;
+            kl::mask<dyn> s   = kl::cleared( six );
+            s.assign( 6, true );
+        }
+    );
+    c.expect_panic(
+        "`operator&` needs `S == U`",
+        fn[]()
+        {
+            u64 two   = 2;
+            u64 three = 3;
+            _         = kl::cleared( two ) & kl::cleared( three );
+        }
+    );
 }

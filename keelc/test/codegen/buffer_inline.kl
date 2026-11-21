@@ -1,5 +1,6 @@
-// A prelude `buffer` of numbers whose bytes fit 4096 is held inline: filled, written through `[]`,
-// read through `as_run()`, moved into a call and held as a field. 512 `f64`s are exactly 4096.
+// A prelude `buffer` of numbers whose bytes fit 2048 is held inline: filled, written through `[]`,
+// read through `as_run()`, moved into a call and held as a field. 512 `f64`s and 4096 `u8`s, past
+// 2048, are on the heap.
 import t::console;
 
 f64 total<u64 N>( move buffer<f64, N> b )

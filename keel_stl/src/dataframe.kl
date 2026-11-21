@@ -5,7 +5,6 @@ import algorithm;
 import kl::_core::compare as runs;
 import kl::_core::hash_control as control;
 import list;
-import mask;
 import math;
 import ndarray;
 import optional;
@@ -190,121 +189,121 @@ private ordering text_order( const ref u8[] a, const ref u8[] b )
 class series
 {
     dtype        kind_;
-    ndarray<f64> f_;
-    ndarray<i64> i_; // also `times` and `durations`, as nanoseconds
-    mask         b_;
+    ndarray<f64, dyn> f_;
+    ndarray<i64, dyn> i_; // also `times` and `durations`, as nanoseconds
+    mask<dyn>         b_;
     text_column  s_;
-    mask         missing_; // no bits when nothing is missing; never set for `f64s`
+    mask<dyn>         missing_; // no bits when nothing is missing; never set for `f64s`
 
     /// `values` as `f64s`.
-    public series( move ndarray<f64> values )
+    public series( move ndarray<f64, dyn> values )
     {
         kind_    = dtype::f64s;
         f_       = move values;
-        i_       = ndarray<i64>::from_list( list<i64>() );
-        b_       = mask( 0 );
+        i_       = kl::zeros<i64, dyn>( 0 );
+        b_       = kl::cleared<dyn>( 0 );
         s_       = text_column();
-        missing_ = mask( 0 );
+        missing_ = kl::cleared<dyn>( 0 );
     }
 
     /// `values` as `i64s`.
-    public series( move ndarray<i64> values )
+    public series( move ndarray<i64, dyn> values )
     {
         kind_    = dtype::i64s;
-        f_       = ndarray<f64>::from_list( list<f64>() );
+        f_       = kl::zeros<f64, dyn>( 0 );
         i_       = move values;
-        b_       = mask( 0 );
+        b_       = kl::cleared<dyn>( 0 );
         s_       = text_column();
-        missing_ = mask( 0 );
+        missing_ = kl::cleared<dyn>( 0 );
     }
 
     /// The bits of `values`, of rank 1, as `bools`.
-    public series( move mask values )
+    public series( move mask<dyn> values )
     {
         kind_    = dtype::bools;
-        f_       = ndarray<f64>::from_list( list<f64>() );
-        i_       = ndarray<i64>::from_list( list<i64>() );
+        f_       = kl::zeros<f64, dyn>( 0 );
+        i_       = kl::zeros<i64, dyn>( 0 );
         b_       = move values;
         s_       = text_column();
-        missing_ = mask( 0 );
+        missing_ = kl::cleared<dyn>( 0 );
     }
 
     /// `values` as `strings`.
     public series( move list<string> values )
     {
         kind_    = dtype::strings;
-        f_       = ndarray<f64>::from_list( list<f64>() );
-        i_       = ndarray<i64>::from_list( list<i64>() );
-        b_       = mask( 0 );
+        f_       = kl::zeros<f64, dyn>( 0 );
+        i_       = kl::zeros<i64, dyn>( 0 );
+        b_       = kl::cleared<dyn>( 0 );
         s_       = text_column();
         for( u64 i : 0..values.size() )
         {
             s_.push( values[i].as_text() );
         }
-        missing_ = mask( 0 );
+        missing_ = kl::cleared<dyn>( 0 );
     }
 
     /// `values` as `strings`.
     public series( move text_column values )
     {
         kind_    = dtype::strings;
-        f_       = ndarray<f64>::from_list( list<f64>() );
-        i_       = ndarray<i64>::from_list( list<i64>() );
-        b_       = mask( 0 );
+        f_       = kl::zeros<f64, dyn>( 0 );
+        i_       = kl::zeros<i64, dyn>( 0 );
+        b_       = kl::cleared<dyn>( 0 );
         s_       = move values;
-        missing_ = mask( 0 );
+        missing_ = kl::cleared<dyn>( 0 );
     }
 
     /// A copy of `values` as `f64s`: `series( [ 1.5, 2.0 ] )`.
     public series( const ref f64[] values )
     {
         kind_    = dtype::f64s;
-        f_       = ndarray<f64>( values );
-        i_       = ndarray<i64>::from_list( list<i64>() );
-        b_       = mask( 0 );
+        f_       = kl::shaped( values, values.size );
+        i_       = kl::zeros<i64, dyn>( 0 );
+        b_       = kl::cleared<dyn>( 0 );
         s_       = text_column();
-        missing_ = mask( 0 );
+        missing_ = kl::cleared<dyn>( 0 );
     }
 
     /// A copy of `values` as `i64s`: `series( [ 1, 2 ] )`.
     public series( const ref i64[] values )
     {
         kind_    = dtype::i64s;
-        f_       = ndarray<f64>::from_list( list<f64>() );
-        i_       = ndarray<i64>( values );
-        b_       = mask( 0 );
+        f_       = kl::zeros<f64, dyn>( 0 );
+        i_       = kl::shaped( values, values.size );
+        b_       = kl::cleared<dyn>( 0 );
         s_       = text_column();
-        missing_ = mask( 0 );
+        missing_ = kl::cleared<dyn>( 0 );
     }
 
     /// A copy of `values` as `bools`.
     public series( const ref bool[] values )
     {
         kind_ = dtype::bools;
-        f_    = ndarray<f64>::from_list( list<f64>() );
-        i_    = ndarray<i64>::from_list( list<i64>() );
-        b_    = mask( values.size );
+        f_    = kl::zeros<f64, dyn>( 0 );
+        i_    = kl::zeros<i64, dyn>( 0 );
+        b_    = kl::cleared( values.size );
         for( u64 i : 0..values.size )
         {
             b_.assign( i, values[i] );
         }
         s_       = text_column();
-        missing_ = mask( 0 );
+        missing_ = kl::cleared<dyn>( 0 );
     }
 
     /// A copy of `values` as `strings`: `series( [ "a", "b" ] )`.
     public series( const ref str[] values )
     {
         kind_ = dtype::strings;
-        f_    = ndarray<f64>::from_list( list<f64>() );
-        i_    = ndarray<i64>::from_list( list<i64>() );
-        b_    = mask( 0 );
+        f_    = kl::zeros<f64, dyn>( 0 );
+        i_    = kl::zeros<i64, dyn>( 0 );
+        b_    = kl::cleared<dyn>( 0 );
         s_    = text_column();
         for( u64 i : 0..values.size )
         {
             s_.push( values[i].as_text() );
         }
-        missing_ = mask( 0 );
+        missing_ = kl::cleared<dyn>( 0 );
     }
 
     /// A copy of `values` as `times`.
@@ -316,11 +315,11 @@ class series
             v.push( values[i].nanoseconds() );
         }
         kind_    = dtype::times;
-        f_       = ndarray<f64>::from_list( list<f64>() );
-        i_       = ndarray<i64>::from_list( move v );
-        b_       = mask( 0 );
+        f_       = kl::zeros<f64, dyn>( 0 );
+        i_       = of_list( v );
+        b_       = kl::cleared<dyn>( 0 );
         s_       = text_column();
-        missing_ = mask( 0 );
+        missing_ = kl::cleared<dyn>( 0 );
     }
 
     /// A copy of `values` as `durations`.
@@ -332,15 +331,15 @@ class series
             v.push( values[i].nanoseconds() );
         }
         kind_    = dtype::durations;
-        f_       = ndarray<f64>::from_list( list<f64>() );
-        i_       = ndarray<i64>::from_list( move v );
-        b_       = mask( 0 );
+        f_       = kl::zeros<f64, dyn>( 0 );
+        i_       = of_list( v );
+        b_       = kl::cleared<dyn>( 0 );
         s_       = text_column();
-        missing_ = mask( 0 );
+        missing_ = kl::cleared<dyn>( 0 );
     }
 
     // `nanoseconds` as `kind`, `i64s`, `times` or `durations`.
-    private static series of_kind( move ndarray<i64> nanoseconds, dtype kind )
+    private static series of_kind( move ndarray<i64, dyn> nanoseconds, dtype kind )
     {
         series r = series( move nanoseconds );
         r.kind_ = kind;
@@ -410,7 +409,7 @@ class series
         }
         if( missing_.size() == 0 )
         {
-            missing_ = mask( size() );
+            missing_ = kl::cleared( size() );
         }
         missing_.assign( i, true );
     }
@@ -426,21 +425,21 @@ class series
     }
 
     /// The values of an `f64s` series; panics on another dtype.
-    public ref ndarray<f64> f64s() const
+    public ref ndarray<f64, dyn> f64s() const
     {
         holds( dtype::f64s );
         return f_;
     }
 
     /// The values of an `i64s` series, missing ones unspecified; panics on another dtype.
-    public ref ndarray<i64> i64s() const
+    public ref ndarray<i64, dyn> i64s() const
     {
         holds( dtype::i64s );
         return i_;
     }
 
     /// The values of a `bools` series, missing ones unspecified; panics on another dtype.
-    public ref mask bools() const
+    public ref mask<dyn> bools() const
     {
         holds( dtype::bools );
         return b_;
@@ -455,7 +454,7 @@ class series
 
     /// The values of a `times` series as nanoseconds since 1970, missing ones unspecified; panics on
     /// another dtype.
-    public ref ndarray<i64> times() const
+    public ref ndarray<i64, dyn> times() const
     {
         holds( dtype::times );
         return i_;
@@ -463,7 +462,7 @@ class series
 
     /// The values of a `durations` series as nanoseconds, missing ones unspecified; panics on
     /// another dtype.
-    public ref ndarray<i64> durations() const
+    public ref ndarray<i64, dyn> durations() const
     {
         holds( dtype::durations );
         return i_;
@@ -496,7 +495,7 @@ class series
                 {
                     f.push( f_[k] );
                 }
-                r.f_ = ndarray<f64>::from_list( move f );
+                r.f_ = of_list( f );
                 break;
             case dtype::i64s:
             case dtype::times:
@@ -506,10 +505,10 @@ class series
                 {
                     v.push( i_[k] );
                 }
-                r.i_ = ndarray<i64>::from_list( move v );
+                r.i_ = of_list( v );
                 break;
             case dtype::bools:
-                r.b_ = mask( rows.size );
+                r.b_ = kl::cleared( rows.size );
                 for( u64 j : 0..rows.size )
                 {
                     r.b_.assign( j, b_.test( rows[j] ) );
@@ -521,7 +520,7 @@ class series
         }
         if( missing_.size() > 0 )
         {
-            r.missing_ = mask( rows.size );
+            r.missing_ = kl::cleared( rows.size );
             for( u64 j : 0..rows.size )
             {
                 r.missing_.assign( j, missing_.test( rows[j] ) );
@@ -549,13 +548,13 @@ class series
     /// --- Missing values ---
 
     /// Where a value is missing.
-    public mask isna() const
+    public mask<dyn> isna() const
     {
         if( kind_ == dtype::f64s )
         {
             return kl::is_nan( f_ );
         }
-        return missing_.size() == 0 ? mask( size() ) : missing_.copy();
+        return missing_.size() == 0 ? kl::cleared( size() ) : missing_.copy();
     }
 
     /// The values present, in order.
@@ -603,7 +602,7 @@ class series
                 r.i_[i] = x;
             }
         }
-        r.missing_ = mask( 0 );
+        r.missing_ = kl::cleared<dyn>( 0 );
         return r;
     }
 
@@ -619,7 +618,7 @@ class series
                 r.b_.assign( i, x );
             }
         }
-        r.missing_ = mask( 0 );
+        r.missing_ = kl::cleared<dyn>( 0 );
         return r;
     }
 
@@ -650,7 +649,7 @@ class series
     {
         list<u64> codes = list<u64>();
         u64 n = factorize( this, ref codes );
-        mask seen = mask( n + 1 );
+        mask<dyn> seen = kl::cleared( n + 1 );
         list<u64> firsts = list<u64>();
         for( u64 i : 0..size() )
         {
@@ -668,13 +667,13 @@ class series
     /// `s.map( fn[]( f64 x ) { return x * x; } )`.
     public series map<F>( F f ) const where F : fn( f64 ) -> f64
     {
-        ndarray<f64> v = numbers();
+        ndarray<f64, dyn> v = numbers();
         list<f64> r = list<f64>::with_capacity( size() );
         for( u64 i : 0..size() )
         {
             r.push( is_missing( i ) ? nan() : f( v[i] ) );
         }
-        return series( ndarray<f64>::from_list( move r ) );
+        return series( of_list( r ) );
     }
 
     /// `f` of each value of a `strings` series; a missing value stays missing:
@@ -705,7 +704,7 @@ class series
     /// pandas' `map( dict )`, `s.to_strings( fn[]( f64 x ) { return kl::string( x > 0.0 ? "up" : "down" ); } )`.
     public series to_strings<F>( F f ) const where F : fn( f64 ) -> string
     {
-        ndarray<f64> v = numbers();
+        ndarray<f64, dyn> v = numbers();
         text_column t = text_column();
         str empty = "";
         for( u64 i : 0..size() )
@@ -789,18 +788,18 @@ class series
         }
         if( ints )
         {
-            return series( ndarray<i64>::from_list( move iv ) );
+            return series( of_list( iv ) );
         }
-        return series( ndarray<f64>::from_list( move fv ) );
+        return series( of_list( fv ) );
     }
 
     /// Where each text holds `needle`, ASCII letters matched in either case when `ignore_case`,
     /// clear where missing: pandas' `str.contains( needle, case=False, regex=False )`.
-    public mask contains( const ref textual needle, bool ignore_case = false ) const
+    public mask<dyn> contains( const ref textual needle, bool ignore_case = false ) const
     {
         holds( dtype::strings );
         const ref u8[] n = needle.as_text();
-        mask r = mask( size() );
+        mask<dyn> r = kl::cleared( size() );
         for( u64 i : 0..size() )
         {
             const ref u8[] t = s_[i];
@@ -815,11 +814,11 @@ class series
     }
 
     /// Where each text starts with `prefix`, clear where missing: pandas' `str.startswith`.
-    public mask starts_with( const ref textual prefix ) const
+    public mask<dyn> starts_with( const ref textual prefix ) const
     {
         holds( dtype::strings );
         const ref u8[] p = prefix.as_text();
-        mask r = mask( size() );
+        mask<dyn> r = kl::cleared( size() );
         for( u64 i : 0..size() )
         {
             r.assign( i, s_[i].size >= p.size && text_at( s_[i], 0, p, false ) );
@@ -829,12 +828,12 @@ class series
 
     /// Where each value is one of `values`', clear where missing: pandas' `isin`. Numbers of either
     /// dtype compare as `f64`; panics on any other mix of dtypes.
-    public mask isin( const ref series values ) const
+    public mask<dyn> isin( const ref series values ) const
     {
         series both = beside( this, values );
         list<u64> codes = list<u64>();
         list<u64> firsts = appearance( both, ref codes );
-        mask wanted = mask( firsts.size() );
+        mask<dyn> wanted = kl::cleared( firsts.size() );
         for( u64 j : size()..both.size() )
         {
             if( codes[j] != u64::max )
@@ -842,7 +841,7 @@ class series
                 wanted.assign( codes[j], true );
             }
         }
-        mask r = mask( size() );
+        mask<dyn> r = kl::cleared( size() );
         for( u64 i : 0..size() )
         {
             r.assign( i, codes[i] != u64::max && wanted.test( codes[i] ) );
@@ -851,14 +850,14 @@ class series
     }
 
     /// Where each value is at least `lo` and at most `hi`, clear where missing: pandas' `between`.
-    public mask between( f64 lo, f64 hi ) const
+    public mask<dyn> between( f64 lo, f64 hi ) const
     {
         return greater_equal( lo ) & less_equal( hi );
     }
 
     /// Each value where `m` holds, else `other`'s at that row: pandas' `where( m, other )`. Numbers
     /// of either dtype give `f64s`; panics on any other mix of dtypes.
-    public series kept( const ref mask m, const ref series other ) const
+    public series kept( const ref mask<dyn> m, const ref series other ) const
     {
         sized_as( m );
         if( other.size() != size() )
@@ -875,13 +874,13 @@ class series
     }
 
     /// Each value where `m` holds, else `x`.
-    public series kept( const ref mask m, f64 x ) const
+    public series kept( const ref mask<dyn> m, f64 x ) const
     {
-        return kept( m, series( ndarray<f64>::filled( x, size() ) ) );
+        return kept( m, series( kl::filled<f64, dyn>( x, size() ) ) );
     }
 
     /// Each value where `m` holds, else a gap: pandas' `where( m )`.
-    public series kept( const ref mask m ) const
+    public series kept( const ref mask<dyn> m ) const
     {
         sized_as( m );
         list<u64> rows = list<u64>::with_capacity( size() );
@@ -948,25 +947,25 @@ class series
     /// `x` added to each value, as `f64`.
     public series operator+( f64 x ) const
     {
-        return combine( series( ndarray<f64>::filled( x, size() ) ), '+' );
+        return combine( series( kl::filled<f64, dyn>( x, size() ) ), '+' );
     }
 
     /// `x` taken from each value, as `f64`.
     public series operator-( f64 x ) const
     {
-        return combine( series( ndarray<f64>::filled( x, size() ) ), '-' );
+        return combine( series( kl::filled<f64, dyn>( x, size() ) ), '-' );
     }
 
     /// Each value times `x`, as `f64`.
     public series operator*( f64 x ) const
     {
-        return combine( series( ndarray<f64>::filled( x, size() ) ), '*' );
+        return combine( series( kl::filled<f64, dyn>( x, size() ) ), '*' );
     }
 
     /// Each value over `x`, as `f64`.
     public series operator/( f64 x ) const
     {
-        return combine( series( ndarray<f64>::filled( x, size() ) ), '/' );
+        return combine( series( kl::filled<f64, dyn>( x, size() ) ), '/' );
     }
 
     /// The text `x` after each text of a `strings` series, a missing value staying missing.
@@ -978,124 +977,124 @@ class series
     /// `x` added to each value; an `i64s` series stays `i64s`.
     public series operator+( i64 x ) const
     {
-        return combine( series( ndarray<i64>::filled( x, size() ) ), '+' );
+        return combine( series( kl::filled<i64, dyn>( x, size() ) ), '+' );
     }
 
     /// `x` taken from each value; an `i64s` series stays `i64s`.
     public series operator-( i64 x ) const
     {
-        return combine( series( ndarray<i64>::filled( x, size() ) ), '-' );
+        return combine( series( kl::filled<i64, dyn>( x, size() ) ), '-' );
     }
 
     /// Each value times `x`; an `i64s` series stays `i64s`.
     public series operator*( i64 x ) const
     {
-        return combine( series( ndarray<i64>::filled( x, size() ) ), '*' );
+        return combine( series( kl::filled<i64, dyn>( x, size() ) ), '*' );
     }
 
     /// Each value over `x`, as `f64`.
     public series operator/( i64 x ) const
     {
-        return combine( series( ndarray<i64>::filled( x, size() ) ), '/' );
+        return combine( series( kl::filled<i64, dyn>( x, size() ) ), '/' );
     }
 
     /// `d` added to each time or duration.
     public series operator+( const ref duration d ) const
     {
-        return combine( of_kind( ndarray<i64>::filled( d.nanoseconds(), size() ), dtype::durations ), '+' );
+        return combine( of_kind( kl::filled<i64, dyn>( d.nanoseconds(), size() ), dtype::durations ), '+' );
     }
 
     /// `d` taken from each time or duration.
     public series operator-( const ref duration d ) const
     {
-        return combine( of_kind( ndarray<i64>::filled( d.nanoseconds(), size() ), dtype::durations ), '-' );
+        return combine( of_kind( kl::filled<i64, dyn>( d.nanoseconds(), size() ), dtype::durations ), '-' );
     }
 
     /// The duration from `t` to each time.
     public series operator-( const ref timestamp t ) const
     {
-        return combine( of_kind( ndarray<i64>::filled( t.nanoseconds(), size() ), dtype::times ), '-' );
+        return combine( of_kind( kl::filled<i64, dyn>( t.nanoseconds(), size() ), dtype::times ), '-' );
     }
 
     /// --- Comparing ---
 
     /// Where each value is less than `o`'s.
-    public mask less( const ref series o ) const
+    public mask<dyn> less( const ref series o ) const
     {
         return compare( o, relation::less );
     }
 
     /// Where each value is greater than `o`'s.
-    public mask greater( const ref series o ) const
+    public mask<dyn> greater( const ref series o ) const
     {
         return compare( o, relation::greater );
     }
 
     /// Where each value is at most `o`'s.
-    public mask less_equal( const ref series o ) const
+    public mask<dyn> less_equal( const ref series o ) const
     {
         return compare( o, relation::less_equal );
     }
 
     /// Where each value is at least `o`'s.
-    public mask greater_equal( const ref series o ) const
+    public mask<dyn> greater_equal( const ref series o ) const
     {
         return compare( o, relation::greater_equal );
     }
 
     /// Where each value equals `o`'s.
-    public mask equal_each( const ref series o ) const
+    public mask<dyn> equal_each( const ref series o ) const
     {
         return compare( o, relation::equal );
     }
 
     /// Where each value differs from `o`'s, a missing one included.
-    public mask differs( const ref series o ) const
+    public mask<dyn> differs( const ref series o ) const
     {
         return ~compare( o, relation::equal );
     }
 
     /// Where each value is less than `x`.
-    public mask less( f64 x ) const
+    public mask<dyn> less( f64 x ) const
     {
-        return compare( series( ndarray<f64>::filled( x, size() ) ), relation::less );
+        return compare( series( kl::filled<f64, dyn>( x, size() ) ), relation::less );
     }
 
     /// Where each value is greater than `x`.
-    public mask greater( f64 x ) const
+    public mask<dyn> greater( f64 x ) const
     {
-        return compare( series( ndarray<f64>::filled( x, size() ) ), relation::greater );
+        return compare( series( kl::filled<f64, dyn>( x, size() ) ), relation::greater );
     }
 
     /// Where each value is at most `x`.
-    public mask less_equal( f64 x ) const
+    public mask<dyn> less_equal( f64 x ) const
     {
-        return compare( series( ndarray<f64>::filled( x, size() ) ), relation::less_equal );
+        return compare( series( kl::filled<f64, dyn>( x, size() ) ), relation::less_equal );
     }
 
     /// Where each value is at least `x`.
-    public mask greater_equal( f64 x ) const
+    public mask<dyn> greater_equal( f64 x ) const
     {
-        return compare( series( ndarray<f64>::filled( x, size() ) ), relation::greater_equal );
+        return compare( series( kl::filled<f64, dyn>( x, size() ) ), relation::greater_equal );
     }
 
     /// Where each value equals `x`.
-    public mask equal_each( f64 x ) const
+    public mask<dyn> equal_each( f64 x ) const
     {
-        return compare( series( ndarray<f64>::filled( x, size() ) ), relation::equal );
+        return compare( series( kl::filled<f64, dyn>( x, size() ) ), relation::equal );
     }
 
     /// Where each value differs from `x`, a missing one included.
-    public mask differs( f64 x ) const
+    public mask<dyn> differs( f64 x ) const
     {
         return ~equal_each( x );
     }
 
     /// Where each value equals the text `x`.
-    public mask equal_each( const ref textual x ) const
+    public mask<dyn> equal_each( const ref textual x ) const
     {
         holds( dtype::strings );
-        mask r = mask( size() );
+        mask<dyn> r = kl::cleared( size() );
         const ref u8[] t = x.as_text();
         for( u64 i : 0..s_.size() )
         {
@@ -1105,43 +1104,43 @@ class series
     }
 
     /// Where each value differs from the text `x`, a missing one included.
-    public mask differs( const ref textual x ) const
+    public mask<dyn> differs( const ref textual x ) const
     {
         return ~equal_each( x );
     }
 
     /// Where each time is before `t`.
-    public mask less( const ref timestamp t ) const
+    public mask<dyn> less( const ref timestamp t ) const
     {
         return compare( at_each( t ), relation::less );
     }
 
     /// Where each time is after `t`.
-    public mask greater( const ref timestamp t ) const
+    public mask<dyn> greater( const ref timestamp t ) const
     {
         return compare( at_each( t ), relation::greater );
     }
 
     /// Where each time is at or before `t`.
-    public mask less_equal( const ref timestamp t ) const
+    public mask<dyn> less_equal( const ref timestamp t ) const
     {
         return compare( at_each( t ), relation::less_equal );
     }
 
     /// Where each time is at or after `t`.
-    public mask greater_equal( const ref timestamp t ) const
+    public mask<dyn> greater_equal( const ref timestamp t ) const
     {
         return compare( at_each( t ), relation::greater_equal );
     }
 
     /// Where each time is `t`.
-    public mask equal_each( const ref timestamp t ) const
+    public mask<dyn> equal_each( const ref timestamp t ) const
     {
         return compare( at_each( t ), relation::equal );
     }
 
     /// Where each time is not `t`, a missing one included.
-    public mask differs( const ref timestamp t ) const
+    public mask<dyn> differs( const ref timestamp t ) const
     {
         return ~equal_each( t );
     }
@@ -1233,7 +1232,7 @@ class series
         {
             v.push( is_missing( i ) ? nan() : cast<f64>( i_[i] ) / 1e9 );
         }
-        return series( ndarray<f64>::from_list( move v ) );
+        return series( of_list( v ) );
     }
 
     /// The earliest time present, none when there is none.
@@ -1259,7 +1258,7 @@ class series
     /// The mean of the values present, NaN when there are none.
     public f64 mean() const
     {
-        ndarray<f64> v = present();
+        ndarray<f64, dyn> v = present();
         return v.size() == 0 ? nan() : v.sum() / cast<f64>( v.size() );
     }
 
@@ -1267,13 +1266,13 @@ class series
     /// than two.
     public f64 var() const
     {
-        ndarray<f64> v = present();
+        ndarray<f64, dyn> v = present();
         u64 n = v.size();
         if( n < 2 )
         {
             return nan();
         }
-        ndarray<f64> d = v - v.sum() / cast<f64>( n );
+        ndarray<f64, dyn> d = v - v.sum() / cast<f64>( n );
         return ( d * d ).sum() / cast<f64>( n - 1 );
     }
 
@@ -1286,14 +1285,14 @@ class series
     /// The least value present, NaN when there are none.
     public f64 min() const
     {
-        ndarray<f64> v = present();
+        ndarray<f64, dyn> v = present();
         return v.size() == 0 ? nan() : v.min();
     }
 
     /// The greatest value present, NaN when there are none.
     public f64 max() const
     {
-        ndarray<f64> v = present();
+        ndarray<f64, dyn> v = present();
         return v.size() == 0 ? nan() : v.max();
     }
 
@@ -1367,7 +1366,7 @@ class series
     }
 
     // Panics unless `m` has a bit for each value.
-    private void sized_as( const ref mask m ) const
+    private void sized_as( const ref mask<dyn> m ) const
     {
         if( m.size() != size() )
         {
@@ -1378,7 +1377,7 @@ class series
     // `t` at every row, as `times`.
     private series at_each( const ref timestamp t ) const
     {
-        return of_kind( ndarray<i64>::filled( t.nanoseconds(), size() ), dtype::times );
+        return of_kind( kl::filled<i64, dyn>( t.nanoseconds(), size() ), dtype::times );
     }
 
     // `to_times`, ISO 8601 for an empty `pattern`.
@@ -1406,7 +1405,7 @@ class series
                     return result::err( i );
             }
         }
-        series r = of_kind( ndarray<i64>::from_list( move v ), dtype::times );
+        series r = of_kind( of_list( v ), dtype::times );
         r.missing_ = missing_.copy();
         return result::ok( move r );
     }
@@ -1420,7 +1419,7 @@ class series
         {
             v.push( is_missing( i ) ? 0 : f( timestamp::of_nanoseconds( i_[i] ) ) );
         }
-        series r = series( ndarray<i64>::from_list( move v ) );
+        series r = series( of_list( v ) );
         r.missing_ = missing_.copy();
         return r;
     }
@@ -1447,7 +1446,7 @@ class series
     }
 
     // The values missing on either side of a combination with `o`, none when neither has any.
-    private mask missing_either( const ref series o ) const
+    private mask<dyn> missing_either( const ref series o ) const
     {
         if( missing_.size() == 0 )
         {
@@ -1457,9 +1456,9 @@ class series
     }
 
     // The values present, as `f64`.
-    private ndarray<f64> present() const
+    private ndarray<f64, dyn> present() const
     {
-        return ndarray<f64>::from_list( present_values() );
+        return of_list( present_values() );
     }
 
     // As `present`, in a list.
@@ -1503,7 +1502,7 @@ class series
     }
 
     // Every value as `f64`, a bool as 0 or 1, missing ones unspecified.
-    private ndarray<f64> numbers() const
+    private ndarray<f64, dyn> numbers() const
     {
         switch( kind_ )
         {
@@ -1517,7 +1516,7 @@ class series
                 {
                     v.push( b_.test( i ) ? 1.0 : 0.0 );
                 }
-                return ndarray<f64>::from_list( move v );
+                return of_list( v );
             case dtype::strings:
             case dtype::times:
             case dtype::durations:
@@ -1579,14 +1578,14 @@ class series
     }
 
     // Where `relation` holds between each value and `o`'s, clear where either is missing.
-    private mask compare( const ref series o, relation rel ) const
+    private mask<dyn> compare( const ref series o, relation rel ) const
     {
         if( size() != o.size() )
         {
             panic( "the series differ in size" );
         }
 
-        mask r = mask( 0 );
+        mask<dyn> r = kl::cleared<dyn>( 0 );
         if( ( is_time( kind_ ) || is_time( o.kind_ ) ) && kind_ != o.kind_ )
         {
             panic( "the series hold dtypes that do not compare" );
@@ -1597,7 +1596,7 @@ class series
         }
         else if( kind_ == dtype::strings && o.kind_ == dtype::strings )
         {
-            r = mask( size() );
+            r = kl::cleared( size() );
             for( u64 i : 0..s_.size() )
             {
                 r.assign( i, holds_between( text_order( s_[i], o.s_[i] ), rel ) );
@@ -1617,7 +1616,7 @@ class series
     }
 
     // `m` cleared where a value is missing.
-    private mask without_missing( move mask m ) const
+    private mask<dyn> without_missing( move mask<dyn> m ) const
     {
         if( missing_.size() == 0 )
         {
@@ -1671,7 +1670,7 @@ private bool holds_between( ordering o, relation rel )
 }
 
 // Where `rel` holds between each element of `a` and `b`'s.
-private mask relate<T>( const ref ndarray<T> a, const ref ndarray<T> b, relation rel ) where T : numeric
+private mask<dyn> relate<T>( const ref ndarray<T, dyn> a, const ref ndarray<T, dyn> b, relation rel ) where T : numeric
 {
     switch( rel )
     {
@@ -1689,7 +1688,7 @@ private mask relate<T>( const ref ndarray<T> a, const ref ndarray<T> b, relation
 }
 
 // `op`, one of `+ - * /`, element by element.
-private ndarray<f64> arithmetic( const ref ndarray<f64> a, const ref ndarray<f64> b, u8 op )
+private ndarray<f64, dyn> arithmetic( const ref ndarray<f64, dyn> a, const ref ndarray<f64, dyn> b, u8 op )
 {
     switch( op )
     {
@@ -1702,6 +1701,12 @@ private ndarray<f64> arithmetic( const ref ndarray<f64> a, const ref ndarray<f64
         default:
             return a / b;
     }
+}
+
+// `v`'s elements, as rank 1.
+private ndarray<T, dyn> of_list<T>( const ref list<T> v ) where T : numeric
+{
+    return kl::shaped( v.as_run(), v.size() );
 }
 
 // `x` to the nearest whole value, a half to the even one.
@@ -1732,7 +1737,7 @@ private bool text_at( const ref u8[] t, u64 at, const ref u8[] n, bool fold )
 }
 
 /// `yes` where `m` holds and `no` elsewhere, as `strings`: numpy's `where( m, yes, no )`.
-series choose( const ref mask m, const ref textual yes, const ref textual no )
+series choose( const ref mask<dyn> m, const ref textual yes, const ref textual no )
 {
     text_column t = text_column::with_capacity( m.size(), 0 );
     for( u64 i : 0..m.size() )
@@ -1751,14 +1756,14 @@ series choose( const ref mask m, const ref textual yes, const ref textual no )
 
 /// `yes` where `m` holds and `no` elsewhere, as `f64s`: `choose( m, 1.0, 0.0 )` is numpy's
 /// `m.astype( float )`.
-series choose( const ref mask m, f64 yes, f64 no )
+series choose( const ref mask<dyn> m, f64 yes, f64 no )
 {
     list<f64> v = list<f64>::with_capacity( m.size() );
     for( u64 i : 0..m.size() )
     {
         v.push( m.test( i ) ? yes : no );
     }
-    return series( ndarray<f64>::from_list( move v ) );
+    return series( of_list( v ) );
 }
 
 /// Named `series` of one length, in order, with rows numbered from 0, as pandas' `DataFrame`.
@@ -1957,7 +1962,7 @@ class dataframe
     }
 
     /// The rows `m` sets, `m` holding one bit per row: `df.filtered( df["a"].greater( 3.0 ) )`.
-    public dataframe filtered( const ref mask m ) const
+    public dataframe filtered( const ref mask<dyn> m ) const
     {
         if( m.size() != rows() )
         {
@@ -2044,7 +2049,7 @@ class dataframe
 
     /// Where a row repeats an earlier one in the columns `names`, or in every column when no name
     /// is given, a gap equal to a gap: pandas' `duplicated( keep="first" )`.
-    public mask duplicated( str... names ) const
+    public mask<dyn> duplicated( str... names ) const
     {
         return repeats( names );
     }
@@ -2070,7 +2075,7 @@ class dataframe
                 checked.push( c );
             }
         }
-        mask gaps = mask( rows() );
+        mask<dyn> gaps = kl::cleared( rows() );
         for( u64 c : checked )
         {
             gaps = gaps | columns_[c].isna();
@@ -2147,7 +2152,7 @@ class dataframe
     /// The rows labelled `label`, in order; panics when no row has it.
     public dataframe loc( i64 label ) const
     {
-        return labelled( labels().equal_each( series( ndarray<i64>::filled( label, rows() ) ) ) );
+        return labelled( labels().equal_each( series( kl::filled<i64, dyn>( label, rows() ) ) ) );
     }
 
     /// The rows labelled with the text `label`, in order; panics when no row has it.
@@ -2191,7 +2196,7 @@ class dataframe
     /// The rows labelled with the times `from` to `to`, both included; panics as `loc( f64, f64 )`.
     public dataframe loc( const ref timestamp from, const ref timestamp to ) const
     {
-        const ref ndarray<i64> v = the_index().times();
+        const ref ndarray<i64, dyn> v = the_index().times();
         i64 a = from.nanoseconds();
         i64 b = to.nanoseconds();
         return label_slice( fn[ v, a ]( i ) { return v[i] >= a; }, fn[ v, b ]( i ) { return v[i] > b; } );
@@ -2327,7 +2332,7 @@ class dataframe
         {
             n.push( counts[codes[i]] );
         }
-        r.insert( "count", series( ndarray<i64>::from_list( move n ) ) );
+        r.insert( "count", series( of_list( n ) ) );
         return r;
     }
 
@@ -2337,7 +2342,7 @@ class dataframe
         dataframe r = dataframe();
         for( u64 c : 0..columns_.size() )
         {
-            r.insert( names_[c], series( ndarray<f64>::filled( f( columns_[c] ), 1 ) ) );
+            r.insert( names_[c], series( kl::filled<f64, dyn>( f( columns_[c] ), 1 ) ) );
         }
         return r;
     }
@@ -2428,7 +2433,7 @@ class dataframe
         list<u64> row_firsts = list<u64>::filled( n, u64::max );
         list<u64> column_firsts = list<u64>::filled( m, u64::max );
         list<f64> cells = list<f64>::filled( n * m, nan() );
-        const ref ndarray<f64> v = met[values].f64s();
+        const ref ndarray<f64, dyn> v = met[values].f64s();
         for( u64 i : 0..met.rows() )
         {
             row_firsts[row_codes[i]] = row_firsts[row_codes[i]] == u64::max ? i : row_firsts[row_codes[i]];
@@ -2442,7 +2447,7 @@ class dataframe
         {
             u64[1] at = [ column_firsts[c] ];
             list<f64> column = list<f64>::of( cells.as_run()[c * n..( c + 1 ) * n] );
-            r.insert( cell_texts( met[columns], at[0..1] )[0].trim_start(), series( ndarray<f64>::from_list( move column ) ) );
+            r.insert( cell_texts( met[columns], at[0..1] )[0].trim_start(), series( of_list( column ) ) );
         }
         return r;
     }
@@ -2868,7 +2873,7 @@ class dataframe
     }
 
     // `duplicated( names )`.
-    private mask repeats( const ref str[] names ) const
+    private mask<dyn> repeats( const ref str[] names ) const
     {
         list<string> keys = list<string>();
         for( str n : names )
@@ -2883,8 +2888,8 @@ class dataframe
             }
         }
         list<u64> codes = list<u64>();
-        mask seen = mask( group_codes( this, keys, ref codes, true ) );
-        mask r = mask( rows() );
+        mask<dyn> seen = kl::cleared( group_codes( this, keys, ref codes, true ) );
+        mask<dyn> r = kl::cleared( rows() );
         for( u64 i : 0..rows() )
         {
             r.assign( i, seen.test( codes[i] ) );
@@ -2951,7 +2956,7 @@ class dataframe
     {
         if( index_.is_empty() )
         {
-            return series( ndarray<i64>::arange( 0, cast<i64>( rows() ) ) );
+            return series( kl::arange<i64>( 0, cast<i64>( rows() ) ) );
         }
         return index_[0].copy();
     }
@@ -2996,7 +3001,7 @@ class dataframe
     }
 
     // The rows `m` sets; panics when it sets none.
-    private dataframe labelled( const ref mask m ) const
+    private dataframe labelled( const ref mask<dyn> m ) const
     {
         if( m.count() == 0 )
         {
@@ -3108,7 +3113,7 @@ private list<u64> present_order( const ref series s, bool ascending )
     switch( s.kind() )
     {
         case dtype::f64s:
-            const ref ndarray<f64> f = s.f64s();
+            const ref ndarray<f64, dyn> f = s.f64s();
             for( u64 i : 0..f.size() )
             {
                 f64 x = f[i];
@@ -3124,7 +3129,7 @@ private list<u64> present_order( const ref series s, bool ascending )
         case dtype::i64s:
         case dtype::times:
         case dtype::durations:
-            const ref ndarray<i64> v = integers( s );
+            const ref ndarray<i64, dyn> v = integers( s );
             for( u64 i : 0..v.size() )
             {
                 if( !s.is_missing( i ) )
@@ -3135,7 +3140,7 @@ private list<u64> present_order( const ref series s, bool ascending )
             }
             return radix_order( move keys, move order );
         case dtype::bools:
-            const ref mask m = s.bools();
+            const ref mask<dyn> m = s.bools();
             for( u64 pass : 0..2 )
             {
                 bool first = pass == 0 ? !ascending : ascending;
@@ -3224,7 +3229,7 @@ private list<u64> radix_order( move list<u64> keys, move list<u64> rows )
 }
 
 // The values of an `i64s`, `times` or `durations` series.
-private const ref ndarray<i64> integers( const ref series s )
+private const ref ndarray<i64, dyn> integers( const ref series s )
 {
     switch( s.kind() )
     {
@@ -3297,19 +3302,19 @@ private list<u64> appearance( const ref series s, ref list<u64> codes )
     switch( s.kind() )
     {
         case dtype::f64s:
-            const ref ndarray<f64> f = s.f64s();
+            const ref ndarray<f64, dyn> f = s.f64s();
             return first_rows( s.size(), ref codes, fn[ f ]( i ) { return !kl::is_nan( f[i] ); },
                 fn[ f ]( i, h ) { h.write( kl::bits_of( f[i] == 0.0 ? 0.0 : f[i] ) ); },
                 fn[ f ]( a, b ) { return f[a] == f[b]; } );
         case dtype::i64s:
         case dtype::times:
         case dtype::durations:
-            const ref ndarray<i64> v = integers( s );
+            const ref ndarray<i64, dyn> v = integers( s );
             return first_rows( s.size(), ref codes, fn[ s ]( i ) { return !s.is_missing( i ); },
                 fn[ v ]( i, h ) { h.write( wrap<u64>( v[i] ) ); },
                 fn[ v ]( a, b ) { return v[a] == v[b]; } );
         case dtype::bools:
-            const ref mask m = s.bools();
+            const ref mask<dyn> m = s.bools();
             return first_rows( s.size(), ref codes, fn[ s ]( i ) { return !s.is_missing( i ); },
                 fn[ m ]( i, h ) { h.write( m.test( i ) ? 1 : 0 ); },
                 fn[ m ]( a, b ) { return m.test( a ) == m.test( b ); } );
@@ -3612,7 +3617,7 @@ class grouped
         {
             n.push( cast<i64>( starts_[g + 1] - starts_[g] ) );
         }
-        r.insert( "size", series( ndarray<i64>::from_list( move n ) ) );
+        r.insert( "size", series( of_list( n ) ) );
         return r;
     }
 
@@ -3675,7 +3680,7 @@ class grouped
             {
                 v.push( f( part( s, g ) ) );
             }
-            r.insert( values_.columns()[c], series( ndarray<f64>::from_list( move v ) ) );
+            r.insert( values_.columns()[c], series( of_list( v ) ) );
         }
         return r;
     }
@@ -3700,7 +3705,7 @@ class grouped
         {
             const ref series s = values_[values_.columns()[c]];
             list<u64> codes = list<u64>();
-            mask seen = mask( appearance( s, ref codes ).size() );
+            mask<dyn> seen = kl::cleared( appearance( s, ref codes ).size() );
             list<i64> v = list<i64>::with_capacity( groups() );
             for( u64 g : 0..groups() )
             {
@@ -3724,7 +3729,7 @@ class grouped
                 }
                 v.push( n );
             }
-            r.insert( values_.columns()[c], series( ndarray<i64>::from_list( move v ) ) );
+            r.insert( values_.columns()[c], series( of_list( v ) ) );
         }
         return r;
     }
@@ -3738,13 +3743,13 @@ class grouped
     public series ngroup() const
     {
         list<i64> v = list<i64>::with_capacity( codes_.size() );
-        mask gaps = mask( codes_.size() );
+        mask<dyn> gaps = kl::cleared( codes_.size() );
         for( u64 i : 0..codes_.size() )
         {
             v.push( codes_[i] == u64::max ? 0 : cast<i64>( codes_[i] ) );
             gaps.assign( i, codes_[i] == u64::max );
         }
-        return with_gaps( series( ndarray<i64>::from_list( move v ) ), gaps );
+        return with_gaps( series( of_list( v ) ), gaps );
     }
 
     /// Each row's place within its group from 0, in row order: pandas' `cumcount`.
@@ -3758,7 +3763,7 @@ class grouped
                 v[order_[k]] = cast<i64>( k - starts_[g] );
             }
         }
-        return with_gaps( series( ndarray<i64>::from_list( move v ) ), ngroup().isna() );
+        return with_gaps( series( of_list( v ) ), ngroup().isna() );
     }
 
     /// The reduction named `op` of each group, `size`, `count`, `sum`, `mean`, `var`, `std`,
@@ -3836,7 +3841,7 @@ class grouped
                 continue;
             }
             series x = series( numbers_of( s ) );
-            const ref ndarray<f64> v = x.f64s();
+            const ref ndarray<f64, dyn> v = x.f64s();
             // Each group's present rows, by value.
             list<u64> ends = list<u64>::of( starts_.as_run() );
             list<u64> by = list<u64>::filled( order_.size(), 0 );
@@ -3867,7 +3872,7 @@ class grouped
                     a = b;
                 }
             }
-            r.insert( name, series( ndarray<f64>::from_list( move ranks ) ) );
+            r.insert( name, series( of_list( ranks ) ) );
         }
         return r;
     }
@@ -3888,7 +3893,7 @@ class grouped
             {
                 v.push( f( part( s, g ) ) );
             }
-            r.insert( values_.columns()[c], series( ndarray<f64>::from_list( move v ) ) );
+            r.insert( values_.columns()[c], series( of_list( v ) ) );
         }
         return r;
     }
@@ -3923,7 +3928,7 @@ class grouped
         if( op == reduction::count || ( ints && op == reduction::sum ) || ( ints && ( op == reduction::min || op == reduction::max ) ) )
         {
             list<i64> v = list<i64>::with_capacity( groups() );
-            mask gaps = mask( groups() );
+            mask<dyn> gaps = kl::cleared( groups() );
             for( u64 g : 0..groups() )
             {
                 i64 total = 0;
@@ -3949,7 +3954,7 @@ class grouped
             }
             if( s.kind() == dtype::bools && op != reduction::sum && op != reduction::count )
             {
-                mask b = mask( groups() );
+                mask<dyn> b = kl::cleared( groups() );
                 for( u64 g : 0..groups() )
                 {
                     b.assign( g, v[g] != 0 );
@@ -3960,10 +3965,10 @@ class grouped
             {
                 return with_gaps( of_nanoseconds( v, s.kind() ), gaps );
             }
-            return with_gaps( series( ndarray<i64>::from_list( move v ) ), gaps );
+            return with_gaps( series( of_list( v ) ), gaps );
         }
 
-        ndarray<f64> x = numbers_of( s );
+        ndarray<f64, dyn> x = numbers_of( s );
         list<f64> v = list<f64>::with_capacity( groups() );
         for( u64 g : 0..groups() )
         {
@@ -4025,7 +4030,7 @@ class grouped
                     break;
             }
         }
-        return series( ndarray<f64>::from_list( move v ) );
+        return series( of_list( v ) );
     }
 };
 
@@ -4218,7 +4223,7 @@ private list<u64> time_starts( const ref series t, const ref duration window )
     {
         panic( "the window is not a positive duration" );
     }
-    const ref ndarray<i64> ns = t.times();
+    const ref ndarray<i64, dyn> ns = t.times();
     list<u64> r = list<u64>::with_capacity( t.size() );
     u64 lo = 0;
     for( u64 i : 0..t.size() )
@@ -4237,7 +4242,7 @@ private list<u64> time_starts( const ref series t, const ref duration window )
 }
 
 // `s` as `f64`, a bool as 0 or 1 and a gap NaN; panics on any other dtype.
-private ndarray<f64> numbers_of( const ref series s )
+private ndarray<f64, dyn> numbers_of( const ref series s )
 {
     if( !is_number( s.kind() ) && s.kind() != dtype::bools )
     {
@@ -4264,7 +4269,7 @@ private ndarray<f64> numbers_of( const ref series s )
                 break;
         }
     }
-    return ndarray<f64>::from_list( move v );
+    return of_list( v );
 }
 
 // The running state of one window's sum, mean or variance.
@@ -4331,7 +4336,7 @@ private void remove( ref window_sums w, f64 x, bool welford )
 }
 
 // How many of `x`'s first i values are present, for each i up to its size.
-private list<u64> present_before( const ref ndarray<f64> x )
+private list<u64> present_before( const ref ndarray<f64, dyn> x )
 {
     list<u64> r = list<u64>::filled( x.size() + 1, 0 );
     for( u64 i : 0..x.size() )
@@ -4344,7 +4349,7 @@ private list<u64> present_before( const ref ndarray<f64> x )
 // `op` of each window of `s`, a gap where fewer than `min_periods` values are present.
 private series rolled( const ref series s, const ref list<u64> starts, u64 min_periods, reduction op )
 {
-    ndarray<f64> x = numbers_of( s );
+    ndarray<f64, dyn> x = numbers_of( s );
     u64 n = x.size();
     list<f64> r = list<f64>::with_capacity( n );
     if( op == reduction::count )
@@ -4355,7 +4360,7 @@ private series rolled( const ref series s, const ref list<u64> starts, u64 min_p
             u64 k = present[i + 1] - present[starts[i]];
             r.push( i + 1 - starts[i] >= min_periods ? cast<f64>( k ) : nan() );
         }
-        return series( ndarray<f64>::from_list( move r ) );
+        return series( of_list( r ) );
     }
     if( op == reduction::min || op == reduction::max )
     {
@@ -4425,12 +4430,12 @@ private series rolled( const ref series s, const ref list<u64> starts, u64 min_p
         f64 v = same >= k ? 0.0 : ( w.squares > 0.0 ? w.squares : 0.0 ) / cast<f64>( k - 1 );
         r.push( op == reduction::std ? kl::sqrt( v ) : v );
     }
-    return series( ndarray<f64>::from_list( move r ) );
+    return series( of_list( r ) );
 }
 
 // The least or greatest value present in each window of `x`, by a deque of rows whose values
 // only grow (or shrink) from its front.
-private series rolled_extreme( const ref ndarray<f64> x, const ref list<u64> starts, u64 min_periods, bool least )
+private series rolled_extreme( const ref ndarray<f64, dyn> x, const ref list<u64> starts, u64 min_periods, bool least )
 {
     u64 n = x.size();
     list<f64> r = list<f64>::with_capacity( n );
@@ -4454,7 +4459,7 @@ private series rolled_extreme( const ref ndarray<f64> x, const ref list<u64> sta
         u64 k = present[i + 1] - present[starts[i]];
         r.push( k >= min_periods && k > 0 ? x[rows[front]] : nan() );
     }
-    return series( ndarray<f64>::from_list( move r ) );
+    return series( of_list( r ) );
 }
 
 // `f` of each window of `s`, a gap where fewer than `min_periods` values are present.
@@ -4473,7 +4478,7 @@ private series rolled_by<F>( const ref series s, const ref list<u64> starts, u64
         bool enough = present[i + 1] - present[starts[i]] >= min_periods;
         r.push( enough ? f( s.taken( all.as_run()[starts[i]..i + 1] ) ) : nan() );
     }
-    return series( ndarray<f64>::from_list( move r ) );
+    return series( of_list( r ) );
 }
 
 // `text` padded with spaces to `width`, on the left when `right`.
@@ -4554,7 +4559,7 @@ private list<string> cell_texts( const ref series s, const ref u64[] rows )
 // durations.
 private list<string> time_texts( const ref series s, const ref u64[] rows )
 {
-    const ref ndarray<i64> v = integers( s );
+    const ref ndarray<i64, dyn> v = integers( s );
     bool times = s.kind() == dtype::times;
     i64 second = 1000000000;
     bool whole = true;
@@ -4620,7 +4625,7 @@ private i64 within( i64 x, i64 m )
 
 // pandas' float column: six places, the trailing zeros all values share trimmed down to one, or
 // six places of scientific when a value is below 1e-6, or above 1e6 with a fixed text past 12.
-private list<string> float_texts( const ref ndarray<f64> v, const ref u64[] rows )
+private list<string> float_texts( const ref ndarray<f64, dyn> v, const ref u64[] rows )
 {
     u64 places = 1;
     bool small = false;
@@ -4928,7 +4933,7 @@ private bool reads_f64( const ref u8[] f, ref string scratch, ref f64 value )
 private series column_of( move text_column fields )
 {
     u64 n = fields.size();
-    mask gaps = mask( n );
+    mask<dyn> gaps = kl::cleared( n );
     string scratch = string();
     bool ints = true;
     bool floats = true;
@@ -4980,22 +4985,22 @@ private series column_of( move text_column fields )
 
     if( present == 0 )
     {
-        return series( ndarray<f64>::filled( nan(), n ) );
+        return series( kl::filled<f64, dyn>( nan(), n ) );
     }
     if( ints )
     {
-        return with_gaps( series( ndarray<i64>::from_list( move iv ) ), gaps );
+        return with_gaps( series( of_list( iv ) ), gaps );
     }
     if( floats )
     {
-        return series( ndarray<f64>::from_list( move fv ) );
+        return series( of_list( fv ) );
     }
     for( u64 i : 0..n )
     {
         gaps.assign( i, is_na_token( fields[i] ) );
     }
     bool bools = true;
-    mask v = mask( n );
+    mask<dyn> v = kl::cleared( n );
     for( u64 i : 0..n )
     {
         bool b = false;
@@ -5013,7 +5018,7 @@ private series column_of( move text_column fields )
 }
 
 // `s` with each value `gaps` sets missing.
-private series with_gaps( move series s, const ref mask gaps )
+private series with_gaps( move series s, const ref mask<dyn> gaps )
 {
     for( u64 i : 0..gaps.size() )
     {
@@ -5112,7 +5117,7 @@ private series stacked( const ref list<series> parts, dtype kind )
     {
         n += parts[p].size();
     }
-    mask gaps = mask( n );
+    mask<dyn> gaps = kl::cleared( n );
     u64 at = 0;
     for( u64 p : 0..parts.size() )
     {
@@ -5128,20 +5133,20 @@ private series stacked( const ref list<series> parts, dtype kind )
             list<f64> f = list<f64>::with_capacity( n );
             for( u64 p : 0..parts.size() )
             {
-                const ref ndarray<f64> x = parts[p].f64s();
+                const ref ndarray<f64, dyn> x = parts[p].f64s();
                 for( u64 i : 0..x.size() )
                 {
                     f.push( x[i] );
                 }
             }
-            return series( ndarray<f64>::from_list( move f ) );
+            return series( of_list( f ) );
         case dtype::i64s:
         case dtype::times:
         case dtype::durations:
             list<i64> v = list<i64>::with_capacity( n );
             for( u64 p : 0..parts.size() )
             {
-                const ref ndarray<i64> x = integers( parts[p] );
+                const ref ndarray<i64, dyn> x = integers( parts[p] );
                 for( u64 i : 0..x.size() )
                 {
                     v.push( x[i] );
@@ -5149,11 +5154,11 @@ private series stacked( const ref list<series> parts, dtype kind )
             }
             if( kind == dtype::i64s )
             {
-                return with_gaps( series( ndarray<i64>::from_list( move v ) ), gaps );
+                return with_gaps( series( of_list( v ) ), gaps );
             }
             return with_gaps( of_nanoseconds( v, kind ), gaps );
         case dtype::bools:
-            mask b = mask( n );
+            mask<dyn> b = kl::cleared( n );
             at = 0;
             for( u64 p : 0..parts.size() )
             {
@@ -5181,7 +5186,7 @@ private series stacked( const ref list<series> parts, dtype kind )
 // `n` gaps of dtype `kind`.
 private series gaps_of( dtype kind, u64 n )
 {
-    mask all = mask( n );
+    mask<dyn> all = kl::cleared( n );
     for( u64 i : 0..n )
     {
         all.assign( i, true );
@@ -5189,14 +5194,14 @@ private series gaps_of( dtype kind, u64 n )
     switch( kind )
     {
         case dtype::f64s:
-            return series( ndarray<f64>::filled( nan(), n ) );
+            return series( kl::filled<f64, dyn>( nan(), n ) );
         case dtype::i64s:
-            return with_gaps( series( ndarray<i64>::filled( 0, n ) ), all );
+            return with_gaps( series( kl::filled<i64, dyn>( 0, n ) ), all );
         case dtype::times:
         case dtype::durations:
             return with_gaps( of_nanoseconds( list<i64>::filled( n, 0 ), kind ), all );
         case dtype::bools:
-            return with_gaps( series( mask( n ) ), all );
+            return with_gaps( series( kl::cleared( n ) ), all );
         case dtype::strings:
             text_column t = text_column::with_capacity( n, 0 );
             str empty = "";
@@ -5215,7 +5220,7 @@ private series gathered( const ref series s, const ref list<u64> rows )
     {
         return gaps_of( s.kind(), rows.size() );
     }
-    mask gaps = mask( rows.size() );
+    mask<dyn> gaps = kl::cleared( rows.size() );
     list<u64> at = list<u64>::with_capacity( rows.size() );
     for( u64 j : 0..rows.size() )
     {

@@ -57,135 +57,6 @@ of each run.</dd>
 </dl>
 </section>
 <section class="module">
-<h3><a href="array.html">array</a></h3>
-<dl class="summaries">
-<dt><a href="array.html#array"><code>array</code></a> <span class="kind">class</span></dt>
-<dd>Numbers in the shape <code>S</code>, held row-major: the last index moves fastest.</dd>
-<dt><a href="array.html#array_mask"><code>array_mask</code></a> <span class="kind">class</span></dt>
-<dd>One bit per element of an <code>array</code> in the shape <code>S</code>, held row-major: what its comparisons
-answer.</dd>
-</dl>
-<h4 class="divider">Making arrays</h4>
-<dl class="summaries">
-<dt><a href="array.html#zeros"><code>zeros</code></a> <span class="kind">function</span></dt>
-<dd>Every element 0, in the sizes <code>n</code>: <code>array&lt;f64, dyn, 3&gt; a = kl::zeros( rows, 3 );</code>. A size whose
-value is known is a constant, any other <code>dyn</code>.</dd>
-<dt><a href="array.html#ones"><code>ones</code></a> <span class="kind">function</span></dt>
-<dd>Every element 1, in the sizes <code>n</code>.</dd>
-<dt><a href="array.html#filled"><code>filled</code></a> <span class="kind">function</span></dt>
-<dd>Every element <code>x</code>, in the sizes <code>n</code>: <code>kl::filled( 0.5, rows, 3 )</code>.</dd>
-<dt><a href="array.html#shaped"><code>shaped</code></a> <span class="kind">function</span></dt>
-<dd><code>elements</code> row after row, in the sizes <code>n</code>: <code>kl::shaped( e, 2, 3 )</code>. Panics unless there are
-as many as the sizes hold.</dd>
-<dt><a href="array.html#of"><code>of</code></a> <span class="kind">function</span></dt>
-<dd>The elements of a literal, as rank 1: <code>kl::of( [1.0, 2.0, 3.0] )</code>.</dd>
-<dt><a href="array.html#arange"><code>arange</code></a> <span class="kind">function</span></dt>
-<dd><code>from</code>, <code>from + step</code>, ... while short of <code>to</code>, as rank 1: <code>kl::arange( 0, 5 )</code> is <code>[0, 1, 2,
-3, 4]</code>. A negative <code>step</code> counts down. Each element is <code>from + i * step</code>, so floats do not
-drift. Panics when <code>step</code> is 0.</dd>
-<dt><a href="array.html#linspace"><code>linspace</code></a> <span class="kind">function</span></dt>
-<dd><code>n</code> evenly spaced from <code>a</code> to <code>b</code>, both included, as rank 1. One element is <code>a</code>.</dd>
-<dt><a href="array.html#eye"><code>eye</code></a> <span class="kind">function</span></dt>
-<dd>The <code>n</code> by <code>n</code> identity: <code>array&lt;f64, 3, 3&gt; i = kl::eye( 3, 3 );</code>, or <code>kl::eye&lt;f64&gt;</code>'s square
-form <code>kl::identity( n )</code> where the type is not written.</dd>
-<dt><a href="array.html#diag"><code>diag</code></a> <span class="kind">function</span></dt>
-<dd>The square matrix with <code>v</code> on its diagonal: <code>kl::diag( v )</code>.</dd>
-<dt><a href="array.html#diagonal"><code>diagonal</code></a> <span class="kind">function</span></dt>
-<dd>The diagonal of a square matrix: <code>kl::diagonal( m )</code>.</dd>
-<dt><a href="array.html#concatenated"><code>concatenated</code></a> <span class="kind">function</span></dt>
-<dd><code>a</code> then <code>b</code>, along the first axis: <code>kl::concatenated( a, b )</code>.</dd>
-<dt><a href="array.html#stacked"><code>stacked</code></a> <span class="kind">function</span></dt>
-<dd><code>a</code> and <code>b</code> as the two entries of a new first axis: <code>kl::stacked( a, b )</code>.</dd>
-</dl>
-<h4 class="divider">Products</h4>
-<dl class="summaries">
-<dt><a href="array.html#matmul"><code>matmul</code></a> <span class="kind">function</span></dt>
-<dd>The matrix product: <code>kl::matmul( a, b )</code>.</dd>
-<dt><a href="array.html#outer"><code>outer</code></a> <span class="kind">function</span></dt>
-<dd>Each element of <code>a</code> times each of <code>b</code>: an <code>N</code> by <code>M</code> matrix.</dd>
-<dt><a href="array.html#cross"><code>cross</code></a> <span class="kind">function</span></dt>
-<dd>The cross product <code>a</code> x <code>b</code>: <code>kl::cross( a, b )</code>.</dd>
-</dl>
-<h4 class="divider">Linear algebra</h4>
-<dl class="summaries">
-<dt><a href="array.html#determinant"><code>determinant</code></a> <span class="kind">function</span></dt>
-<dd>The determinant of a square matrix, through LU with partial pivoting: <code>kl::determinant( m )</code>.
-0 when a pivot is exactly zero.</dd>
-<dt><a href="array.html#inverse"><code>inverse</code></a> <span class="kind">function</span></dt>
-<dd>The inverse of a square matrix, <code>none</code> when a pivot is exactly zero: <code>kl::inverse( m )</code>. A
-nearly singular matrix gives large elements.</dd>
-<dt><a href="array.html#solve"><code>solve</code></a> <span class="kind">function</span></dt>
-<dd>The <code>x</code> with <code>kl::matmul( a, x ) == b</code>, <code>none</code> when a pivot of <code>a</code> is exactly zero:
-<code>kl::solve( a, b )</code>.</dd>
-<dt><a href="array.html#qr"><code>qr</code></a> <span class="kind">function</span></dt>
-<dd>The thin QR factors of <code>a</code>, <code>first</code> with orthonormal columns and <code>second</code> upper triangular,
-their product <code>a</code>, by Householder reflections as numpy's <code>qr</code>: <code>kl::qr( a )</code>.</dd>
-<dt><a href="array.html#lstsq"><code>lstsq</code></a> <span class="kind">function</span></dt>
-<dd>The <code>x</code> making <code>kl::matmul( a, x ) - b</code> shortest, through QR, <code>none</code> when a diagonal of R is
-exactly zero: <code>kl::lstsq( a, b )</code>. numpy's <code>lstsq</code> answers the shortest such <code>x</code> there instead.</dd>
-<dt><a href="array.html#hat_diagonal"><code>hat_diagonal</code></a> <span class="kind">function</span></dt>
-<dd>The diagonal of the projection onto <code>a</code>'s columns, <code>a (a^T a)^-1 a^T</code>, through QR: each row's
-leverage when <code>a</code> has full column rank. <code>kl::hat_diagonal( a )</code>.</dd>
-</dl>
-<h4 class="divider">Element-wise choices</h4>
-<dl class="summaries">
-<dt><a href="array.html#minimum"><code>minimum</code></a> <span class="kind">function</span></dt>
-<dd>The smaller of each pair of matching elements, as <code>kl::min</code>, the two broadcast.</dd>
-<dt><a href="array.html#maximum"><code>maximum</code></a> <span class="kind">function</span></dt>
-<dd>The larger of each pair of matching elements, as <code>kl::max</code>, the two broadcast.</dd>
-<dt><a href="array.html#select"><code>select</code></a> <span class="kind">function</span></dt>
-<dd><code>a</code>'s element where <code>m</code> is set, and <code>b</code>'s where it is clear.</dd>
-<dt><a href="array.html#is_nan"><code>is_nan</code></a> <span class="kind">function</span></dt>
-<dd>Where each element is a NaN, as <code>kl::is_nan</code>.</dd>
-<dt><a href="array.html#is_inf"><code>is_inf</code></a> <span class="kind">function</span></dt>
-<dd>Where each element is an infinity, as <code>kl::is_inf</code>.</dd>
-<dt><a href="array.html#sqrt"><code>sqrt</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::sqrt</code> of each element.</dd>
-<dt><a href="array.html#exp"><code>exp</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::exp</code> of each element.</dd>
-<dt><a href="array.html#expm1"><code>expm1</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::expm1</code> of each element.</dd>
-<dt><a href="array.html#log"><code>log</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::log</code> of each element.</dd>
-<dt><a href="array.html#log1p"><code>log1p</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::log1p</code> of each element.</dd>
-<dt><a href="array.html#log2"><code>log2</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::log2</code> of each element.</dd>
-<dt><a href="array.html#log10"><code>log10</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::log10</code> of each element.</dd>
-<dt><a href="array.html#sin"><code>sin</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::sin</code> of each element.</dd>
-<dt><a href="array.html#cos"><code>cos</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::cos</code> of each element.</dd>
-<dt><a href="array.html#tan"><code>tan</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::tan</code> of each element.</dd>
-<dt><a href="array.html#asin"><code>asin</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::asin</code> of each element.</dd>
-<dt><a href="array.html#acos"><code>acos</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::acos</code> of each element.</dd>
-<dt><a href="array.html#atan"><code>atan</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::atan</code> of each element.</dd>
-<dt><a href="array.html#sinh"><code>sinh</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::sinh</code> of each element.</dd>
-<dt><a href="array.html#cosh"><code>cosh</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::cosh</code> of each element.</dd>
-<dt><a href="array.html#tanh"><code>tanh</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::tanh</code> of each element.</dd>
-<dt><a href="array.html#floor"><code>floor</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::floor</code> of each element.</dd>
-<dt><a href="array.html#ceil"><code>ceil</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::ceil</code> of each element.</dd>
-<dt><a href="array.html#trunc"><code>trunc</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::trunc</code> of each element.</dd>
-<dt><a href="array.html#round"><code>round</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::round</code> of each element.</dd>
-<dt><a href="array.html#pow"><code>pow</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::pow</code> of each element and the matching one of <code>b</code>, the two broadcast.</dd>
-<dt><a href="array.html#atan2"><code>atan2</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::atan2</code> of each element of <code>y</code> and the matching one of <code>x</code>, the two broadcast.</dd>
-</dl>
-</section>
-<section class="module">
 <h3><a href="bitset.html">bitset</a></h3>
 <dl class="summaries">
 <dt><a href="bitset.html#bitset"><code>bitset</code></a> <span class="kind">struct</span></dt>
@@ -306,17 +177,6 @@ appear, and a frame without one has gaps there in its dtype. <code>i64s</code> b
 <dl class="summaries">
 <dt><a href="map.html#map"><code>map</code></a> <span class="kind">class</span></dt>
 <dd>A hash table from keys of type <code>K</code> to values of type <code>V</code>, each key held at most once.</dd>
-</dl>
-</section>
-<section class="module">
-<h3><a href="mask.html">mask</a></h3>
-<dl class="summaries">
-<dt><a href="mask.html#mask"><code>mask</code></a> <span class="kind">class</span></dt>
-<dd>One bit per element of an <code>ndarray</code>, in a shape set at run time, held row-major.</dd>
-<dt><a href="mask.html#vec_mask"><code>vec_mask</code></a> <span class="kind">struct</span></dt>
-<dd>One bit per element of a <code>vec&lt;T, N&gt;</code>: what its comparisons answer.</dd>
-<dt><a href="mask.html#mat_mask"><code>mat_mask</code></a> <span class="kind">struct</span></dt>
-<dd>One bit per element of a <code>mat&lt;T, R, C&gt;</code>, row after row: what its comparisons answer.</dd>
 </dl>
 </section>
 <section class="module">
@@ -445,130 +305,86 @@ outside them. Acklam's rational fit refined by one Halley step through <code>erf
 </dl>
 </section>
 <section class="module">
-<h3><a href="matrix.html">matrix</a></h3>
-<dl class="summaries">
-<dt><a href="matrix.html#vec"><code>vec</code></a> <span class="kind">class</span></dt>
-<dd><code>N</code> numbers held inline: a vector of rank 1, neither a row nor a column.</dd>
-<dt><a href="matrix.html#mat"><code>mat</code></a> <span class="kind">class</span></dt>
-<dd><code>R</code> rows of <code>C</code> numbers held inline, row after row: a matrix of rank 2.</dd>
-<dt><a href="matrix.html#identity"><code>identity</code></a> <span class="kind">function</span></dt>
-<dd>The <code>N</code> by <code>N</code> identity: <code>mat&lt;f64, 3, 3&gt; i = kl::identity();</code>.</dd>
-<dt><a href="matrix.html#diag"><code>diag</code></a> <span class="kind">function</span></dt>
-<dd>The square matrix with <code>v</code> on its diagonal: <code>kl::diag( v )</code>.</dd>
-<dt><a href="matrix.html#diagonal"><code>diagonal</code></a> <span class="kind">function</span></dt>
-<dd>The diagonal of a square matrix: <code>kl::diagonal( m )</code>.</dd>
-<dt><a href="matrix.html#cross"><code>cross</code></a> <span class="kind">function</span></dt>
-<dd>The cross product <code>a</code> x <code>b</code>: <code>kl::cross( a, b )</code>.</dd>
-<dt><a href="matrix.html#determinant"><code>determinant</code></a> <span class="kind">function</span></dt>
-<dd>The determinant of a square matrix, through LU with partial pivoting: <code>kl::determinant( m )</code>.
-0 when a pivot is exactly zero.</dd>
-<dt><a href="matrix.html#inverse"><code>inverse</code></a> <span class="kind">function</span></dt>
-<dd>The inverse of a square matrix, <code>none</code> when a pivot is exactly zero: <code>kl::inverse( m )</code>. A
-nearly singular matrix gives large elements.</dd>
-<dt><a href="matrix.html#solve"><code>solve</code></a> <span class="kind">function</span></dt>
-<dd>The <code>x</code> with <code>a.matmul( x ) == b</code>, <code>none</code> when a pivot of <code>a</code> is exactly zero:
-<code>kl::solve( a, b )</code>.</dd>
-<dt><a href="matrix.html#qr"><code>qr</code></a> <span class="kind">function</span></dt>
-<dd>The thin QR factors of <code>a</code>, <code>first</code> with orthonormal columns and <code>second</code> upper triangular,
-their product <code>a</code>, by Householder reflections as numpy's <code>qr</code>: <code>kl::qr( a )</code>.</dd>
-<dt><a href="matrix.html#lstsq"><code>lstsq</code></a> <span class="kind">function</span></dt>
-<dd>The <code>x</code> making <code>a.matmul( x ) - b</code> shortest, through QR, <code>none</code> when a diagonal of R is
-exactly zero: <code>kl::lstsq( a, b )</code>. numpy's <code>lstsq</code> answers the shortest such <code>x</code> there instead.</dd>
-<dt><a href="matrix.html#hat_diagonal"><code>hat_diagonal</code></a> <span class="kind">function</span></dt>
-<dd>The diagonal of the projection onto <code>a</code>'s columns, <code>a (a^T a)^-1 a^T</code>, through QR: each row's
-leverage when <code>a</code> has full column rank. <code>kl::hat_diagonal( a )</code>.</dd>
-<dt><a href="matrix.html#minimum"><code>minimum</code></a> <span class="kind">function</span></dt>
-<dd>The smallest of each set of matching elements, as <code>kl::min</code>: <code>kl::minimum( a, b, c )</code>.</dd>
-<dt><a href="matrix.html#maximum"><code>maximum</code></a> <span class="kind">function</span></dt>
-<dd>The largest of each set of matching elements, as <code>kl::max</code>: <code>kl::maximum( a, b, c )</code>.</dd>
-<dt><a href="matrix.html#select"><code>select</code></a> <span class="kind">function</span></dt>
-<dd><code>a</code>'s element where <code>m</code> is set, and <code>b</code>'s where it is clear.</dd>
-<dt><a href="matrix.html#is_nan"><code>is_nan</code></a> <span class="kind">function</span></dt>
-<dd>Where each element is a NaN, as <code>kl::is_nan</code>.</dd>
-<dt><a href="matrix.html#is_inf"><code>is_inf</code></a> <span class="kind">function</span></dt>
-<dd>Where each element is an infinity, as <code>kl::is_inf</code>.</dd>
-<dt><a href="matrix.html#sqrt"><code>sqrt</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::sqrt</code> of each element.</dd>
-<dt><a href="matrix.html#exp"><code>exp</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::exp</code> of each element.</dd>
-<dt><a href="matrix.html#expm1"><code>expm1</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::expm1</code> of each element.</dd>
-<dt><a href="matrix.html#log"><code>log</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::log</code> of each element.</dd>
-<dt><a href="matrix.html#log1p"><code>log1p</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::log1p</code> of each element.</dd>
-<dt><a href="matrix.html#log2"><code>log2</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::log2</code> of each element.</dd>
-<dt><a href="matrix.html#log10"><code>log10</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::log10</code> of each element.</dd>
-<dt><a href="matrix.html#sin"><code>sin</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::sin</code> of each element.</dd>
-<dt><a href="matrix.html#cos"><code>cos</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::cos</code> of each element.</dd>
-<dt><a href="matrix.html#tan"><code>tan</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::tan</code> of each element.</dd>
-<dt><a href="matrix.html#asin"><code>asin</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::asin</code> of each element.</dd>
-<dt><a href="matrix.html#acos"><code>acos</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::acos</code> of each element.</dd>
-<dt><a href="matrix.html#atan"><code>atan</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::atan</code> of each element.</dd>
-<dt><a href="matrix.html#sinh"><code>sinh</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::sinh</code> of each element.</dd>
-<dt><a href="matrix.html#cosh"><code>cosh</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::cosh</code> of each element.</dd>
-<dt><a href="matrix.html#tanh"><code>tanh</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::tanh</code> of each element.</dd>
-<dt><a href="matrix.html#floor"><code>floor</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::floor</code> of each element.</dd>
-<dt><a href="matrix.html#ceil"><code>ceil</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::ceil</code> of each element.</dd>
-<dt><a href="matrix.html#trunc"><code>trunc</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::trunc</code> of each element.</dd>
-<dt><a href="matrix.html#round"><code>round</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::round</code> of each element.</dd>
-<dt><a href="matrix.html#pow"><code>pow</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::pow</code> of each element of <code>a</code> and the matching one of <code>b</code>.</dd>
-<dt><a href="matrix.html#atan2"><code>atan2</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::atan2</code> of each element of <code>y</code> and the matching one of <code>x</code>.</dd>
-</dl>
-</section>
-<section class="module">
 <h3><a href="ndarray.html">ndarray</a></h3>
 <dl class="summaries">
 <dt><a href="ndarray.html#ndarray"><code>ndarray</code></a> <span class="kind">class</span></dt>
-<dd>Numbers of any rank with a shape set at run time, held row-major: the last index moves fastest.</dd>
-<dt><a href="ndarray.html#cross"><code>cross</code></a> <span class="kind">function</span></dt>
-<dd>The cross product <code>a</code> x <code>b</code>, each of rank 1 and size 3: <code>kl::cross( a, b )</code>.</dd>
-<dt><a href="ndarray.html#determinant"><code>determinant</code></a> <span class="kind">function</span></dt>
-<dd>The determinant of a square rank 2 array, through LU with partial pivoting:
-<code>kl::determinant( a )</code>. 0 when a pivot is exactly zero.</dd>
-<dt><a href="ndarray.html#inverse"><code>inverse</code></a> <span class="kind">function</span></dt>
-<dd>The inverse of a square rank 2 array, <code>none</code> when a pivot is exactly zero:
-<code>kl::inverse( a )</code>. A nearly singular array gives large elements.</dd>
-<dt><a href="ndarray.html#solve"><code>solve</code></a> <span class="kind">function</span></dt>
-<dd>The <code>x</code> with <code>a.matmul( x ) == b</code>, for a square rank 2 <code>a</code> and a <code>b</code> of rank 1 or 2 whose first
-dimension is <code>a</code>'s, <code>none</code> when a pivot of <code>a</code> is exactly zero: <code>kl::solve( a, b )</code>.</dd>
-<dt><a href="ndarray.html#qr"><code>qr</code></a> <span class="kind">function</span></dt>
-<dd>The thin QR factors of rank 2 <code>a</code>, m by n with m &gt;= n: <code>first</code>, m by n with orthonormal
-columns, and <code>second</code>, n by n upper triangular, their product <code>a</code>, by Householder reflections
-as numpy's <code>qr</code>: <code>kl::qr( a )</code>.</dd>
-<dt><a href="ndarray.html#lstsq"><code>lstsq</code></a> <span class="kind">function</span></dt>
-<dd>The <code>x</code> making <code>a.matmul( x ) - b</code> shortest, through QR, for rank 2 <code>a</code>, m by n with m &gt;= n,
-and <code>b</code> of rank 1 or 2 whose first dimension is m; <code>none</code> when a diagonal of R is exactly zero:
-<code>kl::lstsq( a, b )</code>. numpy's <code>lstsq</code> answers the shortest such <code>x</code> there instead.</dd>
-<dt><a href="ndarray.html#hat_diagonal"><code>hat_diagonal</code></a> <span class="kind">function</span></dt>
-<dd>The diagonal of the projection onto the columns of rank 2 <code>a</code>, m by n with m &gt;= n,
-<code>a (a^T a)^-1 a^T</code>, through QR: each row's leverage when <code>a</code> has full column rank.
-<code>kl::hat_diagonal( a )</code>.</dd>
+<dd>Numbers in the shape <code>S</code>, held row-major: the last index moves fastest.</dd>
+<dt><a href="ndarray.html#mask"><code>mask</code></a> <span class="kind">class</span></dt>
+<dd>One bit per element of an <code>ndarray</code> in the shape <code>S</code>, held row-major: what its comparisons
+answer.</dd>
+</dl>
+<h4 class="divider">Making arrays</h4>
+<dl class="summaries">
+<dt><a href="ndarray.html#zeros"><code>zeros</code></a> <span class="kind">function</span></dt>
+<dd>Every element 0, in the sizes <code>n</code>: <code>ndarray&lt;f64, dyn, 3&gt; a = kl::zeros( rows, 3 );</code>. A size whose
+value is known is a constant, any other <code>dyn</code>.</dd>
+<dt><a href="ndarray.html#ones"><code>ones</code></a> <span class="kind">function</span></dt>
+<dd>Every element 1, in the sizes <code>n</code>.</dd>
+<dt><a href="ndarray.html#filled"><code>filled</code></a> <span class="kind">function</span></dt>
+<dd>Every element <code>x</code>, in the sizes <code>n</code>: <code>kl::filled( 0.5, rows, 3 )</code>.</dd>
+<dt><a href="ndarray.html#cleared"><code>cleared</code></a> <span class="kind">function</span></dt>
+<dd>A mask of every bit clear, in the sizes <code>n</code>: <code>kl::cleared( rows )</code>.</dd>
+<dt><a href="ndarray.html#shaped"><code>shaped</code></a> <span class="kind">function</span></dt>
+<dd><code>elements</code> row after row, in the sizes <code>n</code>: <code>kl::shaped( e, 2, 3 )</code>. Panics unless there are
+as many as the sizes hold.</dd>
+<dt><a href="ndarray.html#of"><code>of</code></a> <span class="kind">function</span></dt>
+<dd>The elements of a literal, as rank 1: <code>kl::of( [1.0, 2.0, 3.0] )</code>.</dd>
+<dt><a href="ndarray.html#arange"><code>arange</code></a> <span class="kind">function</span></dt>
+<dd><code>from</code>, <code>from + step</code>, ... while short of <code>to</code>, as rank 1: <code>kl::arange( 0, 5 )</code> is <code>[0, 1, 2,
+3, 4]</code>. A negative <code>step</code> counts down. Each element is <code>from + i * step</code>, so floats do not
+drift. Panics when <code>step</code> is 0.</dd>
+<dt><a href="ndarray.html#linspace"><code>linspace</code></a> <span class="kind">function</span></dt>
+<dd><code>n</code> evenly spaced from <code>a</code> to <code>b</code>, both included, as rank 1. One element is <code>a</code>.</dd>
+<dt><a href="ndarray.html#eye"><code>eye</code></a> <span class="kind">function</span></dt>
+<dd>1 on the diagonal and 0 elsewhere, <code>rows</code> by <code>cols</code>: <code>ndarray&lt;f64, 3, 3&gt; i = kl::eye( 3, 3 );</code> is
+the identity.</dd>
 <dt><a href="ndarray.html#diag"><code>diag</code></a> <span class="kind">function</span></dt>
-<dd>The square matrix with <code>v</code>, of rank 1, on its diagonal: <code>kl::diag( v )</code>.</dd>
+<dd>The square matrix with <code>v</code> on its diagonal: <code>kl::diag( v )</code>.</dd>
+<dt><a href="ndarray.html#diagonal"><code>diagonal</code></a> <span class="kind">function</span></dt>
+<dd>The diagonal of a square matrix: <code>kl::diagonal( m )</code>.</dd>
+<dt><a href="ndarray.html#concatenated"><code>concatenated</code></a> <span class="kind">function</span></dt>
+<dd><code>a</code> then <code>b</code>, along the first axis: <code>kl::concatenated( a, b )</code>.</dd>
+<dt><a href="ndarray.html#stacked"><code>stacked</code></a> <span class="kind">function</span></dt>
+<dd><code>a</code> and <code>b</code> as the two entries of a new first axis: <code>kl::stacked( a, b )</code>.</dd>
+</dl>
+<h4 class="divider">Products</h4>
+<dl class="summaries">
+<dt><a href="ndarray.html#matmul"><code>matmul</code></a> <span class="kind">function</span></dt>
+<dd>The matrix product: <code>kl::matmul( a, b )</code>.</dd>
+<dt><a href="ndarray.html#outer"><code>outer</code></a> <span class="kind">function</span></dt>
+<dd>Each element of <code>a</code> times each of <code>b</code>: an <code>N</code> by <code>M</code> matrix.</dd>
+<dt><a href="ndarray.html#cross"><code>cross</code></a> <span class="kind">function</span></dt>
+<dd>The cross product <code>a</code> x <code>b</code>: <code>kl::cross( a, b )</code>.</dd>
+</dl>
+<h4 class="divider">Linear algebra</h4>
+<dl class="summaries">
+<dt><a href="ndarray.html#determinant"><code>determinant</code></a> <span class="kind">function</span></dt>
+<dd>The determinant of a square matrix, through LU with partial pivoting: <code>kl::determinant( m )</code>.
+0 when a pivot is exactly zero.</dd>
+<dt><a href="ndarray.html#inverse"><code>inverse</code></a> <span class="kind">function</span></dt>
+<dd>The inverse of a square matrix, <code>none</code> when a pivot is exactly zero: <code>kl::inverse( m )</code>. A
+nearly singular matrix gives large elements.</dd>
+<dt><a href="ndarray.html#solve"><code>solve</code></a> <span class="kind">function</span></dt>
+<dd>The <code>x</code> with <code>kl::matmul( a, x ) == b</code>, <code>none</code> when a pivot of <code>a</code> is exactly zero:
+<code>kl::solve( a, b )</code>.</dd>
+<dt><a href="ndarray.html#qr"><code>qr</code></a> <span class="kind">function</span></dt>
+<dd>The thin QR factors of <code>a</code>, <code>first</code> with orthonormal columns and <code>second</code> upper triangular,
+their product <code>a</code>, by Householder reflections as numpy's <code>qr</code>: <code>kl::qr( a )</code>.</dd>
+<dt><a href="ndarray.html#lstsq"><code>lstsq</code></a> <span class="kind">function</span></dt>
+<dd>The <code>x</code> making <code>kl::matmul( a, x ) - b</code> shortest, through QR, <code>none</code> when a diagonal of R is
+exactly zero: <code>kl::lstsq( a, b )</code>. numpy's <code>lstsq</code> answers the shortest such <code>x</code> there instead.</dd>
+<dt><a href="ndarray.html#hat_diagonal"><code>hat_diagonal</code></a> <span class="kind">function</span></dt>
+<dd>The diagonal of the projection onto <code>a</code>'s columns, <code>a (a^T a)^-1 a^T</code>, through QR: each row's
+leverage when <code>a</code> has full column rank. <code>kl::hat_diagonal( a )</code>.</dd>
+</dl>
+<h4 class="divider">Element-wise choices</h4>
+<dl class="summaries">
 <dt><a href="ndarray.html#minimum"><code>minimum</code></a> <span class="kind">function</span></dt>
-<dd>The smaller of each pair of matching elements, as <code>kl::min</code>: <code>kl::minimum( a, b )</code>.</dd>
+<dd>The smaller of each pair of matching elements, as <code>kl::min</code>, the two broadcast.</dd>
 <dt><a href="ndarray.html#maximum"><code>maximum</code></a> <span class="kind">function</span></dt>
-<dd>The larger of each pair of matching elements, as <code>kl::max</code>: <code>kl::maximum( a, b )</code>.</dd>
+<dd>The larger of each pair of matching elements, as <code>kl::max</code>, the two broadcast.</dd>
 <dt><a href="ndarray.html#select"><code>select</code></a> <span class="kind">function</span></dt>
-<dd><code>a</code>'s element where <code>m</code> is set, and <code>b</code>'s where it is clear. Panics when the shapes differ.</dd>
+<dd><code>a</code>'s element where <code>m</code> is set, and <code>b</code>'s where it is clear.</dd>
 <dt><a href="ndarray.html#is_nan"><code>is_nan</code></a> <span class="kind">function</span></dt>
 <dd>Where each element is a NaN, as <code>kl::is_nan</code>.</dd>
 <dt><a href="ndarray.html#is_inf"><code>is_inf</code></a> <span class="kind">function</span></dt>
@@ -614,9 +430,9 @@ and <code>b</code> of rank 1 or 2 whose first dimension is m; <code>none</code> 
 <dt><a href="ndarray.html#round"><code>round</code></a> <span class="kind">function</span></dt>
 <dd><code>kl::round</code> of each element.</dd>
 <dt><a href="ndarray.html#pow"><code>pow</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::pow</code> of each element of <code>a</code> and the matching one of <code>b</code>.</dd>
+<dd><code>kl::pow</code> of each element and the matching one of <code>b</code>, the two broadcast.</dd>
 <dt><a href="ndarray.html#atan2"><code>atan2</code></a> <span class="kind">function</span></dt>
-<dd><code>kl::atan2</code> of each element of <code>y</code> and the matching one of <code>x</code>.</dd>
+<dd><code>kl::atan2</code> of each element of <code>y</code> and the matching one of <code>x</code>, the two broadcast.</dd>
 </dl>
 </section>
 <section class="module">
@@ -775,10 +591,15 @@ empty or holds <code>=</code> never is.</dd>
 <h3><a href="stats.html">stats</a></h3>
 <dl class="summaries">
 <dt><a href="stats.html#regression"><code>regression</code></a> <span class="kind">class</span></dt>
-<dd>A least-squares fit of <code>y</code> on the columns of a design <code>x</code>, as statsmodels' <code>OLS</code> and <code>WLS</code>:
-<code>regression::ols( x, y )</code> or <code>regression::wls( x, y, w )</code>, then the coefficients, residuals,
+<dd>A least-squares fit of <code>y</code> on the <code>K</code> columns of an <code>N</code> by <code>K</code> design <code>x</code>, as statsmodels'
+<code>OLS</code> and <code>WLS</code>: <code>kl::ols( x, y )</code> or <code>kl::wls( x, y, w )</code>, then the coefficients, residuals,
 scale, leverage, Cook's distance and covariances, and from a covariance the standard errors,
-p-values and intervals.</dd>
+p-values and intervals. A design of <code>ndarray&lt;f64, dyn, 3&gt;</code> gives coefficients of <code>ndarray&lt;f64, 3&gt;</code>
+and covariances of <code>ndarray&lt;f64, 3, 3&gt;</code>.</dd>
+<dt><a href="stats.html#wls"><code>wls</code></a> <span class="kind">function</span></dt>
+<dd><code>regression&lt;N, K&gt;::wls( x, y, w )</code>, its sizes from the arguments.</dd>
+<dt><a href="stats.html#ols"><code>ols</code></a> <span class="kind">function</span></dt>
+<dd><code>regression&lt;N, K&gt;::ols( x, y )</code>, its sizes from the arguments.</dd>
 </dl>
 </section>
 <section class="module">

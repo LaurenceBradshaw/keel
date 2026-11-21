@@ -1,6 +1,9 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+// Numbers in a shape whose sizes are each a constant or known at run time (D90).
+
+import kl::_core::bits as kernel;
 import kl::_core::compare as kernel;
 import kl::_core::elementwise as kernel;
 import kl::_core::exponential as kernel;
@@ -9,388 +12,115 @@ import kl::_core::reduce as kernel;
 import algorithm;
 import iterable;
 import list;
-import mask;
 import math;
 import optional;
 import pair;
 
-/// Numbers of any rank with a shape set at run time, held row-major: the last index moves fastest.
+/// Numbers in the shape `S`, held row-major: the last index moves fastest.
+///
+/// Each size is a constant, `ndarray<f64, 4, 4>`, or known only when the program runs,
+/// `ndarray<f64, dyn, 3>`. A small array of constant sizes is held inline, any other on the heap;
+/// the same code works with either. `kl::zeros( rows, 3 )` makes one from sizes, and a call checks
+/// at run time what the types cannot.
 ///
 /// The operators work element by element, with a scalar on either side. Two arrays broadcast:
-/// their shapes line up from the right, and a dimension of 1 or a missing one stretches to the
-/// other's, so a `(3, 4)` array plus a `(4)` adds the row to each row. Other shapes panic, as does
-/// a compound assignment whose result would not keep the left side's shape. `a[i, j, k]` takes one
-/// index per dimension. An array owns its elements,
-/// so `copy()` is the way to a second one. `for( T x : a )` walks the elements in that order.
-class ndarray<T> implements iterable<T> where T : numeric
+/// their shapes line up from the right, and a size of 1 or a missing one stretches to the other's.
+/// A compound assignment keeps the left side's shape. An array owns its elements, so `copy()` is
+/// the way to a second one. `for( T x : a )` walks the elements in row-major order.
+class ndarray<T, u64... S(dyn)> implements iterable<T> where T : numeric
 {
-    list<T>   e_;
-    list<u64> shape_;
+    buffer<T, (product( S ))> e_;
 
-    /// Stands for one dimension `reshaped` works out from the others.
-    public static const u64 inferred = 18446744073709551615;
-
-    /// `elements` row after row, in `shape`, or as one dimension when no shape is given:
-    /// `ndarray<f64>( [1.0, 2.0, 3.0, 4.0], 2, 2 )`. Panics when the shape does not hold
-    /// exactly as many elements.
-    public ndarray( const ref T[] elements, u64... shape )
+    /// Every element `fill`, in the type's sizes: `ndarray<f64, 2, 3>( 0.0 )`. A `dyn` size comes
+    /// from the caller, so this is how a generic body makes one; elsewhere `kl::filled( x, ... )`.
+    public ndarray( T fill )
     {
-        e_ = list<T>::of( elements );
-
-        shape_ = list<u64>::with_capacity( shape.size );
-        if( shape.size == 0 )
-        {
-            shape_.push( elements.size );
-        }
-        for( u64 d : shape )
-        {
-            shape_.push( d );
-        }
-
-        if( count( shape_.as_run() ) != elements.size )
-        {
-            panic( "the shape does not fit the elements" );
-        }
+        e_ = buffer<T, (product( S ))>( count(), fill );
     }
 
-    /// `elements` as rank 1, taken over without a copy.
-    public static ndarray<T> from_list( move list<T> elements )
+    /// Every element 0.
+    public static ndarray<T, S...> zeros()
     {
-        u64 n = elements.size();
-        return ndarray<T>( move elements, [ n ] );
+        return ndarray<T, S...>( 0 );
     }
 
-    /// Every element 0, in `shape`: `ndarray<f64>::zeros( 3, 4 )`. No shape is rank 0, one element.
-    public static ndarray<T> zeros( u64... shape )
+    /// Every element 1.
+    public static ndarray<T, S...> ones()
     {
-        return ndarray<T>::filled( 0, shape );
+        return ndarray<T, S...>( 1 );
     }
 
-    /// Every element `x`, in `shape`.
-    public static ndarray<T> filled( T x, u64... shape )
+    /// Every element `x`.
+    public static ndarray<T, S...> filled( T x )
     {
-        return ndarray<T>( list<T>::filled( count( shape ), x ), shape );
+        return ndarray<T, S...>( x );
     }
 
-    /// The rows of a nested literal: `ndarray<f64>::of( [[1.0, 2.0], [3.0, 4.0]] )` is 2 by 2.
-    public static ndarray<T> of<u64 R, u64 C>( T[C][R] rows )
+    /// `elements` row after row. Panics unless there are as many as the shape holds.
+    public static ndarray<T, S...> of( const ref T[] elements )
     {
-        list<T> e = list<T>::with_capacity( R * C );
-        for( u64 r : 0..R )
-        {
-            for( u64 c : 0..C )
-            {
-                e.push( rows[r][c] );
-            }
-        }
-        return ndarray<T>( move e, [R, C] );
-    }
-
-    /// The planes of a nested literal, `P` by `R` by `C`.
-    public static ndarray<T> of<u64 P, u64 R, u64 C>( T[C][R][P] planes )
-    {
-        list<T> e = list<T>::with_capacity( P * R * C );
-        for( u64 p : 0..P )
-        {
-            for( u64 r : 0..R )
-            {
-                for( u64 c : 0..C )
-                {
-                    e.push( planes[p][r][c] );
-                }
-            }
-        }
-        return ndarray<T>( move e, [P, R, C] );
-    }
-
-    /// Every element 1, in `shape`.
-    public static ndarray<T> ones( u64... shape )
-    {
-        return ndarray<T>::filled( 1, shape );
-    }
-
-    /// Every element 0, in `a`'s shape.
-    public static ndarray<T> zeros_like( const ref ndarray<T> a )
-    {
-        return ndarray<T>::filled( 0, a.shape_.as_run() );
-    }
-
-    /// Every element `x`, in `a`'s shape.
-    public static ndarray<T> filled_like( T x, const ref ndarray<T> a )
-    {
-        return ndarray<T>::filled( x, a.shape_.as_run() );
-    }
-
-    /// `from`, `from + step`, ... while short of `to`, as rank 1: `arange( 0, 5 )` is `[0, 1, 2, 3,
-    /// 4]`. A negative `step` counts down. Each element is `from + i * step`, so floats do not drift.
-    /// Panics when `step` is 0.
-    public static ndarray<T> arange( T from, T to, T step = 1 )
-    {
-        if( step == 0 )
-        {
-            panic( "the step is 0" );
-        }
-
-        list<T> e = list<T>();
-        T       x = from;
-        while( step > 0 ? x < to : x > to )
-        {
-            e.push( x );
-            x = from + cast<T>( e.size() ) * step;
-        }
-        u64 n = e.size();
-        return ndarray<T>( move e, [n] );
-    }
-
-    /// `n` evenly spaced from `a` to `b`, both included, as rank 1. One element is `a`.
-    public static ndarray<T> linspace( T a, T b, u64 n ) where T : floating
-    {
-        list<T> e = list<T>::with_capacity( n );
-        for( u64 i : 0..n )
-        {
-            e.push( i == 0 ? a : i + 1 == n ? b : a + ( b - a ) * cast<T>( i ) / cast<T>( n - 1 ) );
-        }
-        return ndarray<T>( move e, [n] );
-    }
-
-    /// The `n` by `n` identity.
-    public static ndarray<T> identity( u64 n )
-    {
-        return ndarray<T>::eye( n, n );
-    }
-
-    /// `rows` by `cols`, 1 on the diagonal and 0 elsewhere.
-    public static ndarray<T> eye( u64 rows, u64 cols )
-    {
-        ndarray<T> r = ndarray<T>::zeros( rows, cols );
-        kernel::eye( ref r.e_.as_run(), rows, cols );
+        ndarray<T, S...> r = ndarray<T, S...>( 0 );
+        r.take( elements );
         return r;
     }
 
     /// A second array with the same shape and elements.
-    public ndarray<T> copy() const
+    public ndarray<T, S...> copy() const
     {
-        return ndarray<T>( list<T>::of( e_.as_run() ), shape_.as_run() );
-    }
-
-    /// The same elements in `shape`, which must hold as many. One dimension may be
-    /// `ndarray<T>::inferred`, worked out from the others.
-    public ndarray<T> reshaped( u64... shape ) const
-    {
-        list<u64> s     = list<u64>::with_capacity( shape.size );
-        u64       known = 1;
-        u64       at    = inferred;
-        for( u64 k : 0..shape.size )
-        {
-            s.push( shape[k] );
-            if( shape[k] != inferred )
-            {
-                known *= shape[k];
-            }
-            else if( at != inferred )
-            {
-                panic( "only one dimension can be inferred" );
-            }
-            else
-            {
-                at = k;
-            }
-        }
-        if( at != inferred )
-        {
-            if( known == 0 || size() % known != 0 )
-            {
-                panic( "the shape does not fit the elements" );
-            }
-            s[at] = size() / known;
-        }
-        return ndarray<T>( list<T>::of( e_.as_run() ), s.as_run() );
-    }
-
-    /// The elements as rank 1.
-    public ndarray<T> flattened() const
-    {
-        return ndarray<T>( list<T>::of( e_.as_run() ), [size()] );
-    }
-
-    /// Without its dimensions of length 1.
-    public ndarray<T> squeezed() const
-    {
-        list<u64> s = list<u64>();
-        for( u64 d : shape_.as_run() )
-        {
-            if( d != 1 )
-            {
-                s.push( d );
-            }
-        }
-        return ndarray<T>( list<T>::of( e_.as_run() ), s.as_run() );
-    }
-
-    /// With a dimension of length 1 before `axis`; `rank()` puts it last. Panics on a later axis.
-    public ndarray<T> expanded( u64 axis ) const
-    {
-        if( axis > rank() )
-        {
-            panic( "axis out of range" );
-        }
-
-        list<u64> s = list<u64>::with_capacity( rank() + 1 );
-        for( u64 k : 0..rank() )
-        {
-            if( k == axis )
-            {
-                s.push( 1 );
-            }
-            s.push( shape_[k] );
-        }
-        if( axis == rank() )
-        {
-            s.push( 1 );
-        }
-        return ndarray<T>( list<T>::of( e_.as_run() ), s.as_run() );
-    }
-
-    /// The elements walked with the axes in the order `axes`: dimension `k` of the result is
-    /// dimension `axes[k]` of this one. Panics unless `axes` names each axis once.
-    public ndarray<T> permuted( u64... axes ) const
-    {
-        if( axes.size != rank() )
-        {
-            panic( "the axis count differs from the rank" );
-        }
-
-        list<u64> stride = strides();
-        list<u64> s    = list<u64>::with_capacity( rank() );
-        list<u64> from = list<u64>::with_capacity( rank() );
-        for( u64 k : 0..rank() )
-        {
-            if( axes[k] >= rank() )
-            {
-                panic( "axis out of range" );
-            }
-            for( u64 j : 0..k )
-            {
-                if( axes[j] == axes[k] )
-                {
-                    panic( "an axis is named twice" );
-                }
-            }
-            s.push( shape_[axes[k]] );
-            from.push( stride[axes[k]] );
-        }
-
-        ndarray<T> r = ndarray<T>::zeros( s.as_run() );
-        kernel::gather( ref r.e_.as_run(), e_.as_run(), s.as_run(), from.as_run() );
+        ndarray<T, S...> r = ndarray<T, S...>( 0 );
+        r.take( as_run() );
         return r;
-    }
-
-    /// With axes `a` and `b` exchanged.
-    public ndarray<T> swapped_axes( u64 a, u64 b ) const
-    {
-        if( a >= rank() || b >= rank() )
-        {
-            panic( "axis out of range" );
-        }
-
-        list<u64> axes = list<u64>::with_capacity( rank() );
-        for( u64 k : 0..rank() )
-        {
-            axes.push( k == a ? b : k == b ? a : k );
-        }
-        return permuted( axes.as_run() );
-    }
-
-    /// This array and `b` joined along `axis`, every other dimension matching.
-    public ndarray<T> concatenated( const ref ndarray<T> b, u64 axis ) const
-    {
-        if( axis >= rank() || b.rank() != rank() )
-        {
-            panic( axis >= rank() ? "axis out of range" : "the shapes differ" );
-        }
-
-        list<u64> s     = list<u64>::with_capacity( rank() );
-        u64       lead  = 1;
-        u64       inner = 1;
-        for( u64 k : 0..rank() )
-        {
-            if( k != axis && shape_[k] != b.shape_[k] )
-            {
-                panic( "the shapes differ" );
-            }
-            s.push( k == axis ? shape_[k] + b.shape_[k] : shape_[k] );
-            if( k < axis )
-            {
-                lead *= shape_[k];
-            }
-            if( k > axis )
-            {
-                inner *= shape_[k];
-            }
-        }
-
-        // Each leading index takes a block from this array, then one from `b`.
-        u64     ra = shape_[axis] * inner;
-        u64     rb = b.shape_[axis] * inner;
-        list<T> e  = list<T>::with_capacity( size() + b.size() );
-        for( u64 o : 0..lead )
-        {
-            for( u64 i : 0..ra )
-            {
-                e.push( e_[o * ra + i] );
-            }
-            for( u64 i : 0..rb )
-            {
-                e.push( b.e_[o * rb + i] );
-            }
-        }
-        return ndarray<T>( move e, s.as_run() );
-    }
-
-    /// This array and `b`, of one shape, as the two entries of a new axis before `axis`.
-    public ndarray<T> stacked( const ref ndarray<T> b, u64 axis ) const
-    {
-        same_shape( b );
-        return expanded( axis ).concatenated( b.expanded( axis ), axis );
     }
 
     /// --- Shape and elements ---
 
-    /// The length of each dimension, outermost first.
-    public const ref u64[] shape() const
-    {
-        return shape_.as_run();
-    }
-
-    /// The number of dimensions.
-    public u64 rank() const
-    {
-        return shape_.size();
-    }
-
-    /// The number of elements, the product of the shape.
+    /// The number of elements, the product of the sizes.
     public u64 size() const
     {
-        return e_.size();
+        return count();
     }
 
-    /// The element at `at`, one index per dimension. Panics on another count or an index outside
-    /// its dimension.
+    /// The number of sizes.
+    public u64 rank() const
+    {
+        return S.size;
+    }
+
+    /// The size of `axis`. Panics when there is no such axis.
+    public u64 extent( u64 axis ) const
+    {
+        return S[axis];
+    }
+
+    /// The first size: a matrix's row count.
+    public u64 rows() const
+    {
+        return S[0];
+    }
+
+    /// The second size: a matrix's column count. Panics below rank 2.
+    public u64 cols() const
+    {
+        return S[1];
+    }
+
+    /// The element at `at`, one index per size. Panics on another count or an index outside its
+    /// size.
     public ref T operator[]( u64... at ) const
     {
-        if( at.size != shape_.size() )
+        if( at.size != S.size )
         {
             panic( "the index count differs from the rank" );
         }
 
         u64 flat = 0;
-        for( u64 k : 0..at.size )
+        for( u64 k : 0..S.size )
         {
-            if( at[k] >= shape_[k] )
+            if( at[k] >= S[k] )
             {
                 panic( "index out of range" );
             }
-            flat = flat * shape_[k] + at[k];
+            flat = flat * S[k] + at[k];
         }
         return e_[flat];
     }
@@ -404,7 +134,7 @@ class ndarray<T> implements iterable<T> where T : numeric
     /// Each element in row-major order.
     public void operator:( const ref T item ) const
     {
-        for( u64 i : 0..e_.size() )
+        for( u64 i : 0..count() )
         {
             yield( e_[i] );
         }
@@ -413,69 +143,18 @@ class ndarray<T> implements iterable<T> where T : numeric
     /// Each element in row-major order, writable in place.
     public void operator:( ref T item )
     {
-        for( u64 i : 0..e_.size() )
+        for( u64 i : 0..count() )
         {
             yield( ref e_[i] );
         }
     }
 
-    /// --- Slices ---
-
-    /// A copy of `region`, one range per dimension: `a.sliced( 1..3, 0..a.shape()[1] )`. Panics on
-    /// another count, a backwards range, or one past its dimension.
-    public ndarray<T> sliced( range... region ) const
-    {
-        list<u64>  s = lengths( region );
-        ndarray<T> r = ndarray<T>::zeros( s.as_run() );
-        if( r.size() != 0 )
-        {
-            kernel::gather( ref r.e_.as_run(), e_.as_run()[start( region )..size()], s.as_run(), strides().as_run() );
-        }
-        return r;
-    }
-
-    /// Writes `src` into `region`, whose lengths must be `src`'s shape. Panics as `sliced` does,
-    /// or when the shapes differ.
-    public void assign( const ref ndarray<T> src, range... region )
-    {
-        list<u64> s = lengths( region );
-        if( !kernel::equal( s.as_run(), src.shape_.as_run() ) )
-        {
-            panic( "the shapes differ" );
-        }
-        if( src.size() != 0 )
-        {
-            kernel::scatter( ref e_.as_run()[start( region )..size()], src.e_.as_run(), s.as_run(), strides().as_run() );
-        }
-    }
-
-    /// Sets every element of `region` to `x`. Panics as `sliced` does.
-    public void fill( T x, range... region )
-    {
-        list<u64> s = lengths( region );
-        if( count( s.as_run() ) != 0 )
-        {
-            kernel::fill_strided( ref e_.as_run()[start( region )..size()], x, s.as_run(), strides().as_run() );
-        }
-    }
-
-    /// Row `i` of a matrix, as a run writable where the array is. Panics unless the rank is 2, or
-    /// when `i` is outside the first dimension.
-    public ref T[] row( u64 i ) const
-    {
-        if( rank() != 2 )
-        {
-            panic( "the rank is not 2" );
-        }
-        return block( i );
-    }
-
     /// The elements under the leading indices `at`, as a run writable where the array is:
-    /// `a.block( i, j )` of a rank 3 array is its `[i, j, ..]` row. Panics on more indices than
-    /// dimensions, or an index outside its dimension.
+    /// `a.block( i )` of a matrix is its row `i`. Panics on more indices than sizes, or an index
+    /// outside its size.
     public ref T[] block( u64... at ) const
     {
-        if( at.size > shape_.size() )
+        if( at.size > S.size )
         {
             panic( "the index count exceeds the rank" );
         }
@@ -483,431 +162,493 @@ class ndarray<T> implements iterable<T> where T : numeric
         u64 flat = 0;
         for( u64 k : 0..at.size )
         {
-            if( at[k] >= shape_[k] )
+            if( at[k] >= S[k] )
             {
                 panic( "index out of range" );
             }
-            flat = flat * shape_[k] + at[k];
+            flat = flat * S[k] + at[k];
         }
-        u64 n = span( at.size, rank() );
-        return e_.as_run()[flat * n..flat * n + n];
+        u64 n = span( at.size, S.size );
+        return as_run()[flat * n..flat * n + n];
+    }
+
+    /// --- Changing the shape ---
+
+    /// These sizes, checked: `a.as_shape<4, 2>()`. Panics unless they are this array's.
+    public ndarray<T, U...> as_shape<u64... U>() const
+    {
+        ndarray<T, U...> r = ndarray<T, U...>( 0 );
+        if( U.size != S.size )
+        {
+            panic( "the ranks differ" );
+        }
+        for( u64 k : 0..S.size )
+        {
+            if( U[k] != S[k] )
+            {
+                panic( "the shapes differ" );
+            }
+        }
+        r.take( as_run() );
+        return r;
+    }
+
+    /// This array with every size `dyn`.
+    public ndarray<T, dropped<dyn>( inserted<0>( S ) )...> as_dyn() const
+    {
+        ndarray<T, dropped<dyn>( inserted<0>( S ) )...> r = kl::zeros<T, dropped<dyn>( inserted<0>( S ) )...>( shape().as_run() );
+        r.take( as_run() );
+        return r;
+    }
+
+    /// The same elements in the sizes `n`, which must hold as many: `a.reshaped( 3, dyn_rows )`.
+    public ndarray<T, U...> reshaped<u64... U>( U... n ) const
+    {
+        ndarray<T, U...> r = kl::zeros<T, U...>( n );
+        r.take( as_run() );
+        return r;
+    }
+
+    /// The elements as rank 1.
+    public ndarray<T, (product( S ))> flattened() const
+    {
+        ndarray<T, (product( S ))> r = ndarray<T, (product( S ))>( 0 );
+        r.take( as_run() );
+        return r;
+    }
+
+    /// A size of 1 inserted at axis `A`: `v.expanded<0>()` is a row.
+    public ndarray<T, inserted<A>( S )...> expanded<u64 A>() const
+    {
+        ndarray<T, inserted<A>( S )...> r = ndarray<T, inserted<A>( S )...>( 0 );
+        r.take( as_run() );
+        return r;
+    }
+
+    /// The axes reversed: a matrix's rows as its columns.
+    public ndarray<T, reversed( S )...> transposed() const
+    {
+        ndarray<T, reversed( S )...> r = ndarray<T, reversed( S )...>( 0 );
+        if( S.size == 2 )
+        {
+            kernel::transpose( ref r.as_run(), as_run(), S[0], S[1] );
+            return r;
+        }
+
+        list<u64> from = shape();
+        for( u64 i : 0..count() )
+        {
+            // Axis k of this array is axis `S.size - 1 - k` of the result.
+            u64 rest = i;
+            u64 at   = 0;
+            for( u64 k = S.size; k > 0; k -= 1 )
+            {
+                at += rest % from[k - 1] * span( 0, k - 1 );
+                rest /= from[k - 1];
+            }
+            r.as_run()[at] = as_run()[i];
+        }
+        return r;
+    }
+
+    /// --- Slices ---
+
+    /// A copy of `region`, one range per size: `a.sliced( 1..3, 0..a.cols() )`. Panics on another
+    /// count, a backwards range, or one past its size.
+    public ndarray<T, dropped<dyn>( inserted<0>( S ) )...> sliced( range... region ) const
+    {
+        list<u64>                                     s = lengths( region );
+        ndarray<T, dropped<dyn>( inserted<0>( S ) )...> r = kl::zeros<T, dropped<dyn>( inserted<0>( S ) )...>( s.as_run() );
+        if( r.size() != 0 )
+        {
+            kernel::gather( ref r.as_run(), as_run()[start( region )..count()], s.as_run(), strides().as_run() );
+        }
+        return r;
+    }
+
+    /// Writes `src` into `region`, whose lengths must be `src`'s sizes. Panics as `sliced` does, or
+    /// when the shapes differ.
+    public void assign<u64... U>( const ref ndarray<T, U...> src, range... region )
+    {
+        list<u64> s = lengths( region );
+        list<u64> u = src.shape();
+        if( !kernel::equal( s.as_run(), u.as_run() ) )
+        {
+            panic( "the shapes differ" );
+        }
+        if( src.size() != 0 )
+        {
+            kernel::scatter( ref as_run()[start( region )..count()], src.as_run(), s.as_run(), strides().as_run() );
+        }
+    }
+
+    /// Sets every element of `region` to `x`. Panics as `sliced` does.
+    public void fill( T x, range... region )
+    {
+        list<u64> s = lengths( region );
+        if( kernel::prod( s.as_run() ) != 0 )
+        {
+            kernel::fill_strided( ref as_run()[start( region )..count()], x, s.as_run(), strides().as_run() );
+        }
+    }
+
+    /// The `W` block whose first element is at `at`, one index per size:
+    /// `m.window<2, 2>( 1, 1 )`. Panics when it passes the end of a size.
+    public ndarray<T, W...> window<u64... W>( u64... at ) const
+    {
+        ndarray<T, W...> r = ndarray<T, W...>( 0 );
+        list<u64>      s = r.shape();
+        if( r.size() != 0 )
+        {
+            kernel::gather( ref r.as_run(), as_run()[offset_of( at, s.as_run() )..count()], s.as_run(), strides().as_run() );
+        }
+        return r;
+    }
+
+    /// Writes `w` as the block whose first element is at `at`. Panics as `window` does.
+    public void set_window<u64... W>( const ref ndarray<T, W...> w, u64... at )
+    {
+        list<u64> s = w.shape();
+        if( w.size() != 0 )
+        {
+            kernel::scatter( ref as_run()[offset_of( at, s.as_run() )..count()], w.as_run(), s.as_run(), strides().as_run() );
+        }
     }
 
     /// --- Arithmetic ---
 
-    /// The element-wise sum with `o`.
-    public ndarray<T> operator+( const ref ndarray<T> o ) const
+    /// The element-wise sum with `o`, the two broadcast.
+    public ndarray<T, broadcast( S, U )...> operator+<u64... U>( const ref ndarray<T, U...> o ) const
     {
-        return map( o, fn[]( T x, T y ) { return x + y; } );
+        return zipped( o, fn[]( T x, T y ) { return x + y; } );
     }
 
-    /// Each element + `s`.
-    public ndarray<T> operator+( T s ) const
+    /// The sum of each element and `s`.
+    public ndarray<T, S...> operator+( T s ) const
     {
         return map( fn[ s ]( T x ) { return x + s; } );
     }
 
-    /// `s` + each element.
-    public static ndarray<T> operator+( T s, const ref ndarray<T> a )
+    /// The sum of `s` and each element of `a`.
+    public static ndarray<T, S...> operator+( T s, const ref ndarray<T, S...> a )
     {
         return a.map( fn[ s ]( T x ) { return s + x; } );
     }
 
-    /// The element-wise difference with `o`.
-    public ndarray<T> operator-( const ref ndarray<T> o ) const
-    {
-        return map( o, fn[]( T x, T y ) { return x - y; } );
-    }
-
-    /// Each element - `s`.
-    public ndarray<T> operator-( T s ) const
-    {
-        return map( fn[ s ]( T x ) { return x - s; } );
-    }
-
-    /// `s` - each element.
-    public static ndarray<T> operator-( T s, const ref ndarray<T> a )
-    {
-        return a.map( fn[ s ]( T x ) { return s - x; } );
-    }
-
-    /// The element-wise product with `o`.
-    public ndarray<T> operator*( const ref ndarray<T> o ) const
-    {
-        return map( o, fn[]( T x, T y ) { return x * y; } );
-    }
-
-    /// Each element * `s`.
-    public ndarray<T> operator*( T s ) const
-    {
-        return map( fn[ s ]( T x ) { return x * s; } );
-    }
-
-    /// `s` * each element.
-    public static ndarray<T> operator*( T s, const ref ndarray<T> a )
-    {
-        return a.map( fn[ s ]( T x ) { return s * x; } );
-    }
-
-    /// The element-wise quotient with `o`.
-    public ndarray<T> operator/( const ref ndarray<T> o ) const
-    {
-        return map( o, fn[]( T x, T y ) { return x / y; } );
-    }
-
-    /// Each element / `s`.
-    public ndarray<T> operator/( T s ) const
-    {
-        return map( fn[ s ]( T x ) { return x / s; } );
-    }
-
-    /// `s` / each element.
-    public static ndarray<T> operator/( T s, const ref ndarray<T> a )
-    {
-        return a.map( fn[ s ]( T x ) { return s / x; } );
-    }
-
-    /// Each element += the matching one of `o`.
-    public void operator+=( const ref ndarray<T> o )
+    /// Each element made its sum with `o`'s, `o` broadcast to this shape.
+    public void operator+=<u64... U>( const ref ndarray<T, U...> o ) where S == broadcast( S, U )
     {
         combine( o, fn[]( T x, T y ) { return x + y; } );
     }
 
-    /// Each element += `s`.
+    /// Each element made its sum with `s`.
     public void operator+=( T s )
     {
-        kernel::map_into( ref e_.as_run(), fn[ s ]( T x ) { return x + s; } );
+        kernel::map_into( ref as_run(), fn[ s ]( T x ) { return x + s; } );
     }
 
-    /// Each element -= the matching one of `o`.
-    public void operator-=( const ref ndarray<T> o )
+    /// The element-wise difference with `o`, the two broadcast.
+    public ndarray<T, broadcast( S, U )...> operator-<u64... U>( const ref ndarray<T, U...> o ) const
+    {
+        return zipped( o, fn[]( T x, T y ) { return x - y; } );
+    }
+
+    /// The difference of each element and `s`.
+    public ndarray<T, S...> operator-( T s ) const
+    {
+        return map( fn[ s ]( T x ) { return x - s; } );
+    }
+
+    /// The difference of `s` and each element of `a`.
+    public static ndarray<T, S...> operator-( T s, const ref ndarray<T, S...> a )
+    {
+        return a.map( fn[ s ]( T x ) { return s - x; } );
+    }
+
+    /// Each element made its difference with `o`'s, `o` broadcast to this shape.
+    public void operator-=<u64... U>( const ref ndarray<T, U...> o ) where S == broadcast( S, U )
     {
         combine( o, fn[]( T x, T y ) { return x - y; } );
     }
 
-    /// Each element -= `s`.
+    /// Each element made its difference with `s`.
     public void operator-=( T s )
     {
-        kernel::map_into( ref e_.as_run(), fn[ s ]( T x ) { return x - s; } );
+        kernel::map_into( ref as_run(), fn[ s ]( T x ) { return x - s; } );
     }
 
-    /// Each element *= the matching one of `o`.
-    public void operator*=( const ref ndarray<T> o )
+    /// The element-wise product with `o`, the two broadcast.
+    public ndarray<T, broadcast( S, U )...> operator*<u64... U>( const ref ndarray<T, U...> o ) const
+    {
+        return zipped( o, fn[]( T x, T y ) { return x * y; } );
+    }
+
+    /// The product of each element and `s`.
+    public ndarray<T, S...> operator*( T s ) const
+    {
+        return map( fn[ s ]( T x ) { return x * s; } );
+    }
+
+    /// The product of `s` and each element of `a`.
+    public static ndarray<T, S...> operator*( T s, const ref ndarray<T, S...> a )
+    {
+        return a.map( fn[ s ]( T x ) { return s * x; } );
+    }
+
+    /// Each element made its product with `o`'s, `o` broadcast to this shape.
+    public void operator*=<u64... U>( const ref ndarray<T, U...> o ) where S == broadcast( S, U )
     {
         combine( o, fn[]( T x, T y ) { return x * y; } );
     }
 
-    /// Each element *= `s`.
+    /// Each element made its product with `s`.
     public void operator*=( T s )
     {
-        kernel::map_into( ref e_.as_run(), fn[ s ]( T x ) { return x * s; } );
+        kernel::map_into( ref as_run(), fn[ s ]( T x ) { return x * s; } );
     }
 
-    /// Each element /= the matching one of `o`.
-    public void operator/=( const ref ndarray<T> o )
+    /// The element-wise quotient with `o`, the two broadcast.
+    public ndarray<T, broadcast( S, U )...> operator/<u64... U>( const ref ndarray<T, U...> o ) const
+    {
+        return zipped( o, fn[]( T x, T y ) { return x / y; } );
+    }
+
+    /// The quotient of each element and `s`.
+    public ndarray<T, S...> operator/( T s ) const
+    {
+        return map( fn[ s ]( T x ) { return x / s; } );
+    }
+
+    /// The quotient of `s` and each element of `a`.
+    public static ndarray<T, S...> operator/( T s, const ref ndarray<T, S...> a )
+    {
+        return a.map( fn[ s ]( T x ) { return s / x; } );
+    }
+
+    /// Each element made its quotient with `o`'s, `o` broadcast to this shape.
+    public void operator/=<u64... U>( const ref ndarray<T, U...> o ) where S == broadcast( S, U )
     {
         combine( o, fn[]( T x, T y ) { return x / y; } );
     }
 
-    /// Each element /= `s`.
+    /// Each element made its quotient with `s`.
     public void operator/=( T s )
     {
-        kernel::map_into( ref e_.as_run(), fn[ s ]( T x ) { return x / s; } );
+        kernel::map_into( ref as_run(), fn[ s ]( T x ) { return x / s; } );
     }
 
     /// Each element negated.
-    public ndarray<T> operator-() const where T : floating
+    public ndarray<T, S...> operator-() const where T : floating
     {
         return map( fn[]( T x ) { return -x; } );
     }
 
     /// --- Integer operators ---
 
-    /// The element-wise remainder after dividing by `o`.
-    public ndarray<T> operator%( const ref ndarray<T> o ) const where T : integral
+    /// The element-wise remainder with `o`, the two broadcast.
+    public ndarray<T, broadcast( S, U )...> operator%<u64... U>( const ref ndarray<T, U...> o ) const where T : integral
     {
-        return map( o, fn[]( T x, T y ) { return x % y; } );
+        return zipped( o, fn[]( T x, T y ) { return x % y; } );
     }
 
-    /// Each element % `s`.
-    public ndarray<T> operator%( T s ) const where T : integral
+    /// The remainder of each element and `s`.
+    public ndarray<T, S...> operator%( T s ) const where T : integral
     {
         return map( fn[ s ]( T x ) { return x % s; } );
     }
 
-    /// `s` % each element.
-    public static ndarray<T> operator%( T s, const ref ndarray<T> a ) where T : integral
+    /// The remainder of `s` and each element of `a`.
+    public static ndarray<T, S...> operator%( T s, const ref ndarray<T, S...> a ) where T : integral
     {
         return a.map( fn[ s ]( T x ) { return s % x; } );
     }
 
-    /// The element-wise bitwise and with `o`.
-    public ndarray<T> operator&( const ref ndarray<T> o ) const where T : integral
-    {
-        return map( o, fn[]( T x, T y ) { return x & y; } );
-    }
-
-    /// Each element & `s`.
-    public ndarray<T> operator&( T s ) const where T : integral
-    {
-        return map( fn[ s ]( T x ) { return x & s; } );
-    }
-
-    /// `s` & each element.
-    public static ndarray<T> operator&( T s, const ref ndarray<T> a ) where T : integral
-    {
-        return a.map( fn[ s ]( T x ) { return s & x; } );
-    }
-
-    /// The element-wise bitwise or with `o`.
-    public ndarray<T> operator|( const ref ndarray<T> o ) const where T : integral
-    {
-        return map( o, fn[]( T x, T y ) { return x | y; } );
-    }
-
-    /// Each element | `s`.
-    public ndarray<T> operator|( T s ) const where T : integral
-    {
-        return map( fn[ s ]( T x ) { return x | s; } );
-    }
-
-    /// `s` | each element.
-    public static ndarray<T> operator|( T s, const ref ndarray<T> a ) where T : integral
-    {
-        return a.map( fn[ s ]( T x ) { return s | x; } );
-    }
-
-    /// The element-wise bitwise exclusive or with `o`.
-    public ndarray<T> operator^( const ref ndarray<T> o ) const where T : integral
-    {
-        return map( o, fn[]( T x, T y ) { return x ^ y; } );
-    }
-
-    /// Each element ^ `s`.
-    public ndarray<T> operator^( T s ) const where T : integral
-    {
-        return map( fn[ s ]( T x ) { return x ^ s; } );
-    }
-
-    /// `s` ^ each element.
-    public static ndarray<T> operator^( T s, const ref ndarray<T> a ) where T : integral
-    {
-        return a.map( fn[ s ]( T x ) { return s ^ x; } );
-    }
-
-    /// Each element %= the matching one of `o`.
-    public void operator%=( const ref ndarray<T> o ) where T : integral
+    /// Each element made its remainder with `o`'s, `o` broadcast to this shape.
+    public void operator%=<u64... U>( const ref ndarray<T, U...> o ) where T : integral, where S == broadcast( S, U )
     {
         combine( o, fn[]( T x, T y ) { return x % y; } );
     }
 
-    /// Each element %= `s`.
+    /// Each element made its remainder with `s`.
     public void operator%=( T s ) where T : integral
     {
-        kernel::map_into( ref e_.as_run(), fn[ s ]( T x ) { return x % s; } );
+        kernel::map_into( ref as_run(), fn[ s ]( T x ) { return x % s; } );
     }
 
-    /// Each element &= the matching one of `o`.
-    public void operator&=( const ref ndarray<T> o ) where T : integral
+    /// The element-wise bitwise and with `o`, the two broadcast.
+    public ndarray<T, broadcast( S, U )...> operator&<u64... U>( const ref ndarray<T, U...> o ) const where T : integral
+    {
+        return zipped( o, fn[]( T x, T y ) { return x & y; } );
+    }
+
+    /// The bitwise and of each element and `s`.
+    public ndarray<T, S...> operator&( T s ) const where T : integral
+    {
+        return map( fn[ s ]( T x ) { return x & s; } );
+    }
+
+    /// The bitwise and of `s` and each element of `a`.
+    public static ndarray<T, S...> operator&( T s, const ref ndarray<T, S...> a ) where T : integral
+    {
+        return a.map( fn[ s ]( T x ) { return s & x; } );
+    }
+
+    /// Each element made its bitwise and with `o`'s, `o` broadcast to this shape.
+    public void operator&=<u64... U>( const ref ndarray<T, U...> o ) where T : integral, where S == broadcast( S, U )
     {
         combine( o, fn[]( T x, T y ) { return x & y; } );
     }
 
-    /// Each element &= `s`.
+    /// Each element made its bitwise and with `s`.
     public void operator&=( T s ) where T : integral
     {
-        kernel::map_into( ref e_.as_run(), fn[ s ]( T x ) { return x & s; } );
+        kernel::map_into( ref as_run(), fn[ s ]( T x ) { return x & s; } );
     }
 
-    /// Each element |= the matching one of `o`.
-    public void operator|=( const ref ndarray<T> o ) where T : integral
+    /// The element-wise bitwise or with `o`, the two broadcast.
+    public ndarray<T, broadcast( S, U )...> operator|<u64... U>( const ref ndarray<T, U...> o ) const where T : integral
+    {
+        return zipped( o, fn[]( T x, T y ) { return x | y; } );
+    }
+
+    /// The bitwise or of each element and `s`.
+    public ndarray<T, S...> operator|( T s ) const where T : integral
+    {
+        return map( fn[ s ]( T x ) { return x | s; } );
+    }
+
+    /// The bitwise or of `s` and each element of `a`.
+    public static ndarray<T, S...> operator|( T s, const ref ndarray<T, S...> a ) where T : integral
+    {
+        return a.map( fn[ s ]( T x ) { return s | x; } );
+    }
+
+    /// Each element made its bitwise or with `o`'s, `o` broadcast to this shape.
+    public void operator|=<u64... U>( const ref ndarray<T, U...> o ) where T : integral, where S == broadcast( S, U )
     {
         combine( o, fn[]( T x, T y ) { return x | y; } );
     }
 
-    /// Each element |= `s`.
+    /// Each element made its bitwise or with `s`.
     public void operator|=( T s ) where T : integral
     {
-        kernel::map_into( ref e_.as_run(), fn[ s ]( T x ) { return x | s; } );
+        kernel::map_into( ref as_run(), fn[ s ]( T x ) { return x | s; } );
     }
 
-    /// Each element ^= the matching one of `o`.
-    public void operator^=( const ref ndarray<T> o ) where T : integral
+    /// The element-wise bitwise exclusive or with `o`, the two broadcast.
+    public ndarray<T, broadcast( S, U )...> operator^<u64... U>( const ref ndarray<T, U...> o ) const where T : integral
+    {
+        return zipped( o, fn[]( T x, T y ) { return x ^ y; } );
+    }
+
+    /// The bitwise exclusive or of each element and `s`.
+    public ndarray<T, S...> operator^( T s ) const where T : integral
+    {
+        return map( fn[ s ]( T x ) { return x ^ s; } );
+    }
+
+    /// The bitwise exclusive or of `s` and each element of `a`.
+    public static ndarray<T, S...> operator^( T s, const ref ndarray<T, S...> a ) where T : integral
+    {
+        return a.map( fn[ s ]( T x ) { return s ^ x; } );
+    }
+
+    /// Each element made its bitwise exclusive or with `o`'s, `o` broadcast to this shape.
+    public void operator^=<u64... U>( const ref ndarray<T, U...> o ) where T : integral, where S == broadcast( S, U )
     {
         combine( o, fn[]( T x, T y ) { return x ^ y; } );
     }
 
-    /// Each element ^= `s`.
+    /// Each element made its bitwise exclusive or with `s`.
     public void operator^=( T s ) where T : integral
     {
-        kernel::map_into( ref e_.as_run(), fn[ s ]( T x ) { return x ^ s; } );
+        kernel::map_into( ref as_run(), fn[ s ]( T x ) { return x ^ s; } );
     }
 
-    /// Each element with its bits flipped.
-    public ndarray<T> operator~() const where T : integral
+    /// Each element's bits flipped.
+    public ndarray<T, S...> operator~() const where T : integral
     {
         return map( fn[]( T x ) { return ~x; } );
     }
 
+
     /// --- Element-wise functions ---
 
-    /// Each element without its sign, as `kl::abs`.
-    public ndarray<T> abs() const
+    /// Each element's magnitude.
+    public ndarray<T, S...> abs() const
     {
-        return map( fn[]( T x ) { return kl::abs( x ); } );
+        return map( fn[]( T x ) { return x < 0 ? 0 - x : x; } );
     }
 
-    /// Each element's sign, as `kl::sign`: -1, 0 or 1.
-    public ndarray<T> sign() const
+    /// -1, 0 or 1 by each element's sign; a NaN stays NaN.
+    public ndarray<T, S...> sign() const
     {
-        return map( fn[]( T x ) { return kl::sign( x ); } );
+        return map( fn[]( T x ) { return x > 0 ? cast<T>( 1 ) : x < 0 ? 0 - cast<T>( 1 ) : x; } );
     }
 
-    /// Each element held between `lo` and `hi`; `hi` wins when they cross.
-    public ndarray<T> clip( T lo, T hi ) const
+    /// Each element held within `lo` and `hi`.
+    public ndarray<T, S...> clip( T lo, T hi ) const
     {
-        return map( fn[ lo, hi ]( T x ) { return kl::min( kl::max( x, lo ), hi ); } );
+        return map( fn[ lo, hi ]( T x ) { return x < lo ? lo : x > hi ? hi : x; } );
     }
 
-    /// `f` of each element, in the same shape, `U` being what `f` returns:
-    /// `a.map( fn[]( f64 x ) { return x * x; } )`.
-    public ndarray<U> map<U, F>( F f ) const where F : fn( T ) -> U, where U : numeric
+    /// `f` of each element: `a.map( fn[]( f64 x ) { return x * x; } )`.
+    public ndarray<U, S...> map<U, F>( F f ) const where F : fn( T ) -> U, where U : numeric
     {
-        return ndarray<U>( list<U>::mapped( e_.as_run(), f ), shape_.as_run() );
+        ndarray<U, S...> r = ndarray<U, S...>( 0 );
+        kernel::map( ref r.as_run(), as_run(), f );
+        return r;
     }
 
-    /// `f` of each element and the matching one of `o`, the two broadcast as the operators do:
-    /// `a.map( b, fn[]( f64 x, f64 y ) { return kl::max( x, y ); } )`.
-    public ndarray<T> map<F>( const ref ndarray<T> o, F f ) const where F : fn( T, T ) -> T
+    /// `f` of each element and `o`'s, the two broadcast.
+    public ndarray<T, broadcast( S, U )...> zipped<F, u64... U>( const ref ndarray<T, U...> o, F f ) const where F : fn( T, T ) -> T
     {
-        if( kernel::equal( shape_.as_run(), o.shape_.as_run() ) )
+        list<u64> s = broadcast_shape( o.shape() );
+        u64       n = kernel::prod( s.as_run() );
+        // Made on each path, so the compiler sees the plain one's zeros all overwritten.
+        if( n == count() && n == o.size() )
         {
-            return ndarray<T>( list<T>::zipped( e_.as_run(), o.e_.as_run(), f ), shape_.as_run() );
+            ndarray<T, broadcast( S, U )...> same = kl::zeros<T, broadcast( S, U )...>( s.as_run() );
+            kernel::zip( ref same.as_run(), as_run(), o.as_run(), f );
+            return same;
         }
-
-        // Lined up from the right, a dimension of 1 or a missing one stretches.
-        u64       n = rank() > o.rank() ? rank() : o.rank();
-        list<u64> s = list<u64>::with_capacity( n );
-        for( u64 k : 0..n )
+        ndarray<T, broadcast( S, U )...> r = kl::zeros<T, broadcast( S, U )...>( s.as_run() );
+        if( n != 0 )
         {
-            u64 a = k + rank() < n ? 1 : shape_[k + rank() - n];
-            u64 b = k + o.rank() < n ? 1 : o.shape_[k + o.rank() - n];
-            if( a != b && a != 1 && b != 1 )
-            {
-                panic( "the shapes do not broadcast" );
-            }
-            s.push( a == 1 ? b : a );
+            kernel::zip_strided( ref r.as_run(), as_run(), strides_to( s.as_run() ).as_run(), o.as_run(), o.strides_to( s.as_run() ).as_run(), s.as_run(), f );
         }
-
-        ndarray<T> r = ndarray<T>::zeros( s.as_run() );
-        kernel::zip_strided( ref r.e_.as_run(), e_.as_run(), strides_to( s.as_run() ).as_run(), o.e_.as_run(), o.strides_to( s.as_run() ).as_run(), s.as_run(), f );
         return r;
     }
 
     /// --- Products ---
 
-    /// The inner product with `o`, both of rank 1 and one length.
-    public T dot( const ref ndarray<T> o ) const
+    /// The sum of each element times the matching one of `o`: the inner product at rank 1.
+    public T dot<u64... U>( const ref ndarray<T, U...> o ) const where S == U
     {
-        if( rank() != 1 )
-        {
-            panic( "dot takes arrays of rank 1" );
-        }
-
-        same_shape( o );
-        return kernel::dot( e_.as_run(), o.e_.as_run() );
+        return kernel::dot( as_run(), o.as_run() );
     }
 
-    /// The matrix product with `b`, each of rank 1 or 2. A rank 1 array is a row on the left and a
-    /// column on the right, and that dimension is dropped from the result, so two of them give rank
-    /// 0. Ranks above 2 panic.
-    public ndarray<T> matmul( const ref ndarray<T> b ) const
-    {
-        if( rank() == 0 || rank() > 2 || b.rank() == 0 || b.rank() > 2 )
-        {
-            panic( "matmul takes arrays of rank 1 or 2" );
-        }
-
-        u64 rows  = rank() == 2 ? shape_[0] : 1;
-        u64 inner = shape_[rank() - 1];
-        u64 cols  = b.rank() == 2 ? b.shape_[1] : 1;
-        if( b.shape_[0] != inner )
-        {
-            panic( "the shapes differ" );
-        }
-
-        ndarray<T> r = ndarray<T>::zeros( rows * cols );
-        r.shape_.clear();
-        if( rank() == 2 )
-        {
-            r.shape_.push( rows );
-        }
-        if( b.rank() == 2 )
-        {
-            r.shape_.push( cols );
-        }
-        kernel::matmul( ref r.e_.as_run(), e_.as_run(), b.e_.as_run(), rows, inner, cols );
-        return r;
-    }
-
-    /// The axes reversed: a matrix's rows as columns. Rank 0 and 1 come back unchanged.
-    public ndarray<T> transposed() const
-    {
-        if( rank() != 2 )
-        {
-            list<u64> axes = list<u64>::with_capacity( rank() );
-            for( u64 k : 0..rank() )
-            {
-                axes.push( rank() - 1 - k );
-            }
-            return permuted( axes.as_run() );
-        }
-
-        ndarray<T> r = ndarray<T>::zeros( shape_[1], shape_[0] );
-        kernel::transpose( ref r.e_.as_run(), e_.as_run(), shape_[0], shape_[1] );
-        return r;
-    }
-
-    /// The diagonal of a rank 2 array, as rank 1.
-    public ndarray<T> diagonal() const
-    {
-        if( rank() != 2 )
-        {
-            panic( "diagonal takes an array of rank 2" );
-        }
-
-        u64     n = shape_[0] < shape_[1] ? shape_[0] : shape_[1];
-        list<T> e = list<T>::with_capacity( n );
-        for( u64 i : 0..n )
-        {
-            e.push( e_[i * shape_[1] + i] );
-        }
-        return ndarray<T>( move e, [n] );
-    }
-
-    /// The sum of the diagonal of a rank 2 array.
+    /// The sum of the diagonal of a matrix. Panics unless the rank is 2.
     public T trace() const
     {
-        return diagonal().sum();
-    }
-
-    /// Each element times each of `b`, both read flat: an `a.size()` by `b.size()` array.
-    public ndarray<T> outer( const ref ndarray<T> b ) const
-    {
-        ndarray<T> r = ndarray<T>::zeros( size(), b.size() );
-        kernel::outer( ref r.e_.as_run(), e_.as_run(), b.e_.as_run() );
-        return r;
+        needs_rank( 2, "trace takes an array of rank 2" );
+        T t = 0;
+        for( u64 i : 0..( S[0] < S[1] ? S[0] : S[1] ) )
+        {
+            t += as_run()[i * S[1] + i];
+        }
+        return t;
     }
 
     /// The square root of the sum of squares: the length at rank 1, the Frobenius norm at rank 2.
     /// It overflows only when the norm does.
     public T norm() const where T : floating
     {
-        return cast<T>( kernel::norm( e_.as_run() ) );
+        return cast<T>( kernel::norm( as_run() ) );
     }
 
     /// This array over its `norm()`; every element NaN when that is 0.
-    public ndarray<T> normalised() const where T : floating
+    public ndarray<T, S...> normalised() const where T : floating
     {
         T n = norm();
         return map( fn[ n ]( T x ) { return x / n; } );
@@ -915,280 +656,335 @@ class ndarray<T> implements iterable<T> where T : numeric
 
     /// --- Comparing ---
 
-    /// Whether `o` has this shape and every element equals the matching one.
-    public bool operator==( const ref ndarray<T> o ) const
+    /// Whether every element equals the matching one of `o`.
+    public bool operator==( const ref ndarray<T, S...> o ) const
     {
-        return kernel::equal( shape_.as_run(), o.shape_.as_run() ) && kernel::equal( e_.as_run(), o.e_.as_run() );
+        return kernel::equal( as_run(), o.as_run() );
     }
 
-    /// Whether `o` has this shape and every `|a - b| <= atol + rtol * |b|`, `b` being `o`'s
-    /// element. A NaN is close to nothing, and an infinity only to itself.
-    public bool approx_equal( const ref ndarray<T> o, T rtol = 1e-5, T atol = 1e-8 ) const where T : floating
+    /// Whether every `|a - b| <= atol + rtol * |b|`, `b` being `o`'s element. A NaN is close to
+    /// nothing, and an infinity only to itself.
+    public bool approx_equal<u64... U>( const ref ndarray<T, U...> o, T rtol = 1e-5, T atol = 1e-8 ) const where T : floating, where S == U
     {
-        return kernel::equal( shape_.as_run(), o.shape_.as_run() ) && kernel::approx_equal( e_.as_run(), o.e_.as_run(), rtol, atol );
+        return kernel::approx_equal( as_run(), o.as_run(), rtol, atol );
     }
 
-    /// Where each element is less than the matching one of `o`. Panics when the shapes differ.
-    public mask less( const ref ndarray<T> o ) const
+    /// Where each element is less than the matching one of `o`.
+    public mask<S...> less<u64... U>( const ref ndarray<T, U...> o ) const where S == U
     {
         return compared( o, fn[]( T x, T y ) { return x < y; } );
     }
 
     /// Where each element is less than `s`.
-    public mask less( T s ) const
+    public mask<S...> less( T s ) const
     {
         return marked( fn[ s ]( T x ) { return x < s; } );
     }
 
-    /// Where each element is greater than the matching one of `o`. Panics when the shapes differ.
-    public mask greater( const ref ndarray<T> o ) const
+    /// Where each element is greater than the matching one of `o`.
+    public mask<S...> greater<u64... U>( const ref ndarray<T, U...> o ) const where S == U
     {
         return compared( o, fn[]( T x, T y ) { return x > y; } );
     }
 
     /// Where each element is greater than `s`.
-    public mask greater( T s ) const
+    public mask<S...> greater( T s ) const
     {
         return marked( fn[ s ]( T x ) { return x > s; } );
     }
 
-    /// Where each element is at most the matching one of `o`. Panics when the shapes differ.
-    public mask less_equal( const ref ndarray<T> o ) const
+    /// Where each element is at most the matching one of `o`.
+    public mask<S...> less_equal<u64... U>( const ref ndarray<T, U...> o ) const where S == U
     {
         return compared( o, fn[]( T x, T y ) { return x <= y; } );
     }
 
     /// Where each element is at most `s`.
-    public mask less_equal( T s ) const
+    public mask<S...> less_equal( T s ) const
     {
         return marked( fn[ s ]( T x ) { return x <= s; } );
     }
 
-    /// Where each element is at least the matching one of `o`. Panics when the shapes differ.
-    public mask greater_equal( const ref ndarray<T> o ) const
+    /// Where each element is at least the matching one of `o`.
+    public mask<S...> greater_equal<u64... U>( const ref ndarray<T, U...> o ) const where S == U
     {
         return compared( o, fn[]( T x, T y ) { return x >= y; } );
     }
 
     /// Where each element is at least `s`.
-    public mask greater_equal( T s ) const
+    public mask<S...> greater_equal( T s ) const
     {
         return marked( fn[ s ]( T x ) { return x >= s; } );
     }
 
-    /// Where each element is equal to the matching one of `o`. Panics when the shapes differ.
-    public mask equal_each( const ref ndarray<T> o ) const
+    /// Where each element equals the matching one of `o`.
+    public mask<S...> equal_each<u64... U>( const ref ndarray<T, U...> o ) const where S == U
     {
         return compared( o, fn[]( T x, T y ) { return x == y; } );
     }
 
-    /// Where each element is equal to `s`.
-    public mask equal_each( T s ) const
+    /// Where each element equals `s`.
+    public mask<S...> equal_each( T s ) const
     {
         return marked( fn[ s ]( T x ) { return x == s; } );
     }
 
-    /// Where each element is not equal to the matching one of `o`. Panics when the shapes differ.
-    public mask differs( const ref ndarray<T> o ) const
+    /// Where each element differs from the matching one of `o`.
+    public mask<S...> differs<u64... U>( const ref ndarray<T, U...> o ) const where S == U
     {
         return compared( o, fn[]( T x, T y ) { return x != y; } );
     }
 
-    /// Where each element is not equal to `s`.
-    public mask differs( T s ) const
+    /// Where each element differs from `s`.
+    public mask<S...> differs( T s ) const
     {
         return marked( fn[ s ]( T x ) { return x != s; } );
     }
 
-    /// The elements `m` sets, row-major, as rank 1. Panics when the shapes differ.
-    public ndarray<T> selected( const ref mask m ) const
+    /// The elements `m` sets, row-major, as rank 1.
+    public ndarray<T, dyn> selected<u64... U>( const ref mask<U...> m ) const where S == U
     {
-        if( !kernel::equal( shape_.as_run(), m.shape() ) )
-        {
-            panic( "the shapes differ" );
-        }
-
-        list<T> e = list<T>::with_capacity( m.count() );
-        for( u64 i : 0..e_.size() )
+        ndarray<T, dyn> r = kl::zeros<T, dyn>( m.count() );
+        u64           n = 0;
+        for( u64 i : 0..count() )
         {
             if( m.test( i ) )
             {
-                e.push( e_[i] );
+                r.as_run()[n] = as_run()[i];
+                n += 1;
             }
         }
-        u64 n = e.size();
-        return ndarray<T>( move e, [ n ] );
+        return r;
     }
 
     /// --- Sorting and searching ---
     ///
-    /// These take rank 1 and panic on any other. A NaN orders after every number.
+    /// These read the elements flat, in row-major order. A NaN orders after every number.
 
-    /// The elements from least to greatest.
-    public ndarray<T> sorted() const
+    /// The elements from least to greatest, in this shape.
+    public ndarray<T, S...> sorted() const
     {
-        needs_rank_one( "sorted takes an array of rank 1" );
-        ndarray<T> r = copy();
-        kl::sort( ref r.e_, fn[]( x, y ) { return kernel::before( x, y ); } );
+        list<T> e = list<T>::of( as_run() );
+        kl::sort( ref e, fn[]( x, y ) { return kernel::before( x, y ); } );
+        ndarray<T, S...> r = ndarray<T, S...>( 0 );
+        r.take( e.as_run() );
         return r;
     }
 
-    /// The indices that would sort the elements, equal ones in index order.
-    public ndarray<u64> argsort() const
+    /// The flat indices that would sort the elements, equal ones in index order.
+    public ndarray<u64, S...> argsort() const
     {
-        needs_rank_one( "argsort takes an array of rank 1" );
-        list<u64> r = list<u64>::with_capacity( size() );
-        for( u64 i : 0..size() )
+        list<u64> e = list<u64>::with_capacity( count() );
+        for( u64 i : 0..count() )
         {
-            r.push( i );
+            e.push( i );
         }
-        kl::sort( ref r, fn[ this ]( i, j ) { return kernel::before( e_[i], e_[j] ) || ( !kernel::before( e_[j], e_[i] ) && i < j ); } );
-        u64 n = r.size();
-        return ndarray<u64>( move r, [ n ] );
+        kl::sort( ref e, fn[ this ]( i, j ) { return kernel::before( as_run()[i], as_run()[j] ) || ( !kernel::before( as_run()[j], as_run()[i] ) && i < j ); } );
+        ndarray<u64, S...> r = ndarray<u64, S...>( 0 );
+        kernel::zip_into( ref r.as_run(), e.as_run(), fn[]( u64 _, u64 y ) { return y; } );
+        return r;
     }
 
     /// One of each distinct element, from least to greatest; the NaNs count as one.
-    public ndarray<T> unique() const
+    public ndarray<T, dyn> unique() const
     {
-        needs_rank_one( "unique takes an array of rank 1" );
-        list<T> e = list<T>::of( e_.as_run() );
+        list<T> e = list<T>::of( as_run() );
         kl::sort( ref e, fn[]( x, y ) { return kernel::before( x, y ); } );
 
-        list<T> r = list<T>::with_capacity( e.size() );
+        list<T> u = list<T>::with_capacity( e.size() );
         for( T x : e.as_run() )
         {
-            T last = r.size() == 0 ? x : r[r.size() - 1];
-            if( r.size() == 0 || !( x == last || ( x != x && last != last ) ) )
+            T last = u.size() == 0 ? x : u[u.size() - 1];
+            if( u.size() == 0 || !( x == last || ( x != x && last != last ) ) )
             {
-                r.push( x );
+                u.push( x );
             }
         }
-        u64 n = r.size();
-        return ndarray<T>( move r, [ n ] );
+        ndarray<T, dyn> r = kl::zeros<T, dyn>( u.size() );
+        r.take( u.as_run() );
+        return r;
     }
 
-    /// The indices of the elements that are not 0, in order; a NaN is not 0.
-    public ndarray<u64> nonzero() const
+    /// The flat indices of the elements that are not 0, in order; a NaN is not 0.
+    public ndarray<u64, dyn> nonzero() const
     {
-        needs_rank_one( "nonzero takes an array of rank 1" );
-        list<u64> r = list<u64>::with_capacity( size() );
-        for( u64 i : 0..size() )
+        list<u64> e = list<u64>();
+        for( u64 i : 0..count() )
         {
-            if( e_[i] != 0 )
+            if( as_run()[i] != 0 )
             {
-                r.push( i );
+                e.push( i );
             }
         }
-        u64 n = r.size();
-        return ndarray<u64>( move r, [ n ] );
+        ndarray<u64, dyn> r = kl::zeros<u64, dyn>( e.size() );
+        r.take( e.as_run() );
+        return r;
     }
 
     /// --- Reducing ---
+    ///
+    /// Each reduction has three forms: over every element, `a.sum()`; along an axis named by a
+    /// constant, `a.sum<1>()`, which keeps the other sizes; and along an axis known at run time,
+    /// `a.sum( axis )`, whose sizes are all `dyn`.
 
     /// The total of every element, added in index order; 0 when there are none.
     public T sum() const
     {
-        return kernel::sum( e_.as_run() );
+        return kernel::sum( as_run() );
     }
 
-    /// The totals along `axis`, dropped from the shape: a 2 by 3 array's `sum( 0 )` has 3 elements.
-    public ndarray<T> sum( u64 axis ) const
+    /// The totals along axis `A`, dropped from the shape: a 2 by 3 array's `sum<0>()` has 3.
+    public ndarray<T, dropped<A>( S )...> sum<u64 A>() const
     {
-        if( length( axis ) == 0 )
-        {
-            return ndarray<T>::zeros( without( axis ).as_run() );
-        }
-        return folded( axis, fn[]( T x, T y ) { return x + y; } );
+        ndarray<T, dropped<A>( S )...> r = ndarray<T, dropped<A>( S )...>( 0 );
+        fold_into( ref r.as_run(), A, fn[]( T x, T y ) { return x + y; } );
+        return r;
+    }
+
+    /// The totals along `axis`. Panics when there is no such axis.
+    public ndarray<T, dropped<dyn>( S )...> sum( u64 axis ) const
+    {
+        ndarray<T, dropped<dyn>( S )...> r = without( axis, 0 );
+        fold_into( ref r.as_run(), axis, fn[]( T x, T y ) { return x + y; } );
+        return r;
     }
 
     /// The product of every element, in index order; 1 when there are none.
     public T prod() const
     {
-        return kernel::prod( e_.as_run() );
+        return kernel::prod( as_run() );
     }
 
-    /// The products along `axis`, dropped from the shape.
-    public ndarray<T> prod( u64 axis ) const
+    /// The products along axis `A`.
+    public ndarray<T, dropped<A>( S )...> prod<u64 A>() const
     {
-        if( length( axis ) == 0 )
-        {
-            return ndarray<T>::ones( without( axis ).as_run() );
-        }
-        return folded( axis, fn[]( T x, T y ) { return x * y; } );
+        ndarray<T, dropped<A>( S )...> r = ndarray<T, dropped<A>( S )...>( 1 );
+        fold_into( ref r.as_run(), A, fn[]( T x, T y ) { return x * y; } );
+        return r;
+    }
+
+    /// The products along `axis`.
+    public ndarray<T, dropped<dyn>( S )...> prod( u64 axis ) const
+    {
+        ndarray<T, dropped<dyn>( S )...> r = without( axis, 1 );
+        fold_into( ref r.as_run(), axis, fn[]( T x, T y ) { return x * y; } );
+        return r;
     }
 
     /// The smallest element, as `kl::min`. Panics when there are none.
     public T min() const
     {
-        return kernel::fold( e_.as_run(), fn[]( T x, T y ) { return kl::min( x, y ); } );
+        return kernel::fold( as_run(), fn[]( T x, T y ) { return kl::min( x, y ); } );
     }
 
-    /// The smallest along `axis`, dropped from the shape. Panics when the axis is empty.
-    public ndarray<T> min( u64 axis ) const
+    /// The smallest along axis `A`. Panics when the axis is empty.
+    public ndarray<T, dropped<A>( S )...> min<u64 A>() const
     {
-        return folded( axis, fn[]( T x, T y ) { return kl::min( x, y ); } );
+        ndarray<T, dropped<A>( S )...> r = ndarray<T, dropped<A>( S )...>( 0 );
+        fold_into( ref r.as_run(), A, fn[]( T x, T y ) { return kl::min( x, y ); } );
+        return r;
+    }
+
+    /// The smallest along `axis`.
+    public ndarray<T, dropped<dyn>( S )...> min( u64 axis ) const
+    {
+        ndarray<T, dropped<dyn>( S )...> r = without( axis, 0 );
+        fold_into( ref r.as_run(), axis, fn[]( T x, T y ) { return kl::min( x, y ); } );
+        return r;
     }
 
     /// The largest element, as `kl::max`. Panics when there are none.
     public T max() const
     {
-        return kernel::fold( e_.as_run(), fn[]( T x, T y ) { return kl::max( x, y ); } );
+        return kernel::fold( as_run(), fn[]( T x, T y ) { return kl::max( x, y ); } );
     }
 
-    /// The largest along `axis`, dropped from the shape. Panics when the axis is empty.
-    public ndarray<T> max( u64 axis ) const
+    /// The largest along axis `A`. Panics when the axis is empty.
+    public ndarray<T, dropped<A>( S )...> max<u64 A>() const
     {
-        return folded( axis, fn[]( T x, T y ) { return kl::max( x, y ); } );
+        ndarray<T, dropped<A>( S )...> r = ndarray<T, dropped<A>( S )...>( 0 );
+        fold_into( ref r.as_run(), A, fn[]( T x, T y ) { return kl::max( x, y ); } );
+        return r;
     }
 
-    /// The row-major index of the first smallest element, or of the first NaN. Panics when there
-    /// are none.
+    /// The largest along `axis`.
+    public ndarray<T, dropped<dyn>( S )...> max( u64 axis ) const
+    {
+        ndarray<T, dropped<dyn>( S )...> r = without( axis, 0 );
+        fold_into( ref r.as_run(), axis, fn[]( T x, T y ) { return kl::max( x, y ); } );
+        return r;
+    }
+
+    /// The flat index of the first smallest element, or of the first NaN. Panics when there are
+    /// none.
     public u64 argmin() const
     {
-        return kernel::arg_best( e_.as_run(), fn[]( T x, T m ) { return m == m && ( x < m || x != x ); } );
+        return kernel::arg_best( as_run(), fn[]( T x, T m ) { return m == m && ( x < m || x != x ); } );
     }
 
-    /// The index along `axis` of each first smallest, or first NaN, `axis` dropped from the shape.
-    /// Panics when the axis is empty.
-    public ndarray<u64> argmin( u64 axis ) const
+    /// The index along axis `A` of each first smallest, or first NaN.
+    public ndarray<u64, dropped<A>( S )...> argmin<u64 A>() const
     {
-        return arg_best( axis, fn[]( T x, T m ) { return m == m && ( x < m || x != x ); } );
+        ndarray<u64, dropped<A>( S )...> r = ndarray<u64, dropped<A>( S )...>( 0 );
+        best_into( ref r.as_run(), A, fn[]( T x, T m ) { return m == m && ( x < m || x != x ); } );
+        return r;
     }
 
-    /// The row-major index of the first largest element, or of the first NaN. Panics when there
-    /// are none.
+    /// The index along `axis` of each first smallest, or first NaN.
+    public ndarray<u64, dropped<dyn>( S )...> argmin( u64 axis ) const
+    {
+        ndarray<u64, dropped<dyn>( S )...> r = kl::zeros<u64, dropped<dyn>( S )...>( dropped_shape( axis ).as_run() );
+        best_into( ref r.as_run(), axis, fn[]( T x, T m ) { return m == m && ( x < m || x != x ); } );
+        return r;
+    }
+
+    /// The flat index of the first largest element, or of the first NaN. Panics when there are
+    /// none.
     public u64 argmax() const
     {
-        return kernel::arg_best( e_.as_run(), fn[]( T x, T m ) { return m == m && ( x > m || x != x ); } );
+        return kernel::arg_best( as_run(), fn[]( T x, T m ) { return m == m && ( x > m || x != x ); } );
     }
 
-    /// The index along `axis` of each first largest, or first NaN, `axis` dropped from the shape.
-    /// Panics when the axis is empty.
-    public ndarray<u64> argmax( u64 axis ) const
+    /// The index along axis `A` of each first largest, or first NaN.
+    public ndarray<u64, dropped<A>( S )...> argmax<u64 A>() const
     {
-        return arg_best( axis, fn[]( T x, T m ) { return m == m && ( x > m || x != x ); } );
+        ndarray<u64, dropped<A>( S )...> r = ndarray<u64, dropped<A>( S )...>( 0 );
+        best_into( ref r.as_run(), A, fn[]( T x, T m ) { return m == m && ( x > m || x != x ); } );
+        return r;
     }
 
-    /// The running totals of the elements, as rank 1.
-    public ndarray<T> cumsum() const
+    /// The index along `axis` of each first largest, or first NaN.
+    public ndarray<u64, dropped<dyn>( S )...> argmax( u64 axis ) const
     {
-        return flattened().cumsum( 0 );
+        ndarray<u64, dropped<dyn>( S )...> r = kl::zeros<u64, dropped<dyn>( S )...>( dropped_shape( axis ).as_run() );
+        best_into( ref r.as_run(), axis, fn[]( T x, T m ) { return m == m && ( x > m || x != x ); } );
+        return r;
+    }
+
+    /// The running totals of the elements, flat.
+    public ndarray<T, (product( S ))> cumsum() const
+    {
+        ndarray<T, (product( S ))> r = flattened();
+        kernel::scan_axis( ref r.as_run(), 1, count(), 1, fn[]( T x, T y ) { return x + y; } );
+        return r;
     }
 
     /// The running totals along `axis`, in the same shape.
-    public ndarray<T> cumsum( u64 axis ) const
+    public ndarray<T, S...> cumsum( u64 axis ) const
     {
         return scanned( axis, fn[]( T x, T y ) { return x + y; } );
     }
 
-    /// The running products of the elements, as rank 1.
-    public ndarray<T> cumprod() const
+    /// The running products of the elements, flat.
+    public ndarray<T, (product( S ))> cumprod() const
     {
-        return flattened().cumprod( 0 );
+        ndarray<T, (product( S ))> r = flattened();
+        kernel::scan_axis( ref r.as_run(), 1, count(), 1, fn[]( T x, T y ) { return x * y; } );
+        return r;
     }
 
     /// The running products along `axis`, in the same shape.
-    public ndarray<T> cumprod( u64 axis ) const
+    public ndarray<T, S...> cumprod( u64 axis ) const
     {
         return scanned( axis, fn[]( T x, T y ) { return x * y; } );
     }
@@ -1196,28 +992,44 @@ class ndarray<T> implements iterable<T> where T : numeric
     /// The mean of the elements; a NaN when there are none.
     public T mean() const where T : floating
     {
-        return sum() / cast<T>( size() );
+        return sum() / cast<T>( count() );
     }
 
-    /// The means along `axis`, dropped from the shape.
-    public ndarray<T> mean( u64 axis ) const where T : floating
+    /// The means along axis `A`.
+    public ndarray<T, dropped<A>( S )...> mean<u64 A>() const where T : floating
     {
-        ndarray<T> r = sum( axis );
-        r /= cast<T>( shape_[axis] );
+        ndarray<T, dropped<A>( S )...> r = sum<A>();
+        r /= cast<T>( S[A] );
+        return r;
+    }
+
+    /// The means along `axis`.
+    public ndarray<T, dropped<dyn>( S )...> mean( u64 axis ) const where T : floating
+    {
+        ndarray<T, dropped<dyn>( S )...> r = sum( axis );
+        r /= cast<T>( S[axis] );
         return r;
     }
 
     /// The mean square distance of the elements from their mean; a NaN when there are none.
     public T var() const where T : floating
     {
-        return kernel::variance( e_.as_run() );
+        return kernel::variance( as_run() );
     }
 
-    /// The variances along `axis`, dropped from the shape.
-    public ndarray<T> var( u64 axis ) const where T : floating
+    /// The variances along axis `A`.
+    public ndarray<T, dropped<A>( S )...> var<u64 A>() const where T : floating
     {
-        ndarray<T> r = ndarray<T>::zeros( without( axis ).as_run() );
-        kernel::variance_axis( ref r.e_.as_run(), e_.as_run(), span( 0, axis ), shape_[axis], span( axis + 1, rank() ) );
+        ndarray<T, dropped<A>( S )...> r = ndarray<T, dropped<A>( S )...>( 0 );
+        kernel::variance_axis( ref r.as_run(), as_run(), span( 0, A ), S[A], span( A + 1, S.size ) );
+        return r;
+    }
+
+    /// The variances along `axis`.
+    public ndarray<T, dropped<dyn>( S )...> var( u64 axis ) const where T : floating
+    {
+        ndarray<T, dropped<dyn>( S )...> r = without( axis, 0 );
+        kernel::variance_axis( ref r.as_run(), as_run(), span( 0, axis ), S[axis], span( axis + 1, S.size ) );
         return r;
     }
 
@@ -1227,11 +1039,19 @@ class ndarray<T> implements iterable<T> where T : numeric
         return cast<T>( kl::sqrt( cast<f64>( var() ) ) );
     }
 
-    /// The standard deviations along `axis`, dropped from the shape.
-    public ndarray<T> std( u64 axis ) const where T : floating
+    /// The standard deviations along axis `A`.
+    public ndarray<T, dropped<A>( S )...> std<u64 A>() const where T : floating
     {
-        ndarray<T> r = var( axis );
-        kernel::map_into( ref r.e_.as_run(), fn[]( T x ) { return cast<T>( kl::sqrt( cast<f64>( x ) ) ); } );
+        ndarray<T, dropped<A>( S )...> r = var<A>();
+        kernel::map_into( ref r.as_run(), fn[]( T x ) { return cast<T>( kl::sqrt( cast<f64>( x ) ) ); } );
+        return r;
+    }
+
+    /// The standard deviations along `axis`.
+    public ndarray<T, dropped<dyn>( S )...> std( u64 axis ) const where T : floating
+    {
+        ndarray<T, dropped<dyn>( S )...> r = var( axis );
+        kernel::map_into( ref r.as_run(), fn[]( T x ) { return cast<T>( kl::sqrt( cast<f64>( x ) ) ); } );
         return r;
     }
 
@@ -1239,135 +1059,153 @@ class ndarray<T> implements iterable<T> where T : numeric
 
     /// Each element converted by `cast`, which panics on a value `U` cannot hold. A float to an
     /// integer needs a rounding: `truncated`, `rounded`, `floored` or `ceiled`.
-    public ndarray<U> to<U>() const where T : converts_to<U>, where U : numeric
+    public ndarray<U, S...> to<U>() const where T : converts_to<U>, where U : numeric
     {
-        return ndarray<U>( list<U>::mapped( e_.as_run(), fn[]( T x ) { return cast<U>( x ); } ), shape_.as_run() );
+        return map( fn[]( T x ) { return cast<U>( x ); } );
     }
 
     /// Each element toward zero, as a `U`. Panics on an infinity, a NaN, or a value `U` cannot hold.
-    public ndarray<U> truncated<U>() const where T : floating, where U : integral
+    public ndarray<U, S...> truncated<U>() const where T : floating, where U : integral
     {
-        return ndarray<U>( list<U>::mapped( e_.as_run(), fn[]( T x ) { return kl::truncated<U>( cast<f64>( x ) ); } ), shape_.as_run() );
+        return map( fn[]( T x ) { return kl::truncated<U>( cast<f64>( x ) ); } );
     }
 
-    /// Each element to the nearest, a half away from zero, as a `U`. Panics on an infinity, a NaN, or a value `U` cannot hold.
-    public ndarray<U> rounded<U>() const where T : floating, where U : integral
+    /// Each element to the nearest, a half away from zero, as a `U`. Panics as `truncated` does.
+    public ndarray<U, S...> rounded<U>() const where T : floating, where U : integral
     {
-        return ndarray<U>( list<U>::mapped( e_.as_run(), fn[]( T x ) { return kl::rounded<U>( cast<f64>( x ) ); } ), shape_.as_run() );
+        return map( fn[]( T x ) { return kl::rounded<U>( cast<f64>( x ) ); } );
     }
 
-    /// Each element down, as a `U`. Panics on an infinity, a NaN, or a value `U` cannot hold.
-    public ndarray<U> floored<U>() const where T : floating, where U : integral
+    /// Each element down, as a `U`. Panics as `truncated` does.
+    public ndarray<U, S...> floored<U>() const where T : floating, where U : integral
     {
-        return ndarray<U>( list<U>::mapped( e_.as_run(), fn[]( T x ) { return kl::floored<U>( cast<f64>( x ) ); } ), shape_.as_run() );
+        return map( fn[]( T x ) { return kl::floored<U>( cast<f64>( x ) ); } );
     }
 
-    /// Each element up, as a `U`. Panics on an infinity, a NaN, or a value `U` cannot hold.
-    public ndarray<U> ceiled<U>() const where T : floating, where U : integral
+    /// Each element up, as a `U`. Panics as `truncated` does.
+    public ndarray<U, S...> ceiled<U>() const where T : floating, where U : integral
     {
-        return ndarray<U>( list<U>::mapped( e_.as_run(), fn[]( T x ) { return kl::ceiled<U>( cast<f64>( x ) ); } ), shape_.as_run() );
+        return map( fn[]( T x ) { return kl::ceiled<U>( cast<f64>( x ) ); } );
+    }
+
+    /// The sizes, in order.
+    public list<u64> shape() const
+    {
+        list<u64> s = list<u64>::with_capacity( S.size );
+        for( u64 k : 0..S.size )
+        {
+            s.push( S[k] );
+        }
+        return s;
     }
 
     /// --- Internals ---
 
-    // Panics when `shape` does not hold as many elements as `elements`.
-    private ndarray( move list<T> elements, const ref u64[] shape )
+    private static u64 count()
     {
-        e_     = move elements;
-        shape_ = list<u64>::with_capacity( shape.size );
-        for( u64 d : shape )
+        u64 n = 1;
+        for( u64 k : 0..S.size )
         {
-            shape_.push( d );
+            n *= S[k];
         }
+        return n;
+    }
 
-        if( count( shape ) != e_.size() )
+    // Copies `elements` in. Panics unless there are as many as the shape holds.
+    private void take( const ref T[] elements )
+    {
+        if( elements.size != count() )
         {
             panic( "the shape does not fit the elements" );
         }
+        copy_into( ref as_run(), elements );
     }
 
-    private void needs_rank_one( str message ) const
+    private void needs_rank( u64 rank, str message ) const
     {
-        if( rank() != 1 )
+        if( S.size != rank )
         {
             panic( message );
         }
     }
 
-    // The length of `axis`. Panics when there is no such axis.
-    private u64 length( u64 axis ) const
+    // The number of elements in sizes `from` up to `to`.
+    private static u64 span( u64 from, u64 to )
     {
-        if( axis >= rank() )
+        u64 n = 1;
+        for( u64 k : from..to )
+        {
+            n *= S[k];
+        }
+        return n;
+    }
+
+    // The sizes without `axis`. Panics when there is no such axis.
+    private static list<u64> dropped_shape( u64 axis )
+    {
+        if( axis >= S.size )
         {
             panic( "axis out of range" );
         }
-        return shape_[axis];
-    }
-
-    // The shape without `axis`.
-    private list<u64> without( u64 axis ) const
-    {
-        _ = length( axis );
-        list<u64> s = list<u64>::with_capacity( rank() - 1 );
-        for( u64 k : 0..rank() )
+        list<u64> s = list<u64>::with_capacity( S.size - 1 );
+        for( u64 k : 0..S.size )
         {
             if( k != axis )
             {
-                s.push( shape_[k] );
+                s.push( S[k] );
             }
         }
         return s;
     }
 
-    // The number of elements in dimensions `from` up to `to`.
-    private u64 span( u64 from, u64 to ) const
+    // Every element `x`, in the sizes without `axis`.
+    private static ndarray<T, dropped<dyn>( S )...> without( u64 axis, T x )
     {
-        return count( shape_.as_run()[from..to] );
-    }
-
-    private ndarray<T> folded<F>( u64 axis, F op ) const where F : fn( T, T ) -> T
-    {
-        ndarray<T> r = ndarray<T>::zeros( without( axis ).as_run() );
-        kernel::fold_axis( ref r.e_.as_run(), e_.as_run(), span( 0, axis ), shape_[axis], span( axis + 1, rank() ), op );
+        ndarray<T, dropped<dyn>( S )...> r = kl::zeros<T, dropped<dyn>( S )...>( dropped_shape( axis ).as_run() );
+        kernel::fill( ref r.as_run(), x );
         return r;
     }
 
-    private ndarray<u64> arg_best<F>( u64 axis, F better ) const where F : fn( T, T ) -> bool
+    private void fold_into<F>( ref T[] dest, u64 axis, F op ) const where F : fn( T, T ) -> T
     {
-        ndarray<u64> r = ndarray<u64>::zeros( without( axis ).as_run() );
-        kernel::arg_best_axis( ref r.as_run(), e_.as_run(), span( 0, axis ), shape_[axis], span( axis + 1, rank() ), better );
+        _ = dropped_shape( axis );
+        if( S[axis] != 0 )
+        {
+            kernel::fold_axis( ref dest, as_run(), span( 0, axis ), S[axis], span( axis + 1, S.size ), op );
+        }
+    }
+
+    private void best_into<F>( ref u64[] dest, u64 axis, F better ) const where F : fn( T, T ) -> bool
+    {
+        _ = dropped_shape( axis );
+        kernel::arg_best_axis( ref dest, as_run(), span( 0, axis ), S[axis], span( axis + 1, S.size ), better );
+    }
+
+    private ndarray<T, S...> scanned<F>( u64 axis, F op ) const where F : fn( T, T ) -> T
+    {
+        _ = dropped_shape( axis );
+        ndarray<T, S...> r = copy();
+        kernel::scan_axis( ref r.as_run(), span( 0, axis ), S[axis], span( axis + 1, S.size ), op );
         return r;
     }
 
-    private ndarray<T> scanned<F>( u64 axis, F op ) const where F : fn( T, T ) -> T
-    {
-        u64        n = length( axis );
-        ndarray<T> r = copy();
-        kernel::scan_axis( ref r.e_.as_run(), span( 0, axis ), n, span( axis + 1, rank() ), op );
-        return r;
-    }
-
-    // The step between neighbours along each dimension.
+    // The step between neighbours along each size.
     private list<u64> strides() const
     {
-        list<u64> r    = list<u64>::with_capacity( rank() );
+        list<u64> r = list<u64>::filled( S.size, 0 );
         u64       step = 1;
-        for( u64 k : 0..rank() )
+        for( u64 k = S.size; k > 0; k -= 1 )
         {
-            r.push( 0 );
-        }
-        for( u64 k : 0..rank() )
-        {
-            r[rank() - 1 - k] = step;
-            step *= shape_[rank() - 1 - k];
+            r[k - 1] = step;
+            step *= S[k - 1];
         }
         return r;
     }
 
-    // The lengths of `region`. Panics on another count, a backwards range, or one past its dimension.
+    // The lengths of `region`. Panics on another count, a backwards range, or one past its size.
     private list<u64> lengths( const ref range[] region ) const
     {
-        if( region.size != shape_.size() )
+        if( region.size != S.size )
         {
             panic( "the range count differs from the rank" );
         }
@@ -1379,9 +1217,9 @@ class ndarray<T> implements iterable<T> where T : numeric
             {
                 panic( "the range is backwards" );
             }
-            if( region[k].to > shape_[k] )
+            if( region[k].to > S[k] )
             {
-                panic( "the range is past its dimension" );
+                panic( "the range is past its size" );
             }
             s.push( region[k].to - region[k].from );
         }
@@ -1394,62 +1232,68 @@ class ndarray<T> implements iterable<T> where T : numeric
         u64 flat = 0;
         for( u64 k : 0..region.size )
         {
-            flat = flat * shape_[k] + region[k].from;
+            flat = flat * S[k] + region[k].from;
         }
         return flat;
     }
 
-    private mask compared<F>( const ref ndarray<T> o, F p ) const where F : fn( T, T ) -> bool
+    // Where a block of sizes `s` at `at` starts. Panics on another count or one passing an end.
+    private u64 offset_of( const ref u64[] at, const ref u64[] s ) const
     {
-        same_shape( o );
-        mask r = mask( shape_.as_run() );
-        for( u64 i : 0..e_.size() )
+        if( at.size != S.size || s.size != S.size )
         {
-            r.assign( i, p( e_[i], o.e_[i] ) );
+            panic( "the index count differs from the rank" );
         }
-        return r;
+
+        u64 flat = 0;
+        for( u64 k : 0..S.size )
+        {
+            if( s[k] > S[k] || at[k] > S[k] - s[k] )
+            {
+                panic( "the window passes the end" );
+            }
+            flat = flat * S[k] + at[k];
+        }
+        return flat;
     }
 
-    private mask marked<F>( F p ) const where F : fn( T ) -> bool
+    // This shape and `o`'s lined up from the right. Panics unless each pair is equal or has a 1.
+    private list<u64> broadcast_shape( const ref list<u64> o ) const
     {
-        mask r = mask( shape_.as_run() );
-        for( u64 i : 0..e_.size() )
+        u64       n = S.size > o.size() ? S.size : o.size();
+        list<u64> s = list<u64>::with_capacity( n );
+        for( u64 k : 0..n )
         {
-            r.assign( i, p( e_[i] ) );
+            u64 a = k + S.size < n ? 1 : S[k + S.size - n];
+            u64 b = k + o.size() < n ? 1 : o[k + o.size() - n];
+            if( a != b && a != 1 && b != 1 )
+            {
+                panic( "the shapes do not broadcast" );
+            }
+            s.push( a == 1 ? b : a );
         }
-        return r;
+        return s;
     }
 
-    // `op` over each element and `o`'s, `o` stretched to this shape. Panics unless it stretches.
-    private void combine<F>( const ref ndarray<T> o, F op ) where F : fn( T, T ) -> T
-    {
-        if( kernel::equal( shape_.as_run(), o.shape_.as_run() ) )
-        {
-            kernel::zip_into( ref e_.as_run(), o.e_.as_run(), op );
-            return;
-        }
-        kernel::zip_strided_into( ref e_.as_run(), o.e_.as_run(), shape_.as_run(), o.strides_to( shape_.as_run() ).as_run(), op );
-    }
-
-    // This array's strides when read in `shape`, 0 along each stretched dimension. Panics unless
-    // this shape stretches to `shape`.
+    // This array's strides when read in `shape`, 0 along each stretched size. Panics unless this
+    // shape stretches to `shape`.
     private list<u64> strides_to( const ref u64[] shape ) const
     {
-        if( rank() > shape.size )
+        if( S.size > shape.size )
         {
             panic( "the shapes do not broadcast" );
         }
 
         list<u64> own = strides();
         list<u64> r   = list<u64>::with_capacity( shape.size );
-        u64       pad = shape.size - rank();
+        u64       pad = shape.size - S.size;
         for( u64 k : 0..shape.size )
         {
-            if( k < pad || shape_[k - pad] == 1 )
+            if( k < pad || S[k - pad] == 1 )
             {
                 r.push( 0 );
             }
-            else if( shape_[k - pad] == shape[k] )
+            else if( S[k - pad] == shape[k] )
             {
                 r.push( own[k - pad] );
             }
@@ -1461,206 +1305,498 @@ class ndarray<T> implements iterable<T> where T : numeric
         return r;
     }
 
-    private void same_shape( const ref ndarray<T> o ) const
+    // `op` over each element and `o`'s, `o` stretched to this shape. Panics unless it stretches.
+    private void combine<F, u64... U>( const ref ndarray<T, U...> o, F op ) where F : fn( T, T ) -> T
     {
-        if( !kernel::equal( shape_.as_run(), o.shape_.as_run() ) )
+        if( o.size() == count() && U.size == S.size )
         {
-            panic( "the shapes differ" );
+            kernel::zip_into( ref as_run(), o.as_run(), op );
+            return;
         }
+        list<u64> s = shape();
+        kernel::zip_strided_into( ref as_run(), o.as_run(), s.as_run(), o.strides_to( s.as_run() ).as_run(), op );
+    }
+
+    private mask<S...> compared<F, u64... U>( const ref ndarray<T, U...> o, F p ) const where F : fn( T, T ) -> bool, where S == U
+    {
+        mask<S...> r = mask<S...>();
+        for( u64 i : 0..count() )
+        {
+            r.assign( i, p( as_run()[i], o.as_run()[i] ) );
+        }
+        return r;
+    }
+
+    private mask<S...> marked<F>( F p ) const where F : fn( T ) -> bool
+    {
+        mask<S...> r = mask<S...>();
+        for( u64 i : 0..count() )
+        {
+            r.assign( i, p( as_run()[i] ) );
+        }
+        return r;
     }
 };
 
-/// The cross product `a` x `b`, each of rank 1 and size 3: `kl::cross( a, b )`.
-ndarray<T> cross<T>( const ref ndarray<T> a, const ref ndarray<T> b ) where T : numeric
+/// One bit per element of an `ndarray` in the shape `S`, held row-major: what its comparisons
+/// answer.
+///
+/// `&`, `|`, `^` and `~` combine masks bit by bit. `kl::select( m, a, b )` picks between two
+/// arrays by one, and `a.selected( m )` keeps the elements of `a` it sets.
+class mask<u64... S(dyn)>
 {
-    if( a.rank() != 1 || b.rank() != 1 )
+    buffer<u64, (( product( S ) + 63 ) / 64)> words_;
+
+    /// Every bit clear, in the type's sizes.
+    public mask()
     {
-        panic( "cross takes vectors of size 3" );
+        words_ = buffer<u64, (( product( S ) + 63 ) / 64)>( ( bits() + 63 ) / 64, 0 );
     }
 
-    ndarray<T> r = ndarray<T>::zeros( 3 );
-    kernel::cross( ref r.as_run(), a.as_run(), b.as_run() );
+    /// A second mask with the same bits.
+    public mask<S...> copy() const
+    {
+        mask<S...> r = mask<S...>();
+        kernel::zip_into( ref r.words_.as_run(), words_.as_run(), fn[]( u64 _, u64 y ) { return y; } );
+        return r;
+    }
+
+    /// The number of bits.
+    public u64 size() const
+    {
+        return bits();
+    }
+
+    /// The bit at `index`, one per size. Panics on another count or an index outside its size.
+    public bool at( u64... index ) const
+    {
+        if( index.size != S.size )
+        {
+            panic( "the index count differs from the rank" );
+        }
+
+        u64 flat = 0;
+        for( u64 k : 0..S.size )
+        {
+            if( index[k] >= S[k] )
+            {
+                panic( "index out of range" );
+            }
+            flat = flat * S[k] + index[k];
+        }
+        return kernel::test( words_.as_run(), flat );
+    }
+
+    /// The bit at `i`, counted row-major. Panics when `i` is not less than `size()`.
+    public bool test( u64 i ) const
+    {
+        if( i >= bits() )
+        {
+            panic( "index out of range" );
+        }
+        return kernel::test( words_.as_run(), i );
+    }
+
+    /// Sets the bit at `i`, counted row-major, if `on`, and clears it otherwise. Panics when `i`
+    /// is not less than `size()`.
+    public void assign( u64 i, bool on )
+    {
+        if( i >= bits() )
+        {
+            panic( "index out of range" );
+        }
+        kernel::assign( ref words_.as_run(), i, on );
+    }
+
+    /// The number of bits set.
+    public u64 count() const
+    {
+        return kernel::count( words_.as_run(), bits() );
+    }
+
+    /// Whether any bit is set.
+    public bool any() const
+    {
+        return kernel::any( words_.as_run(), bits() );
+    }
+
+    /// Whether every bit is set; true when there are none.
+    public bool all() const
+    {
+        return kernel::all( words_.as_run(), bits() );
+    }
+
+    /// Whether the same bits are set.
+    public bool operator==( const ref mask<S...> o ) const
+    {
+        return kernel::equal( words_.as_run(), o.words_.as_run(), bits() );
+    }
+
+    /// The bits set in both.
+    public mask<S...> operator&<u64... U>( const ref mask<U...> o ) const where S == U
+    {
+        mask<S...> r = copy();
+        kernel::zip_into( ref r.words_.as_run(), o.words_.as_run(), fn[]( u64 x, u64 y ) { return x & y; } );
+        return r;
+    }
+
+    /// The bits set in either.
+    public mask<S...> operator|<u64... U>( const ref mask<U...> o ) const where S == U
+    {
+        mask<S...> r = copy();
+        kernel::zip_into( ref r.words_.as_run(), o.words_.as_run(), fn[]( u64 x, u64 y ) { return x | y; } );
+        return r;
+    }
+
+    /// The bits set in exactly one.
+    public mask<S...> operator^<u64... U>( const ref mask<U...> o ) const where S == U
+    {
+        mask<S...> r = copy();
+        kernel::zip_into( ref r.words_.as_run(), o.words_.as_run(), fn[]( u64 x, u64 y ) { return x ^ y; } );
+        return r;
+    }
+
+    /// Every bit flipped.
+    public mask<S...> operator~() const
+    {
+        mask<S...> r = copy();
+        kernel::map_into( ref r.words_.as_run(), fn[]( u64 x ) { return ~x; } );
+        return r;
+    }
+
+    private static u64 bits()
+    {
+        u64 n = 1;
+        for( u64 k : 0..S.size )
+        {
+            n *= S[k];
+        }
+        return n;
+    }
+};
+/// --- Making arrays ---
+
+/// Every element 0, in the sizes `n`: `ndarray<f64, dyn, 3> a = kl::zeros( rows, 3 );`. A size whose
+/// value is known is a constant, any other `dyn`.
+ndarray<T, S...> zeros<T, u64... S>( S... n ) where T : numeric
+{
+    return ndarray<T, S...>( 0 );
+}
+
+/// Every element 1, in the sizes `n`.
+ndarray<T, S...> ones<T, u64... S>( S... n ) where T : numeric
+{
+    return ndarray<T, S...>( 1 );
+}
+
+/// Every element `x`, in the sizes `n`: `kl::filled( 0.5, rows, 3 )`.
+ndarray<T, S...> filled<T, u64... S>( T x, S... n ) where T : numeric
+{
+    return ndarray<T, S...>( x );
+}
+
+/// A mask of every bit clear, in the sizes `n`: `kl::cleared( rows )`.
+mask<S...> cleared<u64... S>( S... n )
+{
+    return mask<S...>();
+}
+
+/// `elements` row after row, in the sizes `n`: `kl::shaped( e, 2, 3 )`. Panics unless there are
+/// as many as the sizes hold.
+ndarray<T, S...> shaped<T, u64... S>( const ref T[] elements, S... n ) where T : numeric
+{
+    return ndarray<T, S...>::of( elements );
+}
+
+/// The elements of a literal, as rank 1: `kl::of( [1.0, 2.0, 3.0] )`.
+ndarray<T, N> of<T, u64 N>( T[N] elements ) where T : numeric
+{
+    return ndarray<T, N>::of( elements );
+}
+
+/// The rows of a nested literal: `kl::of( [[1.0, 2.0], [3.0, 4.0]] )` is 2 by 2.
+ndarray<T, R, C> of<T, u64 R, u64 C>( T[C][R] rows ) where T : numeric
+{
+    ndarray<T, R, C> r = ndarray<T, R, C>( 0 );
+    for( u64 i : 0..R )
+    {
+        copy_into( ref r.block( i ), rows[i] );
+    }
     return r;
 }
 
-/// The determinant of a square rank 2 array, through LU with partial pivoting:
-/// `kl::determinant( a )`. 0 when a pivot is exactly zero.
-T determinant<T>( const ref ndarray<T> a ) where T : floating
+/// `from`, `from + step`, ... while short of `to`, as rank 1: `kl::arange( 0, 5 )` is `[0, 1, 2,
+/// 3, 4]`. A negative `step` counts down. Each element is `from + i * step`, so floats do not
+/// drift. Panics when `step` is 0.
+ndarray<T, dyn> arange<T>( T from, T to, T step = 1 ) where T : numeric
 {
-    u64          n    = square( a );
-    ndarray<T>   f    = a.copy();
-    ndarray<u64> perm = ndarray<u64>::zeros( n );
-    T            sign = kernel::lu( ref f.as_run(), ref perm.as_run(), n );
-    return kernel::lu_determinant( f.as_run(), n, sign );
-}
-
-/// The inverse of a square rank 2 array, `none` when a pivot is exactly zero:
-/// `kl::inverse( a )`. A nearly singular array gives large elements.
-optional<ndarray<T>> inverse<T>( const ref ndarray<T> a ) where T : floating
-{
-    return solve( a, ndarray<T>::identity( square( a ) ) );
-}
-
-/// The `x` with `a.matmul( x ) == b`, for a square rank 2 `a` and a `b` of rank 1 or 2 whose first
-/// dimension is `a`'s, `none` when a pivot of `a` is exactly zero: `kl::solve( a, b )`.
-optional<ndarray<T>> solve<T>( const ref ndarray<T> a, const ref ndarray<T> b ) where T : floating
-{
-    u64 n = square( a );
-    if( b.rank() < 1 || b.rank() > 2 || b.shape()[0] != n )
+    if( step == 0 )
     {
-        panic( "the shapes differ" );
+        panic( "the step is 0" );
     }
 
-    ndarray<T>   f    = a.copy();
-    ndarray<u64> perm = ndarray<u64>::zeros( n );
-    if( kernel::lu( ref f.as_run(), ref perm.as_run(), n ) == 0 )
+    list<T> e = list<T>();
+    T       x = from;
+    while( step > 0 ? x < to : x > to )
     {
-        return optional::none;
+        e.push( x );
+        x = from + cast<T>( e.size() ) * step;
     }
-
-    u64        k = b.size() / n;
-    ndarray<T> r = ndarray<T>::zeros( b.shape() );
-    kernel::lu_solve( ref r.as_run(), f.as_run(), perm.as_run(), b.as_run(), n, k );
-    return optional::some( move r );
+    return kl::shaped( e.as_run(), e.size() );
 }
 
-/// The thin QR factors of rank 2 `a`, m by n with m >= n: `first`, m by n with orthonormal
-/// columns, and `second`, n by n upper triangular, their product `a`, by Householder reflections
-/// as numpy's `qr`: `kl::qr( a )`.
-pair<ndarray<T>, ndarray<T>> qr<T>( const ref ndarray<T> a ) where T : floating
+/// `n` evenly spaced from `a` to `b`, both included, as rank 1. One element is `a`.
+ndarray<T, N> linspace<T, u64 N>( T a, T b, N n ) where T : floating
 {
-    u64        m   = tall( a );
-    u64        n   = a.shape()[1];
-    ndarray<T> f   = a.copy();
-    ndarray<T> tau = ndarray<T>::zeros( n );
-    _              = kernel::householder_qr( ref f.as_run(), ref tau.as_run(), m, n );
-    ndarray<T> q   = ndarray<T>::zeros( m, n );
-    ndarray<T> r   = ndarray<T>::zeros( n, n );
-    kernel::qr_q( ref q.as_run(), f.as_run(), tau.as_run(), m, n );
-    kernel::qr_r( ref r.as_run(), f.as_run(), m, n );
-    return pair<ndarray<T>, ndarray<T>>( move q, move r );
+    ndarray<T, N> r = ndarray<T, N>( 0 );
+    for( u64 i : 0..N )
+    {
+        r[i] = i == 0 ? a : i + 1 == N ? b : a + ( b - a ) * cast<T>( i ) / cast<T>( N - 1 );
+    }
+    return r;
 }
 
-/// The `x` making `a.matmul( x ) - b` shortest, through QR, for rank 2 `a`, m by n with m >= n,
-/// and `b` of rank 1 or 2 whose first dimension is m; `none` when a diagonal of R is exactly zero:
-/// `kl::lstsq( a, b )`. numpy's `lstsq` answers the shortest such `x` there instead.
-optional<ndarray<T>> lstsq<T>( const ref ndarray<T> a, const ref ndarray<T> b ) where T : floating
+/// 1 on the diagonal and 0 elsewhere, `rows` by `cols`: `ndarray<f64, 3, 3> i = kl::eye( 3, 3 );` is
+/// the identity.
+ndarray<T, R, C> eye<T, u64 R, u64 C>( R rows, C cols ) where T : numeric
 {
-    u64 m = tall( a );
-    u64 n = a.shape()[1];
-    if( b.rank() < 1 || b.rank() > 2 || b.shape()[0] != m )
-    {
-        panic( "the shapes differ" );
-    }
-
-    ndarray<T> f   = a.copy();
-    ndarray<T> tau = ndarray<T>::zeros( n );
-    if( !kernel::householder_qr( ref f.as_run(), ref tau.as_run(), m, n ) )
-    {
-        return optional::none;
-    }
-
-    u64        k = b.size() / m;
-    ndarray<T> w = b.copy();
-    ndarray<T> x = b.rank() == 1 ? ndarray<T>::zeros( n ) : ndarray<T>::zeros( n, k );
-    kernel::qr_solve( ref x.as_run(), ref w.as_run(), f.as_run(), tau.as_run(), m, n, k );
-    return optional::some( move x );
+    ndarray<T, R, C> r = ndarray<T, R, C>( 0 );
+    kernel::eye( ref r.as_run(), R, C );
+    return r;
 }
 
-/// The diagonal of the projection onto the columns of rank 2 `a`, m by n with m >= n,
-/// `a (a^T a)^-1 a^T`, through QR: each row's leverage when `a` has full column rank.
-/// `kl::hat_diagonal( a )`.
-ndarray<T> hat_diagonal<T>( const ref ndarray<T> a ) where T : floating
+/// The square matrix with `v` on its diagonal: `kl::diag( v )`.
+ndarray<T, N, N> diag<T, u64 N>( const ref ndarray<T, N> v ) where T : numeric
 {
-    u64        m = tall( a );
-    ndarray<T> q = move kl::qr( a ).first;
-    ndarray<T> h = ndarray<T>::zeros( m );
-    kernel::row_squares( ref h.as_run(), q.as_run(), m, a.shape()[1] );
-    return h;
-}
-
-// The rows of rank 2 `a` with no more columns than rows. Panics on any other.
-private u64 tall<T>( const ref ndarray<T> a ) where T : numeric
-{
-    if( a.rank() != 2 || a.shape()[0] < a.shape()[1] )
-    {
-        panic( "the matrix has more columns than rows" );
-    }
-    return a.shape()[0];
-}
-
-// The size of square rank 2 `a`. Panics on any other.
-private u64 square<T>( const ref ndarray<T> a ) where T : numeric
-{
-    if( a.rank() != 2 || a.shape()[0] != a.shape()[1] )
-    {
-        panic( "the matrix is not square" );
-    }
-    return a.shape()[0];
-}
-
-/// The square matrix with `v`, of rank 1, on its diagonal: `kl::diag( v )`.
-ndarray<T> diag<T>( const ref ndarray<T> v ) where T : numeric
-{
-    if( v.rank() != 1 )
-    {
-        panic( "diag takes an array of rank 1" );
-    }
-
-    u64        n = v.size();
-    ndarray<T> r = ndarray<T>::zeros( n, n );
-    for( u64 i : 0..n )
+    ndarray<T, N, N> r = ndarray<T, N, N>( 0 );
+    for( u64 i : 0..N )
     {
         r[i, i] = v[i];
     }
     return r;
 }
 
-/// The smaller of each pair of matching elements, as `kl::min`: `kl::minimum( a, b )`.
-ndarray<T> minimum<T>( const ref ndarray<T> a, const ref ndarray<T> b ) where T : numeric
+/// The diagonal of a square matrix: `kl::diagonal( m )`.
+ndarray<T, N> diagonal<T, u64 N>( const ref ndarray<T, N, N> m ) where T : numeric
 {
-    if( !kernel::equal( a.shape(), b.shape() ) )
+    ndarray<T, N> r = ndarray<T, N>( 0 );
+    for( u64 i : 0..N )
     {
-        panic( "the shapes differ" );
+        r[i] = m[i, i];
     }
-
-    return a.map( b, fn[]( T x, T y ) { return kl::min( x, y ); } );
+    return r;
 }
 
-/// The larger of each pair of matching elements, as `kl::max`: `kl::maximum( a, b )`.
-ndarray<T> maximum<T>( const ref ndarray<T> a, const ref ndarray<T> b ) where T : numeric
+/// `a` then `b`, along the first axis: `kl::concatenated( a, b )`.
+ndarray<T, (A + B), S...> concatenated<T, u64 A, u64 B, u64... S, u64... U>( const ref ndarray<T, A, S...> a, const ref ndarray<T, B, U...> b ) where T : numeric, where S == U
 {
-    if( !kernel::equal( a.shape(), b.shape() ) )
-    {
-        panic( "the shapes differ" );
-    }
-
-    return a.map( b, fn[]( T x, T y ) { return kl::max( x, y ); } );
+    ndarray<T, (A + B), S...> r = ndarray<T, (A + B), S...>( 0 );
+    copy_into( ref r.as_run()[0..a.size()], a.as_run() );
+    copy_into( ref r.as_run()[a.size()..r.size()], b.as_run() );
+    return r;
 }
 
-/// `a`'s element where `m` is set, and `b`'s where it is clear. Panics when the shapes differ.
-ndarray<T> select<T>( const ref mask m, const ref ndarray<T> a, const ref ndarray<T> b ) where T : numeric
+/// `a` and `b` as the two entries of a new first axis: `kl::stacked( a, b )`.
+ndarray<T, 2, S...> stacked<T, u64... S, u64... U>( const ref ndarray<T, S...> a, const ref ndarray<T, U...> b ) where T : numeric, where S == U
 {
-    if( !kernel::equal( m.shape(), a.shape() ) || !kernel::equal( m.shape(), b.shape() ) )
+    ndarray<T, 2, S...> r = ndarray<T, 2, S...>( 0 );
+    copy_into( ref r.block( 0 ), a.as_run() );
+    copy_into( ref r.block( 1 ), b.as_run() );
+    return r;
+}
+
+/// --- Products ---
+
+/// The matrix product: `kl::matmul( a, b )`.
+ndarray<T, R, N> matmul<T, u64 R, u64 K, u64 N>( const ref ndarray<T, R, K> a, const ref ndarray<T, K, N> b ) where T : numeric
+{
+    ndarray<T, R, N> r = ndarray<T, R, N>( 0 );
+    kernel::matmul( ref r.as_run(), a.as_run(), b.as_run(), R, K, N );
+    return r;
+}
+
+/// A matrix times a column.
+ndarray<T, R> matmul<T, u64 R, u64 K>( const ref ndarray<T, R, K> a, const ref ndarray<T, K> v ) where T : numeric
+{
+    ndarray<T, R> r = ndarray<T, R>( 0 );
+    kernel::matmul( ref r.as_run(), a.as_run(), v.as_run(), R, K, 1 );
+    return r;
+}
+
+/// A row times a matrix.
+ndarray<T, N> matmul<T, u64 K, u64 N>( const ref ndarray<T, K> v, const ref ndarray<T, K, N> b ) where T : numeric
+{
+    ndarray<T, N> r = ndarray<T, N>( 0 );
+    kernel::matmul( ref r.as_run(), v.as_run(), b.as_run(), 1, K, N );
+    return r;
+}
+
+/// Each element of `a` times each of `b`: an `N` by `M` matrix.
+ndarray<T, N, M> outer<T, u64 N, u64 M>( const ref ndarray<T, N> a, const ref ndarray<T, M> b ) where T : numeric
+{
+    ndarray<T, N, M> r = ndarray<T, N, M>( 0 );
+    kernel::outer( ref r.as_run(), a.as_run(), b.as_run() );
+    return r;
+}
+
+/// The cross product `a` x `b`: `kl::cross( a, b )`.
+ndarray<T, 3> cross<T>( const ref ndarray<T, 3> a, const ref ndarray<T, 3> b ) where T : numeric
+{
+    ndarray<T, 3> r = ndarray<T, 3>( 0 );
+    kernel::cross( ref r.as_run(), a.as_run(), b.as_run() );
+    return r;
+}
+
+/// --- Linear algebra ---
+
+/// The determinant of a square matrix, through LU with partial pivoting: `kl::determinant( m )`.
+/// 0 when a pivot is exactly zero.
+T determinant<T, u64 N>( const ref ndarray<T, N, N> m ) where T : floating
+{
+    ndarray<T, N, N> f    = m.copy();
+    ndarray<u64, N>  perm = ndarray<u64, N>( 0 );
+    T              sign = kernel::lu( ref f.as_run(), ref perm.as_run(), N );
+    return kernel::lu_determinant( f.as_run(), N, sign );
+}
+
+/// The inverse of a square matrix, `none` when a pivot is exactly zero: `kl::inverse( m )`. A
+/// nearly singular matrix gives large elements.
+optional<ndarray<T, N, N>> inverse<T, u64 N>( const ref ndarray<T, N, N> m ) where T : floating
+{
+    ndarray<T, N, N> f    = m.copy();
+    ndarray<u64, N>  perm = ndarray<u64, N>( 0 );
+    if( kernel::lu( ref f.as_run(), ref perm.as_run(), N ) == 0 )
     {
-        panic( "the shapes differ" );
+        return optional::none;
     }
 
-    ndarray<T> r = b.copy();
+    ndarray<T, N, N> i = ndarray<T, N, N>( 0 );
+    kernel::identity( ref i.as_run(), N );
+    ndarray<T, N, N> r = ndarray<T, N, N>( 0 );
+    kernel::lu_solve( ref r.as_run(), f.as_run(), perm.as_run(), i.as_run(), N, N );
+    return optional::some( move r );
+}
+
+/// The `x` with `kl::matmul( a, x ) == b`, `none` when a pivot of `a` is exactly zero:
+/// `kl::solve( a, b )`.
+optional<ndarray<T, N>> solve<T, u64 N>( const ref ndarray<T, N, N> a, const ref ndarray<T, N> b ) where T : floating
+{
+    ndarray<T, N, N> f    = a.copy();
+    ndarray<u64, N>  perm = ndarray<u64, N>( 0 );
+    if( kernel::lu( ref f.as_run(), ref perm.as_run(), N ) == 0 )
+    {
+        return optional::none;
+    }
+
+    ndarray<T, N> r = ndarray<T, N>( 0 );
+    kernel::lu_solve( ref r.as_run(), f.as_run(), perm.as_run(), b.as_run(), N, 1 );
+    return optional::some( move r );
+}
+
+/// `solve` for each column of `b` at once: `kl::matmul( a, x ) == b`.
+optional<ndarray<T, N, K>> solve<T, u64 N, u64 K>( const ref ndarray<T, N, N> a, const ref ndarray<T, N, K> b ) where T : floating
+{
+    ndarray<T, N, N> f    = a.copy();
+    ndarray<u64, N>  perm = ndarray<u64, N>( 0 );
+    if( kernel::lu( ref f.as_run(), ref perm.as_run(), N ) == 0 )
+    {
+        return optional::none;
+    }
+
+    ndarray<T, N, K> r = ndarray<T, N, K>( 0 );
+    kernel::lu_solve( ref r.as_run(), f.as_run(), perm.as_run(), b.as_run(), N, K );
+    return optional::some( move r );
+}
+
+/// The thin QR factors of `a`, `first` with orthonormal columns and `second` upper triangular,
+/// their product `a`, by Householder reflections as numpy's `qr`: `kl::qr( a )`.
+pair<ndarray<T, R, C>, ndarray<T, C, C>> qr<T, u64 R, u64 C>( const ref ndarray<T, R, C> a ) where T : floating, where R >= C
+{
+    ndarray<T, R, C> f   = a.copy();
+    ndarray<T, C>    tau = ndarray<T, C>( 0 );
+    _                  = kernel::householder_qr( ref f.as_run(), ref tau.as_run(), R, C );
+    ndarray<T, R, C> q   = ndarray<T, R, C>( 0 );
+    ndarray<T, C, C> r   = ndarray<T, C, C>( 0 );
+    kernel::qr_q( ref q.as_run(), f.as_run(), tau.as_run(), R, C );
+    kernel::qr_r( ref r.as_run(), f.as_run(), R, C );
+    return pair<ndarray<T, R, C>, ndarray<T, C, C>>( move q, move r );
+}
+
+/// The `x` making `kl::matmul( a, x ) - b` shortest, through QR, `none` when a diagonal of R is
+/// exactly zero: `kl::lstsq( a, b )`. numpy's `lstsq` answers the shortest such `x` there instead.
+optional<ndarray<T, C>> lstsq<T, u64 R, u64 C>( const ref ndarray<T, R, C> a, const ref ndarray<T, R> b ) where T : floating, where R >= C
+{
+    ndarray<T, R, C> f   = a.copy();
+    ndarray<T, C>    tau = ndarray<T, C>( 0 );
+    if( !kernel::householder_qr( ref f.as_run(), ref tau.as_run(), R, C ) )
+    {
+        return optional::none;
+    }
+
+    ndarray<T, R> w = b.copy();
+    ndarray<T, C> x = ndarray<T, C>( 0 );
+    kernel::qr_solve( ref x.as_run(), ref w.as_run(), f.as_run(), tau.as_run(), R, C, 1 );
+    return optional::some( move x );
+}
+
+/// `lstsq` for each column of `b` at once.
+optional<ndarray<T, C, K>> lstsq<T, u64 R, u64 C, u64 K>( const ref ndarray<T, R, C> a, const ref ndarray<T, R, K> b ) where T : floating, where R >= C
+{
+    ndarray<T, R, C> f   = a.copy();
+    ndarray<T, C>    tau = ndarray<T, C>( 0 );
+    if( !kernel::householder_qr( ref f.as_run(), ref tau.as_run(), R, C ) )
+    {
+        return optional::none;
+    }
+
+    ndarray<T, R, K> w = b.copy();
+    ndarray<T, C, K> x = ndarray<T, C, K>( 0 );
+    kernel::qr_solve( ref x.as_run(), ref w.as_run(), f.as_run(), tau.as_run(), R, C, K );
+    return optional::some( move x );
+}
+
+/// The diagonal of the projection onto `a`'s columns, `a (a^T a)^-1 a^T`, through QR: each row's
+/// leverage when `a` has full column rank. `kl::hat_diagonal( a )`.
+ndarray<T, R> hat_diagonal<T, u64 R, u64 C>( const ref ndarray<T, R, C> a ) where T : floating, where R >= C
+{
+    pair<ndarray<T, R, C>, ndarray<T, C, C>> f = kl::qr( a );
+    ndarray<T, R>                          h = ndarray<T, R>( 0 );
+    kernel::row_squares( ref h.as_run(), f.first.as_run(), R, C );
+    return h;
+}
+
+/// --- Element-wise choices ---
+
+/// The smaller of each pair of matching elements, as `kl::min`, the two broadcast.
+ndarray<T, broadcast( S, U )...> minimum<T, u64... S, u64... U>( const ref ndarray<T, S...> first, const ref ndarray<T, U...> second ) where T : numeric
+{
+    return first.zipped( second, fn[]( T x, T y ) { return kl::min( x, y ); } );
+}
+
+/// The larger of each pair of matching elements, as `kl::max`, the two broadcast.
+ndarray<T, broadcast( S, U )...> maximum<T, u64... S, u64... U>( const ref ndarray<T, S...> first, const ref ndarray<T, U...> second ) where T : numeric
+{
+    return first.zipped( second, fn[]( T x, T y ) { return kl::max( x, y ); } );
+}
+
+/// `a`'s element where `m` is set, and `b`'s where it is clear.
+ndarray<T, S...> select<T, u64... M, u64... S, u64... U>( const ref mask<M...> m, const ref ndarray<T, S...> a, const ref ndarray<T, U...> b ) where T : numeric, where M == S, where S == U
+{
+    ndarray<T, S...> r = a.copy();
     for( u64 i : 0..r.size() )
     {
-        if( m.test( i ) )
+        if( !m.test( i ) )
         {
-            r.as_run()[i] = a.as_run()[i];
+            r.as_run()[i] = b.as_run()[i];
         }
     }
     return r;
 }
 
 /// Where each element is a NaN, as `kl::is_nan`.
-mask is_nan<T>( const ref ndarray<T> a ) where T : floating
+mask<S...> is_nan<T, u64... S>( const ref ndarray<T, S...> a ) where T : floating
 {
-    mask r = mask( a.shape() );
+    mask<S...> r = mask<S...>();
     for( u64 i : 0..a.size() )
     {
         r.assign( i, kl::is_nan( cast<f64>( a.as_run()[i] ) ) );
@@ -1669,9 +1805,9 @@ mask is_nan<T>( const ref ndarray<T> a ) where T : floating
 }
 
 /// Where each element is an infinity, as `kl::is_inf`.
-mask is_inf<T>( const ref ndarray<T> a ) where T : floating
+mask<S...> is_inf<T, u64... S>( const ref ndarray<T, S...> a ) where T : floating
 {
-    mask r = mask( a.shape() );
+    mask<S...> r = mask<S...>();
     for( u64 i : 0..a.size() )
     {
         r.assign( i, kl::is_inf( cast<f64>( a.as_run()[i] ) ) );
@@ -1679,163 +1815,155 @@ mask is_inf<T>( const ref ndarray<T> a ) where T : floating
     return r;
 }
 
+// `src` into `dest`, of one size; a plain copy, so no read of `dest` keeps its old elements alive.
+private void copy_into<T>( ref T[] dest, const ref T[] src ) where T : copyable
+{
+    if( src.size != dest.size )
+    {
+        panic( "the shapes differ" );
+    }
+    for( u64 i : 0..src.size )
+    {
+        dest[i] = src[i];
+    }
+}
 // The scalar maths of `kl::math` over each element, for float elements: `kl::exp( a )`.
 
 /// `kl::sqrt` of each element.
-ndarray<T> sqrt<T>( const ref ndarray<T> a ) where T : floating
+ndarray<T, S...> sqrt<T, u64... S>( const ref ndarray<T, S...> a ) where T : floating
 {
     return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::sqrt( cast<f64>( x ) ) ); } );
 }
 
 /// `kl::exp` of each element.
-ndarray<T> exp<T>( const ref ndarray<T> a ) where T : floating
+ndarray<T, S...> exp<T, u64... S>( const ref ndarray<T, S...> a ) where T : floating
 {
     return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::exp( cast<f64>( x ) ) ); } );
 }
 
 /// `kl::expm1` of each element.
-ndarray<T> expm1<T>( const ref ndarray<T> a ) where T : floating
+ndarray<T, S...> expm1<T, u64... S>( const ref ndarray<T, S...> a ) where T : floating
 {
     return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::expm1( cast<f64>( x ) ) ); } );
 }
 
 /// `kl::log` of each element.
-ndarray<T> log<T>( const ref ndarray<T> a ) where T : floating
+ndarray<T, S...> log<T, u64... S>( const ref ndarray<T, S...> a ) where T : floating
 {
     return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::log( cast<f64>( x ) ) ); } );
 }
 
 /// `kl::log1p` of each element.
-ndarray<T> log1p<T>( const ref ndarray<T> a ) where T : floating
+ndarray<T, S...> log1p<T, u64... S>( const ref ndarray<T, S...> a ) where T : floating
 {
     return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::log1p( cast<f64>( x ) ) ); } );
 }
 
 /// `kl::log2` of each element.
-ndarray<T> log2<T>( const ref ndarray<T> a ) where T : floating
+ndarray<T, S...> log2<T, u64... S>( const ref ndarray<T, S...> a ) where T : floating
 {
     return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::log2( cast<f64>( x ) ) ); } );
 }
 
 /// `kl::log10` of each element.
-ndarray<T> log10<T>( const ref ndarray<T> a ) where T : floating
+ndarray<T, S...> log10<T, u64... S>( const ref ndarray<T, S...> a ) where T : floating
 {
     return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::log10( cast<f64>( x ) ) ); } );
 }
 
 /// `kl::sin` of each element.
-ndarray<T> sin<T>( const ref ndarray<T> a ) where T : floating
+ndarray<T, S...> sin<T, u64... S>( const ref ndarray<T, S...> a ) where T : floating
 {
     return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::sin( cast<f64>( x ) ) ); } );
 }
 
 /// `kl::cos` of each element.
-ndarray<T> cos<T>( const ref ndarray<T> a ) where T : floating
+ndarray<T, S...> cos<T, u64... S>( const ref ndarray<T, S...> a ) where T : floating
 {
     return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::cos( cast<f64>( x ) ) ); } );
 }
 
 /// `kl::tan` of each element.
-ndarray<T> tan<T>( const ref ndarray<T> a ) where T : floating
+ndarray<T, S...> tan<T, u64... S>( const ref ndarray<T, S...> a ) where T : floating
 {
     return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::tan( cast<f64>( x ) ) ); } );
 }
 
 /// `kl::asin` of each element.
-ndarray<T> asin<T>( const ref ndarray<T> a ) where T : floating
+ndarray<T, S...> asin<T, u64... S>( const ref ndarray<T, S...> a ) where T : floating
 {
     return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::asin( cast<f64>( x ) ) ); } );
 }
 
 /// `kl::acos` of each element.
-ndarray<T> acos<T>( const ref ndarray<T> a ) where T : floating
+ndarray<T, S...> acos<T, u64... S>( const ref ndarray<T, S...> a ) where T : floating
 {
     return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::acos( cast<f64>( x ) ) ); } );
 }
 
 /// `kl::atan` of each element.
-ndarray<T> atan<T>( const ref ndarray<T> a ) where T : floating
+ndarray<T, S...> atan<T, u64... S>( const ref ndarray<T, S...> a ) where T : floating
 {
     return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::atan( cast<f64>( x ) ) ); } );
 }
 
 /// `kl::sinh` of each element.
-ndarray<T> sinh<T>( const ref ndarray<T> a ) where T : floating
+ndarray<T, S...> sinh<T, u64... S>( const ref ndarray<T, S...> a ) where T : floating
 {
     return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::sinh( cast<f64>( x ) ) ); } );
 }
 
 /// `kl::cosh` of each element.
-ndarray<T> cosh<T>( const ref ndarray<T> a ) where T : floating
+ndarray<T, S...> cosh<T, u64... S>( const ref ndarray<T, S...> a ) where T : floating
 {
     return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::cosh( cast<f64>( x ) ) ); } );
 }
 
 /// `kl::tanh` of each element.
-ndarray<T> tanh<T>( const ref ndarray<T> a ) where T : floating
+ndarray<T, S...> tanh<T, u64... S>( const ref ndarray<T, S...> a ) where T : floating
 {
     return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::tanh( cast<f64>( x ) ) ); } );
 }
 
 /// `kl::floor` of each element.
-ndarray<T> floor<T>( const ref ndarray<T> a ) where T : floating
+ndarray<T, S...> floor<T, u64... S>( const ref ndarray<T, S...> a ) where T : floating
 {
     return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::floor( cast<f64>( x ) ) ); } );
 }
 
 /// `kl::ceil` of each element.
-ndarray<T> ceil<T>( const ref ndarray<T> a ) where T : floating
+ndarray<T, S...> ceil<T, u64... S>( const ref ndarray<T, S...> a ) where T : floating
 {
     return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::ceil( cast<f64>( x ) ) ); } );
 }
 
 /// `kl::trunc` of each element.
-ndarray<T> trunc<T>( const ref ndarray<T> a ) where T : floating
+ndarray<T, S...> trunc<T, u64... S>( const ref ndarray<T, S...> a ) where T : floating
 {
     return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::trunc( cast<f64>( x ) ) ); } );
 }
 
 /// `kl::round` of each element.
-ndarray<T> round<T>( const ref ndarray<T> a ) where T : floating
+ndarray<T, S...> round<T, u64... S>( const ref ndarray<T, S...> a ) where T : floating
 {
     return a.map( fn[]( T x ) { return kernel::narrowed<T>( kl::round( cast<f64>( x ) ) ); } );
 }
 
-/// `kl::pow` of each element of `a` and the matching one of `b`.
-ndarray<T> pow<T>( const ref ndarray<T> a, const ref ndarray<T> b ) where T : floating
+/// `kl::pow` of each element and the matching one of `b`, the two broadcast.
+ndarray<T, broadcast( S, U )...> pow<T, u64... S, u64... U>( const ref ndarray<T, S...> a, const ref ndarray<T, U...> b ) where T : floating
 {
-    if( !kernel::equal( a.shape(), b.shape() ) )
-    {
-        panic( "the shapes differ" );
-    }
-
-    return a.map( b, fn[]( T x, T y ) { return kernel::narrowed<T>( kl::pow( cast<f64>( x ), cast<f64>( y ) ) ); } );
+    return a.zipped( b, fn[]( T x, T y ) { return kernel::narrowed<T>( kl::pow( cast<f64>( x ), cast<f64>( y ) ) ); } );
 }
 
 /// `kl::pow` of each element and `s`: `kl::pow( a, 2.0 )`.
-ndarray<T> pow<T>( const ref ndarray<T> a, T s ) where T : floating
+ndarray<T, S...> pow<T, u64... S>( const ref ndarray<T, S...> a, T s ) where T : floating
 {
     return a.map( fn[ s ]( T x ) { return kernel::narrowed<T>( kl::pow( cast<f64>( x ), cast<f64>( s ) ) ); } );
 }
 
-/// `kl::atan2` of each element of `y` and the matching one of `x`.
-ndarray<T> atan2<T>( const ref ndarray<T> y, const ref ndarray<T> x ) where T : floating
+/// `kl::atan2` of each element of `y` and the matching one of `x`, the two broadcast.
+ndarray<T, broadcast( S, U )...> atan2<T, u64... S, u64... U>( const ref ndarray<T, S...> y, const ref ndarray<T, U...> x ) where T : floating
 {
-    if( !kernel::equal( y.shape(), x.shape() ) )
-    {
-        panic( "the shapes differ" );
-    }
-
-    return y.map( x, fn[]( T b, T a ) { return kernel::narrowed<T>( kl::atan2( cast<f64>( b ), cast<f64>( a ) ) ); } );
+    return y.zipped( x, fn[]( T b, T a ) { return kernel::narrowed<T>( kl::atan2( cast<f64>( b ), cast<f64>( a ) ) ); } );
 }
 
-// The number of elements `shape` holds.
-private u64 count( const ref u64[] shape )
-{
-    u64 n = 1;
-    for( u64 d : shape )
-    {
-        n *= d;
-    }
-    return n;
-}

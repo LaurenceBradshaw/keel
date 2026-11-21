@@ -1,0 +1,17 @@
+// The inline limit is 2048 bytes: 256 `f64`s and 2048 `u8`s are inline, 257 `f64`s on the heap.
+import t::console;
+
+i32 main()
+{
+    buffer<f64, 256> at = buffer<f64, 256>( 256, 0.5 );
+    at[255] = 2.0;
+    t::print( at[0] + at[255] );
+
+    buffer<f64, 257> past = buffer<f64, 257>( 257, 0.5 );
+    past[256] = 3.0;
+    t::print( past[0] + past[256] );
+
+    buffer<u8, 2048> bytes = buffer<u8, 2048>( 2048, 1 );
+    t::print( bytes.as_run().size + cast<u64>( bytes[2047] ) );
+    return 0;
+}

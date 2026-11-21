@@ -1,31 +1,31 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-import list;
 import map;
 import math;
 import ndarray;
 import optional;
 
-/// A least-squares fit of `y` on the columns of a design `x`, as statsmodels' `OLS` and `WLS`:
-/// `regression::ols( x, y )` or `regression::wls( x, y, w )`, then the coefficients, residuals,
+/// A least-squares fit of `y` on the `K` columns of an `N` by `K` design `x`, as statsmodels'
+/// `OLS` and `WLS`: `kl::ols( x, y )` or `kl::wls( x, y, w )`, then the coefficients, residuals,
 /// scale, leverage, Cook's distance and covariances, and from a covariance the standard errors,
-/// p-values and intervals.
+/// p-values and intervals. A design of `ndarray<f64, dyn, 3>` gives coefficients of `ndarray<f64, 3>`
+/// and covariances of `ndarray<f64, 3, 3>`.
 ///
 /// The p-values and intervals take the coefficients as normal, as statsmodels does for a robust
 /// covariance such as `cluster_cov`. For `cov()` statsmodels uses Student's t with `df_resid()`
 /// degrees of freedom instead, which kl does not have, so there they differ for a small sample.
-class regression
+class regression<u64 N(dyn), u64 K(dyn)> where N >= K
 {
-    ndarray<f64> wx_;
-    ndarray<f64> coef_;
-    ndarray<f64> resid_;
-    ndarray<f64> wresid_;
-    f64          scale_;
+    ndarray<f64, N, K> wx_;
+    ndarray<f64, K>    coef_;
+    ndarray<f64, N>    resid_;
+    ndarray<f64, N>    wresid_;
+    f64              scale_;
 
-    private regression( move ndarray<f64> wx, move ndarray<f64> b, move ndarray<f64> e, move ndarray<f64> we )
+    private regression( move ndarray<f64, N, K> wx, move ndarray<f64, K> b, move ndarray<f64, N> e, move ndarray<f64, N> we )
     {
-        f64 df  = cast<f64>( wx.shape()[0] - wx.shape()[1] );
+        f64 df  = cast<f64>( N - K );
         scale_  = ( we * we ).sum() / df;
         wx_     = move wx;
         coef_   = move b;
@@ -33,55 +33,46 @@ class regression
         wresid_ = move we;
     }
 
-    /// The fit of rank 1 `y` on rank 2 `x`, n by k with n >= k, each row weighted by the matching
-    /// one of rank 1 `w`, by `kl::lstsq` on the rows scaled by the square roots of the weights;
-    /// `none` when `x` lacks full column rank.
-    ///
-    /// ### Panics
-    ///
-    /// If `x` has more columns than rows, or `y` or `w` is not one element per row of `x`.
-    public static optional<regression> wls( const ref ndarray<f64> x, const ref ndarray<f64> y, const ref ndarray<f64> w )
+    /// The fit of `y` on `x`, each row weighted by the matching one of `w`, by `kl::lstsq` on the
+    /// rows scaled by the square roots of the weights; `none` when `x` lacks full column rank.
+    /// `kl::wls( x, y, w )` writes it without the sizes.
+    public static optional<regression<N, K>> wls( const ref ndarray<f64, N, K> x, const ref ndarray<f64, N> y, const ref ndarray<f64, N> w )
     {
-        if( x.rank() != 2 || y.rank() != 1 || w.rank() != 1 || y.size() != x.shape()[0] || w.size() != y.size() )
-        {
-            panic( "the shapes differ" );
-        }
-
-        ndarray<f64>           root = kl::sqrt( w );
-        ndarray<f64>           wx   = x * root.reshaped( y.size(), 1 );
-        ndarray<f64>           wy   = y * root;
-        optional<ndarray<f64>> fit  = kl::lstsq( wx, wy );
+        ndarray<f64, N>              root = kl::sqrt( w );
+        ndarray<f64, N, K>           wx   = x * root.expanded<1>();
+        ndarray<f64, N>              wy   = y * root;
+        optional<ndarray<f64, K>>    fit  = kl::lstsq( wx, wy );
         if( kl::is_none( fit ) )
         {
             return optional::none;
         }
 
-        ndarray<f64> b  = kl::unwrap( move fit );
-        ndarray<f64> e  = y - x.matmul( b );
-        ndarray<f64> we = wy - wx.matmul( b );
-        return optional::some( regression( move wx, move b, move e, move we ) );
+        ndarray<f64, K> b  = kl::unwrap( move fit );
+        ndarray<f64, N> e  = y - kl::matmul( x, b );
+        ndarray<f64, N> we = wy - kl::matmul( wx, b );
+        return optional::some( regression<N, K>( move wx, move b, move e, move we ) );
     }
 
     /// `wls` with every weight 1.
-    public static optional<regression> ols( const ref ndarray<f64> x, const ref ndarray<f64> y )
+    public static optional<regression<N, K>> ols( const ref ndarray<f64, N, K> x, const ref ndarray<f64, N> y )
     {
-        return wls( x, y, ndarray<f64>::ones( y.size() ) );
+        return wls( x, y, ndarray<f64, N>( 1.0 ) );
     }
 
     /// The coefficients, one per column of the design.
-    public const ref ndarray<f64> coef() const
+    public const ref ndarray<f64, K> coef() const
     {
         return coef_;
     }
 
     /// `y` less the fitted values, unweighted.
-    public const ref ndarray<f64> resid() const
+    public const ref ndarray<f64, N> resid() const
     {
         return resid_;
     }
 
     /// The residuals scaled by the square roots of the weights.
-    public const ref ndarray<f64> wresid() const
+    public const ref ndarray<f64, N> wresid() const
     {
         return wresid_;
     }
@@ -95,44 +86,36 @@ class regression
     /// The rows less the columns of the design.
     public u64 df_resid() const
     {
-        return wx_.shape()[0] - wx_.shape()[1];
+        return N - K;
     }
 
     /// Each row's leverage: the diagonal of the projection onto the weighted design's columns.
-    public ndarray<f64> leverage() const
+    public ndarray<f64, N> leverage() const
     {
         return kl::hat_diagonal( wx_ );
     }
 
     /// Each row's Cook's distance over the weighted design, as statsmodels' `cooks_distance`.
-    public ndarray<f64> cooks_distance() const
+    public ndarray<f64, N> cooks_distance() const
     {
-        ndarray<f64> h = leverage();
-        f64          k = cast<f64>( wx_.shape()[1] );
+        ndarray<f64, N> h = leverage();
+        f64           k = cast<f64>( K );
         return wresid_ * wresid_ / ( k * scale_ ) * h / ( ( 1.0 - h ) * ( 1.0 - h ) );
     }
 
-    /// The coefficients' covariance, k by k, `scale() (X^T X)^-1` over the weighted design `X`.
-    public ndarray<f64> cov() const
+    /// The coefficients' covariance, `K` by `K`, `scale() (X^T X)^-1` over the weighted design `X`.
+    public ndarray<f64, K, K> cov() const
     {
         return bread() * scale_;
     }
 
-    /// The cluster-robust covariance, k by k, as statsmodels' `cov_type="cluster"`: rows with the
-    /// same label in `groups` are one cluster, and the sandwich takes statsmodels' correction,
-    /// G / ( G - 1 ) * ( n - 1 ) / ( n - k ) for G clusters.
-    ///
-    /// ### Panics
-    ///
-    /// If `groups` is not one label per row.
-    public ndarray<f64> cluster_cov( const ref u64[] groups ) const
+    /// The cluster-robust covariance, `K` by `K`, as statsmodels' `cov_type="cluster"`: rows with
+    /// the same label in `groups`, one per row, are one cluster, and the sandwich takes
+    /// statsmodels' correction, G / ( G - 1 ) * ( n - 1 ) / ( n - k ) for G clusters.
+    public ndarray<f64, K, K> cluster_cov( const ref ndarray<u64, N> groups ) const
     {
-        u64 n = wx_.shape()[0];
-        u64 k = wx_.shape()[1];
-        if( groups.size != n )
-        {
-            panic( "the shapes differ" );
-        }
+        u64 n = N;
+        u64 k = K;
 
         map<u64, u64> index = map<u64, u64>();
         for( u64 g : groups )
@@ -143,7 +126,7 @@ class regression
             }
         }
         // Each cluster's score sum: its rows of the weighted design times their residuals.
-        ndarray<f64> score = ndarray<f64>::zeros( index.size(), k );
+        ndarray<f64, dyn, K> score = kl::zeros( index.size(), K );
         for( u64 i : 0..n )
         {
             u64 c = index[groups[i]];
@@ -153,43 +136,55 @@ class regression
             }
         }
 
-        ndarray<f64> b = bread();
-        f64          g = cast<f64>( index.size() );
-        f64 correction = g / ( g - 1.0 ) * ( cast<f64>( n ) - 1.0 ) / cast<f64>( n - k );
-        return b.matmul( score.transposed().matmul( score ) ).matmul( b ) * correction;
+        ndarray<f64, K, K> b = bread();
+        f64              g = cast<f64>( index.size() );
+        f64 correction     = g / ( g - 1.0 ) * ( cast<f64>( n ) - 1.0 ) / cast<f64>( n - k );
+        return kl::matmul( kl::matmul( b, kl::matmul( score.transposed(), score ) ), b ) * correction;
     }
 
     /// The standard errors from covariance `cov`, the square roots of its diagonal.
-    public ndarray<f64> std_errors( const ref ndarray<f64> cov ) const
+    public ndarray<f64, K> std_errors( const ref ndarray<f64, K, K> cov ) const
     {
-        return kl::sqrt( cov.diagonal() );
+        return kl::sqrt( kl::diagonal( cov ) );
     }
 
     /// Each coefficient's two-sided p-value against 0 under covariance `cov`, from the normal.
-    public ndarray<f64> p_values( const ref ndarray<f64> cov ) const
+    public ndarray<f64, K> p_values( const ref ndarray<f64, K, K> cov ) const
     {
         return ( coef_ / std_errors( cov ) ).abs().map( fn[]( f64 z ) { return 2.0 * kl::normal_cdf( -z ); } );
     }
 
-    /// The `1 - alpha` interval of each coefficient under covariance `cov`, from the normal, k by
-    /// 2: each row its low and high ends, as statsmodels' `conf_int( alpha )`.
-    public ndarray<f64> conf_int( const ref ndarray<f64> cov, f64 alpha = 0.05 ) const
+    /// The `1 - alpha` interval of each coefficient under covariance `cov`, from the normal, `K`
+    /// by 2: each row its low and high ends, as statsmodels' `conf_int( alpha )`.
+    public ndarray<f64, K, 2> conf_int( const ref ndarray<f64, K, K> cov, f64 alpha = 0.05 ) const
     {
-        ndarray<f64> half = std_errors( cov ) * kl::normal_quantile( 1.0 - alpha / 2.0 );
-        list<f64>    ends = list<f64>::with_capacity( 2 * coef_.size() );
-        for( u64 j : 0..coef_.size() )
+        ndarray<f64, K>    half = std_errors( cov ) * kl::normal_quantile( 1.0 - alpha / 2.0 );
+        ndarray<f64, K, 2> ends = ndarray<f64, K, 2>( 0.0 );
+        for( u64 j : 0..K )
         {
-            ends.push( coef_[j] - half[j] );
-            ends.push( coef_[j] + half[j] );
+            ends[j, 0] = coef_[j] - half[j];
+            ends[j, 1] = coef_[j] + half[j];
         }
-        return ndarray<f64>( ends.as_run(), coef_.size(), 2 );
+        return ends;
     }
 
     // (X^T X)^-1 = R^-1 R^-T over the weighted design; R's diagonal has no zero, or there would
     // be no fit.
-    private ndarray<f64> bread() const
+    private ndarray<f64, K, K> bread() const
     {
-        ndarray<f64> ri = kl::unwrap( kl::inverse( kl::qr( wx_ ).second ) );
-        return ri.matmul( ri.transposed() );
+        ndarray<f64, K, K> ri = kl::unwrap( kl::inverse( kl::qr( wx_ ).second ) );
+        return kl::matmul( ri, ri.transposed() );
     }
 };
+
+/// `regression<N, K>::wls( x, y, w )`, its sizes from the arguments.
+optional<regression<N, K>> wls<u64 N, u64 K>( const ref ndarray<f64, N, K> x, const ref ndarray<f64, N> y, const ref ndarray<f64, N> w ) where N >= K
+{
+    return regression<N, K>::wls( x, y, w );
+}
+
+/// `regression<N, K>::ols( x, y )`, its sizes from the arguments.
+optional<regression<N, K>> ols<u64 N, u64 K>( const ref ndarray<f64, N, K> x, const ref ndarray<f64, N> y ) where N >= K
+{
+    return regression<N, K>::ols( x, y );
+}

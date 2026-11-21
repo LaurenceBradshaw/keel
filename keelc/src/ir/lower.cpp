@@ -457,11 +457,18 @@ private:
 
     // D74: a walk being inlined. Its code and the loop's body each read their own bindings and
     // receiver, so the two sets swap at every `yield` and back after it.
+    struct Dyn_size
+    {
+        Type_id parameter;
+        u32     element;
+        Place   at;
+    };
     struct Walk_context
     {
-        Bindings bindings;
-        Local_id receiver;
-        Node_id  receiver_declaration;
+        Bindings              bindings;
+        Local_id              receiver;
+        Node_id               receiver_declaration;
+        std::vector<Dyn_size> sizes;
     };
     struct Walk_frame
     {
@@ -596,14 +603,7 @@ private:
     std::vector<Loop_targets> loops_; // innermost last, so break and continue bind to it
     std::vector<Walk_frame>   walks_; // innermost last
 
-    // D90: where each of this instance's run-time sizes is read.
-    struct Dyn_size
-    {
-        Type_id parameter;
-        u32     element;
-        Place   at;
-    };
-    std::vector<Dyn_size> dyn_sizes_;
+    std::vector<Dyn_size> dyn_sizes_; // D90: where each of this instance's run-time sizes is read
 
     void read_sizes();
     // A size parameter's value here: its constant, or where its run-time value is.
@@ -6028,7 +6028,7 @@ void Lowering::lower_for( Node_id id )
 
 Lowering::Walk_context Lowering::current_context() const
 {
-    return { bindings_, receiver_, receiver_declaration_ };
+    return { bindings_, receiver_, receiver_declaration_, dyn_sizes_ };
 }
 
 void Lowering::enter( Walk_context context )
@@ -6036,6 +6036,7 @@ void Lowering::enter( Walk_context context )
     bindings_             = std::move( context.bindings );
     receiver_             = context.receiver;
     receiver_declaration_ = context.receiver_declaration;
+    dyn_sizes_            = std::move( context.sizes );
 }
 
 Lowering::Walk_frame* Lowering::running_walk()
@@ -6100,10 +6101,25 @@ void Lowering::lower_walk( Node_id id )
 
     drops_.end_statement( span );
 
+    // The walk's run-time sizes are its container's.
+    std::vector<Dyn_size> sizes;
+    for( const Size_slot& slot : dyn_slots( ast_, types_, walk, bound ) )
+    {
+        assert( slot.of_type && "a walk declares no sizes of its own" );
+        const Type_id  word = types_.table().integer( 64, false );
+        const Local_id index =
+            builder_.into_temp( use( constant( literal_pool_.add_integer( sizes.size() ), word ) ), word, span );
+        const Place stored = builder_.field(
+            builder_.deref( builder_.place( receiver ) ),
+            ast_.sizes_member( types_.table().get( types_.table().get( builder_.type_of( receiver ) ).element ).declaration )
+        );
+        sizes.push_back( { slot.parameter, slot.element, builder_.index( stored, index ) } );
+    }
+
     walks_.push_back( Walk_frame {
         .walk   = walk,
         .loop   = id,
-        .inside = { bound, receiver, receiver_param },
+        .inside = { bound, receiver, receiver_param, std::move( sizes ) },
         .caller = current_context(),
         .exit   = Block_id {},
         .depth  = drops_.depth(),
@@ -9225,6 +9241,19 @@ TEST_CASE( "lower_inlines_a_walk", "[ir][lower][loops][walk]" )
     REQUIRE( main != p.functions.end() );
     REQUIRE( main->walked.size() == 1 );
     REQUIRE( verify( *main ).empty() );
+}
+
+TEST_CASE( "lower_reads_a_walks_run_time_sizes_from_its_container", "[ir][lower][loops][walk]" )
+{
+    // The walk's `N` is its container's; read from the caller's, it had no source, and lowering
+    // asserted.
+    Lowered p( "class Count<u64 N(dyn)> { i32 a_; public Count( N n ) { a_ = 0; } "
+               "public void operator:( u64 item ) const { for( u64 i : 0..N ) { yield( i ); } } };\n"
+               "u64 total<u64 N>( const ref Count<N> c ) { u64 s = 0; for( u64 x : c ) { s += x; } return s; }\n"
+               "i32 main() { u64 n = 4; Count<dyn> c = Count<dyn>( n ); return cast<i32>( total( c ) ); }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
 }
 
 TEST_CASE( "lower_emits_no_markers_for_a_scope_with_no_declarations", "[ir][lower][storage]" )

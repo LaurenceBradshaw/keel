@@ -6,7 +6,6 @@
 // a pivot's corner, which does not name the column key, and bools, written `true` and `false`.
 import kl::dataframe;
 import kl::list;
-import kl::mask;
 import kl::math;
 import kl::ndarray;
 import kl::string;
@@ -71,7 +70,7 @@ private void printing_as_pandas( ref kl::test::context c )
     c.check_eq( f.to_string(), "            a             b         c             d\n0  10000000.0  1.000000e+12  3.141593  1.000000e-07\n1         2.0  3.000000e+00  1.000000  1.000000e+00" );
 
     kl::dataframe long = kl::dataframe();
-    long.insert( "abcd", kl::series( kl::ndarray<i64>::arange( 0, 70 ) ) );
+    long.insert( "abcd", kl::series( kl::arange<i64>( 0, 70 ) ) );
     c.check_eq( long.to_string(), "    abcd\n0      0\n1      1\n2      2\n3      3\n4      4\n..   ...\n65    65\n66    66\n67    67\n68    68\n69    69\n\n[70 rows x 1 columns]" );
 
     c.check_eq( kl::dataframe().to_string(), "Empty DataFrame\nColumns: []\nIndex: []" );
@@ -393,7 +392,7 @@ private void times_compare_sort_and_group( ref kl::test::context c )
 {
     kl::dataframe df = trips();
     kl::timestamp cut = kl::date( 2025, 1, 1 ).at();
-    kl::mask before = df["start"].less( cut );
+    kl::mask<dyn> before = df["start"].less( cut );
     c.check( !before.test( 0 ) && before.test( 1 ) && !before.test( 3 ) && before.test( 4 ) );
     c.check_eq( df["start"].greater_equal( cut ).count(), 2 );
     c.check( df["start"].differs( cut ).test( 3 ) );
@@ -605,7 +604,7 @@ private void masks_and_rounding( ref kl::test::context c )
     c.check_eq( one( "r", kl::series( [ 15.0, 25.0, 34.0 ] ).round( -1 ) ).to_string(), "      r\n0  20.0\n1  20.0\n2  30.0" );
     c.check_eq( df.round( 0 )["j"].i64s()[2], 2 );
     c.expect_panic( "the series hold dtypes that do not compare", fn[ df ]() { _ = df["x"].isin( df["k"] ); } );
-    c.expect_panic( "the mask's size is not the series'", fn[ df ]() { _ = df["x"].kept( kl::mask( 2 ) ); } );
+    c.expect_panic( "the mask's size is not the series'", fn[ df ]() { _ = df["x"].kept( kl::cleared<dyn>( 2 ) ); } );
 }
 
 private void reshaping( ref kl::test::context c )

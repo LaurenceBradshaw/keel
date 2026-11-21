@@ -1,7 +1,6 @@
 // The kl package's unit tests: every test in this program's modules, run by `kl::test::run`.
 import kl::test::run;
 import algorithm_tests;
-import array_tests;
 import bitset_tests;
 import command_line_tests;
 import dataframe_tests;
@@ -11,9 +10,7 @@ import hash_control_tests;
 import kernels_tests;
 import list_tests;
 import map_tests;
-import mask_tests;
 import math_tests;
-import matrix_tests;
 import ndarray_tests;
 import os_tests;
 import ordered_map_tests;

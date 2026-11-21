@@ -490,7 +490,7 @@ class box<T>
 };
 
 /// `N` elements of `T`, owned: held inline when `N` is a constant and `T` a number of which `N` fill
-/// at most 4096 bytes, and on the heap otherwise. Dropping it drops the elements and frees what
+/// at most 2048 bytes, and on the heap otherwise. Dropping it drops the elements and frees what
 /// it allocated.
 ///
 /// `buffer<f64, dyn>` takes its count at run time.

@@ -1,4 +1,4 @@
-// A prelude `buffer` on the heap: a count past 4096 bytes, a run-time count, a count of 0, and
+// A prelude `buffer` on the heap: a count past 2048 bytes, a run-time count, a count of 0, and
 // elements that are not numbers. Moving one moves its pointer, and dropping it frees once.
 import t::console;
 
