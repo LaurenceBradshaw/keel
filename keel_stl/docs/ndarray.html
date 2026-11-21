@@ -39,6 +39,7 @@
 <li><a href="#qr"><code>qr</code></a> <span class="kind">function</span></li>
 <li><a href="#lstsq"><code>lstsq</code></a> <span class="kind">function</span></li>
 <li><a href="#hat_diagonal"><code>hat_diagonal</code></a> <span class="kind">function</span></li>
+<li><a href="#interp"><code>interp</code></a> <span class="kind">function</span></li>
 <li class="divider">Element-wise choices</li>
 <li><a href="#minimum"><code>minimum</code></a> <span class="kind">function</span></li>
 <li><a href="#maximum"><code>maximum</code></a> <span class="kind">function</span></li>
@@ -597,6 +598,20 @@ nothing, and an infinity only to itself.</p>
 <p>The elements <code>m</code> sets, row-major, as rank 1.</p>
 </div>
 </div>
+<div class="group" id="ndarray.taken">
+<pre class="signature"><a class="anchor" href="#ndarray.taken" aria-label="Link to taken">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T, I...&gt; <span class="fn">taken</span>&lt;<a class="prim" href="prelude.html#u64">u64</a>... I&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#u64">u64</a>, I...&gt; at ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The elements at the flat indices <code>at</code>, in its shape: numpy's <code>take</code>, and <code>a[at]</code> for rank 1.
+Panics when an index is out of range.</p>
+</div>
+</div>
+<div class="group" id="ndarray.put">
+<pre class="signature"><a class="anchor" href="#ndarray.put" aria-label="Link to put">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">put</span>&lt;<a class="prim" href="prelude.html#u64">u64</a>... I&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;<a class="prim" href="prelude.html#u64">u64</a>, I...&gt; at, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T, I...&gt; values )</code></pre>
+<div class="doc">
+<p>Sets the element at each flat index <code>at[k]</code> to <code>values[k]</code>, a later <code>k</code> winning: numpy's
+<code>put</code>, and <code>a[at] = values</code> for rank 1. Panics when an index is out of range.</p>
+</div>
+</div>
 <h3>Sorting and searching</h3>
 <div class="group" id="ndarray.sorted">
 <pre class="signature"><a class="anchor" href="#ndarray.sorted" aria-label="Link to sorted">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T, S...&gt; <span class="fn">sorted</span>() <span class="kw">const</span></code></pre>
@@ -773,6 +788,93 @@ none.</p>
 <pre class="signature"><a class="anchor" href="#ndarray.std" aria-label="Link to std">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T, dropped&lt;dyn&gt;(S)...&gt; <span class="fn">std</span>( <a class="prim" href="prelude.html#u64">u64</a> axis ) <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
 <div class="doc">
 <p>The standard deviations along <code>axis</code>.</p>
+</div>
+</div>
+<h3>Skipping NaNs</h3>
+<div class="group" id="ndarray.nansum">
+<pre class="signature"><a class="anchor" href="#ndarray.nansum" aria-label="Link to nansum">#</a><code><span class="kw">public</span> T <span class="fn">nansum</span>() <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>numpy's <code>nansum</code> and the rest: each reads a NaN as absent, in the three forms of the
+reductions above.
+The total of the elements that are not NaN; 0 when none are.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.nansum" aria-label="Link to nansum">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T, dropped&lt;A&gt;(S)...&gt; <span class="fn">nansum</span>&lt;<a class="prim" href="prelude.html#u64">u64</a> A&gt;() <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The totals along axis <code>A</code>, skipping NaNs.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.nansum" aria-label="Link to nansum">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T, dropped&lt;dyn&gt;(S)...&gt; <span class="fn">nansum</span>( <a class="prim" href="prelude.html#u64">u64</a> axis ) <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The totals along <code>axis</code>, skipping NaNs.</p>
+</div>
+</div>
+<div class="group" id="ndarray.nanmean">
+<pre class="signature"><a class="anchor" href="#ndarray.nanmean" aria-label="Link to nanmean">#</a><code><span class="kw">public</span> T <span class="fn">nanmean</span>() <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The mean of the elements that are not NaN; a NaN when none are.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.nanmean" aria-label="Link to nanmean">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T, dropped&lt;A&gt;(S)...&gt; <span class="fn">nanmean</span>&lt;<a class="prim" href="prelude.html#u64">u64</a> A&gt;() <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The means along axis <code>A</code>, skipping NaNs.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.nanmean" aria-label="Link to nanmean">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T, dropped&lt;dyn&gt;(S)...&gt; <span class="fn">nanmean</span>( <a class="prim" href="prelude.html#u64">u64</a> axis ) <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The means along <code>axis</code>, skipping NaNs.</p>
+</div>
+</div>
+<div class="group" id="ndarray.nanvar">
+<pre class="signature"><a class="anchor" href="#ndarray.nanvar" aria-label="Link to nanvar">#</a><code><span class="kw">public</span> T <span class="fn">nanvar</span>() <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The variance of the elements that are not NaN; a NaN when none are.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.nanvar" aria-label="Link to nanvar">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T, dropped&lt;A&gt;(S)...&gt; <span class="fn">nanvar</span>&lt;<a class="prim" href="prelude.html#u64">u64</a> A&gt;() <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The variances along axis <code>A</code>, skipping NaNs.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.nanvar" aria-label="Link to nanvar">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T, dropped&lt;dyn&gt;(S)...&gt; <span class="fn">nanvar</span>( <a class="prim" href="prelude.html#u64">u64</a> axis ) <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The variances along <code>axis</code>, skipping NaNs.</p>
+</div>
+</div>
+<div class="group" id="ndarray.nanstd">
+<pre class="signature"><a class="anchor" href="#ndarray.nanstd" aria-label="Link to nanstd">#</a><code><span class="kw">public</span> T <span class="fn">nanstd</span>() <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The standard deviation of the elements that are not NaN, the square root of <code>nanvar()</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.nanstd" aria-label="Link to nanstd">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T, dropped&lt;A&gt;(S)...&gt; <span class="fn">nanstd</span>&lt;<a class="prim" href="prelude.html#u64">u64</a> A&gt;() <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The standard deviations along axis <code>A</code>, skipping NaNs.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.nanstd" aria-label="Link to nanstd">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T, dropped&lt;dyn&gt;(S)...&gt; <span class="fn">nanstd</span>( <a class="prim" href="prelude.html#u64">u64</a> axis ) <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The standard deviations along <code>axis</code>, skipping NaNs.</p>
+</div>
+</div>
+<div class="group" id="ndarray.nanmin">
+<pre class="signature"><a class="anchor" href="#ndarray.nanmin" aria-label="Link to nanmin">#</a><code><span class="kw">public</span> T <span class="fn">nanmin</span>() <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The smallest element that is not NaN; a NaN when none is. Panics when there are none.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.nanmin" aria-label="Link to nanmin">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T, dropped&lt;A&gt;(S)...&gt; <span class="fn">nanmin</span>&lt;<a class="prim" href="prelude.html#u64">u64</a> A&gt;() <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The smallest along axis <code>A</code>, skipping NaNs. Panics when the axis is empty.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.nanmin" aria-label="Link to nanmin">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T, dropped&lt;dyn&gt;(S)...&gt; <span class="fn">nanmin</span>( <a class="prim" href="prelude.html#u64">u64</a> axis ) <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The smallest along <code>axis</code>, skipping NaNs.</p>
+</div>
+</div>
+<div class="group" id="ndarray.nanmax">
+<pre class="signature"><a class="anchor" href="#ndarray.nanmax" aria-label="Link to nanmax">#</a><code><span class="kw">public</span> T <span class="fn">nanmax</span>() <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The largest element that is not NaN; a NaN when none is. Panics when there are none.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.nanmax" aria-label="Link to nanmax">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T, dropped&lt;A&gt;(S)...&gt; <span class="fn">nanmax</span>&lt;<a class="prim" href="prelude.html#u64">u64</a> A&gt;() <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The largest along axis <code>A</code>, skipping NaNs. Panics when the axis is empty.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#ndarray.nanmax" aria-label="Link to nanmax">#</a><code><span class="kw">public</span> <a class="type" href="#ndarray">ndarray</a>&lt;T, dropped&lt;dyn&gt;(S)...&gt; <span class="fn">nanmax</span>( <a class="prim" href="prelude.html#u64">u64</a> axis ) <span class="kw">const</span> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>The largest along <code>axis</code>, skipping NaNs.</p>
 </div>
 </div>
 <h3>Converting</h3>
@@ -1142,6 +1244,17 @@ exactly zero: <code>kl::lstsq( a, b )</code>. numpy's <code>lstsq</code> answers
 <div class="doc">
 <p>The diagonal of the projection onto <code>a</code>'s columns, <code>a (a^T a)^-1 a^T</code>, through QR: each row's
 leverage when <code>a</code> has full column rank. <code>kl::hat_diagonal( a )</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">interp</span></h2>
+<div class="group" id="interp">
+<pre class="signature"><a class="anchor" href="#interp" aria-label="Link to interp">#</a><code><a class="type" href="#ndarray">ndarray</a>&lt;T, N&gt; <span class="fn">interp</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N, <a class="prim" href="prelude.html#u64">u64</a> M&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T, N&gt; x, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T, M&gt; xp, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#ndarray">ndarray</a>&lt;T, M&gt; fp ) <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>Each <code>x</code> read off the line through the points <code>( xp[k], fp[k] )</code>: numpy's <code>interp</code>. <code>xp</code> must not
+decrease; an <code>x</code> outside it takes the end value, and a NaN stays one.</p>
+<p>Panics when <code>xp</code> is empty.</p>
 </div>
 </div>
 </section>

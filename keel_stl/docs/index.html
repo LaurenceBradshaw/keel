@@ -376,6 +376,9 @@ exactly zero: <code>kl::lstsq( a, b )</code>. numpy's <code>lstsq</code> answers
 <dt><a href="ndarray.html#hat_diagonal"><code>hat_diagonal</code></a> <span class="kind">function</span></dt>
 <dd>The diagonal of the projection onto <code>a</code>'s columns, <code>a (a^T a)^-1 a^T</code>, through QR: each row's
 leverage when <code>a</code> has full column rank. <code>kl::hat_diagonal( a )</code>.</dd>
+<dt><a href="ndarray.html#interp"><code>interp</code></a> <span class="kind">function</span></dt>
+<dd>Each <code>x</code> read off the line through the points <code>( xp[k], fp[k] )</code>: numpy's <code>interp</code>. <code>xp</code> must not
+decrease; an <code>x</code> outside it takes the end value, and a NaN stays one.</dd>
 </dl>
 <h4 class="divider">Element-wise choices</h4>
 <dl class="summaries">

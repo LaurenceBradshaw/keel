@@ -223,6 +223,105 @@ T variance<T>( const ref T[] a ) where T : floating
     return d[0];
 }
 
+/// `dest[o, i]` is the total of the `a[o, k, i]` that are not NaN; 0 when none are.
+///
+/// ### Panics
+///
+/// If the sizes differ.
+void nan_sum_axis<T>( ref T[] dest, const ref T[] a, u64 outer, u64 n, u64 inner ) where T : floating
+{
+    fits( dest, a, outer, n, inner );
+    for( u64 o : 0..outer )
+    {
+        for( u64 i : 0..inner )
+        {
+            dest[o * inner + i] = nan_total( a, o * n * inner + i, n, inner, 0, false );
+        }
+    }
+}
+
+/// `dest[o, i]` is the mean of the `a[o, k, i]` that are not NaN; a NaN when none are.
+///
+/// ### Panics
+///
+/// If the sizes differ.
+void nan_mean_axis<T>( ref T[] dest, const ref T[] a, u64 outer, u64 n, u64 inner ) where T : floating
+{
+    fits( dest, a, outer, n, inner );
+    for( u64 o : 0..outer )
+    {
+        for( u64 i : 0..inner )
+        {
+            u64 first           = o * n * inner + i;
+            dest[o * inner + i] = nan_total( a, first, n, inner, 0, false ) / present( a, first, n, inner );
+        }
+    }
+}
+
+/// `dest[o, i]` is the mean square distance of the `a[o, k, i]` that are not NaN from their mean;
+/// a NaN when none are.
+///
+/// ### Panics
+///
+/// If the sizes differ.
+void nan_variance_axis<T>( ref T[] dest, const ref T[] a, u64 outer, u64 n, u64 inner ) where T : floating
+{
+    fits( dest, a, outer, n, inner );
+    for( u64 o : 0..outer )
+    {
+        for( u64 i : 0..inner )
+        {
+            u64 first           = o * n * inner + i;
+            T   count           = present( a, first, n, inner );
+            T   mean            = nan_total( a, first, n, inner, 0, false ) / count;
+            dest[o * inner + i] = nan_total( a, first, n, inner, mean, true ) / count;
+        }
+    }
+}
+
+private void fits<T, U>( const ref U[] dest, const ref T[] a, u64 outer, u64 n, u64 inner )
+{
+    if( a.size != outer * n * inner || dest.size != outer * inner )
+    {
+        panic( "the shapes differ" );
+    }
+}
+
+// The pairwise total of `a[first + k * inner]` less `centre`, squared when `squared`, over the ones
+// that are not NaN, as numpy's nan reductions add with each NaN read as 0.
+private T nan_total<T>( const ref T[] a, u64 first, u64 n, u64 inner, T centre, bool squared ) where T : floating
+{
+    return pairwise(
+        0,
+        n,
+        fn[a, first, inner, centre, squared]( u64 k ) -> T
+        {
+            T x = a[first + k * inner];
+            if( x != x )
+            {
+                return 0;
+            }
+            T d = x - centre;
+            return squared ? d * d : d;
+        }
+    );
+}
+
+// How many `a[first + k * inner]` are not NaN.
+private T present<T>( const ref T[] a, u64 first, u64 n, u64 inner ) where T : floating
+{
+    u64 count = 0;
+    for( u64 k : 0..n )
+    {
+        T x = a[first + k * inner];
+        if( x == x )
+        {
+            count += 1;
+        }
+    }
+    return cast<T>( count );
+}
+
 // `at( k )` summed for `k` in `begin..end`, pairwise as numpy adds: a run of up to 128 in eight running
 // totals joined as a tree, a longer one as its halves' totals, split at a multiple of 8.
 T pairwise<T, F>( u64 begin, u64 end, F at ) where T : numeric, where F : fn( u64 ) -> T

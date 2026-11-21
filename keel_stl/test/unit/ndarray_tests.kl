@@ -2,7 +2,7 @@
 // products and linear algebra, comparing and masks, the three forms of each reduction, changing
 // the shape, slices and windows, sorting, converting, the scalar maths, walking, mixing constant
 // and `dyn` sizes, the integer operators, norms that neither overflow nor underflow, and masks at
-// the word edges.
+// the word edges; the NaN-skipping reductions, gathering and putting by index, and interp.
 import kl::math;
 import kl::ndarray;
 import kl::optional;
@@ -544,4 +544,80 @@ private void masks( ref kl::test::context c )
             _         = kl::cleared( two ) & kl::cleared( three );
         }
     );
+}
+
+// Each NaN reduction against numpy's, in the three forms, with an all-NaN column.
+private void nan_reductions( ref kl::test::context c )
+{
+    kl::ndarray<f64, 2, 3> a = kl::of( [ [ 1.0, kl::nan(), 3.0 ], [ kl::nan(), kl::nan(), 6.0 ] ] );
+    c.check_eq( a.nansum(), 10.0 );
+    c.check( a.nansum<0>() == kl::of( [ 1.0, 0.0, 9.0 ] ) );
+    c.check( a.nansum( 1 ) == kl::of( [ 4.0, 6.0 ] ).as_dyn() );
+
+    c.check_eq( a.nanmean(), 10.0 / 3.0 );
+    kl::ndarray<f64, 3> m = a.nanmean<0>();
+    c.check( m[0] == 1.0 && kl::is_nan( m[1] ) && m[2] == 4.5 );
+    c.check( a.nanmean<1>() == kl::of( [ 2.0, 6.0 ] ) );
+
+    c.check_eq( a.nanvar(), 4.222222222222222 );
+    c.check( a.nanvar<1>() == kl::of( [ 1.0, 0.0 ] ) );
+    c.check( a.nanstd( 1 ) == kl::of( [ 1.0, 0.0 ] ).as_dyn() );
+
+    c.check_eq( a.nanmin(), 1.0 );
+    kl::ndarray<f64, 3> lo = a.nanmin<0>();
+    c.check( lo[0] == 1.0 && kl::is_nan( lo[1] ) && lo[2] == 3.0 );
+    c.check( a.nanmax<1>() == kl::of( [ 3.0, 6.0 ] ) );
+
+    // A NaN first in the fold is passed over, not kept.
+    c.check_eq( kl::of( [ kl::nan(), 2.0, 1.0 ] ).nanmin(), 1.0 );
+    c.check_eq( kl::of( [ kl::nan(), 2.0, 1.0 ] ).nanmax(), 2.0 );
+    c.check_eq( kl::of( [ kl::nan(), kl::nan() ] ).nansum(), 0.0 );
+    c.check( kl::is_nan( kl::of( [ kl::nan(), kl::nan() ] ).nanvar() ) );
+}
+
+// Gathering by flat index into the index array's shape, and putting back, a later index winning.
+private void gather_scatter( ref kl::test::context c )
+{
+    kl::ndarray<i32, 2, 3> a = kl::of( [ [ 10, 11, 12 ], [ 13, 14, 15 ] ] );
+    c.check( a.taken( kl::ndarray<u64, 3>::of( [ 5, 0, 5 ] ) ) == kl::of( [ 15, 10, 15 ] ) );
+    kl::ndarray<i32, 2, 2> g = a.taken( kl::ndarray<u64, 2, 2>::of( [ 1, 2, 3, 4 ] ) );
+    c.check( g == kl::of( [ [ 11, 12 ], [ 13, 14 ] ] ) );
+
+    u64                   n  = 2;
+    kl::ndarray<u64, dyn> at = kl::zeros<u64, dyn>( n );
+    at[1]                    = 4;
+    c.check( a.taken( at ) == kl::of( [ 10, 14 ] ).as_dyn() );
+
+    a.put( kl::ndarray<u64, 3>::of( [ 0, 4, 0 ] ), kl::of( [ 1, 2, 3 ] ) );
+    c.check( a == kl::of( [ [ 3, 11, 12 ], [ 13, 2, 15 ] ] ) );
+
+    c.expect_panic( "out of bounds", fn[ a ]() { _ = a.taken( kl::ndarray<u64, 1>::of( [ 6 ] ) ); } );
+    c.expect_panic(
+        "`put` needs one `I[0]`",
+        fn[]()
+        {
+            u64                    three = 3;
+            kl::ndarray<i32, 2, 3> b     = kl::zeros( 2, 3 );
+            b.put( kl::zeros<u64, dyn>( three ), kl::of( [ 1, 2 ] ).as_dyn() );
+        }
+    );
+}
+
+// numpy's interp: the ends held, a point hit exactly, a NaN kept, and repeated points.
+private void interpolating( ref kl::test::context c )
+{
+    kl::ndarray<f64, 3> xp = kl::of( [ 1.0, 2.0, 4.0 ] );
+    kl::ndarray<f64, 3> fp = kl::of( [ 10.0, 20.0, 0.0 ] );
+    kl::ndarray<f64, 7> y  = kl::interp( kl::of( [ 0.0, 1.0, 1.5, 2.0, 3.0, 5.0, kl::nan() ] ), xp, fp );
+    kl::ndarray<f64, 6> want = kl::of( [ 10.0, 10.0, 15.0, 20.0, 10.0, 0.0 ] );
+    for( u64 i : 0..6 )
+    {
+        c.check_eq( y[i], want[i] );
+    }
+    c.check( kl::is_nan( y[6] ) );
+    c.check( kl::interp( kl::of( [ 1.0, 2.0 ] ), kl::of( [ 1.0, 1.0, 3.0 ] ), kl::of( [ 0.0, 5.0, 7.0 ] ) ) == kl::of( [ 5.0, 6.0 ] ) );
+    c.check( kl::interp( kl::of( [ -1.0, 9.0 ] ), kl::of( [ 2.0 ] ), kl::of( [ 7.0 ] ) ) == kl::of( [ 7.0, 7.0 ] ) );
+
+    u64 none = 0;
+    c.expect_panic( "interp needs at least one point", fn[ none ]() { _ = kl::interp( kl::of( [ 1.0 ] ), kl::zeros<f64, dyn>( none ), kl::zeros<f64, dyn>( none ) ); } );
 }

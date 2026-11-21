@@ -757,6 +757,28 @@ class ndarray<T, u64... S(dyn)> implements iterable<T> where T : numeric
         return r;
     }
 
+    /// The elements at the flat indices `at`, in its shape: numpy's `take`, and `a[at]` for rank 1.
+    /// Panics when an index is out of range.
+    public ndarray<T, I...> taken<u64... I>( const ref ndarray<u64, I...> at ) const
+    {
+        ndarray<T, I...> r = ndarray<T, I...>( 0 );
+        for( u64 k : 0..at.size() )
+        {
+            r.as_run()[k] = as_run()[at.as_run()[k]];
+        }
+        return r;
+    }
+
+    /// Sets the element at each flat index `at[k]` to `values[k]`, a later `k` winning: numpy's
+    /// `put`, and `a[at] = values` for rank 1. Panics when an index is out of range.
+    public void put<u64... I>( const ref ndarray<u64, I...> at, const ref ndarray<T, I...> values )
+    {
+        for( u64 k : 0..at.size() )
+        {
+            as_run()[at.as_run()[k]] = values.as_run()[k];
+        }
+    }
+
     /// --- Sorting and searching ---
     ///
     /// These read the elements flat, in row-major order. A NaN orders after every number.
@@ -1052,6 +1074,149 @@ class ndarray<T, u64... S(dyn)> implements iterable<T> where T : numeric
     {
         ndarray<T, dropped<dyn>( S )...> r = var( axis );
         kernel::map_into( ref r.as_run(), fn[]( T x ) { return cast<T>( kl::sqrt( cast<f64>( x ) ) ); } );
+        return r;
+    }
+
+    /// --- Skipping NaNs ---
+    ///
+    /// numpy's `nansum` and the rest: each reads a NaN as absent, in the three forms of the
+    /// reductions above.
+
+    /// The total of the elements that are not NaN; 0 when none are.
+    public T nansum() const where T : floating
+    {
+        T[1] d = [0];
+        kernel::nan_sum_axis( ref d, as_run(), 1, count(), 1 );
+        return d[0];
+    }
+
+    /// The totals along axis `A`, skipping NaNs.
+    public ndarray<T, dropped<A>( S )...> nansum<u64 A>() const where T : floating
+    {
+        ndarray<T, dropped<A>( S )...> r = ndarray<T, dropped<A>( S )...>( 0 );
+        kernel::nan_sum_axis( ref r.as_run(), as_run(), span( 0, A ), S[A], span( A + 1, S.size ) );
+        return r;
+    }
+
+    /// The totals along `axis`, skipping NaNs.
+    public ndarray<T, dropped<dyn>( S )...> nansum( u64 axis ) const where T : floating
+    {
+        ndarray<T, dropped<dyn>( S )...> r = without( axis, 0 );
+        kernel::nan_sum_axis( ref r.as_run(), as_run(), span( 0, axis ), S[axis], span( axis + 1, S.size ) );
+        return r;
+    }
+
+    /// The mean of the elements that are not NaN; a NaN when none are.
+    public T nanmean() const where T : floating
+    {
+        T[1] d = [0];
+        kernel::nan_mean_axis( ref d, as_run(), 1, count(), 1 );
+        return d[0];
+    }
+
+    /// The means along axis `A`, skipping NaNs.
+    public ndarray<T, dropped<A>( S )...> nanmean<u64 A>() const where T : floating
+    {
+        ndarray<T, dropped<A>( S )...> r = ndarray<T, dropped<A>( S )...>( 0 );
+        kernel::nan_mean_axis( ref r.as_run(), as_run(), span( 0, A ), S[A], span( A + 1, S.size ) );
+        return r;
+    }
+
+    /// The means along `axis`, skipping NaNs.
+    public ndarray<T, dropped<dyn>( S )...> nanmean( u64 axis ) const where T : floating
+    {
+        ndarray<T, dropped<dyn>( S )...> r = without( axis, 0 );
+        kernel::nan_mean_axis( ref r.as_run(), as_run(), span( 0, axis ), S[axis], span( axis + 1, S.size ) );
+        return r;
+    }
+
+    /// The variance of the elements that are not NaN; a NaN when none are.
+    public T nanvar() const where T : floating
+    {
+        T[1] d = [0];
+        kernel::nan_variance_axis( ref d, as_run(), 1, count(), 1 );
+        return d[0];
+    }
+
+    /// The variances along axis `A`, skipping NaNs.
+    public ndarray<T, dropped<A>( S )...> nanvar<u64 A>() const where T : floating
+    {
+        ndarray<T, dropped<A>( S )...> r = ndarray<T, dropped<A>( S )...>( 0 );
+        kernel::nan_variance_axis( ref r.as_run(), as_run(), span( 0, A ), S[A], span( A + 1, S.size ) );
+        return r;
+    }
+
+    /// The variances along `axis`, skipping NaNs.
+    public ndarray<T, dropped<dyn>( S )...> nanvar( u64 axis ) const where T : floating
+    {
+        ndarray<T, dropped<dyn>( S )...> r = without( axis, 0 );
+        kernel::nan_variance_axis( ref r.as_run(), as_run(), span( 0, axis ), S[axis], span( axis + 1, S.size ) );
+        return r;
+    }
+
+    /// The standard deviation of the elements that are not NaN, the square root of `nanvar()`.
+    public T nanstd() const where T : floating
+    {
+        return cast<T>( kl::sqrt( cast<f64>( nanvar() ) ) );
+    }
+
+    /// The standard deviations along axis `A`, skipping NaNs.
+    public ndarray<T, dropped<A>( S )...> nanstd<u64 A>() const where T : floating
+    {
+        ndarray<T, dropped<A>( S )...> r = nanvar<A>();
+        kernel::map_into( ref r.as_run(), fn[]( T x ) { return cast<T>( kl::sqrt( cast<f64>( x ) ) ); } );
+        return r;
+    }
+
+    /// The standard deviations along `axis`, skipping NaNs.
+    public ndarray<T, dropped<dyn>( S )...> nanstd( u64 axis ) const where T : floating
+    {
+        ndarray<T, dropped<dyn>( S )...> r = nanvar( axis );
+        kernel::map_into( ref r.as_run(), fn[]( T x ) { return cast<T>( kl::sqrt( cast<f64>( x ) ) ); } );
+        return r;
+    }
+
+    /// The smallest element that is not NaN; a NaN when none is. Panics when there are none.
+    public T nanmin() const where T : floating
+    {
+        return kernel::fold( as_run(), fn[]( T x, T y ) { return x != x || y < x ? y : x; } );
+    }
+
+    /// The smallest along axis `A`, skipping NaNs. Panics when the axis is empty.
+    public ndarray<T, dropped<A>( S )...> nanmin<u64 A>() const where T : floating
+    {
+        ndarray<T, dropped<A>( S )...> r = ndarray<T, dropped<A>( S )...>( 0 );
+        fold_into( ref r.as_run(), A, fn[]( T x, T y ) { return x != x || y < x ? y : x; } );
+        return r;
+    }
+
+    /// The smallest along `axis`, skipping NaNs.
+    public ndarray<T, dropped<dyn>( S )...> nanmin( u64 axis ) const where T : floating
+    {
+        ndarray<T, dropped<dyn>( S )...> r = without( axis, 0 );
+        fold_into( ref r.as_run(), axis, fn[]( T x, T y ) { return x != x || y < x ? y : x; } );
+        return r;
+    }
+
+    /// The largest element that is not NaN; a NaN when none is. Panics when there are none.
+    public T nanmax() const where T : floating
+    {
+        return kernel::fold( as_run(), fn[]( T x, T y ) { return x != x || y > x ? y : x; } );
+    }
+
+    /// The largest along axis `A`, skipping NaNs. Panics when the axis is empty.
+    public ndarray<T, dropped<A>( S )...> nanmax<u64 A>() const where T : floating
+    {
+        ndarray<T, dropped<A>( S )...> r = ndarray<T, dropped<A>( S )...>( 0 );
+        fold_into( ref r.as_run(), A, fn[]( T x, T y ) { return x != x || y > x ? y : x; } );
+        return r;
+    }
+
+    /// The largest along `axis`, skipping NaNs.
+    public ndarray<T, dropped<dyn>( S )...> nanmax( u64 axis ) const where T : floating
+    {
+        ndarray<T, dropped<dyn>( S )...> r = without( axis, 0 );
+        fold_into( ref r.as_run(), axis, fn[]( T x, T y ) { return x != x || y > x ? y : x; } );
         return r;
     }
 
@@ -1763,6 +1928,75 @@ ndarray<T, R> hat_diagonal<T, u64 R, u64 C>( const ref ndarray<T, R, C> a ) wher
     ndarray<T, R>                          h = ndarray<T, R>( 0 );
     kernel::row_squares( ref h.as_run(), f.first.as_run(), R, C );
     return h;
+}
+
+/// Each `x` read off the line through the points `( xp[k], fp[k] )`: numpy's `interp`. `xp` must not
+/// decrease; an `x` outside it takes the end value, and a NaN stays one.
+///
+/// Panics when `xp` is empty.
+ndarray<T, N> interp<T, u64 N, u64 M>( const ref ndarray<T, N> x, const ref ndarray<T, M> xp, const ref ndarray<T, M> fp ) where T : floating
+{
+    if( xp.size() == 0 )
+    {
+        panic( "interp needs at least one point" );
+    }
+    ndarray<T, N> r = ndarray<T, N>( 0 );
+    for( u64 i : 0..x.size() )
+    {
+        r.as_run()[i] = interpolated( x.as_run()[i], xp.as_run(), fp.as_run() );
+    }
+    return r;
+}
+
+// `v` on the piecewise line, as numpy's `arr_interp` computes it.
+private T interpolated<T>( T v, const ref T[] xp, const ref T[] fp ) where T : floating
+{
+    u64 m = xp.size;
+    if( v != v )
+    {
+        return v;
+    }
+    if( v < xp[0] )
+    {
+        return fp[0];
+    }
+    if( v >= xp[m - 1] )
+    {
+        return fp[m - 1];
+    }
+
+    // xp[lo] <= v < xp[hi]
+    u64 lo = 0;
+    u64 hi = m - 1;
+    while( hi - lo > 1 )
+    {
+        u64 mid = lo + ( hi - lo ) / 2;
+        if( xp[mid] <= v )
+        {
+            lo = mid;
+        }
+        else
+        {
+            hi = mid;
+        }
+    }
+    if( v == xp[lo] )
+    {
+        return fp[lo];
+    }
+
+    // A NaN one way, from an infinite slope, is tried the other way.
+    T slope = ( fp[hi] - fp[lo] ) / ( xp[hi] - xp[lo] );
+    T y     = slope * ( v - xp[lo] ) + fp[lo];
+    if( y != y )
+    {
+        y = slope * ( v - xp[hi] ) + fp[hi];
+        if( y != y && fp[lo] == fp[hi] )
+        {
+            y = fp[lo];
+        }
+    }
+    return y;
 }
 
 /// --- Element-wise choices ---
