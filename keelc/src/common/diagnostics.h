@@ -71,6 +71,7 @@ public:
     void warning( Warning which, Span span, std::string message, std::string help = {} );
     // A file its reader cannot change, as another package's: its warnings are dropped.
     void quiet( File_id file );
+    bool is_quiet( File_id file ) const;
 
     // flag is what follows -W, read left to right as the command line gives them; false for a name
     // no warning has.

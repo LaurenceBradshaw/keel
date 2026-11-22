@@ -1,0 +1,14 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// Two reals and the larger of them: a call a linear-map golden can stop in, in another package.
+struct pair
+{
+    f64 a;
+    f64 b;
+
+    f64 larger() const
+    {
+        return a > b ? a : b;
+    }
+};

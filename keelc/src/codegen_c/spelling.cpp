@@ -221,10 +221,12 @@ std::string Spelling::callee( const Rvalue& value ) const
 
 std::string Spelling::planned( std::span<const Type_id> sizes ) const
 {
+    // The sizes, then any float type but f64's.
     std::string name = "keel_dft";
     for( const Type_id t : sizes )
     {
-        name += fmt::format( "_{}", types.table().get( t ).count );
+        const Type& type = types.table().get( t );
+        name += type.kind == Type_kind::Float ? fmt::format( "_f{}", type.width ) : fmt::format( "_{}", type.count );
     }
     return name;
 }

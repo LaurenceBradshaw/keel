@@ -871,12 +871,6 @@ private:
         return v.exact ? std::optional( v.value ) : std::nullopt;
     }
 
-    bool is_f64( Type_id type ) const
-    {
-        const Type& t = types_.get( type );
-        return t.kind == Type_kind::Float && t.width == 64;
-    }
-
     bool is_float( Type_id type ) const
     {
         return types_.get( type ).kind == Type_kind::Float;
@@ -1065,7 +1059,7 @@ private:
             return found->second;
         }
         const Type_kind kind = types_.get( type ).kind;
-        if( roots_[at.root].input && ( kind == Type_kind::Int || is_f64( type ) ) )
+        if( roots_[at.root].input && ( kind == Type_kind::Int || is_float( type ) ) )
         {
             return input( at, type );
         }
@@ -1137,12 +1131,18 @@ private:
                 u64 bits = 0;
                 std::memcpy( &bits, bytes.data() + at, size );
                 f64 d = 0;
-                std::memcpy( &d, &bits, sizeof d );
+                if( size == 4 )
+                {
+                    f32 narrow = 0;
+                    std::memcpy( &narrow, &bits, sizeof narrow );
+                    d = narrow;
+                }
+                else
+                {
+                    std::memcpy( &d, &bits, sizeof d );
+                }
                 write(
-                    { found->second, { at / size << 2 } },
-                    is_f64( element )     ? real( d, exact_literal( d ) )
-                    : is_float( element ) ? Value {}
-                                          : number( bits )
+                    { found->second, { at / size << 2 } }, is_float( element ) ? real( d, exact_literal( d ) ) : number( bits )
                 );
             }
         }
@@ -1180,7 +1180,7 @@ private:
                 store( e, v.elements[v.kind == Constant_value::Kind::Fill ? 0 : i], t.element );
             }
         }
-        else if( is_f64( type ) && ( v.kind == Constant_value::Kind::Float || v.kind == Constant_value::Kind::Integer ) )
+        else if( is_float( type ) && ( v.kind == Constant_value::Kind::Float || v.kind == Constant_value::Kind::Integer ) )
         {
             const f64 x = v.kind == Constant_value::Kind::Float ? v.floating
                                                                 : ( v.negative ? -1.0 : 1.0 ) * static_cast<f64>( v.magnitude );
@@ -1267,7 +1267,7 @@ private:
     {
         if( is_float( o.type ) )
         {
-            return is_f64( o.type ) ? real( literals_.floating( o.constant ) ) : Value {};
+            return real( literals_.floating( o.constant ) );
         }
         return literals_.kind( o.constant ) == Literal_kind::Integer ? number( literals_.integer( o.constant ) ) : Value {};
     }
@@ -1279,7 +1279,7 @@ private:
         case Operand_kind::Constant:
         {
             Value v = constant( o );
-            if( v.kind == Kind::Number && is_f64( o.type ) )
+            if( v.kind == Kind::Number && is_float( o.type ) )
             {
                 v = real( as_real( v ), exact_literal( as_real( v ) ) );
             }
@@ -1433,7 +1433,7 @@ private:
         }
         if( is_float( r.a.type ) )
         {
-            return is_f64( r.a.type ) ? real_binary( r.op, a, b ) : Value {};
+            return real_binary( r.op, a, b );
         }
         const std::optional<u64> bits = evaluate( r, a.bits, b.bits, types_ );
         return bits ? number( *bits ) : Value {};
@@ -1460,9 +1460,8 @@ private:
         if( is_float( r.a.type ) )
         {
             const auto e = exact_of( a );
-            return is_f64( r.a.type ) && r.op == Token_kind::Minus
-                       ? real( -as_real( a ), e ? std::optional( negated( *e ) ) : std::nullopt )
-                       : Value {};
+            return r.op == Token_kind::Minus ? real( -as_real( a ), e ? std::optional( negated( *e ) ) : std::nullopt )
+                                             : Value {};
         }
         const std::optional<u64> bits = evaluate( r, a.bits, std::nullopt, types_ );
         return bits ? number( *bits ) : Value {};
@@ -1492,14 +1491,14 @@ private:
         {
             return number( a.bits != 0 );
         }
-        if( from.kind == Type_kind::Int && is_f64( r.type ) )
+        if( from.kind == Type_kind::Int && is_float( r.type ) )
         {
             const bool fits = from.is_signed || a.bits < ( u64 { 1 } << 63 );
             const i64  v    = from.is_signed ? as_signed( a.bits, from.width ) : static_cast<i64>( a.bits );
             const f64  x    = from.is_signed ? static_cast<f64>( v ) : static_cast<f64>( a.bits );
             return real( x, fits ? std::optional( rational( v ) ) : std::nullopt );
         }
-        if( is_f64( r.a.type ) && to.kind == Type_kind::Int )
+        if( is_float( r.a.type ) && to.kind == Type_kind::Int )
         {
             const f64 x  = std::trunc( as_real( a ) );
             const f64 lo = to.is_signed ? -std::ldexp( 1.0, to.width - 1 ) : 0.0;
@@ -1510,7 +1509,8 @@ private:
             }
             return number( truncate( x < 0 ? static_cast<u64>( static_cast<i64>( x ) ) : static_cast<u64>( x ), to.width ) );
         }
-        if( is_f64( r.a.type ) && is_f64( r.type ) )
+        // f32 and f64 alike are read as reals, as `@real_arithmetic` allows.
+        if( is_float( r.a.type ) && is_float( r.type ) )
         {
             return a;
         }
@@ -1658,7 +1658,7 @@ private:
             {
                 end( Ending::Unsupported );
             }
-            if( a.kind != Kind::Number || !is_f64( r.a.type ) )
+            if( a.kind != Kind::Number || !is_float( r.a.type ) )
             {
                 return {};
             }
@@ -2009,6 +2009,16 @@ private:
             const f64       h = s.a * static_cast<f64>( s.i.hi ) + s.b;
             return std::pair { std::min( l, h ), std::max( l, h ) };
         }
+        case Kind::Wave:
+        {
+            // Each power of W has modulus 1.
+            f64 bound = 0;
+            for( const auto& [e, c] : symbolics_[v.index].w.terms )
+            {
+                bound += std::abs( static_cast<f64>( c.num ) / static_cast<f64>( c.den ) );
+            }
+            return std::pair { -bound, bound };
+        }
         default:
             return std::nullopt;
         }
@@ -2019,6 +2029,12 @@ private:
     {
         const auto same = [&]
         {
+            if( x.kind == Kind::Wave && y.kind == Kind::Wave )
+            {
+                const sym::Wave& a = symbolics_[x.index].w;
+                const sym::Wave& b = symbolics_[y.index].w;
+                return x.index == y.index || ( a.M == b.M && a.terms == b.terms );
+            }
             if( x.kind != y.kind || ( x.kind != Kind::Int && x.kind != Kind::Angle ) )
             {
                 return false;
@@ -2251,10 +2267,10 @@ private:
         {
             return integer( within( symbolics_[x.index].i, r.type ), r.type );
         }
-        if( from_int && is_f64( r.type ) && x.kind == Kind::Int )
+        if( from_int && is_float( r.type ) && x.kind == Kind::Int )
         {
             const sym::Int& i     = symbolics_[x.index].i;
-            const i128      exact = i128 { 1 } << 53;
+            const i128      exact = i128 { 1 } << ( types_.get( r.type ).width == 32 ? 24 : 53 );
             if( i.lo < -exact || i.hi > exact )
             {
                 sym::fail();
@@ -2265,7 +2281,8 @@ private:
         {
             return integer( within( symbolics_[x.index].i, r.type ), r.type );
         }
-        if( r.a.type == r.type )
+        // A constant's precision changes, not its value; an input's form keeps its one type.
+        if( r.a.type == r.type || ( is_float( r.a.type ) && is_float( r.type ) && x.kind != Kind::Terms ) )
         {
             return x;
         }
@@ -2344,9 +2361,18 @@ private:
         {
             return {}; // a by-value parameter
         }
-        if( !is_f64( type ) )
+        if( !is_float( type ) )
         {
             sym::fail();
+        }
+        if( !ring_ )
+        {
+            ring_ = true;
+            type_ = type;
+        }
+        else if( type != type_ )
+        {
+            end( Ending::Mixed );
         }
         auto [stream, index] = element( at );
         if( streams_[stream].written )
@@ -2492,8 +2518,11 @@ private:
             sym::fail();
         }
 
-        // Whole scalar locals only; anything else written in the loop is a parameter's element.
+        // Whole scalar locals carry across turns; a whole aggregate is a turn's temporary, forgotten
+        // before and after, so a read before its write is unknown. Anything else written in the loop
+        // is a parameter's element.
         std::vector<Local_id> written;
+        std::vector<u32>      temporaries;
         for( const Block_id b : loop.blocks )
         {
             for( const Statement& s : func.statements_of( b ) )
@@ -2514,7 +2543,8 @@ private:
                 {
                     if( is_aggregate( func.locals[s.place.local].type ) )
                     {
-                        sym::fail();
+                        temporaries.push_back( root( fr, s.place.local ) );
+                        continue;
                     }
                     written.push_back( s.place.local );
                 }
@@ -2537,7 +2567,9 @@ private:
         const size_t first_store = stores_.size();
         const u64    outer       = multiplicity_;
         multiplicity_            = std::min<u64>( multiplicity_ * turns, u64 { 1 } << 40 );
+        forget( temporaries );
         run_from( fr, loop.header, l );
+        forget( temporaries );
         multiplicity_ = outer;
 
         std::vector<Value> ends;
@@ -2571,7 +2603,8 @@ private:
                     bound.bound |= static_cast<u8>( 1u << s );
                     total.terms.emplace( std::move( bound ), std::move( t ) );
                 }
-                write( at, add( before[w], terms( std::move( total ) ), 1 ) );
+                // Written only on a path not taken, it keeps its value.
+                write( at, total.terms.empty() ? before[w] : add( before[w], terms( std::move( total ) ), 1 ) );
             }
             else if( v.kind == Kind::Terms && symbolics_[v.index].f.carried.is_valid() )
             {
@@ -2598,6 +2631,15 @@ private:
         return test.targets[1];
     }
 
+    // Every cell under each root.
+    void forget( const std::vector<u32>& roots )
+    {
+        for( const u32 r : roots )
+        {
+            memory_.erase( memory_.lower_bound( Location { r, {} } ), memory_.lower_bound( Location { r + 1, {} } ) );
+        }
+    }
+
     static std::optional<u32> one_bit( u8 mask )
     {
         return std::popcount( mask ) == 1 ? std::optional<u32>( static_cast<u32>( std::countr_zero( mask ) ) ) : std::nullopt;
@@ -2619,7 +2661,8 @@ private:
         return { one( streams_[a] ), b ? one( streams_[*b] ) : Param_path {} };
     }
 
-    // y = x * K: complex from the four real forms, complex from a real x's two, or real from one.
+    // y = x * K: complex from the four real forms, complex from a real x's two, real from one, or
+    // real from a complex x's two.
     std::optional<Read_kernel> collect_sum() const
     {
         std::vector<u32> in, out;
@@ -2636,7 +2679,7 @@ private:
         std::ranges::sort( out, order );
         const u32  parts = static_cast<u32>( out.size() );
         const bool real  = in.size() == 1;
-        if( parts < 1 || parts > 2 || in.size() < 1 || in.size() > parts || stores_.size() != parts )
+        if( parts < 1 || parts > 2 || in.size() < 1 || in.size() > 2 || stores_.size() != parts )
         {
             return std::nullopt;
         }
@@ -2707,12 +2750,16 @@ private:
             return std::nullopt;
         }
 
-        // re y = A re x - B im x and im y = B re x + A im x for a complex K = A + i B.
-        if( !real && ( !sym::sum( c[0][0], c[1][1], -1 ).terms.empty() || !sym::sum( c[0][1], c[1][0] ).terms.empty() ) )
+        // re y = A re x - B im x and im y = B re x + A im x for a complex K = A + i B; a real y alone is
+        // re y, whose K is c[0][0] - i c[0][1].
+        if( !real && parts == 2 &&
+            ( !sym::sum( c[0][0], c[1][1], -1 ).terms.empty() || !sym::sum( c[0][1], c[1][0] ).terms.empty() ) )
         {
             return std::nullopt;
         }
-        sym::Wave K = parts == 1 ? c[0][0] : sym::sum( c[0][0], sym::product( c[1][0], sym::imaginary() ) );
+        sym::Wave K = parts == 2 ? sym::sum( c[0][0], sym::product( c[1][0], sym::imaginary() ) )
+                      : real     ? c[0][0]
+                                 : sym::sum( c[0][0], sym::product( c[0][1], sym::imaginary() ), -1 );
         sym::Wave b = parts == 1 ? offset[0] : sym::sum( offset[0], sym::product( offset[1], sym::imaginary() ) );
         if( !b.terms.empty() )
         {
@@ -2720,8 +2767,10 @@ private:
             K           = sym::lifted( K, M );
             b           = sym::lifted( b, M );
         }
-        Read_kernel r { .sum = { static_cast<u32>( turns_[*j] ), static_cast<u32>( turns_[*k] ), K.M, {}, real } };
-        const auto  in_jk = [&]( const sym::Poly& e )
+        Read_kernel r {
+            .sum = { static_cast<u32>( turns_[*j] ), static_cast<u32>( turns_[*k] ), K.M, {}, real }, .type = type_
+        };
+        const auto in_jk = [&]( const sym::Poly& e )
         {
             Exponent out;
             for( const auto& [m, v] : e )

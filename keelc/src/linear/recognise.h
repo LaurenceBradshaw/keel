@@ -48,7 +48,7 @@ struct Recognised
     std::vector<Row>        rows; // one per output, one element per input
     std::vector<Value_path> inputs;
     std::vector<Value_path> outputs;
-    Type_id                 type;  // f64, or the integer type of the ring
+    Type_id                 type;  // the inputs' float type, or the integer type of the ring
     Cost                    input; // the adds and muls the program ran
 };
 
@@ -109,6 +109,7 @@ std::variant<Recognised, Unrecognised> recognise(
 struct Read_kernel
 {
     Sum                     sum;
+    Type_id                 type {};    // the inputs' float type
     std::vector<Value_path> inputs {};  // x[j], real and imaginary
     std::vector<Value_path> outputs {}; // y[k]
     Cost                    input {};   // the adds and muls the loops ran

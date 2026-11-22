@@ -1,0 +1,109 @@
+// DFTs in f32 are read and solved as f64 ones are: a complex struct's operators, its roots narrowed
+// by a checked cast, and split arrays whose plan calls planned f32 parts. Each gives what the same
+// loop unmarked gives, to within f32's rounding.
+
+import kl::complex;
+import kl::math;
+
+kl::complex<f32> root( u64 e, u64 n )
+{
+    const f64 t = -2.0 * kl::pi * cast<f64>( e % n ) / cast<f64>( n );
+    return kl::complex<f32> { cast<f32>( kl::cos( t ) ), cast<f32>( kl::sin( t ) ) };
+}
+
+@real_arithmetic
+void solved<u64 N>( const ref kl::complex<f32>[N] x, ref kl::complex<f32>[N] y )
+{
+    for( u64 k : 0..N )
+    {
+        kl::complex<f32> s = kl::complex<f32> {};
+        for( u64 j : 0..N )
+        {
+            s = s + x[j] * root( j * k, N );
+        }
+        y[k] = s;
+    }
+}
+
+void naive<u64 N>( const ref kl::complex<f32>[N] x, ref kl::complex<f32>[N] y )
+{
+    for( u64 k : 0..N )
+    {
+        kl::complex<f32> s = kl::complex<f32> {};
+        for( u64 j : 0..N )
+        {
+            s = s + x[j] * root( j * k, N );
+        }
+        y[k] = s;
+    }
+}
+
+@real_arithmetic
+void split( const ref f32[131] re, const ref f32[131] im, ref f32[131] yr, ref f32[131] yi )
+{
+    for( u64 k : 0..131 )
+    {
+        f32 sr = 0.0;
+        f32 si = 0.0;
+        for( u64 j : 0..131 )
+        {
+            const f64 t = -2.0 * kl::pi * cast<f64>( j * k % 131 ) / 131.0;
+            sr += re[j] * cast<f32>( kl::cos( t ) ) - im[j] * cast<f32>( kl::sin( t ) );
+            si += re[j] * cast<f32>( kl::sin( t ) ) + im[j] * cast<f32>( kl::cos( t ) );
+        }
+        yr[k] = sr;
+        yi[k] = si;
+    }
+}
+
+bool agrees<u64 N>()
+{
+    kl::complex<f32>[N] x = [ kl::complex<f32> {}, .. ];
+    for( u64 i : 0..N )
+    {
+        x[i] = kl::complex<f32> { cast<f32>( i % 7 ) - 2.0, cast<f32>( i % 3 ) * 0.5 };
+    }
+    kl::complex<f32>[N] a = [ kl::complex<f32> {}, .. ];
+    kl::complex<f32>[N] b = [ kl::complex<f32> {}, .. ];
+    solved<N>( x, ref a );
+    naive<N>( x, ref b );
+    for( u64 k : 0..N )
+    {
+        if( kl::abs( a[k].re - b[k].re ) > 1e-3 || kl::abs( a[k].im - b[k].im ) > 1e-3 )
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool split_agrees()
+{
+    kl::complex<f32>[131] x = [ kl::complex<f32> {}, .. ];
+    f32[131]              re = [ 0.0, .. ];
+    f32[131]              im = [ 0.0, .. ];
+    for( u64 i : 0..131 )
+    {
+        x[i]  = kl::complex<f32> { cast<f32>( i % 7 ) - 2.0, cast<f32>( i % 3 ) * 0.5 };
+        re[i] = x[i].re;
+        im[i] = x[i].im;
+    }
+    f32[131] yr = [ 0.0, .. ];
+    f32[131] yi = [ 0.0, .. ];
+    split( re, im, ref yr, ref yi );
+    kl::complex<f32>[131] b = [ kl::complex<f32> {}, .. ];
+    naive<131>( x, ref b );
+    for( u64 k : 0..131 )
+    {
+        if( kl::abs( yr[k] - b[k].re ) > 1e-3 || kl::abs( yi[k] - b[k].im ) > 1e-3 )
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+i32 main()
+{
+    return agrees<8>() && agrees<256>() && agrees<100>() && split_agrees() ? 0 : 1;
+}

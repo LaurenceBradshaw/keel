@@ -194,26 +194,32 @@ bool replace_with(
     return true;
 }
 
-// keelc's function computing `k` alone by `program`, `void( const f64[n]* re, const f64[n]* im, f64[m]* yr,
-// f64[m]* yi )`, its parts called through `called`.
+// keelc's function computing `k` alone by `program`, `void( const real[n]* re, const real[n]* im, real[m]* yr,
+// real[m]* yi )`, its parts called through `called`.
 Function planned_function(
-    const Kernel& k, const Loop_program& program, Type_table& types, Literal_pool& literals, Span span, const Called& called
+    const Kernel&       k,
+    const Loop_program& program,
+    Type_id             real,
+    Type_table&         types,
+    Literal_pool&       literals,
+    Span                span,
+    const Called&       called
 )
 {
     Function f;
-    f.type_arguments  = kernel_arguments( types, k );
+    f.type_arguments  = kernel_arguments( types, k, real );
     f.parameter_count = 4;
     f.planned         = true;
     f.real_arithmetic = true;
     f.locals.push_back( Local { .type = types.builtin( Type_kind::Void ), .span = span } );
     for( u32 p = 0; p < 4; ++p )
     {
-        f.references.push_back( f.locals.push_back( Local { .type = kernel_parameter( types, k, p ), .span = span } ) );
+        f.references.push_back( f.locals.push_back( Local { .type = kernel_parameter( types, k, p, real ), .span = span } ) );
     }
     const auto through = [&]( u32 p )
     { return projected( f, Place { .local = Local_id { p } }, Projection { .kind = Projection_kind::Deref } ); };
     lower_program(
-        f, program, { through( 1 ), through( 2 ) }, { through( 3 ), through( 4 ) }, {}, types, literals, span, called
+        f, program, { through( 1 ), through( 2 ) }, { through( 3 ), through( 4 ) }, {}, real, types, literals, span, called
     );
     return f;
 }
@@ -234,16 +240,16 @@ Map_outcome solve_linear_maps(
     // Past what solve takes whole, the loops are read as a sum rather than run.
     std::optional<Unrecognised> read_ended;
     if( const std::optional<Read_kernel> read = read_kernel( func, functions, purity, types, literals, globals, &read_ended );
-        read && read->sum.n > Plan_options {}.leaf_max )
+        read && std::max( read->sum.n, read->sum.m ) > Plan_options {}.leaf_max )
     {
         const Plan_options plan { .solve = options, .cache = cache, .calls = kernels != nullptr };
         // Arrays in and out take the plan as loops, when it has any.
         const Span span   = body_span( func );
         Called     called = [&]( const Kernel& k, const Loop_program& body )
         {
-            if( kernels->made.insert( k ).second )
+            if( kernels->made.insert( { k, read->type.v } ).second )
             {
-                kernels->add( planned_function( k, body, types, literals, span, called ) );
+                kernels->add( planned_function( k, body, read->type, types, literals, span, called ) );
             }
         };
         Places                           places( func, types, literals, span );
@@ -255,7 +261,7 @@ Map_outcome solve_linear_maps(
             {
                 return { .cost = read->input, .input = read->input };
             }
-            lower_program( func, *program, *x, *y, places.take_prologue(), types, literals, span, called );
+            lower_program( func, *program, *x, *y, places.take_prologue(), read->type, types, literals, span, called );
             return { .solved = true, .cost = program->cost, .input = read->input };
         }
         if( const std::optional<Planned> planned = plan_sum( read->sum, plan ) )
@@ -268,7 +274,7 @@ Map_outcome solve_linear_maps(
                 planned->outputs,
                 read->inputs,
                 read->outputs,
-                types.floating( 64 ),
+                read->type,
                 read->input,
                 types,
                 literals

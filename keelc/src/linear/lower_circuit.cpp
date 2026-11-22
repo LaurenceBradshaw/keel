@@ -477,7 +477,13 @@ class Loop_lowering
 {
 public:
     Loop_lowering(
-        Function& func, const Loop_program& program, Type_table& types, Literal_pool& literals, Span span, const Called& called
+        Function&           func,
+        const Loop_program& program,
+        Type_id             real,
+        Type_table&         types,
+        Literal_pool&       literals,
+        Span                span,
+        const Called&       called
     )
         : func_( func ),
           program_( program ),
@@ -485,7 +491,7 @@ public:
           literals_( literals ),
           span_( span ),
           called_( called ),
-          real_( types.floating( 64 ) ),
+          real_( real ),
           index_( types.integer( 64, false ) ),
           field_( Ring_kind::Complex, 4 ),
           loops_( program.loops )
@@ -503,13 +509,7 @@ public:
         }
         for( const std::vector<std::complex<f64>>& t : program_.tables )
         {
-            std::vector<f64> re, im;
-            for( const std::complex<f64>& w : t )
-            {
-                re.push_back( w.real() );
-                im.push_back( w.imag() );
-            }
-            tables_.push_back( { constant_table( re, real_ ), constant_table( im, real_ ) } );
+            tables_.push_back( types_.get( real_ ).width == 32 ? parts<f32>( t ) : parts<f64>( t ) );
         }
         for( const std::vector<u64>& t : program_.indices )
         {
@@ -804,10 +804,11 @@ private:
                 a < 2 ? Address_purpose::Read : Address_purpose::Borrow,
                 span_
             ) );
-            arguments.push_back( read( emit( cast_to( read( first ), kernel_parameter( types_, callee.kernel, a ) ) ) ) );
+            arguments.push_back( read( emit( cast_to( read( first ), kernel_parameter( types_, callee.kernel, a, real_ ) ) ) )
+            );
         }
         Rvalue c = keel::call(
-            {}, std::move( arguments ), types_.builtin( Type_kind::Void ), kernel_arguments( types_, callee.kernel )
+            {}, std::move( arguments ), types_.builtin( Type_kind::Void ), kernel_arguments( types_, callee.kernel, real_ )
         );
         c.planned = true;
         emit( std::move( c ) );
@@ -912,6 +913,19 @@ private:
         return projected( func_, Place { .local = p }, Projection { .kind = Projection_kind::Deref } );
     }
 
+    // A table's real and imaginary parts, each its elements as `T`.
+    template <typename T>
+    Value_place parts( const std::vector<std::complex<f64>>& table )
+    {
+        std::vector<T> re, im;
+        for( const std::complex<f64>& w : table )
+        {
+            re.push_back( static_cast<T>( w.real() ) );
+            im.push_back( static_cast<T>( w.imag() ) );
+        }
+        return { constant_table( re, real_ ), constant_table( im, real_ ) };
+    }
+
     // No imaginary part for a real buffer's.
     Value_place at( Value_place buffer, Local_id i )
     {
@@ -979,14 +993,19 @@ private:
 };
 } // namespace
 
-std::vector<Type_id> kernel_arguments( Type_table& types, const Kernel& k )
+std::vector<Type_id> kernel_arguments( Type_table& types, const Kernel& k, Type_id real )
 {
-    return { types.size( k.n ), types.size( k.m ), types.size( k.M ), types.size( k.c ) };
+    std::vector<Type_id> out { types.size( k.n ), types.size( k.m ), types.size( k.M ), types.size( k.c ) };
+    if( real != types.floating( 64 ) )
+    {
+        out.push_back( real );
+    }
+    return out;
 }
 
-Type_id kernel_parameter( Type_table& types, const Kernel& k, u32 p )
+Type_id kernel_parameter( Type_table& types, const Kernel& k, u32 p, Type_id real )
 {
-    return types.pointer_to( types.array_of( types.floating( 64 ), p < 2 ? k.n : k.m ), p < 2 );
+    return types.pointer_to( types.array_of( real, p < 2 ? k.n : k.m ), p < 2 );
 }
 
 std::vector<Statement> lower_circuit(
@@ -1017,13 +1036,14 @@ void lower_program(
     Value_place            x,
     Value_place            y,
     std::vector<Statement> prologue,
+    Type_id                real,
     Type_table&            types,
     Literal_pool&          literals,
     Span                   span,
     const Called&          called
 )
 {
-    Loop_lowering( func, program, types, literals, span, called ).lower( x, y, std::move( prologue ) );
+    Loop_lowering( func, program, real, types, literals, span, called ).lower( x, y, std::move( prologue ) );
 }
 } // namespace keel
 

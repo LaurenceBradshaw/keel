@@ -1,0 +1,5 @@
+warning: `larger` is `@real_arithmetic` but computes no linear map: it compares an input [-Wlinear-map]
+ --> opt3_package/map_stops_in_a_package.kl:7:6
+  |
+7 | void larger( const ref t::pair[4] x, ref f64[4] y )
+  |      ^^^^^^ each output must be a sum of inputs scaled by constants, plus a constant

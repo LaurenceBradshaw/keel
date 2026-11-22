@@ -25,13 +25,13 @@ struct Value_place
 // Makes the function computing a program's called kernel alone, by its program, once.
 using Called = std::function<void( const Kernel&, const Loop_program& )>;
 
-// That function's type arguments, its n, m, M and c as sizes, and its parameter p's type: `const f64[n]*` for
-// the real and imaginary x, `f64[m]*` for y's.
-std::vector<Type_id> kernel_arguments( Type_table& types, const Kernel& k );
-Type_id              kernel_parameter( Type_table& types, const Kernel& k, u32 p );
+// That function's type arguments, its n, m, M and c as sizes and then `real` unless it is f64, and its
+// parameter p's type: `const real[n]*` for the real and imaginary x, `real[m]*` for y's.
+std::vector<Type_id> kernel_arguments( Type_table& types, const Kernel& k, Type_id real );
+Type_id              kernel_parameter( Type_table& types, const Kernel& k, u32 p, Type_id real );
 
 // Statements writing each output the value of its node in `nodes` (Circuit::k_zero for zero), from
-// `inputs`, at `type`: f64 parts, or wrapping integers of the ring's width. Units fold into signs, so
+// `inputs`, at `type`: float parts, or wrapping integers of the ring's width. Units fold into signs, so
 // x + (-y) is one subtract. Every input is read before any output is written, so the two may share
 // places. A debug build checks the statements against `rows` on random input, when given.
 std::vector<Statement> lower_circuit(
@@ -48,7 +48,7 @@ std::vector<Statement> lower_circuit(
 );
 
 // `program` in place of `func`'s body, after `prologue`: loops over its leaves' statements, from x's arrays (buffer 0)
-// to y's (buffer 1), each part a whole f64 array. Temporaries are local arrays and tables read-only ones. A call
+// to y's (buffer 1), each part a whole array of `real`. Temporaries are local arrays and tables read-only ones. A call
 // passes the addresses of its first elements, real and imaginary swapped when conjugated.
 void lower_program(
     Function&              func,
@@ -56,6 +56,7 @@ void lower_program(
     Value_place            x,
     Value_place            y,
     std::vector<Statement> prologue,
+    Type_id                real,
     Type_table&            types,
     Literal_pool&          literals,
     Span                   span,

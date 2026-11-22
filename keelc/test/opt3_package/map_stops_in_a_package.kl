@@ -1,0 +1,21 @@
+// A map whose read stops in another package's code, whose lines are not shown, is warned of at the
+// function instead.
+
+import t::pair;
+
+@real_arithmetic
+void larger( const ref t::pair[4] x, ref f64[4] y )
+{
+    for( u64 k = 0; k < 4; k += 1 )
+    {
+        y[k] = x[k].larger();
+    }
+}
+
+i32 main()
+{
+    t::pair[4] x = [ t::pair { 1.0, 2.0 }, .. ];
+    f64[4]     y = [ 0.0, .. ];
+    larger( x, ref y );
+    return y[0] > 1.5 ? 0 : 1;
+}

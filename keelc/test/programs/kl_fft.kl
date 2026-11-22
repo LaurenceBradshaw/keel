@@ -1,5 +1,6 @@
 // kl's transforms, solved at -O3 past what solve reads whole, each give what their definition run as a
-// loop gives: dft and idft at 128, rdft and irdft at an even and an odd length, and dft in f32.
+// loop gives: dft and idft at 128, rdft and irdft at an even and an odd length, and dft in f32, to
+// within f32's rounding.
 
 import kl::complex;
 import kl::fft;
@@ -81,17 +82,21 @@ bool real_agrees<u64 N>()
 bool narrow_agrees<u64 N>()
 {
     kl::complex<f32>[N] x = [ kl::complex<f32> {}, .. ];
-    kl::complex<f64>[N] w = [ kl::complex<f64> {}, .. ];
     for( u64 i : 0..N )
     {
-        w[i] = input( i );
-        x[i] = kl::complex<f32> { cast<f32>( w[i].re ), cast<f32>( w[i].im ) };
+        const kl::complex<f64> w = input( i );
+        x[i]                     = kl::complex<f32> { cast<f32>( w.re ), cast<f32>( w.im ) };
     }
     const kl::complex<f32>[N] y = kl::dft( x );
-    const kl::complex<f64>[N] v = kl::dft( w );
     for( u64 k : 0..N )
     {
-        if( y[k] != kl::complex<f32> { cast<f32>( v[k].re ), cast<f32>( v[k].im ) } )
+        kl::complex<f32> f = kl::complex<f32> {};
+        for( u64 j : 0..N )
+        {
+            const kl::complex<f64> w = turn( j * k, N, -1.0 );
+            f                        = f + x[j] * kl::complex<f32> { cast<f32>( w.re ), cast<f32>( w.im ) };
+        }
+        if( kl::abs( y[k].re - f.re ) > 1e-3 || kl::abs( y[k].im - f.im ) > 1e-3 )
         {
             return false;
         }

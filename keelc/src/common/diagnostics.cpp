@@ -162,7 +162,7 @@ void Diagnostics::warning( Warning which, Span span, std::string message, std::s
 {
     const Level level = levels_[static_cast<u8>( which )];
 
-    if( level == Level::Off || std::ranges::find( quiet_, span.file.v ) != quiet_.end() )
+    if( level == Level::Off || is_quiet( span.file ) )
     {
         return;
     }
@@ -174,6 +174,11 @@ void Diagnostics::warning( Warning which, Span span, std::string message, std::s
 void Diagnostics::quiet( File_id file )
 {
     quiet_.push_back( file.v );
+}
+
+bool Diagnostics::is_quiet( File_id file ) const
+{
+    return std::ranges::find( quiet_, file.v ) != quiet_.end();
 }
 
 bool Diagnostics::apply_warning_flag( std::string_view flag )

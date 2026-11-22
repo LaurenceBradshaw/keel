@@ -510,8 +510,10 @@ Front_end run_front_end(
                                  std::ranges::find( warned_maps, current().declaration ) == warned_maps.end() )
                         {
                             warned_maps.push_back( current().declaration );
+                            // A stop in another package's code, inlined here, is reported at the function.
+                            const Span stop = outcome.ending->span;
                             const Span at =
-                                outcome.ending->span.is_valid() ? outcome.ending->span : ast.name_span( current().declaration );
+                                stop.is_valid() && !diags.is_quiet( stop.file ) ? stop : ast.name_span( current().declaration );
                             diags.warning(
                                 Warning::Linear_map,
                                 at,
@@ -659,28 +661,33 @@ std::string printed( const Compiled& p )
     return text;
 }
 
-// `name<u64 N>`, or `name` at `fixed`, computing the DFT by its definition, under `directives`.
-std::string dft_loop( std::string_view directives, std::string_view name, std::string_view fixed = {} )
+// `name<u64 N>`, or `name` at `fixed`, computing the DFT by its definition over `real` parts, under `directives`.
+std::string
+dft_loop( std::string_view directives, std::string_view name, std::string_view fixed = {}, std::string_view real = "f64" )
 {
     const std::string n = fixed.empty() ? "N" : std::string( fixed );
-    return std::string( directives ) + "\nvoid " + std::string( name ) + ( fixed.empty() ? "<u64 N>" : "" ) +
-           "( const ref f64[" + n + "] re, const ref f64[" + n + "] im, ref f64[" + n + "] yr, ref f64[" + n +
+    const std::string r( real );
+    // The trig in f64, narrowed to `real`.
+    const auto trig = [&]( std::string_view f )
+    { return r == "f64" ? std::string( f ) + "( t )" : "cast<" + r + ">( " + std::string( f ) + "( t ) )"; };
+    return std::string( directives ) + "\nvoid " + std::string( name ) + ( fixed.empty() ? "<u64 N>" : "" ) + "( const ref " +
+           r + "[" + n + "] re, const ref " + r + "[" + n + "] im, ref " + r + "[" + n + "] yr, ref " + r + "[" + n +
            "] yi )\n{\n"
            "    for( u64 k = 0; k < " +
            n +
            "; k += 1 )\n"
            "    {\n"
-           "        f64 sr = 0.0;\n"
-           "        f64 si = 0.0;\n"
+           "        " +
+           r + " sr = 0.0;\n        " + r +
+           " si = 0.0;\n"
            "        for( u64 j = 0; j < " +
            n +
            "; j += 1 )\n"
            "        {\n"
            "            const f64 t = -6.283185307179586 * cast<f64>( j * k % " +
-           n + " ) / cast<f64>( " + n +
-           " );\n"
-           "            sr += re[j] * cosine( t ) - im[j] * sine( t );\n"
-           "            si += re[j] * sine( t ) + im[j] * cosine( t );\n"
+           n + " ) / cast<f64>( " + n + " );\n            sr += re[j] * " + trig( "cosine" ) + " - im[j] * " + trig( "sine" ) +
+           ";\n            si += re[j] * " + trig( "sine" ) + " + im[j] * " + trig( "cosine" ) +
+           ";\n"
            "        }\n"
            "        yr[k] = sr;\n"
            "        yi[k] = si;\n"
@@ -747,6 +754,31 @@ TEST_CASE( "front_end_O3_calls_one_planned_function_for_a_part_two_maps_share", 
     std::set<std::vector<u64>> all = called( "map" );
     all.merge( called( "" ) );
     CHECK( planned == all.size() );
+}
+
+// An f32 map plans as an f64 one does, its parts f32 functions of their own.
+TEST_CASE( "front_end_O3_plans_an_f32_map_with_f32_planned_functions", "[front_end][linear]" )
+{
+    const Compiled p(
+        std::string( k_trig ) + dft_loop( "@real_arithmetic", "map", "131", "f32" ) +
+            "i32 main() { f32[131] a = [ 0.0, .. ]; f32[131] b = [ 0.0, .. ]; map( a, a, ref b, ref b ); return 0; }\n",
+        Stage::Elaborated,
+        Build { .level = 3 }
+    );
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+    const Type_id f32     = p.types.table().floating( 32 );
+    u64           planned = 0;
+    for( const Function& f : p.all )
+    {
+        if( f.planned )
+        {
+            ++planned;
+            CHECK( f.type_arguments.back() == f32 );
+            CHECK( p.types.table().get( p.types.table().get( f.locals[Local_id { 1 }].type ).element ).element == f32 );
+        }
+    }
+    CHECK( planned > 0 );
 }
 
 } // namespace keel

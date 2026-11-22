@@ -1,69 +1,56 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-import kl::_core::exponential as exponential;
 import complex;
 import math;
 
 // e^(-2 pi i e / n), the angle reduced first so a large `e` keeps its precision.
-private complex<f64> root( u64 e, u64 n )
+private complex<T> root<T>( u64 e, u64 n ) where T : floating
 {
     const f64 t = -2.0 * kl::pi * cast<f64>( e % n ) / cast<f64>( n );
-    return complex<f64> { kl::cos( t ), kl::sin( t ) };
+    return complex<T> { cast<T>( kl::cos( t ) ), cast<T>( kl::sin( t ) ) };
 }
 
-private complex<f64> widened<T>( complex<T> z ) where T : floating
-{
-    return complex<f64> { cast<f64>( z.re ), cast<f64>( z.im ) };
-}
-
-private complex<T> narrowed<T>( complex<f64> z ) where T : floating
-{
-    return complex<T> { exponential::narrowed<T>( z.re ), exponential::narrowed<T>( z.im ) };
-}
-
-// The kernels are f64 only: the solver reads no other float.
 @real_arithmetic
-private void dft_into<u64 N>( const ref complex<f64>[N] x, ref complex<f64>[N] y )
+private void dft_into<T, u64 N>( const ref complex<T>[N] x, ref complex<T>[N] y ) where T : floating
 {
     for( u64 k : 0..N )
     {
-        complex<f64> s = complex<f64> {};
+        complex<T> s = complex<T> {};
         for( u64 j : 0..N )
         {
-            s = s + x[j] * root( j * k, N );
+            s = s + x[j] * root<T>( j * k, N );
         }
         y[k] = s;
     }
 }
 
 @real_arithmetic
-private void rdft_into<u64 N>( const ref f64[N] x, ref complex<f64>[N / 2 + 1] y )
+private void rdft_into<T, u64 N>( const ref T[N] x, ref complex<T>[N / 2 + 1] y ) where T : floating
 {
     for( u64 k : 0..N / 2 + 1 )
     {
-        complex<f64> s = complex<f64> {};
+        complex<T> s = complex<T> {};
         for( u64 j : 0..N )
         {
-            s = s + root( j * k, N ) * x[j];
+            s = s + root<T>( j * k, N ) * x[j];
         }
         y[k] = s;
     }
 }
 
-// The sum over the first N / 2 + 1 inputs only, every output kept: complex, since the solver reads
-// no real output taken from a complex sum.
+// The real part of the inverse's sum over the first N / 2 + 1 inputs.
 @real_arithmetic
-private void half_dft_into<u64 N>( const ref complex<f64>[N / 2 + 1] y, ref complex<f64>[N] x )
+private void half_into<T, u64 N>( const ref complex<T>[N / 2 + 1] y, ref T[N] x ) where T : floating
 {
     for( u64 n : 0..N )
     {
-        complex<f64> s = complex<f64> {};
+        complex<T> s = complex<T> {};
         for( u64 k : 0..N / 2 + 1 )
         {
-            s = s + y[k] * root( k * n, N );
+            s = s + y[k] * root<T>( k * n, N ).conj();
         }
-        x[n] = s;
+        x[n] = s.re;
     }
 }
 
@@ -71,40 +58,28 @@ private void half_dft_into<u64 N>( const ref complex<f64>[N / 2 + 1] y, ref comp
 ///
 /// The transforms here follow scipy.fft: the forward one unnormalised, the inverse scaled by 1 / N.
 /// Each is written as its definition, a sum over every input for every output. At -O3 that sum is
-/// solved into a fast circuit for its `N`; below -O3 it runs as written, in O(N^2). An `f32`
-/// transform is computed in `f64` and rounded once.
+/// solved into a fast circuit for its `N`; below -O3 it runs as written, in O(N^2).
 complex<T>[N] dft<T, u64 N>( const ref complex<T>[N] x ) where T : floating
 {
-    complex<f64>[N] a = [ complex<f64> {}, .. ];
-    for( u64 j : 0..N )
-    {
-        a[j] = widened<T>( x[j] );
-    }
-    complex<f64>[N] b = [ complex<f64> {}, .. ];
-    dft_into<N>( a, ref b );
     complex<T>[N] y = [ complex<T> {}, .. ];
-    for( u64 k : 0..N )
-    {
-        y[k] = narrowed<T>( b[k] );
-    }
+    dft_into<T, N>( x, ref y );
     return y;
 }
 
 /// The inverse DFT, `conj( dft( conj( y ) ) ) / N`, so `idft( dft( x ) )` is `x` to rounding.
 complex<T>[N] idft<T, u64 N>( const ref complex<T>[N] y ) where T : floating
 {
-    complex<f64>[N] a = [ complex<f64> {}, .. ];
+    complex<T>[N] c = [ complex<T> {}, .. ];
     for( u64 k : 0..N )
     {
-        a[k] = widened<T>( y[k] ).conj();
+        c[k] = y[k].conj();
     }
-    complex<f64>[N] b = [ complex<f64> {}, .. ];
-    dft_into<N>( a, ref b );
-    const f64 scale = 1.0 / cast<f64>( N );
     complex<T>[N] x = [ complex<T> {}, .. ];
+    dft_into<T, N>( c, ref x );
+    const T scale = 1 / cast<T>( N );
     for( u64 j : 0..N )
     {
-        x[j] = narrowed<T>( b[j].conj() * scale );
+        x[j] = x[j].conj() * scale;
     }
     return x;
 }
@@ -113,18 +88,8 @@ complex<T>[N] idft<T, u64 N>( const ref complex<T>[N] y ) where T : floating
 /// `y[N - k]` being `conj( y[k] )`.
 complex<T>[N / 2 + 1] rdft<T, u64 N>( const ref T[N] x ) where T : floating
 {
-    f64[N] a = [ 0.0, .. ];
-    for( u64 j : 0..N )
-    {
-        a[j] = cast<f64>( x[j] );
-    }
-    complex<f64>[N / 2 + 1] b = [ complex<f64> {}, .. ];
-    rdft_into<N>( a, ref b );
     complex<T>[N / 2 + 1] y = [ complex<T> {}, .. ];
-    for( u64 k : 0..N / 2 + 1 )
-    {
-        y[k] = narrowed<T>( b[k] );
-    }
+    rdft_into<T, N>( x, ref y );
     return y;
 }
 
@@ -132,22 +97,15 @@ complex<T>[N / 2 + 1] rdft<T, u64 N>( const ref T[N] x ) where T : floating
 /// `irfft`, the imaginary parts of `y[0]` and, for an even `N`, `y[N / 2]` are not read.
 T[N] irdft<T, u64 N>( const ref complex<T>[N / 2 + 1] y ) where T : floating
 {
-    // Twice the real part of the sum over the half, less y[0] and an even N's y[N / 2], each counted
-    // twice; conjugated in, so the forward roots serve.
-    complex<f64>[N / 2 + 1] a = [ complex<f64> {}, .. ];
-    for( u64 k : 0..N / 2 + 1 )
-    {
-        a[k] = widened<T>( y[k] ).conj();
-    }
-    complex<f64>[N] b = [ complex<f64> {}, .. ];
-    half_dft_into<N>( a, ref b );
-    const f64 scale = 1.0 / cast<f64>( N );
-    const f64 last  = N % 2 == 0 ? a[N / 2].re : 0.0;
+    // Twice the half's sum, each term standing for its conjugate's too, less y[0] and an even N's
+    // y[N / 2], which have none.
     T[N] x = [ 0, .. ];
+    half_into<T, N>( y, ref x );
+    const T scale = 1 / cast<T>( N );
+    const T last  = N % 2 == 0 ? y[N / 2].re : 0;
     for( u64 n : 0..N )
     {
-        const f64 s = 2.0 * b[n].re - a[0].re - ( n % 2 == 0 ? last : -last );
-        x[n]        = exponential::narrowed<T>( s * scale );
+        x[n] = ( 2 * x[n] - y[0].re - ( n % 2 == 0 ? last : -last ) ) * scale;
     }
     return x;
 }

@@ -25,8 +25,7 @@
 <p>The DFT of <code>x</code>: <code>y[k]</code> is the sum over <code>j</code> of <code>x[j] e^(-2 pi i j k / N)</code>.</p>
 <p>The transforms here follow scipy.fft: the forward one unnormalised, the inverse scaled by 1 / N.
 Each is written as its definition, a sum over every input for every output. At -O3 that sum is
-solved into a fast circuit for its <code>N</code>; below -O3 it runs as written, in O(N^2). An <code>f32</code>
-transform is computed in <code>f64</code> and rounded once.</p>
+solved into a fast circuit for its <code>N</code>; below -O3 it runs as written, in O(N^2).</p>
 </div>
 </div>
 </section>

@@ -65,7 +65,7 @@ struct Printer
         return fmt::format( "<{} {} {}>", type_name( operands[0] ), token_kind_spelling( op ), type_name( operands[1] ) );
     }
 
-    // A planned kernel's function, `<dft n m M c>`.
+    // A planned kernel's function, `<dft n m M c>`, then its float type unless f64.
     std::string planned( std::span<const Type_id> sizes ) const
     {
         std::string out = "<dft";

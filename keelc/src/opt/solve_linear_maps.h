@@ -6,6 +6,7 @@
 #include <functional>
 #include <optional>
 #include <set>
+#include <utility>
 #include <vector>
 #include "common/literal_pool.h"
 #include "ir/kir.h"
@@ -30,8 +31,8 @@ struct Map_outcome
 // functions, optimised.
 struct Planned_kernels
 {
-    std::set<Kernel>                made;
-    std::function<void( Function )> add;
+    std::set<std::pair<Kernel, u32>> made; // with its float type's Type_id
+    std::function<void( Function )>  add;
 };
 
 // At -O3, first in the loop phase, on a `@real_arithmetic` function: the linear map its body computes,
