@@ -151,6 +151,21 @@ appear, and a frame without one has gaps there in its dtype. <code>i64s</code> b
 </dl>
 </section>
 <section class="module">
+<h3><a href="fft.html">fft</a></h3>
+<dl class="summaries">
+<dt><a href="fft.html#dft"><code>dft</code></a> <span class="kind">function</span></dt>
+<dd>The DFT of <code>x</code>: <code>y[k]</code> is the sum over <code>j</code> of <code>x[j] e^(-2 pi i j k / N)</code>.</dd>
+<dt><a href="fft.html#idft"><code>idft</code></a> <span class="kind">function</span></dt>
+<dd>The inverse DFT, <code>conj( dft( conj( y ) ) ) / N</code>, so <code>idft( dft( x ) )</code> is <code>x</code> to rounding.</dd>
+<dt><a href="fft.html#rdft"><code>rdft</code></a> <span class="kind">function</span></dt>
+<dd>The DFT of the real <code>x</code>, its first <code>N / 2 + 1</code> outputs; the rest are their conjugates,
+<code>y[N - k]</code> being <code>conj( y[k] )</code>.</dd>
+<dt><a href="fft.html#irdft"><code>irdft</code></a> <span class="kind">function</span></dt>
+<dd>The real <code>N</code> points whose <code>rdft</code> is <code>y</code>, <code>N</code> given: <code>kl::irdft&lt;f64, 8&gt;( y )</code>. As numpy's
+<code>irfft</code>, the imaginary parts of <code>y[0]</code> and, for an even <code>N</code>, <code>y[N / 2]</code> are not read.</dd>
+</dl>
+</section>
+<section class="module">
 <h3><a href="fixed_list.html">fixed_list</a></h3>
 <dl class="summaries">
 <dt><a href="fixed_list.html#fixed_list"><code>fixed_list</code></a> <span class="kind">class</span></dt>
