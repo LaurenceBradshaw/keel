@@ -809,6 +809,48 @@ f32 atan2( f32 y, f32 x )
     return cast<f32>( atan2( cast<f64>( y ), cast<f64>( x ) ) );
 }
 
+/// The length of (`x`, `y`), sqrt( x^2 + y^2 ) with no overflow or underflow on the way: an
+/// infinity when either is one, even with a NaN, as C's `hypot`. Within an ulp.
+f64 hypot( f64 x, f64 y )
+{
+    f64 a = abs( x );
+    f64 b = abs( y );
+    if( is_inf( a ) || is_inf( b ) )
+    {
+        return inf();
+    }
+    if( a < b )
+    {
+        const f64 t = a;
+        a           = b;
+        b           = t;
+    }
+    // Scaled by a power of two, exact, when the squares would leave the range.
+    if( a > from_bits( 0x5f30000000000000 ) )
+    {
+        const f64 s = from_bits( 0x1a70000000000000 );
+        return sqrt( ( a * s ) * ( a * s ) + ( b * s ) * ( b * s ) ) * from_bits( 0x6570000000000000 );
+    }
+    if( a < from_bits( 0x20b0000000000000 ) )
+    {
+        const f64 s = from_bits( 0x6570000000000000 );
+        return sqrt( ( a * s ) * ( a * s ) + ( b * s ) * ( b * s ) ) * from_bits( 0x1a70000000000000 );
+    }
+    return sqrt( a * a + b * b );
+}
+
+/// The length of (`x`, `y`), from the `f64` squares, rounded.
+f32 hypot( f32 x, f32 y )
+{
+    if( is_inf( x ) || is_inf( y ) )
+    {
+        return cast<f32>( inf() );
+    }
+    const f64 a = cast<f64>( x );
+    const f64 b = cast<f64>( y );
+    return exponential::narrowed<f32>( sqrt( a * a + b * b ) );
+}
+
 private i32 exponent_of( f64 x )
 {
     return wrap<i32>( ( bits_of( x ) >> 52 ) & 0x7ff );

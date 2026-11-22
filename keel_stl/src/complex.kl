@@ -1,0 +1,156 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+import kl::_core::exponential as exponential;
+import math;
+
+/// A complex number, `re + im i`, of `f32` or `f64` parts.
+///
+/// A complex copies like a number. `kl::complex<f64> { 1.0, 2.0 }` is 1 + 2i, and
+/// `kl::complex<f64> {}` is 0. The arithmetic takes a complex or a `T` on either side, and the
+/// rest are methods: `z.abs()`, `z.conj()`. A collection of them is a `kl::complex<T>[N]`, a run or
+/// a list; complex data in an `ndarray` is the caller's `ndarray<T, 2, S...>`, real parts then
+/// imaginary.
+struct complex<T> implements equatable where T : floating
+{
+    /// The real part.
+    T re = 0;
+    /// The imaginary part.
+    T im = 0;
+
+    /// The complex of length `r` at angle `theta` from the positive real axis.
+    static complex<T> polar( T r, T theta )
+    {
+        const f64 t = cast<f64>( theta );
+        return complex<T> { r * cast<T>( kl::cos( t ) ), r * cast<T>( kl::sin( t ) ) };
+    }
+
+    /// --- Arithmetic ---
+
+    /// The sum with `o`.
+    complex<T> operator+( complex<T> o ) const
+    {
+        return complex<T> { re + o.re, im + o.im };
+    }
+
+    /// The sum with the real `s`.
+    complex<T> operator+( T s ) const
+    {
+        return complex<T> { re + s, im };
+    }
+
+    /// The sum of the real `s` and `z`.
+    static complex<T> operator+( T s, complex<T> z )
+    {
+        return complex<T> { s + z.re, z.im };
+    }
+
+    /// The difference with `o`.
+    complex<T> operator-( complex<T> o ) const
+    {
+        return complex<T> { re - o.re, im - o.im };
+    }
+
+    /// The difference with the real `s`.
+    complex<T> operator-( T s ) const
+    {
+        return complex<T> { re - s, im };
+    }
+
+    /// The real `s` less `z`.
+    static complex<T> operator-( T s, complex<T> z )
+    {
+        return complex<T> { s - z.re, -z.im };
+    }
+
+    /// The product with `o`.
+    complex<T> operator*( complex<T> o ) const
+    {
+        return complex<T> { re * o.re - im * o.im, re * o.im + im * o.re };
+    }
+
+    /// The product with the real `s`.
+    complex<T> operator*( T s ) const
+    {
+        return complex<T> { re * s, im * s };
+    }
+
+    /// The product of the real `s` and `z`.
+    static complex<T> operator*( T s, complex<T> z )
+    {
+        return complex<T> { s * z.re, s * z.im };
+    }
+
+    /// The quotient by `o`, by Smith's method: no |o|^2 is formed, so it overflows only where the
+    /// quotient does. A NaN or an infinity in each part when `o` is 0.
+    complex<T> operator/( complex<T> o ) const
+    {
+        if( kl::abs( o.re ) >= kl::abs( o.im ) )
+        {
+            const T r = o.im / o.re;
+            const T d = o.re + o.im * r;
+            return complex<T> { ( re + im * r ) / d, ( im - re * r ) / d };
+        }
+        const T r = o.re / o.im;
+        const T d = o.re * r + o.im;
+        return complex<T> { ( re * r + im ) / d, ( im * r - re ) / d };
+    }
+
+    /// The quotient by the real `s`.
+    complex<T> operator/( T s ) const
+    {
+        return complex<T> { re / s, im / s };
+    }
+
+    /// The real `s` over `z`.
+    static complex<T> operator/( T s, complex<T> z )
+    {
+        return complex<T> { s, 0 } / z;
+    }
+
+    /// The negation.
+    complex<T> operator-() const
+    {
+        return complex<T> { -re, -im };
+    }
+
+    /// Equal when both parts are, so a NaN in either is equal to nothing.
+    bool operator==( const ref complex<T> o ) const
+    {
+        return re == o.re && im == o.im;
+    }
+
+    /// --- Functions ---
+
+    /// The conjugate, `re - im i`.
+    complex<T> conj() const
+    {
+        return complex<T> { re, -im };
+    }
+
+    /// The modulus |z|, with no overflow on the way.
+    T abs() const
+    {
+        return exponential::narrowed<T>( kl::hypot( cast<f64>( re ), cast<f64>( im ) ) );
+    }
+
+    /// The argument, in [-pi, pi], each zero's sign picking the side as `kl::atan2`.
+    T arg() const
+    {
+        return cast<T>( kl::atan2( cast<f64>( im ), cast<f64>( re ) ) );
+    }
+
+    /// |z|^2, `re * re + im * im`.
+    T norm() const
+    {
+        return re * re + im * im;
+    }
+
+    /// e to this power: e^re ( cos im + i sin im ).
+    complex<T> exp() const
+    {
+        const f64 m = kl::exp( cast<f64>( re ) );
+        const f64 t = cast<f64>( im );
+        return complex<T> { exponential::narrowed<T>( m * kl::cos( t ) ), exponential::narrowed<T>( m * kl::sin( t ) ) };
+    }
+};

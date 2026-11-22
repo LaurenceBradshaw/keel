@@ -78,6 +78,13 @@ positionals.</dd>
 </dl>
 </section>
 <section class="module">
+<h3><a href="complex.html">complex</a></h3>
+<dl class="summaries">
+<dt><a href="complex.html#complex"><code>complex</code></a> <span class="kind">struct</span></dt>
+<dd>A complex number, <code>re + im i</code>, of <code>f32</code> or <code>f64</code> parts.</dd>
+</dl>
+</section>
+<section class="module">
 <h3><a href="console.html">console</a></h3>
 <dl class="summaries">
 </dl>
@@ -302,6 +309,9 @@ outside them. Acklam's rational fit refined by one Halley step through <code>erf
 <dt><a href="math.html#atan2"><code>atan2</code></a> <span class="kind">function</span></dt>
 <dd>The angle in [-pi, pi] of the point (<code>x</code>, <code>y</code>) from the positive x axis: <code>atan2( 1.0, -1.0 )</code> is
 3 pi / 4. Each zero's sign picks the side, as C's <code>atan2</code>. Within an ulp.</dd>
+<dt><a href="math.html#hypot"><code>hypot</code></a> <span class="kind">function</span></dt>
+<dd>The length of (<code>x</code>, <code>y</code>), sqrt( x^2 + y^2 ) with no overflow or underflow on the way: an
+infinity when either is one, even with a NaN, as C's <code>hypot</code>. Within an ulp.</dd>
 </dl>
 </section>
 <section class="module">

@@ -1,0 +1,133 @@
+// `kl::complex`: the arithmetic both ways round, Smith's division at the range's ends, and the
+// functions; `kl::hypot` against C's.
+import kl::complex;
+import kl::math;
+import kl::os;
+import kl::test::context;
+
+private bool near( kl::complex<f64> a, f64 re, f64 im )
+{
+    return kl::abs( a.re - re ) <= 1e-12 && kl::abs( a.im - im ) <= 1e-12;
+}
+
+private void arithmetic( ref kl::test::context c )
+{
+    const kl::complex<f64> a = kl::complex<f64> { 1.0, 2.0 };
+    const kl::complex<f64> b = kl::complex<f64> { 3.0, -1.0 };
+    c.check( a + b == kl::complex<f64> { 4.0, 1.0 } );
+    c.check( a - b == kl::complex<f64> { -2.0, 3.0 } );
+    c.check( a * b == kl::complex<f64> { 5.0, 5.0 } );
+    c.check( near( a / b, 0.1, 0.7 ) );
+    c.check( near( b / a, 0.2, -1.4 ) );
+    c.check( -a == kl::complex<f64> { -1.0, -2.0 } );
+    c.check( kl::complex<f64> {} == kl::complex<f64> { 0.0, 0.0 } );
+    c.check( !( a == b ) );
+
+    c.check( a + 2.0 == kl::complex<f64> { 3.0, 2.0 } );
+    c.check( 2.0 + a == kl::complex<f64> { 3.0, 2.0 } );
+    c.check( a - 2.0 == kl::complex<f64> { -1.0, 2.0 } );
+    c.check( 2.0 - a == kl::complex<f64> { 1.0, -2.0 } );
+    c.check( a * 2.0 == kl::complex<f64> { 2.0, 4.0 } );
+    c.check( 2.0 * a == kl::complex<f64> { 2.0, 4.0 } );
+    c.check( a / 2.0 == kl::complex<f64> { 0.5, 1.0 } );
+    c.check( near( 5.0 / a, 1.0, -2.0 ) );
+
+    const kl::complex<f32> n = kl::complex<f32> { 1.0, 2.0 };
+    const kl::complex<f32> m = n * n;
+    c.check_eq( cast<f64>( m.re ), -3.0 );
+    c.check_eq( cast<f64>( m.im ), 4.0 );
+}
+
+// |o|^2 overflows or underflows here, though each quotient fits.
+private void division_at_the_ends( ref kl::test::context c )
+{
+    const f64 big = 1e300;
+    const kl::complex<f64> q = kl::complex<f64> { big, big } / kl::complex<f64> { big, -big };
+    c.check( near( q, 0.0, 1.0 ) );
+
+    const f64 tiny = 1e-300;
+    const kl::complex<f64> r = kl::complex<f64> { tiny, 0.0 } / kl::complex<f64> { 0.0, tiny };
+    c.check( near( r, 0.0, -1.0 ) );
+
+    const kl::complex<f64> z = kl::complex<f64> { 1.0, 1.0 } / kl::complex<f64> {};
+    c.check( z.re != z.re || kl::is_inf( z.re ) );
+}
+
+private void functions( ref kl::test::context c )
+{
+    const kl::complex<f64> a = kl::complex<f64> { 3.0, -4.0 };
+    c.check( a.conj() == kl::complex<f64> { 3.0, 4.0 } );
+    c.check_eq( a.abs(), 5.0 );
+    c.check_eq( a.norm(), 25.0 );
+    c.check_eq( kl::complex<f64> { -1.0, 0.0 }.arg(), kl::pi );
+    c.check_eq( kl::complex<f64> { -1.0, -0.0 }.arg(), -kl::pi );
+    c.check_eq( kl::complex<f64> { 0.0, 1.0 }.arg(), kl::pi / 2.0 );
+    c.check_eq( kl::complex<f64> { 1e300, 1e300 }.abs(), kl::hypot( 1e300, 1e300 ) );
+
+    c.check( near( kl::complex<f64>::polar( 2.0, kl::pi / 2.0 ), 0.0, 2.0 ) );
+    c.check( near( kl::complex<f64> { 0.0, kl::pi }.exp(), -1.0, 0.0 ) );
+    c.check( near( kl::complex<f64> { 1.0, 0.0 }.exp(), kl::exp( 1.0 ), 0.0 ) );
+    const kl::complex<f64> p = kl::complex<f64>::polar( a.abs(), a.arg() );
+    c.check( near( p, 3.0, -4.0 ) );
+
+    const kl::complex<f32> n = kl::complex<f32> { 3.0, 4.0 };
+    c.check_eq( cast<f64>( n.abs() ), 5.0 );
+    const f32 top = kl::from_bits( wrap<u32>( 0x7f7fffff ) );
+    c.check( kl::is_inf( kl::complex<f32> { top, top }.abs() ) );
+}
+
+extern f64 hypot( f64 x, f64 y );
+extern f32 hypotf( f32 x, f32 y );
+
+private i64 ordinal( f64 x )
+{
+    u64 b = kl::bits_of( x );
+    return ( b >> 63 ) == 0 ? wrap<i64>( b ) : wrap<i64>( 0x8000000000000000 - b );
+}
+
+private u64 next_random( ref u64 seed )
+{
+    seed = wrap<u64>( seed * 6364136223846793005 + 1442695040888963407 );
+    return seed;
+}
+
+// Within an ulp of glibc's from random bits, each of both widths, and the infinities over a NaN.
+// The UCRT's hypot is not checked against.
+private void hypot_matches_libm( ref kl::test::context c )
+{
+    if( kl::get_platform() == kl::platform::windows )
+    {
+        return;
+    }
+    u64 seed   = 11;
+    u64 missed = 0;
+    for( u64 i = 0; i < 200000; i++ )
+    {
+        const f64 x = kl::from_bits( next_random( ref seed ) );
+        const f64 y = kl::from_bits( next_random( ref seed ) );
+        const f32 u = kl::from_bits( wrap<u32>( next_random( ref seed ) >> 32 ) );
+        const f32 v = kl::from_bits( wrap<u32>( next_random( ref seed ) >> 32 ) );
+        unsafe
+        {
+            const f64 want = hypot( x, y );
+            const f64 got  = kl::hypot( x, y );
+            if( want == want ? ordinal( got ) - ordinal( want ) > 1 || ordinal( want ) - ordinal( got ) > 1 : got == got )
+            {
+                missed++;
+            }
+            const f32 narrow = hypotf( u, v );
+            const f32 ours   = kl::hypot( u, v );
+            if( narrow == narrow ? kl::bits_of( ours ) != kl::bits_of( narrow ) : ours == ours )
+            {
+                missed++;
+            }
+        }
+    }
+    c.check_eq( missed, 0 );
+
+    c.check_eq( kl::hypot( kl::inf(), kl::nan() ), kl::inf() );
+    c.check_eq( kl::hypot( kl::nan(), kl::ninf() ), kl::inf() );
+    c.check( kl::hypot( kl::nan(), 1.0 ) != kl::hypot( kl::nan(), 1.0 ) );
+    c.check_eq( kl::hypot( 3e-320, 4e-320 ), 5e-320 );
+    c.check_eq( kl::hypot( -3.0, 4.0 ), 5.0 );
+}

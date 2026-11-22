@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kl::complex</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+</head>
+<body>
+<header><nav><a href="index.html"><img src="logo.svg" alt="">The Keel standard library</a></nav></header>
+<main>
+<h1><span class="kind">module</span> <a class="package" href="index.html">kl</a>::complex</h1>
+<section class="entry">
+<h2><span class="kind">struct</span> <span class="type">complex</span></h2>
+<div class="group" id="complex">
+<pre class="signature"><a class="anchor" href="#complex" aria-label="Link to complex">#</a><code><span class="kw">struct</span> <span class="type">complex</span>&lt;T&gt; <span class="kw">implements</span> <a class="type" href="prelude.html#equatable">equatable</a> <span class="kw">where</span> T : floating</code></pre>
+<div class="doc">
+<p>A complex number, <code>re + im i</code>, of <code>f32</code> or <code>f64</code> parts.</p>
+<p>A complex copies like a number. <code>kl::complex&lt;f64&gt; { 1.0, 2.0 }</code> is 1 + 2i, and
+<code>kl::complex&lt;f64&gt; {}</code> is 0. The arithmetic takes a complex or a <code>T</code> on either side, and the
+rest are methods: <code>z.abs()</code>, <code>z.conj()</code>. A collection of them is a <code>kl::complex&lt;T&gt;[N]</code>, a run or
+a list; complex data in an <code>ndarray</code> is the caller's <code>ndarray&lt;T, 2, S...&gt;</code>, real parts then
+imaginary.</p>
+</div>
+</div>
+<h3>Fields</h3>
+<div class="group" id="complex.re">
+<pre class="signature"><a class="anchor" href="#complex.re" aria-label="Link to re">#</a><code><span class="kw">public</span> T re = 0</code></pre>
+<div class="doc">
+<p>The real part.</p>
+</div>
+</div>
+<div class="group" id="complex.im">
+<pre class="signature"><a class="anchor" href="#complex.im" aria-label="Link to im">#</a><code><span class="kw">public</span> T im = 0</code></pre>
+<div class="doc">
+<p>The imaginary part.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="complex.polar">
+<pre class="signature"><a class="anchor" href="#complex.polar" aria-label="Link to polar">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#complex">complex</a>&lt;T&gt; <span class="fn">polar</span>( T r, T theta )</code></pre>
+<div class="doc">
+<p>The complex of length <code>r</code> at angle <code>theta</code> from the positive real axis.</p>
+</div>
+</div>
+<h3>Arithmetic</h3>
+<div class="group" id="complex.operator+">
+<pre class="signature"><a class="anchor" href="#complex.operator+" aria-label="Link to operator+">#</a><code><span class="kw">public</span> <a class="type" href="#complex">complex</a>&lt;T&gt; <span class="fn">operator+</span>( <a class="type" href="#complex">complex</a>&lt;T&gt; o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The sum with <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#complex.operator+" aria-label="Link to operator+">#</a><code><span class="kw">public</span> <a class="type" href="#complex">complex</a>&lt;T&gt; <span class="fn">operator+</span>( T s ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The sum with the real <code>s</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#complex.operator+" aria-label="Link to operator+">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#complex">complex</a>&lt;T&gt; <span class="fn">operator+</span>( T s, <a class="type" href="#complex">complex</a>&lt;T&gt; z )</code></pre>
+<div class="doc">
+<p>The sum of the real <code>s</code> and <code>z</code>.</p>
+</div>
+</div>
+<div class="group" id="complex.operator-">
+<pre class="signature"><a class="anchor" href="#complex.operator-" aria-label="Link to operator-">#</a><code><span class="kw">public</span> <a class="type" href="#complex">complex</a>&lt;T&gt; <span class="fn">operator-</span>( <a class="type" href="#complex">complex</a>&lt;T&gt; o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The difference with <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#complex.operator-" aria-label="Link to operator-">#</a><code><span class="kw">public</span> <a class="type" href="#complex">complex</a>&lt;T&gt; <span class="fn">operator-</span>( T s ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The difference with the real <code>s</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#complex.operator-" aria-label="Link to operator-">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#complex">complex</a>&lt;T&gt; <span class="fn">operator-</span>( T s, <a class="type" href="#complex">complex</a>&lt;T&gt; z )</code></pre>
+<div class="doc">
+<p>The real <code>s</code> less <code>z</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#complex.operator-" aria-label="Link to operator-">#</a><code><span class="kw">public</span> <a class="type" href="#complex">complex</a>&lt;T&gt; <span class="fn">operator-</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The negation.</p>
+</div>
+</div>
+<div class="group" id="complex.operator*">
+<pre class="signature"><a class="anchor" href="#complex.operator*" aria-label="Link to operator*">#</a><code><span class="kw">public</span> <a class="type" href="#complex">complex</a>&lt;T&gt; <span class="fn">operator*</span>( <a class="type" href="#complex">complex</a>&lt;T&gt; o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The product with <code>o</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#complex.operator*" aria-label="Link to operator*">#</a><code><span class="kw">public</span> <a class="type" href="#complex">complex</a>&lt;T&gt; <span class="fn">operator*</span>( T s ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The product with the real <code>s</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#complex.operator*" aria-label="Link to operator*">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#complex">complex</a>&lt;T&gt; <span class="fn">operator*</span>( T s, <a class="type" href="#complex">complex</a>&lt;T&gt; z )</code></pre>
+<div class="doc">
+<p>The product of the real <code>s</code> and <code>z</code>.</p>
+</div>
+</div>
+<div class="group" id="complex.operator/">
+<pre class="signature"><a class="anchor" href="#complex.operator/" aria-label="Link to operator/">#</a><code><span class="kw">public</span> <a class="type" href="#complex">complex</a>&lt;T&gt; <span class="fn">operator/</span>( <a class="type" href="#complex">complex</a>&lt;T&gt; o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The quotient by <code>o</code>, by Smith's method: no |o|^2 is formed, so it overflows only where the
+quotient does. A NaN or an infinity in each part when <code>o</code> is 0.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#complex.operator/" aria-label="Link to operator/">#</a><code><span class="kw">public</span> <a class="type" href="#complex">complex</a>&lt;T&gt; <span class="fn">operator/</span>( T s ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The quotient by the real <code>s</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#complex.operator/" aria-label="Link to operator/">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#complex">complex</a>&lt;T&gt; <span class="fn">operator/</span>( T s, <a class="type" href="#complex">complex</a>&lt;T&gt; z )</code></pre>
+<div class="doc">
+<p>The real <code>s</code> over <code>z</code>.</p>
+</div>
+</div>
+<div class="group" id="complex.operator==">
+<pre class="signature"><a class="anchor" href="#complex.operator==" aria-label="Link to operator==">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">operator==</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#complex">complex</a>&lt;T&gt; o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Equal when both parts are, so a NaN in either is equal to nothing.</p>
+</div>
+</div>
+<h3>Functions</h3>
+<div class="group" id="complex.conj">
+<pre class="signature"><a class="anchor" href="#complex.conj" aria-label="Link to conj">#</a><code><span class="kw">public</span> <a class="type" href="#complex">complex</a>&lt;T&gt; <span class="fn">conj</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The conjugate, <code>re - im i</code>.</p>
+</div>
+</div>
+<div class="group" id="complex.abs">
+<pre class="signature"><a class="anchor" href="#complex.abs" aria-label="Link to abs">#</a><code><span class="kw">public</span> T <span class="fn">abs</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The modulus |z|, with no overflow on the way.</p>
+</div>
+</div>
+<div class="group" id="complex.arg">
+<pre class="signature"><a class="anchor" href="#complex.arg" aria-label="Link to arg">#</a><code><span class="kw">public</span> T <span class="fn">arg</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The argument, in [-pi, pi], each zero's sign picking the side as <code>kl::atan2</code>.</p>
+</div>
+</div>
+<div class="group" id="complex.norm">
+<pre class="signature"><a class="anchor" href="#complex.norm" aria-label="Link to norm">#</a><code><span class="kw">public</span> T <span class="fn">norm</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>|z|^2, <code>re * re + im * im</code>.</p>
+</div>
+</div>
+<div class="group" id="complex.exp">
+<pre class="signature"><a class="anchor" href="#complex.exp" aria-label="Link to exp">#</a><code><span class="kw">public</span> <a class="type" href="#complex">complex</a>&lt;T&gt; <span class="fn">exp</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>e to this power: e^re ( cos im + i sin im ).</p>
+</div>
+</div>
+</section>
+</main>
+<footer>Copyright 2026 Laurence Bradshaw. Licensed under Apache-2.0 WITH LLVM-exception.</footer>
+</body>
+</html>

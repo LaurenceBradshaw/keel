@@ -3,6 +3,7 @@ import kl::test::run;
 import algorithm_tests;
 import bitset_tests;
 import command_line_tests;
+import complex_tests;
 import dataframe_tests;
 import exponential_tests;
 import fixed_list_tests;
